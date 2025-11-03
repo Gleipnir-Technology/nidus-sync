@@ -46,6 +46,10 @@ func main() {
 
 	r.Get("/", getRoot)
 	r.Get("/favicon.ico", getFavicon)
+
+	localFS := http.Dir("./static")
+	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
+
 	log.Printf("Serving on %s", bind)
 	log.Fatal(http.ListenAndServe(bind, r))
 }
