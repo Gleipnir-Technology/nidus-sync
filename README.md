@@ -13,6 +13,12 @@ nix develop
 go build .
 ```
 
+## Running
+
+```sh
+> BASE_URL=https://sync.nidus.cloud ARCGIS_CLIENT_ID=foo ARCGIS_CLIENT_SECRET=bar POSTGRES_DSN='postgresql://?host=/var/run/postgresql&dbname=nidus-sync' ./nidus-sync
+```
+
 ## Hacking
 
 ### bob
