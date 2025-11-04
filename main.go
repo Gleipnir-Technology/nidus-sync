@@ -57,6 +57,7 @@ func main() {
 
 	r.Get("/", getRoot)
 	r.Get("/signup", getSignup)
+	r.Post("/signup", postSignup)
 	r.Get("/favicon.ico", getFavicon)
 
 	localFS := http.Dir("./static")
