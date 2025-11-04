@@ -15,3 +15,9 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+func getSignup(w http.ResponseWriter, r *http.Request) {
+	err := htmlSignup(w, r.URL.Path)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}

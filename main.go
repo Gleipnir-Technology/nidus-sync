@@ -45,6 +45,7 @@ func main() {
 	r.Use(sessionManager.LoadAndSave)
 
 	r.Get("/", getRoot)
+	r.Get("/signup", getSignup)
 	r.Get("/favicon.ico", getFavicon)
 
 	localFS := http.Dir("./static")

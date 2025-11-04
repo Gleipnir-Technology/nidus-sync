@@ -1,0 +1,107 @@
+{{template "base.html" .}}
+
+{{define "title"}}Login{{end}}
+{{define "style"}}
+ .register-container {
+			max-width: 900px;
+			margin: 0 auto;
+		}
+		.register-box {
+			box-shadow: 0 0 15px rgba(0,0,0,0.1);
+			border-radius: 10px;
+			overflow: hidden;
+		}
+		.register-form-section {
+			padding: 40px;
+		}
+		.register-info-section {
+			padding: 40px;
+			background-color: #f8f9fa;
+		}
+		.register-header {
+			margin-bottom: 25px;
+		}
+		.logo-area {
+			text-align: center;
+			margin-bottom: 30px;
+		}
+		.logo-placeholder {
+			width: 120px;
+			height: 60px;
+			background-color: #e9ecef;
+			margin: 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 6px;
+		}
+{{end}}
+{{define "content"}}
+<div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+	<div class="register-container">
+		<!-- Logo Area -->
+		<div class="logo-area">
+			<div class="logo-placeholder">
+				<span class="text-muted">Your Logo</span>
+			</div>
+		</div>
+		
+		<div class="row register-box g-0">
+			<!-- Left side: Registration Form -->
+			<div class="col-md-6 register-form-section">
+				<div class="register-header">
+					<h2>Create an Account</h2>
+					<p class="text-muted">Join us today to get started</p>
+				</div>
+				
+				<form>
+					<div class="mb-3">
+						<label for="name" class="form-label">Full Name</label>
+						<input type="text" class="form-control" id="name" required>
+					</div>
+					
+					<div class="mb-3">
+						<label for="email" class="form-label">Email Address</label>
+						<input type="email" class="form-control" id="email" required>
+					</div>
+					
+					<div class="mb-3 form-check">
+						<input type="checkbox" class="form-check-input" id="terms" required>
+						<label class="form-check-label" for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+					</div>
+					
+					<div class="d-grid gap-2">
+						<button type="submit" class="btn btn-primary">Register</button>
+					</div>
+					
+					<div class="mt-3 text-center">
+						<p>Already have an account? <a href="login.html">Sign in</a></p>
+					</div>
+				</form>
+			</div>
+			
+			<!-- Right side: Account Information -->
+			<div class="col-md-6 register-info-section">
+				<div>
+					<h2>Account Information</h2>
+					<p class="lead mb-4">What you need to know</p>
+					
+					<div class="mb-4">
+						<h5>Who should register?</h5>
+						<p>This platform is designed for professionals who need to manage projects and collaborate with team members. Whether you're a freelancer, small business owner, or part of a larger organization, our tools can help streamline your workflow.</p>
+					</div>
+					
+					<div class="mb-4">
+						<h5>What happens after registration?</h5>
+						<p>After you register with your email, you'll receive a confirmation message with instructions to complete your account setup. You'll then have access to all features and can customize your workspace based on your specific needs.</p>
+					</div>
+					
+					<div class="mb-3">
+						<small class="text-muted">For any questions about account types or registration, please contact our support team at support@yourproduct.com</small>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{{end}}

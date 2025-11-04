@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	root      = newBuiltTemplate("root", "base")
 	dashboard = newBuiltTemplate("dashboard", "base")
+	root      = newBuiltTemplate("root", "base")
+	signup    = newBuiltTemplate("signup", "base")
 )
 
 type BuiltTemplate struct {
@@ -28,6 +29,8 @@ type ContentDashboard struct {
 }
 type ContentRoot struct {
 	BabbleLinks []Link
+}
+type ContentSignup struct {
 }
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
@@ -55,6 +58,12 @@ func htmlRoot(w io.Writer, path string) error {
 	data := ContentRoot{
 	}
 	return root.ExecuteTemplate(w, data)
+}
+
+func htmlSignup(w io.Writer, path string) error {
+	data := ContentSignup{
+	}
+	return signup.ExecuteTemplate(w, data)
 }
 
 func makeFuncMap() template.FuncMap {
