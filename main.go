@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -18,12 +19,12 @@ var BaseURL, ClientID, ClientSecret string
 func main() {
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
 	if ClientID == "" {
-		log.Println("You must specify a non-empty CLIENT_ID")
+		log.Println("You must specify a non-empty ARCGIS_CLIENT_ID")
 		os.Exit(1)
 	}
 	ClientSecret = os.Getenv("ARCGIS_CLIENT_SECRET")
 	if ClientSecret == "" {
-		log.Println("You must specify a non-empty CLIENT_SECRET")
+		log.Println("You must specify a non-empty ARCGIS_CLIENT_SECRET")
 		os.Exit(1)
 	}
 	BaseURL = os.Getenv("BASE_URL")
@@ -35,8 +36,18 @@ func main() {
 	if bind == "" {
 		bind = ":9001"
 	}
+	pg_dsn := os.Getenv("POSTGRES_DSN")
+	if pg_dsn == "" {
+		log.Println("You must specify a non-empty POSTGRES_DSN")
+		os.Exit(1)
+	}
 
 	log.Println("Starting...")
+	err := initializeDatabase(context.TODO(), pg_dsn)
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+		os.Exit(2)
+	}
 	sessionManager = scs.New()
 	sessionManager.Lifetime = 24 * time.Hour
 
