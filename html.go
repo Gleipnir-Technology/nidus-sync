@@ -16,6 +16,7 @@ import (
 var (
 	dashboard = newBuiltTemplate("dashboard", "authenticated")
 	report = newBuiltTemplate("report", "base")
+	reportDetail = newBuiltTemplate("report-detail", "base")
 	signin      = newBuiltTemplate("signin", "base")
 	signup    = newBuiltTemplate("signup", "base")
 )
@@ -29,6 +30,9 @@ type BuiltTemplate struct {
 type Link struct {
 	Href  string
 	Title string
+}
+type ContentReportDetail struct {
+	NextURL string
 }
 type ContentReportDiagnostic struct {
 	URL string
@@ -95,6 +99,14 @@ func htmlReport(w io.Writer) error {
 		URL: url,
 	}
 	return report.ExecuteTemplate(w, data)
+}
+
+func htmlReportDetail(w io.Writer, code string) error {
+	nextURL := BaseURL + "/report/" + code + "/evidence"
+	data := ContentReportDetail{
+		NextURL: nextURL,
+	}
+	return reportDetail.ExecuteTemplate(w, data)
 }
 
 func htmlSignin(w io.Writer, errorCode string) error {

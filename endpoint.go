@@ -82,6 +82,13 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
 	}
 }
+func getReportDetail(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	err := htmlReportDetail(w, code)
+	if err != nil {
+		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
+	}
+}
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	user, err := getAuthenticatedUser(r)

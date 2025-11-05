@@ -60,6 +60,7 @@ func main() {
 	r.Get("/", getRoot)
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/report", getReport)
+	r.Get("/report/{code}", getReportDetail)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
