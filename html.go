@@ -19,6 +19,7 @@ var (
 	reportContribute = newBuiltTemplate("report-contribute", "base")
 	reportDetail = newBuiltTemplate("report-detail", "base")
 	reportEvidence = newBuiltTemplate("report-evidence", "base")
+	reportSchedule = newBuiltTemplate("report-schedule", "base")
 	signin      = newBuiltTemplate("signin", "base")
 	signup    = newBuiltTemplate("signup", "base")
 )
@@ -125,6 +126,14 @@ func htmlReportEvidence(w io.Writer, code string) error {
 		NextURL: nextURL,
 	}
 	return reportEvidence.ExecuteTemplate(w, data)
+}
+
+func htmlReportSchedule(w io.Writer, code string) error {
+	nextURL := BaseURL + "/report/" + code + "/confirm"
+	data := ContentReportDetail{
+		NextURL: nextURL,
+	}
+	return reportSchedule.ExecuteTemplate(w, data)
 }
 
 func htmlSignin(w io.Writer, errorCode string) error {

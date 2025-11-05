@@ -63,6 +63,7 @@ func main() {
 	r.Get("/report/{code}", getReportDetail)
 	r.Get("/report/{code}/contribute", getReportContribute)
 	r.Get("/report/{code}/evidence", getReportEvidence)
+	r.Get("/report/{code}/schedule", getReportSchedule)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
