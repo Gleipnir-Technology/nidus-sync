@@ -4,6 +4,7 @@ go 1.24.9
 
 require (
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
+	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-webauthn/webauthn v0.14.0
@@ -14,6 +15,7 @@ require (
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/stephenafamo/bob v0.41.1
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07
+	golang.org/x/crypto v0.42.0
 )
 
 require (
@@ -34,7 +36,6 @@ require (
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect

@@ -19,6 +19,7 @@
                                 # Development shell configuration
                                 devShells.default = pkgs.mkShell {
                                         buildInputs = [
+						pkgs.air
                                                 pkgs.go
                                                 pkgs.goose
                                                 pkgs.gotools

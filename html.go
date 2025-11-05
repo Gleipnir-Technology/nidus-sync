@@ -2,15 +2,17 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"os"
+
+	"github.com/Gleipnir-Technology/nidus-sync/models"
 )
 
 var (
 	dashboard = newBuiltTemplate("dashboard", "base")
-	root      = newBuiltTemplate("root", "base")
+	signin      = newBuiltTemplate("signin", "base")
 	signup    = newBuiltTemplate("signup", "base")
 )
 
@@ -27,18 +29,20 @@ type ContentDashboard struct {
 	BabbleLinks []Link
 	Username    string
 }
-type ContentRoot struct {
-	BabbleLinks []Link
+type ContentSignin struct {
+	InvalidCredentials bool
 }
-type ContentSignup struct {
-}
+type ContentSignup struct { }
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	name := bt.files[0] + ".html"
 	if bt.template == nil {
-		templ := parseFromDisk(bt.files)
+		templ, err := parseFromDisk(bt.files)
+		if err != nil {
+			return fmt.Errorf("Failed to parse template file: %v", err)
+		}
 		if templ == nil {
-			w.Write([]byte("Failed to read from disk"))
+			w.Write([]byte("Failed to read from disk: "))
 			return errors.New("Template parsing failed")
 		}
 		return templ.ExecuteTemplate(w, name, data)
@@ -47,17 +51,18 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	}
 }
 
-func htmlDashboard(w io.Writer, path string, username string) error {
+func htmlDashboard(w io.Writer, user *models.User) error {
 	data := ContentDashboard{
-		Username:    username,
+		Username:    user.Username,
 	}
 	return dashboard.ExecuteTemplate(w, data)
 }
 
-func htmlRoot(w io.Writer, path string) error {
-	data := ContentRoot{
+func htmlSignin(w io.Writer, errorCode string) error {
+	data := ContentSignin{
+		InvalidCredentials: errorCode == "invalid-credentials",
 	}
-	return root.ExecuteTemplate(w, data)
+	return signin.ExecuteTemplate(w, data)
 }
 
 func htmlSignup(w io.Writer, path string) error {
@@ -96,7 +101,7 @@ func parseEmbedded(files []string) *template.Template {
 	return nil
 }
 
-func parseFromDisk(files []string) *template.Template {
+func parseFromDisk(files []string) (*template.Template, error) {
 	funcMap := makeFuncMap()
 	paths := make([]string, 0)
 	for _, f := range files {
@@ -105,8 +110,7 @@ func parseFromDisk(files []string) *template.Template {
 	name := files[0] + ".html"
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
-		log.Println("TEMPLATE FAILED", err)
-		return nil
+		return nil, fmt.Errorf("Failed to parse %s: %v", paths, err)
 	}
-	return templ
+	return templ, nil
 }

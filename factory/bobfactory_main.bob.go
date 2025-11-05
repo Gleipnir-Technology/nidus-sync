@@ -15,6 +15,7 @@ import (
 type Factory struct {
 	baseGooseDBVersionMods GooseDBVersionModSlice
 	baseOrganizationMods   OrganizationModSlice
+	baseSessionMods        SessionModSlice
 	baseUserMods           UserModSlice
 }
 
@@ -79,6 +80,32 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	return o
 }
 
+func (f *Factory) NewSession(mods ...SessionMod) *SessionTemplate {
+	return f.NewSessionWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewSessionWithContext(ctx context.Context, mods ...SessionMod) *SessionTemplate {
+	o := &SessionTemplate{f: f}
+
+	if f != nil {
+		f.baseSessionMods.Apply(ctx, o)
+	}
+
+	SessionModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingSession(m *models.Session) *SessionTemplate {
+	o := &SessionTemplate{f: f, alreadyPersisted: true}
+
+	o.Token = func() string { return m.Token }
+	o.Data = func() []byte { return m.Data }
+	o.Expiry = func() time.Time { return m.Expiry }
+
+	return o
+}
+
 func (f *Factory) NewUser(mods ...UserMod) *UserTemplate {
 	return f.NewUserWithContext(context.Background(), mods...)
 }
@@ -133,6 +160,14 @@ func (f *Factory) ClearBaseOrganizationMods() {
 
 func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
+}
+
+func (f *Factory) ClearBaseSessionMods() {
+	f.baseSessionMods = nil
+}
+
+func (f *Factory) AddBaseSessionMod(mods ...SessionMod) {
+	f.baseSessionMods = append(f.baseSessionMods, mods...)
 }
 
 func (f *Factory) ClearBaseUserMods() {

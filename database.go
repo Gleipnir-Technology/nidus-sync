@@ -24,6 +24,7 @@ var embedMigrations embed.FS
 
 type postgres struct {
 	BobDB bob.DB
+	PGXPool *pgxpool.Pool
 }
 
 var (
@@ -96,7 +97,7 @@ func initializeDatabase(ctx context.Context, uri string) error {
 	pgOnce.Do(func() {
 		db, e := pgxpool.New(ctx, uri)
 		bobDB := bob.NewDB(stdlib.OpenDBFromPool(db))
-		PGInstance = &postgres{bobDB}
+		PGInstance = &postgres{bobDB, db}
 		err = e
 	})
 	if err != nil {

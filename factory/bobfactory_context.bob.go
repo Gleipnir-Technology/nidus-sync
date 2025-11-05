@@ -15,6 +15,9 @@ var (
 	organizationWithParentsCascadingCtx = newContextual[bool]("organizationWithParentsCascading")
 	organizationRelUserCtx              = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
+	// Relationship Contexts for sessions
+	sessionWithParentsCascadingCtx = newContextual[bool]("sessionWithParentsCascading")
+
 	// Relationship Contexts for user_
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
 	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")

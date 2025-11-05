@@ -20,6 +20,9 @@ var _ bob.HookableType = &GooseDBVersion{}
 // Make sure the type Organization runs hooks after queries
 var _ bob.HookableType = &Organization{}
 
+// Make sure the type Session runs hooks after queries
+var _ bob.HookableType = &Session{}
+
 // Make sure the type User runs hooks after queries
 var _ bob.HookableType = &User{}
 

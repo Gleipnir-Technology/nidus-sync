@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -49,6 +50,7 @@ func main() {
 		os.Exit(2)
 	}
 	sessionManager = scs.New()
+	sessionManager.Store = pgxstore.New(PGInstance.PGXPool)
 	sessionManager.Lifetime = 24 * time.Hour
 
 	r := chi.NewRouter()
@@ -56,6 +58,7 @@ func main() {
 	r.Use(sessionManager.LoadAndSave)
 
 	r.Get("/", getRoot)
+	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
 	r.Get("/favicon.ico", getFavicon)
