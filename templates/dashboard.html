@@ -1,9 +1,106 @@
-{{template "base.html" .}}
+{{template "authenticated.html" .}}
 
 {{define "title"}}Dash{{end}}
 {{define "style"}}
+        .connect-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .connect-box {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 40px;
+            background-color: #fff;
+        }
+        .connect-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo-placeholder {
+            width: 120px;
+            height: 60px;
+            background-color: #e9ecef;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+        .steps-container {
+            margin: 30px 0;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 3px solid #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .connect-btn {
+            margin-top: 30px;
+        }
 {{end}}
 {{define "content"}}
-<h1>Hey {{ .Username }}</h1>
-<p>At this point, pretend I'm showing you the result of some ArcGIS data.</p>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+        <div class="connect-container">
+            <!-- Logo Area -->
+            <div class="logo-area">
+                <div class="logo-placeholder">
+                    <span class="text-muted">Your Logo</span>
+                </div>
+            </div>
+            
+            <div class="connect-box">
+                <div class="connect-header">
+                    <h1>Connect Your ArcGIS Account</h1>
+                    <p class="text-muted">Link your data to get started</p>
+                </div>
+                
+                <div class="connect-content">
+                    <p>To provide you with the best experience, we need to connect to your ArcGIS account. This allows us to securely access and visualize your spatial data within our platform.</p>
+                    
+                    <div class="steps-container">
+                        <h4>What to expect:</h4>
+                        
+                        <div class="step">
+                            <h5>1. Secure Authentication</h5>
+                            <p>When you click the "Connect to ArcGIS" button below, you'll be redirected to the official ArcGIS login page. This connection is secure and uses OAuth 2.0 protocol.</p>
+                        </div>
+                        
+                        <div class="step">
+                            <h5>2. Grant Permissions</h5>
+                            <p>After logging in with your ArcGIS credentials, you'll be asked to approve permissions for our application to access your data. We only request access to what's needed for the platform to function.</p>
+                        </div>
+                        
+                        <div class="step">
+                            <h5>3. Return to Platform</h5>
+                            <p>Once authentication is complete, you'll be automatically redirected back to our platform where your data will be available to work with.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> You'll need an active ArcGIS Online account or ArcGIS Enterprise account to proceed. If you don't have one, you can <a href="https://www.arcgis.com/home/signin.html" target="_blank">create an ArcGIS account here</a>.
+                    </div>
+                    
+                    <p>By connecting your ArcGIS account, you'll be able to:</p>
+                    <ul>
+                        <li>Access and visualize your spatial data</li>
+                        <li>Perform advanced analysis using our integrated tools</li>
+                        <li>Share results with team members securely</li>
+                        <li>Keep your data synchronized across platforms</li>
+                    </ul>
+                    
+                    <div class="text-center connect-btn">
+                        <button type="button" class="btn btn-primary btn-lg">
+                            Connect to ArcGIS
+                        </button>
+                        <p class="mt-2 text-muted"><small>You can disconnect your account at any time in settings</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {{end}}

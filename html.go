@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
 	"os"
+	"strings"
 
+	"github.com/riverqueue/river/rivershared/util/slogutil"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 )
 
 var (
-	dashboard = newBuiltTemplate("dashboard", "base")
+	dashboard = newBuiltTemplate("dashboard", "authenticated")
 	signin      = newBuiltTemplate("signin", "base")
 	signup    = newBuiltTemplate("signup", "base")
 )
+var components = [ ... ]string{"header"}
 
 type BuiltTemplate struct {
 	files    []string
@@ -26,13 +30,17 @@ type Link struct {
 	Title string
 }
 type ContentDashboard struct {
-	BabbleLinks []Link
-	Username    string
+	User User
 }
 type ContentSignin struct {
 	InvalidCredentials bool
 }
 type ContentSignup struct { }
+type User struct {
+	DisplayName string
+	Initials string
+	Username string
+}
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	name := bt.files[0] + ".html"
@@ -51,9 +59,26 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	}
 }
 
+func extractInitials(name string) string {
+	parts := strings.Fields(name)
+    var initials strings.Builder
+    
+    for _, part := range parts {
+        if len(part) > 0 {
+            initials.WriteString(strings.ToUpper(string(part[0])))
+        }
+    }
+    
+    return initials.String()
+}
+
 func htmlDashboard(w io.Writer, user *models.User) error {
 	data := ContentDashboard{
-		Username:    user.Username,
+		User:    User{
+			DisplayName: user.DisplayName,
+			Initials: extractInitials(user.DisplayName),
+			Username: user.Username,
+		},
 	}
 	return dashboard.ExecuteTemplate(w, data)
 }
@@ -108,6 +133,10 @@ func parseFromDisk(files []string) (*template.Template, error) {
 		paths = append(paths, "templates/"+f+".html")
 	}
 	name := files[0] + ".html"
+	for _, f := range components {
+		paths = append(paths, "templates/components/"+f+".html")
+	}
+	slog.Info("Rendering templates from disk", slog.Any("paths", slogutil.SliceString(paths)))
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse %s: %v", paths, err)

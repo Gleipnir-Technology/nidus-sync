@@ -9,11 +9,14 @@ require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-webauthn/webauthn v0.14.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/google/go-cmp v0.7.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jaswdr/faker/v2 v2.8.1
 	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.26.0
+	github.com/riverqueue/river/rivershared v0.26.0
 	github.com/stephenafamo/bob v0.41.1
+	github.com/stephenafamo/scan v0.7.0
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07
 	golang.org/x/crypto v0.42.0
 )
@@ -31,7 +34,6 @@ require (
 	github.com/pganalyze/pg_query_go/v6 v6.1.0 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
-	github.com/stephenafamo/scan v0.7.0 // indirect
 	github.com/tetratelabs/wazero v1.9.0 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
