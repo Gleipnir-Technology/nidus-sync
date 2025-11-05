@@ -58,6 +58,7 @@ func main() {
 	r.Use(sessionManager.LoadAndSave)
 
 	r.Get("/", getRoot)
+	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/report", getReport)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)

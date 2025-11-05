@@ -30,6 +30,9 @@ type Link struct {
 	Href  string
 	Title string
 }
+type ContentReportDiagnostic struct {
+	URL string
+}
 type ContentDashboard struct {
 	User User
 }
@@ -87,7 +90,10 @@ func htmlDashboard(w io.Writer, user *models.User) error {
 }
 
 func htmlReport(w io.Writer) error {
-	data := ContentPlaceholder{}
+	url := BaseURL + "/report/t78fd3"
+	data := ContentReportDiagnostic{
+		URL: url,
+	}
 	return report.ExecuteTemplate(w, data)
 }
 
