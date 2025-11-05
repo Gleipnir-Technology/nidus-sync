@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
@@ -37,16 +36,18 @@ func addUserSession(r *http.Request, user *models.User) {
 func getAuthenticatedUser(r *http.Request) (*models.User, error) {
 	//user_id := sessionManager.GetInt(r.Context(), "user_id")
 	user_id_str := sessionManager.GetString(r.Context(), "user_id")
-	user_id, err := strconv.Atoi(user_id_str)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to convert user_id to int: %v", err)
-	}
-	username := sessionManager.GetString(r.Context(), "username")
-	slog.Info("Current session info",
-		slog.Int("user_id", user_id),
-		slog.String("username", username))
-	if user_id > 0 && username != "" {
-		return models.FindUser(r.Context(), PGInstance.BobDB, int32(user_id))
+	if user_id_str != "" {
+		user_id, err := strconv.Atoi(user_id_str)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert user_id to int: %v", err)
+		}
+		username := sessionManager.GetString(r.Context(), "username")
+		slog.Info("Current session info",
+			slog.Int("user_id", user_id),
+			slog.String("username", username))
+		if user_id > 0 && username != "" {
+			return models.FindUser(r.Context(), PGInstance.BobDB, int32(user_id))
+		}
 	}
 	// If we can't get the user from the session try to get from auth headers
 	username, password, ok := r.BasicAuth()
@@ -84,9 +85,9 @@ func signupUser(username string, name string, password string) (*models.User, er
 		return nil, fmt.Errorf("Cannot signup user: %v", err)
 	}
 	setter := models.UserSetter{
-		DisplayName: omitnull.From(name),
-		PasswordHash: omitnull.From(passwordHash),
-		PasswordHashType: omitnull.From(enums.HashtypeBcrypt14),
+		DisplayName: omit.From(name),
+		PasswordHash: omit.From(passwordHash),
+		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
 		Username: omit.From(username),
 	}
 	u, err := models.Users.Insert(&setter).One(context.TODO(), PGInstance.BobDB)
@@ -123,18 +124,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 		return nil, InvalidUsername{}
 	case 1:
 		row := result[0]
-		hash, err := row.PasswordHash.Value()
-		if err != nil {
-			return nil, err
-		}
-		if hash == nil {
-			return nil, errors.New("Hash is nil")
-		}
-		 hashStr, ok := hash.(string);
-		if !ok {
-			return nil, errors.New("Hash isn't a string")
-		}
-		if !validatePassword(password, hashStr) {
+		if !validatePassword(password, row.PasswordHash) {
 			return nil, InvalidCredentials{}
 		}
 		user := models.User{

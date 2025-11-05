@@ -29,16 +29,16 @@ import (
 type User struct {
 	ID                        int32                             `db:"id,pk" `
 	ArcgisAccessToken         null.Val[string]                  `db:"arcgis_access_token" `
-	ArcgisLicense             null.Val[enums.ArcgisLicenseType] `db:"arcgis_license" `
+	ArcgisLicense             null.Val[enums.Arcgislicensetype] `db:"arcgis_license" `
 	ArcgisRefreshToken        null.Val[string]                  `db:"arcgis_refresh_token" `
 	ArcgisRefreshTokenExpires null.Val[time.Time]               `db:"arcgis_refresh_token_expires" `
 	ArcgisRole                null.Val[string]                  `db:"arcgis_role" `
-	DisplayName               null.Val[string]                  `db:"display_name" `
+	DisplayName               string                            `db:"display_name" `
 	Email                     null.Val[string]                  `db:"email" `
 	OrganizationID            null.Val[int32]                   `db:"organization_id" `
 	Username                  string                            `db:"username" `
-	PasswordHashType          null.Val[enums.Hashtype]          `db:"password_hash_type" `
-	PasswordHash              null.Val[string]                  `db:"password_hash" `
+	PasswordHashType          enums.Hashtype                    `db:"password_hash_type" `
+	PasswordHash              string                            `db:"password_hash" `
 
 	R userR `db:"-" `
 }
@@ -110,16 +110,16 @@ func (userColumns) AliasedAs(alias string) userColumns {
 type UserSetter struct {
 	ID                        omit.Val[int32]                       `db:"id,pk" `
 	ArcgisAccessToken         omitnull.Val[string]                  `db:"arcgis_access_token" `
-	ArcgisLicense             omitnull.Val[enums.ArcgisLicenseType] `db:"arcgis_license" `
+	ArcgisLicense             omitnull.Val[enums.Arcgislicensetype] `db:"arcgis_license" `
 	ArcgisRefreshToken        omitnull.Val[string]                  `db:"arcgis_refresh_token" `
 	ArcgisRefreshTokenExpires omitnull.Val[time.Time]               `db:"arcgis_refresh_token_expires" `
 	ArcgisRole                omitnull.Val[string]                  `db:"arcgis_role" `
-	DisplayName               omitnull.Val[string]                  `db:"display_name" `
+	DisplayName               omit.Val[string]                      `db:"display_name" `
 	Email                     omitnull.Val[string]                  `db:"email" `
 	OrganizationID            omitnull.Val[int32]                   `db:"organization_id" `
 	Username                  omit.Val[string]                      `db:"username" `
-	PasswordHashType          omitnull.Val[enums.Hashtype]          `db:"password_hash_type" `
-	PasswordHash              omitnull.Val[string]                  `db:"password_hash" `
+	PasswordHashType          omit.Val[enums.Hashtype]              `db:"password_hash_type" `
+	PasswordHash              omit.Val[string]                      `db:"password_hash" `
 }
 
 func (s UserSetter) SetColumns() []string {
@@ -142,7 +142,7 @@ func (s UserSetter) SetColumns() []string {
 	if !s.ArcgisRole.IsUnset() {
 		vals = append(vals, "arcgis_role")
 	}
-	if !s.DisplayName.IsUnset() {
+	if s.DisplayName.IsValue() {
 		vals = append(vals, "display_name")
 	}
 	if !s.Email.IsUnset() {
@@ -154,10 +154,10 @@ func (s UserSetter) SetColumns() []string {
 	if s.Username.IsValue() {
 		vals = append(vals, "username")
 	}
-	if !s.PasswordHashType.IsUnset() {
+	if s.PasswordHashType.IsValue() {
 		vals = append(vals, "password_hash_type")
 	}
-	if !s.PasswordHash.IsUnset() {
+	if s.PasswordHash.IsValue() {
 		vals = append(vals, "password_hash")
 	}
 	return vals
@@ -182,8 +182,8 @@ func (s UserSetter) Overwrite(t *User) {
 	if !s.ArcgisRole.IsUnset() {
 		t.ArcgisRole = s.ArcgisRole.MustGetNull()
 	}
-	if !s.DisplayName.IsUnset() {
-		t.DisplayName = s.DisplayName.MustGetNull()
+	if s.DisplayName.IsValue() {
+		t.DisplayName = s.DisplayName.MustGet()
 	}
 	if !s.Email.IsUnset() {
 		t.Email = s.Email.MustGetNull()
@@ -194,11 +194,11 @@ func (s UserSetter) Overwrite(t *User) {
 	if s.Username.IsValue() {
 		t.Username = s.Username.MustGet()
 	}
-	if !s.PasswordHashType.IsUnset() {
-		t.PasswordHashType = s.PasswordHashType.MustGetNull()
+	if s.PasswordHashType.IsValue() {
+		t.PasswordHashType = s.PasswordHashType.MustGet()
 	}
-	if !s.PasswordHash.IsUnset() {
-		t.PasswordHash = s.PasswordHash.MustGetNull()
+	if s.PasswordHash.IsValue() {
+		t.PasswordHash = s.PasswordHash.MustGet()
 	}
 }
 
@@ -245,8 +245,8 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.DisplayName.IsUnset() {
-			vals[6] = psql.Arg(s.DisplayName.MustGetNull())
+		if s.DisplayName.IsValue() {
+			vals[6] = psql.Arg(s.DisplayName.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -269,14 +269,14 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.PasswordHashType.IsUnset() {
-			vals[10] = psql.Arg(s.PasswordHashType.MustGetNull())
+		if s.PasswordHashType.IsValue() {
+			vals[10] = psql.Arg(s.PasswordHashType.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.PasswordHash.IsUnset() {
-			vals[11] = psql.Arg(s.PasswordHash.MustGetNull())
+		if s.PasswordHash.IsValue() {
+			vals[11] = psql.Arg(s.PasswordHash.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -334,7 +334,7 @@ func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.DisplayName.IsUnset() {
+	if s.DisplayName.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "display_name")...),
 			psql.Arg(s.DisplayName),
@@ -362,14 +362,14 @@ func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.PasswordHashType.IsUnset() {
+	if s.PasswordHashType.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "password_hash_type")...),
 			psql.Arg(s.PasswordHashType),
 		}})
 	}
 
-	if !s.PasswordHash.IsUnset() {
+	if s.PasswordHash.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "password_hash")...),
 			psql.Arg(s.PasswordHash),
@@ -677,16 +677,16 @@ func (user0 *User) AttachOrganization(ctx context.Context, exec bob.Executor, or
 type userWhere[Q psql.Filterable] struct {
 	ID                        psql.WhereMod[Q, int32]
 	ArcgisAccessToken         psql.WhereNullMod[Q, string]
-	ArcgisLicense             psql.WhereNullMod[Q, enums.ArcgisLicenseType]
+	ArcgisLicense             psql.WhereNullMod[Q, enums.Arcgislicensetype]
 	ArcgisRefreshToken        psql.WhereNullMod[Q, string]
 	ArcgisRefreshTokenExpires psql.WhereNullMod[Q, time.Time]
 	ArcgisRole                psql.WhereNullMod[Q, string]
-	DisplayName               psql.WhereNullMod[Q, string]
+	DisplayName               psql.WhereMod[Q, string]
 	Email                     psql.WhereNullMod[Q, string]
 	OrganizationID            psql.WhereNullMod[Q, int32]
 	Username                  psql.WhereMod[Q, string]
-	PasswordHashType          psql.WhereNullMod[Q, enums.Hashtype]
-	PasswordHash              psql.WhereNullMod[Q, string]
+	PasswordHashType          psql.WhereMod[Q, enums.Hashtype]
+	PasswordHash              psql.WhereMod[Q, string]
 }
 
 func (userWhere[Q]) AliasedAs(alias string) userWhere[Q] {
@@ -697,16 +697,16 @@ func buildUserWhere[Q psql.Filterable](cols userColumns) userWhere[Q] {
 	return userWhere[Q]{
 		ID:                        psql.Where[Q, int32](cols.ID),
 		ArcgisAccessToken:         psql.WhereNull[Q, string](cols.ArcgisAccessToken),
-		ArcgisLicense:             psql.WhereNull[Q, enums.ArcgisLicenseType](cols.ArcgisLicense),
+		ArcgisLicense:             psql.WhereNull[Q, enums.Arcgislicensetype](cols.ArcgisLicense),
 		ArcgisRefreshToken:        psql.WhereNull[Q, string](cols.ArcgisRefreshToken),
 		ArcgisRefreshTokenExpires: psql.WhereNull[Q, time.Time](cols.ArcgisRefreshTokenExpires),
 		ArcgisRole:                psql.WhereNull[Q, string](cols.ArcgisRole),
-		DisplayName:               psql.WhereNull[Q, string](cols.DisplayName),
+		DisplayName:               psql.Where[Q, string](cols.DisplayName),
 		Email:                     psql.WhereNull[Q, string](cols.Email),
 		OrganizationID:            psql.WhereNull[Q, int32](cols.OrganizationID),
 		Username:                  psql.Where[Q, string](cols.Username),
-		PasswordHashType:          psql.WhereNull[Q, enums.Hashtype](cols.PasswordHashType),
-		PasswordHash:              psql.WhereNull[Q, string](cols.PasswordHash),
+		PasswordHashType:          psql.Where[Q, enums.Hashtype](cols.PasswordHashType),
+		PasswordHash:              psql.Where[Q, string](cols.PasswordHash),
 	}
 }
 

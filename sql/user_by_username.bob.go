@@ -72,16 +72,16 @@ func UserByUsername(Username string) *UserByUsernameQuery {
 type UserByUsernameRow = struct {
 	ID                        int32                             `db:"id"`
 	ArcgisAccessToken         null.Val[string]                  `db:"arcgis_access_token"`
-	ArcgisLicense             null.Val[enums.ArcgisLicenseType] `db:"arcgis_license"`
+	ArcgisLicense             null.Val[enums.Arcgislicensetype] `db:"arcgis_license"`
 	ArcgisRefreshToken        null.Val[string]                  `db:"arcgis_refresh_token"`
 	ArcgisRefreshTokenExpires null.Val[time.Time]               `db:"arcgis_refresh_token_expires"`
 	ArcgisRole                null.Val[string]                  `db:"arcgis_role"`
-	DisplayName               null.Val[string]                  `db:"display_name"`
+	DisplayName               string                            `db:"display_name"`
 	Email                     null.Val[string]                  `db:"email"`
 	OrganizationID            null.Val[int32]                   `db:"organization_id"`
 	Username                  string                            `db:"username"`
-	PasswordHashType          null.Val[enums.Hashtype]          `db:"password_hash_type"`
-	PasswordHash              null.Val[string]                  `db:"password_hash"`
+	PasswordHashType          enums.Hashtype                    `db:"password_hash_type"`
+	PasswordHash              string                            `db:"password_hash"`
 }
 
 type userByUsernameTransformer = bob.SliceTransformer[UserByUsernameRow, []UserByUsernameRow]

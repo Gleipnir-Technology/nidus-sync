@@ -26,11 +26,11 @@ var _ bob.HookableType = &Session{}
 // Make sure the type User runs hooks after queries
 var _ bob.HookableType = &User{}
 
-// Make sure the type enums.ArcgisLicenseType satisfies database/sql.Scanner
-var _ sql.Scanner = (*enums.ArcgisLicenseType)(nil)
+// Make sure the type enums.Arcgislicensetype satisfies database/sql.Scanner
+var _ sql.Scanner = (*enums.Arcgislicensetype)(nil)
 
-// Make sure the type enums.ArcgisLicenseType satisfies database/sql/driver.Valuer
-var _ driver.Valuer = *new(enums.ArcgisLicenseType)
+// Make sure the type enums.Arcgislicensetype satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(enums.Arcgislicensetype)
 
 // Make sure the type enums.Hashtype satisfies database/sql.Scanner
 var _ sql.Scanner = (*enums.Hashtype)(nil)

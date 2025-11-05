@@ -40,16 +40,16 @@ func (mods UserModSlice) Apply(ctx context.Context, n *UserTemplate) {
 type UserTemplate struct {
 	ID                        func() int32
 	ArcgisAccessToken         func() null.Val[string]
-	ArcgisLicense             func() null.Val[enums.ArcgisLicenseType]
+	ArcgisLicense             func() null.Val[enums.Arcgislicensetype]
 	ArcgisRefreshToken        func() null.Val[string]
 	ArcgisRefreshTokenExpires func() null.Val[time.Time]
 	ArcgisRole                func() null.Val[string]
-	DisplayName               func() null.Val[string]
+	DisplayName               func() string
 	Email                     func() null.Val[string]
 	OrganizationID            func() null.Val[int32]
 	Username                  func() string
-	PasswordHashType          func() null.Val[enums.Hashtype]
-	PasswordHash              func() null.Val[string]
+	PasswordHashType          func() enums.Hashtype
+	PasswordHash              func() string
 
 	r userR
 	f *Factory
@@ -114,7 +114,7 @@ func (o UserTemplate) BuildSetter() *models.UserSetter {
 	}
 	if o.DisplayName != nil {
 		val := o.DisplayName()
-		m.DisplayName = omitnull.FromNull(val)
+		m.DisplayName = omit.From(val)
 	}
 	if o.Email != nil {
 		val := o.Email()
@@ -130,11 +130,11 @@ func (o UserTemplate) BuildSetter() *models.UserSetter {
 	}
 	if o.PasswordHashType != nil {
 		val := o.PasswordHashType()
-		m.PasswordHashType = omitnull.FromNull(val)
+		m.PasswordHashType = omit.From(val)
 	}
 	if o.PasswordHash != nil {
 		val := o.PasswordHash()
-		m.PasswordHash = omitnull.FromNull(val)
+		m.PasswordHash = omit.From(val)
 	}
 
 	return m
@@ -214,9 +214,21 @@ func (o UserTemplate) BuildMany(number int) models.UserSlice {
 }
 
 func ensureCreatableUser(m *models.UserSetter) {
+	if !(m.DisplayName.IsValue()) {
+		val := random_string(nil, "200")
+		m.DisplayName = omit.From(val)
+	}
 	if !(m.Username.IsValue()) {
 		val := random_string(nil)
 		m.Username = omit.From(val)
+	}
+	if !(m.PasswordHashType.IsValue()) {
+		val := random_enums_Hashtype(nil)
+		m.PasswordHashType = omit.From(val)
+	}
+	if !(m.PasswordHash.IsValue()) {
+		val := random_string(nil)
+		m.PasswordHash = omit.From(val)
 	}
 }
 
@@ -437,14 +449,14 @@ func (m userMods) RandomArcgisAccessTokenNotNull(f *faker.Faker) UserMod {
 }
 
 // Set the model columns to this value
-func (m userMods) ArcgisLicense(val null.Val[enums.ArcgisLicenseType]) UserMod {
+func (m userMods) ArcgisLicense(val null.Val[enums.Arcgislicensetype]) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.ArcgisLicense = func() null.Val[enums.ArcgisLicenseType] { return val }
+		o.ArcgisLicense = func() null.Val[enums.Arcgislicensetype] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m userMods) ArcgisLicenseFunc(f func() null.Val[enums.ArcgisLicenseType]) UserMod {
+func (m userMods) ArcgisLicenseFunc(f func() null.Val[enums.Arcgislicensetype]) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.ArcgisLicense = f
 	})
@@ -462,12 +474,12 @@ func (m userMods) UnsetArcgisLicense() UserMod {
 // The generated value is sometimes null
 func (m userMods) RandomArcgisLicense(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.ArcgisLicense = func() null.Val[enums.ArcgisLicenseType] {
+		o.ArcgisLicense = func() null.Val[enums.Arcgislicensetype] {
 			if f == nil {
 				f = &defaultFaker
 			}
 
-			val := random_enums_ArcgisLicenseType(f)
+			val := random_enums_Arcgislicensetype(f)
 			return null.From(val)
 		}
 	})
@@ -478,12 +490,12 @@ func (m userMods) RandomArcgisLicense(f *faker.Faker) UserMod {
 // The generated value is never null
 func (m userMods) RandomArcgisLicenseNotNull(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.ArcgisLicense = func() null.Val[enums.ArcgisLicenseType] {
+		o.ArcgisLicense = func() null.Val[enums.Arcgislicensetype] {
 			if f == nil {
 				f = &defaultFaker
 			}
 
-			val := random_enums_ArcgisLicenseType(f)
+			val := random_enums_Arcgislicensetype(f)
 			return null.From(val)
 		}
 	})
@@ -649,14 +661,14 @@ func (m userMods) RandomArcgisRoleNotNull(f *faker.Faker) UserMod {
 }
 
 // Set the model columns to this value
-func (m userMods) DisplayName(val null.Val[string]) UserMod {
+func (m userMods) DisplayName(val string) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.DisplayName = func() null.Val[string] { return val }
+		o.DisplayName = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m userMods) DisplayNameFunc(f func() null.Val[string]) UserMod {
+func (m userMods) DisplayNameFunc(f func() string) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.DisplayName = f
 	})
@@ -671,32 +683,10 @@ func (m userMods) UnsetDisplayName() UserMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m userMods) RandomDisplayName(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.DisplayName = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f, "200")
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m userMods) RandomDisplayNameNotNull(f *faker.Faker) UserMod {
-	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.DisplayName = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f, "200")
-			return null.From(val)
+		o.DisplayName = func() string {
+			return random_string(f, "200")
 		}
 	})
 }
@@ -839,14 +829,14 @@ func (m userMods) RandomUsername(f *faker.Faker) UserMod {
 }
 
 // Set the model columns to this value
-func (m userMods) PasswordHashType(val null.Val[enums.Hashtype]) UserMod {
+func (m userMods) PasswordHashType(val enums.Hashtype) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHashType = func() null.Val[enums.Hashtype] { return val }
+		o.PasswordHashType = func() enums.Hashtype { return val }
 	})
 }
 
 // Set the Column from the function
-func (m userMods) PasswordHashTypeFunc(f func() null.Val[enums.Hashtype]) UserMod {
+func (m userMods) PasswordHashTypeFunc(f func() enums.Hashtype) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.PasswordHashType = f
 	})
@@ -861,45 +851,23 @@ func (m userMods) UnsetPasswordHashType() UserMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m userMods) RandomPasswordHashType(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHashType = func() null.Val[enums.Hashtype] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_enums_Hashtype(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m userMods) RandomPasswordHashTypeNotNull(f *faker.Faker) UserMod {
-	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHashType = func() null.Val[enums.Hashtype] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_enums_Hashtype(f)
-			return null.From(val)
+		o.PasswordHashType = func() enums.Hashtype {
+			return random_enums_Hashtype(f)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m userMods) PasswordHash(val null.Val[string]) UserMod {
+func (m userMods) PasswordHash(val string) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHash = func() null.Val[string] { return val }
+		o.PasswordHash = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m userMods) PasswordHashFunc(f func() null.Val[string]) UserMod {
+func (m userMods) PasswordHashFunc(f func() string) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.PasswordHash = f
 	})
@@ -914,32 +882,10 @@ func (m userMods) UnsetPasswordHash() UserMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m userMods) RandomPasswordHash(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHash = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m userMods) RandomPasswordHashNotNull(f *faker.Faker) UserMod {
-	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.PasswordHash = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.PasswordHash = func() string {
+			return random_string(f)
 		}
 	})
 }

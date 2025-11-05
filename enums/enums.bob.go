@@ -8,65 +8,65 @@ import (
 	"fmt"
 )
 
-// Enum values for ArcgisLicenseType
+// Enum values for Arcgislicensetype
 const (
-	ArcgisLicenseTypeAdvancedut             ArcgisLicenseType = "advancedUT"
-	ArcgisLicenseTypeBasicut                ArcgisLicenseType = "basicUT"
-	ArcgisLicenseTypeCreatorut              ArcgisLicenseType = "creatorUT"
-	ArcgisLicenseTypeEditorut               ArcgisLicenseType = "editorUT"
-	ArcgisLicenseTypeFieldworkerut          ArcgisLicenseType = "fieldWorkerUT"
-	ArcgisLicenseTypeGisprofessionaladvut   ArcgisLicenseType = "GISProfessionalAdvUT"
-	ArcgisLicenseTypeGisprofessionalbasicut ArcgisLicenseType = "GISProfessionalBasicUT"
-	ArcgisLicenseTypeGisprofessionalstdut   ArcgisLicenseType = "GISProfessionalStdUT"
-	ArcgisLicenseTypeIndoorsuserut          ArcgisLicenseType = "IndoorsUserUT"
-	ArcgisLicenseTypeInsightsanalystut      ArcgisLicenseType = "insightsAnalystUT"
-	ArcgisLicenseTypeLiteut                 ArcgisLicenseType = "liteUT"
-	ArcgisLicenseTypeStandardut             ArcgisLicenseType = "standardUT"
-	ArcgisLicenseTypeStorytellerut          ArcgisLicenseType = "storytellerUT"
-	ArcgisLicenseTypeViewerut               ArcgisLicenseType = "viewerUT"
+	ArcgislicensetypeAdvancedut             Arcgislicensetype = "advancedUT"
+	ArcgislicensetypeBasicut                Arcgislicensetype = "basicUT"
+	ArcgislicensetypeCreatorut              Arcgislicensetype = "creatorUT"
+	ArcgislicensetypeEditorut               Arcgislicensetype = "editorUT"
+	ArcgislicensetypeFieldworkerut          Arcgislicensetype = "fieldWorkerUT"
+	ArcgislicensetypeGisprofessionaladvut   Arcgislicensetype = "GISProfessionalAdvUT"
+	ArcgislicensetypeGisprofessionalbasicut Arcgislicensetype = "GISProfessionalBasicUT"
+	ArcgislicensetypeGisprofessionalstdut   Arcgislicensetype = "GISProfessionalStdUT"
+	ArcgislicensetypeIndoorsuserut          Arcgislicensetype = "IndoorsUserUT"
+	ArcgislicensetypeInsightsanalystut      Arcgislicensetype = "insightsAnalystUT"
+	ArcgislicensetypeLiteut                 Arcgislicensetype = "liteUT"
+	ArcgislicensetypeStandardut             Arcgislicensetype = "standardUT"
+	ArcgislicensetypeStorytellerut          Arcgislicensetype = "storytellerUT"
+	ArcgislicensetypeViewerut               Arcgislicensetype = "viewerUT"
 )
 
-func AllArcgisLicenseType() []ArcgisLicenseType {
-	return []ArcgisLicenseType{
-		ArcgisLicenseTypeAdvancedut,
-		ArcgisLicenseTypeBasicut,
-		ArcgisLicenseTypeCreatorut,
-		ArcgisLicenseTypeEditorut,
-		ArcgisLicenseTypeFieldworkerut,
-		ArcgisLicenseTypeGisprofessionaladvut,
-		ArcgisLicenseTypeGisprofessionalbasicut,
-		ArcgisLicenseTypeGisprofessionalstdut,
-		ArcgisLicenseTypeIndoorsuserut,
-		ArcgisLicenseTypeInsightsanalystut,
-		ArcgisLicenseTypeLiteut,
-		ArcgisLicenseTypeStandardut,
-		ArcgisLicenseTypeStorytellerut,
-		ArcgisLicenseTypeViewerut,
+func AllArcgislicensetype() []Arcgislicensetype {
+	return []Arcgislicensetype{
+		ArcgislicensetypeAdvancedut,
+		ArcgislicensetypeBasicut,
+		ArcgislicensetypeCreatorut,
+		ArcgislicensetypeEditorut,
+		ArcgislicensetypeFieldworkerut,
+		ArcgislicensetypeGisprofessionaladvut,
+		ArcgislicensetypeGisprofessionalbasicut,
+		ArcgislicensetypeGisprofessionalstdut,
+		ArcgislicensetypeIndoorsuserut,
+		ArcgislicensetypeInsightsanalystut,
+		ArcgislicensetypeLiteut,
+		ArcgislicensetypeStandardut,
+		ArcgislicensetypeStorytellerut,
+		ArcgislicensetypeViewerut,
 	}
 }
 
-type ArcgisLicenseType string
+type Arcgislicensetype string
 
-func (e ArcgisLicenseType) String() string {
+func (e Arcgislicensetype) String() string {
 	return string(e)
 }
 
-func (e ArcgisLicenseType) Valid() bool {
+func (e Arcgislicensetype) Valid() bool {
 	switch e {
-	case ArcgisLicenseTypeAdvancedut,
-		ArcgisLicenseTypeBasicut,
-		ArcgisLicenseTypeCreatorut,
-		ArcgisLicenseTypeEditorut,
-		ArcgisLicenseTypeFieldworkerut,
-		ArcgisLicenseTypeGisprofessionaladvut,
-		ArcgisLicenseTypeGisprofessionalbasicut,
-		ArcgisLicenseTypeGisprofessionalstdut,
-		ArcgisLicenseTypeIndoorsuserut,
-		ArcgisLicenseTypeInsightsanalystut,
-		ArcgisLicenseTypeLiteut,
-		ArcgisLicenseTypeStandardut,
-		ArcgisLicenseTypeStorytellerut,
-		ArcgisLicenseTypeViewerut:
+	case ArcgislicensetypeAdvancedut,
+		ArcgislicensetypeBasicut,
+		ArcgislicensetypeCreatorut,
+		ArcgislicensetypeEditorut,
+		ArcgislicensetypeFieldworkerut,
+		ArcgislicensetypeGisprofessionaladvut,
+		ArcgislicensetypeGisprofessionalbasicut,
+		ArcgislicensetypeGisprofessionalstdut,
+		ArcgislicensetypeIndoorsuserut,
+		ArcgislicensetypeInsightsanalystut,
+		ArcgislicensetypeLiteut,
+		ArcgislicensetypeStandardut,
+		ArcgislicensetypeStorytellerut,
+		ArcgislicensetypeViewerut:
 		return true
 	default:
 		return false
@@ -74,44 +74,44 @@ func (e ArcgisLicenseType) Valid() bool {
 }
 
 // useful when testing in other packages
-func (e ArcgisLicenseType) All() []ArcgisLicenseType {
-	return AllArcgisLicenseType()
+func (e Arcgislicensetype) All() []Arcgislicensetype {
+	return AllArcgislicensetype()
 }
 
-func (e ArcgisLicenseType) MarshalText() ([]byte, error) {
+func (e Arcgislicensetype) MarshalText() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *ArcgisLicenseType) UnmarshalText(text []byte) error {
+func (e *Arcgislicensetype) UnmarshalText(text []byte) error {
 	return e.Scan(text)
 }
 
-func (e ArcgisLicenseType) MarshalBinary() ([]byte, error) {
+func (e Arcgislicensetype) MarshalBinary() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *ArcgisLicenseType) UnmarshalBinary(data []byte) error {
+func (e *Arcgislicensetype) UnmarshalBinary(data []byte) error {
 	return e.Scan(data)
 }
 
-func (e ArcgisLicenseType) Value() (driver.Value, error) {
+func (e Arcgislicensetype) Value() (driver.Value, error) {
 	return string(e), nil
 }
 
-func (e *ArcgisLicenseType) Scan(value any) error {
+func (e *Arcgislicensetype) Scan(value any) error {
 	switch x := value.(type) {
 	case string:
-		*e = ArcgisLicenseType(x)
+		*e = Arcgislicensetype(x)
 	case []byte:
-		*e = ArcgisLicenseType(x)
+		*e = Arcgislicensetype(x)
 	case nil:
-		return fmt.Errorf("cannot nil into ArcgisLicenseType")
+		return fmt.Errorf("cannot nil into Arcgislicensetype")
 	default:
 		return fmt.Errorf("cannot scan type %T: %v", value, value)
 	}
 
 	if !e.Valid() {
-		return fmt.Errorf("invalid ArcgisLicenseType value: %s", *e)
+		return fmt.Errorf("invalid Arcgislicensetype value: %s", *e)
 	}
 
 	return nil

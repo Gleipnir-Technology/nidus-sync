@@ -28,12 +28,12 @@ func formatQuery(s string) (string, error) {
 
 var defaultFaker = faker.New()
 
-func random_enums_ArcgisLicenseType(f *faker.Faker, limits ...string) enums.ArcgisLicenseType {
+func random_enums_Arcgislicensetype(f *faker.Faker, limits ...string) enums.Arcgislicensetype {
 	if f == nil {
 		f = &defaultFaker
 	}
 
-	var e enums.ArcgisLicenseType
+	var e enums.Arcgislicensetype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

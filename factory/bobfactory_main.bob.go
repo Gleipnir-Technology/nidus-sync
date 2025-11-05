@@ -127,16 +127,16 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 
 	o.ID = func() int32 { return m.ID }
 	o.ArcgisAccessToken = func() null.Val[string] { return m.ArcgisAccessToken }
-	o.ArcgisLicense = func() null.Val[enums.ArcgisLicenseType] { return m.ArcgisLicense }
+	o.ArcgisLicense = func() null.Val[enums.Arcgislicensetype] { return m.ArcgisLicense }
 	o.ArcgisRefreshToken = func() null.Val[string] { return m.ArcgisRefreshToken }
 	o.ArcgisRefreshTokenExpires = func() null.Val[time.Time] { return m.ArcgisRefreshTokenExpires }
 	o.ArcgisRole = func() null.Val[string] { return m.ArcgisRole }
-	o.DisplayName = func() null.Val[string] { return m.DisplayName }
+	o.DisplayName = func() string { return m.DisplayName }
 	o.Email = func() null.Val[string] { return m.Email }
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 	o.Username = func() string { return m.Username }
-	o.PasswordHashType = func() null.Val[enums.Hashtype] { return m.PasswordHashType }
-	o.PasswordHash = func() null.Val[string] { return m.PasswordHash }
+	o.PasswordHashType = func() enums.Hashtype { return m.PasswordHashType }
+	o.PasswordHash = func() string { return m.PasswordHash }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

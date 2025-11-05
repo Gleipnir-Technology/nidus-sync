@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TYPE arcgis_license_type AS ENUM (
+CREATE TYPE ArcgisLicenseType AS ENUM (
 	'advancedUT',
 	'basicUT',
 	'creatorUT',
@@ -23,11 +23,11 @@ CREATE TABLE organization (
 CREATE TABLE user_ (
 	id SERIAL PRIMARY KEY,
 	arcgis_access_token TEXT,
-	arcgis_license arcgis_license_type,
+	arcgis_license ArcgisLicenseType,
 	arcgis_refresh_token TEXT,
 	arcgis_refresh_token_expires TIMESTAMP,
 	arcgis_role TEXT,
-        display_name VARCHAR(200),
+        display_name VARCHAR(200) NOT NULL,
         email TEXT,
 	organization_id INTEGER REFERENCES organization (id),
 	username TEXT NOT NULL
