@@ -32,6 +32,16 @@ func random_enums_ArcgisLicenseType(f *faker.Faker, limits ...string) enums.Arcg
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Hashtype(f *faker.Faker, limits ...string) enums.Hashtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Hashtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_int32(f *faker.Faker, limits ...string) int32 {
 	if f == nil {
 		f = &defaultFaker

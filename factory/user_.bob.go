@@ -48,6 +48,8 @@ type UserTemplate struct {
 	Email                     func() null.Val[string]
 	OrganizationID            func() null.Val[int32]
 	Username                  func() string
+	PasswordHashType          func() null.Val[enums.Hashtype]
+	PasswordHash              func() null.Val[string]
 
 	r userR
 	f *Factory
@@ -126,6 +128,14 @@ func (o UserTemplate) BuildSetter() *models.UserSetter {
 		val := o.Username()
 		m.Username = omit.From(val)
 	}
+	if o.PasswordHashType != nil {
+		val := o.PasswordHashType()
+		m.PasswordHashType = omitnull.FromNull(val)
+	}
+	if o.PasswordHash != nil {
+		val := o.PasswordHash()
+		m.PasswordHash = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -177,6 +187,12 @@ func (o UserTemplate) Build() *models.User {
 	}
 	if o.Username != nil {
 		m.Username = o.Username()
+	}
+	if o.PasswordHashType != nil {
+		m.PasswordHashType = o.PasswordHashType()
+	}
+	if o.PasswordHash != nil {
+		m.PasswordHash = o.PasswordHash()
 	}
 
 	o.setModelRels(m)
@@ -331,6 +347,8 @@ func (m userMods) RandomizeAllColumns(f *faker.Faker) UserMod {
 		UserMods.RandomEmail(f),
 		UserMods.RandomOrganizationID(f),
 		UserMods.RandomUsername(f),
+		UserMods.RandomPasswordHashType(f),
+		UserMods.RandomPasswordHash(f),
 	}
 }
 
@@ -816,6 +834,112 @@ func (m userMods) RandomUsername(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.Username = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m userMods) PasswordHashType(val null.Val[enums.Hashtype]) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHashType = func() null.Val[enums.Hashtype] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m userMods) PasswordHashTypeFunc(f func() null.Val[enums.Hashtype]) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHashType = f
+	})
+}
+
+// Clear any values for the column
+func (m userMods) UnsetPasswordHashType() UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHashType = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m userMods) RandomPasswordHashType(f *faker.Faker) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHashType = func() null.Val[enums.Hashtype] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_enums_Hashtype(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m userMods) RandomPasswordHashTypeNotNull(f *faker.Faker) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHashType = func() null.Val[enums.Hashtype] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_enums_Hashtype(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m userMods) PasswordHash(val null.Val[string]) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHash = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m userMods) PasswordHashFunc(f func() null.Val[string]) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHash = f
+	})
+}
+
+// Clear any values for the column
+func (m userMods) UnsetPasswordHash() UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHash = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m userMods) RandomPasswordHash(f *faker.Faker) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHash = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m userMods) RandomPasswordHashNotNull(f *faker.Faker) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.PasswordHash = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

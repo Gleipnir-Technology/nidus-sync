@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 )
 func getFavicon(w http.ResponseWriter, r *http.Request) {
@@ -23,19 +23,37 @@ func getSignup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func respondError(w http.ResponseWriter, m string, e error, s int) {
+	slog.Error(m, slog.Int("status", s), slog.String("err", e.Error()))
+	http.Error(w, m, http.StatusBadRequest)
+}
+
 func postSignup(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		log.Printf("Error parsing form: %v", err)
-		http.Error(w, "Failed to process form", http.StatusBadRequest)
+		respondError(w, "Could not parse form", err, http.StatusBadRequest)
 		return
 	}
 	
-	email := r.FormValue("email")
+	username := r.FormValue("username")
 	name := r.FormValue("name")
+	password := r.FormValue("password")
 	terms := r.FormValue("terms")
 	
-	log.Printf("Signup - Email: %s, Name: %s, Terms: %s", email, name, terms)
+	slog.Info("Signup", 
+		slog.String("username", username),
+		slog.String("name", name))
 	
+	if terms != "on" {
+		slog.Error("Terms not agreed", slog.String("terms", terms))
+		http.Error(w, "You must agree to the terms to register", http.StatusBadRequest)
+		return
+	}
+
+	if err := signupUser(username, name, password); err != nil {
+		respondError(w, "Failed to signup user", err, http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Form received"))
 }

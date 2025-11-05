@@ -108,6 +108,8 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	o.Email = func() null.Val[string] { return m.Email }
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 	o.Username = func() string { return m.Username }
+	o.PasswordHashType = func() null.Val[enums.Hashtype] { return m.PasswordHashType }
+	o.PasswordHash = func() null.Val[string] { return m.PasswordHash }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

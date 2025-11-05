@@ -105,6 +105,24 @@ var Users = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		PasswordHashType: column{
+			Name:      "password_hash_type",
+			DBType:    "public.hashtype",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		PasswordHash: column{
+			Name:      "password_hash",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: userIndexes{
 		UserPkey: index{
@@ -156,11 +174,13 @@ type userColumns struct {
 	Email                     column
 	OrganizationID            column
 	Username                  column
+	PasswordHashType          column
+	PasswordHash              column
 }
 
 func (c userColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username,
+		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username, c.PasswordHashType, c.PasswordHash,
 	}
 }
 

@@ -37,6 +37,8 @@ type User struct {
 	Email                     null.Val[string]                  `db:"email" `
 	OrganizationID            null.Val[int32]                   `db:"organization_id" `
 	Username                  string                            `db:"username" `
+	PasswordHashType          null.Val[enums.Hashtype]          `db:"password_hash_type" `
+	PasswordHash              null.Val[string]                  `db:"password_hash" `
 
 	R userR `db:"-" `
 }
@@ -59,7 +61,7 @@ type userR struct {
 func buildUserColumns(alias string) userColumns {
 	return userColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "arcgis_access_token", "arcgis_license", "arcgis_refresh_token", "arcgis_refresh_token_expires", "arcgis_role", "display_name", "email", "organization_id", "username",
+			"id", "arcgis_access_token", "arcgis_license", "arcgis_refresh_token", "arcgis_refresh_token_expires", "arcgis_role", "display_name", "email", "organization_id", "username", "password_hash_type", "password_hash",
 		).WithParent("user_"),
 		tableAlias:                alias,
 		ID:                        psql.Quote(alias, "id"),
@@ -72,6 +74,8 @@ func buildUserColumns(alias string) userColumns {
 		Email:                     psql.Quote(alias, "email"),
 		OrganizationID:            psql.Quote(alias, "organization_id"),
 		Username:                  psql.Quote(alias, "username"),
+		PasswordHashType:          psql.Quote(alias, "password_hash_type"),
+		PasswordHash:              psql.Quote(alias, "password_hash"),
 	}
 }
 
@@ -88,6 +92,8 @@ type userColumns struct {
 	Email                     psql.Expression
 	OrganizationID            psql.Expression
 	Username                  psql.Expression
+	PasswordHashType          psql.Expression
+	PasswordHash              psql.Expression
 }
 
 func (c userColumns) Alias() string {
@@ -112,10 +118,12 @@ type UserSetter struct {
 	Email                     omitnull.Val[string]                  `db:"email" `
 	OrganizationID            omitnull.Val[int32]                   `db:"organization_id" `
 	Username                  omit.Val[string]                      `db:"username" `
+	PasswordHashType          omitnull.Val[enums.Hashtype]          `db:"password_hash_type" `
+	PasswordHash              omitnull.Val[string]                  `db:"password_hash" `
 }
 
 func (s UserSetter) SetColumns() []string {
-	vals := make([]string, 0, 10)
+	vals := make([]string, 0, 12)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -145,6 +153,12 @@ func (s UserSetter) SetColumns() []string {
 	}
 	if s.Username.IsValue() {
 		vals = append(vals, "username")
+	}
+	if !s.PasswordHashType.IsUnset() {
+		vals = append(vals, "password_hash_type")
+	}
+	if !s.PasswordHash.IsUnset() {
+		vals = append(vals, "password_hash")
 	}
 	return vals
 }
@@ -180,6 +194,12 @@ func (s UserSetter) Overwrite(t *User) {
 	if s.Username.IsValue() {
 		t.Username = s.Username.MustGet()
 	}
+	if !s.PasswordHashType.IsUnset() {
+		t.PasswordHashType = s.PasswordHashType.MustGetNull()
+	}
+	if !s.PasswordHash.IsUnset() {
+		t.PasswordHash = s.PasswordHash.MustGetNull()
+	}
 }
 
 func (s *UserSetter) Apply(q *dialect.InsertQuery) {
@@ -188,7 +208,7 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 10)
+		vals := make([]bob.Expression, 12)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -249,6 +269,18 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
+		if !s.PasswordHashType.IsUnset() {
+			vals[10] = psql.Arg(s.PasswordHashType.MustGetNull())
+		} else {
+			vals[10] = psql.Raw("DEFAULT")
+		}
+
+		if !s.PasswordHash.IsUnset() {
+			vals[11] = psql.Arg(s.PasswordHash.MustGetNull())
+		} else {
+			vals[11] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -258,7 +290,7 @@ func (s UserSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 10)
+	exprs := make([]bob.Expression, 0, 12)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -327,6 +359,20 @@ func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "username")...),
 			psql.Arg(s.Username),
+		}})
+	}
+
+	if !s.PasswordHashType.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "password_hash_type")...),
+			psql.Arg(s.PasswordHashType),
+		}})
+	}
+
+	if !s.PasswordHash.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "password_hash")...),
+			psql.Arg(s.PasswordHash),
 		}})
 	}
 
@@ -639,6 +685,8 @@ type userWhere[Q psql.Filterable] struct {
 	Email                     psql.WhereNullMod[Q, string]
 	OrganizationID            psql.WhereNullMod[Q, int32]
 	Username                  psql.WhereMod[Q, string]
+	PasswordHashType          psql.WhereNullMod[Q, enums.Hashtype]
+	PasswordHash              psql.WhereNullMod[Q, string]
 }
 
 func (userWhere[Q]) AliasedAs(alias string) userWhere[Q] {
@@ -657,6 +705,8 @@ func buildUserWhere[Q psql.Filterable](cols userColumns) userWhere[Q] {
 		Email:                     psql.WhereNull[Q, string](cols.Email),
 		OrganizationID:            psql.WhereNull[Q, int32](cols.OrganizationID),
 		Username:                  psql.Where[Q, string](cols.Username),
+		PasswordHashType:          psql.WhereNull[Q, enums.Hashtype](cols.PasswordHashType),
+		PasswordHash:              psql.WhereNull[Q, string](cols.PasswordHash),
 	}
 }
 
