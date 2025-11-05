@@ -54,6 +54,5 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Form received"))
+	http.Redirect(w, r, "/", http.StatusFound)
 }
