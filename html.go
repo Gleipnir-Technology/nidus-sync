@@ -37,6 +37,7 @@ type Link struct {
 }
 type ContentReportDetail struct {
 	NextURL string
+	UpdateURL string
 }
 type ContentReportDiagnostic struct {
 	URL string
@@ -125,6 +126,7 @@ func htmlReportDetail(w io.Writer, code string) error {
 	nextURL := BaseURL + "/report/" + code + "/evidence"
 	data := ContentReportDetail{
 		NextURL: nextURL,
+		UpdateURL: BaseURL + "/report/" + code + "/update",
 	}
 	return reportDetail.ExecuteTemplate(w, data)
 }
