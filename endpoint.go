@@ -12,6 +12,14 @@ func getFavicon(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/favicon.ico")
 }
 
+func getReport(w http.ResponseWriter, r *http.Request) {
+	//org := r.URL.Query().Get("org")
+	err := htmlReport(w)
+	if err != nil {
+		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
+	}
+}
+
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	user, err := getAuthenticatedUser(r)
 	if err != nil && !errors.Is(err, &NoCredentialsError{}) {

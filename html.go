@@ -15,6 +15,7 @@ import (
 
 var (
 	dashboard = newBuiltTemplate("dashboard", "authenticated")
+	report = newBuiltTemplate("report", "base")
 	signin      = newBuiltTemplate("signin", "base")
 	signup    = newBuiltTemplate("signup", "base")
 )
@@ -31,6 +32,8 @@ type Link struct {
 }
 type ContentDashboard struct {
 	User User
+}
+type ContentPlaceholder struct {
 }
 type ContentSignin struct {
 	InvalidCredentials bool
@@ -81,6 +84,11 @@ func htmlDashboard(w io.Writer, user *models.User) error {
 		},
 	}
 	return dashboard.ExecuteTemplate(w, data)
+}
+
+func htmlReport(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return report.ExecuteTemplate(w, data)
 }
 
 func htmlSignin(w io.Writer, errorCode string) error {

@@ -58,6 +58,7 @@ func main() {
 	r.Use(sessionManager.LoadAndSave)
 
 	r.Get("/", getRoot)
+	r.Get("/report", getReport)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
