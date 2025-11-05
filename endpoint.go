@@ -83,6 +83,14 @@ func getReport(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getReportConfirmation(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	err := htmlReportConfirmation(w, code)
+	if err != nil {
+		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
+	}
+}
+
 func getReportContribute(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	err := htmlReportContribute(w, code)

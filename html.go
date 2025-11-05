@@ -16,6 +16,7 @@ import (
 var (
 	dashboard = newBuiltTemplate("dashboard", "authenticated")
 	report = newBuiltTemplate("report", "base")
+	reportConfirmation = newBuiltTemplate("report-confirmation", "base")
 	reportContribute = newBuiltTemplate("report-contribute", "base")
 	reportDetail = newBuiltTemplate("report-detail", "base")
 	reportEvidence = newBuiltTemplate("report-evidence", "base")
@@ -102,6 +103,14 @@ func htmlReport(w io.Writer) error {
 		URL: url,
 	}
 	return report.ExecuteTemplate(w, data)
+}
+
+func htmlReportConfirmation(w io.Writer, code string) error {
+	url := BaseURL + "/report/" + code + "/history"
+	data := ContentReportDiagnostic{
+		URL: url,
+	}
+	return reportConfirmation.ExecuteTemplate(w, data)
 }
 
 func htmlReportContribute(w io.Writer, code string) error {

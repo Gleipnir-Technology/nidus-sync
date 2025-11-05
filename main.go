@@ -61,6 +61,7 @@ func main() {
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/report", getReport)
 	r.Get("/report/{code}", getReportDetail)
+	r.Get("/report/{code}/confirm", getReportConfirmation)
 	r.Get("/report/{code}/contribute", getReportContribute)
 	r.Get("/report/{code}/evidence", getReportEvidence)
 	r.Get("/report/{code}/schedule", getReportSchedule)
