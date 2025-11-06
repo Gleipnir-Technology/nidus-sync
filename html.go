@@ -15,6 +15,7 @@ import (
 
 var (
 	dashboard          = newBuiltTemplate("dashboard", "authenticated")
+	oauthPrompt        = newBuiltTemplate("oauth-prompt", "authenticated")
 	report             = newBuiltTemplate("report", "base")
 	reportConfirmation = newBuiltTemplate("report-confirmation", "base")
 	reportContribute   = newBuiltTemplate("report-contribute", "base")
@@ -97,6 +98,17 @@ func htmlDashboard(w io.Writer, user *models.User) error {
 		},
 	}
 	return dashboard.ExecuteTemplate(w, data)
+}
+
+func htmlOauthPrompt(w io.Writer, user *models.User) error {
+	data := ContentDashboard{
+		User: User{
+			DisplayName: user.DisplayName,
+			Initials:    extractInitials(user.DisplayName),
+			Username:    user.Username,
+		},
+	}
+	return oauthPrompt.ExecuteTemplate(w, data)
 }
 
 func htmlReport(w io.Writer) error {

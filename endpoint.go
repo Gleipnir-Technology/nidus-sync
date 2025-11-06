@@ -167,7 +167,16 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		errorCode := r.URL.Query().Get("error")
 		err = htmlSignin(w, errorCode)
 	} else {
-		err = htmlDashboard(w, user)
+		has, err := hasFieldseekerConnection(r.Context(), user)
+		if err != nil {
+			respondError(w, "Failed to check for ArcGIS connection", err, http.StatusInternalServerError)
+			return
+		}
+		if has {
+			err = htmlDashboard(w, user)
+		} else {
+			err = htmlOauthPrompt(w, user)
+		}
 	}
 	if err != nil {
 		respondError(w, "Failed to render root", err, http.StatusInternalServerError)

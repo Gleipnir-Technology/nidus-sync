@@ -17,6 +17,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
 )
 
@@ -155,6 +156,13 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	return nil
 }
 
+func hasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
+	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return false, err
+	}
+	return len(result) > 0, nil
+}
 func redirectURL() string {
 	return BaseURL + "/arcgis/oauth/callback"
 }
