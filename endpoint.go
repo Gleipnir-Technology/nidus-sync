@@ -88,7 +88,7 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 
 	// Set the appropriate content type
 	w.Header().Set("Content-Type", "image/png")
-	
+
 	// Generate PNG and write directly to the response writer
 	png, err := qr.PNG(size)
 	if err != nil {
@@ -190,14 +190,13 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Could not parse form", err, http.StatusBadRequest)
 		return
 	}
-	
+
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	
-	slog.Info("Signin", 
+
+	slog.Info("Signin",
 		slog.String("username", username),
 		slog.String("password", strings.Repeat("*", len(password))))
-	
 
 	_, err := signinUser(r, username, password)
 	if err != nil {
@@ -217,17 +216,17 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Could not parse form", err, http.StatusBadRequest)
 		return
 	}
-	
+
 	username := r.FormValue("username")
 	name := r.FormValue("name")
 	password := r.FormValue("password")
 	terms := r.FormValue("terms")
-	
-	slog.Info("Signup", 
+
+	slog.Info("Signup",
 		slog.String("username", username),
 		slog.String("name", name),
 		slog.String("password", strings.Repeat("*", len(password))))
-	
+
 	if terms != "on" {
 		slog.Error("Terms not agreed", slog.String("terms", terms))
 		http.Error(w, "You must agree to the terms to register", http.StatusBadRequest)

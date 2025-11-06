@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aarondl/opt/omit"
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/aarondl/opt/omit"
 )
 
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
@@ -65,8 +65,8 @@ func generateCodeVerifier() string {
 func getArcgisUserData(access_token string, expires time.Time, refresh_token string) {
 	client := arcgis.NewArcGIS(
 		arcgis.AuthenticatorOAuth{
-			AccessToken: access_token,
-			Expires: expires,
+			AccessToken:  access_token,
+			Expires:      expires,
 			RefreshToken: refresh_token,
 		},
 	)
@@ -78,7 +78,7 @@ func getArcgisUserData(access_token string, expires time.Time, refresh_token str
 	slog.Info("Got portals data",
 		slog.String("Username", portal.User.Username),
 		slog.String("ID", portal.ID))
-*/
+	*/
 	search, err := client.Search("Fieldseeker")
 	if err != nil {
 		slog.Error("Failed to get search FieldseekerGIS data", slog.String("err", err.Error()))
@@ -87,7 +87,7 @@ func getArcgisUserData(access_token string, expires time.Time, refresh_token str
 	for _, result := range search.Results {
 		slog.Info("Got result", slog.String("name", result.Name))
 		//if result.Name == "FieldseekerGIS" {
-			//slog.Info("Found Fieldseeker", slog.String("url", result.URL))
+		//slog.Info("Found Fieldseeker", slog.String("url", result.URL))
 		//}
 	}
 }
@@ -142,10 +142,10 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 
 	expires := futureUTCTimestamp(tokenResponse.ExpiresIn)
 	setter := models.OauthTokenSetter{
-		AccessToken: omit.From(tokenResponse.AccessToken),
-		Expires: omit.From(expires),
+		AccessToken:  omit.From(tokenResponse.AccessToken),
+		Expires:      omit.From(expires),
 		RefreshToken: omit.From(tokenResponse.RefreshToken),
-		Username: omit.From(tokenResponse.Username),
+		Username:     omit.From(tokenResponse.Username),
 	}
 	err = user.InsertUserOauthTokens(ctx, PGInstance.BobDB, &setter)
 	if err != nil {

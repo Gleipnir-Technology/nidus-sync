@@ -8,20 +8,23 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/aarondl/opt/omit"
 	"github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
+	"github.com/aarondl/opt/omit"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type NoCredentialsError struct{}
+
 func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
 
 type InvalidCredentials struct{}
+
 func (e InvalidCredentials) Error() string { return "No username with that password exists" }
 
 type InvalidUsername struct{}
+
 func (e InvalidUsername) Error() string { return "That username doesn't exist" }
 
 func addUserSession(r *http.Request, user *models.User) {
@@ -85,10 +88,10 @@ func signupUser(username string, name string, password string) (*models.User, er
 		return nil, fmt.Errorf("Cannot signup user: %v", err)
 	}
 	setter := models.UserSetter{
-		DisplayName: omit.From(name),
-		PasswordHash: omit.From(passwordHash),
+		DisplayName:      omit.From(name),
+		PasswordHash:     omit.From(passwordHash),
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
-		Username: omit.From(username),
+		Username:         omit.From(username),
 	}
 	u, err := models.Users.Insert(&setter).One(context.TODO(), PGInstance.BobDB)
 	if err != nil {
@@ -120,7 +123,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 		return nil, fmt.Errorf("Failed to query for user: %v", err)
 	}
 	switch len(result) {
-		case 0:
+	case 0:
 		return nil, InvalidUsername{}
 	case 1:
 		row := result[0]
@@ -128,16 +131,16 @@ func validateUser(ctx context.Context, username string, password string) (*model
 			return nil, InvalidCredentials{}
 		}
 		user := models.User{
-			ID: row.ID,
-			ArcgisAccessToken: row.ArcgisAccessToken,
-			ArcgisLicense: row.ArcgisLicense,
-			ArcgisRefreshToken: row.ArcgisRefreshToken,
+			ID:                        row.ID,
+			ArcgisAccessToken:         row.ArcgisAccessToken,
+			ArcgisLicense:             row.ArcgisLicense,
+			ArcgisRefreshToken:        row.ArcgisRefreshToken,
 			ArcgisRefreshTokenExpires: row.ArcgisRefreshTokenExpires,
-			ArcgisRole: row.ArcgisRole,
-			DisplayName: row.DisplayName,
-			Email: row.Email,
-			OrganizationID: row.OrganizationID,
-			Username: row.Username,
+			ArcgisRole:                row.ArcgisRole,
+			DisplayName:               row.DisplayName,
+			Email:                     row.Email,
+			OrganizationID:            row.OrganizationID,
+			Username:                  row.Username,
 		}
 		return &user, nil
 	default:

@@ -1,4 +1,5 @@
 package main
+
 import (
 	"embed"
 	"fmt"
@@ -18,99 +19,100 @@ var embeddedStaticFS embed.FS
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
 func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
-        if strings.ContainsAny(path, "{}*") {
-                panic("FileServer does not permit any URL parameters.")
-        }
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
 
-        if path != "/" && path[len(path)-1] != '/' {
-                r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
-                path += "/"
-        }
-        path += "*"
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
 
-        r.Get(path, func(w http.ResponseWriter, r *http.Request) {
-                rctx := chi.RouteContext(r.Context())
-                pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
 
-                // Determine the actual file path
-                requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix)
+		// Determine the actual file path
+		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix)
 
-                // Try to open from local filesystem first for development
-                localFile, localErr := root.Open(requestedPath)
+		// Try to open from local filesystem first for development
+		localFile, localErr := root.Open(requestedPath)
 
-                var fileToServe http.File
+		var fileToServe http.File
 
-                if localErr == nil {
-                        // File found in local filesystem
-                        fileToServe = localFile
-                } else {
-                        // If not found locall, try embedded filesystem
-                        embeddedFilePath := filepath.Join(embeddedPath, requestedPath)
-                        embeddedFile, err := embeddedFS.Open(embeddedFilePath)
+		if localErr == nil {
+			// File found in local filesystem
+			fileToServe = localFile
+		} else {
+			// If not found locall, try embedded filesystem
+			embeddedFilePath := filepath.Join(embeddedPath, requestedPath)
+			embeddedFile, err := embeddedFS.Open(embeddedFilePath)
 
-                        if err != nil {
-                                http.NotFound(w, r)
-                                return
-                        }
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
 
-                        // Wrap the embedded file to implement http.File interface
-                        fileToServe = &embeddedFileWrapper{embeddedFile}
+			// Wrap the embedded file to implement http.File interface
+			fileToServe = &embeddedFileWrapper{embeddedFile}
 
-                }
+		}
 
-                // Create a custom ResponseWriter that allows us to modify headers
-                crw := &customResponseWriter{ResponseWriter: w}
+		// Create a custom ResponseWriter that allows us to modify headers
+		crw := &customResponseWriter{ResponseWriter: w}
 
-                // Serve the file
-                http.ServeContent(crw, r, requestedPath, time.Time{}, fileToServe)
+		// Serve the file
+		http.ServeContent(crw, r, requestedPath, time.Time{}, fileToServe)
 
-                // Close the file
-                fileToServe.Close()
-        })
+		// Close the file
+		fileToServe.Close()
+	})
 }
+
 type embeddedFileWrapper struct {
-        file fs.File
+	file fs.File
 }
 
 func (e *embeddedFileWrapper) Close() error {
-        return e.file.Close()
+	return e.file.Close()
 }
 
 func (e *embeddedFileWrapper) Read(p []byte) (n int, err error) {
-        return e.file.Read(p)
+	return e.file.Read(p)
 }
 
 type Seeker interface {
-        Seek(offset int64, whence int) (int64, error)
+	Seek(offset int64, whence int) (int64, error)
 }
 
 func (e *embeddedFileWrapper) Seek(offset int64, whence int) (int64, error) {
-        if seeker, ok := e.file.(Seeker); ok {
-                return seeker.Seek(offset, whence)
-        }
-        return 0, fmt.Errorf("Seek not supported")
+	if seeker, ok := e.file.(Seeker); ok {
+		return seeker.Seek(offset, whence)
+	}
+	return 0, fmt.Errorf("Seek not supported")
 }
 
 func (e *embeddedFileWrapper) Readdir(count int) ([]os.FileInfo, error) {
-        // This is a bit tricky with embedded files
-        if dirFile, ok := e.file.(fs.ReadDirFile); ok {
-                entries, err := dirFile.ReadDir(count)
-                if err != nil {
-                        return nil, err
-                }
+	// This is a bit tricky with embedded files
+	if dirFile, ok := e.file.(fs.ReadDirFile); ok {
+		entries, err := dirFile.ReadDir(count)
+		if err != nil {
+			return nil, err
+		}
 
-                fileInfos := make([]os.FileInfo, len(entries))
-                for i, entry := range entries {
-                        fileInfos[i], err = entry.Info()
-                        if err != nil {
-                                return nil, err
-                        }
-                }
-                return fileInfos, nil
-        }
-        return nil, fmt.Errorf("Readdir not supported")
+		fileInfos := make([]os.FileInfo, len(entries))
+		for i, entry := range entries {
+			fileInfos[i], err = entry.Info()
+			if err != nil {
+				return nil, err
+			}
+		}
+		return fileInfos, nil
+	}
+	return nil, fmt.Errorf("Readdir not supported")
 }
 
 func (e *embeddedFileWrapper) Stat() (os.FileInfo, error) {
-        return e.file.Stat()
+	return e.file.Stat()
 }

@@ -23,7 +23,7 @@ import (
 var embedMigrations embed.FS
 
 type postgres struct {
-	BobDB bob.DB
+	BobDB   bob.DB
 	PGXPool *pgxpool.Pool
 }
 

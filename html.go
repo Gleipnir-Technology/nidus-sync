@@ -9,23 +9,23 @@ import (
 	"os"
 	"strings"
 
-	"github.com/riverqueue/river/rivershared/util/slogutil"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/riverqueue/river/rivershared/util/slogutil"
 )
 
 var (
-	dashboard = newBuiltTemplate("dashboard", "authenticated")
-	report = newBuiltTemplate("report", "base")
+	dashboard          = newBuiltTemplate("dashboard", "authenticated")
+	report             = newBuiltTemplate("report", "base")
 	reportConfirmation = newBuiltTemplate("report-confirmation", "base")
-	reportContribute = newBuiltTemplate("report-contribute", "base")
-	reportDetail = newBuiltTemplate("report-detail", "base")
-	reportEvidence = newBuiltTemplate("report-evidence", "base")
-	reportSchedule = newBuiltTemplate("report-schedule", "base")
-	reportUpdate = newBuiltTemplate("report-update", "base")
-	signin      = newBuiltTemplate("signin", "base")
-	signup    = newBuiltTemplate("signup", "base")
+	reportContribute   = newBuiltTemplate("report-contribute", "base")
+	reportDetail       = newBuiltTemplate("report-detail", "base")
+	reportEvidence     = newBuiltTemplate("report-evidence", "base")
+	reportSchedule     = newBuiltTemplate("report-schedule", "base")
+	reportUpdate       = newBuiltTemplate("report-update", "base")
+	signin             = newBuiltTemplate("signin", "base")
+	signup             = newBuiltTemplate("signup", "base")
 )
-var components = [ ... ]string{"header"}
+var components = [...]string{"header"}
 
 type BuiltTemplate struct {
 	files    []string
@@ -37,7 +37,7 @@ type Link struct {
 	Title string
 }
 type ContentReportDetail struct {
-	NextURL string
+	NextURL   string
 	UpdateURL string
 }
 type ContentReportDiagnostic struct {
@@ -51,11 +51,11 @@ type ContentPlaceholder struct {
 type ContentSignin struct {
 	InvalidCredentials bool
 }
-type ContentSignup struct { }
+type ContentSignup struct{}
 type User struct {
 	DisplayName string
-	Initials string
-	Username string
+	Initials    string
+	Username    string
 }
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
@@ -77,23 +77,23 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 
 func extractInitials(name string) string {
 	parts := strings.Fields(name)
-    var initials strings.Builder
-    
-    for _, part := range parts {
-        if len(part) > 0 {
-            initials.WriteString(strings.ToUpper(string(part[0])))
-        }
-    }
-    
-    return initials.String()
+	var initials strings.Builder
+
+	for _, part := range parts {
+		if len(part) > 0 {
+			initials.WriteString(strings.ToUpper(string(part[0])))
+		}
+	}
+
+	return initials.String()
 }
 
 func htmlDashboard(w io.Writer, user *models.User) error {
 	data := ContentDashboard{
-		User:    User{
+		User: User{
 			DisplayName: user.DisplayName,
-			Initials: extractInitials(user.DisplayName),
-			Username: user.Username,
+			Initials:    extractInitials(user.DisplayName),
+			Username:    user.Username,
 		},
 	}
 	return dashboard.ExecuteTemplate(w, data)
@@ -126,7 +126,7 @@ func htmlReportContribute(w io.Writer, code string) error {
 func htmlReportDetail(w io.Writer, code string) error {
 	nextURL := BaseURL + "/report/" + code + "/evidence"
 	data := ContentReportDetail{
-		NextURL: nextURL,
+		NextURL:   nextURL,
 		UpdateURL: BaseURL + "/report/" + code + "/update",
 	}
 	return reportDetail.ExecuteTemplate(w, data)
@@ -164,8 +164,7 @@ func htmlSignin(w io.Writer, errorCode string) error {
 }
 
 func htmlSignup(w io.Writer, path string) error {
-	data := ContentSignup{
-	}
+	data := ContentSignup{}
 	return signup.ExecuteTemplate(w, data)
 }
 
