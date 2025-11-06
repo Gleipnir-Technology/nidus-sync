@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/aarondl/opt/omit"
+	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 )
 
@@ -60,6 +61,37 @@ func generateCodeVerifier() string {
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
+// Find out what we can about this user
+func getArcgisUserData(access_token string, expires time.Time, refresh_token string) {
+	client := arcgis.NewArcGIS(
+		arcgis.AuthenticatorOAuth{
+			AccessToken: access_token,
+			Expires: expires,
+			RefreshToken: refresh_token,
+		},
+	)
+	/*portal, err := client.PortalsSelf()
+	if err != nil {
+		slog.Error("Failed to get ArcGIS user data", slog.String("err", err.Error()))
+		return
+	}
+	slog.Info("Got portals data",
+		slog.String("Username", portal.User.Username),
+		slog.String("ID", portal.ID))
+*/
+	search, err := client.Search("Fieldseeker")
+	if err != nil {
+		slog.Error("Failed to get search FieldseekerGIS data", slog.String("err", err.Error()))
+		return
+	}
+	for _, result := range search.Results {
+		slog.Info("Got result", slog.String("name", result.Name))
+		//if result.Name == "FieldseekerGIS" {
+			//slog.Info("Found Fieldseeker", slog.String("url", result.URL))
+		//}
+	}
+}
+
 func handleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
 
@@ -78,14 +110,14 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	client := http.Client{}
-	log.Printf("POST %s", baseURL)
+	slog.Info("POST", slog.String("url", baseURL))
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Failed to do request: %v", err)
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
-	log.Printf("Response %d", resp.StatusCode)
+	slog.Info("Response", slog.Int("status", resp.StatusCode))
 	if resp.StatusCode >= http.StatusBadRequest {
 		if err != nil {
 			return fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)
@@ -102,11 +134,16 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	if err != nil {
 		return fmt.Errorf("Failed to unmarshal JSON: %v", err)
 	}
-	log.Printf("Refresh token '%s'", tokenResponse.RefreshToken)
+	slog.Info("Oauth token acquired",
+		slog.String("refresh token", tokenResponse.RefreshToken),
+		slog.String("access token", tokenResponse.AccessToken),
+		slog.Int("expires", tokenResponse.ExpiresIn),
+	)
 
+	expires := futureUTCTimestamp(tokenResponse.ExpiresIn)
 	setter := models.OauthTokenSetter{
 		AccessToken: omit.From(tokenResponse.AccessToken),
-		Expires: omit.From(futureUTCTimestamp(tokenResponse.ExpiresIn)),
+		Expires: omit.From(expires),
 		RefreshToken: omit.From(tokenResponse.RefreshToken),
 		Username: omit.From(tokenResponse.Username),
 	}
@@ -114,6 +151,7 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %v", err)
 	}
+	go getArcgisUserData(tokenResponse.AccessToken, expires, tokenResponse.RefreshToken)
 	return nil
 }
 

@@ -3,6 +3,7 @@ module github.com/Gleipnir-Technology/nidus-sync
 go 1.24.9
 
 require (
+	github.com/Gleipnir-Technology/arcgis-go v0.0.2
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
@@ -44,3 +45,4 @@ require (
 	golang.org/x/text v0.29.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
 )
+replace github.com/Gleipnir-Technology/arcgis-go => ./arcgis-go
