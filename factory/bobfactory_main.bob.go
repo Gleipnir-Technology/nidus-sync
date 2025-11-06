@@ -14,6 +14,7 @@ import (
 
 type Factory struct {
 	baseGooseDBVersionMods GooseDBVersionModSlice
+	baseOauthTokenMods     OauthTokenModSlice
 	baseOrganizationMods   OrganizationModSlice
 	baseSessionMods        SessionModSlice
 	baseUserMods           UserModSlice
@@ -46,6 +47,40 @@ func (f *Factory) FromExistingGooseDBVersion(m *models.GooseDBVersion) *GooseDBV
 	o.VersionID = func() int64 { return m.VersionID }
 	o.IsApplied = func() bool { return m.IsApplied }
 	o.Tstamp = func() time.Time { return m.Tstamp }
+
+	return o
+}
+
+func (f *Factory) NewOauthToken(mods ...OauthTokenMod) *OauthTokenTemplate {
+	return f.NewOauthTokenWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewOauthTokenWithContext(ctx context.Context, mods ...OauthTokenMod) *OauthTokenTemplate {
+	o := &OauthTokenTemplate{f: f}
+
+	if f != nil {
+		f.baseOauthTokenMods.Apply(ctx, o)
+	}
+
+	OauthTokenModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingOauthToken(m *models.OauthToken) *OauthTokenTemplate {
+	o := &OauthTokenTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.AccessToken = func() string { return m.AccessToken }
+	o.Expires = func() time.Time { return m.Expires }
+	o.RefreshToken = func() string { return m.RefreshToken }
+	o.Username = func() string { return m.Username }
+	o.UserID = func() int32 { return m.UserID }
+
+	ctx := context.Background()
+	if m.R.UserUser != nil {
+		OauthTokenMods.WithExistingUserUser(m.R.UserUser).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -139,6 +174,9 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	o.PasswordHash = func() string { return m.PasswordHash }
 
 	ctx := context.Background()
+	if len(m.R.UserOauthTokens) > 0 {
+		UserMods.AddExistingUserOauthTokens(m.R.UserOauthTokens...).Apply(ctx, o)
+	}
 	if m.R.Organization != nil {
 		UserMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
@@ -152,6 +190,14 @@ func (f *Factory) ClearBaseGooseDBVersionMods() {
 
 func (f *Factory) AddBaseGooseDBVersionMod(mods ...GooseDBVersionMod) {
 	f.baseGooseDBVersionMods = append(f.baseGooseDBVersionMods, mods...)
+}
+
+func (f *Factory) ClearBaseOauthTokenMods() {
+	f.baseOauthTokenMods = nil
+}
+
+func (f *Factory) AddBaseOauthTokenMod(mods ...OauthTokenMod) {
+	f.baseOauthTokenMods = append(f.baseOauthTokenMods, mods...)
 }
 
 func (f *Factory) ClearBaseOrganizationMods() {

@@ -58,9 +58,14 @@ type UserTemplate struct {
 }
 
 type userR struct {
-	Organization *userROrganizationR
+	UserOauthTokens []*userRUserOauthTokensR
+	Organization    *userROrganizationR
 }
 
+type userRUserOauthTokensR struct {
+	number int
+	o      *OauthTokenTemplate
+}
 type userROrganizationR struct {
 	o *OrganizationTemplate
 }
@@ -75,6 +80,19 @@ func (o *UserTemplate) Apply(ctx context.Context, mods ...UserMod) {
 // setModelRels creates and sets the relationships on *models.User
 // according to the relationships in the template. Nothing is inserted into the db
 func (t UserTemplate) setModelRels(o *models.User) {
+	if t.r.UserOauthTokens != nil {
+		rel := models.OauthTokenSlice{}
+		for _, r := range t.r.UserOauthTokens {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.UserID = o.ID // h2
+				rel.R.UserUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.UserOauthTokens = rel
+	}
+
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.User = append(rel.R.User, o)
@@ -238,18 +256,38 @@ func ensureCreatableUser(m *models.UserSetter) {
 func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.User) error {
 	var err error
 
+	isUserOauthTokensDone, _ := userRelUserOauthTokensCtx.Value(ctx)
+	if !isUserOauthTokensDone && o.r.UserOauthTokens != nil {
+		ctx = userRelUserOauthTokensCtx.WithValue(ctx, true)
+		for _, r := range o.r.UserOauthTokens {
+			if r.o.alreadyPersisted {
+				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachUserOauthTokens(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isOrganizationDone, _ := userRelOrganizationCtx.Value(ctx)
 	if !isOrganizationDone && o.r.Organization != nil {
 		ctx = userRelOrganizationCtx.WithValue(ctx, true)
 		if o.r.Organization.o.alreadyPersisted {
 			m.R.Organization = o.r.Organization.o.Build()
 		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			var rel1 *models.Organization
+			rel1, err = o.r.Organization.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachOrganization(ctx, exec, rel0)
+			err = m.AttachOrganization(ctx, exec, rel1)
 			if err != nil {
 				return err
 			}
@@ -931,5 +969,53 @@ func (m userMods) WithExistingOrganization(em *models.Organization) UserMod {
 func (m userMods) WithoutOrganization() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m userMods) WithUserOauthTokens(number int, related *OauthTokenTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = []*userRUserOauthTokensR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewUserOauthTokens(number int, mods ...OauthTokenMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewOauthTokenWithContext(ctx, mods...)
+		m.WithUserOauthTokens(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddUserOauthTokens(number int, related *OauthTokenTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewUserOauthTokens(number int, mods ...OauthTokenMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewOauthTokenWithContext(ctx, mods...)
+		m.AddUserOauthTokens(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.OauthToken) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
+				o: o.f.FromExistingOauthToken(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutUserOauthTokens() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = nil
 	})
 }

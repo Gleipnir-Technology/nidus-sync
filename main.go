@@ -58,6 +58,8 @@ func main() {
 	r.Use(sessionManager.LoadAndSave)
 
 	r.Get("/", getRoot)
+	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
+	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/report", getReport)
 	r.Get("/report/{code}", getReportDetail)

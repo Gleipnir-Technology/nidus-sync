@@ -55,7 +55,8 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	Organization *Organization // user_.user__organization_id_fkey
+	UserOauthTokens OauthTokenSlice // oauth_token.oauth_token_user_id_fkey
+	Organization    *Organization   // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -602,6 +603,30 @@ func (o UserSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// UserOauthTokens starts a query for related objects on oauth_token
+func (o *User) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) OauthTokensQuery {
+	return OauthTokens.Query(append(mods,
+		sm.Where(OauthTokens.Columns.UserID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) OauthTokensQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return OauthTokens.Query(append(mods,
+		sm.Where(psql.Group(OauthTokens.Columns.UserID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Organization starts a query for related objects on organization
 func (o *User) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
@@ -624,6 +649,74 @@ func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 	return Organizations.Query(append(mods,
 		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertUserUserOauthTokens0(ctx context.Context, exec bob.Executor, oauthTokens1 []*OauthTokenSetter, user0 *User) (OauthTokenSlice, error) {
+	for i := range oauthTokens1 {
+		oauthTokens1[i].UserID = omit.From(user0.ID)
+	}
+
+	ret, err := OauthTokens.Insert(bob.ToMods(oauthTokens1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserUserOauthTokens0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserUserOauthTokens0(ctx context.Context, exec bob.Executor, count int, oauthTokens1 OauthTokenSlice, user0 *User) (OauthTokenSlice, error) {
+	setter := &OauthTokenSetter{
+		UserID: omit.From(user0.ID),
+	}
+
+	err := oauthTokens1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserUserOauthTokens0: %w", err)
+	}
+
+	return oauthTokens1, nil
+}
+
+func (user0 *User) InsertUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*OauthTokenSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	oauthTokens1, err := insertUserUserOauthTokens0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, oauthTokens1...)
+
+	for _, rel := range oauthTokens1 {
+		rel.R.UserUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*OauthToken) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	oauthTokens1 := OauthTokenSlice(related)
+
+	_, err = attachUserUserOauthTokens0(ctx, exec, len(related), oauthTokens1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, oauthTokens1...)
+
+	for _, rel := range related {
+		rel.R.UserUser = user0
+	}
+
+	return nil
 }
 
 func attachUserOrganization0(ctx context.Context, exec bob.Executor, count int, user0 *User, organization1 *Organization) (*User, error) {
@@ -716,6 +809,20 @@ func (o *User) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "UserOauthTokens":
+		rels, ok := retrieved.(OauthTokenSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.UserOauthTokens = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.UserUser = o
+			}
+		}
+		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
@@ -756,15 +863,25 @@ func buildUserPreloader() userPreloader {
 }
 
 type userThenLoader[Q orm.Loadable] struct {
-	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserOauthTokens func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
+	type UserOauthTokensLoadInterface interface {
+		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return userThenLoader[Q]{
+		UserOauthTokens: thenLoadBuilder[Q](
+			"UserOauthTokens",
+			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadUserOauthTokens(ctx, exec, mods...)
+			},
+		),
 		Organization: thenLoadBuilder[Q](
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -772,6 +889,67 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
+func (o *User) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.UserOauthTokens = nil
+
+	related, err := o.UserOauthTokens(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.UserUser = o
+	}
+
+	o.R.UserOauthTokens = related
+	return nil
+}
+
+// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
+func (os UserSlice) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	oauthTokens, err := os.UserOauthTokens(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.UserOauthTokens = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range oauthTokens {
+
+			if !(o.ID == rel.UserID) {
+				continue
+			}
+
+			rel.R.UserUser = o
+
+			o.R.UserOauthTokens = append(o.R.UserOauthTokens, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadOrganization loads the user's Organization into the .R struct
@@ -830,8 +1008,9 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 }
 
 type userJoins[Q dialect.Joinable] struct {
-	typ          string
-	Organization modAs[Q, organizationColumns]
+	typ             string
+	UserOauthTokens modAs[Q, oauthTokenColumns]
+	Organization    modAs[Q, organizationColumns]
 }
 
 func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
@@ -841,6 +1020,20 @@ func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
 func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[Q] {
 	return userJoins[Q]{
 		typ: typ,
+		UserOauthTokens: modAs[Q, oauthTokenColumns]{
+			c: OauthTokens.Columns,
+			f: func(to oauthTokenColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, OauthTokens.Name().As(to.Alias())).On(
+						to.UserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Organization: modAs[Q, organizationColumns]{
 			c: Organizations.Columns,
 			f: func(to organizationColumns) bob.Mod[Q] {

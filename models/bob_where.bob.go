@@ -18,17 +18,20 @@ var (
 
 func Where[Q psql.Filterable]() struct {
 	GooseDBVersions gooseDBVersionWhere[Q]
+	OauthTokens     oauthTokenWhere[Q]
 	Organizations   organizationWhere[Q]
 	Sessions        sessionWhere[Q]
 	Users           userWhere[Q]
 } {
 	return struct {
 		GooseDBVersions gooseDBVersionWhere[Q]
+		OauthTokens     oauthTokenWhere[Q]
 		Organizations   organizationWhere[Q]
 		Sessions        sessionWhere[Q]
 		Users           userWhere[Q]
 	}{
 		GooseDBVersions: buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),
+		OauthTokens:     buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:   buildOrganizationWhere[Q](Organizations.Columns),
 		Sessions:        buildSessionWhere[Q](Sessions.Columns),
 		Users:           buildUserWhere[Q](Users.Columns),

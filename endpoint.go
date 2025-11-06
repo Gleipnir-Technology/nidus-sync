@@ -10,6 +10,32 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/skip2/go-qrcode"
 )
+
+func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
+	expiration := 60
+	authURL := buildArcGISAuthURL(ClientID, redirectURL(), expiration)
+	http.Redirect(w, r, authURL, http.StatusFound)
+}
+
+func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	slog.Info("Handling oauth callback", slog.String("code", code))
+	if code == "" {
+		respondError(w, "Access code is empty", nil, http.StatusBadRequest)
+		return
+	}
+	user, err := getAuthenticatedUser(r)
+	if err != nil {
+		respondError(w, "You're not currently authenticated, which really shouldn't happen.", err, http.StatusUnauthorized)
+		return
+	}
+	err = handleOauthAccessCode(r.Context(), user, code)
+	if err != nil {
+		respondError(w, "Failed to handle access code", err, http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, BaseURL+"/", http.StatusFound)
+}
 func getFavicon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "image/x-icon")
 

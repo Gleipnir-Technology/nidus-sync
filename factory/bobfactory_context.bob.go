@@ -11,6 +11,10 @@ var (
 	// Relationship Contexts for goose_db_version
 	gooseDBVersionWithParentsCascadingCtx = newContextual[bool]("gooseDBVersionWithParentsCascading")
 
+	// Relationship Contexts for oauth_token
+	oauthTokenWithParentsCascadingCtx = newContextual[bool]("oauthTokenWithParentsCascading")
+	oauthTokenRelUserUserCtx          = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
+
 	// Relationship Contexts for organization
 	organizationWithParentsCascadingCtx = newContextual[bool]("organizationWithParentsCascading")
 	organizationRelUserCtx              = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
@@ -20,6 +24,7 @@ var (
 
 	// Relationship Contexts for user_
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
+	userRelUserOauthTokensCtx   = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
 	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )
 

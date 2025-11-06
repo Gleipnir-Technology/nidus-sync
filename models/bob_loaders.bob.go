@@ -17,12 +17,14 @@ import (
 var Preload = getPreloaders()
 
 type preloaders struct {
+	OauthToken   oauthTokenPreloader
 	Organization organizationPreloader
 	User         userPreloader
 }
 
 func getPreloaders() preloaders {
 	return preloaders{
+		OauthToken:   buildOauthTokenPreloader(),
 		Organization: buildOrganizationPreloader(),
 		User:         buildUserPreloader(),
 	}
@@ -35,12 +37,14 @@ var (
 )
 
 type thenLoaders[Q orm.Loadable] struct {
+	OauthToken   oauthTokenThenLoader[Q]
 	Organization organizationThenLoader[Q]
 	User         userThenLoader[Q]
 }
 
 func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
+		OauthToken:   buildOauthTokenThenLoader[Q](),
 		Organization: buildOrganizationThenLoader[Q](),
 		User:         buildUserThenLoader[Q](),
 	}

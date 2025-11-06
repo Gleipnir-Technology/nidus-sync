@@ -17,6 +17,9 @@ var testDB bob.Transactor[bob.Tx]
 // Make sure the type GooseDBVersion runs hooks after queries
 var _ bob.HookableType = &GooseDBVersion{}
 
+// Make sure the type OauthToken runs hooks after queries
+var _ bob.HookableType = &OauthToken{}
+
 // Make sure the type Organization runs hooks after queries
 var _ bob.HookableType = &Organization{}
 
