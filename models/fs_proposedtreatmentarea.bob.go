@@ -26,7 +26,7 @@ import (
 
 // FSProposedtreatmentarea is an object representing the database table.
 type FSProposedtreatmentarea struct {
-	OrganizationID    null.Val[int32]   `db:"organization_id" `
+	OrganizationID    int32             `db:"organization_id" `
 	Acres             null.Val[float64] `db:"acres" `
 	Comments          null.Val[string]  `db:"comments" `
 	Completed         null.Val[int16]   `db:"completed" `
@@ -182,7 +182,7 @@ func (fsProposedtreatmentareaColumns) AliasedAs(alias string) fsProposedtreatmen
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSProposedtreatmentareaSetter struct {
-	OrganizationID    omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID    omit.Val[int32]       `db:"organization_id" `
 	Acres             omitnull.Val[float64] `db:"acres" `
 	Comments          omitnull.Val[string]  `db:"comments" `
 	Completed         omitnull.Val[int16]   `db:"completed" `
@@ -223,7 +223,7 @@ type FSProposedtreatmentareaSetter struct {
 
 func (s FSProposedtreatmentareaSetter) SetColumns() []string {
 	vals := make([]string, 0, 37)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Acres.IsUnset() {
@@ -338,8 +338,8 @@ func (s FSProposedtreatmentareaSetter) SetColumns() []string {
 }
 
 func (s FSProposedtreatmentareaSetter) Overwrite(t *FSProposedtreatmentarea) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Acres.IsUnset() {
 		t.Acres = s.Acres.MustGetNull()
@@ -458,8 +458,8 @@ func (s *FSProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 37)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -691,7 +691,7 @@ func (s FSProposedtreatmentareaSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery]
 func (s FSProposedtreatmentareaSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 37)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1184,7 +1184,7 @@ func (o *FSProposedtreatmentarea) Organization(mods ...bob.Mod[*dialect.SelectQu
 }
 
 func (os FSProposedtreatmentareaSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1202,7 +1202,7 @@ func (os FSProposedtreatmentareaSlice) Organization(mods ...bob.Mod[*dialect.Sel
 
 func attachFSProposedtreatmentareaOrganization0(ctx context.Context, exec bob.Executor, count int, fsProposedtreatmentarea0 *FSProposedtreatmentarea, organization1 *Organization) (*FSProposedtreatmentarea, error) {
 	setter := &FSProposedtreatmentareaSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsProposedtreatmentarea0.Update(ctx, exec, setter)
@@ -1249,7 +1249,7 @@ func (fsProposedtreatmentarea0 *FSProposedtreatmentarea) AttachOrganization(ctx 
 }
 
 type fsProposedtreatmentareaWhere[Q psql.Filterable] struct {
-	OrganizationID    psql.WhereNullMod[Q, int32]
+	OrganizationID    psql.WhereMod[Q, int32]
 	Acres             psql.WhereNullMod[Q, float64]
 	Comments          psql.WhereNullMod[Q, string]
 	Completed         psql.WhereNullMod[Q, int16]
@@ -1294,7 +1294,7 @@ func (fsProposedtreatmentareaWhere[Q]) AliasedAs(alias string) fsProposedtreatme
 
 func buildFSProposedtreatmentareaWhere[Q psql.Filterable](cols fsProposedtreatmentareaColumns) fsProposedtreatmentareaWhere[Q] {
 	return fsProposedtreatmentareaWhere[Q]{
-		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
 		Acres:             psql.WhereNull[Q, float64](cols.Acres),
 		Comments:          psql.WhereNull[Q, string](cols.Comments),
 		Completed:         psql.WhereNull[Q, int16](cols.Completed),
@@ -1435,11 +1435,8 @@ func (os FSProposedtreatmentareaSlice) LoadOrganization(ctx context.Context, exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

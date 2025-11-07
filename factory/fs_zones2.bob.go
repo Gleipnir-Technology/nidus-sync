@@ -37,7 +37,7 @@ func (mods FSZones2ModSlice) Apply(ctx context.Context, n *FSZones2Template) {
 // FSZones2Template is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSZones2Template struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
@@ -82,7 +82,7 @@ func (t FSZones2Template) setModelRels(o *models.FSZones2) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSZones2s = append(rel.R.FSZones2s, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -94,7 +94,7 @@ func (o FSZones2Template) BuildSetter() *models.FSZones2Setter {
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -253,6 +253,10 @@ func (o FSZones2Template) BuildMany(number int) models.FSZones2Slice {
 }
 
 func ensureCreatableFSZones2(m *models.FSZones2Setter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -265,25 +269,6 @@ func ensureCreatableFSZones2(m *models.FSZones2Setter) {
 func (o *FSZones2Template) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSZones2) error {
 	var err error
 
-	isOrganizationDone, _ := fsZones2RelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsZones2RelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -294,10 +279,29 @@ func (o *FSZones2Template) Create(ctx context.Context, exec bob.Executor) (*mode
 	opt := o.BuildSetter()
 	ensureCreatableFSZones2(opt)
 
+	if o.r.Organization == nil {
+		FSZones2Mods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSZones2s.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -397,14 +401,14 @@ func (m fsZones2Mods) RandomizeAllColumns(f *faker.Faker) FSZones2Mod {
 }
 
 // Set the model columns to this value
-func (m fsZones2Mods) OrganizationID(val null.Val[int32]) FSZones2Mod {
+func (m fsZones2Mods) OrganizationID(val int32) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsZones2Mods) OrganizationIDFunc(f func() null.Val[int32]) FSZones2Mod {
+func (m fsZones2Mods) OrganizationIDFunc(f func() int32) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
 		o.OrganizationID = f
 	})
@@ -419,32 +423,10 @@ func (m fsZones2Mods) UnsetOrganizationID() FSZones2Mod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsZones2Mods) RandomOrganizationID(f *faker.Faker) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsZones2Mods) RandomOrganizationIDNotNull(f *faker.Faker) FSZones2Mod {
-	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

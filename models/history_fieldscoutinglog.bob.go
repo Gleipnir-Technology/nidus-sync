@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,21 +26,22 @@ import (
 
 // HistoryFieldscoutinglog is an object representing the database table.
 type HistoryFieldscoutinglog struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Objectid       int32             `db:"objectid,pk" `
-	Status         null.Val[int16]   `db:"status" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Objectid       int32               `db:"objectid,pk" `
+	Status         null.Val[int16]     `db:"status" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historyFieldscoutinglogR `db:"-" `
 }
@@ -62,7 +64,7 @@ type historyFieldscoutinglogR struct {
 func buildHistoryFieldscoutinglogColumns(alias string) historyFieldscoutinglogColumns {
 	return historyFieldscoutinglogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "objectid", "status", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "objectid", "status", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_fieldscoutinglog"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -73,6 +75,7 @@ func buildHistoryFieldscoutinglogColumns(alias string) historyFieldscoutinglogCo
 		Globalid:       psql.Quote(alias, "globalid"),
 		Objectid:       psql.Quote(alias, "objectid"),
 		Status:         psql.Quote(alias, "status"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -94,6 +97,7 @@ type historyFieldscoutinglogColumns struct {
 	Globalid       psql.Expression
 	Objectid       psql.Expression
 	Status         psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -115,26 +119,27 @@ func (historyFieldscoutinglogColumns) AliasedAs(alias string) historyFieldscouti
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryFieldscoutinglogSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Status         omitnull.Val[int16]   `db:"status" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Status         omitnull.Val[int16]     `db:"status" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryFieldscoutinglogSetter) SetColumns() []string {
-	vals := make([]string, 0, 15)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 16)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -157,6 +162,9 @@ func (s HistoryFieldscoutinglogSetter) SetColumns() []string {
 	}
 	if !s.Status.IsUnset() {
 		vals = append(vals, "status")
+	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
 	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
@@ -183,8 +191,8 @@ func (s HistoryFieldscoutinglogSetter) SetColumns() []string {
 }
 
 func (s HistoryFieldscoutinglogSetter) Overwrite(t *HistoryFieldscoutinglog) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -206,6 +214,9 @@ func (s HistoryFieldscoutinglogSetter) Overwrite(t *HistoryFieldscoutinglog) {
 	}
 	if !s.Status.IsUnset() {
 		t.Status = s.Status.MustGetNull()
+	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
 	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
@@ -236,9 +247,9 @@ func (s *HistoryFieldscoutinglogSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 15)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 16)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -285,46 +296,52 @@ func (s *HistoryFieldscoutinglogSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[8] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[8] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[9] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[9] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[10] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[10] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[11] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[11] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[12] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[12] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[13] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[13] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[14] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[14] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[15] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[15] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -336,9 +353,9 @@ func (s HistoryFieldscoutinglogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery]
 }
 
 func (s HistoryFieldscoutinglogSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 15)
+	exprs := make([]bob.Expression, 0, 16)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -391,6 +408,13 @@ func (s HistoryFieldscoutinglogSetter) Expressions(prefix ...string) []bob.Expre
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
 			psql.Arg(s.Status),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -687,7 +711,7 @@ func (o *HistoryFieldscoutinglog) Organization(mods ...bob.Mod[*dialect.SelectQu
 }
 
 func (os HistoryFieldscoutinglogSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -705,7 +729,7 @@ func (os HistoryFieldscoutinglogSlice) Organization(mods ...bob.Mod[*dialect.Sel
 
 func attachHistoryFieldscoutinglogOrganization0(ctx context.Context, exec bob.Executor, count int, historyFieldscoutinglog0 *HistoryFieldscoutinglog, organization1 *Organization) (*HistoryFieldscoutinglog, error) {
 	setter := &HistoryFieldscoutinglogSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyFieldscoutinglog0.Update(ctx, exec, setter)
@@ -752,7 +776,7 @@ func (historyFieldscoutinglog0 *HistoryFieldscoutinglog) AttachOrganization(ctx 
 }
 
 type historyFieldscoutinglogWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
@@ -760,6 +784,7 @@ type historyFieldscoutinglogWhere[Q psql.Filterable] struct {
 	Globalid       psql.WhereNullMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	Status         psql.WhereNullMod[Q, int16]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -775,7 +800,7 @@ func (historyFieldscoutinglogWhere[Q]) AliasedAs(alias string) historyFieldscout
 
 func buildHistoryFieldscoutinglogWhere[Q psql.Filterable](cols historyFieldscoutinglogColumns) historyFieldscoutinglogWhere[Q] {
 	return historyFieldscoutinglogWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
@@ -783,6 +808,7 @@ func buildHistoryFieldscoutinglogWhere[Q psql.Filterable](cols historyFieldscout
 		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		Status:         psql.WhereNull[Q, int16](cols.Status),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -894,11 +920,8 @@ func (os HistoryFieldscoutinglogSlice) LoadOrganization(ctx context.Context, exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

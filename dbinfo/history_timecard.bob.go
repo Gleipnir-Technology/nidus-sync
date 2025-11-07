@@ -18,9 +18,9 @@ var HistoryTimecards = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -231,6 +231,15 @@ var HistoryTimecards = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -373,6 +382,7 @@ type historyTimecardColumns struct {
 	Traplocid      column
 	Zone           column
 	Zone2          column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -385,7 +395,7 @@ type historyTimecardColumns struct {
 
 func (c historyTimecardColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Activity, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Externalid, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Lclocid, c.Linelocid, c.Locationname, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Samplelocid, c.Srid, c.Startdatetime, c.Traplocid, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Rodentlocid, c.Version,
+		c.OrganizationID, c.Activity, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Externalid, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Lclocid, c.Linelocid, c.Locationname, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Samplelocid, c.Srid, c.Startdatetime, c.Traplocid, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Rodentlocid, c.Version,
 	}
 }
 

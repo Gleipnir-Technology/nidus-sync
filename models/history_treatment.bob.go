@@ -25,7 +25,7 @@ import (
 
 // HistoryTreatment is an object representing the database table.
 type HistoryTreatment struct {
-	OrganizationID       null.Val[int32]   `db:"organization_id" `
+	OrganizationID       int32             `db:"organization_id" `
 	Activity             null.Val[string]  `db:"activity" `
 	Areaunit             null.Val[string]  `db:"areaunit" `
 	Avetemp              null.Val[float64] `db:"avetemp" `
@@ -244,7 +244,7 @@ func (historyTreatmentColumns) AliasedAs(alias string) historyTreatmentColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryTreatmentSetter struct {
-	OrganizationID       omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID       omit.Val[int32]       `db:"organization_id" `
 	Activity             omitnull.Val[string]  `db:"activity" `
 	Areaunit             omitnull.Val[string]  `db:"areaunit" `
 	Avetemp              omitnull.Val[float64] `db:"avetemp" `
@@ -306,7 +306,7 @@ type HistoryTreatmentSetter struct {
 
 func (s HistoryTreatmentSetter) SetColumns() []string {
 	vals := make([]string, 0, 58)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -484,8 +484,8 @@ func (s HistoryTreatmentSetter) SetColumns() []string {
 }
 
 func (s HistoryTreatmentSetter) Overwrite(t *HistoryTreatment) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -667,8 +667,8 @@ func (s *HistoryTreatmentSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 58)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -1026,7 +1026,7 @@ func (s HistoryTreatmentSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s HistoryTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 58)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1676,7 +1676,7 @@ func (o *HistoryTreatment) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 }
 
 func (os HistoryTreatmentSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1694,7 +1694,7 @@ func (os HistoryTreatmentSlice) Organization(mods ...bob.Mod[*dialect.SelectQuer
 
 func attachHistoryTreatmentOrganization0(ctx context.Context, exec bob.Executor, count int, historyTreatment0 *HistoryTreatment, organization1 *Organization) (*HistoryTreatment, error) {
 	setter := &HistoryTreatmentSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyTreatment0.Update(ctx, exec, setter)
@@ -1741,7 +1741,7 @@ func (historyTreatment0 *HistoryTreatment) AttachOrganization(ctx context.Contex
 }
 
 type historyTreatmentWhere[Q psql.Filterable] struct {
-	OrganizationID       psql.WhereNullMod[Q, int32]
+	OrganizationID       psql.WhereMod[Q, int32]
 	Activity             psql.WhereNullMod[Q, string]
 	Areaunit             psql.WhereNullMod[Q, string]
 	Avetemp              psql.WhereNullMod[Q, float64]
@@ -1807,7 +1807,7 @@ func (historyTreatmentWhere[Q]) AliasedAs(alias string) historyTreatmentWhere[Q]
 
 func buildHistoryTreatmentWhere[Q psql.Filterable](cols historyTreatmentColumns) historyTreatmentWhere[Q] {
 	return historyTreatmentWhere[Q]{
-		OrganizationID:       psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:       psql.Where[Q, int32](cols.OrganizationID),
 		Activity:             psql.WhereNull[Q, string](cols.Activity),
 		Areaunit:             psql.WhereNull[Q, string](cols.Areaunit),
 		Avetemp:              psql.WhereNull[Q, float64](cols.Avetemp),
@@ -1969,11 +1969,8 @@ func (os HistoryTreatmentSlice) LoadOrganization(ctx context.Context, exec bob.E
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

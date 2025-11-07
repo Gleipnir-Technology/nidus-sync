@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,52 +26,53 @@ import (
 
 // HistoryTrapdatum is an object representing the database table.
 type HistoryTrapdatum struct {
-	OrganizationID           null.Val[int32]   `db:"organization_id" `
-	Avetemp                  null.Val[float64] `db:"avetemp" `
-	Comments                 null.Val[string]  `db:"comments" `
-	Creationdate             null.Val[int64]   `db:"creationdate" `
-	Creator                  null.Val[string]  `db:"creator" `
-	Enddatetime              null.Val[int64]   `db:"enddatetime" `
-	Editdate                 null.Val[int64]   `db:"editdate" `
-	Editor                   null.Val[string]  `db:"editor" `
-	Fieldtech                null.Val[string]  `db:"fieldtech" `
-	Field                    null.Val[int64]   `db:"field" `
-	Gatewaysync              null.Val[int16]   `db:"gatewaysync" `
-	Globalid                 null.Val[string]  `db:"globalid" `
-	Idbytech                 null.Val[string]  `db:"idbytech" `
-	Locationname             null.Val[string]  `db:"locationname" `
-	LocID                    null.Val[string]  `db:"loc_id" `
-	LR                       null.Val[int16]   `db:"lr" `
-	Objectid                 int32             `db:"objectid,pk" `
-	Processed                null.Val[int16]   `db:"processed" `
-	Raingauge                null.Val[float64] `db:"raingauge" `
-	Recordstatus             null.Val[int16]   `db:"recordstatus" `
-	Reviewed                 null.Val[int16]   `db:"reviewed" `
-	Reviewedby               null.Val[string]  `db:"reviewedby" `
-	Revieweddate             null.Val[int64]   `db:"revieweddate" `
-	Sitecond                 null.Val[string]  `db:"sitecond" `
-	Sortbytech               null.Val[string]  `db:"sortbytech" `
-	Srid                     null.Val[string]  `db:"srid" `
-	Startdatetime            null.Val[int64]   `db:"startdatetime" `
-	Trapactivitytype         null.Val[string]  `db:"trapactivitytype" `
-	Trapcondition            null.Val[string]  `db:"trapcondition" `
-	Trapnights               null.Val[int16]   `db:"trapnights" `
-	Traptype                 null.Val[string]  `db:"traptype" `
-	Voltage                  null.Val[float64] `db:"voltage" `
-	Winddir                  null.Val[string]  `db:"winddir" `
-	Windspeed                null.Val[float64] `db:"windspeed" `
-	Zone                     null.Val[string]  `db:"zone" `
-	Zone2                    null.Val[string]  `db:"zone2" `
-	CreatedDate              null.Val[int64]   `db:"created_date" `
-	CreatedUser              null.Val[string]  `db:"created_user" `
-	GeometryX                null.Val[float64] `db:"geometry_x" `
-	GeometryY                null.Val[float64] `db:"geometry_y" `
-	LastEditedDate           null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser           null.Val[string]  `db:"last_edited_user" `
-	Lure                     null.Val[string]  `db:"lure" `
-	Vectorsurvtrapdataid     null.Val[string]  `db:"vectorsurvtrapdataid" `
-	Vectorsurvtraplocationid null.Val[string]  `db:"vectorsurvtraplocationid" `
-	Version                  int32             `db:"version,pk" `
+	OrganizationID           int32               `db:"organization_id" `
+	Avetemp                  null.Val[float64]   `db:"avetemp" `
+	Comments                 null.Val[string]    `db:"comments" `
+	Creationdate             null.Val[int64]     `db:"creationdate" `
+	Creator                  null.Val[string]    `db:"creator" `
+	Enddatetime              null.Val[int64]     `db:"enddatetime" `
+	Editdate                 null.Val[int64]     `db:"editdate" `
+	Editor                   null.Val[string]    `db:"editor" `
+	Fieldtech                null.Val[string]    `db:"fieldtech" `
+	Field                    null.Val[int64]     `db:"field" `
+	Gatewaysync              null.Val[int16]     `db:"gatewaysync" `
+	Globalid                 null.Val[string]    `db:"globalid" `
+	Idbytech                 null.Val[string]    `db:"idbytech" `
+	Locationname             null.Val[string]    `db:"locationname" `
+	LocID                    null.Val[string]    `db:"loc_id" `
+	LR                       null.Val[int16]     `db:"lr" `
+	Objectid                 int32               `db:"objectid,pk" `
+	Processed                null.Val[int16]     `db:"processed" `
+	Raingauge                null.Val[float64]   `db:"raingauge" `
+	Recordstatus             null.Val[int16]     `db:"recordstatus" `
+	Reviewed                 null.Val[int16]     `db:"reviewed" `
+	Reviewedby               null.Val[string]    `db:"reviewedby" `
+	Revieweddate             null.Val[int64]     `db:"revieweddate" `
+	Sitecond                 null.Val[string]    `db:"sitecond" `
+	Sortbytech               null.Val[string]    `db:"sortbytech" `
+	Srid                     null.Val[string]    `db:"srid" `
+	Startdatetime            null.Val[int64]     `db:"startdatetime" `
+	Trapactivitytype         null.Val[string]    `db:"trapactivitytype" `
+	Trapcondition            null.Val[string]    `db:"trapcondition" `
+	Trapnights               null.Val[int16]     `db:"trapnights" `
+	Traptype                 null.Val[string]    `db:"traptype" `
+	Voltage                  null.Val[float64]   `db:"voltage" `
+	Winddir                  null.Val[string]    `db:"winddir" `
+	Windspeed                null.Val[float64]   `db:"windspeed" `
+	Zone                     null.Val[string]    `db:"zone" `
+	Zone2                    null.Val[string]    `db:"zone2" `
+	Created                  null.Val[time.Time] `db:"created" `
+	CreatedDate              null.Val[int64]     `db:"created_date" `
+	CreatedUser              null.Val[string]    `db:"created_user" `
+	GeometryX                null.Val[float64]   `db:"geometry_x" `
+	GeometryY                null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate           null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser           null.Val[string]    `db:"last_edited_user" `
+	Lure                     null.Val[string]    `db:"lure" `
+	Vectorsurvtrapdataid     null.Val[string]    `db:"vectorsurvtrapdataid" `
+	Vectorsurvtraplocationid null.Val[string]    `db:"vectorsurvtraplocationid" `
+	Version                  int32               `db:"version,pk" `
 
 	R historyTrapdatumR `db:"-" `
 }
@@ -93,7 +95,7 @@ type historyTrapdatumR struct {
 func buildHistoryTrapdatumColumns(alias string) historyTrapdatumColumns {
 	return historyTrapdatumColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "avetemp", "comments", "creationdate", "creator", "enddatetime", "editdate", "editor", "fieldtech", "field", "gatewaysync", "globalid", "idbytech", "locationname", "loc_id", "lr", "objectid", "processed", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sitecond", "sortbytech", "srid", "startdatetime", "trapactivitytype", "trapcondition", "trapnights", "traptype", "voltage", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "lure", "vectorsurvtrapdataid", "vectorsurvtraplocationid", "version",
+			"organization_id", "avetemp", "comments", "creationdate", "creator", "enddatetime", "editdate", "editor", "fieldtech", "field", "gatewaysync", "globalid", "idbytech", "locationname", "loc_id", "lr", "objectid", "processed", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sitecond", "sortbytech", "srid", "startdatetime", "trapactivitytype", "trapcondition", "trapnights", "traptype", "voltage", "winddir", "windspeed", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "lure", "vectorsurvtrapdataid", "vectorsurvtraplocationid", "version",
 		).WithParent("history_trapdata"),
 		tableAlias:               alias,
 		OrganizationID:           psql.Quote(alias, "organization_id"),
@@ -132,6 +134,7 @@ func buildHistoryTrapdatumColumns(alias string) historyTrapdatumColumns {
 		Windspeed:                psql.Quote(alias, "windspeed"),
 		Zone:                     psql.Quote(alias, "zone"),
 		Zone2:                    psql.Quote(alias, "zone2"),
+		Created:                  psql.Quote(alias, "created"),
 		CreatedDate:              psql.Quote(alias, "created_date"),
 		CreatedUser:              psql.Quote(alias, "created_user"),
 		GeometryX:                psql.Quote(alias, "geometry_x"),
@@ -184,6 +187,7 @@ type historyTrapdatumColumns struct {
 	Windspeed                psql.Expression
 	Zone                     psql.Expression
 	Zone2                    psql.Expression
+	Created                  psql.Expression
 	CreatedDate              psql.Expression
 	CreatedUser              psql.Expression
 	GeometryX                psql.Expression
@@ -208,57 +212,58 @@ func (historyTrapdatumColumns) AliasedAs(alias string) historyTrapdatumColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryTrapdatumSetter struct {
-	OrganizationID           omitnull.Val[int32]   `db:"organization_id" `
-	Avetemp                  omitnull.Val[float64] `db:"avetemp" `
-	Comments                 omitnull.Val[string]  `db:"comments" `
-	Creationdate             omitnull.Val[int64]   `db:"creationdate" `
-	Creator                  omitnull.Val[string]  `db:"creator" `
-	Enddatetime              omitnull.Val[int64]   `db:"enddatetime" `
-	Editdate                 omitnull.Val[int64]   `db:"editdate" `
-	Editor                   omitnull.Val[string]  `db:"editor" `
-	Fieldtech                omitnull.Val[string]  `db:"fieldtech" `
-	Field                    omitnull.Val[int64]   `db:"field" `
-	Gatewaysync              omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid                 omitnull.Val[string]  `db:"globalid" `
-	Idbytech                 omitnull.Val[string]  `db:"idbytech" `
-	Locationname             omitnull.Val[string]  `db:"locationname" `
-	LocID                    omitnull.Val[string]  `db:"loc_id" `
-	LR                       omitnull.Val[int16]   `db:"lr" `
-	Objectid                 omit.Val[int32]       `db:"objectid,pk" `
-	Processed                omitnull.Val[int16]   `db:"processed" `
-	Raingauge                omitnull.Val[float64] `db:"raingauge" `
-	Recordstatus             omitnull.Val[int16]   `db:"recordstatus" `
-	Reviewed                 omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby               omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate             omitnull.Val[int64]   `db:"revieweddate" `
-	Sitecond                 omitnull.Val[string]  `db:"sitecond" `
-	Sortbytech               omitnull.Val[string]  `db:"sortbytech" `
-	Srid                     omitnull.Val[string]  `db:"srid" `
-	Startdatetime            omitnull.Val[int64]   `db:"startdatetime" `
-	Trapactivitytype         omitnull.Val[string]  `db:"trapactivitytype" `
-	Trapcondition            omitnull.Val[string]  `db:"trapcondition" `
-	Trapnights               omitnull.Val[int16]   `db:"trapnights" `
-	Traptype                 omitnull.Val[string]  `db:"traptype" `
-	Voltage                  omitnull.Val[float64] `db:"voltage" `
-	Winddir                  omitnull.Val[string]  `db:"winddir" `
-	Windspeed                omitnull.Val[float64] `db:"windspeed" `
-	Zone                     omitnull.Val[string]  `db:"zone" `
-	Zone2                    omitnull.Val[string]  `db:"zone2" `
-	CreatedDate              omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser              omitnull.Val[string]  `db:"created_user" `
-	GeometryX                omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY                omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate           omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser           omitnull.Val[string]  `db:"last_edited_user" `
-	Lure                     omitnull.Val[string]  `db:"lure" `
-	Vectorsurvtrapdataid     omitnull.Val[string]  `db:"vectorsurvtrapdataid" `
-	Vectorsurvtraplocationid omitnull.Val[string]  `db:"vectorsurvtraplocationid" `
-	Version                  omit.Val[int32]       `db:"version,pk" `
+	OrganizationID           omit.Val[int32]         `db:"organization_id" `
+	Avetemp                  omitnull.Val[float64]   `db:"avetemp" `
+	Comments                 omitnull.Val[string]    `db:"comments" `
+	Creationdate             omitnull.Val[int64]     `db:"creationdate" `
+	Creator                  omitnull.Val[string]    `db:"creator" `
+	Enddatetime              omitnull.Val[int64]     `db:"enddatetime" `
+	Editdate                 omitnull.Val[int64]     `db:"editdate" `
+	Editor                   omitnull.Val[string]    `db:"editor" `
+	Fieldtech                omitnull.Val[string]    `db:"fieldtech" `
+	Field                    omitnull.Val[int64]     `db:"field" `
+	Gatewaysync              omitnull.Val[int16]     `db:"gatewaysync" `
+	Globalid                 omitnull.Val[string]    `db:"globalid" `
+	Idbytech                 omitnull.Val[string]    `db:"idbytech" `
+	Locationname             omitnull.Val[string]    `db:"locationname" `
+	LocID                    omitnull.Val[string]    `db:"loc_id" `
+	LR                       omitnull.Val[int16]     `db:"lr" `
+	Objectid                 omit.Val[int32]         `db:"objectid,pk" `
+	Processed                omitnull.Val[int16]     `db:"processed" `
+	Raingauge                omitnull.Val[float64]   `db:"raingauge" `
+	Recordstatus             omitnull.Val[int16]     `db:"recordstatus" `
+	Reviewed                 omitnull.Val[int16]     `db:"reviewed" `
+	Reviewedby               omitnull.Val[string]    `db:"reviewedby" `
+	Revieweddate             omitnull.Val[int64]     `db:"revieweddate" `
+	Sitecond                 omitnull.Val[string]    `db:"sitecond" `
+	Sortbytech               omitnull.Val[string]    `db:"sortbytech" `
+	Srid                     omitnull.Val[string]    `db:"srid" `
+	Startdatetime            omitnull.Val[int64]     `db:"startdatetime" `
+	Trapactivitytype         omitnull.Val[string]    `db:"trapactivitytype" `
+	Trapcondition            omitnull.Val[string]    `db:"trapcondition" `
+	Trapnights               omitnull.Val[int16]     `db:"trapnights" `
+	Traptype                 omitnull.Val[string]    `db:"traptype" `
+	Voltage                  omitnull.Val[float64]   `db:"voltage" `
+	Winddir                  omitnull.Val[string]    `db:"winddir" `
+	Windspeed                omitnull.Val[float64]   `db:"windspeed" `
+	Zone                     omitnull.Val[string]    `db:"zone" `
+	Zone2                    omitnull.Val[string]    `db:"zone2" `
+	Created                  omitnull.Val[time.Time] `db:"created" `
+	CreatedDate              omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser              omitnull.Val[string]    `db:"created_user" `
+	GeometryX                omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY                omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate           omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser           omitnull.Val[string]    `db:"last_edited_user" `
+	Lure                     omitnull.Val[string]    `db:"lure" `
+	Vectorsurvtrapdataid     omitnull.Val[string]    `db:"vectorsurvtrapdataid" `
+	Vectorsurvtraplocationid omitnull.Val[string]    `db:"vectorsurvtraplocationid" `
+	Version                  omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryTrapdatumSetter) SetColumns() []string {
-	vals := make([]string, 0, 46)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 47)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Avetemp.IsUnset() {
@@ -366,6 +371,9 @@ func (s HistoryTrapdatumSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -400,8 +408,8 @@ func (s HistoryTrapdatumSetter) SetColumns() []string {
 }
 
 func (s HistoryTrapdatumSetter) Overwrite(t *HistoryTrapdatum) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Avetemp.IsUnset() {
 		t.Avetemp = s.Avetemp.MustGetNull()
@@ -508,6 +516,9 @@ func (s HistoryTrapdatumSetter) Overwrite(t *HistoryTrapdatum) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -546,9 +557,9 @@ func (s *HistoryTrapdatumSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 46)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 47)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -763,64 +774,70 @@ func (s *HistoryTrapdatumSetter) Apply(q *dialect.InsertQuery) {
 			vals[35] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[36] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[36] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[36] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[37] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[37] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[37] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[38] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[38] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[38] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[39] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[39] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[39] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[40] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[40] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[40] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[41] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[41] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[41] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lure.IsUnset() {
-			vals[42] = psql.Arg(s.Lure.MustGetNull())
+		if !s.LastEditedUser.IsUnset() {
+			vals[42] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[42] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Vectorsurvtrapdataid.IsUnset() {
-			vals[43] = psql.Arg(s.Vectorsurvtrapdataid.MustGetNull())
+		if !s.Lure.IsUnset() {
+			vals[43] = psql.Arg(s.Lure.MustGetNull())
 		} else {
 			vals[43] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Vectorsurvtraplocationid.IsUnset() {
-			vals[44] = psql.Arg(s.Vectorsurvtraplocationid.MustGetNull())
+		if !s.Vectorsurvtrapdataid.IsUnset() {
+			vals[44] = psql.Arg(s.Vectorsurvtrapdataid.MustGetNull())
 		} else {
 			vals[44] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[45] = psql.Arg(s.Version.MustGet())
+		if !s.Vectorsurvtraplocationid.IsUnset() {
+			vals[45] = psql.Arg(s.Vectorsurvtraplocationid.MustGetNull())
 		} else {
 			vals[45] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[46] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[46] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -832,9 +849,9 @@ func (s HistoryTrapdatumSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryTrapdatumSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 46)
+	exprs := make([]bob.Expression, 0, 47)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1083,6 +1100,13 @@ func (s HistoryTrapdatumSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "zone2")...),
 			psql.Arg(s.Zone2),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1400,7 +1424,7 @@ func (o *HistoryTrapdatum) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 }
 
 func (os HistoryTrapdatumSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1418,7 +1442,7 @@ func (os HistoryTrapdatumSlice) Organization(mods ...bob.Mod[*dialect.SelectQuer
 
 func attachHistoryTrapdatumOrganization0(ctx context.Context, exec bob.Executor, count int, historyTrapdatum0 *HistoryTrapdatum, organization1 *Organization) (*HistoryTrapdatum, error) {
 	setter := &HistoryTrapdatumSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyTrapdatum0.Update(ctx, exec, setter)
@@ -1465,7 +1489,7 @@ func (historyTrapdatum0 *HistoryTrapdatum) AttachOrganization(ctx context.Contex
 }
 
 type historyTrapdatumWhere[Q psql.Filterable] struct {
-	OrganizationID           psql.WhereNullMod[Q, int32]
+	OrganizationID           psql.WhereMod[Q, int32]
 	Avetemp                  psql.WhereNullMod[Q, float64]
 	Comments                 psql.WhereNullMod[Q, string]
 	Creationdate             psql.WhereNullMod[Q, int64]
@@ -1501,6 +1525,7 @@ type historyTrapdatumWhere[Q psql.Filterable] struct {
 	Windspeed                psql.WhereNullMod[Q, float64]
 	Zone                     psql.WhereNullMod[Q, string]
 	Zone2                    psql.WhereNullMod[Q, string]
+	Created                  psql.WhereNullMod[Q, time.Time]
 	CreatedDate              psql.WhereNullMod[Q, int64]
 	CreatedUser              psql.WhereNullMod[Q, string]
 	GeometryX                psql.WhereNullMod[Q, float64]
@@ -1519,7 +1544,7 @@ func (historyTrapdatumWhere[Q]) AliasedAs(alias string) historyTrapdatumWhere[Q]
 
 func buildHistoryTrapdatumWhere[Q psql.Filterable](cols historyTrapdatumColumns) historyTrapdatumWhere[Q] {
 	return historyTrapdatumWhere[Q]{
-		OrganizationID:           psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:           psql.Where[Q, int32](cols.OrganizationID),
 		Avetemp:                  psql.WhereNull[Q, float64](cols.Avetemp),
 		Comments:                 psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:             psql.WhereNull[Q, int64](cols.Creationdate),
@@ -1555,6 +1580,7 @@ func buildHistoryTrapdatumWhere[Q psql.Filterable](cols historyTrapdatumColumns)
 		Windspeed:                psql.WhereNull[Q, float64](cols.Windspeed),
 		Zone:                     psql.WhereNull[Q, string](cols.Zone),
 		Zone2:                    psql.WhereNull[Q, string](cols.Zone2),
+		Created:                  psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:              psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:              psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:                psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1669,11 +1695,8 @@ func (os HistoryTrapdatumSlice) LoadOrganization(ctx context.Context, exec bob.E
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

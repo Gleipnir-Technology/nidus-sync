@@ -18,9 +18,9 @@ var HistoryTreatmentareas = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -144,6 +144,15 @@ var HistoryTreatmentareas = Table[
 		Type: column{
 			Name:      "type",
 			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -274,6 +283,7 @@ type historyTreatmentareaColumns struct {
 	Treatdate      column
 	TreatID        column
 	Type           column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -285,7 +295,7 @@ type historyTreatmentareaColumns struct {
 
 func (c historyTreatmentareaColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Notified, c.Objectid, c.SessionID, c.ShapeArea, c.ShapeLength, c.Treatdate, c.TreatID, c.Type, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Notified, c.Objectid, c.SessionID, c.ShapeArea, c.ShapeLength, c.Treatdate, c.TreatID, c.Type, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

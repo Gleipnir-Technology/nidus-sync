@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,56 +26,57 @@ import (
 
 // HistorySamplecollection is an object representing the database table.
 type HistorySamplecollection struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Activity       null.Val[string]  `db:"activity" `
-	Avetemp        null.Val[float64] `db:"avetemp" `
-	Chickenid      null.Val[string]  `db:"chickenid" `
-	Comments       null.Val[string]  `db:"comments" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Datesent       null.Val[int64]   `db:"datesent" `
-	Datetested     null.Val[int64]   `db:"datetested" `
-	Diseasepos     null.Val[string]  `db:"diseasepos" `
-	Diseasetested  null.Val[string]  `db:"diseasetested" `
-	Enddatetime    null.Val[int64]   `db:"enddatetime" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Fieldtech      null.Val[string]  `db:"fieldtech" `
-	Flockid        null.Val[string]  `db:"flockid" `
-	Gatewaysync    null.Val[int16]   `db:"gatewaysync" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Lab            null.Val[string]  `db:"lab" `
-	Locationname   null.Val[string]  `db:"locationname" `
-	LocID          null.Val[string]  `db:"loc_id" `
-	Objectid       int32             `db:"objectid,pk" `
-	Processed      null.Val[int16]   `db:"processed" `
-	Raingauge      null.Val[float64] `db:"raingauge" `
-	Recordstatus   null.Val[int16]   `db:"recordstatus" `
-	Reviewed       null.Val[int16]   `db:"reviewed" `
-	Reviewedby     null.Val[string]  `db:"reviewedby" `
-	Revieweddate   null.Val[int64]   `db:"revieweddate" `
-	Samplecond     null.Val[string]  `db:"samplecond" `
-	Samplecount    null.Val[int16]   `db:"samplecount" `
-	Sampleid       null.Val[string]  `db:"sampleid" `
-	Sampletype     null.Val[string]  `db:"sampletype" `
-	Sex            null.Val[string]  `db:"sex" `
-	Sitecond       null.Val[string]  `db:"sitecond" `
-	Species        null.Val[string]  `db:"species" `
-	Startdatetime  null.Val[int64]   `db:"startdatetime" `
-	Survtech       null.Val[string]  `db:"survtech" `
-	Testmethod     null.Val[string]  `db:"testmethod" `
-	Testtech       null.Val[string]  `db:"testtech" `
-	Winddir        null.Val[string]  `db:"winddir" `
-	Windspeed      null.Val[float64] `db:"windspeed" `
-	Zone           null.Val[string]  `db:"zone" `
-	Zone2          null.Val[string]  `db:"zone2" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Activity       null.Val[string]    `db:"activity" `
+	Avetemp        null.Val[float64]   `db:"avetemp" `
+	Chickenid      null.Val[string]    `db:"chickenid" `
+	Comments       null.Val[string]    `db:"comments" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Datesent       null.Val[int64]     `db:"datesent" `
+	Datetested     null.Val[int64]     `db:"datetested" `
+	Diseasepos     null.Val[string]    `db:"diseasepos" `
+	Diseasetested  null.Val[string]    `db:"diseasetested" `
+	Enddatetime    null.Val[int64]     `db:"enddatetime" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Fieldtech      null.Val[string]    `db:"fieldtech" `
+	Flockid        null.Val[string]    `db:"flockid" `
+	Gatewaysync    null.Val[int16]     `db:"gatewaysync" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Lab            null.Val[string]    `db:"lab" `
+	Locationname   null.Val[string]    `db:"locationname" `
+	LocID          null.Val[string]    `db:"loc_id" `
+	Objectid       int32               `db:"objectid,pk" `
+	Processed      null.Val[int16]     `db:"processed" `
+	Raingauge      null.Val[float64]   `db:"raingauge" `
+	Recordstatus   null.Val[int16]     `db:"recordstatus" `
+	Reviewed       null.Val[int16]     `db:"reviewed" `
+	Reviewedby     null.Val[string]    `db:"reviewedby" `
+	Revieweddate   null.Val[int64]     `db:"revieweddate" `
+	Samplecond     null.Val[string]    `db:"samplecond" `
+	Samplecount    null.Val[int16]     `db:"samplecount" `
+	Sampleid       null.Val[string]    `db:"sampleid" `
+	Sampletype     null.Val[string]    `db:"sampletype" `
+	Sex            null.Val[string]    `db:"sex" `
+	Sitecond       null.Val[string]    `db:"sitecond" `
+	Species        null.Val[string]    `db:"species" `
+	Startdatetime  null.Val[int64]     `db:"startdatetime" `
+	Survtech       null.Val[string]    `db:"survtech" `
+	Testmethod     null.Val[string]    `db:"testmethod" `
+	Testtech       null.Val[string]    `db:"testtech" `
+	Winddir        null.Val[string]    `db:"winddir" `
+	Windspeed      null.Val[float64]   `db:"windspeed" `
+	Zone           null.Val[string]    `db:"zone" `
+	Zone2          null.Val[string]    `db:"zone2" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historySamplecollectionR `db:"-" `
 }
@@ -97,7 +99,7 @@ type historySamplecollectionR struct {
 func buildHistorySamplecollectionColumns(alias string) historySamplecollectionColumns {
 	return historySamplecollectionColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "activity", "avetemp", "chickenid", "comments", "creationdate", "creator", "datesent", "datetested", "diseasepos", "diseasetested", "enddatetime", "editdate", "editor", "fieldtech", "flockid", "gatewaysync", "globalid", "lab", "locationname", "loc_id", "objectid", "processed", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "samplecond", "samplecount", "sampleid", "sampletype", "sex", "sitecond", "species", "startdatetime", "survtech", "testmethod", "testtech", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "activity", "avetemp", "chickenid", "comments", "creationdate", "creator", "datesent", "datetested", "diseasepos", "diseasetested", "enddatetime", "editdate", "editor", "fieldtech", "flockid", "gatewaysync", "globalid", "lab", "locationname", "loc_id", "objectid", "processed", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "samplecond", "samplecount", "sampleid", "sampletype", "sex", "sitecond", "species", "startdatetime", "survtech", "testmethod", "testtech", "winddir", "windspeed", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_samplecollection"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -143,6 +145,7 @@ func buildHistorySamplecollectionColumns(alias string) historySamplecollectionCo
 		Windspeed:      psql.Quote(alias, "windspeed"),
 		Zone:           psql.Quote(alias, "zone"),
 		Zone2:          psql.Quote(alias, "zone2"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -199,6 +202,7 @@ type historySamplecollectionColumns struct {
 	Windspeed      psql.Expression
 	Zone           psql.Expression
 	Zone2          psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -220,61 +224,62 @@ func (historySamplecollectionColumns) AliasedAs(alias string) historySamplecolle
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistorySamplecollectionSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Activity       omitnull.Val[string]  `db:"activity" `
-	Avetemp        omitnull.Val[float64] `db:"avetemp" `
-	Chickenid      omitnull.Val[string]  `db:"chickenid" `
-	Comments       omitnull.Val[string]  `db:"comments" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Datesent       omitnull.Val[int64]   `db:"datesent" `
-	Datetested     omitnull.Val[int64]   `db:"datetested" `
-	Diseasepos     omitnull.Val[string]  `db:"diseasepos" `
-	Diseasetested  omitnull.Val[string]  `db:"diseasetested" `
-	Enddatetime    omitnull.Val[int64]   `db:"enddatetime" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Fieldtech      omitnull.Val[string]  `db:"fieldtech" `
-	Flockid        omitnull.Val[string]  `db:"flockid" `
-	Gatewaysync    omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Lab            omitnull.Val[string]  `db:"lab" `
-	Locationname   omitnull.Val[string]  `db:"locationname" `
-	LocID          omitnull.Val[string]  `db:"loc_id" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Processed      omitnull.Val[int16]   `db:"processed" `
-	Raingauge      omitnull.Val[float64] `db:"raingauge" `
-	Recordstatus   omitnull.Val[int16]   `db:"recordstatus" `
-	Reviewed       omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby     omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate   omitnull.Val[int64]   `db:"revieweddate" `
-	Samplecond     omitnull.Val[string]  `db:"samplecond" `
-	Samplecount    omitnull.Val[int16]   `db:"samplecount" `
-	Sampleid       omitnull.Val[string]  `db:"sampleid" `
-	Sampletype     omitnull.Val[string]  `db:"sampletype" `
-	Sex            omitnull.Val[string]  `db:"sex" `
-	Sitecond       omitnull.Val[string]  `db:"sitecond" `
-	Species        omitnull.Val[string]  `db:"species" `
-	Startdatetime  omitnull.Val[int64]   `db:"startdatetime" `
-	Survtech       omitnull.Val[string]  `db:"survtech" `
-	Testmethod     omitnull.Val[string]  `db:"testmethod" `
-	Testtech       omitnull.Val[string]  `db:"testtech" `
-	Winddir        omitnull.Val[string]  `db:"winddir" `
-	Windspeed      omitnull.Val[float64] `db:"windspeed" `
-	Zone           omitnull.Val[string]  `db:"zone" `
-	Zone2          omitnull.Val[string]  `db:"zone2" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Activity       omitnull.Val[string]    `db:"activity" `
+	Avetemp        omitnull.Val[float64]   `db:"avetemp" `
+	Chickenid      omitnull.Val[string]    `db:"chickenid" `
+	Comments       omitnull.Val[string]    `db:"comments" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Datesent       omitnull.Val[int64]     `db:"datesent" `
+	Datetested     omitnull.Val[int64]     `db:"datetested" `
+	Diseasepos     omitnull.Val[string]    `db:"diseasepos" `
+	Diseasetested  omitnull.Val[string]    `db:"diseasetested" `
+	Enddatetime    omitnull.Val[int64]     `db:"enddatetime" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Fieldtech      omitnull.Val[string]    `db:"fieldtech" `
+	Flockid        omitnull.Val[string]    `db:"flockid" `
+	Gatewaysync    omitnull.Val[int16]     `db:"gatewaysync" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Lab            omitnull.Val[string]    `db:"lab" `
+	Locationname   omitnull.Val[string]    `db:"locationname" `
+	LocID          omitnull.Val[string]    `db:"loc_id" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Processed      omitnull.Val[int16]     `db:"processed" `
+	Raingauge      omitnull.Val[float64]   `db:"raingauge" `
+	Recordstatus   omitnull.Val[int16]     `db:"recordstatus" `
+	Reviewed       omitnull.Val[int16]     `db:"reviewed" `
+	Reviewedby     omitnull.Val[string]    `db:"reviewedby" `
+	Revieweddate   omitnull.Val[int64]     `db:"revieweddate" `
+	Samplecond     omitnull.Val[string]    `db:"samplecond" `
+	Samplecount    omitnull.Val[int16]     `db:"samplecount" `
+	Sampleid       omitnull.Val[string]    `db:"sampleid" `
+	Sampletype     omitnull.Val[string]    `db:"sampletype" `
+	Sex            omitnull.Val[string]    `db:"sex" `
+	Sitecond       omitnull.Val[string]    `db:"sitecond" `
+	Species        omitnull.Val[string]    `db:"species" `
+	Startdatetime  omitnull.Val[int64]     `db:"startdatetime" `
+	Survtech       omitnull.Val[string]    `db:"survtech" `
+	Testmethod     omitnull.Val[string]    `db:"testmethod" `
+	Testtech       omitnull.Val[string]    `db:"testtech" `
+	Winddir        omitnull.Val[string]    `db:"winddir" `
+	Windspeed      omitnull.Val[float64]   `db:"windspeed" `
+	Zone           omitnull.Val[string]    `db:"zone" `
+	Zone2          omitnull.Val[string]    `db:"zone2" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistorySamplecollectionSetter) SetColumns() []string {
-	vals := make([]string, 0, 50)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 51)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -403,6 +408,9 @@ func (s HistorySamplecollectionSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -428,8 +436,8 @@ func (s HistorySamplecollectionSetter) SetColumns() []string {
 }
 
 func (s HistorySamplecollectionSetter) Overwrite(t *HistorySamplecollection) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -557,6 +565,9 @@ func (s HistorySamplecollectionSetter) Overwrite(t *HistorySamplecollection) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -586,9 +597,9 @@ func (s *HistorySamplecollectionSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 50)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 51)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -845,46 +856,52 @@ func (s *HistorySamplecollectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[42] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[43] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[43] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[43] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[44] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[44] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[44] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[45] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[45] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[45] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[46] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[46] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[46] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[47] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[47] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[47] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[48] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[48] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[48] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[49] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[49] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[49] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[50] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[50] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -896,9 +913,9 @@ func (s HistorySamplecollectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery]
 }
 
 func (s HistorySamplecollectionSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 50)
+	exprs := make([]bob.Expression, 0, 51)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1199,6 +1216,13 @@ func (s HistorySamplecollectionSetter) Expressions(prefix ...string) []bob.Expre
 		}})
 	}
 
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
+		}})
+	}
+
 	if !s.CreatedDate.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "created_date")...),
@@ -1492,7 +1516,7 @@ func (o *HistorySamplecollection) Organization(mods ...bob.Mod[*dialect.SelectQu
 }
 
 func (os HistorySamplecollectionSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1510,7 +1534,7 @@ func (os HistorySamplecollectionSlice) Organization(mods ...bob.Mod[*dialect.Sel
 
 func attachHistorySamplecollectionOrganization0(ctx context.Context, exec bob.Executor, count int, historySamplecollection0 *HistorySamplecollection, organization1 *Organization) (*HistorySamplecollection, error) {
 	setter := &HistorySamplecollectionSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historySamplecollection0.Update(ctx, exec, setter)
@@ -1557,7 +1581,7 @@ func (historySamplecollection0 *HistorySamplecollection) AttachOrganization(ctx 
 }
 
 type historySamplecollectionWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Activity       psql.WhereNullMod[Q, string]
 	Avetemp        psql.WhereNullMod[Q, float64]
 	Chickenid      psql.WhereNullMod[Q, string]
@@ -1600,6 +1624,7 @@ type historySamplecollectionWhere[Q psql.Filterable] struct {
 	Windspeed      psql.WhereNullMod[Q, float64]
 	Zone           psql.WhereNullMod[Q, string]
 	Zone2          psql.WhereNullMod[Q, string]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -1615,7 +1640,7 @@ func (historySamplecollectionWhere[Q]) AliasedAs(alias string) historySamplecoll
 
 func buildHistorySamplecollectionWhere[Q psql.Filterable](cols historySamplecollectionColumns) historySamplecollectionWhere[Q] {
 	return historySamplecollectionWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Activity:       psql.WhereNull[Q, string](cols.Activity),
 		Avetemp:        psql.WhereNull[Q, float64](cols.Avetemp),
 		Chickenid:      psql.WhereNull[Q, string](cols.Chickenid),
@@ -1658,6 +1683,7 @@ func buildHistorySamplecollectionWhere[Q psql.Filterable](cols historySamplecoll
 		Windspeed:      psql.WhereNull[Q, float64](cols.Windspeed),
 		Zone:           psql.WhereNull[Q, string](cols.Zone),
 		Zone2:          psql.WhereNull[Q, string](cols.Zone2),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1769,11 +1795,8 @@ func (os HistorySamplecollectionSlice) LoadOrganization(ctx context.Context, exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

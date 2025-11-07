@@ -18,9 +18,9 @@ var HistoryZones2s = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -99,6 +99,15 @@ var HistoryZones2s = Table[
 		ShapeLength: column{
 			Name:      "shape__length",
 			DBType:    "double precision",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -224,6 +233,7 @@ type historyZones2Columns struct {
 	Objectid       column
 	ShapeArea      column
 	ShapeLength    column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -235,7 +245,7 @@ type historyZones2Columns struct {
 
 func (c historyZones2Columns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Name, c.Objectid, c.ShapeArea, c.ShapeLength, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Name, c.Objectid, c.ShapeArea, c.ShapeLength, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

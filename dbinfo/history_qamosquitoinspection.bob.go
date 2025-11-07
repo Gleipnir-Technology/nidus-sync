@@ -18,9 +18,9 @@ var HistoryQamosquitoinspections = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -546,6 +546,15 @@ var HistoryQamosquitoinspections = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -714,6 +723,7 @@ type historyQamosquitoinspectionColumns struct {
 	Windspeed                column
 	Zone                     column
 	Zone2                    column
+	Created                  column
 	CreatedDate              column
 	CreatedUser              column
 	GeometryX                column
@@ -725,7 +735,7 @@ type historyQamosquitoinspectionColumns struct {
 
 func (c historyQamosquitoinspectionColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Acresbreeding, c.Actiontaken, c.Adultactivity, c.Aquaticorganisms, c.Avetemp, c.Breedingpotential, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Fish, c.Globalid, c.Habvalue1, c.Habvalue1percent, c.Habvalue2, c.Habvalue2percent, c.Larvaeinsidetreatedarea, c.Larvaeoutsidetreatedarea, c.Larvaepresent, c.Larvaereason, c.Linelocid, c.Locationname, c.LR, c.Mosquitohabitat, c.Movingwater, c.Negdips, c.Nowaterever, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Potential, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sitetype, c.Soilconditions, c.Sourcereduction, c.Startdatetime, c.Totalacres, c.Vegetation, c.Waterconditions, c.Waterduration, c.Watermovement1, c.Watermovement1percent, c.Watermovement2, c.Watermovement2percent, c.Waterpresent, c.Watersource, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Acresbreeding, c.Actiontaken, c.Adultactivity, c.Aquaticorganisms, c.Avetemp, c.Breedingpotential, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Fish, c.Globalid, c.Habvalue1, c.Habvalue1percent, c.Habvalue2, c.Habvalue2percent, c.Larvaeinsidetreatedarea, c.Larvaeoutsidetreatedarea, c.Larvaepresent, c.Larvaereason, c.Linelocid, c.Locationname, c.LR, c.Mosquitohabitat, c.Movingwater, c.Negdips, c.Nowaterever, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Potential, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sitetype, c.Soilconditions, c.Sourcereduction, c.Startdatetime, c.Totalacres, c.Vegetation, c.Waterconditions, c.Waterduration, c.Watermovement1, c.Watermovement1percent, c.Watermovement2, c.Watermovement2percent, c.Waterpresent, c.Watersource, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

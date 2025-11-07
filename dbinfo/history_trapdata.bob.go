@@ -18,9 +18,9 @@ var HistoryTrapdata = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -339,6 +339,15 @@ var HistoryTrapdata = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -511,6 +520,7 @@ type historyTrapdatumColumns struct {
 	Windspeed                column
 	Zone                     column
 	Zone2                    column
+	Created                  column
 	CreatedDate              column
 	CreatedUser              column
 	GeometryX                column
@@ -525,7 +535,7 @@ type historyTrapdatumColumns struct {
 
 func (c historyTrapdatumColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Avetemp, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Field, c.Gatewaysync, c.Globalid, c.Idbytech, c.Locationname, c.LocID, c.LR, c.Objectid, c.Processed, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sitecond, c.Sortbytech, c.Srid, c.Startdatetime, c.Trapactivitytype, c.Trapcondition, c.Trapnights, c.Traptype, c.Voltage, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Lure, c.Vectorsurvtrapdataid, c.Vectorsurvtraplocationid, c.Version,
+		c.OrganizationID, c.Avetemp, c.Comments, c.Creationdate, c.Creator, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Field, c.Gatewaysync, c.Globalid, c.Idbytech, c.Locationname, c.LocID, c.LR, c.Objectid, c.Processed, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sitecond, c.Sortbytech, c.Srid, c.Startdatetime, c.Trapactivitytype, c.Trapcondition, c.Trapnights, c.Traptype, c.Voltage, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Lure, c.Vectorsurvtrapdataid, c.Vectorsurvtraplocationid, c.Version,
 	}
 }
 

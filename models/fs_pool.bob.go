@@ -26,7 +26,7 @@ import (
 
 // FSPool is an object representing the database table.
 type FSPool struct {
-	OrganizationID         null.Val[int32]   `db:"organization_id" `
+	OrganizationID         int32             `db:"organization_id" `
 	Comments               null.Val[string]  `db:"comments" `
 	Creationdate           null.Val[int64]   `db:"creationdate" `
 	Creator                null.Val[string]  `db:"creator" `
@@ -167,7 +167,7 @@ func (fsPoolColumns) AliasedAs(alias string) fsPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSPoolSetter struct {
-	OrganizationID         omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID         omit.Val[int32]       `db:"organization_id" `
 	Comments               omitnull.Val[string]  `db:"comments" `
 	Creationdate           omitnull.Val[int64]   `db:"creationdate" `
 	Creator                omitnull.Val[string]  `db:"creator" `
@@ -203,7 +203,7 @@ type FSPoolSetter struct {
 
 func (s FSPoolSetter) SetColumns() []string {
 	vals := make([]string, 0, 32)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Comments.IsUnset() {
@@ -303,8 +303,8 @@ func (s FSPoolSetter) SetColumns() []string {
 }
 
 func (s FSPoolSetter) Overwrite(t *FSPool) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
@@ -408,8 +408,8 @@ func (s *FSPoolSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 32)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -611,7 +611,7 @@ func (s FSPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSPoolSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 32)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1069,7 +1069,7 @@ func (o *FSPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organizatio
 }
 
 func (os FSPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1087,7 +1087,7 @@ func (os FSPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 
 func attachFSPoolOrganization0(ctx context.Context, exec bob.Executor, count int, fsPool0 *FSPool, organization1 *Organization) (*FSPool, error) {
 	setter := &FSPoolSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsPool0.Update(ctx, exec, setter)
@@ -1134,7 +1134,7 @@ func (fsPool0 *FSPool) AttachOrganization(ctx context.Context, exec bob.Executor
 }
 
 type fsPoolWhere[Q psql.Filterable] struct {
-	OrganizationID         psql.WhereNullMod[Q, int32]
+	OrganizationID         psql.WhereMod[Q, int32]
 	Comments               psql.WhereNullMod[Q, string]
 	Creationdate           psql.WhereNullMod[Q, int64]
 	Creator                psql.WhereNullMod[Q, string]
@@ -1174,7 +1174,7 @@ func (fsPoolWhere[Q]) AliasedAs(alias string) fsPoolWhere[Q] {
 
 func buildFSPoolWhere[Q psql.Filterable](cols fsPoolColumns) fsPoolWhere[Q] {
 	return fsPoolWhere[Q]{
-		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		Comments:               psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:           psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:                psql.WhereNull[Q, string](cols.Creator),
@@ -1310,11 +1310,8 @@ func (os FSPoolSlice) LoadOrganization(ctx context.Context, exec bob.Executor, m
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

@@ -26,7 +26,7 @@ import (
 
 // FSTreatment is an object representing the database table.
 type FSTreatment struct {
-	OrganizationID       null.Val[int32]   `db:"organization_id" `
+	OrganizationID       int32             `db:"organization_id" `
 	Activity             null.Val[string]  `db:"activity" `
 	Areaunit             null.Val[string]  `db:"areaunit" `
 	Avetemp              null.Val[float64] `db:"avetemp" `
@@ -245,7 +245,7 @@ func (fsTreatmentColumns) AliasedAs(alias string) fsTreatmentColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSTreatmentSetter struct {
-	OrganizationID       omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID       omit.Val[int32]       `db:"organization_id" `
 	Activity             omitnull.Val[string]  `db:"activity" `
 	Areaunit             omitnull.Val[string]  `db:"areaunit" `
 	Avetemp              omitnull.Val[float64] `db:"avetemp" `
@@ -307,7 +307,7 @@ type FSTreatmentSetter struct {
 
 func (s FSTreatmentSetter) SetColumns() []string {
 	vals := make([]string, 0, 58)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -485,8 +485,8 @@ func (s FSTreatmentSetter) SetColumns() []string {
 }
 
 func (s FSTreatmentSetter) Overwrite(t *FSTreatment) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -668,8 +668,8 @@ func (s *FSTreatmentSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 58)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -1027,7 +1027,7 @@ func (s FSTreatmentSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 58)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1667,7 +1667,7 @@ func (o *FSTreatment) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 }
 
 func (os FSTreatmentSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1685,7 +1685,7 @@ func (os FSTreatmentSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 
 func attachFSTreatmentOrganization0(ctx context.Context, exec bob.Executor, count int, fsTreatment0 *FSTreatment, organization1 *Organization) (*FSTreatment, error) {
 	setter := &FSTreatmentSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsTreatment0.Update(ctx, exec, setter)
@@ -1732,7 +1732,7 @@ func (fsTreatment0 *FSTreatment) AttachOrganization(ctx context.Context, exec bo
 }
 
 type fsTreatmentWhere[Q psql.Filterable] struct {
-	OrganizationID       psql.WhereNullMod[Q, int32]
+	OrganizationID       psql.WhereMod[Q, int32]
 	Activity             psql.WhereNullMod[Q, string]
 	Areaunit             psql.WhereNullMod[Q, string]
 	Avetemp              psql.WhereNullMod[Q, float64]
@@ -1798,7 +1798,7 @@ func (fsTreatmentWhere[Q]) AliasedAs(alias string) fsTreatmentWhere[Q] {
 
 func buildFSTreatmentWhere[Q psql.Filterable](cols fsTreatmentColumns) fsTreatmentWhere[Q] {
 	return fsTreatmentWhere[Q]{
-		OrganizationID:       psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:       psql.Where[Q, int32](cols.OrganizationID),
 		Activity:             psql.WhereNull[Q, string](cols.Activity),
 		Areaunit:             psql.WhereNull[Q, string](cols.Areaunit),
 		Avetemp:              psql.WhereNull[Q, float64](cols.Avetemp),
@@ -1960,11 +1960,8 @@ func (os FSTreatmentSlice) LoadOrganization(ctx context.Context, exec bob.Execut
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

@@ -26,7 +26,7 @@ import (
 
 // FSInspectionsampledetail is an object representing the database table.
 type FSInspectionsampledetail struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Comments       null.Val[string]  `db:"comments" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
@@ -158,7 +158,7 @@ func (fsInspectionsampledetailColumns) AliasedAs(alias string) fsInspectionsampl
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSInspectionsampledetailSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Comments       omitnull.Val[string]  `db:"comments" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
@@ -191,7 +191,7 @@ type FSInspectionsampledetailSetter struct {
 
 func (s FSInspectionsampledetailSetter) SetColumns() []string {
 	vals := make([]string, 0, 29)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Comments.IsUnset() {
@@ -282,8 +282,8 @@ func (s FSInspectionsampledetailSetter) SetColumns() []string {
 }
 
 func (s FSInspectionsampledetailSetter) Overwrite(t *FSInspectionsampledetail) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
@@ -378,8 +378,8 @@ func (s *FSInspectionsampledetailSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 29)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -563,7 +563,7 @@ func (s FSInspectionsampledetailSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery
 func (s FSInspectionsampledetailSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 29)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1000,7 +1000,7 @@ func (o *FSInspectionsampledetail) Organization(mods ...bob.Mod[*dialect.SelectQ
 }
 
 func (os FSInspectionsampledetailSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1018,7 +1018,7 @@ func (os FSInspectionsampledetailSlice) Organization(mods ...bob.Mod[*dialect.Se
 
 func attachFSInspectionsampledetailOrganization0(ctx context.Context, exec bob.Executor, count int, fsInspectionsampledetail0 *FSInspectionsampledetail, organization1 *Organization) (*FSInspectionsampledetail, error) {
 	setter := &FSInspectionsampledetailSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsInspectionsampledetail0.Update(ctx, exec, setter)
@@ -1065,7 +1065,7 @@ func (fsInspectionsampledetail0 *FSInspectionsampledetail) AttachOrganization(ct
 }
 
 type fsInspectionsampledetailWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Comments       psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -1102,7 +1102,7 @@ func (fsInspectionsampledetailWhere[Q]) AliasedAs(alias string) fsInspectionsamp
 
 func buildFSInspectionsampledetailWhere[Q psql.Filterable](cols fsInspectionsampledetailColumns) fsInspectionsampledetailWhere[Q] {
 	return fsInspectionsampledetailWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Comments:       psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -1235,11 +1235,8 @@ func (os FSInspectionsampledetailSlice) LoadOrganization(ctx context.Context, ex
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

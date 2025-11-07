@@ -18,9 +18,9 @@ var HistoryPools = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -213,6 +213,15 @@ var HistoryPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -371,6 +380,7 @@ type historyPoolColumns struct {
 	Testmethod             column
 	Testtech               column
 	TrapdataID             column
+	Created                column
 	CreatedDate            column
 	CreatedUser            column
 	GeometryX              column
@@ -385,7 +395,7 @@ type historyPoolColumns struct {
 
 func (c historyPoolColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Datesent, c.Datetested, c.Diseasepos, c.Diseasetested, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Lab, c.LabID, c.Objectid, c.Poolyear, c.Processed, c.Sampleid, c.Survtech, c.Testmethod, c.Testtech, c.TrapdataID, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Vectorsurvcollectionid, c.Vectorsurvpoolid, c.Vectorsurvtrapdataid, c.Version,
+		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Datesent, c.Datetested, c.Diseasepos, c.Diseasetested, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Lab, c.LabID, c.Objectid, c.Poolyear, c.Processed, c.Sampleid, c.Survtech, c.Testmethod, c.Testtech, c.TrapdataID, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Vectorsurvcollectionid, c.Vectorsurvpoolid, c.Vectorsurvtrapdataid, c.Version,
 	}
 }
 

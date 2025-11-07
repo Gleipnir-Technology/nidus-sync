@@ -17,6 +17,7 @@ var (
 )
 
 func Where[Q psql.Filterable]() struct {
+	FieldseekerSyncs               fieldseekerSyncWhere[Q]
 	FSContainerrelates             fsContainerrelateWhere[Q]
 	FSFieldscoutinglogs            fsFieldscoutinglogWhere[Q]
 	FSHabitatrelates               fsHabitatrelateWhere[Q]
@@ -78,6 +79,7 @@ func Where[Q psql.Filterable]() struct {
 	Users                          userWhere[Q]
 } {
 	return struct {
+		FieldseekerSyncs               fieldseekerSyncWhere[Q]
 		FSContainerrelates             fsContainerrelateWhere[Q]
 		FSFieldscoutinglogs            fsFieldscoutinglogWhere[Q]
 		FSHabitatrelates               fsHabitatrelateWhere[Q]
@@ -138,6 +140,7 @@ func Where[Q psql.Filterable]() struct {
 		Sessions                       sessionWhere[Q]
 		Users                          userWhere[Q]
 	}{
+		FieldseekerSyncs:               buildFieldseekerSyncWhere[Q](FieldseekerSyncs.Columns),
 		FSContainerrelates:             buildFSContainerrelateWhere[Q](FSContainerrelates.Columns),
 		FSFieldscoutinglogs:            buildFSFieldscoutinglogWhere[Q](FSFieldscoutinglogs.Columns),
 		FSHabitatrelates:               buildFSHabitatrelateWhere[Q](FSHabitatrelates.Columns),

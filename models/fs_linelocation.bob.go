@@ -26,7 +26,7 @@ import (
 
 // FSLinelocation is an object representing the database table.
 type FSLinelocation struct {
-	OrganizationID          null.Val[int32]   `db:"organization_id" `
+	OrganizationID          int32             `db:"organization_id" `
 	Accessdesc              null.Val[string]  `db:"accessdesc" `
 	Acres                   null.Val[float64] `db:"acres" `
 	Active                  null.Val[int16]   `db:"active" `
@@ -227,7 +227,7 @@ func (fsLinelocationColumns) AliasedAs(alias string) fsLinelocationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSLinelocationSetter struct {
-	OrganizationID          omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID          omit.Val[int32]       `db:"organization_id" `
 	Accessdesc              omitnull.Val[string]  `db:"accessdesc" `
 	Acres                   omitnull.Val[float64] `db:"acres" `
 	Active                  omitnull.Val[int16]   `db:"active" `
@@ -283,7 +283,7 @@ type FSLinelocationSetter struct {
 
 func (s FSLinelocationSetter) SetColumns() []string {
 	vals := make([]string, 0, 52)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accessdesc.IsUnset() {
@@ -443,8 +443,8 @@ func (s FSLinelocationSetter) SetColumns() []string {
 }
 
 func (s FSLinelocationSetter) Overwrite(t *FSLinelocation) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accessdesc.IsUnset() {
 		t.Accessdesc = s.Accessdesc.MustGetNull()
@@ -608,8 +608,8 @@ func (s *FSLinelocationSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 52)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -931,7 +931,7 @@ func (s FSLinelocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSLinelocationSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 52)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1529,7 +1529,7 @@ func (o *FSLinelocation) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Org
 }
 
 func (os FSLinelocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1547,7 +1547,7 @@ func (os FSLinelocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]
 
 func attachFSLinelocationOrganization0(ctx context.Context, exec bob.Executor, count int, fsLinelocation0 *FSLinelocation, organization1 *Organization) (*FSLinelocation, error) {
 	setter := &FSLinelocationSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsLinelocation0.Update(ctx, exec, setter)
@@ -1594,7 +1594,7 @@ func (fsLinelocation0 *FSLinelocation) AttachOrganization(ctx context.Context, e
 }
 
 type fsLinelocationWhere[Q psql.Filterable] struct {
-	OrganizationID          psql.WhereNullMod[Q, int32]
+	OrganizationID          psql.WhereMod[Q, int32]
 	Accessdesc              psql.WhereNullMod[Q, string]
 	Acres                   psql.WhereNullMod[Q, float64]
 	Active                  psql.WhereNullMod[Q, int16]
@@ -1654,7 +1654,7 @@ func (fsLinelocationWhere[Q]) AliasedAs(alias string) fsLinelocationWhere[Q] {
 
 func buildFSLinelocationWhere[Q psql.Filterable](cols fsLinelocationColumns) fsLinelocationWhere[Q] {
 	return fsLinelocationWhere[Q]{
-		OrganizationID:          psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:          psql.Where[Q, int32](cols.OrganizationID),
 		Accessdesc:              psql.WhereNull[Q, string](cols.Accessdesc),
 		Acres:                   psql.WhereNull[Q, float64](cols.Acres),
 		Active:                  psql.WhereNull[Q, int16](cols.Active),
@@ -1810,11 +1810,8 @@ func (os FSLinelocationSlice) LoadOrganization(ctx context.Context, exec bob.Exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

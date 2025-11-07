@@ -18,9 +18,9 @@ var HistoryTraplocations = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -198,6 +198,15 @@ var HistoryTraplocations = Table[
 		Zone2: column{
 			Name:      "zone2",
 			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -388,6 +397,7 @@ type historyTraplocationColumns struct {
 	Usetype                 column
 	Zone                    column
 	Zone2                   column
+	Created                 column
 	CreatedDate             column
 	CreatedUser             column
 	GeometryX               column
@@ -405,7 +415,7 @@ type historyTraplocationColumns struct {
 
 func (c historyTraplocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Habitat, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Usetype, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Route, c.RouteOrder, c.SetDow, c.Vectorsurvsiteid, c.H3R7, c.H3R8, c.Version,
+		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Habitat, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Usetype, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Route, c.RouteOrder, c.SetDow, c.Vectorsurvsiteid, c.H3R7, c.H3R8, c.Version,
 	}
 }
 

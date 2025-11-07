@@ -13,6 +13,7 @@ import (
 )
 
 type Factory struct {
+	baseFieldseekerSyncMods               FieldseekerSyncModSlice
 	baseFSContainerrelateMods             FSContainerrelateModSlice
 	baseFSFieldscoutinglogMods            FSFieldscoutinglogModSlice
 	baseFSHabitatrelateMods               FSHabitatrelateModSlice
@@ -78,6 +79,40 @@ func New() *Factory {
 	return &Factory{}
 }
 
+func (f *Factory) NewFieldseekerSync(mods ...FieldseekerSyncMod) *FieldseekerSyncTemplate {
+	return f.NewFieldseekerSyncWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFieldseekerSyncWithContext(ctx context.Context, mods ...FieldseekerSyncMod) *FieldseekerSyncTemplate {
+	o := &FieldseekerSyncTemplate{f: f}
+
+	if f != nil {
+		f.baseFieldseekerSyncMods.Apply(ctx, o)
+	}
+
+	FieldseekerSyncModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFieldseekerSync(m *models.FieldseekerSync) *FieldseekerSyncTemplate {
+	o := &FieldseekerSyncTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.Created = func() time.Time { return m.Created }
+	o.RecordsCreated = func() int32 { return m.RecordsCreated }
+	o.RecordsUpdated = func() int32 { return m.RecordsUpdated }
+	o.RecordsUnchanged = func() int32 { return m.RecordsUnchanged }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.Organization != nil {
+		FieldseekerSyncMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewFSContainerrelate(mods ...FSContainerrelateMod) *FSContainerrelateTemplate {
 	return f.NewFSContainerrelateWithContext(context.Background(), mods...)
 }
@@ -97,7 +132,7 @@ func (f *Factory) NewFSContainerrelateWithContext(ctx context.Context, mods ...F
 func (f *Factory) FromExistingFSContainerrelate(m *models.FSContainerrelate) *FSContainerrelateTemplate {
 	o := &FSContainerrelateTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Containertype = func() null.Val[string] { return m.Containertype }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -143,7 +178,7 @@ func (f *Factory) NewFSFieldscoutinglogWithContext(ctx context.Context, mods ...
 func (f *Factory) FromExistingFSFieldscoutinglog(m *models.FSFieldscoutinglog) *FSFieldscoutinglogTemplate {
 	o := &FSFieldscoutinglogTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -186,7 +221,7 @@ func (f *Factory) NewFSHabitatrelateWithContext(ctx context.Context, mods ...FSH
 func (f *Factory) FromExistingFSHabitatrelate(m *models.FSHabitatrelate) *FSHabitatrelateTemplate {
 	o := &FSHabitatrelateTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -230,7 +265,7 @@ func (f *Factory) NewFSInspectionsampleWithContext(ctx context.Context, mods ...
 func (f *Factory) FromExistingFSInspectionsample(m *models.FSInspectionsample) *FSInspectionsampleTemplate {
 	o := &FSInspectionsampleTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -276,7 +311,7 @@ func (f *Factory) NewFSInspectionsampledetailWithContext(ctx context.Context, mo
 func (f *Factory) FromExistingFSInspectionsampledetail(m *models.FSInspectionsampledetail) *FSInspectionsampledetailTemplate {
 	o := &FSInspectionsampledetailTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -333,7 +368,7 @@ func (f *Factory) NewFSLinelocationWithContext(ctx context.Context, mods ...FSLi
 func (f *Factory) FromExistingFSLinelocation(m *models.FSLinelocation) *FSLinelocationTemplate {
 	o := &FSLinelocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Active = func() null.Val[int16] { return m.Active }
@@ -413,7 +448,7 @@ func (f *Factory) NewFSLocationtrackingWithContext(ctx context.Context, mods ...
 func (f *Factory) FromExistingFSLocationtracking(m *models.FSLocationtracking) *FSLocationtrackingTemplate {
 	o := &FSLocationtrackingTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accuracy = func() null.Val[float64] { return m.Accuracy }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -457,7 +492,7 @@ func (f *Factory) NewFSMosquitoinspectionWithContext(ctx context.Context, mods .
 func (f *Factory) FromExistingFSMosquitoinspection(m *models.FSMosquitoinspection) *FSMosquitoinspectionTemplate {
 	o := &FSMosquitoinspectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Actiontaken = func() null.Val[string] { return m.Actiontaken }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Adultact = func() null.Val[string] { return m.Adultact }
@@ -546,7 +581,7 @@ func (f *Factory) NewFSPointlocationWithContext(ctx context.Context, mods ...FSP
 func (f *Factory) FromExistingFSPointlocation(m *models.FSPointlocation) *FSPointlocationTemplate {
 	o := &FSPointlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -622,7 +657,7 @@ func (f *Factory) NewFSPolygonlocationWithContext(ctx context.Context, mods ...F
 func (f *Factory) FromExistingFSPolygonlocation(m *models.FSPolygonlocation) *FSPolygonlocationTemplate {
 	o := &FSPolygonlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Active = func() null.Val[int16] { return m.Active }
@@ -696,7 +731,7 @@ func (f *Factory) NewFSPoolWithContext(ctx context.Context, mods ...FSPoolMod) *
 func (f *Factory) FromExistingFSPool(m *models.FSPool) *FSPoolTemplate {
 	o := &FSPoolTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -756,7 +791,7 @@ func (f *Factory) NewFSPooldetailWithContext(ctx context.Context, mods ...FSPool
 func (f *Factory) FromExistingFSPooldetail(m *models.FSPooldetail) *FSPooldetailTemplate {
 	o := &FSPooldetailTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -802,7 +837,7 @@ func (f *Factory) NewFSProposedtreatmentareaWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingFSProposedtreatmentarea(m *models.FSProposedtreatmentarea) *FSProposedtreatmentareaTemplate {
 	o := &FSProposedtreatmentareaTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Completed = func() null.Val[int16] { return m.Completed }
@@ -867,7 +902,7 @@ func (f *Factory) NewFSQamosquitoinspectionWithContext(ctx context.Context, mods
 func (f *Factory) FromExistingFSQamosquitoinspection(m *models.FSQamosquitoinspection) *FSQamosquitoinspectionTemplate {
 	o := &FSQamosquitoinspectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Acresbreeding = func() null.Val[float64] { return m.Acresbreeding }
 	o.Actiontaken = func() null.Val[string] { return m.Actiontaken }
 	o.Adultactivity = func() null.Val[int16] { return m.Adultactivity }
@@ -961,7 +996,7 @@ func (f *Factory) NewFSRodentlocationWithContext(ctx context.Context, mods ...FS
 func (f *Factory) FromExistingFSRodentlocation(m *models.FSRodentlocation) *FSRodentlocationTemplate {
 	o := &FSRodentlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -1023,7 +1058,7 @@ func (f *Factory) NewFSSamplecollectionWithContext(ctx context.Context, mods ...
 func (f *Factory) FromExistingFSSamplecollection(m *models.FSSamplecollection) *FSSamplecollectionTemplate {
 	o := &FSSamplecollectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
 	o.Chickenid = func() null.Val[string] { return m.Chickenid }
@@ -1101,7 +1136,7 @@ func (f *Factory) NewFSSamplelocationWithContext(ctx context.Context, mods ...FS
 func (f *Factory) FromExistingFSSamplelocation(m *models.FSSamplelocation) *FSSamplelocationTemplate {
 	o := &FSSamplelocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -1157,7 +1192,7 @@ func (f *Factory) NewFSServicerequestWithContext(ctx context.Context, mods ...FS
 func (f *Factory) FromExistingFSServicerequest(m *models.FSServicerequest) *FSServicerequestTemplate {
 	o := &FSServicerequestTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accepted = func() null.Val[int16] { return m.Accepted }
 	o.Acceptedby = func() null.Val[string] { return m.Acceptedby }
 	o.Accepteddate = func() null.Val[int64] { return m.Accepteddate }
@@ -1275,7 +1310,7 @@ func (f *Factory) NewFSSpeciesabundanceWithContext(ctx context.Context, mods ...
 func (f *Factory) FromExistingFSSpeciesabundance(m *models.FSSpeciesabundance) *FSSpeciesabundanceTemplate {
 	o := &FSSpeciesabundanceTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Bloodedfem = func() null.Val[int16] { return m.Bloodedfem }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -1336,7 +1371,7 @@ func (f *Factory) NewFSStormdrainWithContext(ctx context.Context, mods ...FSStor
 func (f *Factory) FromExistingFSStormdrain(m *models.FSStormdrain) *FSStormdrainTemplate {
 	o := &FSStormdrainTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -1387,7 +1422,7 @@ func (f *Factory) NewFSTimecardWithContext(ctx context.Context, mods ...FSTimeca
 func (f *Factory) FromExistingFSTimecard(m *models.FSTimecard) *FSTimecardTemplate {
 	o := &FSTimecardTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
@@ -1447,7 +1482,7 @@ func (f *Factory) NewFSTrapdatumWithContext(ctx context.Context, mods ...FSTrapd
 func (f *Factory) FromExistingFSTrapdatum(m *models.FSTrapdatum) *FSTrapdatumTemplate {
 	o := &FSTrapdatumTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
@@ -1521,7 +1556,7 @@ func (f *Factory) NewFSTraplocationWithContext(ctx context.Context, mods ...FSTr
 func (f *Factory) FromExistingFSTraplocation(m *models.FSTraplocation) *FSTraplocationTemplate {
 	o := &FSTraplocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -1583,7 +1618,7 @@ func (f *Factory) NewFSTreatmentWithContext(ctx context.Context, mods ...FSTreat
 func (f *Factory) FromExistingFSTreatment(m *models.FSTreatment) *FSTreatmentTemplate {
 	o := &FSTreatmentTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Areaunit = func() null.Val[string] { return m.Areaunit }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
@@ -1669,7 +1704,7 @@ func (f *Factory) NewFSTreatmentareaWithContext(ctx context.Context, mods ...FST
 func (f *Factory) FromExistingFSTreatmentarea(m *models.FSTreatmentarea) *FSTreatmentareaTemplate {
 	o := &FSTreatmentareaTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -1719,7 +1754,7 @@ func (f *Factory) NewFSZoneWithContext(ctx context.Context, mods ...FSZoneMod) *
 func (f *Factory) FromExistingFSZone(m *models.FSZone) *FSZoneTemplate {
 	o := &FSZoneTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Active = func() null.Val[int64] { return m.Active }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -1765,7 +1800,7 @@ func (f *Factory) NewFSZones2WithContext(ctx context.Context, mods ...FSZones2Mo
 func (f *Factory) FromExistingFSZones2(m *models.FSZones2) *FSZones2Template {
 	o := &FSZones2Template{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -1837,7 +1872,7 @@ func (f *Factory) NewHistoryContainerrelateWithContext(ctx context.Context, mods
 func (f *Factory) FromExistingHistoryContainerrelate(m *models.HistoryContainerrelate) *HistoryContainerrelateTemplate {
 	o := &HistoryContainerrelateTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Containertype = func() null.Val[string] { return m.Containertype }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -1848,6 +1883,7 @@ func (f *Factory) FromExistingHistoryContainerrelate(m *models.HistoryContainerr
 	o.Mosquitoinspid = func() null.Val[string] { return m.Mosquitoinspid }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.Treatmentid = func() null.Val[string] { return m.Treatmentid }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -1883,7 +1919,7 @@ func (f *Factory) NewHistoryFieldscoutinglogWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingHistoryFieldscoutinglog(m *models.HistoryFieldscoutinglog) *HistoryFieldscoutinglogTemplate {
 	o := &HistoryFieldscoutinglogTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -1891,6 +1927,7 @@ func (f *Factory) FromExistingHistoryFieldscoutinglog(m *models.HistoryFieldscou
 	o.Globalid = func() null.Val[string] { return m.Globalid }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.Status = func() null.Val[int16] { return m.Status }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -1926,7 +1963,7 @@ func (f *Factory) NewHistoryHabitatrelateWithContext(ctx context.Context, mods .
 func (f *Factory) FromExistingHistoryHabitatrelate(m *models.HistoryHabitatrelate) *HistoryHabitatrelateTemplate {
 	o := &HistoryHabitatrelateTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -1935,6 +1972,7 @@ func (f *Factory) FromExistingHistoryHabitatrelate(m *models.HistoryHabitatrelat
 	o.Globalid = func() null.Val[string] { return m.Globalid }
 	o.Habitattype = func() null.Val[string] { return m.Habitattype }
 	o.Objectid = func() int32 { return m.Objectid }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -1970,7 +2008,7 @@ func (f *Factory) NewHistoryInspectionsampleWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingHistoryInspectionsample(m *models.HistoryInspectionsample) *HistoryInspectionsampleTemplate {
 	o := &HistoryInspectionsampleTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -1981,6 +2019,7 @@ func (f *Factory) FromExistingHistoryInspectionsample(m *models.HistoryInspectio
 	o.Objectid = func() int32 { return m.Objectid }
 	o.Processed = func() null.Val[int16] { return m.Processed }
 	o.Sampleid = func() null.Val[string] { return m.Sampleid }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2016,7 +2055,7 @@ func (f *Factory) NewHistoryInspectionsampledetailWithContext(ctx context.Contex
 func (f *Factory) FromExistingHistoryInspectionsampledetail(m *models.HistoryInspectionsampledetail) *HistoryInspectionsampledetailTemplate {
 	o := &HistoryInspectionsampledetailTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -2038,6 +2077,7 @@ func (f *Factory) FromExistingHistoryInspectionsampledetail(m *models.HistoryIns
 	o.Lpupcount = func() null.Val[int16] { return m.Lpupcount }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.Processed = func() null.Val[int16] { return m.Processed }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2073,7 +2113,7 @@ func (f *Factory) NewHistoryLinelocationWithContext(ctx context.Context, mods ..
 func (f *Factory) FromExistingHistoryLinelocation(m *models.HistoryLinelocation) *HistoryLinelocationTemplate {
 	o := &HistoryLinelocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Active = func() null.Val[int16] { return m.Active }
@@ -2118,6 +2158,7 @@ func (f *Factory) FromExistingHistoryLinelocation(m *models.HistoryLinelocation)
 	o.WidthMeters = func() null.Val[float64] { return m.WidthMeters }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2153,7 +2194,7 @@ func (f *Factory) NewHistoryLocationtrackingWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingHistoryLocationtracking(m *models.HistoryLocationtracking) *HistoryLocationtrackingTemplate {
 	o := &HistoryLocationtrackingTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accuracy = func() null.Val[float64] { return m.Accuracy }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -2162,6 +2203,7 @@ func (f *Factory) FromExistingHistoryLocationtracking(m *models.HistoryLocationt
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
 	o.Globalid = func() null.Val[string] { return m.Globalid }
 	o.Objectid = func() int32 { return m.Objectid }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2197,7 +2239,7 @@ func (f *Factory) NewHistoryMosquitoinspectionWithContext(ctx context.Context, m
 func (f *Factory) FromExistingHistoryMosquitoinspection(m *models.HistoryMosquitoinspection) *HistoryMosquitoinspectionTemplate {
 	o := &HistoryMosquitoinspectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Actiontaken = func() null.Val[string] { return m.Actiontaken }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Adultact = func() null.Val[string] { return m.Adultact }
@@ -2249,6 +2291,7 @@ func (f *Factory) FromExistingHistoryMosquitoinspection(m *models.HistoryMosquit
 	o.Windspeed = func() null.Val[float64] { return m.Windspeed }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2286,7 +2329,7 @@ func (f *Factory) NewHistoryPointlocationWithContext(ctx context.Context, mods .
 func (f *Factory) FromExistingHistoryPointlocation(m *models.HistoryPointlocation) *HistoryPointlocationTemplate {
 	o := &HistoryPointlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -2362,7 +2405,7 @@ func (f *Factory) NewHistoryPolygonlocationWithContext(ctx context.Context, mods
 func (f *Factory) FromExistingHistoryPolygonlocation(m *models.HistoryPolygonlocation) *HistoryPolygonlocationTemplate {
 	o := &HistoryPolygonlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Active = func() null.Val[int16] { return m.Active }
@@ -2436,7 +2479,7 @@ func (f *Factory) NewHistoryPoolWithContext(ctx context.Context, mods ...History
 func (f *Factory) FromExistingHistoryPool(m *models.HistoryPool) *HistoryPoolTemplate {
 	o := &HistoryPoolTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -2458,6 +2501,7 @@ func (f *Factory) FromExistingHistoryPool(m *models.HistoryPool) *HistoryPoolTem
 	o.Testmethod = func() null.Val[string] { return m.Testmethod }
 	o.Testtech = func() null.Val[string] { return m.Testtech }
 	o.TrapdataID = func() null.Val[string] { return m.TrapdataID }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2496,7 +2540,7 @@ func (f *Factory) NewHistoryPooldetailWithContext(ctx context.Context, mods ...H
 func (f *Factory) FromExistingHistoryPooldetail(m *models.HistoryPooldetail) *HistoryPooldetailTemplate {
 	o := &HistoryPooldetailTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -2507,6 +2551,7 @@ func (f *Factory) FromExistingHistoryPooldetail(m *models.HistoryPooldetail) *Hi
 	o.PoolID = func() null.Val[string] { return m.PoolID }
 	o.Species = func() null.Val[string] { return m.Species }
 	o.TrapdataID = func() null.Val[string] { return m.TrapdataID }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2542,7 +2587,7 @@ func (f *Factory) NewHistoryProposedtreatmentareaWithContext(ctx context.Context
 func (f *Factory) FromExistingHistoryProposedtreatmentarea(m *models.HistoryProposedtreatmentarea) *HistoryProposedtreatmentareaTemplate {
 	o := &HistoryProposedtreatmentareaTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Acres = func() null.Val[float64] { return m.Acres }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Completed = func() null.Val[int16] { return m.Completed }
@@ -2607,7 +2652,7 @@ func (f *Factory) NewHistoryQamosquitoinspectionWithContext(ctx context.Context,
 func (f *Factory) FromExistingHistoryQamosquitoinspection(m *models.HistoryQamosquitoinspection) *HistoryQamosquitoinspectionTemplate {
 	o := &HistoryQamosquitoinspectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Acresbreeding = func() null.Val[float64] { return m.Acresbreeding }
 	o.Actiontaken = func() null.Val[string] { return m.Actiontaken }
 	o.Adultactivity = func() null.Val[int16] { return m.Adultactivity }
@@ -2666,6 +2711,7 @@ func (f *Factory) FromExistingHistoryQamosquitoinspection(m *models.HistoryQamos
 	o.Windspeed = func() null.Val[float64] { return m.Windspeed }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2701,7 +2747,7 @@ func (f *Factory) NewHistoryRodentlocationWithContext(ctx context.Context, mods 
 func (f *Factory) FromExistingHistoryRodentlocation(m *models.HistoryRodentlocation) *HistoryRodentlocationTemplate {
 	o := &HistoryRodentlocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -2727,6 +2773,7 @@ func (f *Factory) FromExistingHistoryRodentlocation(m *models.HistoryRodentlocat
 	o.Usetype = func() null.Val[string] { return m.Usetype }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2763,7 +2810,7 @@ func (f *Factory) NewHistorySamplecollectionWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingHistorySamplecollection(m *models.HistorySamplecollection) *HistorySamplecollectionTemplate {
 	o := &HistorySamplecollectionTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
 	o.Chickenid = func() null.Val[string] { return m.Chickenid }
@@ -2806,6 +2853,7 @@ func (f *Factory) FromExistingHistorySamplecollection(m *models.HistorySamplecol
 	o.Windspeed = func() null.Val[float64] { return m.Windspeed }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2841,7 +2889,7 @@ func (f *Factory) NewHistorySamplelocationWithContext(ctx context.Context, mods 
 func (f *Factory) FromExistingHistorySamplelocation(m *models.HistorySamplelocation) *HistorySamplelocationTemplate {
 	o := &HistorySamplelocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -2862,6 +2910,7 @@ func (f *Factory) FromExistingHistorySamplelocation(m *models.HistorySamplelocat
 	o.Usetype = func() null.Val[string] { return m.Usetype }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -2897,7 +2946,7 @@ func (f *Factory) NewHistoryServicerequestWithContext(ctx context.Context, mods 
 func (f *Factory) FromExistingHistoryServicerequest(m *models.HistoryServicerequest) *HistoryServicerequestTemplate {
 	o := &HistoryServicerequestTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accepted = func() null.Val[int16] { return m.Accepted }
 	o.Acceptedby = func() null.Val[string] { return m.Acceptedby }
 	o.Accepteddate = func() null.Val[int64] { return m.Accepteddate }
@@ -2976,6 +3025,7 @@ func (f *Factory) FromExistingHistoryServicerequest(m *models.HistoryServicerequ
 	o.Yvalue = func() null.Val[string] { return m.Yvalue }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3015,7 +3065,7 @@ func (f *Factory) NewHistorySpeciesabundanceWithContext(ctx context.Context, mod
 func (f *Factory) FromExistingHistorySpeciesabundance(m *models.HistorySpeciesabundance) *HistorySpeciesabundanceTemplate {
 	o := &HistorySpeciesabundanceTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Bloodedfem = func() null.Val[int16] { return m.Bloodedfem }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -3035,6 +3085,7 @@ func (f *Factory) FromExistingHistorySpeciesabundance(m *models.HistorySpeciesab
 	o.Total = func() null.Val[int64] { return m.Total }
 	o.TrapdataID = func() null.Val[string] { return m.TrapdataID }
 	o.Unknown = func() null.Val[int16] { return m.Unknown }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3076,7 +3127,7 @@ func (f *Factory) NewHistoryStormdrainWithContext(ctx context.Context, mods ...H
 func (f *Factory) FromExistingHistoryStormdrain(m *models.HistoryStormdrain) *HistoryStormdrainTemplate {
 	o := &HistoryStormdrainTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -3092,6 +3143,7 @@ func (f *Factory) FromExistingHistoryStormdrain(m *models.HistoryStormdrain) *Hi
 	o.Type = func() null.Val[string] { return m.Type }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3127,7 +3179,7 @@ func (f *Factory) NewHistoryTimecardWithContext(ctx context.Context, mods ...His
 func (f *Factory) FromExistingHistoryTimecard(m *models.HistoryTimecard) *HistoryTimecardTemplate {
 	o := &HistoryTimecardTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
@@ -3151,6 +3203,7 @@ func (f *Factory) FromExistingHistoryTimecard(m *models.HistoryTimecard) *Histor
 	o.Traplocid = func() null.Val[string] { return m.Traplocid }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3187,7 +3240,7 @@ func (f *Factory) NewHistoryTrapdatumWithContext(ctx context.Context, mods ...Hi
 func (f *Factory) FromExistingHistoryTrapdatum(m *models.HistoryTrapdatum) *HistoryTrapdatumTemplate {
 	o := &HistoryTrapdatumTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
@@ -3223,6 +3276,7 @@ func (f *Factory) FromExistingHistoryTrapdatum(m *models.HistoryTrapdatum) *Hist
 	o.Windspeed = func() null.Val[float64] { return m.Windspeed }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3261,7 +3315,7 @@ func (f *Factory) NewHistoryTraplocationWithContext(ctx context.Context, mods ..
 func (f *Factory) FromExistingHistoryTraplocation(m *models.HistoryTraplocation) *HistoryTraplocationTemplate {
 	o := &HistoryTraplocationTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
@@ -3282,6 +3336,7 @@ func (f *Factory) FromExistingHistoryTraplocation(m *models.HistoryTraplocation)
 	o.Usetype = func() null.Val[string] { return m.Usetype }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3323,7 +3378,7 @@ func (f *Factory) NewHistoryTreatmentWithContext(ctx context.Context, mods ...Hi
 func (f *Factory) FromExistingHistoryTreatment(m *models.HistoryTreatment) *HistoryTreatmentTemplate {
 	o := &HistoryTreatmentTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Activity = func() null.Val[string] { return m.Activity }
 	o.Areaunit = func() null.Val[string] { return m.Areaunit }
 	o.Avetemp = func() null.Val[float64] { return m.Avetemp }
@@ -3409,7 +3464,7 @@ func (f *Factory) NewHistoryTreatmentareaWithContext(ctx context.Context, mods .
 func (f *Factory) FromExistingHistoryTreatmentarea(m *models.HistoryTreatmentarea) *HistoryTreatmentareaTemplate {
 	o := &HistoryTreatmentareaTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Comments = func() null.Val[string] { return m.Comments }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -3424,6 +3479,7 @@ func (f *Factory) FromExistingHistoryTreatmentarea(m *models.HistoryTreatmentare
 	o.Treatdate = func() null.Val[int64] { return m.Treatdate }
 	o.TreatID = func() null.Val[string] { return m.TreatID }
 	o.Type = func() null.Val[string] { return m.Type }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3459,7 +3515,7 @@ func (f *Factory) NewHistoryZoneWithContext(ctx context.Context, mods ...History
 func (f *Factory) FromExistingHistoryZone(m *models.HistoryZone) *HistoryZoneTemplate {
 	o := &HistoryZoneTemplate{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Active = func() null.Val[int64] { return m.Active }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
@@ -3470,6 +3526,7 @@ func (f *Factory) FromExistingHistoryZone(m *models.HistoryZone) *HistoryZoneTem
 	o.Objectid = func() int32 { return m.Objectid }
 	o.ShapeArea = func() null.Val[float64] { return m.ShapeArea }
 	o.ShapeLength = func() null.Val[float64] { return m.ShapeLength }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3505,7 +3562,7 @@ func (f *Factory) NewHistoryZones2WithContext(ctx context.Context, mods ...Histo
 func (f *Factory) FromExistingHistoryZones2(m *models.HistoryZones2) *HistoryZones2Template {
 	o := &HistoryZones2Template{f: f, alreadyPersisted: true}
 
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
@@ -3515,6 +3572,7 @@ func (f *Factory) FromExistingHistoryZones2(m *models.HistoryZones2) *HistoryZon
 	o.Objectid = func() int32 { return m.Objectid }
 	o.ShapeArea = func() null.Val[float64] { return m.ShapeArea }
 	o.ShapeLength = func() null.Val[float64] { return m.ShapeLength }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
@@ -3594,6 +3652,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.FieldseekerURL = func() null.Val[string] { return m.FieldseekerURL }
 
 	ctx := context.Background()
+	if len(m.R.FieldseekerSyncs) > 0 {
+		OrganizationMods.AddExistingFieldseekerSyncs(m.R.FieldseekerSyncs...).Apply(ctx, o)
+	}
 	if len(m.R.FSContainerrelates) > 0 {
 		OrganizationMods.AddExistingFSContainerrelates(m.R.FSContainerrelates...).Apply(ctx, o)
 	}
@@ -3830,6 +3891,14 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	}
 
 	return o
+}
+
+func (f *Factory) ClearBaseFieldseekerSyncMods() {
+	f.baseFieldseekerSyncMods = nil
+}
+
+func (f *Factory) AddBaseFieldseekerSyncMod(mods ...FieldseekerSyncMod) {
+	f.baseFieldseekerSyncMods = append(f.baseFieldseekerSyncMods, mods...)
 }
 
 func (f *Factory) ClearBaseFSContainerrelateMods() {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,38 +26,39 @@ import (
 
 // HistoryTimecard is an object representing the database table.
 type HistoryTimecard struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Activity       null.Val[string]  `db:"activity" `
-	Comments       null.Val[string]  `db:"comments" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Enddatetime    null.Val[int64]   `db:"enddatetime" `
-	Equiptype      null.Val[string]  `db:"equiptype" `
-	Externalid     null.Val[string]  `db:"externalid" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Fieldtech      null.Val[string]  `db:"fieldtech" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Lclocid        null.Val[string]  `db:"lclocid" `
-	Linelocid      null.Val[string]  `db:"linelocid" `
-	Locationname   null.Val[string]  `db:"locationname" `
-	Objectid       int32             `db:"objectid,pk" `
-	Pointlocid     null.Val[string]  `db:"pointlocid" `
-	Polygonlocid   null.Val[string]  `db:"polygonlocid" `
-	Samplelocid    null.Val[string]  `db:"samplelocid" `
-	Srid           null.Val[string]  `db:"srid" `
-	Startdatetime  null.Val[int64]   `db:"startdatetime" `
-	Traplocid      null.Val[string]  `db:"traplocid" `
-	Zone           null.Val[string]  `db:"zone" `
-	Zone2          null.Val[string]  `db:"zone2" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Rodentlocid    null.Val[string]  `db:"rodentlocid" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Activity       null.Val[string]    `db:"activity" `
+	Comments       null.Val[string]    `db:"comments" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Enddatetime    null.Val[int64]     `db:"enddatetime" `
+	Equiptype      null.Val[string]    `db:"equiptype" `
+	Externalid     null.Val[string]    `db:"externalid" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Fieldtech      null.Val[string]    `db:"fieldtech" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Lclocid        null.Val[string]    `db:"lclocid" `
+	Linelocid      null.Val[string]    `db:"linelocid" `
+	Locationname   null.Val[string]    `db:"locationname" `
+	Objectid       int32               `db:"objectid,pk" `
+	Pointlocid     null.Val[string]    `db:"pointlocid" `
+	Polygonlocid   null.Val[string]    `db:"polygonlocid" `
+	Samplelocid    null.Val[string]    `db:"samplelocid" `
+	Srid           null.Val[string]    `db:"srid" `
+	Startdatetime  null.Val[int64]     `db:"startdatetime" `
+	Traplocid      null.Val[string]    `db:"traplocid" `
+	Zone           null.Val[string]    `db:"zone" `
+	Zone2          null.Val[string]    `db:"zone2" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Rodentlocid    null.Val[string]    `db:"rodentlocid" `
+	Version        int32               `db:"version,pk" `
 
 	R historyTimecardR `db:"-" `
 }
@@ -79,7 +81,7 @@ type historyTimecardR struct {
 func buildHistoryTimecardColumns(alias string) historyTimecardColumns {
 	return historyTimecardColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "rodentlocid", "version",
+			"organization_id", "activity", "comments", "creationdate", "creator", "enddatetime", "equiptype", "externalid", "editdate", "editor", "fieldtech", "globalid", "lclocid", "linelocid", "locationname", "objectid", "pointlocid", "polygonlocid", "samplelocid", "srid", "startdatetime", "traplocid", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "rodentlocid", "version",
 		).WithParent("history_timecard"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -106,6 +108,7 @@ func buildHistoryTimecardColumns(alias string) historyTimecardColumns {
 		Traplocid:      psql.Quote(alias, "traplocid"),
 		Zone:           psql.Quote(alias, "zone"),
 		Zone2:          psql.Quote(alias, "zone2"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -144,6 +147,7 @@ type historyTimecardColumns struct {
 	Traplocid      psql.Expression
 	Zone           psql.Expression
 	Zone2          psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -166,43 +170,44 @@ func (historyTimecardColumns) AliasedAs(alias string) historyTimecardColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryTimecardSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Activity       omitnull.Val[string]  `db:"activity" `
-	Comments       omitnull.Val[string]  `db:"comments" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Enddatetime    omitnull.Val[int64]   `db:"enddatetime" `
-	Equiptype      omitnull.Val[string]  `db:"equiptype" `
-	Externalid     omitnull.Val[string]  `db:"externalid" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Fieldtech      omitnull.Val[string]  `db:"fieldtech" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Lclocid        omitnull.Val[string]  `db:"lclocid" `
-	Linelocid      omitnull.Val[string]  `db:"linelocid" `
-	Locationname   omitnull.Val[string]  `db:"locationname" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Pointlocid     omitnull.Val[string]  `db:"pointlocid" `
-	Polygonlocid   omitnull.Val[string]  `db:"polygonlocid" `
-	Samplelocid    omitnull.Val[string]  `db:"samplelocid" `
-	Srid           omitnull.Val[string]  `db:"srid" `
-	Startdatetime  omitnull.Val[int64]   `db:"startdatetime" `
-	Traplocid      omitnull.Val[string]  `db:"traplocid" `
-	Zone           omitnull.Val[string]  `db:"zone" `
-	Zone2          omitnull.Val[string]  `db:"zone2" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Rodentlocid    omitnull.Val[string]  `db:"rodentlocid" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Activity       omitnull.Val[string]    `db:"activity" `
+	Comments       omitnull.Val[string]    `db:"comments" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Enddatetime    omitnull.Val[int64]     `db:"enddatetime" `
+	Equiptype      omitnull.Val[string]    `db:"equiptype" `
+	Externalid     omitnull.Val[string]    `db:"externalid" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Fieldtech      omitnull.Val[string]    `db:"fieldtech" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Lclocid        omitnull.Val[string]    `db:"lclocid" `
+	Linelocid      omitnull.Val[string]    `db:"linelocid" `
+	Locationname   omitnull.Val[string]    `db:"locationname" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Pointlocid     omitnull.Val[string]    `db:"pointlocid" `
+	Polygonlocid   omitnull.Val[string]    `db:"polygonlocid" `
+	Samplelocid    omitnull.Val[string]    `db:"samplelocid" `
+	Srid           omitnull.Val[string]    `db:"srid" `
+	Startdatetime  omitnull.Val[int64]     `db:"startdatetime" `
+	Traplocid      omitnull.Val[string]    `db:"traplocid" `
+	Zone           omitnull.Val[string]    `db:"zone" `
+	Zone2          omitnull.Val[string]    `db:"zone2" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Rodentlocid    omitnull.Val[string]    `db:"rodentlocid" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryTimecardSetter) SetColumns() []string {
-	vals := make([]string, 0, 32)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 33)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -274,6 +279,9 @@ func (s HistoryTimecardSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -302,8 +310,8 @@ func (s HistoryTimecardSetter) SetColumns() []string {
 }
 
 func (s HistoryTimecardSetter) Overwrite(t *HistoryTimecard) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -374,6 +382,9 @@ func (s HistoryTimecardSetter) Overwrite(t *HistoryTimecard) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -406,9 +417,9 @@ func (s *HistoryTimecardSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 32)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 33)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -551,52 +562,58 @@ func (s *HistoryTimecardSetter) Apply(q *dialect.InsertQuery) {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[24] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[24] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[25] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[25] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[26] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[26] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[27] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[27] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[28] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[28] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[29] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[29] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Rodentlocid.IsUnset() {
-			vals[30] = psql.Arg(s.Rodentlocid.MustGetNull())
+		if !s.LastEditedUser.IsUnset() {
+			vals[30] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[31] = psql.Arg(s.Version.MustGet())
+		if !s.Rodentlocid.IsUnset() {
+			vals[31] = psql.Arg(s.Rodentlocid.MustGetNull())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[32] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[32] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -608,9 +625,9 @@ func (s HistoryTimecardSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryTimecardSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 32)
+	exprs := make([]bob.Expression, 0, 33)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -775,6 +792,13 @@ func (s HistoryTimecardSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "zone2")...),
 			psql.Arg(s.Zone2),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1078,7 +1102,7 @@ func (o *HistoryTimecard) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Or
 }
 
 func (os HistoryTimecardSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1096,7 +1120,7 @@ func (os HistoryTimecardSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery
 
 func attachHistoryTimecardOrganization0(ctx context.Context, exec bob.Executor, count int, historyTimecard0 *HistoryTimecard, organization1 *Organization) (*HistoryTimecard, error) {
 	setter := &HistoryTimecardSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyTimecard0.Update(ctx, exec, setter)
@@ -1143,7 +1167,7 @@ func (historyTimecard0 *HistoryTimecard) AttachOrganization(ctx context.Context,
 }
 
 type historyTimecardWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Activity       psql.WhereNullMod[Q, string]
 	Comments       psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
@@ -1167,6 +1191,7 @@ type historyTimecardWhere[Q psql.Filterable] struct {
 	Traplocid      psql.WhereNullMod[Q, string]
 	Zone           psql.WhereNullMod[Q, string]
 	Zone2          psql.WhereNullMod[Q, string]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -1183,7 +1208,7 @@ func (historyTimecardWhere[Q]) AliasedAs(alias string) historyTimecardWhere[Q] {
 
 func buildHistoryTimecardWhere[Q psql.Filterable](cols historyTimecardColumns) historyTimecardWhere[Q] {
 	return historyTimecardWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Activity:       psql.WhereNull[Q, string](cols.Activity),
 		Comments:       psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
@@ -1207,6 +1232,7 @@ func buildHistoryTimecardWhere[Q psql.Filterable](cols historyTimecardColumns) h
 		Traplocid:      psql.WhereNull[Q, string](cols.Traplocid),
 		Zone:           psql.WhereNull[Q, string](cols.Zone),
 		Zone2:          psql.WhereNull[Q, string](cols.Zone2),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1319,11 +1345,8 @@ func (os HistoryTimecardSlice) LoadOrganization(ctx context.Context, exec bob.Ex
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

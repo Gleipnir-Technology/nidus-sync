@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,35 +26,36 @@ import (
 
 // HistoryInspectionsampledetail is an object representing the database table.
 type HistoryInspectionsampledetail struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Comments       null.Val[string]  `db:"comments" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Fadultact      null.Val[string]  `db:"fadultact" `
-	Fdomstage      null.Val[string]  `db:"fdomstage" `
-	Feggcount      null.Val[int16]   `db:"feggcount" `
-	Fieldspecies   null.Val[string]  `db:"fieldspecies" `
-	Flarvcount     null.Val[int16]   `db:"flarvcount" `
-	Flstages       null.Val[string]  `db:"flstages" `
-	Fpupcount      null.Val[int16]   `db:"fpupcount" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	InspsampleID   null.Val[string]  `db:"inspsample_id" `
-	Labspecies     null.Val[string]  `db:"labspecies" `
-	Ldomstage      null.Val[string]  `db:"ldomstage" `
-	Leggcount      null.Val[int16]   `db:"leggcount" `
-	Llarvcount     null.Val[int16]   `db:"llarvcount" `
-	Lpupcount      null.Val[int16]   `db:"lpupcount" `
-	Objectid       int32             `db:"objectid,pk" `
-	Processed      null.Val[int16]   `db:"processed" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Comments       null.Val[string]    `db:"comments" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Fadultact      null.Val[string]    `db:"fadultact" `
+	Fdomstage      null.Val[string]    `db:"fdomstage" `
+	Feggcount      null.Val[int16]     `db:"feggcount" `
+	Fieldspecies   null.Val[string]    `db:"fieldspecies" `
+	Flarvcount     null.Val[int16]     `db:"flarvcount" `
+	Flstages       null.Val[string]    `db:"flstages" `
+	Fpupcount      null.Val[int16]     `db:"fpupcount" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	InspsampleID   null.Val[string]    `db:"inspsample_id" `
+	Labspecies     null.Val[string]    `db:"labspecies" `
+	Ldomstage      null.Val[string]    `db:"ldomstage" `
+	Leggcount      null.Val[int16]     `db:"leggcount" `
+	Llarvcount     null.Val[int16]     `db:"llarvcount" `
+	Lpupcount      null.Val[int16]     `db:"lpupcount" `
+	Objectid       int32               `db:"objectid,pk" `
+	Processed      null.Val[int16]     `db:"processed" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historyInspectionsampledetailR `db:"-" `
 }
@@ -76,7 +78,7 @@ type historyInspectionsampledetailR struct {
 func buildHistoryInspectionsampledetailColumns(alias string) historyInspectionsampledetailColumns {
 	return historyInspectionsampledetailColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "comments", "creationdate", "creator", "editdate", "editor", "fadultact", "fdomstage", "feggcount", "fieldspecies", "flarvcount", "flstages", "fpupcount", "globalid", "inspsample_id", "labspecies", "ldomstage", "leggcount", "llarvcount", "lpupcount", "objectid", "processed", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "comments", "creationdate", "creator", "editdate", "editor", "fadultact", "fdomstage", "feggcount", "fieldspecies", "flarvcount", "flstages", "fpupcount", "globalid", "inspsample_id", "labspecies", "ldomstage", "leggcount", "llarvcount", "lpupcount", "objectid", "processed", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_inspectionsampledetail"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -101,6 +103,7 @@ func buildHistoryInspectionsampledetailColumns(alias string) historyInspectionsa
 		Lpupcount:      psql.Quote(alias, "lpupcount"),
 		Objectid:       psql.Quote(alias, "objectid"),
 		Processed:      psql.Quote(alias, "processed"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -136,6 +139,7 @@ type historyInspectionsampledetailColumns struct {
 	Lpupcount      psql.Expression
 	Objectid       psql.Expression
 	Processed      psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -157,40 +161,41 @@ func (historyInspectionsampledetailColumns) AliasedAs(alias string) historyInspe
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryInspectionsampledetailSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Comments       omitnull.Val[string]  `db:"comments" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Fadultact      omitnull.Val[string]  `db:"fadultact" `
-	Fdomstage      omitnull.Val[string]  `db:"fdomstage" `
-	Feggcount      omitnull.Val[int16]   `db:"feggcount" `
-	Fieldspecies   omitnull.Val[string]  `db:"fieldspecies" `
-	Flarvcount     omitnull.Val[int16]   `db:"flarvcount" `
-	Flstages       omitnull.Val[string]  `db:"flstages" `
-	Fpupcount      omitnull.Val[int16]   `db:"fpupcount" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	InspsampleID   omitnull.Val[string]  `db:"inspsample_id" `
-	Labspecies     omitnull.Val[string]  `db:"labspecies" `
-	Ldomstage      omitnull.Val[string]  `db:"ldomstage" `
-	Leggcount      omitnull.Val[int16]   `db:"leggcount" `
-	Llarvcount     omitnull.Val[int16]   `db:"llarvcount" `
-	Lpupcount      omitnull.Val[int16]   `db:"lpupcount" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Processed      omitnull.Val[int16]   `db:"processed" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Comments       omitnull.Val[string]    `db:"comments" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Fadultact      omitnull.Val[string]    `db:"fadultact" `
+	Fdomstage      omitnull.Val[string]    `db:"fdomstage" `
+	Feggcount      omitnull.Val[int16]     `db:"feggcount" `
+	Fieldspecies   omitnull.Val[string]    `db:"fieldspecies" `
+	Flarvcount     omitnull.Val[int16]     `db:"flarvcount" `
+	Flstages       omitnull.Val[string]    `db:"flstages" `
+	Fpupcount      omitnull.Val[int16]     `db:"fpupcount" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	InspsampleID   omitnull.Val[string]    `db:"inspsample_id" `
+	Labspecies     omitnull.Val[string]    `db:"labspecies" `
+	Ldomstage      omitnull.Val[string]    `db:"ldomstage" `
+	Leggcount      omitnull.Val[int16]     `db:"leggcount" `
+	Llarvcount     omitnull.Val[int16]     `db:"llarvcount" `
+	Lpupcount      omitnull.Val[int16]     `db:"lpupcount" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Processed      omitnull.Val[int16]     `db:"processed" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryInspectionsampledetailSetter) SetColumns() []string {
-	vals := make([]string, 0, 29)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 30)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Comments.IsUnset() {
@@ -256,6 +261,9 @@ func (s HistoryInspectionsampledetailSetter) SetColumns() []string {
 	if !s.Processed.IsUnset() {
 		vals = append(vals, "processed")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -281,8 +289,8 @@ func (s HistoryInspectionsampledetailSetter) SetColumns() []string {
 }
 
 func (s HistoryInspectionsampledetailSetter) Overwrite(t *HistoryInspectionsampledetail) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
@@ -347,6 +355,9 @@ func (s HistoryInspectionsampledetailSetter) Overwrite(t *HistoryInspectionsampl
 	if !s.Processed.IsUnset() {
 		t.Processed = s.Processed.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -376,9 +387,9 @@ func (s *HistoryInspectionsampledetailSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 29)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 30)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -509,46 +520,52 @@ func (s *HistoryInspectionsampledetailSetter) Apply(q *dialect.InsertQuery) {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[22] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[22] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[23] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[23] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[24] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[24] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[25] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[25] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[26] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[26] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[27] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[27] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[28] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[28] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[29] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[29] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -560,9 +577,9 @@ func (s HistoryInspectionsampledetailSetter) UpdateMod() bob.Mod[*dialect.Update
 }
 
 func (s HistoryInspectionsampledetailSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 29)
+	exprs := make([]bob.Expression, 0, 30)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -713,6 +730,13 @@ func (s HistoryInspectionsampledetailSetter) Expressions(prefix ...string) []bob
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "processed")...),
 			psql.Arg(s.Processed),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1009,7 +1033,7 @@ func (o *HistoryInspectionsampledetail) Organization(mods ...bob.Mod[*dialect.Se
 }
 
 func (os HistoryInspectionsampledetailSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1027,7 +1051,7 @@ func (os HistoryInspectionsampledetailSlice) Organization(mods ...bob.Mod[*diale
 
 func attachHistoryInspectionsampledetailOrganization0(ctx context.Context, exec bob.Executor, count int, historyInspectionsampledetail0 *HistoryInspectionsampledetail, organization1 *Organization) (*HistoryInspectionsampledetail, error) {
 	setter := &HistoryInspectionsampledetailSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyInspectionsampledetail0.Update(ctx, exec, setter)
@@ -1074,7 +1098,7 @@ func (historyInspectionsampledetail0 *HistoryInspectionsampledetail) AttachOrgan
 }
 
 type historyInspectionsampledetailWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Comments       psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -1096,6 +1120,7 @@ type historyInspectionsampledetailWhere[Q psql.Filterable] struct {
 	Lpupcount      psql.WhereNullMod[Q, int16]
 	Objectid       psql.WhereMod[Q, int32]
 	Processed      psql.WhereNullMod[Q, int16]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -1111,7 +1136,7 @@ func (historyInspectionsampledetailWhere[Q]) AliasedAs(alias string) historyInsp
 
 func buildHistoryInspectionsampledetailWhere[Q psql.Filterable](cols historyInspectionsampledetailColumns) historyInspectionsampledetailWhere[Q] {
 	return historyInspectionsampledetailWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Comments:       psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -1133,6 +1158,7 @@ func buildHistoryInspectionsampledetailWhere[Q psql.Filterable](cols historyInsp
 		Lpupcount:      psql.WhereNull[Q, int16](cols.Lpupcount),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		Processed:      psql.WhereNull[Q, int16](cols.Processed),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1244,11 +1270,8 @@ func (os HistoryInspectionsampledetailSlice) LoadOrganization(ctx context.Contex
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

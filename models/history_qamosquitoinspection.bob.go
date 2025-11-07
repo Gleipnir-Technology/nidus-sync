@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,72 +26,73 @@ import (
 
 // HistoryQamosquitoinspection is an object representing the database table.
 type HistoryQamosquitoinspection struct {
-	OrganizationID           null.Val[int32]   `db:"organization_id" `
-	Acresbreeding            null.Val[float64] `db:"acresbreeding" `
-	Actiontaken              null.Val[string]  `db:"actiontaken" `
-	Adultactivity            null.Val[int16]   `db:"adultactivity" `
-	Aquaticorganisms         null.Val[string]  `db:"aquaticorganisms" `
-	Avetemp                  null.Val[float64] `db:"avetemp" `
-	Breedingpotential        null.Val[string]  `db:"breedingpotential" `
-	Comments                 null.Val[string]  `db:"comments" `
-	Creationdate             null.Val[int64]   `db:"creationdate" `
-	Creator                  null.Val[string]  `db:"creator" `
-	Enddatetime              null.Val[int64]   `db:"enddatetime" `
-	Editdate                 null.Val[int64]   `db:"editdate" `
-	Editor                   null.Val[string]  `db:"editor" `
-	Fieldtech                null.Val[string]  `db:"fieldtech" `
-	Fish                     null.Val[int16]   `db:"fish" `
-	Globalid                 null.Val[string]  `db:"globalid" `
-	Habvalue1                null.Val[int16]   `db:"habvalue1" `
-	Habvalue1percent         null.Val[int16]   `db:"habvalue1percent" `
-	Habvalue2                null.Val[int16]   `db:"habvalue2" `
-	Habvalue2percent         null.Val[int16]   `db:"habvalue2percent" `
-	Larvaeinsidetreatedarea  null.Val[int16]   `db:"larvaeinsidetreatedarea" `
-	Larvaeoutsidetreatedarea null.Val[int16]   `db:"larvaeoutsidetreatedarea" `
-	Larvaepresent            null.Val[int16]   `db:"larvaepresent" `
-	Larvaereason             null.Val[string]  `db:"larvaereason" `
-	Linelocid                null.Val[string]  `db:"linelocid" `
-	Locationname             null.Val[string]  `db:"locationname" `
-	LR                       null.Val[int16]   `db:"lr" `
-	Mosquitohabitat          null.Val[string]  `db:"mosquitohabitat" `
-	Movingwater              null.Val[int16]   `db:"movingwater" `
-	Negdips                  null.Val[int16]   `db:"negdips" `
-	Nowaterever              null.Val[int16]   `db:"nowaterever" `
-	Objectid                 int32             `db:"objectid,pk" `
-	Pointlocid               null.Val[string]  `db:"pointlocid" `
-	Polygonlocid             null.Val[string]  `db:"polygonlocid" `
-	Posdips                  null.Val[int16]   `db:"posdips" `
-	Potential                null.Val[int16]   `db:"potential" `
-	Raingauge                null.Val[float64] `db:"raingauge" `
-	Recordstatus             null.Val[int16]   `db:"recordstatus" `
-	Reviewed                 null.Val[int16]   `db:"reviewed" `
-	Reviewedby               null.Val[string]  `db:"reviewedby" `
-	Revieweddate             null.Val[int64]   `db:"revieweddate" `
-	Sitetype                 null.Val[string]  `db:"sitetype" `
-	Soilconditions           null.Val[string]  `db:"soilconditions" `
-	Sourcereduction          null.Val[string]  `db:"sourcereduction" `
-	Startdatetime            null.Val[int64]   `db:"startdatetime" `
-	Totalacres               null.Val[float64] `db:"totalacres" `
-	Vegetation               null.Val[string]  `db:"vegetation" `
-	Waterconditions          null.Val[string]  `db:"waterconditions" `
-	Waterduration            null.Val[string]  `db:"waterduration" `
-	Watermovement1           null.Val[string]  `db:"watermovement1" `
-	Watermovement1percent    null.Val[int16]   `db:"watermovement1percent" `
-	Watermovement2           null.Val[string]  `db:"watermovement2" `
-	Watermovement2percent    null.Val[int16]   `db:"watermovement2percent" `
-	Waterpresent             null.Val[int16]   `db:"waterpresent" `
-	Watersource              null.Val[string]  `db:"watersource" `
-	Winddir                  null.Val[string]  `db:"winddir" `
-	Windspeed                null.Val[float64] `db:"windspeed" `
-	Zone                     null.Val[string]  `db:"zone" `
-	Zone2                    null.Val[string]  `db:"zone2" `
-	CreatedDate              null.Val[int64]   `db:"created_date" `
-	CreatedUser              null.Val[string]  `db:"created_user" `
-	GeometryX                null.Val[float64] `db:"geometry_x" `
-	GeometryY                null.Val[float64] `db:"geometry_y" `
-	LastEditedDate           null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser           null.Val[string]  `db:"last_edited_user" `
-	Version                  int32             `db:"version,pk" `
+	OrganizationID           int32               `db:"organization_id" `
+	Acresbreeding            null.Val[float64]   `db:"acresbreeding" `
+	Actiontaken              null.Val[string]    `db:"actiontaken" `
+	Adultactivity            null.Val[int16]     `db:"adultactivity" `
+	Aquaticorganisms         null.Val[string]    `db:"aquaticorganisms" `
+	Avetemp                  null.Val[float64]   `db:"avetemp" `
+	Breedingpotential        null.Val[string]    `db:"breedingpotential" `
+	Comments                 null.Val[string]    `db:"comments" `
+	Creationdate             null.Val[int64]     `db:"creationdate" `
+	Creator                  null.Val[string]    `db:"creator" `
+	Enddatetime              null.Val[int64]     `db:"enddatetime" `
+	Editdate                 null.Val[int64]     `db:"editdate" `
+	Editor                   null.Val[string]    `db:"editor" `
+	Fieldtech                null.Val[string]    `db:"fieldtech" `
+	Fish                     null.Val[int16]     `db:"fish" `
+	Globalid                 null.Val[string]    `db:"globalid" `
+	Habvalue1                null.Val[int16]     `db:"habvalue1" `
+	Habvalue1percent         null.Val[int16]     `db:"habvalue1percent" `
+	Habvalue2                null.Val[int16]     `db:"habvalue2" `
+	Habvalue2percent         null.Val[int16]     `db:"habvalue2percent" `
+	Larvaeinsidetreatedarea  null.Val[int16]     `db:"larvaeinsidetreatedarea" `
+	Larvaeoutsidetreatedarea null.Val[int16]     `db:"larvaeoutsidetreatedarea" `
+	Larvaepresent            null.Val[int16]     `db:"larvaepresent" `
+	Larvaereason             null.Val[string]    `db:"larvaereason" `
+	Linelocid                null.Val[string]    `db:"linelocid" `
+	Locationname             null.Val[string]    `db:"locationname" `
+	LR                       null.Val[int16]     `db:"lr" `
+	Mosquitohabitat          null.Val[string]    `db:"mosquitohabitat" `
+	Movingwater              null.Val[int16]     `db:"movingwater" `
+	Negdips                  null.Val[int16]     `db:"negdips" `
+	Nowaterever              null.Val[int16]     `db:"nowaterever" `
+	Objectid                 int32               `db:"objectid,pk" `
+	Pointlocid               null.Val[string]    `db:"pointlocid" `
+	Polygonlocid             null.Val[string]    `db:"polygonlocid" `
+	Posdips                  null.Val[int16]     `db:"posdips" `
+	Potential                null.Val[int16]     `db:"potential" `
+	Raingauge                null.Val[float64]   `db:"raingauge" `
+	Recordstatus             null.Val[int16]     `db:"recordstatus" `
+	Reviewed                 null.Val[int16]     `db:"reviewed" `
+	Reviewedby               null.Val[string]    `db:"reviewedby" `
+	Revieweddate             null.Val[int64]     `db:"revieweddate" `
+	Sitetype                 null.Val[string]    `db:"sitetype" `
+	Soilconditions           null.Val[string]    `db:"soilconditions" `
+	Sourcereduction          null.Val[string]    `db:"sourcereduction" `
+	Startdatetime            null.Val[int64]     `db:"startdatetime" `
+	Totalacres               null.Val[float64]   `db:"totalacres" `
+	Vegetation               null.Val[string]    `db:"vegetation" `
+	Waterconditions          null.Val[string]    `db:"waterconditions" `
+	Waterduration            null.Val[string]    `db:"waterduration" `
+	Watermovement1           null.Val[string]    `db:"watermovement1" `
+	Watermovement1percent    null.Val[int16]     `db:"watermovement1percent" `
+	Watermovement2           null.Val[string]    `db:"watermovement2" `
+	Watermovement2percent    null.Val[int16]     `db:"watermovement2percent" `
+	Waterpresent             null.Val[int16]     `db:"waterpresent" `
+	Watersource              null.Val[string]    `db:"watersource" `
+	Winddir                  null.Val[string]    `db:"winddir" `
+	Windspeed                null.Val[float64]   `db:"windspeed" `
+	Zone                     null.Val[string]    `db:"zone" `
+	Zone2                    null.Val[string]    `db:"zone2" `
+	Created                  null.Val[time.Time] `db:"created" `
+	CreatedDate              null.Val[int64]     `db:"created_date" `
+	CreatedUser              null.Val[string]    `db:"created_user" `
+	GeometryX                null.Val[float64]   `db:"geometry_x" `
+	GeometryY                null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate           null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser           null.Val[string]    `db:"last_edited_user" `
+	Version                  int32               `db:"version,pk" `
 
 	R historyQamosquitoinspectionR `db:"-" `
 }
@@ -113,7 +115,7 @@ type historyQamosquitoinspectionR struct {
 func buildHistoryQamosquitoinspectionColumns(alias string) historyQamosquitoinspectionColumns {
 	return historyQamosquitoinspectionColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "acresbreeding", "actiontaken", "adultactivity", "aquaticorganisms", "avetemp", "breedingpotential", "comments", "creationdate", "creator", "enddatetime", "editdate", "editor", "fieldtech", "fish", "globalid", "habvalue1", "habvalue1percent", "habvalue2", "habvalue2percent", "larvaeinsidetreatedarea", "larvaeoutsidetreatedarea", "larvaepresent", "larvaereason", "linelocid", "locationname", "lr", "mosquitohabitat", "movingwater", "negdips", "nowaterever", "objectid", "pointlocid", "polygonlocid", "posdips", "potential", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sitetype", "soilconditions", "sourcereduction", "startdatetime", "totalacres", "vegetation", "waterconditions", "waterduration", "watermovement1", "watermovement1percent", "watermovement2", "watermovement2percent", "waterpresent", "watersource", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "acresbreeding", "actiontaken", "adultactivity", "aquaticorganisms", "avetemp", "breedingpotential", "comments", "creationdate", "creator", "enddatetime", "editdate", "editor", "fieldtech", "fish", "globalid", "habvalue1", "habvalue1percent", "habvalue2", "habvalue2percent", "larvaeinsidetreatedarea", "larvaeoutsidetreatedarea", "larvaepresent", "larvaereason", "linelocid", "locationname", "lr", "mosquitohabitat", "movingwater", "negdips", "nowaterever", "objectid", "pointlocid", "polygonlocid", "posdips", "potential", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sitetype", "soilconditions", "sourcereduction", "startdatetime", "totalacres", "vegetation", "waterconditions", "waterduration", "watermovement1", "watermovement1percent", "watermovement2", "watermovement2percent", "waterpresent", "watersource", "winddir", "windspeed", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_qamosquitoinspection"),
 		tableAlias:               alias,
 		OrganizationID:           psql.Quote(alias, "organization_id"),
@@ -175,6 +177,7 @@ func buildHistoryQamosquitoinspectionColumns(alias string) historyQamosquitoinsp
 		Windspeed:                psql.Quote(alias, "windspeed"),
 		Zone:                     psql.Quote(alias, "zone"),
 		Zone2:                    psql.Quote(alias, "zone2"),
+		Created:                  psql.Quote(alias, "created"),
 		CreatedDate:              psql.Quote(alias, "created_date"),
 		CreatedUser:              psql.Quote(alias, "created_user"),
 		GeometryX:                psql.Quote(alias, "geometry_x"),
@@ -247,6 +250,7 @@ type historyQamosquitoinspectionColumns struct {
 	Windspeed                psql.Expression
 	Zone                     psql.Expression
 	Zone2                    psql.Expression
+	Created                  psql.Expression
 	CreatedDate              psql.Expression
 	CreatedUser              psql.Expression
 	GeometryX                psql.Expression
@@ -268,77 +272,78 @@ func (historyQamosquitoinspectionColumns) AliasedAs(alias string) historyQamosqu
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryQamosquitoinspectionSetter struct {
-	OrganizationID           omitnull.Val[int32]   `db:"organization_id" `
-	Acresbreeding            omitnull.Val[float64] `db:"acresbreeding" `
-	Actiontaken              omitnull.Val[string]  `db:"actiontaken" `
-	Adultactivity            omitnull.Val[int16]   `db:"adultactivity" `
-	Aquaticorganisms         omitnull.Val[string]  `db:"aquaticorganisms" `
-	Avetemp                  omitnull.Val[float64] `db:"avetemp" `
-	Breedingpotential        omitnull.Val[string]  `db:"breedingpotential" `
-	Comments                 omitnull.Val[string]  `db:"comments" `
-	Creationdate             omitnull.Val[int64]   `db:"creationdate" `
-	Creator                  omitnull.Val[string]  `db:"creator" `
-	Enddatetime              omitnull.Val[int64]   `db:"enddatetime" `
-	Editdate                 omitnull.Val[int64]   `db:"editdate" `
-	Editor                   omitnull.Val[string]  `db:"editor" `
-	Fieldtech                omitnull.Val[string]  `db:"fieldtech" `
-	Fish                     omitnull.Val[int16]   `db:"fish" `
-	Globalid                 omitnull.Val[string]  `db:"globalid" `
-	Habvalue1                omitnull.Val[int16]   `db:"habvalue1" `
-	Habvalue1percent         omitnull.Val[int16]   `db:"habvalue1percent" `
-	Habvalue2                omitnull.Val[int16]   `db:"habvalue2" `
-	Habvalue2percent         omitnull.Val[int16]   `db:"habvalue2percent" `
-	Larvaeinsidetreatedarea  omitnull.Val[int16]   `db:"larvaeinsidetreatedarea" `
-	Larvaeoutsidetreatedarea omitnull.Val[int16]   `db:"larvaeoutsidetreatedarea" `
-	Larvaepresent            omitnull.Val[int16]   `db:"larvaepresent" `
-	Larvaereason             omitnull.Val[string]  `db:"larvaereason" `
-	Linelocid                omitnull.Val[string]  `db:"linelocid" `
-	Locationname             omitnull.Val[string]  `db:"locationname" `
-	LR                       omitnull.Val[int16]   `db:"lr" `
-	Mosquitohabitat          omitnull.Val[string]  `db:"mosquitohabitat" `
-	Movingwater              omitnull.Val[int16]   `db:"movingwater" `
-	Negdips                  omitnull.Val[int16]   `db:"negdips" `
-	Nowaterever              omitnull.Val[int16]   `db:"nowaterever" `
-	Objectid                 omit.Val[int32]       `db:"objectid,pk" `
-	Pointlocid               omitnull.Val[string]  `db:"pointlocid" `
-	Polygonlocid             omitnull.Val[string]  `db:"polygonlocid" `
-	Posdips                  omitnull.Val[int16]   `db:"posdips" `
-	Potential                omitnull.Val[int16]   `db:"potential" `
-	Raingauge                omitnull.Val[float64] `db:"raingauge" `
-	Recordstatus             omitnull.Val[int16]   `db:"recordstatus" `
-	Reviewed                 omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby               omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate             omitnull.Val[int64]   `db:"revieweddate" `
-	Sitetype                 omitnull.Val[string]  `db:"sitetype" `
-	Soilconditions           omitnull.Val[string]  `db:"soilconditions" `
-	Sourcereduction          omitnull.Val[string]  `db:"sourcereduction" `
-	Startdatetime            omitnull.Val[int64]   `db:"startdatetime" `
-	Totalacres               omitnull.Val[float64] `db:"totalacres" `
-	Vegetation               omitnull.Val[string]  `db:"vegetation" `
-	Waterconditions          omitnull.Val[string]  `db:"waterconditions" `
-	Waterduration            omitnull.Val[string]  `db:"waterduration" `
-	Watermovement1           omitnull.Val[string]  `db:"watermovement1" `
-	Watermovement1percent    omitnull.Val[int16]   `db:"watermovement1percent" `
-	Watermovement2           omitnull.Val[string]  `db:"watermovement2" `
-	Watermovement2percent    omitnull.Val[int16]   `db:"watermovement2percent" `
-	Waterpresent             omitnull.Val[int16]   `db:"waterpresent" `
-	Watersource              omitnull.Val[string]  `db:"watersource" `
-	Winddir                  omitnull.Val[string]  `db:"winddir" `
-	Windspeed                omitnull.Val[float64] `db:"windspeed" `
-	Zone                     omitnull.Val[string]  `db:"zone" `
-	Zone2                    omitnull.Val[string]  `db:"zone2" `
-	CreatedDate              omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser              omitnull.Val[string]  `db:"created_user" `
-	GeometryX                omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY                omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate           omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser           omitnull.Val[string]  `db:"last_edited_user" `
-	Version                  omit.Val[int32]       `db:"version,pk" `
+	OrganizationID           omit.Val[int32]         `db:"organization_id" `
+	Acresbreeding            omitnull.Val[float64]   `db:"acresbreeding" `
+	Actiontaken              omitnull.Val[string]    `db:"actiontaken" `
+	Adultactivity            omitnull.Val[int16]     `db:"adultactivity" `
+	Aquaticorganisms         omitnull.Val[string]    `db:"aquaticorganisms" `
+	Avetemp                  omitnull.Val[float64]   `db:"avetemp" `
+	Breedingpotential        omitnull.Val[string]    `db:"breedingpotential" `
+	Comments                 omitnull.Val[string]    `db:"comments" `
+	Creationdate             omitnull.Val[int64]     `db:"creationdate" `
+	Creator                  omitnull.Val[string]    `db:"creator" `
+	Enddatetime              omitnull.Val[int64]     `db:"enddatetime" `
+	Editdate                 omitnull.Val[int64]     `db:"editdate" `
+	Editor                   omitnull.Val[string]    `db:"editor" `
+	Fieldtech                omitnull.Val[string]    `db:"fieldtech" `
+	Fish                     omitnull.Val[int16]     `db:"fish" `
+	Globalid                 omitnull.Val[string]    `db:"globalid" `
+	Habvalue1                omitnull.Val[int16]     `db:"habvalue1" `
+	Habvalue1percent         omitnull.Val[int16]     `db:"habvalue1percent" `
+	Habvalue2                omitnull.Val[int16]     `db:"habvalue2" `
+	Habvalue2percent         omitnull.Val[int16]     `db:"habvalue2percent" `
+	Larvaeinsidetreatedarea  omitnull.Val[int16]     `db:"larvaeinsidetreatedarea" `
+	Larvaeoutsidetreatedarea omitnull.Val[int16]     `db:"larvaeoutsidetreatedarea" `
+	Larvaepresent            omitnull.Val[int16]     `db:"larvaepresent" `
+	Larvaereason             omitnull.Val[string]    `db:"larvaereason" `
+	Linelocid                omitnull.Val[string]    `db:"linelocid" `
+	Locationname             omitnull.Val[string]    `db:"locationname" `
+	LR                       omitnull.Val[int16]     `db:"lr" `
+	Mosquitohabitat          omitnull.Val[string]    `db:"mosquitohabitat" `
+	Movingwater              omitnull.Val[int16]     `db:"movingwater" `
+	Negdips                  omitnull.Val[int16]     `db:"negdips" `
+	Nowaterever              omitnull.Val[int16]     `db:"nowaterever" `
+	Objectid                 omit.Val[int32]         `db:"objectid,pk" `
+	Pointlocid               omitnull.Val[string]    `db:"pointlocid" `
+	Polygonlocid             omitnull.Val[string]    `db:"polygonlocid" `
+	Posdips                  omitnull.Val[int16]     `db:"posdips" `
+	Potential                omitnull.Val[int16]     `db:"potential" `
+	Raingauge                omitnull.Val[float64]   `db:"raingauge" `
+	Recordstatus             omitnull.Val[int16]     `db:"recordstatus" `
+	Reviewed                 omitnull.Val[int16]     `db:"reviewed" `
+	Reviewedby               omitnull.Val[string]    `db:"reviewedby" `
+	Revieweddate             omitnull.Val[int64]     `db:"revieweddate" `
+	Sitetype                 omitnull.Val[string]    `db:"sitetype" `
+	Soilconditions           omitnull.Val[string]    `db:"soilconditions" `
+	Sourcereduction          omitnull.Val[string]    `db:"sourcereduction" `
+	Startdatetime            omitnull.Val[int64]     `db:"startdatetime" `
+	Totalacres               omitnull.Val[float64]   `db:"totalacres" `
+	Vegetation               omitnull.Val[string]    `db:"vegetation" `
+	Waterconditions          omitnull.Val[string]    `db:"waterconditions" `
+	Waterduration            omitnull.Val[string]    `db:"waterduration" `
+	Watermovement1           omitnull.Val[string]    `db:"watermovement1" `
+	Watermovement1percent    omitnull.Val[int16]     `db:"watermovement1percent" `
+	Watermovement2           omitnull.Val[string]    `db:"watermovement2" `
+	Watermovement2percent    omitnull.Val[int16]     `db:"watermovement2percent" `
+	Waterpresent             omitnull.Val[int16]     `db:"waterpresent" `
+	Watersource              omitnull.Val[string]    `db:"watersource" `
+	Winddir                  omitnull.Val[string]    `db:"winddir" `
+	Windspeed                omitnull.Val[float64]   `db:"windspeed" `
+	Zone                     omitnull.Val[string]    `db:"zone" `
+	Zone2                    omitnull.Val[string]    `db:"zone2" `
+	Created                  omitnull.Val[time.Time] `db:"created" `
+	CreatedDate              omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser              omitnull.Val[string]    `db:"created_user" `
+	GeometryX                omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY                omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate           omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser           omitnull.Val[string]    `db:"last_edited_user" `
+	Version                  omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryQamosquitoinspectionSetter) SetColumns() []string {
-	vals := make([]string, 0, 66)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 67)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Acresbreeding.IsUnset() {
@@ -515,6 +520,9 @@ func (s HistoryQamosquitoinspectionSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -540,8 +548,8 @@ func (s HistoryQamosquitoinspectionSetter) SetColumns() []string {
 }
 
 func (s HistoryQamosquitoinspectionSetter) Overwrite(t *HistoryQamosquitoinspection) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Acresbreeding.IsUnset() {
 		t.Acresbreeding = s.Acresbreeding.MustGetNull()
@@ -717,6 +725,9 @@ func (s HistoryQamosquitoinspectionSetter) Overwrite(t *HistoryQamosquitoinspect
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -746,9 +757,9 @@ func (s *HistoryQamosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 66)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 67)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -1101,46 +1112,52 @@ func (s *HistoryQamosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[58] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[59] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[59] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[59] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[60] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[60] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[60] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[61] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[61] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[61] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[62] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[62] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[62] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[63] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[63] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[63] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[64] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[64] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[64] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[65] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[65] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[65] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[66] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[66] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -1152,9 +1169,9 @@ func (s HistoryQamosquitoinspectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQu
 }
 
 func (s HistoryQamosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 66)
+	exprs := make([]bob.Expression, 0, 67)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1567,6 +1584,13 @@ func (s HistoryQamosquitoinspectionSetter) Expressions(prefix ...string) []bob.E
 		}})
 	}
 
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
+		}})
+	}
+
 	if !s.CreatedDate.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "created_date")...),
@@ -1860,7 +1884,7 @@ func (o *HistoryQamosquitoinspection) Organization(mods ...bob.Mod[*dialect.Sele
 }
 
 func (os HistoryQamosquitoinspectionSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1878,7 +1902,7 @@ func (os HistoryQamosquitoinspectionSlice) Organization(mods ...bob.Mod[*dialect
 
 func attachHistoryQamosquitoinspectionOrganization0(ctx context.Context, exec bob.Executor, count int, historyQamosquitoinspection0 *HistoryQamosquitoinspection, organization1 *Organization) (*HistoryQamosquitoinspection, error) {
 	setter := &HistoryQamosquitoinspectionSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyQamosquitoinspection0.Update(ctx, exec, setter)
@@ -1925,7 +1949,7 @@ func (historyQamosquitoinspection0 *HistoryQamosquitoinspection) AttachOrganizat
 }
 
 type historyQamosquitoinspectionWhere[Q psql.Filterable] struct {
-	OrganizationID           psql.WhereNullMod[Q, int32]
+	OrganizationID           psql.WhereMod[Q, int32]
 	Acresbreeding            psql.WhereNullMod[Q, float64]
 	Actiontaken              psql.WhereNullMod[Q, string]
 	Adultactivity            psql.WhereNullMod[Q, int16]
@@ -1984,6 +2008,7 @@ type historyQamosquitoinspectionWhere[Q psql.Filterable] struct {
 	Windspeed                psql.WhereNullMod[Q, float64]
 	Zone                     psql.WhereNullMod[Q, string]
 	Zone2                    psql.WhereNullMod[Q, string]
+	Created                  psql.WhereNullMod[Q, time.Time]
 	CreatedDate              psql.WhereNullMod[Q, int64]
 	CreatedUser              psql.WhereNullMod[Q, string]
 	GeometryX                psql.WhereNullMod[Q, float64]
@@ -1999,7 +2024,7 @@ func (historyQamosquitoinspectionWhere[Q]) AliasedAs(alias string) historyQamosq
 
 func buildHistoryQamosquitoinspectionWhere[Q psql.Filterable](cols historyQamosquitoinspectionColumns) historyQamosquitoinspectionWhere[Q] {
 	return historyQamosquitoinspectionWhere[Q]{
-		OrganizationID:           psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:           psql.Where[Q, int32](cols.OrganizationID),
 		Acresbreeding:            psql.WhereNull[Q, float64](cols.Acresbreeding),
 		Actiontaken:              psql.WhereNull[Q, string](cols.Actiontaken),
 		Adultactivity:            psql.WhereNull[Q, int16](cols.Adultactivity),
@@ -2058,6 +2083,7 @@ func buildHistoryQamosquitoinspectionWhere[Q psql.Filterable](cols historyQamosq
 		Windspeed:                psql.WhereNull[Q, float64](cols.Windspeed),
 		Zone:                     psql.WhereNull[Q, string](cols.Zone),
 		Zone2:                    psql.WhereNull[Q, string](cols.Zone2),
+		Created:                  psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:              psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:              psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:                psql.WhereNull[Q, float64](cols.GeometryX),
@@ -2169,11 +2195,8 @@ func (os HistoryQamosquitoinspectionSlice) LoadOrganization(ctx context.Context,
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

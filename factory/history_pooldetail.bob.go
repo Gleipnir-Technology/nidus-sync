@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryPooldetailModSlice) Apply(ctx context.Context, n *HistoryPoold
 // HistoryPooldetailTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryPooldetailTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
@@ -47,6 +48,7 @@ type HistoryPooldetailTemplate struct {
 	PoolID         func() null.Val[string]
 	Species        func() null.Val[string]
 	TrapdataID     func() null.Val[string]
+	Created        func() null.Val[time.Time]
 	CreatedDate    func() null.Val[int64]
 	CreatedUser    func() null.Val[string]
 	GeometryX      func() null.Val[float64]
@@ -82,7 +84,7 @@ func (t HistoryPooldetailTemplate) setModelRels(o *models.HistoryPooldetail) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryPooldetails = append(rel.R.HistoryPooldetails, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -94,7 +96,7 @@ func (o HistoryPooldetailTemplate) BuildSetter() *models.HistoryPooldetailSetter
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -135,6 +137,10 @@ func (o HistoryPooldetailTemplate) BuildSetter() *models.HistoryPooldetailSetter
 	if o.TrapdataID != nil {
 		val := o.TrapdataID()
 		m.TrapdataID = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
@@ -219,6 +225,9 @@ func (o HistoryPooldetailTemplate) Build() *models.HistoryPooldetail {
 	if o.TrapdataID != nil {
 		m.TrapdataID = o.TrapdataID()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -260,6 +269,10 @@ func (o HistoryPooldetailTemplate) BuildMany(number int) models.HistoryPooldetai
 }
 
 func ensureCreatableHistoryPooldetail(m *models.HistoryPooldetailSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -276,25 +289,6 @@ func ensureCreatableHistoryPooldetail(m *models.HistoryPooldetailSetter) {
 func (o *HistoryPooldetailTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryPooldetail) error {
 	var err error
 
-	isOrganizationDone, _ := historyPooldetailRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyPooldetailRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -305,10 +299,29 @@ func (o *HistoryPooldetailTemplate) Create(ctx context.Context, exec bob.Executo
 	opt := o.BuildSetter()
 	ensureCreatableHistoryPooldetail(opt)
 
+	if o.r.Organization == nil {
+		HistoryPooldetailMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryPooldetails.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -398,6 +411,7 @@ func (m historyPooldetailMods) RandomizeAllColumns(f *faker.Faker) HistoryPoolde
 		HistoryPooldetailMods.RandomPoolID(f),
 		HistoryPooldetailMods.RandomSpecies(f),
 		HistoryPooldetailMods.RandomTrapdataID(f),
+		HistoryPooldetailMods.RandomCreated(f),
 		HistoryPooldetailMods.RandomCreatedDate(f),
 		HistoryPooldetailMods.RandomCreatedUser(f),
 		HistoryPooldetailMods.RandomGeometryX(f),
@@ -409,14 +423,14 @@ func (m historyPooldetailMods) RandomizeAllColumns(f *faker.Faker) HistoryPoolde
 }
 
 // Set the model columns to this value
-func (m historyPooldetailMods) OrganizationID(val null.Val[int32]) HistoryPooldetailMod {
+func (m historyPooldetailMods) OrganizationID(val int32) HistoryPooldetailMod {
 	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyPooldetailMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryPooldetailMod {
+func (m historyPooldetailMods) OrganizationIDFunc(f func() int32) HistoryPooldetailMod {
 	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
 		o.OrganizationID = f
 	})
@@ -431,32 +445,10 @@ func (m historyPooldetailMods) UnsetOrganizationID() HistoryPooldetailMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyPooldetailMods) RandomOrganizationID(f *faker.Faker) HistoryPooldetailMod {
 	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyPooldetailMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryPooldetailMod {
-	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -964,6 +956,59 @@ func (m historyPooldetailMods) RandomTrapdataIDNotNull(f *faker.Faker) HistoryPo
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyPooldetailMods) Created(val null.Val[time.Time]) HistoryPooldetailMod {
+	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyPooldetailMods) CreatedFunc(f func() null.Val[time.Time]) HistoryPooldetailMod {
+	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyPooldetailMods) UnsetCreated() HistoryPooldetailMod {
+	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyPooldetailMods) RandomCreated(f *faker.Faker) HistoryPooldetailMod {
+	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyPooldetailMods) RandomCreatedNotNull(f *faker.Faker) HistoryPooldetailMod {
+	return HistoryPooldetailModFunc(func(_ context.Context, o *HistoryPooldetailTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

@@ -36,7 +36,7 @@ func (mods HistoryProposedtreatmentareaModSlice) Apply(ctx context.Context, n *H
 // HistoryProposedtreatmentareaTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryProposedtreatmentareaTemplate struct {
-	OrganizationID    func() null.Val[int32]
+	OrganizationID    func() int32
 	Acres             func() null.Val[float64]
 	Comments          func() null.Val[string]
 	Completed         func() null.Val[int16]
@@ -101,7 +101,7 @@ func (t HistoryProposedtreatmentareaTemplate) setModelRels(o *models.HistoryProp
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryProposedtreatmentareas = append(rel.R.HistoryProposedtreatmentareas, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -113,7 +113,7 @@ func (o HistoryProposedtreatmentareaTemplate) BuildSetter() *models.HistoryPropo
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Acres != nil {
 		val := o.Acres()
@@ -412,6 +412,10 @@ func (o HistoryProposedtreatmentareaTemplate) BuildMany(number int) models.Histo
 }
 
 func ensureCreatableHistoryProposedtreatmentarea(m *models.HistoryProposedtreatmentareaSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -428,25 +432,6 @@ func ensureCreatableHistoryProposedtreatmentarea(m *models.HistoryProposedtreatm
 func (o *HistoryProposedtreatmentareaTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryProposedtreatmentarea) error {
 	var err error
 
-	isOrganizationDone, _ := historyProposedtreatmentareaRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyProposedtreatmentareaRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -457,10 +442,29 @@ func (o *HistoryProposedtreatmentareaTemplate) Create(ctx context.Context, exec 
 	opt := o.BuildSetter()
 	ensureCreatableHistoryProposedtreatmentarea(opt)
 
+	if o.r.Organization == nil {
+		HistoryProposedtreatmentareaMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryProposedtreatmentareas.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -580,14 +584,14 @@ func (m historyProposedtreatmentareaMods) RandomizeAllColumns(f *faker.Faker) Hi
 }
 
 // Set the model columns to this value
-func (m historyProposedtreatmentareaMods) OrganizationID(val null.Val[int32]) HistoryProposedtreatmentareaMod {
+func (m historyProposedtreatmentareaMods) OrganizationID(val int32) HistoryProposedtreatmentareaMod {
 	return HistoryProposedtreatmentareaModFunc(func(_ context.Context, o *HistoryProposedtreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyProposedtreatmentareaMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryProposedtreatmentareaMod {
+func (m historyProposedtreatmentareaMods) OrganizationIDFunc(f func() int32) HistoryProposedtreatmentareaMod {
 	return HistoryProposedtreatmentareaModFunc(func(_ context.Context, o *HistoryProposedtreatmentareaTemplate) {
 		o.OrganizationID = f
 	})
@@ -602,32 +606,10 @@ func (m historyProposedtreatmentareaMods) UnsetOrganizationID() HistoryProposedt
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyProposedtreatmentareaMods) RandomOrganizationID(f *faker.Faker) HistoryProposedtreatmentareaMod {
 	return HistoryProposedtreatmentareaModFunc(func(_ context.Context, o *HistoryProposedtreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyProposedtreatmentareaMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryProposedtreatmentareaMod {
-	return HistoryProposedtreatmentareaModFunc(func(_ context.Context, o *HistoryProposedtreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

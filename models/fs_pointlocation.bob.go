@@ -26,7 +26,7 @@ import (
 
 // FSPointlocation is an object representing the database table.
 type FSPointlocation struct {
-	OrganizationID          null.Val[int32]   `db:"organization_id" `
+	OrganizationID          int32             `db:"organization_id" `
 	Accessdesc              null.Val[string]  `db:"accessdesc" `
 	Active                  null.Val[int16]   `db:"active" `
 	Comments                null.Val[string]  `db:"comments" `
@@ -215,7 +215,7 @@ func (fsPointlocationColumns) AliasedAs(alias string) fsPointlocationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSPointlocationSetter struct {
-	OrganizationID          omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID          omit.Val[int32]       `db:"organization_id" `
 	Accessdesc              omitnull.Val[string]  `db:"accessdesc" `
 	Active                  omitnull.Val[int16]   `db:"active" `
 	Comments                omitnull.Val[string]  `db:"comments" `
@@ -267,7 +267,7 @@ type FSPointlocationSetter struct {
 
 func (s FSPointlocationSetter) SetColumns() []string {
 	vals := make([]string, 0, 48)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accessdesc.IsUnset() {
@@ -415,8 +415,8 @@ func (s FSPointlocationSetter) SetColumns() []string {
 }
 
 func (s FSPointlocationSetter) Overwrite(t *FSPointlocation) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accessdesc.IsUnset() {
 		t.Accessdesc = s.Accessdesc.MustGetNull()
@@ -568,8 +568,8 @@ func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 48)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -867,7 +867,7 @@ func (s FSPointlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 48)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1437,7 +1437,7 @@ func (o *FSPointlocation) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Or
 }
 
 func (os FSPointlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1455,7 +1455,7 @@ func (os FSPointlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery
 
 func attachFSPointlocationOrganization0(ctx context.Context, exec bob.Executor, count int, fsPointlocation0 *FSPointlocation, organization1 *Organization) (*FSPointlocation, error) {
 	setter := &FSPointlocationSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsPointlocation0.Update(ctx, exec, setter)
@@ -1502,7 +1502,7 @@ func (fsPointlocation0 *FSPointlocation) AttachOrganization(ctx context.Context,
 }
 
 type fsPointlocationWhere[Q psql.Filterable] struct {
-	OrganizationID          psql.WhereNullMod[Q, int32]
+	OrganizationID          psql.WhereMod[Q, int32]
 	Accessdesc              psql.WhereNullMod[Q, string]
 	Active                  psql.WhereNullMod[Q, int16]
 	Comments                psql.WhereNullMod[Q, string]
@@ -1558,7 +1558,7 @@ func (fsPointlocationWhere[Q]) AliasedAs(alias string) fsPointlocationWhere[Q] {
 
 func buildFSPointlocationWhere[Q psql.Filterable](cols fsPointlocationColumns) fsPointlocationWhere[Q] {
 	return fsPointlocationWhere[Q]{
-		OrganizationID:          psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:          psql.Where[Q, int32](cols.OrganizationID),
 		Accessdesc:              psql.WhereNull[Q, string](cols.Accessdesc),
 		Active:                  psql.WhereNull[Q, int16](cols.Active),
 		Comments:                psql.WhereNull[Q, string](cols.Comments),
@@ -1710,11 +1710,8 @@ func (os FSPointlocationSlice) LoadOrganization(ctx context.Context, exec bob.Ex
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

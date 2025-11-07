@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,40 +26,41 @@ import (
 
 // HistoryRodentlocation is an object representing the database table.
 type HistoryRodentlocation struct {
-	OrganizationID            null.Val[int32]   `db:"organization_id" `
-	Accessdesc                null.Val[string]  `db:"accessdesc" `
-	Active                    null.Val[int16]   `db:"active" `
-	Comments                  null.Val[string]  `db:"comments" `
-	Creationdate              null.Val[int64]   `db:"creationdate" `
-	Creator                   null.Val[string]  `db:"creator" `
-	Description               null.Val[string]  `db:"description" `
-	Externalid                null.Val[string]  `db:"externalid" `
-	Editdate                  null.Val[int64]   `db:"editdate" `
-	Editor                    null.Val[string]  `db:"editor" `
-	Globalid                  null.Val[string]  `db:"globalid" `
-	Habitat                   null.Val[string]  `db:"habitat" `
-	Lastinspectaction         null.Val[string]  `db:"lastinspectaction" `
-	Lastinspectconditions     null.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate           null.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectrodentevidence null.Val[string]  `db:"lastinspectrodentevidence" `
-	Lastinspectspecies        null.Val[string]  `db:"lastinspectspecies" `
-	Locationname              null.Val[string]  `db:"locationname" `
-	Locationnumber            null.Val[int64]   `db:"locationnumber" `
-	Nextactiondatescheduled   null.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                  int32             `db:"objectid,pk" `
-	Priority                  null.Val[string]  `db:"priority" `
-	Symbology                 null.Val[string]  `db:"symbology" `
-	Usetype                   null.Val[string]  `db:"usetype" `
-	Zone                      null.Val[string]  `db:"zone" `
-	Zone2                     null.Val[string]  `db:"zone2" `
-	CreatedDate               null.Val[int64]   `db:"created_date" `
-	CreatedUser               null.Val[string]  `db:"created_user" `
-	GeometryX                 null.Val[float64] `db:"geometry_x" `
-	GeometryY                 null.Val[float64] `db:"geometry_y" `
-	LastEditedDate            null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser            null.Val[string]  `db:"last_edited_user" `
-	Jurisdiction              null.Val[string]  `db:"jurisdiction" `
-	Version                   int32             `db:"version,pk" `
+	OrganizationID            int32               `db:"organization_id" `
+	Accessdesc                null.Val[string]    `db:"accessdesc" `
+	Active                    null.Val[int16]     `db:"active" `
+	Comments                  null.Val[string]    `db:"comments" `
+	Creationdate              null.Val[int64]     `db:"creationdate" `
+	Creator                   null.Val[string]    `db:"creator" `
+	Description               null.Val[string]    `db:"description" `
+	Externalid                null.Val[string]    `db:"externalid" `
+	Editdate                  null.Val[int64]     `db:"editdate" `
+	Editor                    null.Val[string]    `db:"editor" `
+	Globalid                  null.Val[string]    `db:"globalid" `
+	Habitat                   null.Val[string]    `db:"habitat" `
+	Lastinspectaction         null.Val[string]    `db:"lastinspectaction" `
+	Lastinspectconditions     null.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate           null.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectrodentevidence null.Val[string]    `db:"lastinspectrodentevidence" `
+	Lastinspectspecies        null.Val[string]    `db:"lastinspectspecies" `
+	Locationname              null.Val[string]    `db:"locationname" `
+	Locationnumber            null.Val[int64]     `db:"locationnumber" `
+	Nextactiondatescheduled   null.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                  int32               `db:"objectid,pk" `
+	Priority                  null.Val[string]    `db:"priority" `
+	Symbology                 null.Val[string]    `db:"symbology" `
+	Usetype                   null.Val[string]    `db:"usetype" `
+	Zone                      null.Val[string]    `db:"zone" `
+	Zone2                     null.Val[string]    `db:"zone2" `
+	Created                   null.Val[time.Time] `db:"created" `
+	CreatedDate               null.Val[int64]     `db:"created_date" `
+	CreatedUser               null.Val[string]    `db:"created_user" `
+	GeometryX                 null.Val[float64]   `db:"geometry_x" `
+	GeometryY                 null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate            null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser            null.Val[string]    `db:"last_edited_user" `
+	Jurisdiction              null.Val[string]    `db:"jurisdiction" `
+	Version                   int32               `db:"version,pk" `
 
 	R historyRodentlocationR `db:"-" `
 }
@@ -81,7 +83,7 @@ type historyRodentlocationR struct {
 func buildHistoryRodentlocationColumns(alias string) historyRodentlocationColumns {
 	return historyRodentlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "lastinspectaction", "lastinspectconditions", "lastinspectdate", "lastinspectrodentevidence", "lastinspectspecies", "locationname", "locationnumber", "nextactiondatescheduled", "objectid", "priority", "symbology", "usetype", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "jurisdiction", "version",
+			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "lastinspectaction", "lastinspectconditions", "lastinspectdate", "lastinspectrodentevidence", "lastinspectspecies", "locationname", "locationnumber", "nextactiondatescheduled", "objectid", "priority", "symbology", "usetype", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "jurisdiction", "version",
 		).WithParent("history_rodentlocation"),
 		tableAlias:                alias,
 		OrganizationID:            psql.Quote(alias, "organization_id"),
@@ -110,6 +112,7 @@ func buildHistoryRodentlocationColumns(alias string) historyRodentlocationColumn
 		Usetype:                   psql.Quote(alias, "usetype"),
 		Zone:                      psql.Quote(alias, "zone"),
 		Zone2:                     psql.Quote(alias, "zone2"),
+		Created:                   psql.Quote(alias, "created"),
 		CreatedDate:               psql.Quote(alias, "created_date"),
 		CreatedUser:               psql.Quote(alias, "created_user"),
 		GeometryX:                 psql.Quote(alias, "geometry_x"),
@@ -150,6 +153,7 @@ type historyRodentlocationColumns struct {
 	Usetype                   psql.Expression
 	Zone                      psql.Expression
 	Zone2                     psql.Expression
+	Created                   psql.Expression
 	CreatedDate               psql.Expression
 	CreatedUser               psql.Expression
 	GeometryX                 psql.Expression
@@ -172,45 +176,46 @@ func (historyRodentlocationColumns) AliasedAs(alias string) historyRodentlocatio
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryRodentlocationSetter struct {
-	OrganizationID            omitnull.Val[int32]   `db:"organization_id" `
-	Accessdesc                omitnull.Val[string]  `db:"accessdesc" `
-	Active                    omitnull.Val[int16]   `db:"active" `
-	Comments                  omitnull.Val[string]  `db:"comments" `
-	Creationdate              omitnull.Val[int64]   `db:"creationdate" `
-	Creator                   omitnull.Val[string]  `db:"creator" `
-	Description               omitnull.Val[string]  `db:"description" `
-	Externalid                omitnull.Val[string]  `db:"externalid" `
-	Editdate                  omitnull.Val[int64]   `db:"editdate" `
-	Editor                    omitnull.Val[string]  `db:"editor" `
-	Globalid                  omitnull.Val[string]  `db:"globalid" `
-	Habitat                   omitnull.Val[string]  `db:"habitat" `
-	Lastinspectaction         omitnull.Val[string]  `db:"lastinspectaction" `
-	Lastinspectconditions     omitnull.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate           omitnull.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectrodentevidence omitnull.Val[string]  `db:"lastinspectrodentevidence" `
-	Lastinspectspecies        omitnull.Val[string]  `db:"lastinspectspecies" `
-	Locationname              omitnull.Val[string]  `db:"locationname" `
-	Locationnumber            omitnull.Val[int64]   `db:"locationnumber" `
-	Nextactiondatescheduled   omitnull.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                  omit.Val[int32]       `db:"objectid,pk" `
-	Priority                  omitnull.Val[string]  `db:"priority" `
-	Symbology                 omitnull.Val[string]  `db:"symbology" `
-	Usetype                   omitnull.Val[string]  `db:"usetype" `
-	Zone                      omitnull.Val[string]  `db:"zone" `
-	Zone2                     omitnull.Val[string]  `db:"zone2" `
-	CreatedDate               omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser               omitnull.Val[string]  `db:"created_user" `
-	GeometryX                 omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY                 omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate            omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser            omitnull.Val[string]  `db:"last_edited_user" `
-	Jurisdiction              omitnull.Val[string]  `db:"jurisdiction" `
-	Version                   omit.Val[int32]       `db:"version,pk" `
+	OrganizationID            omit.Val[int32]         `db:"organization_id" `
+	Accessdesc                omitnull.Val[string]    `db:"accessdesc" `
+	Active                    omitnull.Val[int16]     `db:"active" `
+	Comments                  omitnull.Val[string]    `db:"comments" `
+	Creationdate              omitnull.Val[int64]     `db:"creationdate" `
+	Creator                   omitnull.Val[string]    `db:"creator" `
+	Description               omitnull.Val[string]    `db:"description" `
+	Externalid                omitnull.Val[string]    `db:"externalid" `
+	Editdate                  omitnull.Val[int64]     `db:"editdate" `
+	Editor                    omitnull.Val[string]    `db:"editor" `
+	Globalid                  omitnull.Val[string]    `db:"globalid" `
+	Habitat                   omitnull.Val[string]    `db:"habitat" `
+	Lastinspectaction         omitnull.Val[string]    `db:"lastinspectaction" `
+	Lastinspectconditions     omitnull.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate           omitnull.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectrodentevidence omitnull.Val[string]    `db:"lastinspectrodentevidence" `
+	Lastinspectspecies        omitnull.Val[string]    `db:"lastinspectspecies" `
+	Locationname              omitnull.Val[string]    `db:"locationname" `
+	Locationnumber            omitnull.Val[int64]     `db:"locationnumber" `
+	Nextactiondatescheduled   omitnull.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                  omit.Val[int32]         `db:"objectid,pk" `
+	Priority                  omitnull.Val[string]    `db:"priority" `
+	Symbology                 omitnull.Val[string]    `db:"symbology" `
+	Usetype                   omitnull.Val[string]    `db:"usetype" `
+	Zone                      omitnull.Val[string]    `db:"zone" `
+	Zone2                     omitnull.Val[string]    `db:"zone2" `
+	Created                   omitnull.Val[time.Time] `db:"created" `
+	CreatedDate               omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser               omitnull.Val[string]    `db:"created_user" `
+	GeometryX                 omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY                 omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate            omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser            omitnull.Val[string]    `db:"last_edited_user" `
+	Jurisdiction              omitnull.Val[string]    `db:"jurisdiction" `
+	Version                   omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryRodentlocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 34)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 35)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accessdesc.IsUnset() {
@@ -288,6 +293,9 @@ func (s HistoryRodentlocationSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -316,8 +324,8 @@ func (s HistoryRodentlocationSetter) SetColumns() []string {
 }
 
 func (s HistoryRodentlocationSetter) Overwrite(t *HistoryRodentlocation) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accessdesc.IsUnset() {
 		t.Accessdesc = s.Accessdesc.MustGetNull()
@@ -394,6 +402,9 @@ func (s HistoryRodentlocationSetter) Overwrite(t *HistoryRodentlocation) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -426,9 +437,9 @@ func (s *HistoryRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 34)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 35)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -583,52 +594,58 @@ func (s *HistoryRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[26] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[26] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[27] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[27] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[28] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[28] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[29] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[29] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[30] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[30] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[31] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[31] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Jurisdiction.IsUnset() {
-			vals[32] = psql.Arg(s.Jurisdiction.MustGetNull())
+		if !s.LastEditedUser.IsUnset() {
+			vals[32] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[33] = psql.Arg(s.Version.MustGet())
+		if !s.Jurisdiction.IsUnset() {
+			vals[33] = psql.Arg(s.Jurisdiction.MustGetNull())
 		} else {
 			vals[33] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[34] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[34] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -640,9 +657,9 @@ func (s HistoryRodentlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryRodentlocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 34)
+	exprs := make([]bob.Expression, 0, 35)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -821,6 +838,13 @@ func (s HistoryRodentlocationSetter) Expressions(prefix ...string) []bob.Express
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "zone2")...),
 			psql.Arg(s.Zone2),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1124,7 +1148,7 @@ func (o *HistoryRodentlocation) Organization(mods ...bob.Mod[*dialect.SelectQuer
 }
 
 func (os HistoryRodentlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1142,7 +1166,7 @@ func (os HistoryRodentlocationSlice) Organization(mods ...bob.Mod[*dialect.Selec
 
 func attachHistoryRodentlocationOrganization0(ctx context.Context, exec bob.Executor, count int, historyRodentlocation0 *HistoryRodentlocation, organization1 *Organization) (*HistoryRodentlocation, error) {
 	setter := &HistoryRodentlocationSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyRodentlocation0.Update(ctx, exec, setter)
@@ -1189,7 +1213,7 @@ func (historyRodentlocation0 *HistoryRodentlocation) AttachOrganization(ctx cont
 }
 
 type historyRodentlocationWhere[Q psql.Filterable] struct {
-	OrganizationID            psql.WhereNullMod[Q, int32]
+	OrganizationID            psql.WhereMod[Q, int32]
 	Accessdesc                psql.WhereNullMod[Q, string]
 	Active                    psql.WhereNullMod[Q, int16]
 	Comments                  psql.WhereNullMod[Q, string]
@@ -1215,6 +1239,7 @@ type historyRodentlocationWhere[Q psql.Filterable] struct {
 	Usetype                   psql.WhereNullMod[Q, string]
 	Zone                      psql.WhereNullMod[Q, string]
 	Zone2                     psql.WhereNullMod[Q, string]
+	Created                   psql.WhereNullMod[Q, time.Time]
 	CreatedDate               psql.WhereNullMod[Q, int64]
 	CreatedUser               psql.WhereNullMod[Q, string]
 	GeometryX                 psql.WhereNullMod[Q, float64]
@@ -1231,7 +1256,7 @@ func (historyRodentlocationWhere[Q]) AliasedAs(alias string) historyRodentlocati
 
 func buildHistoryRodentlocationWhere[Q psql.Filterable](cols historyRodentlocationColumns) historyRodentlocationWhere[Q] {
 	return historyRodentlocationWhere[Q]{
-		OrganizationID:            psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:            psql.Where[Q, int32](cols.OrganizationID),
 		Accessdesc:                psql.WhereNull[Q, string](cols.Accessdesc),
 		Active:                    psql.WhereNull[Q, int16](cols.Active),
 		Comments:                  psql.WhereNull[Q, string](cols.Comments),
@@ -1257,6 +1282,7 @@ func buildHistoryRodentlocationWhere[Q psql.Filterable](cols historyRodentlocati
 		Usetype:                   psql.WhereNull[Q, string](cols.Usetype),
 		Zone:                      psql.WhereNull[Q, string](cols.Zone),
 		Zone2:                     psql.WhereNull[Q, string](cols.Zone2),
+		Created:                   psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:               psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:               psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:                 psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1369,11 +1395,8 @@ func (os HistoryRodentlocationSlice) LoadOrganization(ctx context.Context, exec 
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

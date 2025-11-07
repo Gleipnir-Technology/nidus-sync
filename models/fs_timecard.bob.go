@@ -26,7 +26,7 @@ import (
 
 // FSTimecard is an object representing the database table.
 type FSTimecard struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Activity       null.Val[string]  `db:"activity" `
 	Comments       null.Val[string]  `db:"comments" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
@@ -167,7 +167,7 @@ func (fsTimecardColumns) AliasedAs(alias string) fsTimecardColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSTimecardSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Activity       omitnull.Val[string]  `db:"activity" `
 	Comments       omitnull.Val[string]  `db:"comments" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
@@ -203,7 +203,7 @@ type FSTimecardSetter struct {
 
 func (s FSTimecardSetter) SetColumns() []string {
 	vals := make([]string, 0, 32)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -303,8 +303,8 @@ func (s FSTimecardSetter) SetColumns() []string {
 }
 
 func (s FSTimecardSetter) Overwrite(t *FSTimecard) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -408,8 +408,8 @@ func (s *FSTimecardSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 32)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -611,7 +611,7 @@ func (s FSTimecardSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSTimecardSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 32)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1069,7 +1069,7 @@ func (o *FSTimecard) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiz
 }
 
 func (os FSTimecardSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1087,7 +1087,7 @@ func (os FSTimecardSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Or
 
 func attachFSTimecardOrganization0(ctx context.Context, exec bob.Executor, count int, fsTimecard0 *FSTimecard, organization1 *Organization) (*FSTimecard, error) {
 	setter := &FSTimecardSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsTimecard0.Update(ctx, exec, setter)
@@ -1134,7 +1134,7 @@ func (fsTimecard0 *FSTimecard) AttachOrganization(ctx context.Context, exec bob.
 }
 
 type fsTimecardWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Activity       psql.WhereNullMod[Q, string]
 	Comments       psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
@@ -1174,7 +1174,7 @@ func (fsTimecardWhere[Q]) AliasedAs(alias string) fsTimecardWhere[Q] {
 
 func buildFSTimecardWhere[Q psql.Filterable](cols fsTimecardColumns) fsTimecardWhere[Q] {
 	return fsTimecardWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Activity:       psql.WhereNull[Q, string](cols.Activity),
 		Comments:       psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
@@ -1310,11 +1310,8 @@ func (os FSTimecardSlice) LoadOrganization(ctx context.Context, exec bob.Executo
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

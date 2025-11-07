@@ -37,7 +37,7 @@ func (mods FSPolygonlocationModSlice) Apply(ctx context.Context, n *FSPolygonloc
 // FSPolygonlocationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSPolygonlocationTemplate struct {
-	OrganizationID          func() null.Val[int32]
+	OrganizationID          func() int32
 	Accessdesc              func() null.Val[string]
 	Acres                   func() null.Val[float64]
 	Active                  func() null.Val[int16]
@@ -111,7 +111,7 @@ func (t FSPolygonlocationTemplate) setModelRels(o *models.FSPolygonlocation) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSPolygonlocations = append(rel.R.FSPolygonlocations, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -123,7 +123,7 @@ func (o FSPolygonlocationTemplate) BuildSetter() *models.FSPolygonlocationSetter
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Accessdesc != nil {
 		val := o.Accessdesc()
@@ -485,6 +485,10 @@ func (o FSPolygonlocationTemplate) BuildMany(number int) models.FSPolygonlocatio
 }
 
 func ensureCreatableFSPolygonlocation(m *models.FSPolygonlocationSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -497,25 +501,6 @@ func ensureCreatableFSPolygonlocation(m *models.FSPolygonlocationSetter) {
 func (o *FSPolygonlocationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSPolygonlocation) error {
 	var err error
 
-	isOrganizationDone, _ := fsPolygonlocationRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsPolygonlocationRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -526,10 +511,29 @@ func (o *FSPolygonlocationTemplate) Create(ctx context.Context, exec bob.Executo
 	opt := o.BuildSetter()
 	ensureCreatableFSPolygonlocation(opt)
 
+	if o.r.Organization == nil {
+		FSPolygonlocationMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSPolygonlocations.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -658,14 +662,14 @@ func (m fsPolygonlocationMods) RandomizeAllColumns(f *faker.Faker) FSPolygonloca
 }
 
 // Set the model columns to this value
-func (m fsPolygonlocationMods) OrganizationID(val null.Val[int32]) FSPolygonlocationMod {
+func (m fsPolygonlocationMods) OrganizationID(val int32) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPolygonlocationMods) OrganizationIDFunc(f func() null.Val[int32]) FSPolygonlocationMod {
+func (m fsPolygonlocationMods) OrganizationIDFunc(f func() int32) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
 		o.OrganizationID = f
 	})
@@ -680,32 +684,10 @@ func (m fsPolygonlocationMods) UnsetOrganizationID() FSPolygonlocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPolygonlocationMods) RandomOrganizationID(f *faker.Faker) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPolygonlocationMods) RandomOrganizationIDNotNull(f *faker.Faker) FSPolygonlocationMod {
-	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

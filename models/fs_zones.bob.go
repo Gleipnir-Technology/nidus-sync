@@ -26,7 +26,7 @@ import (
 
 // FSZone is an object representing the database table.
 type FSZone struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Active         null.Val[int64]   `db:"active" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
@@ -125,7 +125,7 @@ func (fsZoneColumns) AliasedAs(alias string) fsZoneColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSZoneSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Active         omitnull.Val[int64]   `db:"active" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
@@ -147,7 +147,7 @@ type FSZoneSetter struct {
 
 func (s FSZoneSetter) SetColumns() []string {
 	vals := make([]string, 0, 18)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Active.IsUnset() {
@@ -205,8 +205,8 @@ func (s FSZoneSetter) SetColumns() []string {
 }
 
 func (s FSZoneSetter) Overwrite(t *FSZone) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Active.IsUnset() {
 		t.Active = s.Active.MustGetNull()
@@ -268,8 +268,8 @@ func (s *FSZoneSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 18)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -387,7 +387,7 @@ func (s FSZoneSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSZoneSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 18)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -747,7 +747,7 @@ func (o *FSZone) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organizatio
 }
 
 func (os FSZoneSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -765,7 +765,7 @@ func (os FSZoneSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 
 func attachFSZoneOrganization0(ctx context.Context, exec bob.Executor, count int, fsZone0 *FSZone, organization1 *Organization) (*FSZone, error) {
 	setter := &FSZoneSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsZone0.Update(ctx, exec, setter)
@@ -812,7 +812,7 @@ func (fsZone0 *FSZone) AttachOrganization(ctx context.Context, exec bob.Executor
 }
 
 type fsZoneWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Active         psql.WhereNullMod[Q, int64]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -838,7 +838,7 @@ func (fsZoneWhere[Q]) AliasedAs(alias string) fsZoneWhere[Q] {
 
 func buildFSZoneWhere[Q psql.Filterable](cols fsZoneColumns) fsZoneWhere[Q] {
 	return fsZoneWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Active:         psql.WhereNull[Q, int64](cols.Active),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -960,11 +960,8 @@ func (os FSZoneSlice) LoadOrganization(ctx context.Context, exec bob.Executor, m
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

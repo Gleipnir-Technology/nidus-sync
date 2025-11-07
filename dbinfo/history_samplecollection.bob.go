@@ -18,9 +18,9 @@ var HistorySamplecollections = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -402,6 +402,15 @@ var HistorySamplecollections = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -554,6 +563,7 @@ type historySamplecollectionColumns struct {
 	Windspeed      column
 	Zone           column
 	Zone2          column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -565,7 +575,7 @@ type historySamplecollectionColumns struct {
 
 func (c historySamplecollectionColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Activity, c.Avetemp, c.Chickenid, c.Comments, c.Creationdate, c.Creator, c.Datesent, c.Datetested, c.Diseasepos, c.Diseasetested, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Flockid, c.Gatewaysync, c.Globalid, c.Lab, c.Locationname, c.LocID, c.Objectid, c.Processed, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Samplecond, c.Samplecount, c.Sampleid, c.Sampletype, c.Sex, c.Sitecond, c.Species, c.Startdatetime, c.Survtech, c.Testmethod, c.Testtech, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Activity, c.Avetemp, c.Chickenid, c.Comments, c.Creationdate, c.Creator, c.Datesent, c.Datetested, c.Diseasepos, c.Diseasetested, c.Enddatetime, c.Editdate, c.Editor, c.Fieldtech, c.Flockid, c.Gatewaysync, c.Globalid, c.Lab, c.Locationname, c.LocID, c.Objectid, c.Processed, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Samplecond, c.Samplecount, c.Sampleid, c.Sampletype, c.Sex, c.Sitecond, c.Species, c.Startdatetime, c.Survtech, c.Testmethod, c.Testtech, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

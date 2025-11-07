@@ -18,9 +18,9 @@ var HistoryMosquitoinspections = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -483,6 +483,15 @@ var HistoryMosquitoinspections = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -662,6 +671,7 @@ type historyMosquitoinspectionColumns struct {
 	Windspeed              column
 	Zone                   column
 	Zone2                  column
+	Created                column
 	CreatedDate            column
 	CreatedUser            column
 	GeometryX              column
@@ -675,7 +685,7 @@ type historyMosquitoinspectionColumns struct {
 
 func (c historyMosquitoinspectionColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Actiontaken, c.Activity, c.Adultact, c.Avetemp, c.Avglarvae, c.Avgpupae, c.Breeding, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Domstage, c.Eggs, c.Enddatetime, c.Editdate, c.Editor, c.Fieldspecies, c.Fieldtech, c.Globalid, c.Jurisdiction, c.Larvaepresent, c.Linelocid, c.Locationname, c.Lstages, c.Numdips, c.Objectid, c.Personalcontact, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Positivecontainercount, c.Pupaepresent, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Tirecount, c.Totlarvae, c.Totpupae, c.Visualmonitoring, c.Vmcomments, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Adminaction, c.Ptaid, c.Version,
+		c.OrganizationID, c.Actiontaken, c.Activity, c.Adultact, c.Avetemp, c.Avglarvae, c.Avgpupae, c.Breeding, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Domstage, c.Eggs, c.Enddatetime, c.Editdate, c.Editor, c.Fieldspecies, c.Fieldtech, c.Globalid, c.Jurisdiction, c.Larvaepresent, c.Linelocid, c.Locationname, c.Lstages, c.Numdips, c.Objectid, c.Personalcontact, c.Pointlocid, c.Polygonlocid, c.Posdips, c.Positivecontainercount, c.Pupaepresent, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Tirecount, c.Totlarvae, c.Totpupae, c.Visualmonitoring, c.Vmcomments, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Adminaction, c.Ptaid, c.Version,
 	}
 }
 

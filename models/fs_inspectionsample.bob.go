@@ -26,7 +26,7 @@ import (
 
 // FSInspectionsample is an object representing the database table.
 type FSInspectionsample struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
@@ -125,7 +125,7 @@ func (fsInspectionsampleColumns) AliasedAs(alias string) fsInspectionsampleColum
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSInspectionsampleSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
@@ -147,7 +147,7 @@ type FSInspectionsampleSetter struct {
 
 func (s FSInspectionsampleSetter) SetColumns() []string {
 	vals := make([]string, 0, 18)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -205,8 +205,8 @@ func (s FSInspectionsampleSetter) SetColumns() []string {
 }
 
 func (s FSInspectionsampleSetter) Overwrite(t *FSInspectionsample) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -268,8 +268,8 @@ func (s *FSInspectionsampleSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 18)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -387,7 +387,7 @@ func (s FSInspectionsampleSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSInspectionsampleSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 18)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -747,7 +747,7 @@ func (o *FSInspectionsample) Organization(mods ...bob.Mod[*dialect.SelectQuery])
 }
 
 func (os FSInspectionsampleSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -765,7 +765,7 @@ func (os FSInspectionsampleSlice) Organization(mods ...bob.Mod[*dialect.SelectQu
 
 func attachFSInspectionsampleOrganization0(ctx context.Context, exec bob.Executor, count int, fsInspectionsample0 *FSInspectionsample, organization1 *Organization) (*FSInspectionsample, error) {
 	setter := &FSInspectionsampleSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsInspectionsample0.Update(ctx, exec, setter)
@@ -812,7 +812,7 @@ func (fsInspectionsample0 *FSInspectionsample) AttachOrganization(ctx context.Co
 }
 
 type fsInspectionsampleWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
@@ -838,7 +838,7 @@ func (fsInspectionsampleWhere[Q]) AliasedAs(alias string) fsInspectionsampleWher
 
 func buildFSInspectionsampleWhere[Q psql.Filterable](cols fsInspectionsampleColumns) fsInspectionsampleWhere[Q] {
 	return fsInspectionsampleWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
@@ -960,11 +960,8 @@ func (os FSInspectionsampleSlice) LoadOrganization(ctx context.Context, exec bob
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

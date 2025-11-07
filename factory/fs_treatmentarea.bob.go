@@ -37,7 +37,7 @@ func (mods FSTreatmentareaModSlice) Apply(ctx context.Context, n *FSTreatmentare
 // FSTreatmentareaTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSTreatmentareaTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Comments       func() null.Val[string]
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
@@ -87,7 +87,7 @@ func (t FSTreatmentareaTemplate) setModelRels(o *models.FSTreatmentarea) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSTreatmentareas = append(rel.R.FSTreatmentareas, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -99,7 +99,7 @@ func (o FSTreatmentareaTemplate) BuildSetter() *models.FSTreatmentareaSetter {
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Comments != nil {
 		val := o.Comments()
@@ -293,6 +293,10 @@ func (o FSTreatmentareaTemplate) BuildMany(number int) models.FSTreatmentareaSli
 }
 
 func ensureCreatableFSTreatmentarea(m *models.FSTreatmentareaSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -305,25 +309,6 @@ func ensureCreatableFSTreatmentarea(m *models.FSTreatmentareaSetter) {
 func (o *FSTreatmentareaTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSTreatmentarea) error {
 	var err error
 
-	isOrganizationDone, _ := fsTreatmentareaRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsTreatmentareaRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -334,10 +319,29 @@ func (o *FSTreatmentareaTemplate) Create(ctx context.Context, exec bob.Executor)
 	opt := o.BuildSetter()
 	ensureCreatableFSTreatmentarea(opt)
 
+	if o.r.Organization == nil {
+		FSTreatmentareaMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSTreatmentareas.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -442,14 +446,14 @@ func (m fsTreatmentareaMods) RandomizeAllColumns(f *faker.Faker) FSTreatmentarea
 }
 
 // Set the model columns to this value
-func (m fsTreatmentareaMods) OrganizationID(val null.Val[int32]) FSTreatmentareaMod {
+func (m fsTreatmentareaMods) OrganizationID(val int32) FSTreatmentareaMod {
 	return FSTreatmentareaModFunc(func(_ context.Context, o *FSTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsTreatmentareaMods) OrganizationIDFunc(f func() null.Val[int32]) FSTreatmentareaMod {
+func (m fsTreatmentareaMods) OrganizationIDFunc(f func() int32) FSTreatmentareaMod {
 	return FSTreatmentareaModFunc(func(_ context.Context, o *FSTreatmentareaTemplate) {
 		o.OrganizationID = f
 	})
@@ -464,32 +468,10 @@ func (m fsTreatmentareaMods) UnsetOrganizationID() FSTreatmentareaMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsTreatmentareaMods) RandomOrganizationID(f *faker.Faker) FSTreatmentareaMod {
 	return FSTreatmentareaModFunc(func(_ context.Context, o *FSTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsTreatmentareaMods) RandomOrganizationIDNotNull(f *faker.Faker) FSTreatmentareaMod {
-	return FSTreatmentareaModFunc(func(_ context.Context, o *FSTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

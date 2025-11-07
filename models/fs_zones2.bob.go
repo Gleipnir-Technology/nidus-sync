@@ -26,7 +26,7 @@ import (
 
 // FSZones2 is an object representing the database table.
 type FSZones2 struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
@@ -122,7 +122,7 @@ func (fsZones2Columns) AliasedAs(alias string) fsZones2Columns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSZones2Setter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
@@ -143,7 +143,7 @@ type FSZones2Setter struct {
 
 func (s FSZones2Setter) SetColumns() []string {
 	vals := make([]string, 0, 17)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -198,8 +198,8 @@ func (s FSZones2Setter) SetColumns() []string {
 }
 
 func (s FSZones2Setter) Overwrite(t *FSZones2) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -258,8 +258,8 @@ func (s *FSZones2Setter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 17)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -371,7 +371,7 @@ func (s FSZones2Setter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSZones2Setter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 17)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -724,7 +724,7 @@ func (o *FSZones2) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organizat
 }
 
 func (os FSZones2Slice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -742,7 +742,7 @@ func (os FSZones2Slice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Orga
 
 func attachFSZones2Organization0(ctx context.Context, exec bob.Executor, count int, fsZones20 *FSZones2, organization1 *Organization) (*FSZones2, error) {
 	setter := &FSZones2Setter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsZones20.Update(ctx, exec, setter)
@@ -789,7 +789,7 @@ func (fsZones20 *FSZones2) AttachOrganization(ctx context.Context, exec bob.Exec
 }
 
 type fsZones2Where[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
@@ -814,7 +814,7 @@ func (fsZones2Where[Q]) AliasedAs(alias string) fsZones2Where[Q] {
 
 func buildFSZones2Where[Q psql.Filterable](cols fsZones2Columns) fsZones2Where[Q] {
 	return fsZones2Where[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
@@ -935,11 +935,8 @@ func (os FSZones2Slice) LoadOrganization(ctx context.Context, exec bob.Executor,
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

@@ -26,7 +26,7 @@ import (
 
 // FSRodentlocation is an object representing the database table.
 type FSRodentlocation struct {
-	OrganizationID            null.Val[int32]   `db:"organization_id" `
+	OrganizationID            int32             `db:"organization_id" `
 	Accessdesc                null.Val[string]  `db:"accessdesc" `
 	Active                    null.Val[int16]   `db:"active" `
 	Comments                  null.Val[string]  `db:"comments" `
@@ -173,7 +173,7 @@ func (fsRodentlocationColumns) AliasedAs(alias string) fsRodentlocationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSRodentlocationSetter struct {
-	OrganizationID            omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID            omit.Val[int32]       `db:"organization_id" `
 	Accessdesc                omitnull.Val[string]  `db:"accessdesc" `
 	Active                    omitnull.Val[int16]   `db:"active" `
 	Comments                  omitnull.Val[string]  `db:"comments" `
@@ -211,7 +211,7 @@ type FSRodentlocationSetter struct {
 
 func (s FSRodentlocationSetter) SetColumns() []string {
 	vals := make([]string, 0, 34)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accessdesc.IsUnset() {
@@ -317,8 +317,8 @@ func (s FSRodentlocationSetter) SetColumns() []string {
 }
 
 func (s FSRodentlocationSetter) Overwrite(t *FSRodentlocation) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accessdesc.IsUnset() {
 		t.Accessdesc = s.Accessdesc.MustGetNull()
@@ -428,8 +428,8 @@ func (s *FSRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 34)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -643,7 +643,7 @@ func (s FSRodentlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSRodentlocationSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 34)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1115,7 +1115,7 @@ func (o *FSRodentlocation) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 }
 
 func (os FSRodentlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1133,7 +1133,7 @@ func (os FSRodentlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuer
 
 func attachFSRodentlocationOrganization0(ctx context.Context, exec bob.Executor, count int, fsRodentlocation0 *FSRodentlocation, organization1 *Organization) (*FSRodentlocation, error) {
 	setter := &FSRodentlocationSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsRodentlocation0.Update(ctx, exec, setter)
@@ -1180,7 +1180,7 @@ func (fsRodentlocation0 *FSRodentlocation) AttachOrganization(ctx context.Contex
 }
 
 type fsRodentlocationWhere[Q psql.Filterable] struct {
-	OrganizationID            psql.WhereNullMod[Q, int32]
+	OrganizationID            psql.WhereMod[Q, int32]
 	Accessdesc                psql.WhereNullMod[Q, string]
 	Active                    psql.WhereNullMod[Q, int16]
 	Comments                  psql.WhereNullMod[Q, string]
@@ -1222,7 +1222,7 @@ func (fsRodentlocationWhere[Q]) AliasedAs(alias string) fsRodentlocationWhere[Q]
 
 func buildFSRodentlocationWhere[Q psql.Filterable](cols fsRodentlocationColumns) fsRodentlocationWhere[Q] {
 	return fsRodentlocationWhere[Q]{
-		OrganizationID:            psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:            psql.Where[Q, int32](cols.OrganizationID),
 		Accessdesc:                psql.WhereNull[Q, string](cols.Accessdesc),
 		Active:                    psql.WhereNull[Q, int16](cols.Active),
 		Comments:                  psql.WhereNull[Q, string](cols.Comments),
@@ -1360,11 +1360,8 @@ func (os FSRodentlocationSlice) LoadOrganization(ctx context.Context, exec bob.E
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

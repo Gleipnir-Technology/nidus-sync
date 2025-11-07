@@ -14,6 +14,9 @@ import (
 // Set the testDB to enable tests that use the database
 var testDB bob.Transactor[bob.Tx]
 
+// Make sure the type FieldseekerSync runs hooks after queries
+var _ bob.HookableType = &FieldseekerSync{}
+
 // Make sure the type FSContainerrelate runs hooks after queries
 var _ bob.HookableType = &FSContainerrelate{}
 

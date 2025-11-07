@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,38 +26,39 @@ import (
 
 // HistoryPool is an object representing the database table.
 type HistoryPool struct {
-	OrganizationID         null.Val[int32]   `db:"organization_id" `
-	Comments               null.Val[string]  `db:"comments" `
-	Creationdate           null.Val[int64]   `db:"creationdate" `
-	Creator                null.Val[string]  `db:"creator" `
-	Datesent               null.Val[int64]   `db:"datesent" `
-	Datetested             null.Val[int64]   `db:"datetested" `
-	Diseasepos             null.Val[string]  `db:"diseasepos" `
-	Diseasetested          null.Val[string]  `db:"diseasetested" `
-	Editdate               null.Val[int64]   `db:"editdate" `
-	Editor                 null.Val[string]  `db:"editor" `
-	Gatewaysync            null.Val[int16]   `db:"gatewaysync" `
-	Globalid               null.Val[string]  `db:"globalid" `
-	Lab                    null.Val[string]  `db:"lab" `
-	LabID                  null.Val[string]  `db:"lab_id" `
-	Objectid               int32             `db:"objectid,pk" `
-	Poolyear               null.Val[int16]   `db:"poolyear" `
-	Processed              null.Val[int16]   `db:"processed" `
-	Sampleid               null.Val[string]  `db:"sampleid" `
-	Survtech               null.Val[string]  `db:"survtech" `
-	Testmethod             null.Val[string]  `db:"testmethod" `
-	Testtech               null.Val[string]  `db:"testtech" `
-	TrapdataID             null.Val[string]  `db:"trapdata_id" `
-	CreatedDate            null.Val[int64]   `db:"created_date" `
-	CreatedUser            null.Val[string]  `db:"created_user" `
-	GeometryX              null.Val[float64] `db:"geometry_x" `
-	GeometryY              null.Val[float64] `db:"geometry_y" `
-	LastEditedDate         null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser         null.Val[string]  `db:"last_edited_user" `
-	Vectorsurvcollectionid null.Val[string]  `db:"vectorsurvcollectionid" `
-	Vectorsurvpoolid       null.Val[string]  `db:"vectorsurvpoolid" `
-	Vectorsurvtrapdataid   null.Val[string]  `db:"vectorsurvtrapdataid" `
-	Version                int32             `db:"version,pk" `
+	OrganizationID         int32               `db:"organization_id" `
+	Comments               null.Val[string]    `db:"comments" `
+	Creationdate           null.Val[int64]     `db:"creationdate" `
+	Creator                null.Val[string]    `db:"creator" `
+	Datesent               null.Val[int64]     `db:"datesent" `
+	Datetested             null.Val[int64]     `db:"datetested" `
+	Diseasepos             null.Val[string]    `db:"diseasepos" `
+	Diseasetested          null.Val[string]    `db:"diseasetested" `
+	Editdate               null.Val[int64]     `db:"editdate" `
+	Editor                 null.Val[string]    `db:"editor" `
+	Gatewaysync            null.Val[int16]     `db:"gatewaysync" `
+	Globalid               null.Val[string]    `db:"globalid" `
+	Lab                    null.Val[string]    `db:"lab" `
+	LabID                  null.Val[string]    `db:"lab_id" `
+	Objectid               int32               `db:"objectid,pk" `
+	Poolyear               null.Val[int16]     `db:"poolyear" `
+	Processed              null.Val[int16]     `db:"processed" `
+	Sampleid               null.Val[string]    `db:"sampleid" `
+	Survtech               null.Val[string]    `db:"survtech" `
+	Testmethod             null.Val[string]    `db:"testmethod" `
+	Testtech               null.Val[string]    `db:"testtech" `
+	TrapdataID             null.Val[string]    `db:"trapdata_id" `
+	Created                null.Val[time.Time] `db:"created" `
+	CreatedDate            null.Val[int64]     `db:"created_date" `
+	CreatedUser            null.Val[string]    `db:"created_user" `
+	GeometryX              null.Val[float64]   `db:"geometry_x" `
+	GeometryY              null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate         null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser         null.Val[string]    `db:"last_edited_user" `
+	Vectorsurvcollectionid null.Val[string]    `db:"vectorsurvcollectionid" `
+	Vectorsurvpoolid       null.Val[string]    `db:"vectorsurvpoolid" `
+	Vectorsurvtrapdataid   null.Val[string]    `db:"vectorsurvtrapdataid" `
+	Version                int32               `db:"version,pk" `
 
 	R historyPoolR `db:"-" `
 }
@@ -79,7 +81,7 @@ type historyPoolR struct {
 func buildHistoryPoolColumns(alias string) historyPoolColumns {
 	return historyPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "comments", "creationdate", "creator", "datesent", "datetested", "diseasepos", "diseasetested", "editdate", "editor", "gatewaysync", "globalid", "lab", "lab_id", "objectid", "poolyear", "processed", "sampleid", "survtech", "testmethod", "testtech", "trapdata_id", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "vectorsurvcollectionid", "vectorsurvpoolid", "vectorsurvtrapdataid", "version",
+			"organization_id", "comments", "creationdate", "creator", "datesent", "datetested", "diseasepos", "diseasetested", "editdate", "editor", "gatewaysync", "globalid", "lab", "lab_id", "objectid", "poolyear", "processed", "sampleid", "survtech", "testmethod", "testtech", "trapdata_id", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "vectorsurvcollectionid", "vectorsurvpoolid", "vectorsurvtrapdataid", "version",
 		).WithParent("history_pool"),
 		tableAlias:             alias,
 		OrganizationID:         psql.Quote(alias, "organization_id"),
@@ -104,6 +106,7 @@ func buildHistoryPoolColumns(alias string) historyPoolColumns {
 		Testmethod:             psql.Quote(alias, "testmethod"),
 		Testtech:               psql.Quote(alias, "testtech"),
 		TrapdataID:             psql.Quote(alias, "trapdata_id"),
+		Created:                psql.Quote(alias, "created"),
 		CreatedDate:            psql.Quote(alias, "created_date"),
 		CreatedUser:            psql.Quote(alias, "created_user"),
 		GeometryX:              psql.Quote(alias, "geometry_x"),
@@ -142,6 +145,7 @@ type historyPoolColumns struct {
 	Testmethod             psql.Expression
 	Testtech               psql.Expression
 	TrapdataID             psql.Expression
+	Created                psql.Expression
 	CreatedDate            psql.Expression
 	CreatedUser            psql.Expression
 	GeometryX              psql.Expression
@@ -166,43 +170,44 @@ func (historyPoolColumns) AliasedAs(alias string) historyPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryPoolSetter struct {
-	OrganizationID         omitnull.Val[int32]   `db:"organization_id" `
-	Comments               omitnull.Val[string]  `db:"comments" `
-	Creationdate           omitnull.Val[int64]   `db:"creationdate" `
-	Creator                omitnull.Val[string]  `db:"creator" `
-	Datesent               omitnull.Val[int64]   `db:"datesent" `
-	Datetested             omitnull.Val[int64]   `db:"datetested" `
-	Diseasepos             omitnull.Val[string]  `db:"diseasepos" `
-	Diseasetested          omitnull.Val[string]  `db:"diseasetested" `
-	Editdate               omitnull.Val[int64]   `db:"editdate" `
-	Editor                 omitnull.Val[string]  `db:"editor" `
-	Gatewaysync            omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid               omitnull.Val[string]  `db:"globalid" `
-	Lab                    omitnull.Val[string]  `db:"lab" `
-	LabID                  omitnull.Val[string]  `db:"lab_id" `
-	Objectid               omit.Val[int32]       `db:"objectid,pk" `
-	Poolyear               omitnull.Val[int16]   `db:"poolyear" `
-	Processed              omitnull.Val[int16]   `db:"processed" `
-	Sampleid               omitnull.Val[string]  `db:"sampleid" `
-	Survtech               omitnull.Val[string]  `db:"survtech" `
-	Testmethod             omitnull.Val[string]  `db:"testmethod" `
-	Testtech               omitnull.Val[string]  `db:"testtech" `
-	TrapdataID             omitnull.Val[string]  `db:"trapdata_id" `
-	CreatedDate            omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser            omitnull.Val[string]  `db:"created_user" `
-	GeometryX              omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY              omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate         omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser         omitnull.Val[string]  `db:"last_edited_user" `
-	Vectorsurvcollectionid omitnull.Val[string]  `db:"vectorsurvcollectionid" `
-	Vectorsurvpoolid       omitnull.Val[string]  `db:"vectorsurvpoolid" `
-	Vectorsurvtrapdataid   omitnull.Val[string]  `db:"vectorsurvtrapdataid" `
-	Version                omit.Val[int32]       `db:"version,pk" `
+	OrganizationID         omit.Val[int32]         `db:"organization_id" `
+	Comments               omitnull.Val[string]    `db:"comments" `
+	Creationdate           omitnull.Val[int64]     `db:"creationdate" `
+	Creator                omitnull.Val[string]    `db:"creator" `
+	Datesent               omitnull.Val[int64]     `db:"datesent" `
+	Datetested             omitnull.Val[int64]     `db:"datetested" `
+	Diseasepos             omitnull.Val[string]    `db:"diseasepos" `
+	Diseasetested          omitnull.Val[string]    `db:"diseasetested" `
+	Editdate               omitnull.Val[int64]     `db:"editdate" `
+	Editor                 omitnull.Val[string]    `db:"editor" `
+	Gatewaysync            omitnull.Val[int16]     `db:"gatewaysync" `
+	Globalid               omitnull.Val[string]    `db:"globalid" `
+	Lab                    omitnull.Val[string]    `db:"lab" `
+	LabID                  omitnull.Val[string]    `db:"lab_id" `
+	Objectid               omit.Val[int32]         `db:"objectid,pk" `
+	Poolyear               omitnull.Val[int16]     `db:"poolyear" `
+	Processed              omitnull.Val[int16]     `db:"processed" `
+	Sampleid               omitnull.Val[string]    `db:"sampleid" `
+	Survtech               omitnull.Val[string]    `db:"survtech" `
+	Testmethod             omitnull.Val[string]    `db:"testmethod" `
+	Testtech               omitnull.Val[string]    `db:"testtech" `
+	TrapdataID             omitnull.Val[string]    `db:"trapdata_id" `
+	Created                omitnull.Val[time.Time] `db:"created" `
+	CreatedDate            omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser            omitnull.Val[string]    `db:"created_user" `
+	GeometryX              omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY              omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate         omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser         omitnull.Val[string]    `db:"last_edited_user" `
+	Vectorsurvcollectionid omitnull.Val[string]    `db:"vectorsurvcollectionid" `
+	Vectorsurvpoolid       omitnull.Val[string]    `db:"vectorsurvpoolid" `
+	Vectorsurvtrapdataid   omitnull.Val[string]    `db:"vectorsurvtrapdataid" `
+	Version                omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 32)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 33)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Comments.IsUnset() {
@@ -268,6 +273,9 @@ func (s HistoryPoolSetter) SetColumns() []string {
 	if !s.TrapdataID.IsUnset() {
 		vals = append(vals, "trapdata_id")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -302,8 +310,8 @@ func (s HistoryPoolSetter) SetColumns() []string {
 }
 
 func (s HistoryPoolSetter) Overwrite(t *HistoryPool) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
@@ -368,6 +376,9 @@ func (s HistoryPoolSetter) Overwrite(t *HistoryPool) {
 	if !s.TrapdataID.IsUnset() {
 		t.TrapdataID = s.TrapdataID.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -406,9 +417,9 @@ func (s *HistoryPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 32)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 33)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -539,64 +550,70 @@ func (s *HistoryPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[22] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[22] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[23] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[23] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[24] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[24] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[25] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[25] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[26] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[26] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[27] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[27] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Vectorsurvcollectionid.IsUnset() {
-			vals[28] = psql.Arg(s.Vectorsurvcollectionid.MustGetNull())
+		if !s.LastEditedUser.IsUnset() {
+			vals[28] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Vectorsurvpoolid.IsUnset() {
-			vals[29] = psql.Arg(s.Vectorsurvpoolid.MustGetNull())
+		if !s.Vectorsurvcollectionid.IsUnset() {
+			vals[29] = psql.Arg(s.Vectorsurvcollectionid.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Vectorsurvtrapdataid.IsUnset() {
-			vals[30] = psql.Arg(s.Vectorsurvtrapdataid.MustGetNull())
+		if !s.Vectorsurvpoolid.IsUnset() {
+			vals[30] = psql.Arg(s.Vectorsurvpoolid.MustGetNull())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[31] = psql.Arg(s.Version.MustGet())
+		if !s.Vectorsurvtrapdataid.IsUnset() {
+			vals[31] = psql.Arg(s.Vectorsurvtrapdataid.MustGetNull())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[32] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[32] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -608,9 +625,9 @@ func (s HistoryPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 32)
+	exprs := make([]bob.Expression, 0, 33)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -761,6 +778,13 @@ func (s HistoryPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "trapdata_id")...),
 			psql.Arg(s.TrapdataID),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1078,7 +1102,7 @@ func (o *HistoryPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 }
 
 func (os HistoryPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1096,7 +1120,7 @@ func (os HistoryPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 
 func attachHistoryPoolOrganization0(ctx context.Context, exec bob.Executor, count int, historyPool0 *HistoryPool, organization1 *Organization) (*HistoryPool, error) {
 	setter := &HistoryPoolSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyPool0.Update(ctx, exec, setter)
@@ -1143,7 +1167,7 @@ func (historyPool0 *HistoryPool) AttachOrganization(ctx context.Context, exec bo
 }
 
 type historyPoolWhere[Q psql.Filterable] struct {
-	OrganizationID         psql.WhereNullMod[Q, int32]
+	OrganizationID         psql.WhereMod[Q, int32]
 	Comments               psql.WhereNullMod[Q, string]
 	Creationdate           psql.WhereNullMod[Q, int64]
 	Creator                psql.WhereNullMod[Q, string]
@@ -1165,6 +1189,7 @@ type historyPoolWhere[Q psql.Filterable] struct {
 	Testmethod             psql.WhereNullMod[Q, string]
 	Testtech               psql.WhereNullMod[Q, string]
 	TrapdataID             psql.WhereNullMod[Q, string]
+	Created                psql.WhereNullMod[Q, time.Time]
 	CreatedDate            psql.WhereNullMod[Q, int64]
 	CreatedUser            psql.WhereNullMod[Q, string]
 	GeometryX              psql.WhereNullMod[Q, float64]
@@ -1183,7 +1208,7 @@ func (historyPoolWhere[Q]) AliasedAs(alias string) historyPoolWhere[Q] {
 
 func buildHistoryPoolWhere[Q psql.Filterable](cols historyPoolColumns) historyPoolWhere[Q] {
 	return historyPoolWhere[Q]{
-		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		Comments:               psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:           psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:                psql.WhereNull[Q, string](cols.Creator),
@@ -1205,6 +1230,7 @@ func buildHistoryPoolWhere[Q psql.Filterable](cols historyPoolColumns) historyPo
 		Testmethod:             psql.WhereNull[Q, string](cols.Testmethod),
 		Testtech:               psql.WhereNull[Q, string](cols.Testtech),
 		TrapdataID:             psql.WhereNull[Q, string](cols.TrapdataID),
+		Created:                psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:            psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:            psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:              psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1319,11 +1345,8 @@ func (os HistoryPoolSlice) LoadOrganization(ctx context.Context, exec bob.Execut
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

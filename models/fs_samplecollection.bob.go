@@ -26,7 +26,7 @@ import (
 
 // FSSamplecollection is an object representing the database table.
 type FSSamplecollection struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Activity       null.Val[string]  `db:"activity" `
 	Avetemp        null.Val[float64] `db:"avetemp" `
 	Chickenid      null.Val[string]  `db:"chickenid" `
@@ -221,7 +221,7 @@ func (fsSamplecollectionColumns) AliasedAs(alias string) fsSamplecollectionColum
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSSamplecollectionSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Activity       omitnull.Val[string]  `db:"activity" `
 	Avetemp        omitnull.Val[float64] `db:"avetemp" `
 	Chickenid      omitnull.Val[string]  `db:"chickenid" `
@@ -275,7 +275,7 @@ type FSSamplecollectionSetter struct {
 
 func (s FSSamplecollectionSetter) SetColumns() []string {
 	vals := make([]string, 0, 50)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Activity.IsUnset() {
@@ -429,8 +429,8 @@ func (s FSSamplecollectionSetter) SetColumns() []string {
 }
 
 func (s FSSamplecollectionSetter) Overwrite(t *FSSamplecollection) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Activity.IsUnset() {
 		t.Activity = s.Activity.MustGetNull()
@@ -588,8 +588,8 @@ func (s *FSSamplecollectionSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 50)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -899,7 +899,7 @@ func (s FSSamplecollectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSSamplecollectionSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 50)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1483,7 +1483,7 @@ func (o *FSSamplecollection) Organization(mods ...bob.Mod[*dialect.SelectQuery])
 }
 
 func (os FSSamplecollectionSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1501,7 +1501,7 @@ func (os FSSamplecollectionSlice) Organization(mods ...bob.Mod[*dialect.SelectQu
 
 func attachFSSamplecollectionOrganization0(ctx context.Context, exec bob.Executor, count int, fsSamplecollection0 *FSSamplecollection, organization1 *Organization) (*FSSamplecollection, error) {
 	setter := &FSSamplecollectionSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsSamplecollection0.Update(ctx, exec, setter)
@@ -1548,7 +1548,7 @@ func (fsSamplecollection0 *FSSamplecollection) AttachOrganization(ctx context.Co
 }
 
 type fsSamplecollectionWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Activity       psql.WhereNullMod[Q, string]
 	Avetemp        psql.WhereNullMod[Q, float64]
 	Chickenid      psql.WhereNullMod[Q, string]
@@ -1606,7 +1606,7 @@ func (fsSamplecollectionWhere[Q]) AliasedAs(alias string) fsSamplecollectionWher
 
 func buildFSSamplecollectionWhere[Q psql.Filterable](cols fsSamplecollectionColumns) fsSamplecollectionWhere[Q] {
 	return fsSamplecollectionWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Activity:       psql.WhereNull[Q, string](cols.Activity),
 		Avetemp:        psql.WhereNull[Q, float64](cols.Avetemp),
 		Chickenid:      psql.WhereNull[Q, string](cols.Chickenid),
@@ -1760,11 +1760,8 @@ func (os FSSamplecollectionSlice) LoadOrganization(ctx context.Context, exec bob
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

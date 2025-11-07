@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryServicerequestModSlice) Apply(ctx context.Context, n *HistoryS
 // HistoryServicerequestTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryServicerequestTemplate struct {
-	OrganizationID        func() null.Val[int32]
+	OrganizationID        func() int32
 	Accepted              func() null.Val[int16]
 	Acceptedby            func() null.Val[string]
 	Accepteddate          func() null.Val[int64]
@@ -115,6 +116,7 @@ type HistoryServicerequestTemplate struct {
 	Yvalue                func() null.Val[string]
 	Zone                  func() null.Val[string]
 	Zone2                 func() null.Val[string]
+	Created               func() null.Val[time.Time]
 	CreatedDate           func() null.Val[int64]
 	CreatedUser           func() null.Val[string]
 	GeometryX             func() null.Val[float64]
@@ -154,7 +156,7 @@ func (t HistoryServicerequestTemplate) setModelRels(o *models.HistoryServicerequ
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryServicerequests = append(rel.R.HistoryServicerequests, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -166,7 +168,7 @@ func (o HistoryServicerequestTemplate) BuildSetter() *models.HistoryServicereque
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Accepted != nil {
 		val := o.Accepted()
@@ -480,6 +482,10 @@ func (o HistoryServicerequestTemplate) BuildSetter() *models.HistoryServicereque
 		val := o.Zone2()
 		m.Zone2 = omitnull.FromNull(val)
 	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
+	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
 		m.CreatedDate = omitnull.FromNull(val)
@@ -783,6 +789,9 @@ func (o HistoryServicerequestTemplate) Build() *models.HistoryServicerequest {
 	if o.Zone2 != nil {
 		m.Zone2 = o.Zone2()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -836,6 +845,10 @@ func (o HistoryServicerequestTemplate) BuildMany(number int) models.HistoryServi
 }
 
 func ensureCreatableHistoryServicerequest(m *models.HistoryServicerequestSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -852,25 +865,6 @@ func ensureCreatableHistoryServicerequest(m *models.HistoryServicerequestSetter)
 func (o *HistoryServicerequestTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryServicerequest) error {
 	var err error
 
-	isOrganizationDone, _ := historyServicerequestRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyServicerequestRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -881,10 +875,29 @@ func (o *HistoryServicerequestTemplate) Create(ctx context.Context, exec bob.Exe
 	opt := o.BuildSetter()
 	ensureCreatableHistoryServicerequest(opt)
 
+	if o.r.Organization == nil {
+		HistoryServicerequestMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryServicerequests.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1042,6 +1055,7 @@ func (m historyServicerequestMods) RandomizeAllColumns(f *faker.Faker) HistorySe
 		HistoryServicerequestMods.RandomYvalue(f),
 		HistoryServicerequestMods.RandomZone(f),
 		HistoryServicerequestMods.RandomZone2(f),
+		HistoryServicerequestMods.RandomCreated(f),
 		HistoryServicerequestMods.RandomCreatedDate(f),
 		HistoryServicerequestMods.RandomCreatedUser(f),
 		HistoryServicerequestMods.RandomGeometryX(f),
@@ -1057,14 +1071,14 @@ func (m historyServicerequestMods) RandomizeAllColumns(f *faker.Faker) HistorySe
 }
 
 // Set the model columns to this value
-func (m historyServicerequestMods) OrganizationID(val null.Val[int32]) HistoryServicerequestMod {
+func (m historyServicerequestMods) OrganizationID(val int32) HistoryServicerequestMod {
 	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyServicerequestMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryServicerequestMod {
+func (m historyServicerequestMods) OrganizationIDFunc(f func() int32) HistoryServicerequestMod {
 	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
 		o.OrganizationID = f
 	})
@@ -1079,32 +1093,10 @@ func (m historyServicerequestMods) UnsetOrganizationID() HistoryServicerequestMo
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyServicerequestMods) RandomOrganizationID(f *faker.Faker) HistoryServicerequestMod {
 	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyServicerequestMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryServicerequestMod {
-	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -5216,6 +5208,59 @@ func (m historyServicerequestMods) RandomZone2NotNull(f *faker.Faker) HistorySer
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyServicerequestMods) Created(val null.Val[time.Time]) HistoryServicerequestMod {
+	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyServicerequestMods) CreatedFunc(f func() null.Val[time.Time]) HistoryServicerequestMod {
+	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyServicerequestMods) UnsetCreated() HistoryServicerequestMod {
+	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyServicerequestMods) RandomCreated(f *faker.Faker) HistoryServicerequestMod {
+	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyServicerequestMods) RandomCreatedNotNull(f *faker.Faker) HistoryServicerequestMod {
+	return HistoryServicerequestModFunc(func(_ context.Context, o *HistoryServicerequestTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

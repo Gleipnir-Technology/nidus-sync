@@ -26,7 +26,7 @@ import (
 
 // FSServicerequest is an object representing the database table.
 type FSServicerequest struct {
-	OrganizationID        null.Val[int32]   `db:"organization_id" `
+	OrganizationID        int32             `db:"organization_id" `
 	Accepted              null.Val[int16]   `db:"accepted" `
 	Acceptedby            null.Val[string]  `db:"acceptedby" `
 	Accepteddate          null.Val[int64]   `db:"accepteddate" `
@@ -341,7 +341,7 @@ func (fsServicerequestColumns) AliasedAs(alias string) fsServicerequestColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSServicerequestSetter struct {
-	OrganizationID        omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID        omit.Val[int32]       `db:"organization_id" `
 	Accepted              omitnull.Val[int16]   `db:"accepted" `
 	Acceptedby            omitnull.Val[string]  `db:"acceptedby" `
 	Accepteddate          omitnull.Val[int64]   `db:"accepteddate" `
@@ -435,7 +435,7 @@ type FSServicerequestSetter struct {
 
 func (s FSServicerequestSetter) SetColumns() []string {
 	vals := make([]string, 0, 90)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accepted.IsUnset() {
@@ -709,8 +709,8 @@ func (s FSServicerequestSetter) SetColumns() []string {
 }
 
 func (s FSServicerequestSetter) Overwrite(t *FSServicerequest) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accepted.IsUnset() {
 		t.Accepted = s.Accepted.MustGetNull()
@@ -988,8 +988,8 @@ func (s *FSServicerequestSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 90)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -1539,7 +1539,7 @@ func (s FSServicerequestSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSServicerequestSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 90)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -2403,7 +2403,7 @@ func (o *FSServicerequest) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 }
 
 func (os FSServicerequestSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -2421,7 +2421,7 @@ func (os FSServicerequestSlice) Organization(mods ...bob.Mod[*dialect.SelectQuer
 
 func attachFSServicerequestOrganization0(ctx context.Context, exec bob.Executor, count int, fsServicerequest0 *FSServicerequest, organization1 *Organization) (*FSServicerequest, error) {
 	setter := &FSServicerequestSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsServicerequest0.Update(ctx, exec, setter)
@@ -2468,7 +2468,7 @@ func (fsServicerequest0 *FSServicerequest) AttachOrganization(ctx context.Contex
 }
 
 type fsServicerequestWhere[Q psql.Filterable] struct {
-	OrganizationID        psql.WhereNullMod[Q, int32]
+	OrganizationID        psql.WhereMod[Q, int32]
 	Accepted              psql.WhereNullMod[Q, int16]
 	Acceptedby            psql.WhereNullMod[Q, string]
 	Accepteddate          psql.WhereNullMod[Q, int64]
@@ -2566,7 +2566,7 @@ func (fsServicerequestWhere[Q]) AliasedAs(alias string) fsServicerequestWhere[Q]
 
 func buildFSServicerequestWhere[Q psql.Filterable](cols fsServicerequestColumns) fsServicerequestWhere[Q] {
 	return fsServicerequestWhere[Q]{
-		OrganizationID:        psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:        psql.Where[Q, int32](cols.OrganizationID),
 		Accepted:              psql.WhereNull[Q, int16](cols.Accepted),
 		Acceptedby:            psql.WhereNull[Q, string](cols.Acceptedby),
 		Accepteddate:          psql.WhereNull[Q, int64](cols.Accepteddate),
@@ -2760,11 +2760,8 @@ func (os FSServicerequestSlice) LoadOrganization(ctx context.Context, exec bob.E
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

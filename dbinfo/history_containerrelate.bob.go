@@ -18,9 +18,9 @@ var HistoryContainerrelates = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -108,6 +108,15 @@ var HistoryContainerrelates = Table[
 		Treatmentid: column{
 			Name:      "treatmentid",
 			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -234,6 +243,7 @@ type historyContainerrelateColumns struct {
 	Mosquitoinspid column
 	Objectid       column
 	Treatmentid    column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -245,7 +255,7 @@ type historyContainerrelateColumns struct {
 
 func (c historyContainerrelateColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Containertype, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Inspsampleid, c.Mosquitoinspid, c.Objectid, c.Treatmentid, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Containertype, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Inspsampleid, c.Mosquitoinspid, c.Objectid, c.Treatmentid, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

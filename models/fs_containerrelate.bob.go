@@ -26,7 +26,7 @@ import (
 
 // FSContainerrelate is an object representing the database table.
 type FSContainerrelate struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Containertype  null.Val[string]  `db:"containertype" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
@@ -125,7 +125,7 @@ func (fsContainerrelateColumns) AliasedAs(alias string) fsContainerrelateColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSContainerrelateSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Containertype  omitnull.Val[string]  `db:"containertype" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
@@ -147,7 +147,7 @@ type FSContainerrelateSetter struct {
 
 func (s FSContainerrelateSetter) SetColumns() []string {
 	vals := make([]string, 0, 18)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Containertype.IsUnset() {
@@ -205,8 +205,8 @@ func (s FSContainerrelateSetter) SetColumns() []string {
 }
 
 func (s FSContainerrelateSetter) Overwrite(t *FSContainerrelate) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Containertype.IsUnset() {
 		t.Containertype = s.Containertype.MustGetNull()
@@ -268,8 +268,8 @@ func (s *FSContainerrelateSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 18)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -387,7 +387,7 @@ func (s FSContainerrelateSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSContainerrelateSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 18)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -747,7 +747,7 @@ func (o *FSContainerrelate) Organization(mods ...bob.Mod[*dialect.SelectQuery]) 
 }
 
 func (os FSContainerrelateSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -765,7 +765,7 @@ func (os FSContainerrelateSlice) Organization(mods ...bob.Mod[*dialect.SelectQue
 
 func attachFSContainerrelateOrganization0(ctx context.Context, exec bob.Executor, count int, fsContainerrelate0 *FSContainerrelate, organization1 *Organization) (*FSContainerrelate, error) {
 	setter := &FSContainerrelateSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsContainerrelate0.Update(ctx, exec, setter)
@@ -812,7 +812,7 @@ func (fsContainerrelate0 *FSContainerrelate) AttachOrganization(ctx context.Cont
 }
 
 type fsContainerrelateWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Containertype  psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -838,7 +838,7 @@ func (fsContainerrelateWhere[Q]) AliasedAs(alias string) fsContainerrelateWhere[
 
 func buildFSContainerrelateWhere[Q psql.Filterable](cols fsContainerrelateColumns) fsContainerrelateWhere[Q] {
 	return fsContainerrelateWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Containertype:  psql.WhereNull[Q, string](cols.Containertype),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -960,11 +960,8 @@ func (os FSContainerrelateSlice) LoadOrganization(ctx context.Context, exec bob.
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

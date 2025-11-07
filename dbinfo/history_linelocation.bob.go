@@ -18,9 +18,9 @@ var HistoryLinelocations = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -420,6 +420,15 @@ var HistoryLinelocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -574,6 +583,7 @@ type historyLinelocationColumns struct {
 	WidthMeters             column
 	Zone                    column
 	Zone2                   column
+	Created                 column
 	CreatedDate             column
 	CreatedUser             column
 	GeometryX               column
@@ -585,7 +595,7 @@ type historyLinelocationColumns struct {
 
 func (c historyLinelocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Acres, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Hectares, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.LengthFT, c.LengthMeters, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.ShapeLength, c.Usetype, c.Waterorigin, c.WidthFT, c.WidthMeters, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Accessdesc, c.Acres, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Hectares, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.LengthFT, c.LengthMeters, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.ShapeLength, c.Usetype, c.Waterorigin, c.WidthFT, c.WidthMeters, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

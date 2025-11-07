@@ -18,9 +18,9 @@ var HistoryServicerequests = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -726,6 +726,15 @@ var HistoryServicerequests = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -950,6 +959,7 @@ type historyServicerequestColumns struct {
 	Yvalue                column
 	Zone                  column
 	Zone2                 column
+	Created               column
 	CreatedDate           column
 	CreatedUser           column
 	GeometryX             column
@@ -965,7 +975,7 @@ type historyServicerequestColumns struct {
 
 func (c historyServicerequestColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accepted, c.Acceptedby, c.Accepteddate, c.Allowed, c.Assignedtech, c.Clraddr1, c.Clraddr2, c.Clranon, c.Clrcity, c.Clrcompany, c.Clrcontpref, c.Clremail, c.Clrfname, c.Clrother, c.Clrphone1, c.Clrphone2, c.Clrstate, c.Clrzip, c.Comments, c.Creationdate, c.Creator, c.Datetimeclosed, c.Duedate, c.Entrytech, c.Estcompletedate, c.Externalerror, c.Externalid, c.Editdate, c.Editor, c.Firstresponsedate, c.Globalid, c.Issuesreported, c.Jurisdiction, c.Nextaction, c.Notificationtimestamp, c.Notified, c.Notifieddate, c.Objectid, c.Pointlocid, c.Priority, c.Recdatetime, c.Recordstatus, c.Rejectedby, c.Rejecteddate, c.Rejectedreason, c.Reqaddr1, c.Reqaddr2, c.Reqcity, c.Reqcompany, c.Reqcrossst, c.Reqdescr, c.Reqfldnotes, c.Reqmapgrid, c.Reqnotesforcust, c.Reqnotesfortech, c.Reqpermission, c.Reqprogramactions, c.Reqstate, c.Reqsubdiv, c.Reqtarget, c.Reqzip, c.Responsedaycount, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Scheduled, c.Scheduleddate, c.Source, c.SRNumber, c.Status, c.Supervisor, c.Techclosed, c.Validx, c.Validy, c.Xvalue, c.Yvalue, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Dog, c.Spanish, c.ScheduleNotes, c.SchedulePeriod, c.Version,
+		c.OrganizationID, c.Accepted, c.Acceptedby, c.Accepteddate, c.Allowed, c.Assignedtech, c.Clraddr1, c.Clraddr2, c.Clranon, c.Clrcity, c.Clrcompany, c.Clrcontpref, c.Clremail, c.Clrfname, c.Clrother, c.Clrphone1, c.Clrphone2, c.Clrstate, c.Clrzip, c.Comments, c.Creationdate, c.Creator, c.Datetimeclosed, c.Duedate, c.Entrytech, c.Estcompletedate, c.Externalerror, c.Externalid, c.Editdate, c.Editor, c.Firstresponsedate, c.Globalid, c.Issuesreported, c.Jurisdiction, c.Nextaction, c.Notificationtimestamp, c.Notified, c.Notifieddate, c.Objectid, c.Pointlocid, c.Priority, c.Recdatetime, c.Recordstatus, c.Rejectedby, c.Rejecteddate, c.Rejectedreason, c.Reqaddr1, c.Reqaddr2, c.Reqcity, c.Reqcompany, c.Reqcrossst, c.Reqdescr, c.Reqfldnotes, c.Reqmapgrid, c.Reqnotesforcust, c.Reqnotesfortech, c.Reqpermission, c.Reqprogramactions, c.Reqstate, c.Reqsubdiv, c.Reqtarget, c.Reqzip, c.Responsedaycount, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Scheduled, c.Scheduleddate, c.Source, c.SRNumber, c.Status, c.Supervisor, c.Techclosed, c.Validx, c.Validy, c.Xvalue, c.Yvalue, c.Zone, c.Zone2, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Dog, c.Spanish, c.ScheduleNotes, c.SchedulePeriod, c.Version,
 	}
 }
 

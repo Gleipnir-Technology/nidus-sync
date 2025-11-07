@@ -37,7 +37,7 @@ func (mods FSContainerrelateModSlice) Apply(ctx context.Context, n *FSContainerr
 // FSContainerrelateTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSContainerrelateTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Containertype  func() null.Val[string]
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
@@ -83,7 +83,7 @@ func (t FSContainerrelateTemplate) setModelRels(o *models.FSContainerrelate) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSContainerrelates = append(rel.R.FSContainerrelates, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -95,7 +95,7 @@ func (o FSContainerrelateTemplate) BuildSetter() *models.FSContainerrelateSetter
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Containertype != nil {
 		val := o.Containertype()
@@ -261,6 +261,10 @@ func (o FSContainerrelateTemplate) BuildMany(number int) models.FSContainerrelat
 }
 
 func ensureCreatableFSContainerrelate(m *models.FSContainerrelateSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -273,25 +277,6 @@ func ensureCreatableFSContainerrelate(m *models.FSContainerrelateSetter) {
 func (o *FSContainerrelateTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSContainerrelate) error {
 	var err error
 
-	isOrganizationDone, _ := fsContainerrelateRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsContainerrelateRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -302,10 +287,29 @@ func (o *FSContainerrelateTemplate) Create(ctx context.Context, exec bob.Executo
 	opt := o.BuildSetter()
 	ensureCreatableFSContainerrelate(opt)
 
+	if o.r.Organization == nil {
+		FSContainerrelateMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSContainerrelates.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -406,14 +410,14 @@ func (m fsContainerrelateMods) RandomizeAllColumns(f *faker.Faker) FSContainerre
 }
 
 // Set the model columns to this value
-func (m fsContainerrelateMods) OrganizationID(val null.Val[int32]) FSContainerrelateMod {
+func (m fsContainerrelateMods) OrganizationID(val int32) FSContainerrelateMod {
 	return FSContainerrelateModFunc(func(_ context.Context, o *FSContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsContainerrelateMods) OrganizationIDFunc(f func() null.Val[int32]) FSContainerrelateMod {
+func (m fsContainerrelateMods) OrganizationIDFunc(f func() int32) FSContainerrelateMod {
 	return FSContainerrelateModFunc(func(_ context.Context, o *FSContainerrelateTemplate) {
 		o.OrganizationID = f
 	})
@@ -428,32 +432,10 @@ func (m fsContainerrelateMods) UnsetOrganizationID() FSContainerrelateMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsContainerrelateMods) RandomOrganizationID(f *faker.Faker) FSContainerrelateMod {
 	return FSContainerrelateModFunc(func(_ context.Context, o *FSContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsContainerrelateMods) RandomOrganizationIDNotNull(f *faker.Faker) FSContainerrelateMod {
-	return FSContainerrelateModFunc(func(_ context.Context, o *FSContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

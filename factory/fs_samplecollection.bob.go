@@ -37,7 +37,7 @@ func (mods FSSamplecollectionModSlice) Apply(ctx context.Context, n *FSSamplecol
 // FSSamplecollectionTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSSamplecollectionTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Activity       func() null.Val[string]
 	Avetemp        func() null.Val[float64]
 	Chickenid      func() null.Val[string]
@@ -115,7 +115,7 @@ func (t FSSamplecollectionTemplate) setModelRels(o *models.FSSamplecollection) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSSamplecollections = append(rel.R.FSSamplecollections, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -127,7 +127,7 @@ func (o FSSamplecollectionTemplate) BuildSetter() *models.FSSamplecollectionSett
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Activity != nil {
 		val := o.Activity()
@@ -517,6 +517,10 @@ func (o FSSamplecollectionTemplate) BuildMany(number int) models.FSSamplecollect
 }
 
 func ensureCreatableFSSamplecollection(m *models.FSSamplecollectionSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -529,25 +533,6 @@ func ensureCreatableFSSamplecollection(m *models.FSSamplecollectionSetter) {
 func (o *FSSamplecollectionTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSSamplecollection) error {
 	var err error
 
-	isOrganizationDone, _ := fsSamplecollectionRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsSamplecollectionRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -558,10 +543,29 @@ func (o *FSSamplecollectionTemplate) Create(ctx context.Context, exec bob.Execut
 	opt := o.BuildSetter()
 	ensureCreatableFSSamplecollection(opt)
 
+	if o.r.Organization == nil {
+		FSSamplecollectionMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSSamplecollections.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -694,14 +698,14 @@ func (m fsSamplecollectionMods) RandomizeAllColumns(f *faker.Faker) FSSamplecoll
 }
 
 // Set the model columns to this value
-func (m fsSamplecollectionMods) OrganizationID(val null.Val[int32]) FSSamplecollectionMod {
+func (m fsSamplecollectionMods) OrganizationID(val int32) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsSamplecollectionMods) OrganizationIDFunc(f func() null.Val[int32]) FSSamplecollectionMod {
+func (m fsSamplecollectionMods) OrganizationIDFunc(f func() int32) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
 		o.OrganizationID = f
 	})
@@ -716,32 +720,10 @@ func (m fsSamplecollectionMods) UnsetOrganizationID() FSSamplecollectionMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsSamplecollectionMods) RandomOrganizationID(f *faker.Faker) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsSamplecollectionMods) RandomOrganizationIDNotNull(f *faker.Faker) FSSamplecollectionMod {
-	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

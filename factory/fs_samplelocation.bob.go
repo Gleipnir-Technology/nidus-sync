@@ -37,7 +37,7 @@ func (mods FSSamplelocationModSlice) Apply(ctx context.Context, n *FSSamplelocat
 // FSSamplelocationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSSamplelocationTemplate struct {
-	OrganizationID          func() null.Val[int32]
+	OrganizationID          func() int32
 	Accessdesc              func() null.Val[string]
 	Active                  func() null.Val[int16]
 	Comments                func() null.Val[string]
@@ -93,7 +93,7 @@ func (t FSSamplelocationTemplate) setModelRels(o *models.FSSamplelocation) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSSamplelocations = append(rel.R.FSSamplelocations, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -105,7 +105,7 @@ func (o FSSamplelocationTemplate) BuildSetter() *models.FSSamplelocationSetter {
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Accessdesc != nil {
 		val := o.Accessdesc()
@@ -341,6 +341,10 @@ func (o FSSamplelocationTemplate) BuildMany(number int) models.FSSamplelocationS
 }
 
 func ensureCreatableFSSamplelocation(m *models.FSSamplelocationSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -353,25 +357,6 @@ func ensureCreatableFSSamplelocation(m *models.FSSamplelocationSetter) {
 func (o *FSSamplelocationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSSamplelocation) error {
 	var err error
 
-	isOrganizationDone, _ := fsSamplelocationRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsSamplelocationRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -382,10 +367,29 @@ func (o *FSSamplelocationTemplate) Create(ctx context.Context, exec bob.Executor
 	opt := o.BuildSetter()
 	ensureCreatableFSSamplelocation(opt)
 
+	if o.r.Organization == nil {
+		FSSamplelocationMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSSamplelocations.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -496,14 +500,14 @@ func (m fsSamplelocationMods) RandomizeAllColumns(f *faker.Faker) FSSamplelocati
 }
 
 // Set the model columns to this value
-func (m fsSamplelocationMods) OrganizationID(val null.Val[int32]) FSSamplelocationMod {
+func (m fsSamplelocationMods) OrganizationID(val int32) FSSamplelocationMod {
 	return FSSamplelocationModFunc(func(_ context.Context, o *FSSamplelocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsSamplelocationMods) OrganizationIDFunc(f func() null.Val[int32]) FSSamplelocationMod {
+func (m fsSamplelocationMods) OrganizationIDFunc(f func() int32) FSSamplelocationMod {
 	return FSSamplelocationModFunc(func(_ context.Context, o *FSSamplelocationTemplate) {
 		o.OrganizationID = f
 	})
@@ -518,32 +522,10 @@ func (m fsSamplelocationMods) UnsetOrganizationID() FSSamplelocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsSamplelocationMods) RandomOrganizationID(f *faker.Faker) FSSamplelocationMod {
 	return FSSamplelocationModFunc(func(_ context.Context, o *FSSamplelocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsSamplelocationMods) RandomOrganizationIDNotNull(f *faker.Faker) FSSamplelocationMod {
-	return FSSamplelocationModFunc(func(_ context.Context, o *FSSamplelocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

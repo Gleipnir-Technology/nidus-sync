@@ -18,9 +18,9 @@ var HistoryFieldscoutinglogs = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -81,6 +81,15 @@ var HistoryFieldscoutinglogs = Table[
 		Status: column{
 			Name:      "status",
 			DBType:    "smallint",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -204,6 +213,7 @@ type historyFieldscoutinglogColumns struct {
 	Globalid       column
 	Objectid       column
 	Status         column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -215,7 +225,7 @@ type historyFieldscoutinglogColumns struct {
 
 func (c historyFieldscoutinglogColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Objectid, c.Status, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Globalid, c.Objectid, c.Status, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

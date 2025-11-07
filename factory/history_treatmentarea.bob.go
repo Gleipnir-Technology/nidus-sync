@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryTreatmentareaModSlice) Apply(ctx context.Context, n *HistoryTr
 // HistoryTreatmentareaTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryTreatmentareaTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Comments       func() null.Val[string]
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
@@ -51,6 +52,7 @@ type HistoryTreatmentareaTemplate struct {
 	Treatdate      func() null.Val[int64]
 	TreatID        func() null.Val[string]
 	Type           func() null.Val[string]
+	Created        func() null.Val[time.Time]
 	CreatedDate    func() null.Val[int64]
 	CreatedUser    func() null.Val[string]
 	GeometryX      func() null.Val[float64]
@@ -86,7 +88,7 @@ func (t HistoryTreatmentareaTemplate) setModelRels(o *models.HistoryTreatmentare
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryTreatmentareas = append(rel.R.HistoryTreatmentareas, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -98,7 +100,7 @@ func (o HistoryTreatmentareaTemplate) BuildSetter() *models.HistoryTreatmentarea
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Comments != nil {
 		val := o.Comments()
@@ -155,6 +157,10 @@ func (o HistoryTreatmentareaTemplate) BuildSetter() *models.HistoryTreatmentarea
 	if o.Type != nil {
 		val := o.Type()
 		m.Type = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
@@ -251,6 +257,9 @@ func (o HistoryTreatmentareaTemplate) Build() *models.HistoryTreatmentarea {
 	if o.Type != nil {
 		m.Type = o.Type()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -292,6 +301,10 @@ func (o HistoryTreatmentareaTemplate) BuildMany(number int) models.HistoryTreatm
 }
 
 func ensureCreatableHistoryTreatmentarea(m *models.HistoryTreatmentareaSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -308,25 +321,6 @@ func ensureCreatableHistoryTreatmentarea(m *models.HistoryTreatmentareaSetter) {
 func (o *HistoryTreatmentareaTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryTreatmentarea) error {
 	var err error
 
-	isOrganizationDone, _ := historyTreatmentareaRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyTreatmentareaRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -337,10 +331,29 @@ func (o *HistoryTreatmentareaTemplate) Create(ctx context.Context, exec bob.Exec
 	opt := o.BuildSetter()
 	ensureCreatableHistoryTreatmentarea(opt)
 
+	if o.r.Organization == nil {
+		HistoryTreatmentareaMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryTreatmentareas.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -434,6 +447,7 @@ func (m historyTreatmentareaMods) RandomizeAllColumns(f *faker.Faker) HistoryTre
 		HistoryTreatmentareaMods.RandomTreatdate(f),
 		HistoryTreatmentareaMods.RandomTreatID(f),
 		HistoryTreatmentareaMods.RandomType(f),
+		HistoryTreatmentareaMods.RandomCreated(f),
 		HistoryTreatmentareaMods.RandomCreatedDate(f),
 		HistoryTreatmentareaMods.RandomCreatedUser(f),
 		HistoryTreatmentareaMods.RandomGeometryX(f),
@@ -445,14 +459,14 @@ func (m historyTreatmentareaMods) RandomizeAllColumns(f *faker.Faker) HistoryTre
 }
 
 // Set the model columns to this value
-func (m historyTreatmentareaMods) OrganizationID(val null.Val[int32]) HistoryTreatmentareaMod {
+func (m historyTreatmentareaMods) OrganizationID(val int32) HistoryTreatmentareaMod {
 	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyTreatmentareaMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryTreatmentareaMod {
+func (m historyTreatmentareaMods) OrganizationIDFunc(f func() int32) HistoryTreatmentareaMod {
 	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
 		o.OrganizationID = f
 	})
@@ -467,32 +481,10 @@ func (m historyTreatmentareaMods) UnsetOrganizationID() HistoryTreatmentareaMod 
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyTreatmentareaMods) RandomOrganizationID(f *faker.Faker) HistoryTreatmentareaMod {
 	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyTreatmentareaMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryTreatmentareaMod {
-	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -1212,6 +1204,59 @@ func (m historyTreatmentareaMods) RandomTypeNotNull(f *faker.Faker) HistoryTreat
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyTreatmentareaMods) Created(val null.Val[time.Time]) HistoryTreatmentareaMod {
+	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyTreatmentareaMods) CreatedFunc(f func() null.Val[time.Time]) HistoryTreatmentareaMod {
+	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyTreatmentareaMods) UnsetCreated() HistoryTreatmentareaMod {
+	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyTreatmentareaMods) RandomCreated(f *faker.Faker) HistoryTreatmentareaMod {
+	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyTreatmentareaMods) RandomCreatedNotNull(f *faker.Faker) HistoryTreatmentareaMod {
+	return HistoryTreatmentareaModFunc(func(_ context.Context, o *HistoryTreatmentareaTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

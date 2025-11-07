@@ -26,7 +26,7 @@ import (
 
 // FSMosquitoinspection is an object representing the database table.
 type FSMosquitoinspection struct {
-	OrganizationID         null.Val[int32]   `db:"organization_id" `
+	OrganizationID         int32             `db:"organization_id" `
 	Actiontaken            null.Val[string]  `db:"actiontaken" `
 	Activity               null.Val[string]  `db:"activity" `
 	Adultact               null.Val[string]  `db:"adultact" `
@@ -254,7 +254,7 @@ func (fsMosquitoinspectionColumns) AliasedAs(alias string) fsMosquitoinspectionC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSMosquitoinspectionSetter struct {
-	OrganizationID         omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID         omit.Val[int32]       `db:"organization_id" `
 	Actiontaken            omitnull.Val[string]  `db:"actiontaken" `
 	Activity               omitnull.Val[string]  `db:"activity" `
 	Adultact               omitnull.Val[string]  `db:"adultact" `
@@ -319,7 +319,7 @@ type FSMosquitoinspectionSetter struct {
 
 func (s FSMosquitoinspectionSetter) SetColumns() []string {
 	vals := make([]string, 0, 61)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Actiontaken.IsUnset() {
@@ -506,8 +506,8 @@ func (s FSMosquitoinspectionSetter) SetColumns() []string {
 }
 
 func (s FSMosquitoinspectionSetter) Overwrite(t *FSMosquitoinspection) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Actiontaken.IsUnset() {
 		t.Actiontaken = s.Actiontaken.MustGetNull()
@@ -698,8 +698,8 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 61)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -1075,7 +1075,7 @@ func (s FSMosquitoinspectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 61)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1736,7 +1736,7 @@ func (o *FSMosquitoinspection) Organization(mods ...bob.Mod[*dialect.SelectQuery
 }
 
 func (os FSMosquitoinspectionSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1754,7 +1754,7 @@ func (os FSMosquitoinspectionSlice) Organization(mods ...bob.Mod[*dialect.Select
 
 func attachFSMosquitoinspectionOrganization0(ctx context.Context, exec bob.Executor, count int, fsMosquitoinspection0 *FSMosquitoinspection, organization1 *Organization) (*FSMosquitoinspection, error) {
 	setter := &FSMosquitoinspectionSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsMosquitoinspection0.Update(ctx, exec, setter)
@@ -1801,7 +1801,7 @@ func (fsMosquitoinspection0 *FSMosquitoinspection) AttachOrganization(ctx contex
 }
 
 type fsMosquitoinspectionWhere[Q psql.Filterable] struct {
-	OrganizationID         psql.WhereNullMod[Q, int32]
+	OrganizationID         psql.WhereMod[Q, int32]
 	Actiontaken            psql.WhereNullMod[Q, string]
 	Activity               psql.WhereNullMod[Q, string]
 	Adultact               psql.WhereNullMod[Q, string]
@@ -1870,7 +1870,7 @@ func (fsMosquitoinspectionWhere[Q]) AliasedAs(alias string) fsMosquitoinspection
 
 func buildFSMosquitoinspectionWhere[Q psql.Filterable](cols fsMosquitoinspectionColumns) fsMosquitoinspectionWhere[Q] {
 	return fsMosquitoinspectionWhere[Q]{
-		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		Actiontaken:            psql.WhereNull[Q, string](cols.Actiontaken),
 		Activity:               psql.WhereNull[Q, string](cols.Activity),
 		Adultact:               psql.WhereNull[Q, string](cols.Adultact),
@@ -2035,11 +2035,8 @@ func (os FSMosquitoinspectionSlice) LoadOrganization(ctx context.Context, exec b
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

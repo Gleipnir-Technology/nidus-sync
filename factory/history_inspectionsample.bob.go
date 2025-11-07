@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryInspectionsampleModSlice) Apply(ctx context.Context, n *Histor
 // HistoryInspectionsampleTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryInspectionsampleTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
@@ -47,6 +48,7 @@ type HistoryInspectionsampleTemplate struct {
 	Objectid       func() int32
 	Processed      func() null.Val[int16]
 	Sampleid       func() null.Val[string]
+	Created        func() null.Val[time.Time]
 	CreatedDate    func() null.Val[int64]
 	CreatedUser    func() null.Val[string]
 	GeometryX      func() null.Val[float64]
@@ -82,7 +84,7 @@ func (t HistoryInspectionsampleTemplate) setModelRels(o *models.HistoryInspectio
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryInspectionsamples = append(rel.R.HistoryInspectionsamples, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -94,7 +96,7 @@ func (o HistoryInspectionsampleTemplate) BuildSetter() *models.HistoryInspection
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -135,6 +137,10 @@ func (o HistoryInspectionsampleTemplate) BuildSetter() *models.HistoryInspection
 	if o.Sampleid != nil {
 		val := o.Sampleid()
 		m.Sampleid = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
@@ -219,6 +225,9 @@ func (o HistoryInspectionsampleTemplate) Build() *models.HistoryInspectionsample
 	if o.Sampleid != nil {
 		m.Sampleid = o.Sampleid()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -260,6 +269,10 @@ func (o HistoryInspectionsampleTemplate) BuildMany(number int) models.HistoryIns
 }
 
 func ensureCreatableHistoryInspectionsample(m *models.HistoryInspectionsampleSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -276,25 +289,6 @@ func ensureCreatableHistoryInspectionsample(m *models.HistoryInspectionsampleSet
 func (o *HistoryInspectionsampleTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryInspectionsample) error {
 	var err error
 
-	isOrganizationDone, _ := historyInspectionsampleRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyInspectionsampleRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -305,10 +299,29 @@ func (o *HistoryInspectionsampleTemplate) Create(ctx context.Context, exec bob.E
 	opt := o.BuildSetter()
 	ensureCreatableHistoryInspectionsample(opt)
 
+	if o.r.Organization == nil {
+		HistoryInspectionsampleMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryInspectionsamples.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -398,6 +411,7 @@ func (m historyInspectionsampleMods) RandomizeAllColumns(f *faker.Faker) History
 		HistoryInspectionsampleMods.RandomObjectid(f),
 		HistoryInspectionsampleMods.RandomProcessed(f),
 		HistoryInspectionsampleMods.RandomSampleid(f),
+		HistoryInspectionsampleMods.RandomCreated(f),
 		HistoryInspectionsampleMods.RandomCreatedDate(f),
 		HistoryInspectionsampleMods.RandomCreatedUser(f),
 		HistoryInspectionsampleMods.RandomGeometryX(f),
@@ -409,14 +423,14 @@ func (m historyInspectionsampleMods) RandomizeAllColumns(f *faker.Faker) History
 }
 
 // Set the model columns to this value
-func (m historyInspectionsampleMods) OrganizationID(val null.Val[int32]) HistoryInspectionsampleMod {
+func (m historyInspectionsampleMods) OrganizationID(val int32) HistoryInspectionsampleMod {
 	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyInspectionsampleMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryInspectionsampleMod {
+func (m historyInspectionsampleMods) OrganizationIDFunc(f func() int32) HistoryInspectionsampleMod {
 	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
 		o.OrganizationID = f
 	})
@@ -431,32 +445,10 @@ func (m historyInspectionsampleMods) UnsetOrganizationID() HistoryInspectionsamp
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyInspectionsampleMods) RandomOrganizationID(f *faker.Faker) HistoryInspectionsampleMod {
 	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyInspectionsampleMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryInspectionsampleMod {
-	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -964,6 +956,59 @@ func (m historyInspectionsampleMods) RandomSampleidNotNull(f *faker.Faker) Histo
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyInspectionsampleMods) Created(val null.Val[time.Time]) HistoryInspectionsampleMod {
+	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyInspectionsampleMods) CreatedFunc(f func() null.Val[time.Time]) HistoryInspectionsampleMod {
+	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyInspectionsampleMods) UnsetCreated() HistoryInspectionsampleMod {
+	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyInspectionsampleMods) RandomCreated(f *faker.Faker) HistoryInspectionsampleMod {
+	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyInspectionsampleMods) RandomCreatedNotNull(f *faker.Faker) HistoryInspectionsampleMod {
+	return HistoryInspectionsampleModFunc(func(_ context.Context, o *HistoryInspectionsampleTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

@@ -37,7 +37,7 @@ func (mods FSServicerequestModSlice) Apply(ctx context.Context, n *FSServicerequ
 // FSServicerequestTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSServicerequestTemplate struct {
-	OrganizationID        func() null.Val[int32]
+	OrganizationID        func() int32
 	Accepted              func() null.Val[int16]
 	Acceptedby            func() null.Val[string]
 	Accepteddate          func() null.Val[int64]
@@ -155,7 +155,7 @@ func (t FSServicerequestTemplate) setModelRels(o *models.FSServicerequest) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSServicerequests = append(rel.R.FSServicerequests, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -167,7 +167,7 @@ func (o FSServicerequestTemplate) BuildSetter() *models.FSServicerequestSetter {
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Accepted != nil {
 		val := o.Accepted()
@@ -837,6 +837,10 @@ func (o FSServicerequestTemplate) BuildMany(number int) models.FSServicerequestS
 }
 
 func ensureCreatableFSServicerequest(m *models.FSServicerequestSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -849,25 +853,6 @@ func ensureCreatableFSServicerequest(m *models.FSServicerequestSetter) {
 func (o *FSServicerequestTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSServicerequest) error {
 	var err error
 
-	isOrganizationDone, _ := fsServicerequestRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsServicerequestRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -878,10 +863,29 @@ func (o *FSServicerequestTemplate) Create(ctx context.Context, exec bob.Executor
 	opt := o.BuildSetter()
 	ensureCreatableFSServicerequest(opt)
 
+	if o.r.Organization == nil {
+		FSServicerequestMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSServicerequests.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1054,14 +1058,14 @@ func (m fsServicerequestMods) RandomizeAllColumns(f *faker.Faker) FSServicereque
 }
 
 // Set the model columns to this value
-func (m fsServicerequestMods) OrganizationID(val null.Val[int32]) FSServicerequestMod {
+func (m fsServicerequestMods) OrganizationID(val int32) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsServicerequestMods) OrganizationIDFunc(f func() null.Val[int32]) FSServicerequestMod {
+func (m fsServicerequestMods) OrganizationIDFunc(f func() int32) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
 		o.OrganizationID = f
 	})
@@ -1076,32 +1080,10 @@ func (m fsServicerequestMods) UnsetOrganizationID() FSServicerequestMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsServicerequestMods) RandomOrganizationID(f *faker.Faker) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsServicerequestMods) RandomOrganizationIDNotNull(f *faker.Faker) FSServicerequestMod {
-	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

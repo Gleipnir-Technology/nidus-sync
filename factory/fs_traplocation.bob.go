@@ -37,7 +37,7 @@ func (mods FSTraplocationModSlice) Apply(ctx context.Context, n *FSTraplocationT
 // FSTraplocationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSTraplocationTemplate struct {
-	OrganizationID          func() null.Val[int32]
+	OrganizationID          func() int32
 	Accessdesc              func() null.Val[string]
 	Active                  func() null.Val[int16]
 	Comments                func() null.Val[string]
@@ -99,7 +99,7 @@ func (t FSTraplocationTemplate) setModelRels(o *models.FSTraplocation) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSTraplocations = append(rel.R.FSTraplocations, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -111,7 +111,7 @@ func (o FSTraplocationTemplate) BuildSetter() *models.FSTraplocationSetter {
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Accessdesc != nil {
 		val := o.Accessdesc()
@@ -389,6 +389,10 @@ func (o FSTraplocationTemplate) BuildMany(number int) models.FSTraplocationSlice
 }
 
 func ensureCreatableFSTraplocation(m *models.FSTraplocationSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -401,25 +405,6 @@ func ensureCreatableFSTraplocation(m *models.FSTraplocationSetter) {
 func (o *FSTraplocationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSTraplocation) error {
 	var err error
 
-	isOrganizationDone, _ := fsTraplocationRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsTraplocationRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -430,10 +415,29 @@ func (o *FSTraplocationTemplate) Create(ctx context.Context, exec bob.Executor) 
 	opt := o.BuildSetter()
 	ensureCreatableFSTraplocation(opt)
 
+	if o.r.Organization == nil {
+		FSTraplocationMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSTraplocations.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -550,14 +554,14 @@ func (m fsTraplocationMods) RandomizeAllColumns(f *faker.Faker) FSTraplocationMo
 }
 
 // Set the model columns to this value
-func (m fsTraplocationMods) OrganizationID(val null.Val[int32]) FSTraplocationMod {
+func (m fsTraplocationMods) OrganizationID(val int32) FSTraplocationMod {
 	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsTraplocationMods) OrganizationIDFunc(f func() null.Val[int32]) FSTraplocationMod {
+func (m fsTraplocationMods) OrganizationIDFunc(f func() int32) FSTraplocationMod {
 	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
 		o.OrganizationID = f
 	})
@@ -572,32 +576,10 @@ func (m fsTraplocationMods) UnsetOrganizationID() FSTraplocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsTraplocationMods) RandomOrganizationID(f *faker.Faker) FSTraplocationMod {
 	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsTraplocationMods) RandomOrganizationIDNotNull(f *faker.Faker) FSTraplocationMod {
-	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

@@ -8,6 +8,10 @@ import "context"
 type contextKey string
 
 var (
+	// Relationship Contexts for fieldseeker_sync
+	fieldseekerSyncWithParentsCascadingCtx = newContextual[bool]("fieldseekerSyncWithParentsCascading")
+	fieldseekerSyncRelOrganizationCtx      = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
+
 	// Relationship Contexts for fs_containerrelate
 	fsContainerrelateWithParentsCascadingCtx = newContextual[bool]("fsContainerrelateWithParentsCascading")
 	fsContainerrelateRelOrganizationCtx      = newContextual[bool]("fs_containerrelate.organization.fs_containerrelate.fs_containerrelate_organization_id_fkey")
@@ -233,6 +237,7 @@ var (
 
 	// Relationship Contexts for organization
 	organizationWithParentsCascadingCtx              = newContextual[bool]("organizationWithParentsCascading")
+	organizationRelFieldseekerSyncsCtx               = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
 	organizationRelFSContainerrelatesCtx             = newContextual[bool]("fs_containerrelate.organization.fs_containerrelate.fs_containerrelate_organization_id_fkey")
 	organizationRelFSFieldscoutinglogsCtx            = newContextual[bool]("fs_fieldscoutinglog.organization.fs_fieldscoutinglog.fs_fieldscoutinglog_organization_id_fkey")
 	organizationRelFSHabitatrelatesCtx               = newContextual[bool]("fs_habitatrelate.organization.fs_habitatrelate.fs_habitatrelate_organization_id_fkey")

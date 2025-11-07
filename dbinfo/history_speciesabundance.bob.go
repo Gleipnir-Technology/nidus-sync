@@ -18,9 +18,9 @@ var HistorySpeciesabundances = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -189,6 +189,15 @@ var HistorySpeciesabundances = Table[
 		Unknown: column{
 			Name:      "unknown",
 			DBType:    "smallint",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -378,6 +387,7 @@ type historySpeciesabundanceColumns struct {
 	Total          column
 	TrapdataID     column
 	Unknown        column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -395,7 +405,7 @@ type historySpeciesabundanceColumns struct {
 
 func (c historySpeciesabundanceColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Bloodedfem, c.Creationdate, c.Creator, c.Eggs, c.Editdate, c.Editor, c.Females, c.Gravidfem, c.Globalid, c.Larvae, c.Males, c.Objectid, c.Poolstogen, c.Processed, c.Pupae, c.Species, c.Total, c.TrapdataID, c.Unknown, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Globalzscore, c.H3R7, c.H3R8, c.R7score, c.R8score, c.Yearweek, c.Version,
+		c.OrganizationID, c.Bloodedfem, c.Creationdate, c.Creator, c.Eggs, c.Editdate, c.Editor, c.Females, c.Gravidfem, c.Globalid, c.Larvae, c.Males, c.Objectid, c.Poolstogen, c.Processed, c.Pupae, c.Species, c.Total, c.TrapdataID, c.Unknown, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Globalzscore, c.H3R7, c.H3R8, c.R7score, c.R8score, c.Yearweek, c.Version,
 	}
 }
 

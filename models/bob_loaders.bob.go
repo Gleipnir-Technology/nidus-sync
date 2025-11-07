@@ -17,6 +17,7 @@ import (
 var Preload = getPreloaders()
 
 type preloaders struct {
+	FieldseekerSync               fieldseekerSyncPreloader
 	FSContainerrelate             fsContainerrelatePreloader
 	FSFieldscoutinglog            fsFieldscoutinglogPreloader
 	FSHabitatrelate               fsHabitatrelatePreloader
@@ -78,6 +79,7 @@ type preloaders struct {
 
 func getPreloaders() preloaders {
 	return preloaders{
+		FieldseekerSync:               buildFieldseekerSyncPreloader(),
 		FSContainerrelate:             buildFSContainerrelatePreloader(),
 		FSFieldscoutinglog:            buildFSFieldscoutinglogPreloader(),
 		FSHabitatrelate:               buildFSHabitatrelatePreloader(),
@@ -145,6 +147,7 @@ var (
 )
 
 type thenLoaders[Q orm.Loadable] struct {
+	FieldseekerSync               fieldseekerSyncThenLoader[Q]
 	FSContainerrelate             fsContainerrelateThenLoader[Q]
 	FSFieldscoutinglog            fsFieldscoutinglogThenLoader[Q]
 	FSHabitatrelate               fsHabitatrelateThenLoader[Q]
@@ -206,6 +209,7 @@ type thenLoaders[Q orm.Loadable] struct {
 
 func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
+		FieldseekerSync:               buildFieldseekerSyncThenLoader[Q](),
 		FSContainerrelate:             buildFSContainerrelateThenLoader[Q](),
 		FSFieldscoutinglog:            buildFSFieldscoutinglogThenLoader[Q](),
 		FSHabitatrelate:               buildFSHabitatrelateThenLoader[Q](),

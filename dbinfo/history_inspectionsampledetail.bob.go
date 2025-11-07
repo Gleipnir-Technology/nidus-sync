@@ -18,9 +18,9 @@ var HistoryInspectionsampledetails = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -213,6 +213,15 @@ var HistoryInspectionsampledetails = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		CreatedDate: column{
 			Name:      "created_date",
 			DBType:    "bigint",
@@ -344,6 +353,7 @@ type historyInspectionsampledetailColumns struct {
 	Lpupcount      column
 	Objectid       column
 	Processed      column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -355,7 +365,7 @@ type historyInspectionsampledetailColumns struct {
 
 func (c historyInspectionsampledetailColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Fadultact, c.Fdomstage, c.Feggcount, c.Fieldspecies, c.Flarvcount, c.Flstages, c.Fpupcount, c.Globalid, c.InspsampleID, c.Labspecies, c.Ldomstage, c.Leggcount, c.Llarvcount, c.Lpupcount, c.Objectid, c.Processed, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Comments, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Fadultact, c.Fdomstage, c.Feggcount, c.Fieldspecies, c.Flarvcount, c.Flstages, c.Fpupcount, c.Globalid, c.InspsampleID, c.Labspecies, c.Ldomstage, c.Leggcount, c.Llarvcount, c.Lpupcount, c.Objectid, c.Processed, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

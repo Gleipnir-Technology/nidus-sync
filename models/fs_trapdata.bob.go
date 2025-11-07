@@ -26,7 +26,7 @@ import (
 
 // FSTrapdatum is an object representing the database table.
 type FSTrapdatum struct {
-	OrganizationID           null.Val[int32]   `db:"organization_id" `
+	OrganizationID           int32             `db:"organization_id" `
 	Avetemp                  null.Val[float64] `db:"avetemp" `
 	Comments                 null.Val[string]  `db:"comments" `
 	Creationdate             null.Val[int64]   `db:"creationdate" `
@@ -209,7 +209,7 @@ func (fsTrapdatumColumns) AliasedAs(alias string) fsTrapdatumColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSTrapdatumSetter struct {
-	OrganizationID           omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID           omit.Val[int32]       `db:"organization_id" `
 	Avetemp                  omitnull.Val[float64] `db:"avetemp" `
 	Comments                 omitnull.Val[string]  `db:"comments" `
 	Creationdate             omitnull.Val[int64]   `db:"creationdate" `
@@ -259,7 +259,7 @@ type FSTrapdatumSetter struct {
 
 func (s FSTrapdatumSetter) SetColumns() []string {
 	vals := make([]string, 0, 46)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Avetemp.IsUnset() {
@@ -401,8 +401,8 @@ func (s FSTrapdatumSetter) SetColumns() []string {
 }
 
 func (s FSTrapdatumSetter) Overwrite(t *FSTrapdatum) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Avetemp.IsUnset() {
 		t.Avetemp = s.Avetemp.MustGetNull()
@@ -548,8 +548,8 @@ func (s *FSTrapdatumSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 46)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -835,7 +835,7 @@ func (s FSTrapdatumSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSTrapdatumSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 46)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1391,7 +1391,7 @@ func (o *FSTrapdatum) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 }
 
 func (os FSTrapdatumSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1409,7 +1409,7 @@ func (os FSTrapdatumSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) O
 
 func attachFSTrapdatumOrganization0(ctx context.Context, exec bob.Executor, count int, fsTrapdatum0 *FSTrapdatum, organization1 *Organization) (*FSTrapdatum, error) {
 	setter := &FSTrapdatumSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsTrapdatum0.Update(ctx, exec, setter)
@@ -1456,7 +1456,7 @@ func (fsTrapdatum0 *FSTrapdatum) AttachOrganization(ctx context.Context, exec bo
 }
 
 type fsTrapdatumWhere[Q psql.Filterable] struct {
-	OrganizationID           psql.WhereNullMod[Q, int32]
+	OrganizationID           psql.WhereMod[Q, int32]
 	Avetemp                  psql.WhereNullMod[Q, float64]
 	Comments                 psql.WhereNullMod[Q, string]
 	Creationdate             psql.WhereNullMod[Q, int64]
@@ -1510,7 +1510,7 @@ func (fsTrapdatumWhere[Q]) AliasedAs(alias string) fsTrapdatumWhere[Q] {
 
 func buildFSTrapdatumWhere[Q psql.Filterable](cols fsTrapdatumColumns) fsTrapdatumWhere[Q] {
 	return fsTrapdatumWhere[Q]{
-		OrganizationID:           psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:           psql.Where[Q, int32](cols.OrganizationID),
 		Avetemp:                  psql.WhereNull[Q, float64](cols.Avetemp),
 		Comments:                 psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:             psql.WhereNull[Q, int64](cols.Creationdate),
@@ -1660,11 +1660,8 @@ func (os FSTrapdatumSlice) LoadOrganization(ctx context.Context, exec bob.Execut
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

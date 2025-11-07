@@ -32,6 +32,7 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 }
 
 type joins[Q dialect.Joinable] struct {
+	FieldseekerSyncs               joinSet[fieldseekerSyncJoins[Q]]
 	FSContainerrelates             joinSet[fsContainerrelateJoins[Q]]
 	FSFieldscoutinglogs            joinSet[fsFieldscoutinglogJoins[Q]]
 	FSHabitatrelates               joinSet[fsHabitatrelateJoins[Q]]
@@ -101,6 +102,7 @@ func buildJoinSet[Q interface{ aliasedAs(string) Q }, C any, F func(C, string) Q
 
 func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
+		FieldseekerSyncs:               buildJoinSet[fieldseekerSyncJoins[Q]](FieldseekerSyncs.Columns, buildFieldseekerSyncJoins),
 		FSContainerrelates:             buildJoinSet[fsContainerrelateJoins[Q]](FSContainerrelates.Columns, buildFSContainerrelateJoins),
 		FSFieldscoutinglogs:            buildJoinSet[fsFieldscoutinglogJoins[Q]](FSFieldscoutinglogs.Columns, buildFSFieldscoutinglogJoins),
 		FSHabitatrelates:               buildJoinSet[fsHabitatrelateJoins[Q]](FSHabitatrelates.Columns, buildFSHabitatrelateJoins),

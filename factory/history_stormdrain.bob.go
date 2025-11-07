@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryStormdrainModSlice) Apply(ctx context.Context, n *HistoryStorm
 // HistoryStormdrainTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryStormdrainTemplate struct {
-	OrganizationID    func() null.Val[int32]
+	OrganizationID    func() int32
 	Creationdate      func() null.Val[int64]
 	Creator           func() null.Val[string]
 	Editdate          func() null.Val[int64]
@@ -52,6 +53,7 @@ type HistoryStormdrainTemplate struct {
 	Type              func() null.Val[string]
 	Zone              func() null.Val[string]
 	Zone2             func() null.Val[string]
+	Created           func() null.Val[time.Time]
 	CreatedDate       func() null.Val[int64]
 	CreatedUser       func() null.Val[string]
 	GeometryX         func() null.Val[float64]
@@ -87,7 +89,7 @@ func (t HistoryStormdrainTemplate) setModelRels(o *models.HistoryStormdrain) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryStormdrains = append(rel.R.HistoryStormdrains, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -99,7 +101,7 @@ func (o HistoryStormdrainTemplate) BuildSetter() *models.HistoryStormdrainSetter
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -160,6 +162,10 @@ func (o HistoryStormdrainTemplate) BuildSetter() *models.HistoryStormdrainSetter
 	if o.Zone2 != nil {
 		val := o.Zone2()
 		m.Zone2 = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
@@ -259,6 +265,9 @@ func (o HistoryStormdrainTemplate) Build() *models.HistoryStormdrain {
 	if o.Zone2 != nil {
 		m.Zone2 = o.Zone2()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -300,6 +309,10 @@ func (o HistoryStormdrainTemplate) BuildMany(number int) models.HistoryStormdrai
 }
 
 func ensureCreatableHistoryStormdrain(m *models.HistoryStormdrainSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -316,25 +329,6 @@ func ensureCreatableHistoryStormdrain(m *models.HistoryStormdrainSetter) {
 func (o *HistoryStormdrainTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryStormdrain) error {
 	var err error
 
-	isOrganizationDone, _ := historyStormdrainRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyStormdrainRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -345,10 +339,29 @@ func (o *HistoryStormdrainTemplate) Create(ctx context.Context, exec bob.Executo
 	opt := o.BuildSetter()
 	ensureCreatableHistoryStormdrain(opt)
 
+	if o.r.Organization == nil {
+		HistoryStormdrainMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryStormdrains.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -443,6 +456,7 @@ func (m historyStormdrainMods) RandomizeAllColumns(f *faker.Faker) HistoryStormd
 		HistoryStormdrainMods.RandomType(f),
 		HistoryStormdrainMods.RandomZone(f),
 		HistoryStormdrainMods.RandomZone2(f),
+		HistoryStormdrainMods.RandomCreated(f),
 		HistoryStormdrainMods.RandomCreatedDate(f),
 		HistoryStormdrainMods.RandomCreatedUser(f),
 		HistoryStormdrainMods.RandomGeometryX(f),
@@ -454,14 +468,14 @@ func (m historyStormdrainMods) RandomizeAllColumns(f *faker.Faker) HistoryStormd
 }
 
 // Set the model columns to this value
-func (m historyStormdrainMods) OrganizationID(val null.Val[int32]) HistoryStormdrainMod {
+func (m historyStormdrainMods) OrganizationID(val int32) HistoryStormdrainMod {
 	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyStormdrainMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryStormdrainMod {
+func (m historyStormdrainMods) OrganizationIDFunc(f func() int32) HistoryStormdrainMod {
 	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
 		o.OrganizationID = f
 	})
@@ -476,32 +490,10 @@ func (m historyStormdrainMods) UnsetOrganizationID() HistoryStormdrainMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyStormdrainMods) RandomOrganizationID(f *faker.Faker) HistoryStormdrainMod {
 	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyStormdrainMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryStormdrainMod {
-	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -1274,6 +1266,59 @@ func (m historyStormdrainMods) RandomZone2NotNull(f *faker.Faker) HistoryStormdr
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyStormdrainMods) Created(val null.Val[time.Time]) HistoryStormdrainMod {
+	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyStormdrainMods) CreatedFunc(f func() null.Val[time.Time]) HistoryStormdrainMod {
+	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyStormdrainMods) UnsetCreated() HistoryStormdrainMod {
+	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyStormdrainMods) RandomCreated(f *faker.Faker) HistoryStormdrainMod {
+	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyStormdrainMods) RandomCreatedNotNull(f *faker.Faker) HistoryStormdrainMod {
+	return HistoryStormdrainModFunc(func(_ context.Context, o *HistoryStormdrainTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

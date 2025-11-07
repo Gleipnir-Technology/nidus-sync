@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,28 +26,29 @@ import (
 
 // HistoryTreatmentarea is an object representing the database table.
 type HistoryTreatmentarea struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Comments       null.Val[string]  `db:"comments" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Notified       null.Val[int16]   `db:"notified" `
-	Objectid       int32             `db:"objectid,pk" `
-	SessionID      null.Val[string]  `db:"session_id" `
-	ShapeArea      null.Val[float64] `db:"shape__area" `
-	ShapeLength    null.Val[float64] `db:"shape__length" `
-	Treatdate      null.Val[int64]   `db:"treatdate" `
-	TreatID        null.Val[string]  `db:"treat_id" `
-	Type           null.Val[string]  `db:"type" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Comments       null.Val[string]    `db:"comments" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Notified       null.Val[int16]     `db:"notified" `
+	Objectid       int32               `db:"objectid,pk" `
+	SessionID      null.Val[string]    `db:"session_id" `
+	ShapeArea      null.Val[float64]   `db:"shape__area" `
+	ShapeLength    null.Val[float64]   `db:"shape__length" `
+	Treatdate      null.Val[int64]     `db:"treatdate" `
+	TreatID        null.Val[string]    `db:"treat_id" `
+	Type           null.Val[string]    `db:"type" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historyTreatmentareaR `db:"-" `
 }
@@ -69,7 +71,7 @@ type historyTreatmentareaR struct {
 func buildHistoryTreatmentareaColumns(alias string) historyTreatmentareaColumns {
 	return historyTreatmentareaColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "comments", "creationdate", "creator", "editdate", "editor", "globalid", "notified", "objectid", "session_id", "shape__area", "shape__length", "treatdate", "treat_id", "type", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "comments", "creationdate", "creator", "editdate", "editor", "globalid", "notified", "objectid", "session_id", "shape__area", "shape__length", "treatdate", "treat_id", "type", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_treatmentarea"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -87,6 +89,7 @@ func buildHistoryTreatmentareaColumns(alias string) historyTreatmentareaColumns 
 		Treatdate:      psql.Quote(alias, "treatdate"),
 		TreatID:        psql.Quote(alias, "treat_id"),
 		Type:           psql.Quote(alias, "type"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -115,6 +118,7 @@ type historyTreatmentareaColumns struct {
 	Treatdate      psql.Expression
 	TreatID        psql.Expression
 	Type           psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -136,33 +140,34 @@ func (historyTreatmentareaColumns) AliasedAs(alias string) historyTreatmentareaC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryTreatmentareaSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Comments       omitnull.Val[string]  `db:"comments" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Notified       omitnull.Val[int16]   `db:"notified" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	SessionID      omitnull.Val[string]  `db:"session_id" `
-	ShapeArea      omitnull.Val[float64] `db:"shape__area" `
-	ShapeLength    omitnull.Val[float64] `db:"shape__length" `
-	Treatdate      omitnull.Val[int64]   `db:"treatdate" `
-	TreatID        omitnull.Val[string]  `db:"treat_id" `
-	Type           omitnull.Val[string]  `db:"type" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Comments       omitnull.Val[string]    `db:"comments" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Notified       omitnull.Val[int16]     `db:"notified" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	SessionID      omitnull.Val[string]    `db:"session_id" `
+	ShapeArea      omitnull.Val[float64]   `db:"shape__area" `
+	ShapeLength    omitnull.Val[float64]   `db:"shape__length" `
+	Treatdate      omitnull.Val[int64]     `db:"treatdate" `
+	TreatID        omitnull.Val[string]    `db:"treat_id" `
+	Type           omitnull.Val[string]    `db:"type" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryTreatmentareaSetter) SetColumns() []string {
-	vals := make([]string, 0, 22)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 23)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Comments.IsUnset() {
@@ -207,6 +212,9 @@ func (s HistoryTreatmentareaSetter) SetColumns() []string {
 	if !s.Type.IsUnset() {
 		vals = append(vals, "type")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -232,8 +240,8 @@ func (s HistoryTreatmentareaSetter) SetColumns() []string {
 }
 
 func (s HistoryTreatmentareaSetter) Overwrite(t *HistoryTreatmentarea) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
@@ -277,6 +285,9 @@ func (s HistoryTreatmentareaSetter) Overwrite(t *HistoryTreatmentarea) {
 	if !s.Type.IsUnset() {
 		t.Type = s.Type.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -306,9 +317,9 @@ func (s *HistoryTreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 22)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 23)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -397,46 +408,52 @@ func (s *HistoryTreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[15] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[15] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[16] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[16] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[17] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[17] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[18] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[18] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[19] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[19] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[20] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[20] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[21] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[21] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[22] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[22] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -448,9 +465,9 @@ func (s HistoryTreatmentareaSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryTreatmentareaSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 22)
+	exprs := make([]bob.Expression, 0, 23)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -552,6 +569,13 @@ func (s HistoryTreatmentareaSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "type")...),
 			psql.Arg(s.Type),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -848,7 +872,7 @@ func (o *HistoryTreatmentarea) Organization(mods ...bob.Mod[*dialect.SelectQuery
 }
 
 func (os HistoryTreatmentareaSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -866,7 +890,7 @@ func (os HistoryTreatmentareaSlice) Organization(mods ...bob.Mod[*dialect.Select
 
 func attachHistoryTreatmentareaOrganization0(ctx context.Context, exec bob.Executor, count int, historyTreatmentarea0 *HistoryTreatmentarea, organization1 *Organization) (*HistoryTreatmentarea, error) {
 	setter := &HistoryTreatmentareaSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyTreatmentarea0.Update(ctx, exec, setter)
@@ -913,7 +937,7 @@ func (historyTreatmentarea0 *HistoryTreatmentarea) AttachOrganization(ctx contex
 }
 
 type historyTreatmentareaWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Comments       psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -928,6 +952,7 @@ type historyTreatmentareaWhere[Q psql.Filterable] struct {
 	Treatdate      psql.WhereNullMod[Q, int64]
 	TreatID        psql.WhereNullMod[Q, string]
 	Type           psql.WhereNullMod[Q, string]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -943,7 +968,7 @@ func (historyTreatmentareaWhere[Q]) AliasedAs(alias string) historyTreatmentarea
 
 func buildHistoryTreatmentareaWhere[Q psql.Filterable](cols historyTreatmentareaColumns) historyTreatmentareaWhere[Q] {
 	return historyTreatmentareaWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Comments:       psql.WhereNull[Q, string](cols.Comments),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -958,6 +983,7 @@ func buildHistoryTreatmentareaWhere[Q psql.Filterable](cols historyTreatmentarea
 		Treatdate:      psql.WhereNull[Q, int64](cols.Treatdate),
 		TreatID:        psql.WhereNull[Q, string](cols.TreatID),
 		Type:           psql.WhereNull[Q, string](cols.Type),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1069,11 +1095,8 @@ func (os HistoryTreatmentareaSlice) LoadOrganization(ctx context.Context, exec b
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -36,7 +37,7 @@ func (mods HistoryContainerrelateModSlice) Apply(ctx context.Context, n *History
 // HistoryContainerrelateTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type HistoryContainerrelateTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Containertype  func() null.Val[string]
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
@@ -47,6 +48,7 @@ type HistoryContainerrelateTemplate struct {
 	Mosquitoinspid func() null.Val[string]
 	Objectid       func() int32
 	Treatmentid    func() null.Val[string]
+	Created        func() null.Val[time.Time]
 	CreatedDate    func() null.Val[int64]
 	CreatedUser    func() null.Val[string]
 	GeometryX      func() null.Val[float64]
@@ -82,7 +84,7 @@ func (t HistoryContainerrelateTemplate) setModelRels(o *models.HistoryContainerr
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.HistoryContainerrelates = append(rel.R.HistoryContainerrelates, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -94,7 +96,7 @@ func (o HistoryContainerrelateTemplate) BuildSetter() *models.HistoryContainerre
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Containertype != nil {
 		val := o.Containertype()
@@ -135,6 +137,10 @@ func (o HistoryContainerrelateTemplate) BuildSetter() *models.HistoryContainerre
 	if o.Treatmentid != nil {
 		val := o.Treatmentid()
 		m.Treatmentid = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.CreatedDate != nil {
 		val := o.CreatedDate()
@@ -219,6 +225,9 @@ func (o HistoryContainerrelateTemplate) Build() *models.HistoryContainerrelate {
 	if o.Treatmentid != nil {
 		m.Treatmentid = o.Treatmentid()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 	if o.CreatedDate != nil {
 		m.CreatedDate = o.CreatedDate()
 	}
@@ -260,6 +269,10 @@ func (o HistoryContainerrelateTemplate) BuildMany(number int) models.HistoryCont
 }
 
 func ensureCreatableHistoryContainerrelate(m *models.HistoryContainerrelateSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -276,25 +289,6 @@ func ensureCreatableHistoryContainerrelate(m *models.HistoryContainerrelateSette
 func (o *HistoryContainerrelateTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.HistoryContainerrelate) error {
 	var err error
 
-	isOrganizationDone, _ := historyContainerrelateRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = historyContainerrelateRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -305,10 +299,29 @@ func (o *HistoryContainerrelateTemplate) Create(ctx context.Context, exec bob.Ex
 	opt := o.BuildSetter()
 	ensureCreatableHistoryContainerrelate(opt)
 
+	if o.r.Organization == nil {
+		HistoryContainerrelateMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.HistoryContainerrelates.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -398,6 +411,7 @@ func (m historyContainerrelateMods) RandomizeAllColumns(f *faker.Faker) HistoryC
 		HistoryContainerrelateMods.RandomMosquitoinspid(f),
 		HistoryContainerrelateMods.RandomObjectid(f),
 		HistoryContainerrelateMods.RandomTreatmentid(f),
+		HistoryContainerrelateMods.RandomCreated(f),
 		HistoryContainerrelateMods.RandomCreatedDate(f),
 		HistoryContainerrelateMods.RandomCreatedUser(f),
 		HistoryContainerrelateMods.RandomGeometryX(f),
@@ -409,14 +423,14 @@ func (m historyContainerrelateMods) RandomizeAllColumns(f *faker.Faker) HistoryC
 }
 
 // Set the model columns to this value
-func (m historyContainerrelateMods) OrganizationID(val null.Val[int32]) HistoryContainerrelateMod {
+func (m historyContainerrelateMods) OrganizationID(val int32) HistoryContainerrelateMod {
 	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m historyContainerrelateMods) OrganizationIDFunc(f func() null.Val[int32]) HistoryContainerrelateMod {
+func (m historyContainerrelateMods) OrganizationIDFunc(f func() int32) HistoryContainerrelateMod {
 	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
 		o.OrganizationID = f
 	})
@@ -431,32 +445,10 @@ func (m historyContainerrelateMods) UnsetOrganizationID() HistoryContainerrelate
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m historyContainerrelateMods) RandomOrganizationID(f *faker.Faker) HistoryContainerrelateMod {
 	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m historyContainerrelateMods) RandomOrganizationIDNotNull(f *faker.Faker) HistoryContainerrelateMod {
-	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -964,6 +956,59 @@ func (m historyContainerrelateMods) RandomTreatmentidNotNull(f *faker.Faker) His
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyContainerrelateMods) Created(val null.Val[time.Time]) HistoryContainerrelateMod {
+	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyContainerrelateMods) CreatedFunc(f func() null.Val[time.Time]) HistoryContainerrelateMod {
+	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyContainerrelateMods) UnsetCreated() HistoryContainerrelateMod {
+	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyContainerrelateMods) RandomCreated(f *faker.Faker) HistoryContainerrelateMod {
+	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyContainerrelateMods) RandomCreatedNotNull(f *faker.Faker) HistoryContainerrelateMod {
+	return HistoryContainerrelateModFunc(func(_ context.Context, o *HistoryContainerrelateTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})

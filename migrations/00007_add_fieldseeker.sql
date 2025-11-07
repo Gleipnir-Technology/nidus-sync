@@ -2,7 +2,7 @@
 ALTER TABLE organization ADD COLUMN fieldseeker_url TEXT;
 
 CREATE TABLE fs_containerrelate (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     containertype text,
     creationdate bigint,
     creator text,
@@ -24,7 +24,7 @@ CREATE TABLE fs_containerrelate (
 
 
 CREATE TABLE fs_fieldscoutinglog (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -43,7 +43,7 @@ CREATE TABLE fs_fieldscoutinglog (
 
 
 CREATE TABLE fs_habitatrelate (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -62,7 +62,7 @@ CREATE TABLE fs_habitatrelate (
 );
 
 CREATE TABLE fs_inspectionsample (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -83,7 +83,7 @@ CREATE TABLE fs_inspectionsample (
 );
 
 CREATE TABLE fs_inspectionsampledetail (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -115,7 +115,7 @@ CREATE TABLE fs_inspectionsampledetail (
 );
 
 CREATE TABLE fs_linelocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -171,7 +171,7 @@ CREATE TABLE fs_linelocation (
 
 
 CREATE TABLE fs_locationtracking (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accuracy double precision,
     creationdate bigint,
     creator text,
@@ -191,7 +191,7 @@ CREATE TABLE fs_locationtracking (
 
 
 CREATE TABLE fs_mosquitoinspection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     actiontaken text,
     activity text,
     adultact text,
@@ -256,7 +256,7 @@ CREATE TABLE fs_mosquitoinspection (
 
 
 CREATE TABLE fs_pointlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -308,7 +308,7 @@ CREATE TABLE fs_pointlocation (
 
 
 CREATE TABLE fs_polygonlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -358,7 +358,7 @@ CREATE TABLE fs_polygonlocation (
 
 
 CREATE TABLE fs_pool (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -393,7 +393,7 @@ CREATE TABLE fs_pool (
 );
 
 CREATE TABLE fs_pooldetail (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -414,7 +414,7 @@ CREATE TABLE fs_pooldetail (
 );
 
 CREATE TABLE fs_proposedtreatmentarea (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     acres double precision,
     comments text,
     completed smallint,
@@ -454,7 +454,7 @@ CREATE TABLE fs_proposedtreatmentarea (
 );
 
 CREATE TABLE fs_qamosquitoinspection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     acresbreeding double precision,
     actiontaken text,
     adultactivity smallint,
@@ -523,7 +523,7 @@ CREATE TABLE fs_qamosquitoinspection (
 );
 
 CREATE TABLE fs_rodentlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -560,7 +560,7 @@ CREATE TABLE fs_rodentlocation (
 );
 
 CREATE TABLE fs_samplecollection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     avetemp double precision,
     chickenid text,
@@ -613,7 +613,7 @@ CREATE TABLE fs_samplecollection (
 );
 
 CREATE TABLE fs_samplelocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -645,7 +645,7 @@ CREATE TABLE fs_samplelocation (
 
 
 CREATE TABLE fs_servicerequest (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accepted smallint,
     acceptedby text,
     accepteddate bigint,
@@ -739,7 +739,7 @@ CREATE TABLE fs_servicerequest (
 
 
 CREATE TABLE fs_speciesabundance (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     bloodedfem smallint,
     creationdate bigint,
     creator text,
@@ -776,7 +776,7 @@ CREATE TABLE fs_speciesabundance (
 
 
 CREATE TABLE fs_stormdrain (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -803,7 +803,7 @@ CREATE TABLE fs_stormdrain (
 
 
 CREATE TABLE fs_timecard (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     comments text,
     creationdate bigint,
@@ -839,7 +839,7 @@ CREATE TABLE fs_timecard (
 
 
 CREATE TABLE fs_trapdata (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     avetemp double precision,
     comments text,
     creationdate bigint,
@@ -889,7 +889,7 @@ CREATE TABLE fs_trapdata (
 
 
 CREATE TABLE fs_traplocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -927,7 +927,7 @@ CREATE TABLE fs_traplocation (
 
 
 CREATE TABLE fs_treatment (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     areaunit text,
     avetemp double precision,
@@ -989,7 +989,7 @@ CREATE TABLE fs_treatment (
 
 
 CREATE TABLE fs_treatmentarea (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -1015,7 +1015,7 @@ CREATE TABLE fs_treatmentarea (
 
 
 CREATE TABLE fs_zones (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     active bigint,
     creationdate bigint,
     creator text,
@@ -1037,7 +1037,7 @@ CREATE TABLE fs_zones (
 
 
 CREATE TABLE fs_zones2 (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1057,7 +1057,7 @@ CREATE TABLE fs_zones2 (
 );
 
 CREATE TABLE history_containerrelate (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     containertype text,
     creationdate bigint,
     creator text,
@@ -1081,7 +1081,7 @@ CREATE TABLE history_containerrelate (
 
 
 CREATE TABLE history_fieldscoutinglog (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1102,7 +1102,7 @@ CREATE TABLE history_fieldscoutinglog (
 
 
 CREATE TABLE history_habitatrelate (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1123,7 +1123,7 @@ CREATE TABLE history_habitatrelate (
 );
 
 CREATE TABLE history_inspectionsample (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1146,7 +1146,7 @@ CREATE TABLE history_inspectionsample (
 );
 
 CREATE TABLE history_inspectionsampledetail (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -1180,7 +1180,7 @@ CREATE TABLE history_inspectionsampledetail (
 );
 
 CREATE TABLE history_linelocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -1238,7 +1238,7 @@ CREATE TABLE history_linelocation (
 
 
 CREATE TABLE history_locationtracking (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accuracy double precision,
     creationdate bigint,
     creator text,
@@ -1260,7 +1260,7 @@ CREATE TABLE history_locationtracking (
 
 
 CREATE TABLE history_mosquitoinspection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     actiontaken text,
     activity text,
     adultact text,
@@ -1327,10 +1327,11 @@ CREATE TABLE history_mosquitoinspection (
 
 
 CREATE TABLE history_pointlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
+    created TIMESTAMP,
     creationdate bigint,
     creator text,
     description text,
@@ -1380,7 +1381,7 @@ CREATE TABLE history_pointlocation (
 
 
 CREATE TABLE history_polygonlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -1431,7 +1432,7 @@ CREATE TABLE history_polygonlocation (
 
 
 CREATE TABLE history_pool (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -1468,7 +1469,7 @@ CREATE TABLE history_pool (
 );
 
 CREATE TABLE history_pooldetail (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1491,7 +1492,7 @@ CREATE TABLE history_pooldetail (
 );
 
 CREATE TABLE history_proposedtreatmentarea (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     acres double precision,
     comments text,
     completed smallint,
@@ -1532,7 +1533,7 @@ CREATE TABLE history_proposedtreatmentarea (
 );
 
 CREATE TABLE history_qamosquitoinspection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     acresbreeding double precision,
     actiontaken text,
     adultactivity smallint,
@@ -1603,7 +1604,7 @@ CREATE TABLE history_qamosquitoinspection (
 );
 
 CREATE TABLE history_rodentlocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -1642,7 +1643,7 @@ CREATE TABLE history_rodentlocation (
 );
 
 CREATE TABLE history_samplecollection (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     avetemp double precision,
     chickenid text,
@@ -1697,7 +1698,7 @@ CREATE TABLE history_samplecollection (
 );
 
 CREATE TABLE history_samplelocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -1731,7 +1732,7 @@ CREATE TABLE history_samplelocation (
 
 
 CREATE TABLE history_servicerequest (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accepted smallint,
     acceptedby text,
     accepteddate bigint,
@@ -1827,7 +1828,7 @@ CREATE TABLE history_servicerequest (
 
 
 CREATE TABLE history_speciesabundance (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     bloodedfem smallint,
     creationdate bigint,
     creator text,
@@ -1866,7 +1867,7 @@ CREATE TABLE history_speciesabundance (
 
 
 CREATE TABLE history_stormdrain (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -1895,7 +1896,7 @@ CREATE TABLE history_stormdrain (
 
 
 CREATE TABLE history_timecard (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     comments text,
     creationdate bigint,
@@ -1933,7 +1934,7 @@ CREATE TABLE history_timecard (
 
 
 CREATE TABLE history_trapdata (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     avetemp double precision,
     comments text,
     creationdate bigint,
@@ -1985,7 +1986,7 @@ CREATE TABLE history_trapdata (
 
 
 CREATE TABLE history_traplocation (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -2025,7 +2026,7 @@ CREATE TABLE history_traplocation (
 
 
 CREATE TABLE history_treatment (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     activity text,
     areaunit text,
     avetemp double precision,
@@ -2088,7 +2089,7 @@ CREATE TABLE history_treatment (
 
 
 CREATE TABLE history_treatmentarea (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -2116,7 +2117,7 @@ CREATE TABLE history_treatmentarea (
 
 
 CREATE TABLE history_zones (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     active bigint,
     creationdate bigint,
     creator text,
@@ -2140,7 +2141,7 @@ CREATE TABLE history_zones (
 
 
 CREATE TABLE history_zones2 (
-    organization_id INTEGER REFERENCES organization(id),
+    organization_id INTEGER NOT NULL REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,

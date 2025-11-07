@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,24 +26,25 @@ import (
 
 // HistoryInspectionsample is an object representing the database table.
 type HistoryInspectionsample struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Idbytech       null.Val[string]  `db:"idbytech" `
-	InspID         null.Val[string]  `db:"insp_id" `
-	Objectid       int32             `db:"objectid,pk" `
-	Processed      null.Val[int16]   `db:"processed" `
-	Sampleid       null.Val[string]  `db:"sampleid" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Idbytech       null.Val[string]    `db:"idbytech" `
+	InspID         null.Val[string]    `db:"insp_id" `
+	Objectid       int32               `db:"objectid,pk" `
+	Processed      null.Val[int16]     `db:"processed" `
+	Sampleid       null.Val[string]    `db:"sampleid" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historyInspectionsampleR `db:"-" `
 }
@@ -65,7 +67,7 @@ type historyInspectionsampleR struct {
 func buildHistoryInspectionsampleColumns(alias string) historyInspectionsampleColumns {
 	return historyInspectionsampleColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "idbytech", "insp_id", "objectid", "processed", "sampleid", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "idbytech", "insp_id", "objectid", "processed", "sampleid", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_inspectionsample"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -79,6 +81,7 @@ func buildHistoryInspectionsampleColumns(alias string) historyInspectionsampleCo
 		Objectid:       psql.Quote(alias, "objectid"),
 		Processed:      psql.Quote(alias, "processed"),
 		Sampleid:       psql.Quote(alias, "sampleid"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -103,6 +106,7 @@ type historyInspectionsampleColumns struct {
 	Objectid       psql.Expression
 	Processed      psql.Expression
 	Sampleid       psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -124,29 +128,30 @@ func (historyInspectionsampleColumns) AliasedAs(alias string) historyInspections
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryInspectionsampleSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Idbytech       omitnull.Val[string]  `db:"idbytech" `
-	InspID         omitnull.Val[string]  `db:"insp_id" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Processed      omitnull.Val[int16]   `db:"processed" `
-	Sampleid       omitnull.Val[string]  `db:"sampleid" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Idbytech       omitnull.Val[string]    `db:"idbytech" `
+	InspID         omitnull.Val[string]    `db:"insp_id" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Processed      omitnull.Val[int16]     `db:"processed" `
+	Sampleid       omitnull.Val[string]    `db:"sampleid" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryInspectionsampleSetter) SetColumns() []string {
-	vals := make([]string, 0, 18)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 19)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -179,6 +184,9 @@ func (s HistoryInspectionsampleSetter) SetColumns() []string {
 	if !s.Sampleid.IsUnset() {
 		vals = append(vals, "sampleid")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -204,8 +212,8 @@ func (s HistoryInspectionsampleSetter) SetColumns() []string {
 }
 
 func (s HistoryInspectionsampleSetter) Overwrite(t *HistoryInspectionsample) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -237,6 +245,9 @@ func (s HistoryInspectionsampleSetter) Overwrite(t *HistoryInspectionsample) {
 	if !s.Sampleid.IsUnset() {
 		t.Sampleid = s.Sampleid.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -266,9 +277,9 @@ func (s *HistoryInspectionsampleSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 18)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 19)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -333,46 +344,52 @@ func (s *HistoryInspectionsampleSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[11] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[11] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[12] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[12] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[13] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[13] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[14] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[14] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[15] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[15] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[16] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[16] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[17] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[17] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[18] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[18] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -384,9 +401,9 @@ func (s HistoryInspectionsampleSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery]
 }
 
 func (s HistoryInspectionsampleSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 18)
+	exprs := make([]bob.Expression, 0, 19)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -460,6 +477,13 @@ func (s HistoryInspectionsampleSetter) Expressions(prefix ...string) []bob.Expre
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "sampleid")...),
 			psql.Arg(s.Sampleid),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -756,7 +780,7 @@ func (o *HistoryInspectionsample) Organization(mods ...bob.Mod[*dialect.SelectQu
 }
 
 func (os HistoryInspectionsampleSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -774,7 +798,7 @@ func (os HistoryInspectionsampleSlice) Organization(mods ...bob.Mod[*dialect.Sel
 
 func attachHistoryInspectionsampleOrganization0(ctx context.Context, exec bob.Executor, count int, historyInspectionsample0 *HistoryInspectionsample, organization1 *Organization) (*HistoryInspectionsample, error) {
 	setter := &HistoryInspectionsampleSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyInspectionsample0.Update(ctx, exec, setter)
@@ -821,7 +845,7 @@ func (historyInspectionsample0 *HistoryInspectionsample) AttachOrganization(ctx 
 }
 
 type historyInspectionsampleWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
@@ -832,6 +856,7 @@ type historyInspectionsampleWhere[Q psql.Filterable] struct {
 	Objectid       psql.WhereMod[Q, int32]
 	Processed      psql.WhereNullMod[Q, int16]
 	Sampleid       psql.WhereNullMod[Q, string]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -847,7 +872,7 @@ func (historyInspectionsampleWhere[Q]) AliasedAs(alias string) historyInspection
 
 func buildHistoryInspectionsampleWhere[Q psql.Filterable](cols historyInspectionsampleColumns) historyInspectionsampleWhere[Q] {
 	return historyInspectionsampleWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
@@ -858,6 +883,7 @@ func buildHistoryInspectionsampleWhere[Q psql.Filterable](cols historyInspection
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		Processed:      psql.WhereNull[Q, int16](cols.Processed),
 		Sampleid:       psql.WhereNull[Q, string](cols.Sampleid),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -969,11 +995,8 @@ func (os HistoryInspectionsampleSlice) LoadOrganization(ctx context.Context, exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

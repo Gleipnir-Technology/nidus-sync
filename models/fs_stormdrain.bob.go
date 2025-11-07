@@ -26,7 +26,7 @@ import (
 
 // FSStormdrain is an object representing the database table.
 type FSStormdrain struct {
-	OrganizationID    null.Val[int32]   `db:"organization_id" `
+	OrganizationID    int32             `db:"organization_id" `
 	Creationdate      null.Val[int64]   `db:"creationdate" `
 	Creator           null.Val[string]  `db:"creator" `
 	Editdate          null.Val[int64]   `db:"editdate" `
@@ -140,7 +140,7 @@ func (fsStormdrainColumns) AliasedAs(alias string) fsStormdrainColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSStormdrainSetter struct {
-	OrganizationID    omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID    omit.Val[int32]       `db:"organization_id" `
 	Creationdate      omitnull.Val[int64]   `db:"creationdate" `
 	Creator           omitnull.Val[string]  `db:"creator" `
 	Editdate          omitnull.Val[int64]   `db:"editdate" `
@@ -167,7 +167,7 @@ type FSStormdrainSetter struct {
 
 func (s FSStormdrainSetter) SetColumns() []string {
 	vals := make([]string, 0, 23)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -240,8 +240,8 @@ func (s FSStormdrainSetter) SetColumns() []string {
 }
 
 func (s FSStormdrainSetter) Overwrite(t *FSStormdrain) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -318,8 +318,8 @@ func (s *FSStormdrainSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 23)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -467,7 +467,7 @@ func (s FSStormdrainSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSStormdrainSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 23)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -862,7 +862,7 @@ func (o *FSStormdrain) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organ
 }
 
 func (os FSStormdrainSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -880,7 +880,7 @@ func (os FSStormdrainSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) 
 
 func attachFSStormdrainOrganization0(ctx context.Context, exec bob.Executor, count int, fsStormdrain0 *FSStormdrain, organization1 *Organization) (*FSStormdrain, error) {
 	setter := &FSStormdrainSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsStormdrain0.Update(ctx, exec, setter)
@@ -927,7 +927,7 @@ func (fsStormdrain0 *FSStormdrain) AttachOrganization(ctx context.Context, exec 
 }
 
 type fsStormdrainWhere[Q psql.Filterable] struct {
-	OrganizationID    psql.WhereNullMod[Q, int32]
+	OrganizationID    psql.WhereMod[Q, int32]
 	Creationdate      psql.WhereNullMod[Q, int64]
 	Creator           psql.WhereNullMod[Q, string]
 	Editdate          psql.WhereNullMod[Q, int64]
@@ -958,7 +958,7 @@ func (fsStormdrainWhere[Q]) AliasedAs(alias string) fsStormdrainWhere[Q] {
 
 func buildFSStormdrainWhere[Q psql.Filterable](cols fsStormdrainColumns) fsStormdrainWhere[Q] {
 	return fsStormdrainWhere[Q]{
-		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:      psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:           psql.WhereNull[Q, string](cols.Creator),
 		Editdate:          psql.WhereNull[Q, int64](cols.Editdate),
@@ -1085,11 +1085,8 @@ func (os FSStormdrainSlice) LoadOrganization(ctx context.Context, exec bob.Execu
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

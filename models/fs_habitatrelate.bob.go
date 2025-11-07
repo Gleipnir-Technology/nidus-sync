@@ -26,7 +26,7 @@ import (
 
 // FSHabitatrelate is an object representing the database table.
 type FSHabitatrelate struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
@@ -119,7 +119,7 @@ func (fsHabitatrelateColumns) AliasedAs(alias string) fsHabitatrelateColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSHabitatrelateSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
@@ -139,7 +139,7 @@ type FSHabitatrelateSetter struct {
 
 func (s FSHabitatrelateSetter) SetColumns() []string {
 	vals := make([]string, 0, 16)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -191,8 +191,8 @@ func (s FSHabitatrelateSetter) SetColumns() []string {
 }
 
 func (s FSHabitatrelateSetter) Overwrite(t *FSHabitatrelate) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -248,8 +248,8 @@ func (s *FSHabitatrelateSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 16)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -355,7 +355,7 @@ func (s FSHabitatrelateSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSHabitatrelateSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 16)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -701,7 +701,7 @@ func (o *FSHabitatrelate) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Or
 }
 
 func (os FSHabitatrelateSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -719,7 +719,7 @@ func (os FSHabitatrelateSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery
 
 func attachFSHabitatrelateOrganization0(ctx context.Context, exec bob.Executor, count int, fsHabitatrelate0 *FSHabitatrelate, organization1 *Organization) (*FSHabitatrelate, error) {
 	setter := &FSHabitatrelateSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsHabitatrelate0.Update(ctx, exec, setter)
@@ -766,7 +766,7 @@ func (fsHabitatrelate0 *FSHabitatrelate) AttachOrganization(ctx context.Context,
 }
 
 type fsHabitatrelateWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
@@ -790,7 +790,7 @@ func (fsHabitatrelateWhere[Q]) AliasedAs(alias string) fsHabitatrelateWhere[Q] {
 
 func buildFSHabitatrelateWhere[Q psql.Filterable](cols fsHabitatrelateColumns) fsHabitatrelateWhere[Q] {
 	return fsHabitatrelateWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
@@ -910,11 +910,8 @@ func (os FSHabitatrelateSlice) LoadOrganization(ctx context.Context, exec bob.Ex
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

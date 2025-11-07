@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,24 +26,25 @@ import (
 
 // HistoryContainerrelate is an object representing the database table.
 type HistoryContainerrelate struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Containertype  null.Val[string]  `db:"containertype" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Inspsampleid   null.Val[string]  `db:"inspsampleid" `
-	Mosquitoinspid null.Val[string]  `db:"mosquitoinspid" `
-	Objectid       int32             `db:"objectid,pk" `
-	Treatmentid    null.Val[string]  `db:"treatmentid" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Containertype  null.Val[string]    `db:"containertype" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Inspsampleid   null.Val[string]    `db:"inspsampleid" `
+	Mosquitoinspid null.Val[string]    `db:"mosquitoinspid" `
+	Objectid       int32               `db:"objectid,pk" `
+	Treatmentid    null.Val[string]    `db:"treatmentid" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Version        int32               `db:"version,pk" `
 
 	R historyContainerrelateR `db:"-" `
 }
@@ -65,7 +67,7 @@ type historyContainerrelateR struct {
 func buildHistoryContainerrelateColumns(alias string) historyContainerrelateColumns {
 	return historyContainerrelateColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "containertype", "creationdate", "creator", "editdate", "editor", "globalid", "inspsampleid", "mosquitoinspid", "objectid", "treatmentid", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "containertype", "creationdate", "creator", "editdate", "editor", "globalid", "inspsampleid", "mosquitoinspid", "objectid", "treatmentid", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_containerrelate"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -79,6 +81,7 @@ func buildHistoryContainerrelateColumns(alias string) historyContainerrelateColu
 		Mosquitoinspid: psql.Quote(alias, "mosquitoinspid"),
 		Objectid:       psql.Quote(alias, "objectid"),
 		Treatmentid:    psql.Quote(alias, "treatmentid"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -103,6 +106,7 @@ type historyContainerrelateColumns struct {
 	Mosquitoinspid psql.Expression
 	Objectid       psql.Expression
 	Treatmentid    psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -124,29 +128,30 @@ func (historyContainerrelateColumns) AliasedAs(alias string) historyContainerrel
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryContainerrelateSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Containertype  omitnull.Val[string]  `db:"containertype" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Inspsampleid   omitnull.Val[string]  `db:"inspsampleid" `
-	Mosquitoinspid omitnull.Val[string]  `db:"mosquitoinspid" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Treatmentid    omitnull.Val[string]  `db:"treatmentid" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Containertype  omitnull.Val[string]    `db:"containertype" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Inspsampleid   omitnull.Val[string]    `db:"inspsampleid" `
+	Mosquitoinspid omitnull.Val[string]    `db:"mosquitoinspid" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Treatmentid    omitnull.Val[string]    `db:"treatmentid" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryContainerrelateSetter) SetColumns() []string {
-	vals := make([]string, 0, 18)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 19)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Containertype.IsUnset() {
@@ -179,6 +184,9 @@ func (s HistoryContainerrelateSetter) SetColumns() []string {
 	if !s.Treatmentid.IsUnset() {
 		vals = append(vals, "treatmentid")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -204,8 +212,8 @@ func (s HistoryContainerrelateSetter) SetColumns() []string {
 }
 
 func (s HistoryContainerrelateSetter) Overwrite(t *HistoryContainerrelate) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Containertype.IsUnset() {
 		t.Containertype = s.Containertype.MustGetNull()
@@ -237,6 +245,9 @@ func (s HistoryContainerrelateSetter) Overwrite(t *HistoryContainerrelate) {
 	if !s.Treatmentid.IsUnset() {
 		t.Treatmentid = s.Treatmentid.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -266,9 +277,9 @@ func (s *HistoryContainerrelateSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 18)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 19)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -333,46 +344,52 @@ func (s *HistoryContainerrelateSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[11] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[11] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[12] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[12] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[13] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[13] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[14] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[14] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[15] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[15] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[16] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[16] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[17] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[17] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[18] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[18] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -384,9 +401,9 @@ func (s HistoryContainerrelateSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] 
 }
 
 func (s HistoryContainerrelateSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 18)
+	exprs := make([]bob.Expression, 0, 19)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -460,6 +477,13 @@ func (s HistoryContainerrelateSetter) Expressions(prefix ...string) []bob.Expres
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "treatmentid")...),
 			psql.Arg(s.Treatmentid),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -756,7 +780,7 @@ func (o *HistoryContainerrelate) Organization(mods ...bob.Mod[*dialect.SelectQue
 }
 
 func (os HistoryContainerrelateSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -774,7 +798,7 @@ func (os HistoryContainerrelateSlice) Organization(mods ...bob.Mod[*dialect.Sele
 
 func attachHistoryContainerrelateOrganization0(ctx context.Context, exec bob.Executor, count int, historyContainerrelate0 *HistoryContainerrelate, organization1 *Organization) (*HistoryContainerrelate, error) {
 	setter := &HistoryContainerrelateSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyContainerrelate0.Update(ctx, exec, setter)
@@ -821,7 +845,7 @@ func (historyContainerrelate0 *HistoryContainerrelate) AttachOrganization(ctx co
 }
 
 type historyContainerrelateWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Containertype  psql.WhereNullMod[Q, string]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -832,6 +856,7 @@ type historyContainerrelateWhere[Q psql.Filterable] struct {
 	Mosquitoinspid psql.WhereNullMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	Treatmentid    psql.WhereNullMod[Q, string]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -847,7 +872,7 @@ func (historyContainerrelateWhere[Q]) AliasedAs(alias string) historyContainerre
 
 func buildHistoryContainerrelateWhere[Q psql.Filterable](cols historyContainerrelateColumns) historyContainerrelateWhere[Q] {
 	return historyContainerrelateWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Containertype:  psql.WhereNull[Q, string](cols.Containertype),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -858,6 +883,7 @@ func buildHistoryContainerrelateWhere[Q psql.Filterable](cols historyContainerre
 		Mosquitoinspid: psql.WhereNull[Q, string](cols.Mosquitoinspid),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		Treatmentid:    psql.WhereNull[Q, string](cols.Treatmentid),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -969,11 +995,8 @@ func (os HistoryContainerrelateSlice) LoadOrganization(ctx context.Context, exec
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

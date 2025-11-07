@@ -26,7 +26,7 @@ import (
 
 // FSSpeciesabundance is an object representing the database table.
 type FSSpeciesabundance struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
+	OrganizationID int32             `db:"organization_id" `
 	Bloodedfem     null.Val[int16]   `db:"bloodedfem" `
 	Creationdate   null.Val[int64]   `db:"creationdate" `
 	Creator        null.Val[string]  `db:"creator" `
@@ -170,7 +170,7 @@ func (fsSpeciesabundanceColumns) AliasedAs(alias string) fsSpeciesabundanceColum
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSSpeciesabundanceSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID omit.Val[int32]       `db:"organization_id" `
 	Bloodedfem     omitnull.Val[int16]   `db:"bloodedfem" `
 	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
 	Creator        omitnull.Val[string]  `db:"creator" `
@@ -207,7 +207,7 @@ type FSSpeciesabundanceSetter struct {
 
 func (s FSSpeciesabundanceSetter) SetColumns() []string {
 	vals := make([]string, 0, 33)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Bloodedfem.IsUnset() {
@@ -310,8 +310,8 @@ func (s FSSpeciesabundanceSetter) SetColumns() []string {
 }
 
 func (s FSSpeciesabundanceSetter) Overwrite(t *FSSpeciesabundance) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Bloodedfem.IsUnset() {
 		t.Bloodedfem = s.Bloodedfem.MustGetNull()
@@ -418,8 +418,8 @@ func (s *FSSpeciesabundanceSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 33)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -627,7 +627,7 @@ func (s FSSpeciesabundanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSSpeciesabundanceSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 33)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1092,7 +1092,7 @@ func (o *FSSpeciesabundance) Organization(mods ...bob.Mod[*dialect.SelectQuery])
 }
 
 func (os FSSpeciesabundanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1110,7 +1110,7 @@ func (os FSSpeciesabundanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQu
 
 func attachFSSpeciesabundanceOrganization0(ctx context.Context, exec bob.Executor, count int, fsSpeciesabundance0 *FSSpeciesabundance, organization1 *Organization) (*FSSpeciesabundance, error) {
 	setter := &FSSpeciesabundanceSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsSpeciesabundance0.Update(ctx, exec, setter)
@@ -1157,7 +1157,7 @@ func (fsSpeciesabundance0 *FSSpeciesabundance) AttachOrganization(ctx context.Co
 }
 
 type fsSpeciesabundanceWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Bloodedfem     psql.WhereNullMod[Q, int16]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -1198,7 +1198,7 @@ func (fsSpeciesabundanceWhere[Q]) AliasedAs(alias string) fsSpeciesabundanceWher
 
 func buildFSSpeciesabundanceWhere[Q psql.Filterable](cols fsSpeciesabundanceColumns) fsSpeciesabundanceWhere[Q] {
 	return fsSpeciesabundanceWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Bloodedfem:     psql.WhereNull[Q, int16](cols.Bloodedfem),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -1335,11 +1335,8 @@ func (os FSSpeciesabundanceSlice) LoadOrganization(ctx context.Context, exec bob
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

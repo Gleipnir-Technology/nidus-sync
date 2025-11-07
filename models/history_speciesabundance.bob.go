@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,39 +26,40 @@ import (
 
 // HistorySpeciesabundance is an object representing the database table.
 type HistorySpeciesabundance struct {
-	OrganizationID null.Val[int32]   `db:"organization_id" `
-	Bloodedfem     null.Val[int16]   `db:"bloodedfem" `
-	Creationdate   null.Val[int64]   `db:"creationdate" `
-	Creator        null.Val[string]  `db:"creator" `
-	Eggs           null.Val[int16]   `db:"eggs" `
-	Editdate       null.Val[int64]   `db:"editdate" `
-	Editor         null.Val[string]  `db:"editor" `
-	Females        null.Val[int64]   `db:"females" `
-	Gravidfem      null.Val[int16]   `db:"gravidfem" `
-	Globalid       null.Val[string]  `db:"globalid" `
-	Larvae         null.Val[int16]   `db:"larvae" `
-	Males          null.Val[int16]   `db:"males" `
-	Objectid       int32             `db:"objectid,pk" `
-	Poolstogen     null.Val[int16]   `db:"poolstogen" `
-	Processed      null.Val[int16]   `db:"processed" `
-	Pupae          null.Val[int16]   `db:"pupae" `
-	Species        null.Val[string]  `db:"species" `
-	Total          null.Val[int64]   `db:"total" `
-	TrapdataID     null.Val[string]  `db:"trapdata_id" `
-	Unknown        null.Val[int16]   `db:"unknown" `
-	CreatedDate    null.Val[int64]   `db:"created_date" `
-	CreatedUser    null.Val[string]  `db:"created_user" `
-	GeometryX      null.Val[float64] `db:"geometry_x" `
-	GeometryY      null.Val[float64] `db:"geometry_y" `
-	LastEditedDate null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser null.Val[string]  `db:"last_edited_user" `
-	Globalzscore   null.Val[float64] `db:"globalzscore" `
-	H3R7           null.Val[string]  `db:"h3r7" `
-	H3R8           null.Val[string]  `db:"h3r8" `
-	R7score        null.Val[float64] `db:"r7score" `
-	R8score        null.Val[float64] `db:"r8score" `
-	Yearweek       null.Val[int64]   `db:"yearweek" `
-	Version        int32             `db:"version,pk" `
+	OrganizationID int32               `db:"organization_id" `
+	Bloodedfem     null.Val[int16]     `db:"bloodedfem" `
+	Creationdate   null.Val[int64]     `db:"creationdate" `
+	Creator        null.Val[string]    `db:"creator" `
+	Eggs           null.Val[int16]     `db:"eggs" `
+	Editdate       null.Val[int64]     `db:"editdate" `
+	Editor         null.Val[string]    `db:"editor" `
+	Females        null.Val[int64]     `db:"females" `
+	Gravidfem      null.Val[int16]     `db:"gravidfem" `
+	Globalid       null.Val[string]    `db:"globalid" `
+	Larvae         null.Val[int16]     `db:"larvae" `
+	Males          null.Val[int16]     `db:"males" `
+	Objectid       int32               `db:"objectid,pk" `
+	Poolstogen     null.Val[int16]     `db:"poolstogen" `
+	Processed      null.Val[int16]     `db:"processed" `
+	Pupae          null.Val[int16]     `db:"pupae" `
+	Species        null.Val[string]    `db:"species" `
+	Total          null.Val[int64]     `db:"total" `
+	TrapdataID     null.Val[string]    `db:"trapdata_id" `
+	Unknown        null.Val[int16]     `db:"unknown" `
+	Created        null.Val[time.Time] `db:"created" `
+	CreatedDate    null.Val[int64]     `db:"created_date" `
+	CreatedUser    null.Val[string]    `db:"created_user" `
+	GeometryX      null.Val[float64]   `db:"geometry_x" `
+	GeometryY      null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser null.Val[string]    `db:"last_edited_user" `
+	Globalzscore   null.Val[float64]   `db:"globalzscore" `
+	H3R7           null.Val[string]    `db:"h3r7" `
+	H3R8           null.Val[string]    `db:"h3r8" `
+	R7score        null.Val[float64]   `db:"r7score" `
+	R8score        null.Val[float64]   `db:"r8score" `
+	Yearweek       null.Val[int64]     `db:"yearweek" `
+	Version        int32               `db:"version,pk" `
 
 	R historySpeciesabundanceR `db:"-" `
 }
@@ -80,7 +82,7 @@ type historySpeciesabundanceR struct {
 func buildHistorySpeciesabundanceColumns(alias string) historySpeciesabundanceColumns {
 	return historySpeciesabundanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "bloodedfem", "creationdate", "creator", "eggs", "editdate", "editor", "females", "gravidfem", "globalid", "larvae", "males", "objectid", "poolstogen", "processed", "pupae", "species", "total", "trapdata_id", "unknown", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "globalzscore", "h3r7", "h3r8", "r7score", "r8score", "yearweek", "version",
+			"organization_id", "bloodedfem", "creationdate", "creator", "eggs", "editdate", "editor", "females", "gravidfem", "globalid", "larvae", "males", "objectid", "poolstogen", "processed", "pupae", "species", "total", "trapdata_id", "unknown", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "globalzscore", "h3r7", "h3r8", "r7score", "r8score", "yearweek", "version",
 		).WithParent("history_speciesabundance"),
 		tableAlias:     alias,
 		OrganizationID: psql.Quote(alias, "organization_id"),
@@ -103,6 +105,7 @@ func buildHistorySpeciesabundanceColumns(alias string) historySpeciesabundanceCo
 		Total:          psql.Quote(alias, "total"),
 		TrapdataID:     psql.Quote(alias, "trapdata_id"),
 		Unknown:        psql.Quote(alias, "unknown"),
+		Created:        psql.Quote(alias, "created"),
 		CreatedDate:    psql.Quote(alias, "created_date"),
 		CreatedUser:    psql.Quote(alias, "created_user"),
 		GeometryX:      psql.Quote(alias, "geometry_x"),
@@ -142,6 +145,7 @@ type historySpeciesabundanceColumns struct {
 	Total          psql.Expression
 	TrapdataID     psql.Expression
 	Unknown        psql.Expression
+	Created        psql.Expression
 	CreatedDate    psql.Expression
 	CreatedUser    psql.Expression
 	GeometryX      psql.Expression
@@ -169,44 +173,45 @@ func (historySpeciesabundanceColumns) AliasedAs(alias string) historySpeciesabun
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistorySpeciesabundanceSetter struct {
-	OrganizationID omitnull.Val[int32]   `db:"organization_id" `
-	Bloodedfem     omitnull.Val[int16]   `db:"bloodedfem" `
-	Creationdate   omitnull.Val[int64]   `db:"creationdate" `
-	Creator        omitnull.Val[string]  `db:"creator" `
-	Eggs           omitnull.Val[int16]   `db:"eggs" `
-	Editdate       omitnull.Val[int64]   `db:"editdate" `
-	Editor         omitnull.Val[string]  `db:"editor" `
-	Females        omitnull.Val[int64]   `db:"females" `
-	Gravidfem      omitnull.Val[int16]   `db:"gravidfem" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
-	Larvae         omitnull.Val[int16]   `db:"larvae" `
-	Males          omitnull.Val[int16]   `db:"males" `
-	Objectid       omit.Val[int32]       `db:"objectid,pk" `
-	Poolstogen     omitnull.Val[int16]   `db:"poolstogen" `
-	Processed      omitnull.Val[int16]   `db:"processed" `
-	Pupae          omitnull.Val[int16]   `db:"pupae" `
-	Species        omitnull.Val[string]  `db:"species" `
-	Total          omitnull.Val[int64]   `db:"total" `
-	TrapdataID     omitnull.Val[string]  `db:"trapdata_id" `
-	Unknown        omitnull.Val[int16]   `db:"unknown" `
-	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser    omitnull.Val[string]  `db:"created_user" `
-	GeometryX      omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY      omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser omitnull.Val[string]  `db:"last_edited_user" `
-	Globalzscore   omitnull.Val[float64] `db:"globalzscore" `
-	H3R7           omitnull.Val[string]  `db:"h3r7" `
-	H3R8           omitnull.Val[string]  `db:"h3r8" `
-	R7score        omitnull.Val[float64] `db:"r7score" `
-	R8score        omitnull.Val[float64] `db:"r8score" `
-	Yearweek       omitnull.Val[int64]   `db:"yearweek" `
-	Version        omit.Val[int32]       `db:"version,pk" `
+	OrganizationID omit.Val[int32]         `db:"organization_id" `
+	Bloodedfem     omitnull.Val[int16]     `db:"bloodedfem" `
+	Creationdate   omitnull.Val[int64]     `db:"creationdate" `
+	Creator        omitnull.Val[string]    `db:"creator" `
+	Eggs           omitnull.Val[int16]     `db:"eggs" `
+	Editdate       omitnull.Val[int64]     `db:"editdate" `
+	Editor         omitnull.Val[string]    `db:"editor" `
+	Females        omitnull.Val[int64]     `db:"females" `
+	Gravidfem      omitnull.Val[int16]     `db:"gravidfem" `
+	Globalid       omitnull.Val[string]    `db:"globalid" `
+	Larvae         omitnull.Val[int16]     `db:"larvae" `
+	Males          omitnull.Val[int16]     `db:"males" `
+	Objectid       omit.Val[int32]         `db:"objectid,pk" `
+	Poolstogen     omitnull.Val[int16]     `db:"poolstogen" `
+	Processed      omitnull.Val[int16]     `db:"processed" `
+	Pupae          omitnull.Val[int16]     `db:"pupae" `
+	Species        omitnull.Val[string]    `db:"species" `
+	Total          omitnull.Val[int64]     `db:"total" `
+	TrapdataID     omitnull.Val[string]    `db:"trapdata_id" `
+	Unknown        omitnull.Val[int16]     `db:"unknown" `
+	Created        omitnull.Val[time.Time] `db:"created" `
+	CreatedDate    omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser    omitnull.Val[string]    `db:"created_user" `
+	GeometryX      omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY      omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser omitnull.Val[string]    `db:"last_edited_user" `
+	Globalzscore   omitnull.Val[float64]   `db:"globalzscore" `
+	H3R7           omitnull.Val[string]    `db:"h3r7" `
+	H3R8           omitnull.Val[string]    `db:"h3r8" `
+	R7score        omitnull.Val[float64]   `db:"r7score" `
+	R8score        omitnull.Val[float64]   `db:"r8score" `
+	Yearweek       omitnull.Val[int64]     `db:"yearweek" `
+	Version        omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistorySpeciesabundanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 33)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 34)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Bloodedfem.IsUnset() {
@@ -266,6 +271,9 @@ func (s HistorySpeciesabundanceSetter) SetColumns() []string {
 	if !s.Unknown.IsUnset() {
 		vals = append(vals, "unknown")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -309,8 +317,8 @@ func (s HistorySpeciesabundanceSetter) SetColumns() []string {
 }
 
 func (s HistorySpeciesabundanceSetter) Overwrite(t *HistorySpeciesabundance) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Bloodedfem.IsUnset() {
 		t.Bloodedfem = s.Bloodedfem.MustGetNull()
@@ -369,6 +377,9 @@ func (s HistorySpeciesabundanceSetter) Overwrite(t *HistorySpeciesabundance) {
 	if !s.Unknown.IsUnset() {
 		t.Unknown = s.Unknown.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -416,9 +427,9 @@ func (s *HistorySpeciesabundanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 33)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 34)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -537,82 +548,88 @@ func (s *HistorySpeciesabundanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[20] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[20] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[21] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[21] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[22] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[22] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[23] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[23] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[24] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[24] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[25] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[25] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalzscore.IsUnset() {
-			vals[26] = psql.Arg(s.Globalzscore.MustGetNull())
+		if !s.LastEditedUser.IsUnset() {
+			vals[26] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3R7.IsUnset() {
-			vals[27] = psql.Arg(s.H3R7.MustGetNull())
+		if !s.Globalzscore.IsUnset() {
+			vals[27] = psql.Arg(s.Globalzscore.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3R8.IsUnset() {
-			vals[28] = psql.Arg(s.H3R8.MustGetNull())
+		if !s.H3R7.IsUnset() {
+			vals[28] = psql.Arg(s.H3R7.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.R7score.IsUnset() {
-			vals[29] = psql.Arg(s.R7score.MustGetNull())
+		if !s.H3R8.IsUnset() {
+			vals[29] = psql.Arg(s.H3R8.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.R8score.IsUnset() {
-			vals[30] = psql.Arg(s.R8score.MustGetNull())
+		if !s.R7score.IsUnset() {
+			vals[30] = psql.Arg(s.R7score.MustGetNull())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Yearweek.IsUnset() {
-			vals[31] = psql.Arg(s.Yearweek.MustGetNull())
+		if !s.R8score.IsUnset() {
+			vals[31] = psql.Arg(s.R8score.MustGetNull())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[32] = psql.Arg(s.Version.MustGet())
+		if !s.Yearweek.IsUnset() {
+			vals[32] = psql.Arg(s.Yearweek.MustGetNull())
 		} else {
 			vals[32] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[33] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[33] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -624,9 +641,9 @@ func (s HistorySpeciesabundanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery]
 }
 
 func (s HistorySpeciesabundanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 33)
+	exprs := make([]bob.Expression, 0, 34)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -763,6 +780,13 @@ func (s HistorySpeciesabundanceSetter) Expressions(prefix ...string) []bob.Expre
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "unknown")...),
 			psql.Arg(s.Unknown),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1101,7 +1125,7 @@ func (o *HistorySpeciesabundance) Organization(mods ...bob.Mod[*dialect.SelectQu
 }
 
 func (os HistorySpeciesabundanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1119,7 +1143,7 @@ func (os HistorySpeciesabundanceSlice) Organization(mods ...bob.Mod[*dialect.Sel
 
 func attachHistorySpeciesabundanceOrganization0(ctx context.Context, exec bob.Executor, count int, historySpeciesabundance0 *HistorySpeciesabundance, organization1 *Organization) (*HistorySpeciesabundance, error) {
 	setter := &HistorySpeciesabundanceSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historySpeciesabundance0.Update(ctx, exec, setter)
@@ -1166,7 +1190,7 @@ func (historySpeciesabundance0 *HistorySpeciesabundance) AttachOrganization(ctx 
 }
 
 type historySpeciesabundanceWhere[Q psql.Filterable] struct {
-	OrganizationID psql.WhereNullMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
 	Bloodedfem     psql.WhereNullMod[Q, int16]
 	Creationdate   psql.WhereNullMod[Q, int64]
 	Creator        psql.WhereNullMod[Q, string]
@@ -1186,6 +1210,7 @@ type historySpeciesabundanceWhere[Q psql.Filterable] struct {
 	Total          psql.WhereNullMod[Q, int64]
 	TrapdataID     psql.WhereNullMod[Q, string]
 	Unknown        psql.WhereNullMod[Q, int16]
+	Created        psql.WhereNullMod[Q, time.Time]
 	CreatedDate    psql.WhereNullMod[Q, int64]
 	CreatedUser    psql.WhereNullMod[Q, string]
 	GeometryX      psql.WhereNullMod[Q, float64]
@@ -1207,7 +1232,7 @@ func (historySpeciesabundanceWhere[Q]) AliasedAs(alias string) historySpeciesabu
 
 func buildHistorySpeciesabundanceWhere[Q psql.Filterable](cols historySpeciesabundanceColumns) historySpeciesabundanceWhere[Q] {
 	return historySpeciesabundanceWhere[Q]{
-		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Bloodedfem:     psql.WhereNull[Q, int16](cols.Bloodedfem),
 		Creationdate:   psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
@@ -1227,6 +1252,7 @@ func buildHistorySpeciesabundanceWhere[Q psql.Filterable](cols historySpeciesabu
 		Total:          psql.WhereNull[Q, int64](cols.Total),
 		TrapdataID:     psql.WhereNull[Q, string](cols.TrapdataID),
 		Unknown:        psql.WhereNull[Q, int16](cols.Unknown),
+		Created:        psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:    psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:      psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1344,11 +1370,8 @@ func (os HistorySpeciesabundanceSlice) LoadOrganization(ctx context.Context, exe
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

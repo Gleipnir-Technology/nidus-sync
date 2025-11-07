@@ -18,9 +18,9 @@ var HistoryLocationtrackings = Table[
 		OrganizationID: column{
 			Name:      "organization_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -93,6 +93,15 @@ var HistoryLocationtrackings = Table[
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -214,6 +223,7 @@ type historyLocationtrackingColumns struct {
 	Fieldtech      column
 	Globalid       column
 	Objectid       column
+	Created        column
 	CreatedDate    column
 	CreatedUser    column
 	GeometryX      column
@@ -225,7 +235,7 @@ type historyLocationtrackingColumns struct {
 
 func (c historyLocationtrackingColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accuracy, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Objectid, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
+		c.OrganizationID, c.Accuracy, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Fieldtech, c.Globalid, c.Objectid, c.Created, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Version,
 	}
 }
 

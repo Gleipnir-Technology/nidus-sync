@@ -26,7 +26,7 @@ import (
 
 // FSPolygonlocation is an object representing the database table.
 type FSPolygonlocation struct {
-	OrganizationID          null.Val[int32]   `db:"organization_id" `
+	OrganizationID          int32             `db:"organization_id" `
 	Accessdesc              null.Val[string]  `db:"accessdesc" `
 	Acres                   null.Val[float64] `db:"acres" `
 	Active                  null.Val[int16]   `db:"active" `
@@ -209,7 +209,7 @@ func (fsPolygonlocationColumns) AliasedAs(alias string) fsPolygonlocationColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSPolygonlocationSetter struct {
-	OrganizationID          omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID          omit.Val[int32]       `db:"organization_id" `
 	Accessdesc              omitnull.Val[string]  `db:"accessdesc" `
 	Acres                   omitnull.Val[float64] `db:"acres" `
 	Active                  omitnull.Val[int16]   `db:"active" `
@@ -259,7 +259,7 @@ type FSPolygonlocationSetter struct {
 
 func (s FSPolygonlocationSetter) SetColumns() []string {
 	vals := make([]string, 0, 46)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Accessdesc.IsUnset() {
@@ -401,8 +401,8 @@ func (s FSPolygonlocationSetter) SetColumns() []string {
 }
 
 func (s FSPolygonlocationSetter) Overwrite(t *FSPolygonlocation) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Accessdesc.IsUnset() {
 		t.Accessdesc = s.Accessdesc.MustGetNull()
@@ -548,8 +548,8 @@ func (s *FSPolygonlocationSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 46)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -835,7 +835,7 @@ func (s FSPolygonlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s FSPolygonlocationSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 46)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1391,7 +1391,7 @@ func (o *FSPolygonlocation) Organization(mods ...bob.Mod[*dialect.SelectQuery]) 
 }
 
 func (os FSPolygonlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1409,7 +1409,7 @@ func (os FSPolygonlocationSlice) Organization(mods ...bob.Mod[*dialect.SelectQue
 
 func attachFSPolygonlocationOrganization0(ctx context.Context, exec bob.Executor, count int, fsPolygonlocation0 *FSPolygonlocation, organization1 *Organization) (*FSPolygonlocation, error) {
 	setter := &FSPolygonlocationSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := fsPolygonlocation0.Update(ctx, exec, setter)
@@ -1456,7 +1456,7 @@ func (fsPolygonlocation0 *FSPolygonlocation) AttachOrganization(ctx context.Cont
 }
 
 type fsPolygonlocationWhere[Q psql.Filterable] struct {
-	OrganizationID          psql.WhereNullMod[Q, int32]
+	OrganizationID          psql.WhereMod[Q, int32]
 	Accessdesc              psql.WhereNullMod[Q, string]
 	Acres                   psql.WhereNullMod[Q, float64]
 	Active                  psql.WhereNullMod[Q, int16]
@@ -1510,7 +1510,7 @@ func (fsPolygonlocationWhere[Q]) AliasedAs(alias string) fsPolygonlocationWhere[
 
 func buildFSPolygonlocationWhere[Q psql.Filterable](cols fsPolygonlocationColumns) fsPolygonlocationWhere[Q] {
 	return fsPolygonlocationWhere[Q]{
-		OrganizationID:          psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:          psql.Where[Q, int32](cols.OrganizationID),
 		Accessdesc:              psql.WhereNull[Q, string](cols.Accessdesc),
 		Acres:                   psql.WhereNull[Q, float64](cols.Acres),
 		Active:                  psql.WhereNull[Q, int16](cols.Active),
@@ -1660,11 +1660,8 @@ func (os FSPolygonlocationSlice) LoadOrganization(ctx context.Context, exec bob.
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

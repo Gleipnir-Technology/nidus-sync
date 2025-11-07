@@ -25,7 +25,7 @@ import (
 
 // HistoryProposedtreatmentarea is an object representing the database table.
 type HistoryProposedtreatmentarea struct {
-	OrganizationID    null.Val[int32]   `db:"organization_id" `
+	OrganizationID    int32             `db:"organization_id" `
 	Acres             null.Val[float64] `db:"acres" `
 	Comments          null.Val[string]  `db:"comments" `
 	Completed         null.Val[int16]   `db:"completed" `
@@ -181,7 +181,7 @@ func (historyProposedtreatmentareaColumns) AliasedAs(alias string) historyPropos
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryProposedtreatmentareaSetter struct {
-	OrganizationID    omitnull.Val[int32]   `db:"organization_id" `
+	OrganizationID    omit.Val[int32]       `db:"organization_id" `
 	Acres             omitnull.Val[float64] `db:"acres" `
 	Comments          omitnull.Val[string]  `db:"comments" `
 	Completed         omitnull.Val[int16]   `db:"completed" `
@@ -222,7 +222,7 @@ type HistoryProposedtreatmentareaSetter struct {
 
 func (s HistoryProposedtreatmentareaSetter) SetColumns() []string {
 	vals := make([]string, 0, 37)
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Acres.IsUnset() {
@@ -337,8 +337,8 @@ func (s HistoryProposedtreatmentareaSetter) SetColumns() []string {
 }
 
 func (s HistoryProposedtreatmentareaSetter) Overwrite(t *HistoryProposedtreatmentarea) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Acres.IsUnset() {
 		t.Acres = s.Acres.MustGetNull()
@@ -457,8 +457,8 @@ func (s *HistoryProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 37)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -690,7 +690,7 @@ func (s HistoryProposedtreatmentareaSetter) UpdateMod() bob.Mod[*dialect.UpdateQ
 func (s HistoryProposedtreatmentareaSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 37)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1193,7 +1193,7 @@ func (o *HistoryProposedtreatmentarea) Organization(mods ...bob.Mod[*dialect.Sel
 }
 
 func (os HistoryProposedtreatmentareaSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1211,7 +1211,7 @@ func (os HistoryProposedtreatmentareaSlice) Organization(mods ...bob.Mod[*dialec
 
 func attachHistoryProposedtreatmentareaOrganization0(ctx context.Context, exec bob.Executor, count int, historyProposedtreatmentarea0 *HistoryProposedtreatmentarea, organization1 *Organization) (*HistoryProposedtreatmentarea, error) {
 	setter := &HistoryProposedtreatmentareaSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyProposedtreatmentarea0.Update(ctx, exec, setter)
@@ -1258,7 +1258,7 @@ func (historyProposedtreatmentarea0 *HistoryProposedtreatmentarea) AttachOrganiz
 }
 
 type historyProposedtreatmentareaWhere[Q psql.Filterable] struct {
-	OrganizationID    psql.WhereNullMod[Q, int32]
+	OrganizationID    psql.WhereMod[Q, int32]
 	Acres             psql.WhereNullMod[Q, float64]
 	Comments          psql.WhereNullMod[Q, string]
 	Completed         psql.WhereNullMod[Q, int16]
@@ -1303,7 +1303,7 @@ func (historyProposedtreatmentareaWhere[Q]) AliasedAs(alias string) historyPropo
 
 func buildHistoryProposedtreatmentareaWhere[Q psql.Filterable](cols historyProposedtreatmentareaColumns) historyProposedtreatmentareaWhere[Q] {
 	return historyProposedtreatmentareaWhere[Q]{
-		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
 		Acres:             psql.WhereNull[Q, float64](cols.Acres),
 		Comments:          psql.WhereNull[Q, string](cols.Comments),
 		Completed:         psql.WhereNull[Q, int16](cols.Completed),
@@ -1444,11 +1444,8 @@ func (os HistoryProposedtreatmentareaSlice) LoadOrganization(ctx context.Context
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

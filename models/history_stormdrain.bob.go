@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,29 +26,30 @@ import (
 
 // HistoryStormdrain is an object representing the database table.
 type HistoryStormdrain struct {
-	OrganizationID    null.Val[int32]   `db:"organization_id" `
-	Creationdate      null.Val[int64]   `db:"creationdate" `
-	Creator           null.Val[string]  `db:"creator" `
-	Editdate          null.Val[int64]   `db:"editdate" `
-	Editor            null.Val[string]  `db:"editor" `
-	Globalid          null.Val[string]  `db:"globalid" `
-	Jurisdiction      null.Val[string]  `db:"jurisdiction" `
-	Lastaction        null.Val[string]  `db:"lastaction" `
-	Laststatus        null.Val[string]  `db:"laststatus" `
-	Lasttreatdate     null.Val[int64]   `db:"lasttreatdate" `
-	Nexttreatmentdate null.Val[int64]   `db:"nexttreatmentdate" `
-	Objectid          int32             `db:"objectid,pk" `
-	Symbology         null.Val[string]  `db:"symbology" `
-	Type              null.Val[string]  `db:"type" `
-	Zone              null.Val[string]  `db:"zone" `
-	Zone2             null.Val[string]  `db:"zone2" `
-	CreatedDate       null.Val[int64]   `db:"created_date" `
-	CreatedUser       null.Val[string]  `db:"created_user" `
-	GeometryX         null.Val[float64] `db:"geometry_x" `
-	GeometryY         null.Val[float64] `db:"geometry_y" `
-	LastEditedDate    null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser    null.Val[string]  `db:"last_edited_user" `
-	Version           int32             `db:"version,pk" `
+	OrganizationID    int32               `db:"organization_id" `
+	Creationdate      null.Val[int64]     `db:"creationdate" `
+	Creator           null.Val[string]    `db:"creator" `
+	Editdate          null.Val[int64]     `db:"editdate" `
+	Editor            null.Val[string]    `db:"editor" `
+	Globalid          null.Val[string]    `db:"globalid" `
+	Jurisdiction      null.Val[string]    `db:"jurisdiction" `
+	Lastaction        null.Val[string]    `db:"lastaction" `
+	Laststatus        null.Val[string]    `db:"laststatus" `
+	Lasttreatdate     null.Val[int64]     `db:"lasttreatdate" `
+	Nexttreatmentdate null.Val[int64]     `db:"nexttreatmentdate" `
+	Objectid          int32               `db:"objectid,pk" `
+	Symbology         null.Val[string]    `db:"symbology" `
+	Type              null.Val[string]    `db:"type" `
+	Zone              null.Val[string]    `db:"zone" `
+	Zone2             null.Val[string]    `db:"zone2" `
+	Created           null.Val[time.Time] `db:"created" `
+	CreatedDate       null.Val[int64]     `db:"created_date" `
+	CreatedUser       null.Val[string]    `db:"created_user" `
+	GeometryX         null.Val[float64]   `db:"geometry_x" `
+	GeometryY         null.Val[float64]   `db:"geometry_y" `
+	LastEditedDate    null.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser    null.Val[string]    `db:"last_edited_user" `
+	Version           int32               `db:"version,pk" `
 
 	R historyStormdrainR `db:"-" `
 }
@@ -70,7 +72,7 @@ type historyStormdrainR struct {
 func buildHistoryStormdrainColumns(alias string) historyStormdrainColumns {
 	return historyStormdrainColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "jurisdiction", "lastaction", "laststatus", "lasttreatdate", "nexttreatmentdate", "objectid", "symbology", "type", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
+			"organization_id", "creationdate", "creator", "editdate", "editor", "globalid", "jurisdiction", "lastaction", "laststatus", "lasttreatdate", "nexttreatmentdate", "objectid", "symbology", "type", "zone", "zone2", "created", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "version",
 		).WithParent("history_stormdrain"),
 		tableAlias:        alias,
 		OrganizationID:    psql.Quote(alias, "organization_id"),
@@ -89,6 +91,7 @@ func buildHistoryStormdrainColumns(alias string) historyStormdrainColumns {
 		Type:              psql.Quote(alias, "type"),
 		Zone:              psql.Quote(alias, "zone"),
 		Zone2:             psql.Quote(alias, "zone2"),
+		Created:           psql.Quote(alias, "created"),
 		CreatedDate:       psql.Quote(alias, "created_date"),
 		CreatedUser:       psql.Quote(alias, "created_user"),
 		GeometryX:         psql.Quote(alias, "geometry_x"),
@@ -118,6 +121,7 @@ type historyStormdrainColumns struct {
 	Type              psql.Expression
 	Zone              psql.Expression
 	Zone2             psql.Expression
+	Created           psql.Expression
 	CreatedDate       psql.Expression
 	CreatedUser       psql.Expression
 	GeometryX         psql.Expression
@@ -139,34 +143,35 @@ func (historyStormdrainColumns) AliasedAs(alias string) historyStormdrainColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryStormdrainSetter struct {
-	OrganizationID    omitnull.Val[int32]   `db:"organization_id" `
-	Creationdate      omitnull.Val[int64]   `db:"creationdate" `
-	Creator           omitnull.Val[string]  `db:"creator" `
-	Editdate          omitnull.Val[int64]   `db:"editdate" `
-	Editor            omitnull.Val[string]  `db:"editor" `
-	Globalid          omitnull.Val[string]  `db:"globalid" `
-	Jurisdiction      omitnull.Val[string]  `db:"jurisdiction" `
-	Lastaction        omitnull.Val[string]  `db:"lastaction" `
-	Laststatus        omitnull.Val[string]  `db:"laststatus" `
-	Lasttreatdate     omitnull.Val[int64]   `db:"lasttreatdate" `
-	Nexttreatmentdate omitnull.Val[int64]   `db:"nexttreatmentdate" `
-	Objectid          omit.Val[int32]       `db:"objectid,pk" `
-	Symbology         omitnull.Val[string]  `db:"symbology" `
-	Type              omitnull.Val[string]  `db:"type" `
-	Zone              omitnull.Val[string]  `db:"zone" `
-	Zone2             omitnull.Val[string]  `db:"zone2" `
-	CreatedDate       omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser       omitnull.Val[string]  `db:"created_user" `
-	GeometryX         omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY         omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate    omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser    omitnull.Val[string]  `db:"last_edited_user" `
-	Version           omit.Val[int32]       `db:"version,pk" `
+	OrganizationID    omit.Val[int32]         `db:"organization_id" `
+	Creationdate      omitnull.Val[int64]     `db:"creationdate" `
+	Creator           omitnull.Val[string]    `db:"creator" `
+	Editdate          omitnull.Val[int64]     `db:"editdate" `
+	Editor            omitnull.Val[string]    `db:"editor" `
+	Globalid          omitnull.Val[string]    `db:"globalid" `
+	Jurisdiction      omitnull.Val[string]    `db:"jurisdiction" `
+	Lastaction        omitnull.Val[string]    `db:"lastaction" `
+	Laststatus        omitnull.Val[string]    `db:"laststatus" `
+	Lasttreatdate     omitnull.Val[int64]     `db:"lasttreatdate" `
+	Nexttreatmentdate omitnull.Val[int64]     `db:"nexttreatmentdate" `
+	Objectid          omit.Val[int32]         `db:"objectid,pk" `
+	Symbology         omitnull.Val[string]    `db:"symbology" `
+	Type              omitnull.Val[string]    `db:"type" `
+	Zone              omitnull.Val[string]    `db:"zone" `
+	Zone2             omitnull.Val[string]    `db:"zone2" `
+	Created           omitnull.Val[time.Time] `db:"created" `
+	CreatedDate       omitnull.Val[int64]     `db:"created_date" `
+	CreatedUser       omitnull.Val[string]    `db:"created_user" `
+	GeometryX         omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY         omitnull.Val[float64]   `db:"geometry_y" `
+	LastEditedDate    omitnull.Val[int64]     `db:"last_edited_date" `
+	LastEditedUser    omitnull.Val[string]    `db:"last_edited_user" `
+	Version           omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryStormdrainSetter) SetColumns() []string {
-	vals := make([]string, 0, 23)
-	if !s.OrganizationID.IsUnset() {
+	vals := make([]string, 0, 24)
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if !s.Creationdate.IsUnset() {
@@ -214,6 +219,9 @@ func (s HistoryStormdrainSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
+	}
 	if !s.CreatedDate.IsUnset() {
 		vals = append(vals, "created_date")
 	}
@@ -239,8 +247,8 @@ func (s HistoryStormdrainSetter) SetColumns() []string {
 }
 
 func (s HistoryStormdrainSetter) Overwrite(t *HistoryStormdrain) {
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
@@ -287,6 +295,9 @@ func (s HistoryStormdrainSetter) Overwrite(t *HistoryStormdrain) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.CreatedDate.IsUnset() {
 		t.CreatedDate = s.CreatedDate.MustGetNull()
 	}
@@ -316,9 +327,9 @@ func (s *HistoryStormdrainSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 23)
-		if !s.OrganizationID.IsUnset() {
-			vals[0] = psql.Arg(s.OrganizationID.MustGetNull())
+		vals := make([]bob.Expression, 24)
+		if s.OrganizationID.IsValue() {
+			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -413,46 +424,52 @@ func (s *HistoryStormdrainSetter) Apply(q *dialect.InsertQuery) {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedDate.IsUnset() {
-			vals[16] = psql.Arg(s.CreatedDate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[16] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.CreatedUser.IsUnset() {
-			vals[17] = psql.Arg(s.CreatedUser.MustGetNull())
+		if !s.CreatedDate.IsUnset() {
+			vals[17] = psql.Arg(s.CreatedDate.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[18] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.CreatedUser.IsUnset() {
+			vals[18] = psql.Arg(s.CreatedUser.MustGetNull())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[19] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[19] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedDate.IsUnset() {
-			vals[20] = psql.Arg(s.LastEditedDate.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[20] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if !s.LastEditedUser.IsUnset() {
-			vals[21] = psql.Arg(s.LastEditedUser.MustGetNull())
+		if !s.LastEditedDate.IsUnset() {
+			vals[21] = psql.Arg(s.LastEditedDate.MustGetNull())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[22] = psql.Arg(s.Version.MustGet())
+		if !s.LastEditedUser.IsUnset() {
+			vals[22] = psql.Arg(s.LastEditedUser.MustGetNull())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[23] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[23] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -464,9 +481,9 @@ func (s HistoryStormdrainSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryStormdrainSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 23)
+	exprs := make([]bob.Expression, 0, 24)
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -575,6 +592,13 @@ func (s HistoryStormdrainSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "zone2")...),
 			psql.Arg(s.Zone2),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -871,7 +895,7 @@ func (o *HistoryStormdrain) Organization(mods ...bob.Mod[*dialect.SelectQuery]) 
 }
 
 func (os HistoryStormdrainSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -889,7 +913,7 @@ func (os HistoryStormdrainSlice) Organization(mods ...bob.Mod[*dialect.SelectQue
 
 func attachHistoryStormdrainOrganization0(ctx context.Context, exec bob.Executor, count int, historyStormdrain0 *HistoryStormdrain, organization1 *Organization) (*HistoryStormdrain, error) {
 	setter := &HistoryStormdrainSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := historyStormdrain0.Update(ctx, exec, setter)
@@ -936,7 +960,7 @@ func (historyStormdrain0 *HistoryStormdrain) AttachOrganization(ctx context.Cont
 }
 
 type historyStormdrainWhere[Q psql.Filterable] struct {
-	OrganizationID    psql.WhereNullMod[Q, int32]
+	OrganizationID    psql.WhereMod[Q, int32]
 	Creationdate      psql.WhereNullMod[Q, int64]
 	Creator           psql.WhereNullMod[Q, string]
 	Editdate          psql.WhereNullMod[Q, int64]
@@ -952,6 +976,7 @@ type historyStormdrainWhere[Q psql.Filterable] struct {
 	Type              psql.WhereNullMod[Q, string]
 	Zone              psql.WhereNullMod[Q, string]
 	Zone2             psql.WhereNullMod[Q, string]
+	Created           psql.WhereNullMod[Q, time.Time]
 	CreatedDate       psql.WhereNullMod[Q, int64]
 	CreatedUser       psql.WhereNullMod[Q, string]
 	GeometryX         psql.WhereNullMod[Q, float64]
@@ -967,7 +992,7 @@ func (historyStormdrainWhere[Q]) AliasedAs(alias string) historyStormdrainWhere[
 
 func buildHistoryStormdrainWhere[Q psql.Filterable](cols historyStormdrainColumns) historyStormdrainWhere[Q] {
 	return historyStormdrainWhere[Q]{
-		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
 		Creationdate:      psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:           psql.WhereNull[Q, string](cols.Creator),
 		Editdate:          psql.WhereNull[Q, int64](cols.Editdate),
@@ -983,6 +1008,7 @@ func buildHistoryStormdrainWhere[Q psql.Filterable](cols historyStormdrainColumn
 		Type:              psql.WhereNull[Q, string](cols.Type),
 		Zone:              psql.WhereNull[Q, string](cols.Zone),
 		Zone2:             psql.WhereNull[Q, string](cols.Zone2),
+		Created:           psql.WhereNull[Q, time.Time](cols.Created),
 		CreatedDate:       psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:       psql.WhereNull[Q, string](cols.CreatedUser),
 		GeometryX:         psql.WhereNull[Q, float64](cols.GeometryX),
@@ -1094,11 +1120,8 @@ func (os HistoryStormdrainSlice) LoadOrganization(ctx context.Context, exec bob.
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

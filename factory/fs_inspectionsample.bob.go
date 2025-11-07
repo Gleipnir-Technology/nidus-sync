@@ -37,7 +37,7 @@ func (mods FSInspectionsampleModSlice) Apply(ctx context.Context, n *FSInspectio
 // FSInspectionsampleTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FSInspectionsampleTemplate struct {
-	OrganizationID func() null.Val[int32]
+	OrganizationID func() int32
 	Creationdate   func() null.Val[int64]
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
@@ -83,7 +83,7 @@ func (t FSInspectionsampleTemplate) setModelRels(o *models.FSInspectionsample) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.FSInspectionsamples = append(rel.R.FSInspectionsamples, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -95,7 +95,7 @@ func (o FSInspectionsampleTemplate) BuildSetter() *models.FSInspectionsampleSett
 
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -261,6 +261,10 @@ func (o FSInspectionsampleTemplate) BuildMany(number int) models.FSInspectionsam
 }
 
 func ensureCreatableFSInspectionsample(m *models.FSInspectionsampleSetter) {
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
@@ -273,25 +277,6 @@ func ensureCreatableFSInspectionsample(m *models.FSInspectionsampleSetter) {
 func (o *FSInspectionsampleTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FSInspectionsample) error {
 	var err error
 
-	isOrganizationDone, _ := fsInspectionsampleRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = fsInspectionsampleRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -302,10 +287,29 @@ func (o *FSInspectionsampleTemplate) Create(ctx context.Context, exec bob.Execut
 	opt := o.BuildSetter()
 	ensureCreatableFSInspectionsample(opt)
 
+	if o.r.Organization == nil {
+		FSInspectionsampleMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel0 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel0 = o.r.Organization.o.Build()
+	} else {
+		rel0, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel0.ID)
+
 	m, err := models.FSInspectionsamples.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -406,14 +410,14 @@ func (m fsInspectionsampleMods) RandomizeAllColumns(f *faker.Faker) FSInspection
 }
 
 // Set the model columns to this value
-func (m fsInspectionsampleMods) OrganizationID(val null.Val[int32]) FSInspectionsampleMod {
+func (m fsInspectionsampleMods) OrganizationID(val int32) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsInspectionsampleMods) OrganizationIDFunc(f func() null.Val[int32]) FSInspectionsampleMod {
+func (m fsInspectionsampleMods) OrganizationIDFunc(f func() int32) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
 		o.OrganizationID = f
 	})
@@ -428,32 +432,10 @@ func (m fsInspectionsampleMods) UnsetOrganizationID() FSInspectionsampleMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsInspectionsampleMods) RandomOrganizationID(f *faker.Faker) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsInspectionsampleMods) RandomOrganizationIDNotNull(f *faker.Faker) FSInspectionsampleMod {
-	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
