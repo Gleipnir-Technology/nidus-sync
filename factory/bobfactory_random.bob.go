@@ -4,6 +4,7 @@
 package factory
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -48,6 +49,43 @@ func random_enums_Hashtype(f *faker.Faker, limits ...string) enums.Hashtype {
 	var e enums.Hashtype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_float64(f *faker.Faker, limits ...string) float64 {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var precision int64 = 5
+	var scale int64 = 2
+
+	if len(limits) > 0 {
+		precision, _ = strconv.ParseInt(limits[0], 10, 32)
+	}
+
+	if len(limits) > 1 {
+		scale, _ = strconv.ParseInt(limits[1], 10, 32)
+	}
+
+	baseVal := f.Float64(10, -1, 1)
+	for baseVal == -1 || baseVal == 0 || baseVal == 1 {
+		baseVal = f.Float64(10, -1, 1)
+	}
+
+	scaleFloat := math.Pow10(int(scale))
+
+	val := baseVal * math.Pow10(int(precision))
+	val = math.Trunc(val) / scaleFloat
+
+	return val
+}
+
+func random_int16(f *faker.Faker, limits ...string) int16 {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	return f.Int16()
 }
 
 func random_int32(f *faker.Faker, limits ...string) int32 {

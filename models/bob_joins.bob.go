@@ -32,9 +32,63 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 }
 
 type joins[Q dialect.Joinable] struct {
-	OauthTokens   joinSet[oauthTokenJoins[Q]]
-	Organizations joinSet[organizationJoins[Q]]
-	Users         joinSet[userJoins[Q]]
+	FSContainerrelates             joinSet[fsContainerrelateJoins[Q]]
+	FSFieldscoutinglogs            joinSet[fsFieldscoutinglogJoins[Q]]
+	FSHabitatrelates               joinSet[fsHabitatrelateJoins[Q]]
+	FSInspectionsamples            joinSet[fsInspectionsampleJoins[Q]]
+	FSInspectionsampledetails      joinSet[fsInspectionsampledetailJoins[Q]]
+	FSLinelocations                joinSet[fsLinelocationJoins[Q]]
+	FSLocationtrackings            joinSet[fsLocationtrackingJoins[Q]]
+	FSMosquitoinspections          joinSet[fsMosquitoinspectionJoins[Q]]
+	FSPointlocations               joinSet[fsPointlocationJoins[Q]]
+	FSPolygonlocations             joinSet[fsPolygonlocationJoins[Q]]
+	FSPools                        joinSet[fsPoolJoins[Q]]
+	FSPooldetails                  joinSet[fsPooldetailJoins[Q]]
+	FSProposedtreatmentareas       joinSet[fsProposedtreatmentareaJoins[Q]]
+	FSQamosquitoinspections        joinSet[fsQamosquitoinspectionJoins[Q]]
+	FSRodentlocations              joinSet[fsRodentlocationJoins[Q]]
+	FSSamplecollections            joinSet[fsSamplecollectionJoins[Q]]
+	FSSamplelocations              joinSet[fsSamplelocationJoins[Q]]
+	FSServicerequests              joinSet[fsServicerequestJoins[Q]]
+	FSSpeciesabundances            joinSet[fsSpeciesabundanceJoins[Q]]
+	FSStormdrains                  joinSet[fsStormdrainJoins[Q]]
+	FSTimecards                    joinSet[fsTimecardJoins[Q]]
+	FSTrapdata                     joinSet[fsTrapdatumJoins[Q]]
+	FSTraplocations                joinSet[fsTraplocationJoins[Q]]
+	FSTreatments                   joinSet[fsTreatmentJoins[Q]]
+	FSTreatmentareas               joinSet[fsTreatmentareaJoins[Q]]
+	FSZones                        joinSet[fsZoneJoins[Q]]
+	FSZones2s                      joinSet[fsZones2Joins[Q]]
+	HistoryContainerrelates        joinSet[historyContainerrelateJoins[Q]]
+	HistoryFieldscoutinglogs       joinSet[historyFieldscoutinglogJoins[Q]]
+	HistoryHabitatrelates          joinSet[historyHabitatrelateJoins[Q]]
+	HistoryInspectionsamples       joinSet[historyInspectionsampleJoins[Q]]
+	HistoryInspectionsampledetails joinSet[historyInspectionsampledetailJoins[Q]]
+	HistoryLinelocations           joinSet[historyLinelocationJoins[Q]]
+	HistoryLocationtrackings       joinSet[historyLocationtrackingJoins[Q]]
+	HistoryMosquitoinspections     joinSet[historyMosquitoinspectionJoins[Q]]
+	HistoryPointlocations          joinSet[historyPointlocationJoins[Q]]
+	HistoryPolygonlocations        joinSet[historyPolygonlocationJoins[Q]]
+	HistoryPools                   joinSet[historyPoolJoins[Q]]
+	HistoryPooldetails             joinSet[historyPooldetailJoins[Q]]
+	HistoryProposedtreatmentareas  joinSet[historyProposedtreatmentareaJoins[Q]]
+	HistoryQamosquitoinspections   joinSet[historyQamosquitoinspectionJoins[Q]]
+	HistoryRodentlocations         joinSet[historyRodentlocationJoins[Q]]
+	HistorySamplecollections       joinSet[historySamplecollectionJoins[Q]]
+	HistorySamplelocations         joinSet[historySamplelocationJoins[Q]]
+	HistoryServicerequests         joinSet[historyServicerequestJoins[Q]]
+	HistorySpeciesabundances       joinSet[historySpeciesabundanceJoins[Q]]
+	HistoryStormdrains             joinSet[historyStormdrainJoins[Q]]
+	HistoryTimecards               joinSet[historyTimecardJoins[Q]]
+	HistoryTrapdata                joinSet[historyTrapdatumJoins[Q]]
+	HistoryTraplocations           joinSet[historyTraplocationJoins[Q]]
+	HistoryTreatments              joinSet[historyTreatmentJoins[Q]]
+	HistoryTreatmentareas          joinSet[historyTreatmentareaJoins[Q]]
+	HistoryZones                   joinSet[historyZoneJoins[Q]]
+	HistoryZones2s                 joinSet[historyZones2Joins[Q]]
+	OauthTokens                    joinSet[oauthTokenJoins[Q]]
+	Organizations                  joinSet[organizationJoins[Q]]
+	Users                          joinSet[userJoins[Q]]
 }
 
 func buildJoinSet[Q interface{ aliasedAs(string) Q }, C any, F func(C, string) Q](c C, f F) joinSet[Q] {
@@ -47,9 +101,63 @@ func buildJoinSet[Q interface{ aliasedAs(string) Q }, C any, F func(C, string) Q
 
 func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
-		OauthTokens:   buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
-		Organizations: buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
-		Users:         buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
+		FSContainerrelates:             buildJoinSet[fsContainerrelateJoins[Q]](FSContainerrelates.Columns, buildFSContainerrelateJoins),
+		FSFieldscoutinglogs:            buildJoinSet[fsFieldscoutinglogJoins[Q]](FSFieldscoutinglogs.Columns, buildFSFieldscoutinglogJoins),
+		FSHabitatrelates:               buildJoinSet[fsHabitatrelateJoins[Q]](FSHabitatrelates.Columns, buildFSHabitatrelateJoins),
+		FSInspectionsamples:            buildJoinSet[fsInspectionsampleJoins[Q]](FSInspectionsamples.Columns, buildFSInspectionsampleJoins),
+		FSInspectionsampledetails:      buildJoinSet[fsInspectionsampledetailJoins[Q]](FSInspectionsampledetails.Columns, buildFSInspectionsampledetailJoins),
+		FSLinelocations:                buildJoinSet[fsLinelocationJoins[Q]](FSLinelocations.Columns, buildFSLinelocationJoins),
+		FSLocationtrackings:            buildJoinSet[fsLocationtrackingJoins[Q]](FSLocationtrackings.Columns, buildFSLocationtrackingJoins),
+		FSMosquitoinspections:          buildJoinSet[fsMosquitoinspectionJoins[Q]](FSMosquitoinspections.Columns, buildFSMosquitoinspectionJoins),
+		FSPointlocations:               buildJoinSet[fsPointlocationJoins[Q]](FSPointlocations.Columns, buildFSPointlocationJoins),
+		FSPolygonlocations:             buildJoinSet[fsPolygonlocationJoins[Q]](FSPolygonlocations.Columns, buildFSPolygonlocationJoins),
+		FSPools:                        buildJoinSet[fsPoolJoins[Q]](FSPools.Columns, buildFSPoolJoins),
+		FSPooldetails:                  buildJoinSet[fsPooldetailJoins[Q]](FSPooldetails.Columns, buildFSPooldetailJoins),
+		FSProposedtreatmentareas:       buildJoinSet[fsProposedtreatmentareaJoins[Q]](FSProposedtreatmentareas.Columns, buildFSProposedtreatmentareaJoins),
+		FSQamosquitoinspections:        buildJoinSet[fsQamosquitoinspectionJoins[Q]](FSQamosquitoinspections.Columns, buildFSQamosquitoinspectionJoins),
+		FSRodentlocations:              buildJoinSet[fsRodentlocationJoins[Q]](FSRodentlocations.Columns, buildFSRodentlocationJoins),
+		FSSamplecollections:            buildJoinSet[fsSamplecollectionJoins[Q]](FSSamplecollections.Columns, buildFSSamplecollectionJoins),
+		FSSamplelocations:              buildJoinSet[fsSamplelocationJoins[Q]](FSSamplelocations.Columns, buildFSSamplelocationJoins),
+		FSServicerequests:              buildJoinSet[fsServicerequestJoins[Q]](FSServicerequests.Columns, buildFSServicerequestJoins),
+		FSSpeciesabundances:            buildJoinSet[fsSpeciesabundanceJoins[Q]](FSSpeciesabundances.Columns, buildFSSpeciesabundanceJoins),
+		FSStormdrains:                  buildJoinSet[fsStormdrainJoins[Q]](FSStormdrains.Columns, buildFSStormdrainJoins),
+		FSTimecards:                    buildJoinSet[fsTimecardJoins[Q]](FSTimecards.Columns, buildFSTimecardJoins),
+		FSTrapdata:                     buildJoinSet[fsTrapdatumJoins[Q]](FSTrapdata.Columns, buildFSTrapdatumJoins),
+		FSTraplocations:                buildJoinSet[fsTraplocationJoins[Q]](FSTraplocations.Columns, buildFSTraplocationJoins),
+		FSTreatments:                   buildJoinSet[fsTreatmentJoins[Q]](FSTreatments.Columns, buildFSTreatmentJoins),
+		FSTreatmentareas:               buildJoinSet[fsTreatmentareaJoins[Q]](FSTreatmentareas.Columns, buildFSTreatmentareaJoins),
+		FSZones:                        buildJoinSet[fsZoneJoins[Q]](FSZones.Columns, buildFSZoneJoins),
+		FSZones2s:                      buildJoinSet[fsZones2Joins[Q]](FSZones2s.Columns, buildFSZones2Joins),
+		HistoryContainerrelates:        buildJoinSet[historyContainerrelateJoins[Q]](HistoryContainerrelates.Columns, buildHistoryContainerrelateJoins),
+		HistoryFieldscoutinglogs:       buildJoinSet[historyFieldscoutinglogJoins[Q]](HistoryFieldscoutinglogs.Columns, buildHistoryFieldscoutinglogJoins),
+		HistoryHabitatrelates:          buildJoinSet[historyHabitatrelateJoins[Q]](HistoryHabitatrelates.Columns, buildHistoryHabitatrelateJoins),
+		HistoryInspectionsamples:       buildJoinSet[historyInspectionsampleJoins[Q]](HistoryInspectionsamples.Columns, buildHistoryInspectionsampleJoins),
+		HistoryInspectionsampledetails: buildJoinSet[historyInspectionsampledetailJoins[Q]](HistoryInspectionsampledetails.Columns, buildHistoryInspectionsampledetailJoins),
+		HistoryLinelocations:           buildJoinSet[historyLinelocationJoins[Q]](HistoryLinelocations.Columns, buildHistoryLinelocationJoins),
+		HistoryLocationtrackings:       buildJoinSet[historyLocationtrackingJoins[Q]](HistoryLocationtrackings.Columns, buildHistoryLocationtrackingJoins),
+		HistoryMosquitoinspections:     buildJoinSet[historyMosquitoinspectionJoins[Q]](HistoryMosquitoinspections.Columns, buildHistoryMosquitoinspectionJoins),
+		HistoryPointlocations:          buildJoinSet[historyPointlocationJoins[Q]](HistoryPointlocations.Columns, buildHistoryPointlocationJoins),
+		HistoryPolygonlocations:        buildJoinSet[historyPolygonlocationJoins[Q]](HistoryPolygonlocations.Columns, buildHistoryPolygonlocationJoins),
+		HistoryPools:                   buildJoinSet[historyPoolJoins[Q]](HistoryPools.Columns, buildHistoryPoolJoins),
+		HistoryPooldetails:             buildJoinSet[historyPooldetailJoins[Q]](HistoryPooldetails.Columns, buildHistoryPooldetailJoins),
+		HistoryProposedtreatmentareas:  buildJoinSet[historyProposedtreatmentareaJoins[Q]](HistoryProposedtreatmentareas.Columns, buildHistoryProposedtreatmentareaJoins),
+		HistoryQamosquitoinspections:   buildJoinSet[historyQamosquitoinspectionJoins[Q]](HistoryQamosquitoinspections.Columns, buildHistoryQamosquitoinspectionJoins),
+		HistoryRodentlocations:         buildJoinSet[historyRodentlocationJoins[Q]](HistoryRodentlocations.Columns, buildHistoryRodentlocationJoins),
+		HistorySamplecollections:       buildJoinSet[historySamplecollectionJoins[Q]](HistorySamplecollections.Columns, buildHistorySamplecollectionJoins),
+		HistorySamplelocations:         buildJoinSet[historySamplelocationJoins[Q]](HistorySamplelocations.Columns, buildHistorySamplelocationJoins),
+		HistoryServicerequests:         buildJoinSet[historyServicerequestJoins[Q]](HistoryServicerequests.Columns, buildHistoryServicerequestJoins),
+		HistorySpeciesabundances:       buildJoinSet[historySpeciesabundanceJoins[Q]](HistorySpeciesabundances.Columns, buildHistorySpeciesabundanceJoins),
+		HistoryStormdrains:             buildJoinSet[historyStormdrainJoins[Q]](HistoryStormdrains.Columns, buildHistoryStormdrainJoins),
+		HistoryTimecards:               buildJoinSet[historyTimecardJoins[Q]](HistoryTimecards.Columns, buildHistoryTimecardJoins),
+		HistoryTrapdata:                buildJoinSet[historyTrapdatumJoins[Q]](HistoryTrapdata.Columns, buildHistoryTrapdatumJoins),
+		HistoryTraplocations:           buildJoinSet[historyTraplocationJoins[Q]](HistoryTraplocations.Columns, buildHistoryTraplocationJoins),
+		HistoryTreatments:              buildJoinSet[historyTreatmentJoins[Q]](HistoryTreatments.Columns, buildHistoryTreatmentJoins),
+		HistoryTreatmentareas:          buildJoinSet[historyTreatmentareaJoins[Q]](HistoryTreatmentareas.Columns, buildHistoryTreatmentareaJoins),
+		HistoryZones:                   buildJoinSet[historyZoneJoins[Q]](HistoryZones.Columns, buildHistoryZoneJoins),
+		HistoryZones2s:                 buildJoinSet[historyZones2Joins[Q]](HistoryZones2s.Columns, buildHistoryZones2Joins),
+		OauthTokens:                    buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
+		Organizations:                  buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		Users:                          buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}
 }
 

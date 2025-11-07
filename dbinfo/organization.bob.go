@@ -51,6 +51,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		FieldseekerURL: column{
+			Name:      "fieldseeker_url",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -81,15 +90,16 @@ var Organizations = Table[
 }
 
 type organizationColumns struct {
-	ID         column
-	Name       column
-	ArcgisID   column
-	ArcgisName column
+	ID             column
+	Name           column
+	ArcgisID       column
+	ArcgisName     column
+	FieldseekerURL column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL,
 	}
 }
 

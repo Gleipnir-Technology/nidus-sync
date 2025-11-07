@@ -14,12 +14,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
+	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
@@ -154,10 +156,19 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	}
 	for _, result := range search.Results {
 		slog.Info("Got result", slog.String("name", result.Name))
-		//if result.Name == "FieldseekerGIS" {
-		//slog.Info("Found Fieldseeker", slog.String("url", result.URL))
-		//}
+		if result.Name == "FieldSeekerGIS" {
+			slog.Info("Found Fieldseeker", slog.String("url", result.URL))
+			setter := models.OrganizationSetter{
+				FieldseekerURL: omitnull.From(result.URL),
+			}
+			err = org.Update(ctx, PGInstance.BobDB, &setter)
+			if err != nil {
+				slog.Error("Failed to create new organization", slog.String("err", err.Error()))
+				return
+			}
+		}
 	}
+	NewOAuthTokenChannel <- struct{}{}
 }
 
 func handleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
@@ -195,7 +206,6 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 		return fmt.Errorf("Failed to save token to database: %v", err)
 	}
 	go updateArcgisUserData(context.Background(), user, token.AccessToken, accessExpires, token.RefreshToken, refreshExpires)
-	NewOAuthTokenChannel <- struct{}{}
 	return nil
 }
 
@@ -228,6 +238,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				maintainOAuth(workerCtx, oauth)
 			}()
 		}
+
 		select {
 		case <-ctx.Done():
 			slog.Info("Exiting refresh worker...")
@@ -242,6 +253,82 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 	}
 }
 
+func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature) (int, int, error) {
+	inserts := 0
+	updates := 0
+	offset := 0
+	count, err := fssync.QueryCount(layer.ID)
+	if err != nil {
+		return inserts, updates, fmt.Errorf("Failed to get counts for layer %s (%d): %v", layer.Name, layer.ID, err)
+	}
+	slog.Info("Starting on layer", slog.String("name", layer.Name), slog.Int("id", layer.ID))
+	if count.Count == 0 {
+		return inserts, updates, nil
+	}
+	for {
+		if offset >= count.Count {
+			break
+		}
+		query := arcgis.NewQuery()
+		query.ResultRecordCount = fssync.MaxRecordCount()
+		query.ResultOffset = offset
+		query.SpatialReference = "4326"
+		query.OutFields = "*"
+		query.Where = "1=1"
+		qr, err := fssync.DoQuery(
+			layer.ID,
+			query)
+		if err != nil {
+			return inserts, updates, fmt.Errorf("Failed to get layer %s (%d) at offset %d: %v", layer.Name, layer.ID, offset, err)
+		}
+		i, u, err := saveOrUpdateDBRecords(ctx, "FS_"+layer.Name, qr)
+		if err != nil {
+			saveRawQuery(fssync, layer, query, "failure.json")
+			return inserts, updates, fmt.Errorf("Failed to save records: %v", err)
+		}
+		inserts += i
+		updates += u
+		offset += len(qr.Features)
+	}
+	slog.Info("Finished layer", slog.Int("inserts", inserts), slog.Int("updates", updates), slog.Int("no change", count.Count-inserts-updates))
+	return inserts, updates, nil
+}
+
+func exportFieldseekerData(ctx context.Context, oauth *models.OauthToken) error {
+	slog.Info("Update Fieldseeker data")
+	ar := arcgis.NewArcGIS(
+		arcgis.AuthenticatorOAuth{
+			AccessToken:         oauth.AccessToken,
+			AccessTokenExpires:  oauth.AccessTokenExpires,
+			RefreshToken:        oauth.RefreshToken,
+			RefreshTokenExpires: oauth.RefreshTokenExpires,
+		},
+	)
+	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get org ID: %v", err)
+	}
+	fssync, err := fieldseeker.NewFieldSeeker(
+		ar,
+		row.FieldseekerURL.MustGet(),
+	)
+	if err != nil {
+		return fmt.Errorf("Failed to create fssync: %v", err)
+	}
+	inserts := 0
+	updates := 0
+	for _, layer := range fssync.FeatureServerLayers() {
+		i, u, err := downloadAllRecords(ctx, fssync, layer)
+		if err != nil {
+			return fmt.Errorf("Failed to get layer %s: %v", layer, err)
+		}
+		inserts += i
+		updates += u
+	}
+
+	return nil
+}
+
 func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
 	refreshDelay := time.Until(oauth.AccessTokenExpires)
 	slog.Info("Need to refresh oauth", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshDelay.Seconds()))
@@ -251,14 +338,26 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
 			slog.Error("Failed to refresh token", slog.String("err", err.Error()))
 			return
 		}
+		refreshDelay = time.Until(oauth.AccessTokenExpires)
 	}
-	ticker := time.NewTicker(refreshDelay)
+	refreshTicker := time.NewTicker(refreshDelay)
+	pollTicker := time.NewTicker(1)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
-
+		case <-refreshTicker.C:
+			err := refreshOAuth(ctx, oauth)
+			if err != nil {
+				slog.Error("Failed to refresh token", slog.String("err", err.Error()))
+				return
+			}
+		case <-pollTicker.C:
+			err := exportFieldseekerData(ctx, oauth)
+			if err != nil {
+				slog.Error("Failed to export Fieldseeker data", slog.String("err", err.Error()))
+			}
+			pollTicker = time.NewTicker(15 * time.Minute)
 		}
 	}
 
@@ -283,18 +382,16 @@ func refreshOAuth(ctx context.Context, oauth *models.OauthToken) error {
 		return fmt.Errorf("Failed to handle request: %v", err)
 	}
 	accessExpires := futureUTCTimestamp(token.ExpiresIn)
-	refreshExpires := futureUTCTimestamp(token.RefreshTokenExpiresIn)
 	setter := models.OauthTokenSetter{
-		AccessToken:         omit.From(token.AccessToken),
-		AccessTokenExpires:  omit.From(accessExpires),
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		Username:            omit.From(token.Username),
+		AccessToken:        omit.From(token.AccessToken),
+		AccessTokenExpires: omit.From(accessExpires),
+		Username:           omit.From(token.Username),
 	}
 	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %v", err)
 	}
+	slog.Info("Updated oauth token", slog.Int("oauth token id", int(oauth.ID)))
 	return nil
 }
 
@@ -381,4 +478,359 @@ func saveResponse(data []byte, filename string) {
 		return
 	}
 	slog.Info("Wrote response", slog.String("filename", filename))
+}
+
+func saveRawQuery(fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature, query *arcgis.Query, filename string) {
+	output, err := os.Create(filename)
+	if err != nil {
+		slog.Error("Failed to create file", slog.String("filename", filename))
+		return
+	}
+	qr, err := fssync.DoQueryRaw(
+		layer.ID,
+		query)
+	if err != nil {
+		slog.Error("Failed to do query", slog.String("err", err.Error()))
+		return
+	}
+	_, err = output.Write(qr)
+	if err != nil {
+		slog.Error("Failed to write results", slog.String("err", err.Error()))
+		return
+	}
+	slog.Info("Wrote failed query", slog.String("filename", filename))
+}
+
+func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryResult) (int, int, error) {
+	inserts, updates := 0, 0
+	sorted_columns := make([]string, 0, len(qr.Fields))
+	for _, f := range qr.Fields {
+		sorted_columns = append(sorted_columns, f.Name)
+	}
+	sort.Strings(sorted_columns)
+
+	objectids := make([]int, 0)
+	for _, l := range qr.Features {
+		oid := l.Attributes["OBJECTID"].(float64)
+		objectids = append(objectids, int(oid))
+	}
+
+	rows_by_objectid, err := rowmapViaQuery(ctx, table, sorted_columns, objectids)
+	if err != nil {
+		return inserts, updates, fmt.Errorf("Failed to get existing rows: %v", err)
+	}
+	// log.Println("Rows from query", len(rows_by_objectid))
+
+	for _, feature := range qr.Features {
+		oid := feature.Attributes["OBJECTID"].(float64)
+		row := rows_by_objectid[int(oid)]
+		// If we have no matching row we'll need to create it
+		if len(row) == 0 {
+
+			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
+				return inserts, updates, fmt.Errorf("Failed to insert row: %v", err)
+			}
+			inserts += 1
+		} else if hasUpdates(row, feature) {
+			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature); err != nil {
+				return inserts, updates, fmt.Errorf("Failed to update row: %v", err)
+			}
+			updates += 1
+		}
+	}
+	return inserts, updates, nil
+}
+
+// Produces a map of OBJECTID to a 'row' which is in turn a map of column names to their values as strings
+func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, objectids []int) (map[int]map[string]string, error) {
+	result := make(map[int]map[string]string)
+
+	query := selectAllFromQueryResult(table, sorted_columns)
+
+	args := pgx.NamedArgs{
+		"objectids": objectids,
+	}
+	rows, err := PGInstance.PGXPool.Query(ctx, query, args)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query rows: %v", err)
+	}
+	defer rows.Close()
+
+	// +2 for geometry x and geometry x
+	columnNames := make([]string, len(sorted_columns)+2)
+	for i, c := range sorted_columns {
+		columnNames[i] = c
+	}
+	columnNames[len(sorted_columns)] = "geometry_x"
+	columnNames[len(sorted_columns)+1] = "geometry_y"
+
+	rowSlice, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (map[string]string, error) {
+		fieldDescriptions := row.FieldDescriptions()
+		values := make([]interface{}, len(fieldDescriptions))
+		valuePtrs := make([]interface{}, len(fieldDescriptions))
+
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+
+		if err := row.Scan(valuePtrs...); err != nil {
+			return nil, err
+		}
+
+		result := make(map[string]string)
+		for i, fd := range fieldDescriptions {
+			if values[i] != nil {
+				result[fd.Name] = fmt.Sprintf("%v", values[i])
+				//log.Printf("col %v type %T val %v", fd.Name, values[i], values[i])
+			} else {
+				result[fd.Name] = ""
+			}
+		}
+
+		return result, nil
+	})
+	if err != nil {
+		return result, fmt.Errorf("Failed to collect rows: %v", err)
+	}
+	for _, row := range rowSlice {
+		o := row["objectid"]
+		objectid, err := strconv.Atoi(o)
+		if err != nil {
+			return result, fmt.Errorf("Failed to parse objectid %s: %v", o, err)
+		}
+		result[objectid] = row
+	}
+	return result, nil
+}
+
+func insertRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	var options pgx.TxOptions
+	transaction, err := PGInstance.PGXPool.BeginTx(ctx, options)
+	if err != nil {
+		return fmt.Errorf("Unable to start transaction")
+	}
+
+	err = insertRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
+	if err != nil {
+		transaction.Rollback(ctx)
+		return fmt.Errorf("Unable to insert FS: %v", err)
+	}
+
+	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, 1)
+	if err != nil {
+		transaction.Rollback(ctx)
+		return fmt.Errorf("Failed to insert history: %v", err)
+	}
+
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit transaction: %v", err)
+	}
+	return nil
+}
+
+func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Create the query to produce the main row
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(table)
+	sb.WriteString(" (")
+	for _, field := range sorted_columns {
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("geometry_x,geometry_y,updated")
+	sb.WriteString(")\nVALUES (")
+	for _, field := range sorted_columns {
+		sb.WriteString("@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("@geometry_x,@geometry_y,@updated)")
+
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	// specially add geometry since it isn't in the list of attributes
+	args["geometry_x"] = feature.Geometry.X
+	args["geometry_y"] = feature.Geometry.Y
+	args["updated"] = time.Now()
+
+	_, err := transaction.Exec(ctx, sb.String(), args)
+	if err != nil {
+		return fmt.Errorf("Failed to insert row into %s: %v", table, err)
+	}
+	return nil
+}
+func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
+	for key, value := range feature.Attributes {
+		rowdata := row[strings.ToLower(key)]
+		// We'll accept any 'nil' as represented by the empty string in the database
+		if value == nil {
+			if rowdata == "" {
+				continue
+			} else if len(rowdata) > 0 {
+				return true
+			} else {
+				slog.Error("Looks like our original value is nil, but our row value is something non-empty with a zero length. Need a programmer to look into this.")
+			}
+		}
+		// check strings first, their simplest
+		if featureAsString, ok := value.(string); ok {
+			if featureAsString != rowdata {
+				return true
+			}
+			continue
+		} else if featureAsInt, ok := value.(int); ok {
+			// Previously had a nil value, now we have a real value
+			if rowdata == "" {
+				return true
+			}
+			rowAsInt, err := strconv.Atoi(rowdata)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Failed to convert '%s' to an int to compare against %v for %v", rowdata, featureAsInt, key))
+			}
+			if rowAsInt != featureAsInt {
+				return true
+			} else {
+				continue
+			}
+		} else if featureAsFloat, ok := value.(float64); ok {
+			// Previously had a nil value, now we have a real value
+			if rowdata == "" {
+				return true
+			}
+			rowAsFloat, err := strconv.ParseFloat(rowdata, 64)
+			if err != nil {
+				slog.Error(fmt.Sprintf("Failed to convert '%s' to a float64 to compare against %v for %v", rowdata, featureAsFloat, key))
+			}
+			if rowAsFloat != featureAsFloat {
+				return true
+			} else {
+				continue
+			}
+		}
+		slog.Info(fmt.Sprintf("key: %s\tvalue: %v (type %T)\trow: %s\n", key, value, value, rowdata))
+		slog.Error("we've hit a point where we can't tell if we have an update or not, need a programmer to look at the above")
+	}
+	return false
+}
+func updateRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Get the current highest version for the row in question
+	history_table := toHistoryTable(table)
+	var sb strings.Builder
+	sb.WriteString("SELECT MAX(version) FROM ")
+	sb.WriteString(history_table)
+	sb.WriteString(" WHERE OBJECTID=@objectid")
+
+	args := pgx.NamedArgs{}
+	o := feature.Attributes["OBJECTID"].(float64)
+	args["objectid"] = int(o)
+
+	var version int
+	if err := PGInstance.PGXPool.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
+		return fmt.Errorf("Failed to query for version: %v", err)
+	}
+
+	var options pgx.TxOptions
+	transaction, err := PGInstance.PGXPool.BeginTx(ctx, options)
+	if err != nil {
+		return fmt.Errorf("Unable to start transaction")
+	}
+
+	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, version+1)
+	if err != nil {
+		transaction.Rollback(ctx)
+		return fmt.Errorf("Failed to insert history: %v", err)
+	}
+	err = updateRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
+	if err != nil {
+		transaction.Rollback(ctx)
+		return fmt.Errorf("Failed to update row from feature: %v", err)
+	}
+
+	err = transaction.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to commit transaction: %v", err)
+	}
+	return nil
+}
+func insertRowFromFeatureHistory(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature, version int) error {
+	history_table := toHistoryTable(table)
+	var sb strings.Builder
+	sb.WriteString("INSERT INTO ")
+	sb.WriteString(history_table)
+	sb.WriteString(" (")
+	for _, field := range sorted_columns {
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("created,geometry_x,geometry_y,version")
+	sb.WriteString(")\nVALUES (")
+	for _, field := range sorted_columns {
+		sb.WriteString("@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("@created,@geometry_x,@geometry_y,@version)")
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	args["created"] = time.Now()
+	args["version"] = version
+	if _, err := transaction.Exec(ctx, sb.String(), args); err != nil {
+		return fmt.Errorf("Failed to insert history row into %s: %v", table, err)
+	}
+	return nil
+}
+func selectAllFromQueryResult(table string, sorted_columns []string) string {
+	var sb strings.Builder
+	sb.WriteString("SELECT * FROM ")
+	sb.WriteString(table)
+	sb.WriteString(" WHERE OBJECTID=ANY(@objectids)")
+	return sb.String()
+}
+func toHistoryTable(table string) string {
+	return "History_" + table[3:len(table)]
+}
+
+func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table string, sorted_columns []string, feature *arcgis.Feature) error {
+	// Create the query to produce the main row
+	var sb strings.Builder
+	sb.WriteString("UPDATE ")
+	sb.WriteString(table)
+	sb.WriteString(" SET ")
+	for _, field := range sorted_columns {
+		// OBJECTID is special as our primary key, so skip it
+		if field == "OBJECTID" {
+			continue
+		}
+		sb.WriteString(field)
+		sb.WriteString("=@")
+		sb.WriteString(field)
+		sb.WriteString(",")
+	}
+	// Specially add the geometry values since they aren't in the fields
+	sb.WriteString("geometry_x=@geometry_x,geometry_y=@geometry_y,updated=@updated WHERE OBJECTID=@OBJECTID")
+
+	args := pgx.NamedArgs{}
+	for k, v := range feature.Attributes {
+		args[k] = v
+	}
+	// specially add geometry since it isn't in the list of attributes
+	args["geometry_x"] = feature.Geometry.X
+	args["geometry_y"] = feature.Geometry.Y
+	args["updated"] = time.Now()
+
+	_, err := transaction.Exec(ctx, sb.String(), args)
+	if err != nil {
+		return fmt.Errorf("Failed to update row into %s: %v", table, err)
+	}
+	return nil
 }

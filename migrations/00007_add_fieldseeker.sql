@@ -1,5 +1,1063 @@
 -- +goose Up
+ALTER TABLE organization ADD COLUMN fieldseeker_url TEXT;
+
 CREATE TABLE fs_containerrelate (
+    organization_id INTEGER REFERENCES organization(id),
+    containertype text,
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    inspsampleid text,
+    mosquitoinspid text,
+    objectid integer PRIMARY KEY,
+    treatmentid text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_fieldscoutinglog (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    objectid integer PRIMARY KEY,
+    status smallint,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_habitatrelate (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    foreign_id text,
+    globalid text,
+    habitattype text,
+    objectid integer PRIMARY KEY,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_inspectionsample (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    idbytech text,
+    insp_id text,
+    objectid integer PRIMARY KEY,
+    processed smallint,
+    sampleid text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_inspectionsampledetail (
+    organization_id INTEGER REFERENCES organization(id),
+    comments text,
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    fadultact text,
+    fdomstage text,
+    feggcount smallint,
+    fieldspecies text,
+    flarvcount smallint,
+    flstages text,
+    fpupcount smallint,
+    globalid text,
+    inspsample_id text,
+    labspecies text,
+    ldomstage text,
+    leggcount smallint,
+    llarvcount smallint,
+    lpupcount smallint,
+    objectid integer PRIMARY KEY,
+    processed smallint,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_linelocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    acres double precision,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    habitat text,
+    hectares double precision,
+    jurisdiction text,
+    larvinspectinterval smallint,
+    lastinspectactiontaken text,
+    lastinspectactivity text,
+    lastinspectavglarvae double precision,
+    lastinspectavgpupae double precision,
+    lastinspectbreeding text,
+    lastinspectconditions text,
+    lastinspectdate bigint,
+    lastinspectfieldspecies text,
+    lastinspectlstages text,
+    lasttreatactivity text,
+    lasttreatdate bigint,
+    lasttreatproduct text,
+    lasttreatqty double precision,
+    lasttreatqtyunit text,
+    length_ft double precision,
+    length_meters double precision,
+    locationnumber bigint,
+    name text,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    symbology text,
+    shape__length double precision,
+    usetype text,
+    waterorigin text,
+    width_ft double precision,
+    width_meters double precision,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_locationtracking (
+    organization_id INTEGER REFERENCES organization(id),
+    accuracy double precision,
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    globalid text,
+    objectid integer PRIMARY KEY,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_mosquitoinspection (
+    organization_id INTEGER REFERENCES organization(id),
+    actiontaken text,
+    activity text,
+    adultact text,
+    avetemp double precision,
+    avglarvae double precision,
+    avgpupae double precision,
+    breeding text,
+    cbcount smallint,
+    comments text,
+    containercount smallint,
+    creationdate bigint,
+    creator text,
+    domstage text,
+    eggs smallint,
+    enddatetime bigint,
+    editdate bigint,
+    editor text,
+    fieldspecies text,
+    fieldtech text,
+    globalid text,
+    jurisdiction text,
+    larvaepresent smallint,
+    linelocid text,
+    locationname text,
+    lstages text,
+    numdips smallint,
+    objectid integer PRIMARY KEY,
+    personalcontact smallint,
+    pointlocid text,
+    polygonlocid text,
+    posdips smallint,
+    positivecontainercount smallint,
+    pupaepresent smallint,
+    raingauge double precision,
+    recordstatus smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    sdid text,
+    sitecond text,
+    srid text,
+    startdatetime bigint,
+    tirecount smallint,
+    totlarvae smallint,
+    totpupae smallint,
+    visualmonitoring smallint,
+    vmcomments text,
+    winddir text,
+    windspeed double precision,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    adminaction text,
+    ptaid text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_pointlocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    habitat text,
+    jurisdiction text,
+    larvinspectinterval smallint,
+    lastinspectactiontaken text,
+    lastinspectactivity text,
+    lastinspectavglarvae double precision,
+    lastinspectavgpupae double precision,
+    lastinspectbreeding text,
+    lastinspectconditions text,
+    lastinspectdate bigint,
+    lastinspectfieldspecies text,
+    lastinspectlstages text,
+    lasttreatactivity text,
+    lasttreatdate bigint,
+    lasttreatproduct text,
+    lasttreatqty double precision,
+    lasttreatqtyunit text,
+    locationnumber bigint,
+    name text,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    stype text,
+    symbology text,
+    usetype text,
+    waterorigin text,
+    x double precision,
+    y double precision,
+    zone text,
+    zone2 text,
+    geometry_x double precision,
+    geometry_y double precision,
+    assignedtech text,
+    deactivate_reason text,
+    scalarpriority bigint,
+    sourcestatus text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_polygonlocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    acres double precision,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    filter text,
+    globalid text,
+    habitat text,
+    hectares double precision,
+    jurisdiction text,
+    larvinspectinterval smallint,
+    lastinspectactiontaken text,
+    lastinspectactivity text,
+    lastinspectavglarvae double precision,
+    lastinspectavgpupae double precision,
+    lastinspectbreeding text,
+    lastinspectconditions text,
+    lastinspectdate bigint,
+    lastinspectfieldspecies text,
+    lastinspectlstages text,
+    lasttreatactivity text,
+    lasttreatdate bigint,
+    lasttreatproduct text,
+    lasttreatqty double precision,
+    lasttreatqtyunit text,
+    locationnumber bigint,
+    name text,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    symbology text,
+    shape__area double precision,
+    shape__length double precision,
+    usetype text,
+    waterorigin text,
+    zone text,
+    zone2 text,
+    geometry_x double precision,
+    geometry_y double precision,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_pool (
+    organization_id INTEGER REFERENCES organization(id),
+    comments text,
+    creationdate bigint,
+    creator text,
+    datesent bigint,
+    datetested bigint,
+    diseasepos text,
+    diseasetested text,
+    editdate bigint,
+    editor text,
+    gatewaysync smallint,
+    globalid text,
+    lab text,
+    lab_id text,
+    objectid integer PRIMARY KEY,
+    poolyear smallint,
+    processed smallint,
+    sampleid text,
+    survtech text,
+    testmethod text,
+    testtech text,
+    trapdata_id text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    vectorsurvcollectionid text,
+    vectorsurvpoolid text,
+    vectorsurvtrapdataid text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_pooldetail (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    females smallint,
+    globalid text,
+    objectid integer PRIMARY KEY,
+    pool_id text,
+    species text,
+    trapdata_id text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_proposedtreatmentarea (
+    organization_id INTEGER REFERENCES organization(id),
+    acres double precision,
+    comments text,
+    completed smallint,
+    completedby text,
+    completeddate bigint,
+    creationdate bigint,
+    creator text,
+    duedate bigint,
+    exported smallint,
+    editdate bigint,
+    editor text,
+    globalid text,
+    hectares double precision,
+    issprayroute smallint,
+    lasttreatactivity text,
+    lasttreatdate bigint,
+    lasttreatproduct text,
+    lasttreatqty double precision,
+    lasttreatqtyunit text,
+    method text,
+    name text,
+    objectid integer PRIMARY KEY,
+    priority text,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    shape__area double precision,
+    shape__length double precision,
+    targetapprate double precision,
+    targetproduct text,
+    targetspecies text,
+    zone text,
+    zone2 text,
+    geometry_x double precision,
+    geometry_y double precision,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_qamosquitoinspection (
+    organization_id INTEGER REFERENCES organization(id),
+    acresbreeding double precision,
+    actiontaken text,
+    adultactivity smallint,
+    aquaticorganisms text,
+    avetemp double precision,
+    breedingpotential text,
+    comments text,
+    creationdate bigint,
+    creator text,
+    enddatetime bigint,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    fish smallint,
+    globalid text,
+    habvalue1 smallint,
+    habvalue1percent smallint,
+    habvalue2 smallint,
+    habvalue2percent smallint,
+    larvaeinsidetreatedarea smallint,
+    larvaeoutsidetreatedarea smallint,
+    larvaepresent smallint,
+    larvaereason text,
+    linelocid text,
+    locationname text,
+    lr smallint,
+    mosquitohabitat text,
+    movingwater smallint,
+    negdips smallint,
+    nowaterever smallint,
+    objectid integer PRIMARY KEY,
+    pointlocid text,
+    polygonlocid text,
+    posdips smallint,
+    potential smallint,
+    raingauge double precision,
+    recordstatus smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    sitetype text,
+    soilconditions text,
+    sourcereduction text,
+    startdatetime bigint,
+    totalacres double precision,
+    vegetation text,
+    waterconditions text,
+    waterduration text,
+    watermovement1 text,
+    watermovement1percent smallint,
+    watermovement2 text,
+    watermovement2percent smallint,
+    waterpresent smallint,
+    watersource text,
+    winddir text,
+    windspeed double precision,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_rodentlocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    habitat text,
+    lastinspectaction text,
+    lastinspectconditions text,
+    lastinspectdate bigint,
+    lastinspectrodentevidence text,
+    lastinspectspecies text,
+    locationname text,
+    locationnumber bigint,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    symbology text,
+    usetype text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    jurisdiction text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_samplecollection (
+    organization_id INTEGER REFERENCES organization(id),
+    activity text,
+    avetemp double precision,
+    chickenid text,
+    comments text,
+    creationdate bigint,
+    creator text,
+    datesent bigint,
+    datetested bigint,
+    diseasepos text,
+    diseasetested text,
+    enddatetime bigint,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    flockid text,
+    gatewaysync smallint,
+    globalid text,
+    lab text,
+    locationname text,
+    loc_id text,
+    objectid integer PRIMARY KEY,
+    processed smallint,
+    raingauge double precision,
+    recordstatus smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    samplecond text,
+    samplecount smallint,
+    sampleid text,
+    sampletype text,
+    sex text,
+    sitecond text,
+    species text,
+    startdatetime bigint,
+    survtech text,
+    testmethod text,
+    testtech text,
+    winddir text,
+    windspeed double precision,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE fs_samplelocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    gatewaysync smallint,
+    globalid text,
+    habitat text,
+    locationnumber bigint,
+    name text,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    usetype text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_servicerequest (
+    organization_id INTEGER REFERENCES organization(id),
+    accepted smallint,
+    acceptedby text,
+    accepteddate bigint,
+    allowed text,
+    assignedtech text,
+    clraddr1 text,
+    clraddr2 text,
+    clranon smallint,
+    clrcity text,
+    clrcompany text,
+    clrcontpref text,
+    clremail text,
+    clrfname text,
+    clrother text,
+    clrphone1 text,
+    clrphone2 text,
+    clrstate text,
+    clrzip text,
+    comments text,
+    creationdate bigint,
+    creator text,
+    datetimeclosed bigint,
+    duedate bigint,
+    entrytech text,
+    estcompletedate bigint,
+    externalerror text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    firstresponsedate bigint,
+    globalid text,
+    issuesreported text,
+    jurisdiction text,
+    nextaction text,
+    notificationtimestamp text,
+    notified smallint,
+    notifieddate bigint,
+    objectid integer PRIMARY KEY,
+    pointlocid text,
+    priority text,
+    recdatetime bigint,
+    recordstatus smallint,
+    rejectedby text,
+    rejecteddate bigint,
+    rejectedreason text,
+    reqaddr1 text,
+    reqaddr2 text,
+    reqcity text,
+    reqcompany text,
+    reqcrossst text,
+    reqdescr text,
+    reqfldnotes text,
+    reqmapgrid text,
+    reqnotesforcust text,
+    reqnotesfortech text,
+    reqpermission smallint,
+    reqprogramactions text,
+    reqstate text,
+    reqsubdiv text,
+    reqtarget text,
+    reqzip text,
+    responsedaycount smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    scheduled smallint,
+    scheduleddate bigint,
+    source text,
+    sr_number bigint,
+    status text,
+    supervisor text,
+    techclosed text,
+    validx text,
+    validy text,
+    xvalue text,
+    yvalue text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    dog bigint,
+    spanish bigint,
+    schedule_notes text,
+    schedule_period text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_speciesabundance (
+    organization_id INTEGER REFERENCES organization(id),
+    bloodedfem smallint,
+    creationdate bigint,
+    creator text,
+    eggs smallint,
+    editdate bigint,
+    editor text,
+    females bigint,
+    gravidfem smallint,
+    globalid text,
+    larvae smallint,
+    males smallint,
+    objectid integer PRIMARY KEY,
+    poolstogen smallint,
+    processed smallint,
+    pupae smallint,
+    species text,
+    total bigint,
+    trapdata_id text,
+    unknown smallint,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    globalzscore double precision,
+    h3r7 text,
+    h3r8 text,
+    r7score double precision,
+    r8score double precision,
+    yearweek bigint,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_stormdrain (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    jurisdiction text,
+    lastaction text,
+    laststatus text,
+    lasttreatdate bigint,
+    nexttreatmentdate bigint,
+    objectid integer PRIMARY KEY,
+    symbology text,
+    type text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_timecard (
+    organization_id INTEGER REFERENCES organization(id),
+    activity text,
+    comments text,
+    creationdate bigint,
+    creator text,
+    enddatetime bigint,
+    equiptype text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    globalid text,
+    lclocid text,
+    linelocid text,
+    locationname text,
+    objectid integer PRIMARY KEY,
+    pointlocid text,
+    polygonlocid text,
+    samplelocid text,
+    srid text,
+    startdatetime bigint,
+    traplocid text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    rodentlocid text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_trapdata (
+    organization_id INTEGER REFERENCES organization(id),
+    avetemp double precision,
+    comments text,
+    creationdate bigint,
+    creator text,
+    enddatetime bigint,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    field bigint,
+    gatewaysync smallint,
+    globalid text,
+    idbytech text,
+    locationname text,
+    loc_id text,
+    lr smallint,
+    objectid integer PRIMARY KEY,
+    processed smallint,
+    raingauge double precision,
+    recordstatus smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    sitecond text,
+    sortbytech text,
+    srid text,
+    startdatetime bigint,
+    trapactivitytype text,
+    trapcondition text,
+    trapnights smallint,
+    traptype text,
+    voltage double precision,
+    winddir text,
+    windspeed double precision,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    lure text,
+    vectorsurvtrapdataid text,
+    vectorsurvtraplocationid text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_traplocation (
+    organization_id INTEGER REFERENCES organization(id),
+    accessdesc text,
+    active smallint,
+    comments text,
+    creationdate bigint,
+    creator text,
+    description text,
+    externalid text,
+    editdate bigint,
+    editor text,
+    gatewaysync smallint,
+    globalid text,
+    habitat text,
+    locationnumber bigint,
+    name text,
+    nextactiondatescheduled bigint,
+    objectid integer PRIMARY KEY,
+    priority text,
+    usetype text,
+    zone text,
+    zone2 text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    route bigint,
+    route_order bigint,
+    set_dow bigint,
+    vectorsurvsiteid text,
+    h3r7 text,
+    h3r8 text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_treatment (
+    organization_id INTEGER REFERENCES organization(id),
+    activity text,
+    areaunit text,
+    avetemp double precision,
+    barrierrouteid text,
+    cbcount smallint,
+    comments text,
+    containercount smallint,
+    creationdate bigint,
+    creator text,
+    enddatetime bigint,
+    equiptype text,
+    editdate bigint,
+    editor text,
+    fieldtech text,
+    flowrate double precision,
+    globalid text,
+    habitat text,
+    insp_id text,
+    invloc text,
+    linelocid text,
+    locationname text,
+    method text,
+    objectid integer PRIMARY KEY,
+    pointlocid text,
+    polygonlocid text,
+    product text,
+    ptaid text,
+    qty double precision,
+    qtyunit text,
+    raingauge double precision,
+    recordstatus smallint,
+    reviewed smallint,
+    reviewedby text,
+    revieweddate bigint,
+    sdid text,
+    sitecond text,
+    srid text,
+    startdatetime bigint,
+    targetspecies text,
+    tirecount smallint,
+    treatacres double precision,
+    treatarea double precision,
+    treathectares double precision,
+    treatmenthours double precision,
+    treatmentlength double precision,
+    treatmentlengthunits text,
+    totalcostprodcut double precision,
+    ulvrouteid text,
+    warningoverride smallint,
+    winddir text,
+    windspeed double precision,
+    zone text,
+    zone2 text,
+    geometry_x double precision,
+    geometry_y double precision,
+    temp_sitecond text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_treatmentarea (
+    organization_id INTEGER REFERENCES organization(id),
+    comments text,
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    notified smallint,
+    objectid integer PRIMARY KEY,
+    session_id text,
+    shape__area double precision,
+    shape__length double precision,
+    treatdate bigint,
+    treat_id text,
+    type text,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_zones (
+    organization_id INTEGER REFERENCES organization(id),
+    active bigint,
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    name text,
+    objectid integer PRIMARY KEY,
+    shape__area double precision,
+    shape__length double precision,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+CREATE TABLE fs_zones2 (
+    organization_id INTEGER REFERENCES organization(id),
+    creationdate bigint,
+    creator text,
+    editdate bigint,
+    editor text,
+    globalid text,
+    name text,
+    objectid integer PRIMARY KEY,
+    shape__area double precision,
+    shape__length double precision,
+    created_date bigint,
+    created_user text,
+    geometry_x double precision,
+    geometry_y double precision,
+    last_edited_date bigint,
+    last_edited_user text,
+    updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE history_containerrelate (
+    organization_id INTEGER REFERENCES organization(id),
     containertype text,
     creationdate bigint,
     creator text,
@@ -10,16 +1068,20 @@ CREATE TABLE fs_containerrelate (
     mosquitoinspid text,
     objectid integer NOT NULL,
     treatmentid text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_fieldscoutinglog (
+CREATE TABLE history_fieldscoutinglog (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -27,16 +1089,20 @@ CREATE TABLE fs_fieldscoutinglog (
     globalid text,
     objectid integer NOT NULL,
     status smallint,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_habitatrelate (
+CREATE TABLE history_habitatrelate (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -45,15 +1111,19 @@ CREATE TABLE fs_habitatrelate (
     globalid text,
     habitattype text,
     objectid integer NOT NULL,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_inspectionsample (
+CREATE TABLE history_inspectionsample (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -64,15 +1134,19 @@ CREATE TABLE fs_inspectionsample (
     objectid integer NOT NULL,
     processed smallint,
     sampleid text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_inspectionsampledetail (
+CREATE TABLE history_inspectionsampledetail (
+    organization_id INTEGER REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -94,15 +1168,19 @@ CREATE TABLE fs_inspectionsampledetail (
     lpupcount smallint,
     objectid integer NOT NULL,
     processed smallint,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_linelocation (
+CREATE TABLE history_linelocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -147,16 +1225,20 @@ CREATE TABLE fs_linelocation (
     width_meters double precision,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_locationtracking (
+CREATE TABLE history_locationtracking (
+    organization_id INTEGER REFERENCES organization(id),
     accuracy double precision,
     creationdate bigint,
     creator text,
@@ -165,16 +1247,20 @@ CREATE TABLE fs_locationtracking (
     fieldtech text,
     globalid text,
     objectid integer NOT NULL,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_mosquitoinspection (
+CREATE TABLE history_mosquitoinspection (
+    organization_id INTEGER REFERENCES organization(id),
     actiontaken text,
     activity text,
     adultact text,
@@ -226,6 +1312,7 @@ CREATE TABLE fs_mosquitoinspection (
     windspeed double precision,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -233,11 +1320,14 @@ CREATE TABLE fs_mosquitoinspection (
     last_edited_date bigint,
     last_edited_user text,
     adminaction text,
-    ptaid text
+    ptaid text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_pointlocation (
+CREATE TABLE history_pointlocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -283,11 +1373,14 @@ CREATE TABLE fs_pointlocation (
     assignedtech text,
     deactivate_reason text,
     scalarpriority bigint,
-    sourcestatus text
+    sourcestatus text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_polygonlocation (
+CREATE TABLE history_polygonlocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     acres double precision,
     active smallint,
@@ -331,11 +1424,14 @@ CREATE TABLE fs_polygonlocation (
     zone text,
     zone2 text,
     geometry_x double precision,
-    geometry_y double precision
+    geometry_y double precision,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_pool (
+CREATE TABLE history_pool (
+    organization_id INTEGER REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -357,6 +1453,7 @@ CREATE TABLE fs_pool (
     testmethod text,
     testtech text,
     trapdata_id text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -365,10 +1462,13 @@ CREATE TABLE fs_pool (
     last_edited_user text,
     vectorsurvcollectionid text,
     vectorsurvpoolid text,
-    vectorsurvtrapdataid text
+    vectorsurvtrapdataid text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_pooldetail (
+CREATE TABLE history_pooldetail (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -379,15 +1479,19 @@ CREATE TABLE fs_pooldetail (
     pool_id text,
     species text,
     trapdata_id text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_proposedtreatmentarea (
+CREATE TABLE history_proposedtreatmentarea (
+    organization_id INTEGER REFERENCES organization(id),
     acres double precision,
     comments text,
     completed smallint,
@@ -422,10 +1526,13 @@ CREATE TABLE fs_proposedtreatmentarea (
     zone text,
     zone2 text,
     geometry_x double precision,
-    geometry_y double precision
+    geometry_y double precision,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_qamosquitoinspection (
+CREATE TABLE history_qamosquitoinspection (
+    organization_id INTEGER REFERENCES organization(id),
     acresbreeding double precision,
     actiontaken text,
     adultactivity smallint,
@@ -484,15 +1591,19 @@ CREATE TABLE fs_qamosquitoinspection (
     windspeed double precision,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_rodentlocation (
+CREATE TABLE history_rodentlocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -518,16 +1629,20 @@ CREATE TABLE fs_rodentlocation (
     usetype text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
     last_edited_user text,
-    jurisdiction text
+    jurisdiction text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_samplecollection (
+CREATE TABLE history_samplecollection (
+    organization_id INTEGER REFERENCES organization(id),
     activity text,
     avetemp double precision,
     chickenid text,
@@ -570,15 +1685,19 @@ CREATE TABLE fs_samplecollection (
     windspeed double precision,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
-CREATE TABLE fs_samplelocation (
+CREATE TABLE history_samplelocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -599,16 +1718,20 @@ CREATE TABLE fs_samplelocation (
     usetype text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_servicerequest (
+CREATE TABLE history_servicerequest (
+    organization_id INTEGER REFERENCES organization(id),
     accepted smallint,
     acceptedby text,
     accepteddate bigint,
@@ -687,6 +1810,7 @@ CREATE TABLE fs_servicerequest (
     yvalue text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -696,11 +1820,14 @@ CREATE TABLE fs_servicerequest (
     dog bigint,
     spanish bigint,
     schedule_notes text,
-    schedule_period text
+    schedule_period text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_speciesabundance (
+CREATE TABLE history_speciesabundance (
+    organization_id INTEGER REFERENCES organization(id),
     bloodedfem smallint,
     creationdate bigint,
     creator text,
@@ -720,6 +1847,7 @@ CREATE TABLE fs_speciesabundance (
     total bigint,
     trapdata_id text,
     unknown smallint,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -731,11 +1859,14 @@ CREATE TABLE fs_speciesabundance (
     h3r8 text,
     r7score double precision,
     r8score double precision,
-    yearweek bigint
+    yearweek bigint,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_stormdrain (
+CREATE TABLE history_stormdrain (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -751,16 +1882,20 @@ CREATE TABLE fs_stormdrain (
     type text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_timecard (
+CREATE TABLE history_timecard (
+    organization_id INTEGER REFERENCES organization(id),
     activity text,
     comments text,
     creationdate bigint,
@@ -784,17 +1919,21 @@ CREATE TABLE fs_timecard (
     traplocid text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
     last_edited_user text,
-    rodentlocid text
+    rodentlocid text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_trapdata (
+CREATE TABLE history_trapdata (
+    organization_id INTEGER REFERENCES organization(id),
     avetemp double precision,
     comments text,
     creationdate bigint,
@@ -830,6 +1969,7 @@ CREATE TABLE fs_trapdata (
     windspeed double precision,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -838,11 +1978,14 @@ CREATE TABLE fs_trapdata (
     last_edited_user text,
     lure text,
     vectorsurvtrapdataid text,
-    vectorsurvtraplocationid text
+    vectorsurvtraplocationid text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_traplocation (
+CREATE TABLE history_traplocation (
+    organization_id INTEGER REFERENCES organization(id),
     accessdesc text,
     active smallint,
     comments text,
@@ -863,6 +2006,7 @@ CREATE TABLE fs_traplocation (
     usetype text,
     zone text,
     zone2 text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
@@ -874,11 +2018,14 @@ CREATE TABLE fs_traplocation (
     set_dow bigint,
     vectorsurvsiteid text,
     h3r7 text,
-    h3r8 text
+    h3r8 text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_treatment (
+CREATE TABLE history_treatment (
+    organization_id INTEGER REFERENCES organization(id),
     activity text,
     areaunit text,
     avetemp double precision,
@@ -934,11 +2081,14 @@ CREATE TABLE fs_treatment (
     zone2 text,
     geometry_x double precision,
     geometry_y double precision,
-    temp_sitecond text
+    temp_sitecond text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_treatmentarea (
+CREATE TABLE history_treatmentarea (
+    organization_id INTEGER REFERENCES organization(id),
     comments text,
     creationdate bigint,
     creator text,
@@ -953,16 +2103,20 @@ CREATE TABLE fs_treatmentarea (
     treatdate bigint,
     treat_id text,
     type text,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_zones (
+CREATE TABLE history_zones (
+    organization_id INTEGER REFERENCES organization(id),
     active bigint,
     creationdate bigint,
     creator text,
@@ -973,16 +2127,20 @@ CREATE TABLE fs_zones (
     objectid integer NOT NULL,
     shape__area double precision,
     shape__length double precision,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 
-CREATE TABLE fs_zones2 (
+CREATE TABLE history_zones2 (
+    organization_id INTEGER REFERENCES organization(id),
     creationdate bigint,
     creator text,
     editdate bigint,
@@ -992,12 +2150,15 @@ CREATE TABLE fs_zones2 (
     objectid integer NOT NULL,
     shape__area double precision,
     shape__length double precision,
+    created TIMESTAMP,
     created_date bigint,
     created_user text,
     geometry_x double precision,
     geometry_y double precision,
     last_edited_date bigint,
-    last_edited_user text
+    last_edited_user text,
+    version INT,
+    PRIMARY KEY(OBJECTID, version)
 );
 
 -- +goose Down
@@ -1028,3 +2189,31 @@ DROP TABLE fs_treatment;
 DROP TABLE fs_treatmentarea;
 DROP TABLE fs_zones;
 DROP TABLE fs_zones2;
+DROP TABLE history_containerrelate;
+DROP TABLE history_fieldscoutinglog;
+DROP TABLE history_habitatrelate;
+DROP TABLE history_inspectionsample;
+DROP TABLE history_inspectionsampledetail;
+DROP TABLE history_linelocation;
+DROP TABLE history_locationtracking;
+DROP TABLE history_mosquitoinspection;
+DROP TABLE history_pointlocation;
+DROP TABLE history_polygonlocation;
+DROP TABLE history_pool;
+DROP TABLE history_pooldetail;
+DROP TABLE history_proposedtreatmentarea;
+DROP TABLE history_qamosquitoinspection;
+DROP TABLE history_rodentlocation;
+DROP TABLE history_samplecollection;
+DROP TABLE history_samplelocation;
+DROP TABLE history_servicerequest;
+DROP TABLE history_speciesabundance;
+DROP TABLE history_stormdrain;
+DROP TABLE history_timecard;
+DROP TABLE history_trapdata;
+DROP TABLE history_traplocation;
+DROP TABLE history_treatment;
+DROP TABLE history_treatmentarea;
+DROP TABLE history_zones;
+DROP TABLE history_zones2;
+ALTER TABLE organization DROP COLUMN fieldseeker_url;
