@@ -179,27 +179,15 @@ body {
 								</tr>
 							</thead>
 							<tbody>
+							{{ range $i, $sr := .RecentRequests }}
 								<tr>
-									<td>Aug 24, 2023</td>
-									<td>Inspection</td>
-									<td>River Park Area</td>
+									<td>{{ $sr.Date | timeSince }}</td>
+									<td>Service Request</td>
+									<td>{{ $sr.Location }}</td>
 									<td><span class="badge bg-success">Completed</span></td>
 									<td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
 								</tr>
-								<tr>
-									<td>Aug 23, 2023</td>
-									<td>Service Request</td>
-									<td>Westside Community</td>
-									<td><span class="badge bg-warning">Pending</span></td>
-									<td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
-								</tr>
-								<tr>
-									<td>Aug 22, 2023</td>
-									<td>Source Treatment</td>
-									<td>Lakeside Avenue</td>
-									<td><span class="badge bg-info">In Progress</span></td>
-									<td><a href="#" class="btn btn-sm btn-outline-primary">View</a></td>
-								</tr>
+							{{ end }}
 							</tbody>
 						</table>
 					</div>

@@ -54,6 +54,7 @@ type ContentDashboard struct {
 	CountServiceRequests int
 	LastSync             string
 	Org                  string
+	RecentRequests       []ServiceRequestSummary
 	User                 User
 }
 type ContentPlaceholder struct {
@@ -62,6 +63,11 @@ type ContentSignin struct {
 	InvalidCredentials bool
 }
 type ContentSignup struct{}
+type ServiceRequestSummary struct {
+	Date     time.Time
+	Location string
+	Status   string
+}
 type User struct {
 	DisplayName string
 	Initials    string
@@ -123,12 +129,26 @@ func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get service count: %v", err)
 	}
+	recentRequests, err := org.FSServicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get recent service: %v", err)
+	}
+
+	requests := make([]ServiceRequestSummary, 0)
+	for _, r := range recentRequests {
+		requests = append(requests, ServiceRequestSummary{
+			Date:     time.UnixMilli(r.Creationdate.MustGet()),
+			Location: r.Reqaddr1.MustGet(),
+			Status:   "Completed",
+		})
+	}
 	data := ContentDashboard{
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
 		LastSync:             syncString,
 		Org:                  org.Name.MustGet(),
+		RecentRequests:       requests,
 		User: User{
 			DisplayName: user.DisplayName,
 			Initials:    extractInitials(user.DisplayName),
