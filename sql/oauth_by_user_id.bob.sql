@@ -2,5 +2,5 @@
 -- This file is meant to be re-generated in place and/or deleted at any time.
 
 -- OauthTokenByUserId
-SELECT "oauth_token"."id" AS "id", "oauth_token"."access_token" AS "access_token", "oauth_token"."expires" AS "expires", "oauth_token"."refresh_token" AS "refresh_token", "oauth_token"."username" AS "username", "oauth_token"."user_id" AS "user_id", "oauth_token"."arcgis_id" AS "arcgis_id", "oauth_token"."arcgis_license_type_id" AS "arcgis_license_type_id" FROM oauth_token WHERE
+SELECT "oauth_token"."id" AS "id", "oauth_token"."access_token" AS "access_token", "oauth_token"."access_token_expires" AS "access_token_expires", "oauth_token"."refresh_token" AS "refresh_token", "oauth_token"."username" AS "username", "oauth_token"."user_id" AS "user_id", "oauth_token"."arcgis_id" AS "arcgis_id", "oauth_token"."arcgis_license_type_id" AS "arcgis_license_type_id", "oauth_token"."refresh_token_expires" AS "refresh_token_expires" FROM oauth_token WHERE
 	user_id = $1;

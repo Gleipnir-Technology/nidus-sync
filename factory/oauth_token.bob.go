@@ -39,12 +39,13 @@ func (mods OauthTokenModSlice) Apply(ctx context.Context, n *OauthTokenTemplate)
 type OauthTokenTemplate struct {
 	ID                  func() int32
 	AccessToken         func() string
-	Expires             func() time.Time
+	AccessTokenExpires  func() time.Time
 	RefreshToken        func() string
 	Username            func() string
 	UserID              func() int32
 	ArcgisID            func() null.Val[string]
 	ArcgisLicenseTypeID func() null.Val[string]
+	RefreshTokenExpires func() time.Time
 
 	r oauthTokenR
 	f *Factory
@@ -91,9 +92,9 @@ func (o OauthTokenTemplate) BuildSetter() *models.OauthTokenSetter {
 		val := o.AccessToken()
 		m.AccessToken = omit.From(val)
 	}
-	if o.Expires != nil {
-		val := o.Expires()
-		m.Expires = omit.From(val)
+	if o.AccessTokenExpires != nil {
+		val := o.AccessTokenExpires()
+		m.AccessTokenExpires = omit.From(val)
 	}
 	if o.RefreshToken != nil {
 		val := o.RefreshToken()
@@ -114,6 +115,10 @@ func (o OauthTokenTemplate) BuildSetter() *models.OauthTokenSetter {
 	if o.ArcgisLicenseTypeID != nil {
 		val := o.ArcgisLicenseTypeID()
 		m.ArcgisLicenseTypeID = omitnull.FromNull(val)
+	}
+	if o.RefreshTokenExpires != nil {
+		val := o.RefreshTokenExpires()
+		m.RefreshTokenExpires = omit.From(val)
 	}
 
 	return m
@@ -143,8 +148,8 @@ func (o OauthTokenTemplate) Build() *models.OauthToken {
 	if o.AccessToken != nil {
 		m.AccessToken = o.AccessToken()
 	}
-	if o.Expires != nil {
-		m.Expires = o.Expires()
+	if o.AccessTokenExpires != nil {
+		m.AccessTokenExpires = o.AccessTokenExpires()
 	}
 	if o.RefreshToken != nil {
 		m.RefreshToken = o.RefreshToken()
@@ -160,6 +165,9 @@ func (o OauthTokenTemplate) Build() *models.OauthToken {
 	}
 	if o.ArcgisLicenseTypeID != nil {
 		m.ArcgisLicenseTypeID = o.ArcgisLicenseTypeID()
+	}
+	if o.RefreshTokenExpires != nil {
+		m.RefreshTokenExpires = o.RefreshTokenExpires()
 	}
 
 	o.setModelRels(m)
@@ -185,9 +193,9 @@ func ensureCreatableOauthToken(m *models.OauthTokenSetter) {
 		val := random_string(nil)
 		m.AccessToken = omit.From(val)
 	}
-	if !(m.Expires.IsValue()) {
+	if !(m.AccessTokenExpires.IsValue()) {
 		val := random_time_Time(nil)
-		m.Expires = omit.From(val)
+		m.AccessTokenExpires = omit.From(val)
 	}
 	if !(m.RefreshToken.IsValue()) {
 		val := random_string(nil)
@@ -322,12 +330,13 @@ func (m oauthTokenMods) RandomizeAllColumns(f *faker.Faker) OauthTokenMod {
 	return OauthTokenModSlice{
 		OauthTokenMods.RandomID(f),
 		OauthTokenMods.RandomAccessToken(f),
-		OauthTokenMods.RandomExpires(f),
+		OauthTokenMods.RandomAccessTokenExpires(f),
 		OauthTokenMods.RandomRefreshToken(f),
 		OauthTokenMods.RandomUsername(f),
 		OauthTokenMods.RandomUserID(f),
 		OauthTokenMods.RandomArcgisID(f),
 		OauthTokenMods.RandomArcgisLicenseTypeID(f),
+		OauthTokenMods.RandomRefreshTokenExpires(f),
 	}
 }
 
@@ -394,31 +403,31 @@ func (m oauthTokenMods) RandomAccessToken(f *faker.Faker) OauthTokenMod {
 }
 
 // Set the model columns to this value
-func (m oauthTokenMods) Expires(val time.Time) OauthTokenMod {
+func (m oauthTokenMods) AccessTokenExpires(val time.Time) OauthTokenMod {
 	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
-		o.Expires = func() time.Time { return val }
+		o.AccessTokenExpires = func() time.Time { return val }
 	})
 }
 
 // Set the Column from the function
-func (m oauthTokenMods) ExpiresFunc(f func() time.Time) OauthTokenMod {
+func (m oauthTokenMods) AccessTokenExpiresFunc(f func() time.Time) OauthTokenMod {
 	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
-		o.Expires = f
+		o.AccessTokenExpires = f
 	})
 }
 
 // Clear any values for the column
-func (m oauthTokenMods) UnsetExpires() OauthTokenMod {
+func (m oauthTokenMods) UnsetAccessTokenExpires() OauthTokenMod {
 	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
-		o.Expires = nil
+		o.AccessTokenExpires = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m oauthTokenMods) RandomExpires(f *faker.Faker) OauthTokenMod {
+func (m oauthTokenMods) RandomAccessTokenExpires(f *faker.Faker) OauthTokenMod {
 	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
-		o.Expires = func() time.Time {
+		o.AccessTokenExpires = func() time.Time {
 			return random_time_Time(f)
 		}
 	})
@@ -619,6 +628,37 @@ func (m oauthTokenMods) RandomArcgisLicenseTypeIDNotNull(f *faker.Faker) OauthTo
 
 			val := random_string(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m oauthTokenMods) RefreshTokenExpires(val time.Time) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.RefreshTokenExpires = func() time.Time { return val }
+	})
+}
+
+// Set the Column from the function
+func (m oauthTokenMods) RefreshTokenExpiresFunc(f func() time.Time) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.RefreshTokenExpires = f
+	})
+}
+
+// Clear any values for the column
+func (m oauthTokenMods) UnsetRefreshTokenExpires() OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.RefreshTokenExpires = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m oauthTokenMods) RandomRefreshTokenExpires(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.RefreshTokenExpires = func() time.Time {
+			return random_time_Time(f)
 		}
 	})
 }

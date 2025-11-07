@@ -72,12 +72,13 @@ func (f *Factory) FromExistingOauthToken(m *models.OauthToken) *OauthTokenTempla
 
 	o.ID = func() int32 { return m.ID }
 	o.AccessToken = func() string { return m.AccessToken }
-	o.Expires = func() time.Time { return m.Expires }
+	o.AccessTokenExpires = func() time.Time { return m.AccessTokenExpires }
 	o.RefreshToken = func() string { return m.RefreshToken }
 	o.Username = func() string { return m.Username }
 	o.UserID = func() int32 { return m.UserID }
 	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
 	o.ArcgisLicenseTypeID = func() null.Val[string] { return m.ArcgisLicenseTypeID }
+	o.RefreshTokenExpires = func() time.Time { return m.RefreshTokenExpires }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {

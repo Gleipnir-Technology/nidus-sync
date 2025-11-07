@@ -33,8 +33,8 @@ var OauthTokens = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Expires: column{
-			Name:      "expires",
+		AccessTokenExpires: column{
+			Name:      "access_token_expires",
 			DBType:    "timestamp without time zone",
 			Default:   "",
 			Comment:   "",
@@ -87,6 +87,15 @@ var OauthTokens = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		RefreshTokenExpires: column{
+			Name:      "refresh_token_expires",
+			DBType:    "timestamp without time zone",
+			Default:   "CURRENT_TIMESTAMP",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: oauthTokenIndexes{
 		OauthTokenPkey: index{
@@ -130,17 +139,18 @@ var OauthTokens = Table[
 type oauthTokenColumns struct {
 	ID                  column
 	AccessToken         column
-	Expires             column
+	AccessTokenExpires  column
 	RefreshToken        column
 	Username            column
 	UserID              column
 	ArcgisID            column
 	ArcgisLicenseTypeID column
+	RefreshTokenExpires column
 }
 
 func (c oauthTokenColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessToken, c.Expires, c.RefreshToken, c.Username, c.UserID, c.ArcgisID, c.ArcgisLicenseTypeID,
+		c.ID, c.AccessToken, c.AccessTokenExpires, c.RefreshToken, c.Username, c.UserID, c.ArcgisID, c.ArcgisLicenseTypeID, c.RefreshTokenExpires,
 	}
 }
 

@@ -84,8 +84,8 @@ func TestOauthTokenByUserId(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(columns) != 8 {
-			t.Fatalf("expected %d columns, got %d", 8, len(columns))
+		if len(columns) != 9 {
+			t.Fatalf("expected %d columns, got %d", 9, len(columns))
 		}
 
 		if columns[0] != "id" {
@@ -96,8 +96,8 @@ func TestOauthTokenByUserId(t *testing.T) {
 			t.Fatalf("expected column %d to be %s, got %s", 1, "access_token", columns[1])
 		}
 
-		if columns[2] != "expires" {
-			t.Fatalf("expected column %d to be %s, got %s", 2, "expires", columns[2])
+		if columns[2] != "access_token_expires" {
+			t.Fatalf("expected column %d to be %s, got %s", 2, "access_token_expires", columns[2])
 		}
 
 		if columns[3] != "refresh_token" {
@@ -118,6 +118,10 @@ func TestOauthTokenByUserId(t *testing.T) {
 
 		if columns[7] != "arcgis_license_type_id" {
 			t.Fatalf("expected column %d to be %s, got %s", 7, "arcgis_license_type_id", columns[7])
+		}
+
+		if columns[8] != "refresh_token_expires" {
+			t.Fatalf("expected column %d to be %s, got %s", 8, "refresh_token_expires", columns[8])
 		}
 	})
 }

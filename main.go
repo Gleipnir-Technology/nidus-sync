@@ -82,14 +82,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	newTokenChannel := make(chan int, 10)
+	NewOAuthTokenChannel = make(chan struct{}, 10)
 
 	var waitGroup sync.WaitGroup
 
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		refreshFieldseekerData(ctx, newTokenChannel)
+		refreshFieldseekerData(ctx, NewOAuthTokenChannel)
 	}()
 
 	server := &http.Server{
