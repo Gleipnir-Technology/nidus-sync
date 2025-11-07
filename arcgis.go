@@ -216,5 +216,14 @@ func redirectURL() string {
 }
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
-func refreshFieldseekerData(newOauthCh <-chan int, done <-chan struct{}) {
+func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan int) {
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Info("Exiting refresh worker")
+			return
+		case id := <-newOauthCh:
+			slog.Info("Adding oauth to background work", slog.Int("oauth id", id))
+		}
+	}
 }

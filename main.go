@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/alexedwards/scs/pgxstore"
@@ -20,17 +23,17 @@ var BaseURL, ClientID, ClientSecret string
 func main() {
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
 	if ClientID == "" {
-		log.Println("You must specify a non-empty ARCGIS_CLIENT_ID")
+		slog.Error("You must specify a non-empty ARCGIS_CLIENT_ID")
 		os.Exit(1)
 	}
 	ClientSecret = os.Getenv("ARCGIS_CLIENT_SECRET")
 	if ClientSecret == "" {
-		log.Println("You must specify a non-empty ARCGIS_CLIENT_SECRET")
+		slog.Error("You must specify a non-empty ARCGIS_CLIENT_SECRET")
 		os.Exit(1)
 	}
 	BaseURL = os.Getenv("BASE_URL")
 	if BaseURL == "" {
-		log.Println("You must specify a non-empty BASE_URL")
+		slog.Error("You must specify a non-empty BASE_URL")
 		os.Exit(1)
 	}
 	bind := os.Getenv("BIND")
@@ -39,14 +42,14 @@ func main() {
 	}
 	pg_dsn := os.Getenv("POSTGRES_DSN")
 	if pg_dsn == "" {
-		log.Println("You must specify a non-empty POSTGRES_DSN")
+		slog.Error("You must specify a non-empty POSTGRES_DSN")
 		os.Exit(1)
 	}
 
-	log.Println("Starting...")
+	slog.Info("Starting...")
 	err := initializeDatabase(context.TODO(), pg_dsn)
 	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database", slog.String("err", err.Error()))
 		os.Exit(2)
 	}
 	sessionManager = scs.New()
@@ -76,9 +79,46 @@ func main() {
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
 
-	newTokenChannel := make(chan int)
-	endChannel := make(chan struct{})
-	go refreshFieldseekerData(newTokenChannel, endChannel)
-	log.Printf("Serving on %s", bind)
-	log.Fatal(http.ListenAndServe(bind, r))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	newTokenChannel := make(chan int, 10)
+
+	var waitGroup sync.WaitGroup
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		refreshFieldseekerData(ctx, newTokenChannel)
+	}()
+
+	server := &http.Server{
+		Addr:    bind,
+		Handler: r,
+	}
+	go func() {
+		slog.Info("Serving HTTP requests", slog.String("address", bind))
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("HTTP Server Error", slog.String("err", err.Error()))
+		}
+	}()
+
+	// Wait for the interrupt signal to gracefully shut down
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	<-signalCh
+
+	slog.Info("Received shutdown signal, shutting down...")
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		slog.Error("HTTP server shutdown error", slog.String("err", err.Error()))
+	}
+
+	cancel()
+
+	waitGroup.Wait()
+
+	slog.Info("Shutdown complete")
 }
