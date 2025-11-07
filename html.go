@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -8,9 +9,12 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/aarondl/opt/null"
 	"github.com/riverqueue/river/rivershared/util/slogutil"
+	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
 var (
@@ -45,7 +49,12 @@ type ContentReportDiagnostic struct {
 	URL string
 }
 type ContentDashboard struct {
-	User User
+	CountInspections     int
+	CountMosquitoSources int
+	CountServiceRequests int
+	LastSync             string
+	Org                  string
+	User                 User
 }
 type ContentPlaceholder struct {
 }
@@ -89,8 +98,37 @@ func extractInitials(name string) string {
 	return initials.String()
 }
 
-func htmlDashboard(w io.Writer, user *models.User) error {
+func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
+	org, err := user.Organization().One(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get org: %v", err)
+	}
+	var syncString string
+	sync, err := org.FieldseekerSyncs(sm.OrderBy("created")).One(ctx, PGInstance.BobDB)
+	if err != nil {
+		//return fmt.Errorf("Failed to get sync: %v", err)
+		syncString = "never"
+	} else {
+		syncString = sync.Created.String()
+	}
+	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get inspection count: %v", err)
+	}
+	sourceCount, err := org.FSPointlocations().Count(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get inspection count: %v", err)
+	}
+	serviceCount, err := org.FSServicerequests().Count(ctx, PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to get service count: %v", err)
+	}
 	data := ContentDashboard{
+		CountInspections:     int(inspectionCount),
+		CountMosquitoSources: int(sourceCount),
+		CountServiceRequests: int(serviceCount),
+		LastSync:             syncString,
+		Org:                  org.Name.MustGet(),
 		User: User{
 			DisplayName: user.DisplayName,
 			Initials:    extractInitials(user.DisplayName),
@@ -181,7 +219,10 @@ func htmlSignup(w io.Writer, path string) error {
 }
 
 func makeFuncMap() template.FuncMap {
-	funcMap := template.FuncMap{}
+	funcMap := template.FuncMap{
+		"timeElapsed": timeElapsed,
+		"timeSince":   timeSince,
+	}
 	return funcMap
 }
 func newBuiltTemplate(files ...string) BuiltTemplate {
@@ -226,4 +267,37 @@ func parseFromDisk(files []string) (*template.Template, error) {
 		return nil, fmt.Errorf("Failed to parse %s: %v", paths, err)
 	}
 	return templ, nil
+}
+func timeElapsed(seconds null.Val[float32]) string {
+	if !seconds.IsValue() {
+		return "none"
+	}
+	s := int(seconds.MustGet())
+	hours := s / 3600
+	remainder := s - (hours * 3600)
+	minutes := remainder / 60
+	remainder = remainder - (minutes * 60)
+	if hours > 0 {
+		return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, remainder)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%02d:%02d", minutes, remainder)
+	} else {
+		return fmt.Sprintf("%d seconds", remainder)
+	}
+}
+
+func timeSince(t time.Time) string {
+	now := time.Now()
+	diff := now.Sub(t)
+
+	hours := diff.Hours()
+	if hours < 1 {
+		minutes := diff.Minutes()
+		return fmt.Sprintf("%d minutes ago", int(minutes))
+	} else if hours < 24 {
+		return fmt.Sprintf("%d hours ago", int(hours))
+	} else {
+		days := hours / 24
+		return fmt.Sprintf("%d days ago", int(days))
+	}
 }

@@ -173,7 +173,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if has {
-			err = htmlDashboard(w, user)
+			err = htmlDashboard(r.Context(), w, user)
 		} else {
 			err = htmlOauthPrompt(w, user)
 		}

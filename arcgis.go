@@ -26,6 +26,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/alitto/pond/v2"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -266,45 +267,63 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 	}
 }
 
-func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature, org_id int32) (int, int, int, error) {
-	inserts := 0
-	updates := 0
-	offset := 0
+type SyncStats struct {
+	Inserts   int
+	Updates   int
+	Unchanged int
+}
+
+func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature, org_id int32) (SyncStats, error) {
+	var stats SyncStats
 	count, err := fssync.QueryCount(layer.ID)
 	if err != nil {
-		return inserts, updates, 0, fmt.Errorf("Failed to get counts for layer %s (%d): %v", layer.Name, layer.ID, err)
+		return stats, fmt.Errorf("Failed to get counts for layer %s (%d): %v", layer.Name, layer.ID, err)
 	}
 	slog.Info("Starting on layer", slog.String("name", layer.Name), slog.Int("id", layer.ID))
 	if count.Count == 0 {
-		return inserts, updates, 0, nil
+		return stats, nil
 	}
-	for {
-		if offset >= count.Count {
-			break
-		}
-		query := arcgis.NewQuery()
-		query.ResultRecordCount = fssync.MaxRecordCount()
-		query.ResultOffset = offset
-		query.SpatialReference = "4326"
-		query.OutFields = "*"
-		query.Where = "1=1"
-		qr, err := fssync.DoQuery(
-			layer.ID,
-			query)
-		if err != nil {
-			return inserts, updates, count.Count - inserts - updates, fmt.Errorf("Failed to get layer %s (%d) at offset %d: %v", layer.Name, layer.ID, offset, err)
-		}
-		i, u, err := saveOrUpdateDBRecords(ctx, "FS_"+layer.Name, qr, org_id)
-		if err != nil {
-			saveRawQuery(fssync, layer, query, "failure.json")
-			return inserts, updates, count.Count - inserts - updates, fmt.Errorf("Failed to save records: %v", err)
-		}
-		inserts += i
-		updates += u
-		offset += len(qr.Features)
+	pool := pond.NewResultPool[SyncStats](20)
+	group := pool.NewGroup()
+	maxRecords := fssync.MaxRecordCount()
+	for offset := 0; offset < count.Count; offset += maxRecords {
+		group.SubmitErr(func() (SyncStats, error) {
+			query := arcgis.NewQuery()
+			query.ResultRecordCount = maxRecords
+			query.ResultOffset = offset
+			query.SpatialReference = "4326"
+			query.OutFields = "*"
+			query.Where = "1=1"
+			qr, err := fssync.DoQuery(
+				layer.ID,
+				query)
+			if err != nil {
+				return SyncStats{}, fmt.Errorf("Failed to get layer %s (%d) at offset %d: %v", layer.Name, layer.ID, offset, err)
+			}
+			i, u, err := saveOrUpdateDBRecords(ctx, "FS_"+layer.Name, qr, org_id)
+			if err != nil {
+				filename := fmt.Sprintf("failure-%s-%d.json", layer.Name, layer.ID)
+				saveRawQuery(fssync, layer, query, filename)
+				return SyncStats{}, fmt.Errorf("Failed to save records: %v", err)
+			}
+			return SyncStats{
+				Inserts:   i,
+				Updates:   u,
+				Unchanged: len(qr.Features) - u - i,
+			}, nil
+		})
 	}
-	slog.Info("Finished layer", slog.Int("inserts", inserts), slog.Int("updates", updates), slog.Int("no change", count.Count-inserts-updates))
-	return inserts, updates, count.Count - inserts - updates, nil
+	results, err := group.Wait()
+	if err != nil {
+		return stats, fmt.Errorf("one or more tasks in the work pool failed: %v", err)
+	}
+	for _, r := range results {
+		stats.Inserts += r.Inserts
+		stats.Updates += r.Updates
+		stats.Unchanged += r.Unchanged
+	}
+	slog.Info("Finished layer", slog.Int("inserts", stats.Inserts), slog.Int("updates", stats.Updates), slog.Int("no change", stats.Unchanged))
+	return stats, nil
 }
 
 func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.OauthToken, error) {
@@ -364,23 +383,21 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 	if err != nil {
 		return fmt.Errorf("Failed to create fssync: %v", err)
 	}
-	inserts := 0
-	updates := 0
-	unchanged := 0
+	var stats SyncStats
 	for _, layer := range fssync.FeatureServerLayers() {
-		i, u, un, err := downloadAllRecords(ctx, fssync, layer, row.OrganizationID)
+		ss, err := downloadAllRecords(ctx, fssync, layer, row.OrganizationID)
 		if err != nil {
 			return fmt.Errorf("Failed to get layer %s: %v", layer, err)
 		}
-		inserts += i
-		updates += u
-		unchanged += un
+		stats.Inserts += ss.Inserts
+		stats.Updates += ss.Updates
+		stats.Unchanged += ss.Unchanged
 	}
 
 	setter := models.FieldseekerSyncSetter{
-		RecordsCreated:   omit.From(int32(inserts)),
-		RecordsUpdated:   omit.From(int32(updates)),
-		RecordsUnchanged: omit.From(int32(unchanged)),
+		RecordsCreated:   omit.From(int32(stats.Inserts)),
+		RecordsUpdated:   omit.From(int32(stats.Updates)),
+		RecordsUnchanged: omit.From(int32(stats.Unchanged)),
 	}
 	err = org.InsertFieldseekerSyncs(ctx, PGInstance.BobDB, &setter)
 	//err = user.InsertUserOauthTokens(ctx, PGInstance.BobDB, &setter)
