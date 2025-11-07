@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -19,6 +20,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
+	"github.com/jackc/pgx/v5"
 )
 
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
@@ -63,7 +66,7 @@ func generateCodeVerifier() string {
 }
 
 // Find out what we can about this user
-func getArcgisUserData(access_token string, expires time.Time, refresh_token string) {
+func updateArcgisUserData(ctx context.Context, user *models.User, access_token string, expires time.Time, refresh_token string) {
 	client := arcgis.NewArcGIS(
 		arcgis.AuthenticatorOAuth{
 			AccessToken:  access_token,
@@ -71,15 +74,60 @@ func getArcgisUserData(access_token string, expires time.Time, refresh_token str
 			RefreshToken: refresh_token,
 		},
 	)
-	/*portal, err := client.PortalsSelf()
+	portal, err := client.PortalsSelf()
 	if err != nil {
 		slog.Error("Failed to get ArcGIS user data", slog.String("err", err.Error()))
 		return
 	}
 	slog.Info("Got portals data",
 		slog.String("Username", portal.User.Username),
-		slog.String("ID", portal.ID))
-	*/
+		slog.String("user_id", portal.User.ID),
+		slog.String("org_id", portal.User.OrgID),
+		slog.String("org_name", portal.Name),
+		slog.String("license_type_id", portal.User.UserLicenseTypeID))
+
+	_, err = sql.UpdateOauthTokenOrg(portal.User.ID, portal.User.UserLicenseTypeID, refresh_token).Exec(ctx, PGInstance.BobDB)
+	if err != nil {
+		slog.Error("Failed to update oauth token portal data", slog.String("err", err.Error()))
+		return
+	}
+	var org *models.Organization
+	orgs, err := models.Organizations.Query(models.SelectWhere.Organizations.ArcgisName.EQ(portal.Name)).All(ctx, PGInstance.BobDB)
+	switch len(orgs) {
+	case 0:
+		setter := models.OrganizationSetter{
+			Name:       omitnull.From(portal.Name),
+			ArcgisID:   omitnull.From(portal.User.OrgID),
+			ArcgisName: omitnull.From(portal.Name),
+		}
+		org, err = models.Organizations.Insert(&setter).One(ctx, PGInstance.BobDB)
+		if err != nil {
+			slog.Error("Failed to create new organization", slog.String("err", err.Error()))
+			return
+		}
+		slog.Info("Created new organization", slog.Int("org_id", int(org.ID)))
+	case 1:
+		org = orgs[0]
+		slog.Info("Organization already exists")
+	default:
+		slog.Error("Got too many organizations, bailing")
+		return
+
+	}
+	if err != nil {
+		LogErrorTypeInfo(err)
+		if errors.Is(err, pgx.ErrNoRows) {
+		} else {
+			slog.Error("Failed to query for existing org", slog.String("err", err.Error()))
+			return
+		}
+	}
+	err = org.AttachUser(ctx, PGInstance.BobDB, user)
+	if err != nil {
+		slog.Error("Failed to attach user to organization", slog.String("err", err.Error()), slog.Int("user_id", int(user.ID)), slog.Int("org_id", int(org.ID)))
+		return
+	}
+
 	search, err := client.Search("Fieldseeker")
 	if err != nil {
 		slog.Error("Failed to get search FieldseekerGIS data", slog.String("err", err.Error()))
@@ -152,7 +200,7 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %v", err)
 	}
-	go getArcgisUserData(tokenResponse.AccessToken, expires, tokenResponse.RefreshToken)
+	go updateArcgisUserData(context.Background(), user, tokenResponse.AccessToken, expires, tokenResponse.RefreshToken)
 	return nil
 }
 
@@ -165,4 +213,8 @@ func hasFieldseekerConnection(ctx context.Context, user *models.User) (bool, err
 }
 func redirectURL() string {
 	return BaseURL + "/arcgis/oauth/callback"
+}
+
+// This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
+func refreshFieldseekerData(newOauthCh <-chan int, done <-chan struct{}) {
 }

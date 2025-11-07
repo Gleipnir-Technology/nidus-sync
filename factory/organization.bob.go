@@ -36,8 +36,10 @@ func (mods OrganizationModSlice) Apply(ctx context.Context, n *OrganizationTempl
 // OrganizationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type OrganizationTemplate struct {
-	ID   func() int32
-	Name func() null.Val[string]
+	ID         func() int32
+	Name       func() null.Val[string]
+	ArcgisID   func() null.Val[string]
+	ArcgisName func() null.Val[string]
 
 	r organizationR
 	f *Factory
@@ -91,6 +93,14 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.Name()
 		m.Name = omitnull.FromNull(val)
 	}
+	if o.ArcgisID != nil {
+		val := o.ArcgisID()
+		m.ArcgisID = omitnull.FromNull(val)
+	}
+	if o.ArcgisName != nil {
+		val := o.ArcgisName()
+		m.ArcgisName = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -118,6 +128,12 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.Name != nil {
 		m.Name = o.Name()
+	}
+	if o.ArcgisID != nil {
+		m.ArcgisID = o.ArcgisID()
+	}
+	if o.ArcgisName != nil {
+		m.ArcgisName = o.ArcgisName()
 	}
 
 	o.setModelRels(m)
@@ -261,6 +277,8 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 	return OrganizationModSlice{
 		OrganizationMods.RandomID(f),
 		OrganizationMods.RandomName(f),
+		OrganizationMods.RandomArcgisID(f),
+		OrganizationMods.RandomArcgisName(f),
 	}
 }
 
@@ -338,6 +356,112 @@ func (m organizationMods) RandomName(f *faker.Faker) OrganizationMod {
 func (m organizationMods) RandomNameNotNull(f *faker.Faker) OrganizationMod {
 	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
 		o.Name = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ArcgisID(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisID = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ArcgisIDFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisID = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetArcgisID() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomArcgisID(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomArcgisIDNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ArcgisName(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisName = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ArcgisNameFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisName = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetArcgisName() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisName = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomArcgisName(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisName = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomArcgisNameNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisName = func() null.Val[string] {
 			if f == nil {
 				f = &defaultFaker
 			}

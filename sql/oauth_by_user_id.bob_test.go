@@ -84,8 +84,8 @@ func TestOauthTokenByUserId(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(columns) != 6 {
-			t.Fatalf("expected %d columns, got %d", 6, len(columns))
+		if len(columns) != 8 {
+			t.Fatalf("expected %d columns, got %d", 8, len(columns))
 		}
 
 		if columns[0] != "id" {
@@ -110,6 +110,14 @@ func TestOauthTokenByUserId(t *testing.T) {
 
 		if columns[5] != "user_id" {
 			t.Fatalf("expected column %d to be %s, got %s", 5, "user_id", columns[5])
+		}
+
+		if columns[6] != "arcgis_id" {
+			t.Fatalf("expected column %d to be %s, got %s", 6, "arcgis_id", columns[6])
+		}
+
+		if columns[7] != "arcgis_license_type_id" {
+			t.Fatalf("expected column %d to be %s, got %s", 7, "arcgis_license_type_id", columns[7])
 		}
 	})
 }

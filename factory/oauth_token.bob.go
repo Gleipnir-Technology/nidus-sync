@@ -9,7 +9,9 @@ import (
 	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -35,12 +37,14 @@ func (mods OauthTokenModSlice) Apply(ctx context.Context, n *OauthTokenTemplate)
 // OauthTokenTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type OauthTokenTemplate struct {
-	ID           func() int32
-	AccessToken  func() string
-	Expires      func() time.Time
-	RefreshToken func() string
-	Username     func() string
-	UserID       func() int32
+	ID                  func() int32
+	AccessToken         func() string
+	Expires             func() time.Time
+	RefreshToken        func() string
+	Username            func() string
+	UserID              func() int32
+	ArcgisID            func() null.Val[string]
+	ArcgisLicenseTypeID func() null.Val[string]
 
 	r oauthTokenR
 	f *Factory
@@ -103,6 +107,14 @@ func (o OauthTokenTemplate) BuildSetter() *models.OauthTokenSetter {
 		val := o.UserID()
 		m.UserID = omit.From(val)
 	}
+	if o.ArcgisID != nil {
+		val := o.ArcgisID()
+		m.ArcgisID = omitnull.FromNull(val)
+	}
+	if o.ArcgisLicenseTypeID != nil {
+		val := o.ArcgisLicenseTypeID()
+		m.ArcgisLicenseTypeID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -142,6 +154,12 @@ func (o OauthTokenTemplate) Build() *models.OauthToken {
 	}
 	if o.UserID != nil {
 		m.UserID = o.UserID()
+	}
+	if o.ArcgisID != nil {
+		m.ArcgisID = o.ArcgisID()
+	}
+	if o.ArcgisLicenseTypeID != nil {
+		m.ArcgisLicenseTypeID = o.ArcgisLicenseTypeID()
 	}
 
 	o.setModelRels(m)
@@ -308,6 +326,8 @@ func (m oauthTokenMods) RandomizeAllColumns(f *faker.Faker) OauthTokenMod {
 		OauthTokenMods.RandomRefreshToken(f),
 		OauthTokenMods.RandomUsername(f),
 		OauthTokenMods.RandomUserID(f),
+		OauthTokenMods.RandomArcgisID(f),
+		OauthTokenMods.RandomArcgisLicenseTypeID(f),
 	}
 }
 
@@ -493,6 +513,112 @@ func (m oauthTokenMods) RandomUserID(f *faker.Faker) OauthTokenMod {
 	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
 		o.UserID = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m oauthTokenMods) ArcgisID(val null.Val[string]) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisID = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m oauthTokenMods) ArcgisIDFunc(f func() null.Val[string]) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisID = f
+	})
+}
+
+// Clear any values for the column
+func (m oauthTokenMods) UnsetArcgisID() OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m oauthTokenMods) RandomArcgisID(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m oauthTokenMods) RandomArcgisIDNotNull(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m oauthTokenMods) ArcgisLicenseTypeID(val null.Val[string]) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisLicenseTypeID = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m oauthTokenMods) ArcgisLicenseTypeIDFunc(f func() null.Val[string]) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisLicenseTypeID = f
+	})
+}
+
+// Clear any values for the column
+func (m oauthTokenMods) UnsetArcgisLicenseTypeID() OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisLicenseTypeID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m oauthTokenMods) RandomArcgisLicenseTypeID(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisLicenseTypeID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m oauthTokenMods) RandomArcgisLicenseTypeIDNotNull(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.ArcgisLicenseTypeID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

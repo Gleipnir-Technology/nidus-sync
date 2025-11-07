@@ -76,6 +76,8 @@ func (f *Factory) FromExistingOauthToken(m *models.OauthToken) *OauthTokenTempla
 	o.RefreshToken = func() string { return m.RefreshToken }
 	o.Username = func() string { return m.Username }
 	o.UserID = func() int32 { return m.UserID }
+	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
+	o.ArcgisLicenseTypeID = func() null.Val[string] { return m.ArcgisLicenseTypeID }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {
@@ -106,6 +108,8 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 
 	o.ID = func() int32 { return m.ID }
 	o.Name = func() null.Val[string] { return m.Name }
+	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
+	o.ArcgisName = func() null.Val[string] { return m.ArcgisName }
 
 	ctx := context.Background()
 	if len(m.R.User) > 0 {

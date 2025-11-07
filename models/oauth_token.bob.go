@@ -9,7 +9,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -24,12 +26,14 @@ import (
 
 // OauthToken is an object representing the database table.
 type OauthToken struct {
-	ID           int32     `db:"id,pk" `
-	AccessToken  string    `db:"access_token" `
-	Expires      time.Time `db:"expires" `
-	RefreshToken string    `db:"refresh_token" `
-	Username     string    `db:"username" `
-	UserID       int32     `db:"user_id" `
+	ID                  int32            `db:"id,pk" `
+	AccessToken         string           `db:"access_token" `
+	Expires             time.Time        `db:"expires" `
+	RefreshToken        string           `db:"refresh_token" `
+	Username            string           `db:"username" `
+	UserID              int32            `db:"user_id" `
+	ArcgisID            null.Val[string] `db:"arcgis_id" `
+	ArcgisLicenseTypeID null.Val[string] `db:"arcgis_license_type_id" `
 
 	R oauthTokenR `db:"-" `
 }
@@ -52,27 +56,31 @@ type oauthTokenR struct {
 func buildOauthTokenColumns(alias string) oauthTokenColumns {
 	return oauthTokenColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_token", "expires", "refresh_token", "username", "user_id",
+			"id", "access_token", "expires", "refresh_token", "username", "user_id", "arcgis_id", "arcgis_license_type_id",
 		).WithParent("oauth_token"),
-		tableAlias:   alias,
-		ID:           psql.Quote(alias, "id"),
-		AccessToken:  psql.Quote(alias, "access_token"),
-		Expires:      psql.Quote(alias, "expires"),
-		RefreshToken: psql.Quote(alias, "refresh_token"),
-		Username:     psql.Quote(alias, "username"),
-		UserID:       psql.Quote(alias, "user_id"),
+		tableAlias:          alias,
+		ID:                  psql.Quote(alias, "id"),
+		AccessToken:         psql.Quote(alias, "access_token"),
+		Expires:             psql.Quote(alias, "expires"),
+		RefreshToken:        psql.Quote(alias, "refresh_token"),
+		Username:            psql.Quote(alias, "username"),
+		UserID:              psql.Quote(alias, "user_id"),
+		ArcgisID:            psql.Quote(alias, "arcgis_id"),
+		ArcgisLicenseTypeID: psql.Quote(alias, "arcgis_license_type_id"),
 	}
 }
 
 type oauthTokenColumns struct {
 	expr.ColumnsExpr
-	tableAlias   string
-	ID           psql.Expression
-	AccessToken  psql.Expression
-	Expires      psql.Expression
-	RefreshToken psql.Expression
-	Username     psql.Expression
-	UserID       psql.Expression
+	tableAlias          string
+	ID                  psql.Expression
+	AccessToken         psql.Expression
+	Expires             psql.Expression
+	RefreshToken        psql.Expression
+	Username            psql.Expression
+	UserID              psql.Expression
+	ArcgisID            psql.Expression
+	ArcgisLicenseTypeID psql.Expression
 }
 
 func (c oauthTokenColumns) Alias() string {
@@ -87,16 +95,18 @@ func (oauthTokenColumns) AliasedAs(alias string) oauthTokenColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type OauthTokenSetter struct {
-	ID           omit.Val[int32]     `db:"id,pk" `
-	AccessToken  omit.Val[string]    `db:"access_token" `
-	Expires      omit.Val[time.Time] `db:"expires" `
-	RefreshToken omit.Val[string]    `db:"refresh_token" `
-	Username     omit.Val[string]    `db:"username" `
-	UserID       omit.Val[int32]     `db:"user_id" `
+	ID                  omit.Val[int32]      `db:"id,pk" `
+	AccessToken         omit.Val[string]     `db:"access_token" `
+	Expires             omit.Val[time.Time]  `db:"expires" `
+	RefreshToken        omit.Val[string]     `db:"refresh_token" `
+	Username            omit.Val[string]     `db:"username" `
+	UserID              omit.Val[int32]      `db:"user_id" `
+	ArcgisID            omitnull.Val[string] `db:"arcgis_id" `
+	ArcgisLicenseTypeID omitnull.Val[string] `db:"arcgis_license_type_id" `
 }
 
 func (s OauthTokenSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 8)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -114,6 +124,12 @@ func (s OauthTokenSetter) SetColumns() []string {
 	}
 	if s.UserID.IsValue() {
 		vals = append(vals, "user_id")
+	}
+	if !s.ArcgisID.IsUnset() {
+		vals = append(vals, "arcgis_id")
+	}
+	if !s.ArcgisLicenseTypeID.IsUnset() {
+		vals = append(vals, "arcgis_license_type_id")
 	}
 	return vals
 }
@@ -137,6 +153,12 @@ func (s OauthTokenSetter) Overwrite(t *OauthToken) {
 	if s.UserID.IsValue() {
 		t.UserID = s.UserID.MustGet()
 	}
+	if !s.ArcgisID.IsUnset() {
+		t.ArcgisID = s.ArcgisID.MustGetNull()
+	}
+	if !s.ArcgisLicenseTypeID.IsUnset() {
+		t.ArcgisLicenseTypeID = s.ArcgisLicenseTypeID.MustGetNull()
+	}
 }
 
 func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
@@ -145,7 +167,7 @@ func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 8)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -182,6 +204,18 @@ func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
+		if !s.ArcgisID.IsUnset() {
+			vals[6] = psql.Arg(s.ArcgisID.MustGetNull())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
+		if !s.ArcgisLicenseTypeID.IsUnset() {
+			vals[7] = psql.Arg(s.ArcgisLicenseTypeID.MustGetNull())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -191,7 +225,7 @@ func (s OauthTokenSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OauthTokenSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 8)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -232,6 +266,20 @@ func (s OauthTokenSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "user_id")...),
 			psql.Arg(s.UserID),
+		}})
+	}
+
+	if !s.ArcgisID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "arcgis_id")...),
+			psql.Arg(s.ArcgisID),
+		}})
+	}
+
+	if !s.ArcgisLicenseTypeID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "arcgis_license_type_id")...),
+			psql.Arg(s.ArcgisLicenseTypeID),
 		}})
 	}
 
@@ -534,12 +582,14 @@ func (oauthToken0 *OauthToken) AttachUserUser(ctx context.Context, exec bob.Exec
 }
 
 type oauthTokenWhere[Q psql.Filterable] struct {
-	ID           psql.WhereMod[Q, int32]
-	AccessToken  psql.WhereMod[Q, string]
-	Expires      psql.WhereMod[Q, time.Time]
-	RefreshToken psql.WhereMod[Q, string]
-	Username     psql.WhereMod[Q, string]
-	UserID       psql.WhereMod[Q, int32]
+	ID                  psql.WhereMod[Q, int32]
+	AccessToken         psql.WhereMod[Q, string]
+	Expires             psql.WhereMod[Q, time.Time]
+	RefreshToken        psql.WhereMod[Q, string]
+	Username            psql.WhereMod[Q, string]
+	UserID              psql.WhereMod[Q, int32]
+	ArcgisID            psql.WhereNullMod[Q, string]
+	ArcgisLicenseTypeID psql.WhereNullMod[Q, string]
 }
 
 func (oauthTokenWhere[Q]) AliasedAs(alias string) oauthTokenWhere[Q] {
@@ -548,12 +598,14 @@ func (oauthTokenWhere[Q]) AliasedAs(alias string) oauthTokenWhere[Q] {
 
 func buildOauthTokenWhere[Q psql.Filterable](cols oauthTokenColumns) oauthTokenWhere[Q] {
 	return oauthTokenWhere[Q]{
-		ID:           psql.Where[Q, int32](cols.ID),
-		AccessToken:  psql.Where[Q, string](cols.AccessToken),
-		Expires:      psql.Where[Q, time.Time](cols.Expires),
-		RefreshToken: psql.Where[Q, string](cols.RefreshToken),
-		Username:     psql.Where[Q, string](cols.Username),
-		UserID:       psql.Where[Q, int32](cols.UserID),
+		ID:                  psql.Where[Q, int32](cols.ID),
+		AccessToken:         psql.Where[Q, string](cols.AccessToken),
+		Expires:             psql.Where[Q, time.Time](cols.Expires),
+		RefreshToken:        psql.Where[Q, string](cols.RefreshToken),
+		Username:            psql.Where[Q, string](cols.Username),
+		UserID:              psql.Where[Q, int32](cols.UserID),
+		ArcgisID:            psql.WhereNull[Q, string](cols.ArcgisID),
+		ArcgisLicenseTypeID: psql.WhereNull[Q, string](cols.ArcgisLicenseTypeID),
 	}
 }
 

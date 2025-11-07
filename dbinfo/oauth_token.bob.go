@@ -69,6 +69,24 @@ var OauthTokens = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ArcgisID: column{
+			Name:      "arcgis_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ArcgisLicenseTypeID: column{
+			Name:      "arcgis_license_type_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: oauthTokenIndexes{
 		OauthTokenPkey: index{
@@ -110,17 +128,19 @@ var OauthTokens = Table[
 }
 
 type oauthTokenColumns struct {
-	ID           column
-	AccessToken  column
-	Expires      column
-	RefreshToken column
-	Username     column
-	UserID       column
+	ID                  column
+	AccessToken         column
+	Expires             column
+	RefreshToken        column
+	Username            column
+	UserID              column
+	ArcgisID            column
+	ArcgisLicenseTypeID column
 }
 
 func (c oauthTokenColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessToken, c.Expires, c.RefreshToken, c.Username, c.UserID,
+		c.ID, c.AccessToken, c.Expires, c.RefreshToken, c.Username, c.UserID, c.ArcgisID, c.ArcgisLicenseTypeID,
 	}
 }
 

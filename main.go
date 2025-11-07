@@ -76,6 +76,9 @@ func main() {
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
 
+	newTokenChannel := make(chan int)
+	endChannel := make(chan struct{})
+	go refreshFieldseekerData(newTokenChannel, endChannel)
 	log.Printf("Serving on %s", bind)
 	log.Fatal(http.ListenAndServe(bind, r))
 }

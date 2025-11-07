@@ -39,3 +39,14 @@ PSQL_DSN="postgresql://?host=/var/run/postgresql&sslmode=disable&dbname=nidus-sy
 ```
 
 This will generate a bunch of files. They're already committed, you only need this if you change the database schema in some way.
+
+### goose
+
+This uses [goose](https://github.com/pressly/goose). You can use the goose command line to check status and make changes
+
+```sh
+> cd migrations
+> GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose status
+> GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose down
+> GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose up
+```
