@@ -1,0 +1,365 @@
+{{template "base.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "style"}}
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.map-container {
+	height: 400px;
+	background-color: #e9ecef;
+	border-radius: 5px;
+	border: 1px solid #dee2e6;
+	position: relative;
+}
+.map-placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	flex-direction: column;
+}
+.map-overlay {
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+	background-color: rgba(255, 255, 255, 0.9);
+	padding: 10px;
+	border-radius: 5px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	max-width: 250px;
+}
+.map-controls {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+.map-control-btn {
+	width: 40px;
+	height: 40px;
+	background-color: white;
+	border: 1px solid #dee2e6;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.report-type-icon {
+	font-size: 1.2rem;
+}
+.days-ago {
+	font-size: 0.85rem;
+	color: #6c757d;
+}
+.status-badge {
+	font-size: 0.85rem;
+	font-weight: normal;
+	padding: 6px 10px;
+}
+.report-row:hover {
+	background-color: rgba(13, 110, 253, 0.05);
+	cursor: pointer;
+}
+.instruction-card {
+	border-left: 4px solid #0d6efd;
+}
+{{end}}
+{{define "content"}}
+<!-- Header -->
+<header class="bg-light py-3">
+	<div class="container">
+		<div class="row align-items-center">
+			<div class="col-md-6">
+				<h1 class="district-name">[District Name]</h1>
+			</div>
+			<div class="col-md-6 text-md-end">
+				<img src="placeholder-logo.png" alt="District Logo" class="district-logo">
+			</div>
+		</div>
+	</div>
+</header>
+
+<!-- Main Content -->
+<main class="py-5">
+	<div class="container">
+		<!-- Page Title -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<h2>Lookup Reports by Location</h2>
+				<p class="lead">Find reports and mosquito activity in your area</p>
+			</div>
+		</div>
+
+		<!-- Instructions Card -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card instruction-card">
+					<div class="card-body">
+						<h5><i class="bi bi-info-circle me-2"></i>How to use this tool</h5>
+						<p class="mb-0">You can either <strong>enter an address</strong> in the search box or <strong>navigate the map</strong> by dragging and zooming to find reports in your area. The table below will update automatically to show reports within the current map view.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Search and Map Section -->
+		<div class="row mb-4">
+			<div class="col-md-4 mb-3 mb-md-0">
+				<!-- Address Search -->
+				<div class="card h-100">
+					<div class="card-header">
+						<h5 class="mb-0">Search by Address</h5>
+					</div>
+					<div class="card-body">
+						<form id="addressSearchForm">
+							<div class="mb-3">
+								<label for="addressInput" class="form-label">Enter an address or location</label>
+								<div class="input-group">
+									<input type="text" class="form-control" id="addressInput" placeholder="123 Main St, City, State">
+									<button class="btn btn-primary" type="submit">
+										<i class="bi bi-search"></i>
+									</button>
+								</div>
+							</div>
+							<div class="mb-3">
+								<label class="form-label">Search radius</label>
+								<select class="form-select" id="searchRadius">
+									<option value="0.5">0.5 miles</option>
+									<option value="1" selected>1 mile</option>
+									<option value="2">2 miles</option>
+									<option value="5">5 miles</option>
+								</select>
+							</div>
+						</form>
+
+						<div class="alert alert-info mt-4">
+							<small><i class="bi bi-eye me-1"></i> Currently showing reports within <strong>1 mile</strong> of map center</small>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-8">
+				<!-- Map Area -->
+				<div class="map-container">
+					<div class="map-placeholder">
+						<i class="bi bi-map fs-1 text-secondary mb-2"></i>
+						<p class="mb-1 fw-bold">Interactive Map Area</p>
+						<p class="text-muted small mb-0">The map will display here and allow you to navigate the area</p>
+					</div>
+					
+					<!-- Simulated map controls -->
+					<div class="map-controls">
+						<button class="map-control-btn">
+							<i class="bi bi-plus"></i>
+						</button>
+						<button class="map-control-btn">
+							<i class="bi bi-dash"></i>
+						</button>
+						<button class="map-control-btn">
+							<i class="bi bi-house"></i>
+						</button>
+					</div>
+
+					<!-- Map overlay showing current view -->
+					<div class="map-overlay">
+						<div class="small fw-bold mb-1">Current View</div>
+						<div class="small">Lakeside, CA</div>
+						<div class="small text-muted">32.857° N, 116.922° W</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Results Section -->
+		<div class="row">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header d-flex justify-content-between align-items-center">
+						<h5 class="mb-0">Reports in This Area</h5>
+						<span class="badge bg-secondary">Showing 12 of 37 total reports</span>
+					</div>
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table table-hover mb-0">
+								<thead class="table-light">
+									<tr>
+										<th>Type</th>
+										<th>Location</th>
+										<th>Submitted</th>
+										<th>Status</th>
+										<th>Report ID</th>
+									</tr>
+								</thead>
+								<tbody>
+									<!-- Report Row 1 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-primary me-1">
+												<i class="bi bi-water"></i>
+											</span>
+											Green Pool
+										</td>
+										<td>123 Mosquito Ave</td>
+										<td>
+											Oct 15, 2023
+											<div class="days-ago">5 days ago</div>
+										</td>
+										<td>
+											<span class="badge bg-primary status-badge">Scheduled</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12345">MMD-2023-12345</a>
+										</td>
+									</tr>
+									
+									<!-- Report Row 2 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-danger me-1">
+												<i class="bi bi-bug"></i>
+											</span>
+											Mosquito Nuisance
+										</td>
+										<td>456 Lake Dr</td>
+										<td>
+											Oct 12, 2023
+											<div class="days-ago">8 days ago</div>
+										</td>
+										<td>
+											<span class="badge bg-success status-badge">Complete</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12341">MMD-2023-12341</a>
+										</td>
+									</tr>
+									
+									<!-- Report Row 3 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-success me-1">
+												<i class="bi bi-droplet"></i>
+											</span>
+											Fish Request
+										</td>
+										<td>789 Creek Rd</td>
+										<td>
+											Oct 18, 2023
+											<div class="days-ago">2 days ago</div>
+										</td>
+										<td>
+											<span class="badge bg-warning text-dark status-badge">Acknowledged</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12350">MMD-2023-12350</a>
+										</td>
+									</tr>
+									
+									<!-- Report Row 4 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-danger me-1">
+												<i class="bi bi-bug"></i>
+											</span>
+											Mosquito Nuisance
+										</td>
+										<td>101 Pond Ln</td>
+										<td>
+											Sep 25, 2023
+											<div class="days-ago">25 days ago</div>
+										</td>
+										<td>
+											<span class="badge bg-success status-badge">Complete</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12289">MMD-2023-12289</a>
+										</td>
+									</tr>
+									
+									<!-- Report Row 5 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-primary me-1">
+												<i class="bi bi-water"></i>
+											</span>
+											Green Pool
+										</td>
+										<td>202 Highland Ave</td>
+										<td>
+											Oct 19, 2023
+											<div class="days-ago">1 day ago</div>
+										</td>
+										<td>
+											<span class="badge bg-secondary status-badge">Submitted</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12356">MMD-2023-12356</a>
+										</td>
+									</tr>
+									
+									<!-- Report Row 6 -->
+									<tr class="report-row">
+										<td>
+											<span class="report-type-icon text-primary me-1">
+												<i class="bi bi-water"></i>
+											</span>
+											Green Pool
+										</td>
+										<td>303 Marsh Way</td>
+										<td>
+											Aug 15, 2023
+											<div class="days-ago">2 months ago</div>
+										</td>
+										<td>
+											<span class="badge bg-success status-badge">Complete</span>
+										</td>
+										<td>
+											<a href="/report-details?id=MMD-2023-12056">MMD-2023-12056</a>
+										</td>
+									</tr>
+									
+									<!-- More rows would go here -->
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="card-footer text-center">
+						<p class="mb-0 small text-muted">
+							Showing reports submitted within the last 6 months. The table displays up to 20 reports at a time.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Back Button -->
+		<div class="row mt-4">
+			<div class="col-12">
+				<a href="/check-status" class="btn btn-outline-secondary">
+					<i class="bi bi-arrow-left"></i> Back to Status Check
+				</a>
+			</div>
+		</div>
+	</div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+				<p class="mb-0">&copy; 2023 [District Name] Mosquito Management District</p>
+			</div>
+			<div class="col-md-6 text-md-end">
+				<p class="mb-0">Contact: (555) 123-4567 | info@mosquitodistrict.gov</p>
+			</div>
+		</div>
+	</div>
+</footer>
+{{end}}

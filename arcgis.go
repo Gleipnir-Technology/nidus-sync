@@ -358,6 +358,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 			if err != nil {
 				return fmt.Errorf("Failed to export Fieldseeker data: %v", err)
 			}
+			slog.Info("Completed exporting data, waiting 15 minutes to go agoin.")
 			pollTicker = time.NewTicker(15 * time.Minute)
 		}
 	}
@@ -400,7 +401,9 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 		RecordsUnchanged: omit.From(int32(stats.Unchanged)),
 	}
 	err = org.InsertFieldseekerSyncs(ctx, PGInstance.BobDB, &setter)
-	//err = user.InsertUserOauthTokens(ctx, PGInstance.BobDB, &setter)
+	if err != nil {
+		return fmt.Errorf("Failed to insert sync: %v", err)
+	}
 
 	return nil
 }

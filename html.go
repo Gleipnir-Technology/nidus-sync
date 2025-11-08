@@ -18,17 +18,23 @@ import (
 )
 
 var (
-	dashboard          = newBuiltTemplate("dashboard", "authenticated")
-	oauthPrompt        = newBuiltTemplate("oauth-prompt", "authenticated")
-	report             = newBuiltTemplate("report", "base")
-	reportConfirmation = newBuiltTemplate("report-confirmation", "base")
-	reportContribute   = newBuiltTemplate("report-contribute", "base")
-	reportDetail       = newBuiltTemplate("report-detail", "base")
-	reportEvidence     = newBuiltTemplate("report-evidence", "base")
-	reportSchedule     = newBuiltTemplate("report-schedule", "base")
-	reportUpdate       = newBuiltTemplate("report-update", "base")
-	signin             = newBuiltTemplate("signin", "base")
-	signup             = newBuiltTemplate("signup", "base")
+	dashboard              = newBuiltTemplate("dashboard", "authenticated")
+	oauthPrompt            = newBuiltTemplate("oauth-prompt", "authenticated")
+	report                 = newBuiltTemplate("report", "base")
+	reportConfirmation     = newBuiltTemplate("report-confirmation", "base")
+	reportContribute       = newBuiltTemplate("report-contribute", "base")
+	reportDetail           = newBuiltTemplate("report-detail", "base")
+	reportEvidence         = newBuiltTemplate("report-evidence", "base")
+	reportSchedule         = newBuiltTemplate("report-schedule", "base")
+	reportUpdate           = newBuiltTemplate("report-update", "base")
+	serviceRequest         = newBuiltTemplate("service-request", "base")
+	serviceRequestDetail   = newBuiltTemplate("service-request-detail", "base")
+	serviceRequestLocation = newBuiltTemplate("service-request-location", "base")
+	serviceRequestMosquito = newBuiltTemplate("service-request-mosquito", "base")
+	serviceRequestPool     = newBuiltTemplate("service-request-pool", "base")
+	serviceRequestUpdates  = newBuiltTemplate("service-request-updates", "base")
+	signin                 = newBuiltTemplate("signin", "base")
+	signup                 = newBuiltTemplate("signup", "base")
 )
 var components = [...]string{"header"}
 
@@ -52,7 +58,7 @@ type ContentDashboard struct {
 	CountInspections     int
 	CountMosquitoSources int
 	CountServiceRequests int
-	LastSync             string
+	LastSync             time.Time
 	Org                  string
 	RecentRequests       []ServiceRequestSummary
 	User                 User
@@ -109,13 +115,12 @@ func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get org: %v", err)
 	}
-	var syncString string
+	var lastSync time.Time
 	sync, err := org.FieldseekerSyncs(sm.OrderBy("created")).One(ctx, PGInstance.BobDB)
 	if err != nil {
-		//return fmt.Errorf("Failed to get sync: %v", err)
-		syncString = "never"
+		return fmt.Errorf("Failed to get sync: %v", err)
 	} else {
-		syncString = sync.Created.String()
+		lastSync = sync.Created
 	}
 	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, PGInstance.BobDB)
 	if err != nil {
@@ -146,7 +151,7 @@ func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
-		LastSync:             syncString,
+		LastSync:             lastSync,
 		Org:                  org.Name.MustGet(),
 		RecentRequests:       requests,
 		User: User{
@@ -224,6 +229,36 @@ func htmlReportUpdate(w io.Writer, code string) error {
 		NextURL: nextURL,
 	}
 	return reportUpdate.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequest(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequest.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestDetail(w io.Writer, code string) error {
+	data := ContentPlaceholder{}
+	return serviceRequestDetail.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestLocation(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestLocation.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestMosquito(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestMosquito.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestPool(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestPool.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestUpdates(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestUpdates.ExecuteTemplate(w, data)
 }
 
 func htmlSignin(w io.Writer, errorCode string) error {
@@ -311,6 +346,7 @@ func timeSince(t time.Time) string {
 	diff := now.Sub(t)
 
 	hours := diff.Hours()
+	slog.Info("time since", slog.String("t", t.String()), slog.Float64("hours", hours))
 	if hours < 1 {
 		minutes := diff.Minutes()
 		return fmt.Sprintf("%d minutes ago", int(minutes))

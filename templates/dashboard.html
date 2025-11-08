@@ -69,7 +69,7 @@ body {
 		</div>
 		<div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end">
 			<p class="last-refreshed mb-0">
-			<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync }}</span>
+			<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync | timeSince }}</span>
 				<button class="btn btn-sm btn-outline-primary ms-3">Refresh Data</button>
 			</p>
 		</div>
@@ -85,7 +85,7 @@ body {
 						<i class="fas fa-clock"></i>
 					</div>
 					<h5 class="card-title">Last Data Refresh</h5>
-					<p class="metric-value">{{ .LastSync }}</p>
+					<p class="metric-value">{{ .LastSync | timeSince }}</p>
 					<p class="card-text text-muted">Last sync: 12:45 PM</p>
 				</div>
 			</div>

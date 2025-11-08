@@ -182,6 +182,50 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to render root", err, http.StatusInternalServerError)
 	}
 }
+
+func getServiceRequest(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequest(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestDetail(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	err := htmlServiceRequestDetail(w, code)
+	if err != nil {
+		respondError(w, "Failed to generate service request page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestLocation(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestLocation(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request location page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestMosquito(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestMosquito(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request mosquito page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestPool(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestPool(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request pool page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestUpdates(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request updates page", err, http.StatusInternalServerError)
+	}
+}
+
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	err := htmlSignup(w, r.URL.Path)
 	if err != nil {
