@@ -13,28 +13,30 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
-	"github.com/riverqueue/river/rivershared/util/slogutil"
+	//"github.com/riverqueue/river/rivershared/util/slogutil"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
 var (
-	dashboard              = newBuiltTemplate("dashboard", "authenticated")
-	oauthPrompt            = newBuiltTemplate("oauth-prompt", "authenticated")
-	report                 = newBuiltTemplate("report", "base")
-	reportConfirmation     = newBuiltTemplate("report-confirmation", "base")
-	reportContribute       = newBuiltTemplate("report-contribute", "base")
-	reportDetail           = newBuiltTemplate("report-detail", "base")
-	reportEvidence         = newBuiltTemplate("report-evidence", "base")
-	reportSchedule         = newBuiltTemplate("report-schedule", "base")
-	reportUpdate           = newBuiltTemplate("report-update", "base")
-	serviceRequest         = newBuiltTemplate("service-request", "base")
-	serviceRequestDetail   = newBuiltTemplate("service-request-detail", "base")
-	serviceRequestLocation = newBuiltTemplate("service-request-location", "base")
-	serviceRequestMosquito = newBuiltTemplate("service-request-mosquito", "base")
-	serviceRequestPool     = newBuiltTemplate("service-request-pool", "base")
-	serviceRequestUpdates  = newBuiltTemplate("service-request-updates", "base")
-	signin                 = newBuiltTemplate("signin", "base")
-	signup                 = newBuiltTemplate("signup", "base")
+	dashboard                       = newBuiltTemplate("dashboard", "authenticated")
+	oauthPrompt                     = newBuiltTemplate("oauth-prompt", "authenticated")
+	report                          = newBuiltTemplate("report", "base")
+	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
+	reportContribute                = newBuiltTemplate("report-contribute", "base")
+	reportDetail                    = newBuiltTemplate("report-detail", "base")
+	reportEvidence                  = newBuiltTemplate("report-evidence", "base")
+	reportSchedule                  = newBuiltTemplate("report-schedule", "base")
+	reportUpdate                    = newBuiltTemplate("report-update", "base")
+	serviceRequest                  = newBuiltTemplate("service-request", "base")
+	serviceRequestDetail            = newBuiltTemplate("service-request-detail", "base")
+	serviceRequestLocation          = newBuiltTemplate("service-request-location", "base")
+	serviceRequestMosquito          = newBuiltTemplate("service-request-mosquito", "base")
+	serviceRequestPool              = newBuiltTemplate("service-request-pool", "base")
+	serviceRequestQuick             = newBuiltTemplate("service-request-quick", "base")
+	serviceRequestQuickConfirmation = newBuiltTemplate("service-request-quick-confirmation", "base")
+	serviceRequestUpdates           = newBuiltTemplate("service-request-updates", "base")
+	signin                          = newBuiltTemplate("signin", "base")
+	signup                          = newBuiltTemplate("signup", "base")
 )
 var components = [...]string{"header"}
 
@@ -256,6 +258,16 @@ func htmlServiceRequestPool(w io.Writer) error {
 	return serviceRequestPool.ExecuteTemplate(w, data)
 }
 
+func htmlServiceRequestQuick(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestQuick.ExecuteTemplate(w, data)
+}
+
+func htmlServiceRequestQuickConfirmation(w io.Writer) error {
+	data := ContentPlaceholder{}
+	return serviceRequestQuickConfirmation.ExecuteTemplate(w, data)
+}
+
 func htmlServiceRequestUpdates(w io.Writer) error {
 	data := ContentPlaceholder{}
 	return serviceRequestUpdates.ExecuteTemplate(w, data)
@@ -316,7 +328,7 @@ func parseFromDisk(files []string) (*template.Template, error) {
 	for _, f := range components {
 		paths = append(paths, "templates/components/"+f+".html")
 	}
-	slog.Info("Rendering templates from disk", slog.Any("paths", slogutil.SliceString(paths)))
+	//slog.Info("Rendering templates from disk", slog.Any("paths", slogutil.SliceString(paths)))
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse %s: %v", paths, err)

@@ -76,6 +76,8 @@ func main() {
 	r.Get("/service-request-location", getServiceRequestLocation)
 	r.Get("/service-request-mosquito", getServiceRequestMosquito)
 	r.Get("/service-request-pool", getServiceRequestPool)
+	r.Get("/service-request-quick", getServiceRequestQuick)
+	r.Get("/service-request-quick-confirmation", getServiceRequestQuickConfirmation)
 	r.Get("/service-request-updates", getServiceRequestUpdates)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)

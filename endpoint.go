@@ -219,6 +219,20 @@ func getServiceRequestPool(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getServiceRequestQuick(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestQuick(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request quick page", err, http.StatusInternalServerError)
+	}
+}
+
+func getServiceRequestQuickConfirmation(w http.ResponseWriter, r *http.Request) {
+	err := htmlServiceRequestQuickConfirmation(w)
+	if err != nil {
+		respondError(w, "Failed to generate service request quick confirmation page", err, http.StatusInternalServerError)
+	}
+}
+
 func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
 	err := htmlServiceRequestUpdates(w)
 	if err != nil {
