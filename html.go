@@ -84,9 +84,10 @@ type ServiceRequestSummary struct {
 	Status   string
 }
 type User struct {
-	DisplayName string
-	Initials    string
-	Username    string
+	DisplayName   string
+	Initials      string
+	Notifications []Notification
+	Username      string
 }
 
 func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
@@ -162,6 +163,11 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 			Status:   "Completed",
 		})
 	}
+	notifications, err := notificationsForUser(user)
+	if err != nil {
+		respondError(w, "Failed to get notifications", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentDashboard{
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
@@ -170,9 +176,10 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		Org:                  org.Name.MustGet(),
 		RecentRequests:       requests,
 		User: User{
-			DisplayName: user.DisplayName,
-			Initials:    extractInitials(user.DisplayName),
-			Username:    user.Username,
+			DisplayName:   user.DisplayName,
+			Initials:      extractInitials(user.DisplayName),
+			Notifications: notifications,
+			Username:      user.Username,
 		},
 	}
 	renderOrError(w, dashboard, data)
@@ -394,16 +401,18 @@ func timeSince(t time.Time) string {
 }
 
 type Notification struct {
-	Created time.Time
 	Link    string
 	Message string
+	Time    time.Time
+	Type    string
 }
 
 func notificationsForUser(u *models.User) ([]Notification, error) {
 	return []Notification{Notification{
-		Created: time.Now(),
 		Link:    "/foo/bar",
 		Message: "hey, your oauth is broken.",
+		Time:    time.Now(),
+		Type:    "alert",
 	}}, nil
 }
 
