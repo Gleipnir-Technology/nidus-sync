@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -42,6 +44,7 @@ var components = [...]string{"header"}
 
 type BuiltTemplate struct {
 	files    []string
+	name     string
 	template *template.Template
 }
 
@@ -112,33 +115,39 @@ func extractInitials(name string) string {
 	return initials.String()
 }
 
-func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
+func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get org: %v", err)
+		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
+		return
 	}
 	var lastSync time.Time
 	sync, err := org.FieldseekerSyncs(sm.OrderBy("created")).One(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get sync: %v", err)
+		respondError(w, "Failed to get syncs", err, http.StatusInternalServerError)
+		return
 	} else {
 		lastSync = sync.Created
 	}
 	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get inspection count: %v", err)
+		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
+		return
 	}
 	sourceCount, err := org.FSPointlocations().Count(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get inspection count: %v", err)
+		respondError(w, "Failed to get source count", err, http.StatusInternalServerError)
+		return
 	}
 	serviceCount, err := org.FSServicerequests().Count(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get service count: %v", err)
+		respondError(w, "Failed to get service count", err, http.StatusInternalServerError)
+		return
 	}
 	recentRequests, err := org.FSServicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get recent service: %v", err)
+		respondError(w, "Failed to get recent service", err, http.StatusInternalServerError)
+		return
 	}
 
 	requests := make([]ServiceRequestSummary, 0)
@@ -162,7 +171,7 @@ func htmlDashboard(ctx context.Context, w io.Writer, user *models.User) error {
 			Username:    user.Username,
 		},
 	}
-	return dashboard.ExecuteTemplate(w, data)
+	renderOrError(w, dashboard, data)
 }
 
 func htmlOauthPrompt(w io.Writer, user *models.User) error {
@@ -292,9 +301,10 @@ func makeFuncMap() template.FuncMap {
 	}
 	return funcMap
 }
-func newBuiltTemplate(files ...string) BuiltTemplate {
+func newBuiltTemplate(name string, files ...string) BuiltTemplate {
 	files_on_disk := true
-	for _, f := range files {
+	all_files := append([]string{name}, files...)
+	for _, f := range all_files {
 		full_path := "templates/" + f + ".html"
 		_, err := os.Stat(full_path)
 		if err != nil {
@@ -304,13 +314,15 @@ func newBuiltTemplate(files ...string) BuiltTemplate {
 	}
 	if files_on_disk {
 		return BuiltTemplate{
-			files:    files,
+			files:    all_files,
+			name:     name,
 			template: nil,
 		}
 	}
 	return BuiltTemplate{
-		files:    files,
-		template: parseEmbedded(files),
+		files:    all_files,
+		name:     name,
+		template: parseEmbedded(all_files),
 	}
 }
 
@@ -368,4 +380,29 @@ func timeSince(t time.Time) string {
 		days := hours / 24
 		return fmt.Sprintf("%d days ago", int(days))
 	}
+}
+
+type Notification struct {
+	Created time.Time
+	Link    string
+	Message string
+}
+
+func notificationsForUser(u *models.User) ([]Notification, error) {
+	return []Notification{Notification{
+		Created: time.Now(),
+		Link:    "/foo/bar",
+		Message: "hey, your oauth is broken.",
+	}}, nil
+}
+
+func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interface{}) {
+	buf := &bytes.Buffer{}
+	err := template.ExecuteTemplate(buf, context)
+	if err != nil {
+		slog.Error("Failed to render template", slog.String("err", err.Error()), slog.String("template", template.name))
+		respondError(w, "Failed to render template", err, http.StatusInternalServerError)
+		return
+	}
+	buf.WriteTo(w)
 }
