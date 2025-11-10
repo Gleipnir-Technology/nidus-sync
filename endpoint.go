@@ -42,6 +42,10 @@ func getFavicon(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/favicon.ico")
 }
 
+func getPhoneCall(w http.ResponseWriter, r *http.Request) {
+	htmlPhoneCall(w)
+}
+
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {

@@ -22,6 +22,7 @@ import (
 var (
 	dashboard                       = newBuiltTemplate("dashboard", "authenticated")
 	oauthPrompt                     = newBuiltTemplate("oauth-prompt", "authenticated")
+	phoneCall                       = newBuiltTemplate("phone-call", "base")
 	report                          = newBuiltTemplate("report", "base")
 	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
 	reportContribute                = newBuiltTemplate("report-contribute", "base")
@@ -51,6 +52,9 @@ type BuiltTemplate struct {
 type Link struct {
 	Href  string
 	Title string
+}
+type ContentPhoneCall struct {
+	DistrictName string
 }
 type ContentReportDetail struct {
 	NextURL   string
@@ -183,6 +187,13 @@ func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
 		},
 	}
 	renderOrError(w, oauthPrompt, data)
+}
+
+func htmlPhoneCall(w http.ResponseWriter) {
+	data := ContentPhoneCall{
+		DistrictName: "[District Name]",
+	}
+	renderOrError(w, phoneCall, data)
 }
 
 func htmlReport(w http.ResponseWriter) {
