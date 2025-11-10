@@ -103,58 +103,37 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 }
 func getReport(w http.ResponseWriter, r *http.Request) {
 	//org := r.URL.Query().Get("org")
-	err := htmlReport(w)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReport(w)
 }
 
 func getReportConfirmation(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportConfirmation(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportConfirmation(w, code)
 }
 
 func getReportContribute(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportContribute(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportContribute(w, code)
 }
 
 func getReportDetail(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportDetail(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportDetail(w, code)
 }
 
 func getReportEvidence(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportEvidence(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportEvidence(w, code)
 }
 
 func getReportSchedule(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportSchedule(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportSchedule(w, code)
 }
 
 func getReportUpdate(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlReportUpdate(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate report page", err, http.StatusInternalServerError)
-	}
+	htmlReportUpdate(w, code)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +144,8 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		errorCode := r.URL.Query().Get("error")
-		err = htmlSignin(w, errorCode)
+		htmlSignin(w, errorCode)
+		return
 	} else {
 		has, err := hasFieldseekerConnection(r.Context(), user)
 		if err != nil {
@@ -176,7 +156,8 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 			htmlDashboard(r.Context(), w, user)
 			return
 		} else {
-			err = htmlOauthPrompt(w, user)
+			htmlOauthPrompt(w, user)
+			return
 		}
 	}
 	if err != nil {
@@ -185,67 +166,40 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getServiceRequest(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequest(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequest(w)
 }
 
 func getServiceRequestDetail(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
-	err := htmlServiceRequestDetail(w, code)
-	if err != nil {
-		respondError(w, "Failed to generate service request page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestDetail(w, code)
 }
 
 func getServiceRequestLocation(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestLocation(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request location page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestLocation(w)
 }
 
 func getServiceRequestMosquito(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestMosquito(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request mosquito page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestMosquito(w)
 }
 
 func getServiceRequestPool(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestPool(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request pool page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestPool(w)
 }
 
 func getServiceRequestQuick(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestQuick(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request quick page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestQuick(w)
 }
 
 func getServiceRequestQuickConfirmation(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestQuickConfirmation(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request quick confirmation page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestQuickConfirmation(w)
 }
 
 func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
-	err := htmlServiceRequestUpdates(w)
-	if err != nil {
-		respondError(w, "Failed to generate service request updates page", err, http.StatusInternalServerError)
-	}
+	htmlServiceRequestUpdates(w)
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
-	err := htmlSignup(w, r.URL.Path)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	htmlSignup(w, r.URL.Path)
 }
 
 func respondError(w http.ResponseWriter, m string, e error, s int) {

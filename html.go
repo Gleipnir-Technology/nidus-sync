@@ -174,7 +174,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	renderOrError(w, dashboard, data)
 }
 
-func htmlOauthPrompt(w io.Writer, user *models.User) error {
+func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
 	data := ContentDashboard{
 		User: User{
 			DisplayName: user.DisplayName,
@@ -182,116 +182,116 @@ func htmlOauthPrompt(w io.Writer, user *models.User) error {
 			Username:    user.Username,
 		},
 	}
-	return oauthPrompt.ExecuteTemplate(w, data)
+	renderOrError(w, oauthPrompt, data)
 }
 
-func htmlReport(w io.Writer) error {
+func htmlReport(w http.ResponseWriter) {
 	url := BaseURL + "/report/t78fd3"
 	data := ContentReportDiagnostic{
 		URL: url,
 	}
-	return report.ExecuteTemplate(w, data)
+	renderOrError(w, report, data)
 }
 
-func htmlReportConfirmation(w io.Writer, code string) error {
+func htmlReportConfirmation(w http.ResponseWriter, code string) {
 	url := BaseURL + "/report/" + code + "/history"
 	data := ContentReportDiagnostic{
 		URL: url,
 	}
-	return reportConfirmation.ExecuteTemplate(w, data)
+	renderOrError(w, reportConfirmation, data)
 }
 
-func htmlReportContribute(w io.Writer, code string) error {
+func htmlReportContribute(w http.ResponseWriter, code string) {
 	nextURL := BaseURL + "/report/" + code + "/schedule"
 	data := ContentReportDetail{
 		NextURL: nextURL,
 	}
-	return reportContribute.ExecuteTemplate(w, data)
+	renderOrError(w, reportContribute, data)
 }
 
-func htmlReportDetail(w io.Writer, code string) error {
+func htmlReportDetail(w http.ResponseWriter, code string) {
 	nextURL := BaseURL + "/report/" + code + "/evidence"
 	data := ContentReportDetail{
 		NextURL:   nextURL,
 		UpdateURL: BaseURL + "/report/" + code + "/update",
 	}
-	return reportDetail.ExecuteTemplate(w, data)
+	renderOrError(w, reportDetail, data)
 }
 
-func htmlReportEvidence(w io.Writer, code string) error {
+func htmlReportEvidence(w http.ResponseWriter, code string) {
 	nextURL := BaseURL + "/report/" + code + "/contribute"
 	data := ContentReportDetail{
 		NextURL: nextURL,
 	}
-	return reportEvidence.ExecuteTemplate(w, data)
+	renderOrError(w, reportEvidence, data)
 }
 
-func htmlReportSchedule(w io.Writer, code string) error {
+func htmlReportSchedule(w http.ResponseWriter, code string) {
 	nextURL := BaseURL + "/report/" + code + "/confirm"
 	data := ContentReportDetail{
 		NextURL: nextURL,
 	}
-	return reportSchedule.ExecuteTemplate(w, data)
+	renderOrError(w, reportSchedule, data)
 }
 
-func htmlReportUpdate(w io.Writer, code string) error {
+func htmlReportUpdate(w http.ResponseWriter, code string) {
 	nextURL := BaseURL + "/report/" + code + "/evidence"
 	data := ContentReportDetail{
 		NextURL: nextURL,
 	}
-	return reportUpdate.ExecuteTemplate(w, data)
+	renderOrError(w, reportUpdate, data)
 }
 
-func htmlServiceRequest(w io.Writer) error {
+func htmlServiceRequest(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequest.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequest, data)
 }
 
-func htmlServiceRequestDetail(w io.Writer, code string) error {
+func htmlServiceRequestDetail(w http.ResponseWriter, code string) {
 	data := ContentPlaceholder{}
-	return serviceRequestDetail.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestDetail, data)
 }
 
-func htmlServiceRequestLocation(w io.Writer) error {
+func htmlServiceRequestLocation(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestLocation.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestLocation, data)
 }
 
-func htmlServiceRequestMosquito(w io.Writer) error {
+func htmlServiceRequestMosquito(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestMosquito.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestMosquito, data)
 }
 
-func htmlServiceRequestPool(w io.Writer) error {
+func htmlServiceRequestPool(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestPool.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestPool, data)
 }
 
-func htmlServiceRequestQuick(w io.Writer) error {
+func htmlServiceRequestQuick(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestQuick.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestQuick, data)
 }
 
-func htmlServiceRequestQuickConfirmation(w io.Writer) error {
+func htmlServiceRequestQuickConfirmation(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestQuickConfirmation.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestQuickConfirmation, data)
 }
 
-func htmlServiceRequestUpdates(w io.Writer) error {
+func htmlServiceRequestUpdates(w http.ResponseWriter) {
 	data := ContentPlaceholder{}
-	return serviceRequestUpdates.ExecuteTemplate(w, data)
+	renderOrError(w, serviceRequestUpdates, data)
 }
 
-func htmlSignin(w io.Writer, errorCode string) error {
+func htmlSignin(w http.ResponseWriter, errorCode string) {
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
 	}
-	return signin.ExecuteTemplate(w, data)
+	renderOrError(w, signin, data)
 }
 
-func htmlSignup(w io.Writer, path string) error {
+func htmlSignup(w http.ResponseWriter, path string) {
 	data := ContentSignup{}
-	return signup.ExecuteTemplate(w, data)
+	renderOrError(w, signup, data)
 }
 
 func makeFuncMap() template.FuncMap {
