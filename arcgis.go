@@ -237,7 +237,10 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				maintainOAuth(workerCtx, oauth)
+				err := maintainOAuth(workerCtx, oauth)
+				if err != nil {
+					slog.Error("Crashed oauth maintenance goroutine", slog.String("err", err.Error()))
+				}
 			}()
 		}
 
@@ -250,7 +253,10 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				periodicallyExportFieldseeker(workerCtx, org)
+				err := periodicallyExportFieldseeker(workerCtx, org)
+				if err != nil {
+					slog.Error("Crashed fieldseeker export goroutine", slog.String("err", err.Error()))
+				}
 			}()
 		}
 
@@ -303,8 +309,9 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 			}
 			i, u, err := saveOrUpdateDBRecords(ctx, "FS_"+layer.Name, qr, org_id)
 			if err != nil {
-				filename := fmt.Sprintf("failure-%s-%d.json", layer.Name, layer.ID)
+				filename := fmt.Sprintf("failure-%s-%d-%d.json", layer.Name, layer.ID, offset)
 				saveRawQuery(fssync, layer, query, filename)
+				slog.Error("Faield to save DB records", slog.String("err", err.Error()))
 				return SyncStats{}, fmt.Errorf("Failed to save records: %v", err)
 			}
 			return SyncStats{
@@ -409,15 +416,14 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 	return nil
 }
 
-func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
+func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 	refreshDelay := time.Until(oauth.AccessTokenExpires)
 	slog.Info("Need to refresh oauth", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshDelay.Seconds()))
 	if oauth.AccessTokenExpires.Before(time.Now()) {
 		err := refreshOAuth(ctx, oauth)
 		if err != nil {
-			slog.Error("Failed to refresh token", slog.String("err", err.Error()))
 			markTokenFailed(ctx, oauth)
-			return
+			return fmt.Errorf("Failed to refresh token: %v", err)
 		}
 		refreshDelay = time.Until(oauth.AccessTokenExpires)
 	}
@@ -425,12 +431,11 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return nil
 		case <-refreshTicker.C:
 			err := refreshOAuth(ctx, oauth)
 			if err != nil {
-				slog.Error("Failed to refresh token", slog.String("err", err.Error()))
-				return
+				return fmt.Errorf("Failed to refresh token: %v", err)
 			}
 		}
 	}
