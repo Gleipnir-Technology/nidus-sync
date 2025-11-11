@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"html/template"
@@ -18,6 +19,9 @@ import (
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
+
+//go:embed templates/*
+var embeddedFiles embed.FS
 
 var (
 	dashboard                       = newBuiltTemplate("dashboard", "authenticated")
@@ -345,7 +349,18 @@ func newBuiltTemplate(name string, files ...string) BuiltTemplate {
 }
 
 func parseEmbedded(files []string) *template.Template {
-	return nil
+	funcMap := makeFuncMap()
+	// Remap the file names to embedded paths
+	paths := make([]string, 0)
+	for _, f := range files {
+		paths = append(paths, "templates/"+f+".html")
+	}
+	for _, f := range components {
+		paths = append(paths, "templates/components/"+f+".html")
+	}
+	name := files[0]
+	return template.Must(
+		template.New(name).Funcs(funcMap).ParseFS(embeddedFiles, paths...))
 }
 
 func parseFromDisk(files []string) (*template.Template, error) {
