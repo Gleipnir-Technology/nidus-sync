@@ -2453,6 +2453,7 @@ func (f *Factory) FromExistingHistoryPolygonlocation(m *models.HistoryPolygonloc
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
 	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
 	o.Version = func() int32 { return m.Version }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -2626,6 +2627,7 @@ func (f *Factory) FromExistingHistoryProposedtreatmentarea(m *models.HistoryProp
 	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
 	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
 	o.Version = func() int32 { return m.Version }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -3438,6 +3440,7 @@ func (f *Factory) FromExistingHistoryTreatment(m *models.HistoryTreatment) *Hist
 	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
 	o.TempSitecond = func() null.Val[string] { return m.TempSitecond }
 	o.Version = func() int32 { return m.Version }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -3611,10 +3614,11 @@ func (f *Factory) FromExistingNotification(m *models.Notification) *Notification
 	o := &NotificationTemplate{f: f, alreadyPersisted: true}
 
 	o.ID = func() int32 { return m.ID }
-	o.UserID = func() null.Val[int32] { return m.UserID }
-	o.Message = func() null.Val[string] { return m.Message }
-	o.Link = func() null.Val[string] { return m.Link }
-	o.Type = func() null.Val[enums.Notificationtype] { return m.Type }
+	o.Created = func() time.Time { return m.Created }
+	o.Link = func() string { return m.Link }
+	o.Message = func() string { return m.Message }
+	o.Type = func() enums.Notificationtype { return m.Type }
+	o.UserID = func() int32 { return m.UserID }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {

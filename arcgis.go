@@ -458,9 +458,10 @@ func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
 		return
 	}
 	notificationSetter := models.NotificationSetter{
-		Message: omitnull.From("Oauth token invalidated"),
-		Link:    omitnull.From("/oauth/refresh"),
-		Type:    omitnull.From(enums.NotificationtypeOauthTokenInvalidated),
+		Created: omit.From(time.Now()),
+		Message: omit.From("Oauth token invalidated"),
+		Link:    omit.From("/oauth/refresh"),
+		Type:    omit.From(enums.NotificationtypeOauthTokenInvalidated),
 	}
 	err = user.InsertUserNotifications(ctx, PGInstance.BobDB, &notificationSetter)
 	if err != nil {

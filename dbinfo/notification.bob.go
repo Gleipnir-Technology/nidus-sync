@@ -24,39 +24,48 @@ var Notifications = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		UserID: column{
-			Name:      "user_id",
-			DBType:    "integer",
-			Default:   "NULL",
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Message: column{
-			Name:      "message",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
 		Link: column{
 			Name:      "link",
 			DBType:    "text",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Message: column{
+			Name:      "message",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
 		Type: column{
 			Name:      "type",
 			DBType:    "public.notificationtype",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		UserID: column{
+			Name:      "user_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -102,15 +111,16 @@ var Notifications = Table[
 
 type notificationColumns struct {
 	ID      column
-	UserID  column
-	Message column
+	Created column
 	Link    column
+	Message column
 	Type    column
+	UserID  column
 }
 
 func (c notificationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.UserID, c.Message, c.Link, c.Type,
+		c.ID, c.Created, c.Link, c.Message, c.Type, c.UserID,
 	}
 }
 

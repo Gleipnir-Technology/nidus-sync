@@ -6,12 +6,11 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -38,10 +37,11 @@ func (mods NotificationModSlice) Apply(ctx context.Context, n *NotificationTempl
 // all columns are optional and should be set by mods
 type NotificationTemplate struct {
 	ID      func() int32
-	UserID  func() null.Val[int32]
-	Message func() null.Val[string]
-	Link    func() null.Val[string]
-	Type    func() null.Val[enums.Notificationtype]
+	Created func() time.Time
+	Link    func() string
+	Message func() string
+	Type    func() enums.Notificationtype
+	UserID  func() int32
 
 	r notificationR
 	f *Factory
@@ -70,7 +70,7 @@ func (t NotificationTemplate) setModelRels(o *models.Notification) {
 	if t.r.UserUser != nil {
 		rel := t.r.UserUser.o.Build()
 		rel.R.UserNotifications = append(rel.R.UserNotifications, o)
-		o.UserID = null.From(rel.ID) // h2
+		o.UserID = rel.ID // h2
 		o.R.UserUser = rel
 	}
 }
@@ -84,21 +84,25 @@ func (o NotificationTemplate) BuildSetter() *models.NotificationSetter {
 		val := o.ID()
 		m.ID = omit.From(val)
 	}
-	if o.UserID != nil {
-		val := o.UserID()
-		m.UserID = omitnull.FromNull(val)
-	}
-	if o.Message != nil {
-		val := o.Message()
-		m.Message = omitnull.FromNull(val)
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omit.From(val)
 	}
 	if o.Link != nil {
 		val := o.Link()
-		m.Link = omitnull.FromNull(val)
+		m.Link = omit.From(val)
+	}
+	if o.Message != nil {
+		val := o.Message()
+		m.Message = omit.From(val)
 	}
 	if o.Type != nil {
 		val := o.Type()
-		m.Type = omitnull.FromNull(val)
+		m.Type = omit.From(val)
+	}
+	if o.UserID != nil {
+		val := o.UserID()
+		m.UserID = omit.From(val)
 	}
 
 	return m
@@ -125,17 +129,20 @@ func (o NotificationTemplate) Build() *models.Notification {
 	if o.ID != nil {
 		m.ID = o.ID()
 	}
-	if o.UserID != nil {
-		m.UserID = o.UserID()
-	}
-	if o.Message != nil {
-		m.Message = o.Message()
+	if o.Created != nil {
+		m.Created = o.Created()
 	}
 	if o.Link != nil {
 		m.Link = o.Link()
 	}
+	if o.Message != nil {
+		m.Message = o.Message()
+	}
 	if o.Type != nil {
 		m.Type = o.Type()
+	}
+	if o.UserID != nil {
+		m.UserID = o.UserID()
 	}
 
 	o.setModelRels(m)
@@ -157,6 +164,26 @@ func (o NotificationTemplate) BuildMany(number int) models.NotificationSlice {
 }
 
 func ensureCreatableNotification(m *models.NotificationSetter) {
+	if !(m.Created.IsValue()) {
+		val := random_time_Time(nil)
+		m.Created = omit.From(val)
+	}
+	if !(m.Link.IsValue()) {
+		val := random_string(nil)
+		m.Link = omit.From(val)
+	}
+	if !(m.Message.IsValue()) {
+		val := random_string(nil)
+		m.Message = omit.From(val)
+	}
+	if !(m.Type.IsValue()) {
+		val := random_enums_Notificationtype(nil)
+		m.Type = omit.From(val)
+	}
+	if !(m.UserID.IsValue()) {
+		val := random_int32(nil)
+		m.UserID = omit.From(val)
+	}
 }
 
 // insertOptRels creates and inserts any optional the relationships on *models.Notification
@@ -164,25 +191,6 @@ func ensureCreatableNotification(m *models.NotificationSetter) {
 // any required relationship should have already exist on the model
 func (o *NotificationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Notification) error {
 	var err error
-
-	isUserUserDone, _ := notificationRelUserUserCtx.Value(ctx)
-	if !isUserUserDone && o.r.UserUser != nil {
-		ctx = notificationRelUserUserCtx.WithValue(ctx, true)
-		if o.r.UserUser.o.alreadyPersisted {
-			m.R.UserUser = o.r.UserUser.o.Build()
-		} else {
-			var rel0 *models.User
-			rel0, err = o.r.UserUser.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachUserUser(ctx, exec, rel0)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
 
 	return err
 }
@@ -194,10 +202,29 @@ func (o *NotificationTemplate) Create(ctx context.Context, exec bob.Executor) (*
 	opt := o.BuildSetter()
 	ensureCreatableNotification(opt)
 
+	if o.r.UserUser == nil {
+		NotificationMods.WithNewUserUser().Apply(ctx, o)
+	}
+
+	var rel0 *models.User
+
+	if o.r.UserUser.o.alreadyPersisted {
+		rel0 = o.r.UserUser.o.Build()
+	} else {
+		rel0, err = o.r.UserUser.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.UserID = omit.From(rel0.ID)
+
 	m, err := models.Notifications.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.UserUser = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -277,10 +304,11 @@ type notificationMods struct{}
 func (m notificationMods) RandomizeAllColumns(f *faker.Faker) NotificationMod {
 	return NotificationModSlice{
 		NotificationMods.RandomID(f),
-		NotificationMods.RandomUserID(f),
-		NotificationMods.RandomMessage(f),
+		NotificationMods.RandomCreated(f),
 		NotificationMods.RandomLink(f),
+		NotificationMods.RandomMessage(f),
 		NotificationMods.RandomType(f),
+		NotificationMods.RandomUserID(f),
 	}
 }
 
@@ -316,120 +344,45 @@ func (m notificationMods) RandomID(f *faker.Faker) NotificationMod {
 }
 
 // Set the model columns to this value
-func (m notificationMods) UserID(val null.Val[int32]) NotificationMod {
+func (m notificationMods) Created(val time.Time) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.UserID = func() null.Val[int32] { return val }
+		o.Created = func() time.Time { return val }
 	})
 }
 
 // Set the Column from the function
-func (m notificationMods) UserIDFunc(f func() null.Val[int32]) NotificationMod {
+func (m notificationMods) CreatedFunc(f func() time.Time) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.UserID = f
+		o.Created = f
 	})
 }
 
 // Clear any values for the column
-func (m notificationMods) UnsetUserID() NotificationMod {
+func (m notificationMods) UnsetCreated() NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.UserID = nil
+		o.Created = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m notificationMods) RandomUserID(f *faker.Faker) NotificationMod {
+func (m notificationMods) RandomCreated(f *faker.Faker) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.UserID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m notificationMods) RandomUserIDNotNull(f *faker.Faker) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.UserID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.Created = func() time.Time {
+			return random_time_Time(f)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m notificationMods) Message(val null.Val[string]) NotificationMod {
+func (m notificationMods) Link(val string) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Message = func() null.Val[string] { return val }
+		o.Link = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m notificationMods) MessageFunc(f func() null.Val[string]) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Message = f
-	})
-}
-
-// Clear any values for the column
-func (m notificationMods) UnsetMessage() NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Message = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m notificationMods) RandomMessage(f *faker.Faker) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Message = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m notificationMods) RandomMessageNotNull(f *faker.Faker) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Message = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m notificationMods) Link(val null.Val[string]) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Link = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m notificationMods) LinkFunc(f func() null.Val[string]) NotificationMod {
+func (m notificationMods) LinkFunc(f func() string) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
 		o.Link = f
 	})
@@ -444,45 +397,54 @@ func (m notificationMods) UnsetLink() NotificationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m notificationMods) RandomLink(f *faker.Faker) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Link = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m notificationMods) RandomLinkNotNull(f *faker.Faker) NotificationMod {
-	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Link = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Link = func() string {
+			return random_string(f)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m notificationMods) Type(val null.Val[enums.Notificationtype]) NotificationMod {
+func (m notificationMods) Message(val string) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Type = func() null.Val[enums.Notificationtype] { return val }
+		o.Message = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m notificationMods) TypeFunc(f func() null.Val[enums.Notificationtype]) NotificationMod {
+func (m notificationMods) MessageFunc(f func() string) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.Message = f
+	})
+}
+
+// Clear any values for the column
+func (m notificationMods) UnsetMessage() NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.Message = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m notificationMods) RandomMessage(f *faker.Faker) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.Message = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m notificationMods) Type(val enums.Notificationtype) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.Type = func() enums.Notificationtype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m notificationMods) TypeFunc(f func() enums.Notificationtype) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
 		o.Type = f
 	})
@@ -497,32 +459,41 @@ func (m notificationMods) UnsetType() NotificationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m notificationMods) RandomType(f *faker.Faker) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Type = func() null.Val[enums.Notificationtype] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_enums_Notificationtype(f)
-			return null.From(val)
+		o.Type = func() enums.Notificationtype {
+			return random_enums_Notificationtype(f)
 		}
+	})
+}
+
+// Set the model columns to this value
+func (m notificationMods) UserID(val int32) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.UserID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m notificationMods) UserIDFunc(f func() int32) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.UserID = f
+	})
+}
+
+// Clear any values for the column
+func (m notificationMods) UnsetUserID() NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.UserID = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is never null
-func (m notificationMods) RandomTypeNotNull(f *faker.Faker) NotificationMod {
+func (m notificationMods) RandomUserID(f *faker.Faker) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
-		o.Type = func() null.Val[enums.Notificationtype] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_enums_Notificationtype(f)
-			return null.From(val)
+		o.UserID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

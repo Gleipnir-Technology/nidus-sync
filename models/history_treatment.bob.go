@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,64 +26,65 @@ import (
 
 // HistoryTreatment is an object representing the database table.
 type HistoryTreatment struct {
-	OrganizationID       int32             `db:"organization_id" `
-	Activity             null.Val[string]  `db:"activity" `
-	Areaunit             null.Val[string]  `db:"areaunit" `
-	Avetemp              null.Val[float64] `db:"avetemp" `
-	Barrierrouteid       null.Val[string]  `db:"barrierrouteid" `
-	Cbcount              null.Val[int16]   `db:"cbcount" `
-	Comments             null.Val[string]  `db:"comments" `
-	Containercount       null.Val[int16]   `db:"containercount" `
-	Creationdate         null.Val[int64]   `db:"creationdate" `
-	Creator              null.Val[string]  `db:"creator" `
-	Enddatetime          null.Val[int64]   `db:"enddatetime" `
-	Equiptype            null.Val[string]  `db:"equiptype" `
-	Editdate             null.Val[int64]   `db:"editdate" `
-	Editor               null.Val[string]  `db:"editor" `
-	Fieldtech            null.Val[string]  `db:"fieldtech" `
-	Flowrate             null.Val[float64] `db:"flowrate" `
-	Globalid             null.Val[string]  `db:"globalid" `
-	Habitat              null.Val[string]  `db:"habitat" `
-	InspID               null.Val[string]  `db:"insp_id" `
-	Invloc               null.Val[string]  `db:"invloc" `
-	Linelocid            null.Val[string]  `db:"linelocid" `
-	Locationname         null.Val[string]  `db:"locationname" `
-	Method               null.Val[string]  `db:"method" `
-	Objectid             int32             `db:"objectid,pk" `
-	Pointlocid           null.Val[string]  `db:"pointlocid" `
-	Polygonlocid         null.Val[string]  `db:"polygonlocid" `
-	Product              null.Val[string]  `db:"product" `
-	Ptaid                null.Val[string]  `db:"ptaid" `
-	Qty                  null.Val[float64] `db:"qty" `
-	Qtyunit              null.Val[string]  `db:"qtyunit" `
-	Raingauge            null.Val[float64] `db:"raingauge" `
-	Recordstatus         null.Val[int16]   `db:"recordstatus" `
-	Reviewed             null.Val[int16]   `db:"reviewed" `
-	Reviewedby           null.Val[string]  `db:"reviewedby" `
-	Revieweddate         null.Val[int64]   `db:"revieweddate" `
-	Sdid                 null.Val[string]  `db:"sdid" `
-	Sitecond             null.Val[string]  `db:"sitecond" `
-	Srid                 null.Val[string]  `db:"srid" `
-	Startdatetime        null.Val[int64]   `db:"startdatetime" `
-	Targetspecies        null.Val[string]  `db:"targetspecies" `
-	Tirecount            null.Val[int16]   `db:"tirecount" `
-	Treatacres           null.Val[float64] `db:"treatacres" `
-	Treatarea            null.Val[float64] `db:"treatarea" `
-	Treathectares        null.Val[float64] `db:"treathectares" `
-	Treatmenthours       null.Val[float64] `db:"treatmenthours" `
-	Treatmentlength      null.Val[float64] `db:"treatmentlength" `
-	Treatmentlengthunits null.Val[string]  `db:"treatmentlengthunits" `
-	Totalcostprodcut     null.Val[float64] `db:"totalcostprodcut" `
-	Ulvrouteid           null.Val[string]  `db:"ulvrouteid" `
-	Warningoverride      null.Val[int16]   `db:"warningoverride" `
-	Winddir              null.Val[string]  `db:"winddir" `
-	Windspeed            null.Val[float64] `db:"windspeed" `
-	Zone                 null.Val[string]  `db:"zone" `
-	Zone2                null.Val[string]  `db:"zone2" `
-	GeometryX            null.Val[float64] `db:"geometry_x" `
-	GeometryY            null.Val[float64] `db:"geometry_y" `
-	TempSitecond         null.Val[string]  `db:"temp_sitecond" `
-	Version              int32             `db:"version,pk" `
+	OrganizationID       int32               `db:"organization_id" `
+	Activity             null.Val[string]    `db:"activity" `
+	Areaunit             null.Val[string]    `db:"areaunit" `
+	Avetemp              null.Val[float64]   `db:"avetemp" `
+	Barrierrouteid       null.Val[string]    `db:"barrierrouteid" `
+	Cbcount              null.Val[int16]     `db:"cbcount" `
+	Comments             null.Val[string]    `db:"comments" `
+	Containercount       null.Val[int16]     `db:"containercount" `
+	Creationdate         null.Val[int64]     `db:"creationdate" `
+	Creator              null.Val[string]    `db:"creator" `
+	Enddatetime          null.Val[int64]     `db:"enddatetime" `
+	Equiptype            null.Val[string]    `db:"equiptype" `
+	Editdate             null.Val[int64]     `db:"editdate" `
+	Editor               null.Val[string]    `db:"editor" `
+	Fieldtech            null.Val[string]    `db:"fieldtech" `
+	Flowrate             null.Val[float64]   `db:"flowrate" `
+	Globalid             null.Val[string]    `db:"globalid" `
+	Habitat              null.Val[string]    `db:"habitat" `
+	InspID               null.Val[string]    `db:"insp_id" `
+	Invloc               null.Val[string]    `db:"invloc" `
+	Linelocid            null.Val[string]    `db:"linelocid" `
+	Locationname         null.Val[string]    `db:"locationname" `
+	Method               null.Val[string]    `db:"method" `
+	Objectid             int32               `db:"objectid,pk" `
+	Pointlocid           null.Val[string]    `db:"pointlocid" `
+	Polygonlocid         null.Val[string]    `db:"polygonlocid" `
+	Product              null.Val[string]    `db:"product" `
+	Ptaid                null.Val[string]    `db:"ptaid" `
+	Qty                  null.Val[float64]   `db:"qty" `
+	Qtyunit              null.Val[string]    `db:"qtyunit" `
+	Raingauge            null.Val[float64]   `db:"raingauge" `
+	Recordstatus         null.Val[int16]     `db:"recordstatus" `
+	Reviewed             null.Val[int16]     `db:"reviewed" `
+	Reviewedby           null.Val[string]    `db:"reviewedby" `
+	Revieweddate         null.Val[int64]     `db:"revieweddate" `
+	Sdid                 null.Val[string]    `db:"sdid" `
+	Sitecond             null.Val[string]    `db:"sitecond" `
+	Srid                 null.Val[string]    `db:"srid" `
+	Startdatetime        null.Val[int64]     `db:"startdatetime" `
+	Targetspecies        null.Val[string]    `db:"targetspecies" `
+	Tirecount            null.Val[int16]     `db:"tirecount" `
+	Treatacres           null.Val[float64]   `db:"treatacres" `
+	Treatarea            null.Val[float64]   `db:"treatarea" `
+	Treathectares        null.Val[float64]   `db:"treathectares" `
+	Treatmenthours       null.Val[float64]   `db:"treatmenthours" `
+	Treatmentlength      null.Val[float64]   `db:"treatmentlength" `
+	Treatmentlengthunits null.Val[string]    `db:"treatmentlengthunits" `
+	Totalcostprodcut     null.Val[float64]   `db:"totalcostprodcut" `
+	Ulvrouteid           null.Val[string]    `db:"ulvrouteid" `
+	Warningoverride      null.Val[int16]     `db:"warningoverride" `
+	Winddir              null.Val[string]    `db:"winddir" `
+	Windspeed            null.Val[float64]   `db:"windspeed" `
+	Zone                 null.Val[string]    `db:"zone" `
+	Zone2                null.Val[string]    `db:"zone2" `
+	GeometryX            null.Val[float64]   `db:"geometry_x" `
+	GeometryY            null.Val[float64]   `db:"geometry_y" `
+	TempSitecond         null.Val[string]    `db:"temp_sitecond" `
+	Version              int32               `db:"version,pk" `
+	Created              null.Val[time.Time] `db:"created" `
 
 	R historyTreatmentR `db:"-" `
 }
@@ -105,7 +107,7 @@ type historyTreatmentR struct {
 func buildHistoryTreatmentColumns(alias string) historyTreatmentColumns {
 	return historyTreatmentColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "activity", "areaunit", "avetemp", "barrierrouteid", "cbcount", "comments", "containercount", "creationdate", "creator", "enddatetime", "equiptype", "editdate", "editor", "fieldtech", "flowrate", "globalid", "habitat", "insp_id", "invloc", "linelocid", "locationname", "method", "objectid", "pointlocid", "polygonlocid", "product", "ptaid", "qty", "qtyunit", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "targetspecies", "tirecount", "treatacres", "treatarea", "treathectares", "treatmenthours", "treatmentlength", "treatmentlengthunits", "totalcostprodcut", "ulvrouteid", "warningoverride", "winddir", "windspeed", "zone", "zone2", "geometry_x", "geometry_y", "temp_sitecond", "version",
+			"organization_id", "activity", "areaunit", "avetemp", "barrierrouteid", "cbcount", "comments", "containercount", "creationdate", "creator", "enddatetime", "equiptype", "editdate", "editor", "fieldtech", "flowrate", "globalid", "habitat", "insp_id", "invloc", "linelocid", "locationname", "method", "objectid", "pointlocid", "polygonlocid", "product", "ptaid", "qty", "qtyunit", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "targetspecies", "tirecount", "treatacres", "treatarea", "treathectares", "treatmenthours", "treatmentlength", "treatmentlengthunits", "totalcostprodcut", "ulvrouteid", "warningoverride", "winddir", "windspeed", "zone", "zone2", "geometry_x", "geometry_y", "temp_sitecond", "version", "created",
 		).WithParent("history_treatment"),
 		tableAlias:           alias,
 		OrganizationID:       psql.Quote(alias, "organization_id"),
@@ -166,6 +168,7 @@ func buildHistoryTreatmentColumns(alias string) historyTreatmentColumns {
 		GeometryY:            psql.Quote(alias, "geometry_y"),
 		TempSitecond:         psql.Quote(alias, "temp_sitecond"),
 		Version:              psql.Quote(alias, "version"),
+		Created:              psql.Quote(alias, "created"),
 	}
 }
 
@@ -230,6 +233,7 @@ type historyTreatmentColumns struct {
 	GeometryY            psql.Expression
 	TempSitecond         psql.Expression
 	Version              psql.Expression
+	Created              psql.Expression
 }
 
 func (c historyTreatmentColumns) Alias() string {
@@ -244,68 +248,69 @@ func (historyTreatmentColumns) AliasedAs(alias string) historyTreatmentColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryTreatmentSetter struct {
-	OrganizationID       omit.Val[int32]       `db:"organization_id" `
-	Activity             omitnull.Val[string]  `db:"activity" `
-	Areaunit             omitnull.Val[string]  `db:"areaunit" `
-	Avetemp              omitnull.Val[float64] `db:"avetemp" `
-	Barrierrouteid       omitnull.Val[string]  `db:"barrierrouteid" `
-	Cbcount              omitnull.Val[int16]   `db:"cbcount" `
-	Comments             omitnull.Val[string]  `db:"comments" `
-	Containercount       omitnull.Val[int16]   `db:"containercount" `
-	Creationdate         omitnull.Val[int64]   `db:"creationdate" `
-	Creator              omitnull.Val[string]  `db:"creator" `
-	Enddatetime          omitnull.Val[int64]   `db:"enddatetime" `
-	Equiptype            omitnull.Val[string]  `db:"equiptype" `
-	Editdate             omitnull.Val[int64]   `db:"editdate" `
-	Editor               omitnull.Val[string]  `db:"editor" `
-	Fieldtech            omitnull.Val[string]  `db:"fieldtech" `
-	Flowrate             omitnull.Val[float64] `db:"flowrate" `
-	Globalid             omitnull.Val[string]  `db:"globalid" `
-	Habitat              omitnull.Val[string]  `db:"habitat" `
-	InspID               omitnull.Val[string]  `db:"insp_id" `
-	Invloc               omitnull.Val[string]  `db:"invloc" `
-	Linelocid            omitnull.Val[string]  `db:"linelocid" `
-	Locationname         omitnull.Val[string]  `db:"locationname" `
-	Method               omitnull.Val[string]  `db:"method" `
-	Objectid             omit.Val[int32]       `db:"objectid,pk" `
-	Pointlocid           omitnull.Val[string]  `db:"pointlocid" `
-	Polygonlocid         omitnull.Val[string]  `db:"polygonlocid" `
-	Product              omitnull.Val[string]  `db:"product" `
-	Ptaid                omitnull.Val[string]  `db:"ptaid" `
-	Qty                  omitnull.Val[float64] `db:"qty" `
-	Qtyunit              omitnull.Val[string]  `db:"qtyunit" `
-	Raingauge            omitnull.Val[float64] `db:"raingauge" `
-	Recordstatus         omitnull.Val[int16]   `db:"recordstatus" `
-	Reviewed             omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby           omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate         omitnull.Val[int64]   `db:"revieweddate" `
-	Sdid                 omitnull.Val[string]  `db:"sdid" `
-	Sitecond             omitnull.Val[string]  `db:"sitecond" `
-	Srid                 omitnull.Val[string]  `db:"srid" `
-	Startdatetime        omitnull.Val[int64]   `db:"startdatetime" `
-	Targetspecies        omitnull.Val[string]  `db:"targetspecies" `
-	Tirecount            omitnull.Val[int16]   `db:"tirecount" `
-	Treatacres           omitnull.Val[float64] `db:"treatacres" `
-	Treatarea            omitnull.Val[float64] `db:"treatarea" `
-	Treathectares        omitnull.Val[float64] `db:"treathectares" `
-	Treatmenthours       omitnull.Val[float64] `db:"treatmenthours" `
-	Treatmentlength      omitnull.Val[float64] `db:"treatmentlength" `
-	Treatmentlengthunits omitnull.Val[string]  `db:"treatmentlengthunits" `
-	Totalcostprodcut     omitnull.Val[float64] `db:"totalcostprodcut" `
-	Ulvrouteid           omitnull.Val[string]  `db:"ulvrouteid" `
-	Warningoverride      omitnull.Val[int16]   `db:"warningoverride" `
-	Winddir              omitnull.Val[string]  `db:"winddir" `
-	Windspeed            omitnull.Val[float64] `db:"windspeed" `
-	Zone                 omitnull.Val[string]  `db:"zone" `
-	Zone2                omitnull.Val[string]  `db:"zone2" `
-	GeometryX            omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY            omitnull.Val[float64] `db:"geometry_y" `
-	TempSitecond         omitnull.Val[string]  `db:"temp_sitecond" `
-	Version              omit.Val[int32]       `db:"version,pk" `
+	OrganizationID       omit.Val[int32]         `db:"organization_id" `
+	Activity             omitnull.Val[string]    `db:"activity" `
+	Areaunit             omitnull.Val[string]    `db:"areaunit" `
+	Avetemp              omitnull.Val[float64]   `db:"avetemp" `
+	Barrierrouteid       omitnull.Val[string]    `db:"barrierrouteid" `
+	Cbcount              omitnull.Val[int16]     `db:"cbcount" `
+	Comments             omitnull.Val[string]    `db:"comments" `
+	Containercount       omitnull.Val[int16]     `db:"containercount" `
+	Creationdate         omitnull.Val[int64]     `db:"creationdate" `
+	Creator              omitnull.Val[string]    `db:"creator" `
+	Enddatetime          omitnull.Val[int64]     `db:"enddatetime" `
+	Equiptype            omitnull.Val[string]    `db:"equiptype" `
+	Editdate             omitnull.Val[int64]     `db:"editdate" `
+	Editor               omitnull.Val[string]    `db:"editor" `
+	Fieldtech            omitnull.Val[string]    `db:"fieldtech" `
+	Flowrate             omitnull.Val[float64]   `db:"flowrate" `
+	Globalid             omitnull.Val[string]    `db:"globalid" `
+	Habitat              omitnull.Val[string]    `db:"habitat" `
+	InspID               omitnull.Val[string]    `db:"insp_id" `
+	Invloc               omitnull.Val[string]    `db:"invloc" `
+	Linelocid            omitnull.Val[string]    `db:"linelocid" `
+	Locationname         omitnull.Val[string]    `db:"locationname" `
+	Method               omitnull.Val[string]    `db:"method" `
+	Objectid             omit.Val[int32]         `db:"objectid,pk" `
+	Pointlocid           omitnull.Val[string]    `db:"pointlocid" `
+	Polygonlocid         omitnull.Val[string]    `db:"polygonlocid" `
+	Product              omitnull.Val[string]    `db:"product" `
+	Ptaid                omitnull.Val[string]    `db:"ptaid" `
+	Qty                  omitnull.Val[float64]   `db:"qty" `
+	Qtyunit              omitnull.Val[string]    `db:"qtyunit" `
+	Raingauge            omitnull.Val[float64]   `db:"raingauge" `
+	Recordstatus         omitnull.Val[int16]     `db:"recordstatus" `
+	Reviewed             omitnull.Val[int16]     `db:"reviewed" `
+	Reviewedby           omitnull.Val[string]    `db:"reviewedby" `
+	Revieweddate         omitnull.Val[int64]     `db:"revieweddate" `
+	Sdid                 omitnull.Val[string]    `db:"sdid" `
+	Sitecond             omitnull.Val[string]    `db:"sitecond" `
+	Srid                 omitnull.Val[string]    `db:"srid" `
+	Startdatetime        omitnull.Val[int64]     `db:"startdatetime" `
+	Targetspecies        omitnull.Val[string]    `db:"targetspecies" `
+	Tirecount            omitnull.Val[int16]     `db:"tirecount" `
+	Treatacres           omitnull.Val[float64]   `db:"treatacres" `
+	Treatarea            omitnull.Val[float64]   `db:"treatarea" `
+	Treathectares        omitnull.Val[float64]   `db:"treathectares" `
+	Treatmenthours       omitnull.Val[float64]   `db:"treatmenthours" `
+	Treatmentlength      omitnull.Val[float64]   `db:"treatmentlength" `
+	Treatmentlengthunits omitnull.Val[string]    `db:"treatmentlengthunits" `
+	Totalcostprodcut     omitnull.Val[float64]   `db:"totalcostprodcut" `
+	Ulvrouteid           omitnull.Val[string]    `db:"ulvrouteid" `
+	Warningoverride      omitnull.Val[int16]     `db:"warningoverride" `
+	Winddir              omitnull.Val[string]    `db:"winddir" `
+	Windspeed            omitnull.Val[float64]   `db:"windspeed" `
+	Zone                 omitnull.Val[string]    `db:"zone" `
+	Zone2                omitnull.Val[string]    `db:"zone2" `
+	GeometryX            omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY            omitnull.Val[float64]   `db:"geometry_y" `
+	TempSitecond         omitnull.Val[string]    `db:"temp_sitecond" `
+	Version              omit.Val[int32]         `db:"version,pk" `
+	Created              omitnull.Val[time.Time] `db:"created" `
 }
 
 func (s HistoryTreatmentSetter) SetColumns() []string {
-	vals := make([]string, 0, 58)
+	vals := make([]string, 0, 59)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -479,6 +484,9 @@ func (s HistoryTreatmentSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
 	}
 	return vals
 }
@@ -658,6 +666,9 @@ func (s HistoryTreatmentSetter) Overwrite(t *HistoryTreatment) {
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 }
 
 func (s *HistoryTreatmentSetter) Apply(q *dialect.InsertQuery) {
@@ -666,7 +677,7 @@ func (s *HistoryTreatmentSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 58)
+		vals := make([]bob.Expression, 59)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -1015,6 +1026,12 @@ func (s *HistoryTreatmentSetter) Apply(q *dialect.InsertQuery) {
 			vals[57] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Created.IsUnset() {
+			vals[58] = psql.Arg(s.Created.MustGetNull())
+		} else {
+			vals[58] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -1024,7 +1041,7 @@ func (s HistoryTreatmentSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 58)
+	exprs := make([]bob.Expression, 0, 59)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1432,6 +1449,13 @@ func (s HistoryTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1799,6 +1823,7 @@ type historyTreatmentWhere[Q psql.Filterable] struct {
 	GeometryY            psql.WhereNullMod[Q, float64]
 	TempSitecond         psql.WhereNullMod[Q, string]
 	Version              psql.WhereMod[Q, int32]
+	Created              psql.WhereNullMod[Q, time.Time]
 }
 
 func (historyTreatmentWhere[Q]) AliasedAs(alias string) historyTreatmentWhere[Q] {
@@ -1865,6 +1890,7 @@ func buildHistoryTreatmentWhere[Q psql.Filterable](cols historyTreatmentColumns)
 		GeometryY:            psql.WhereNull[Q, float64](cols.GeometryY),
 		TempSitecond:         psql.WhereNull[Q, string](cols.TempSitecond),
 		Version:              psql.Where[Q, int32](cols.Version),
+		Created:              psql.WhereNull[Q, time.Time](cols.Created),
 	}
 }
 

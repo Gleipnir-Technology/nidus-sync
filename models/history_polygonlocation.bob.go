@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,52 +26,53 @@ import (
 
 // HistoryPolygonlocation is an object representing the database table.
 type HistoryPolygonlocation struct {
-	OrganizationID          int32             `db:"organization_id" `
-	Accessdesc              null.Val[string]  `db:"accessdesc" `
-	Acres                   null.Val[float64] `db:"acres" `
-	Active                  null.Val[int16]   `db:"active" `
-	Comments                null.Val[string]  `db:"comments" `
-	Creationdate            null.Val[int64]   `db:"creationdate" `
-	Creator                 null.Val[string]  `db:"creator" `
-	Description             null.Val[string]  `db:"description" `
-	Externalid              null.Val[string]  `db:"externalid" `
-	Editdate                null.Val[int64]   `db:"editdate" `
-	Editor                  null.Val[string]  `db:"editor" `
-	Filter                  null.Val[string]  `db:"filter" `
-	Globalid                null.Val[string]  `db:"globalid" `
-	Habitat                 null.Val[string]  `db:"habitat" `
-	Hectares                null.Val[float64] `db:"hectares" `
-	Jurisdiction            null.Val[string]  `db:"jurisdiction" `
-	Larvinspectinterval     null.Val[int16]   `db:"larvinspectinterval" `
-	Lastinspectactiontaken  null.Val[string]  `db:"lastinspectactiontaken" `
-	Lastinspectactivity     null.Val[string]  `db:"lastinspectactivity" `
-	Lastinspectavglarvae    null.Val[float64] `db:"lastinspectavglarvae" `
-	Lastinspectavgpupae     null.Val[float64] `db:"lastinspectavgpupae" `
-	Lastinspectbreeding     null.Val[string]  `db:"lastinspectbreeding" `
-	Lastinspectconditions   null.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate         null.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectfieldspecies null.Val[string]  `db:"lastinspectfieldspecies" `
-	Lastinspectlstages      null.Val[string]  `db:"lastinspectlstages" `
-	Lasttreatactivity       null.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate           null.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct        null.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty            null.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit        null.Val[string]  `db:"lasttreatqtyunit" `
-	Locationnumber          null.Val[int64]   `db:"locationnumber" `
-	Name                    null.Val[string]  `db:"name" `
-	Nextactiondatescheduled null.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                int32             `db:"objectid,pk" `
-	Priority                null.Val[string]  `db:"priority" `
-	Symbology               null.Val[string]  `db:"symbology" `
-	ShapeArea               null.Val[float64] `db:"shape__area" `
-	ShapeLength             null.Val[float64] `db:"shape__length" `
-	Usetype                 null.Val[string]  `db:"usetype" `
-	Waterorigin             null.Val[string]  `db:"waterorigin" `
-	Zone                    null.Val[string]  `db:"zone" `
-	Zone2                   null.Val[string]  `db:"zone2" `
-	GeometryX               null.Val[float64] `db:"geometry_x" `
-	GeometryY               null.Val[float64] `db:"geometry_y" `
-	Version                 int32             `db:"version,pk" `
+	OrganizationID          int32               `db:"organization_id" `
+	Accessdesc              null.Val[string]    `db:"accessdesc" `
+	Acres                   null.Val[float64]   `db:"acres" `
+	Active                  null.Val[int16]     `db:"active" `
+	Comments                null.Val[string]    `db:"comments" `
+	Creationdate            null.Val[int64]     `db:"creationdate" `
+	Creator                 null.Val[string]    `db:"creator" `
+	Description             null.Val[string]    `db:"description" `
+	Externalid              null.Val[string]    `db:"externalid" `
+	Editdate                null.Val[int64]     `db:"editdate" `
+	Editor                  null.Val[string]    `db:"editor" `
+	Filter                  null.Val[string]    `db:"filter" `
+	Globalid                null.Val[string]    `db:"globalid" `
+	Habitat                 null.Val[string]    `db:"habitat" `
+	Hectares                null.Val[float64]   `db:"hectares" `
+	Jurisdiction            null.Val[string]    `db:"jurisdiction" `
+	Larvinspectinterval     null.Val[int16]     `db:"larvinspectinterval" `
+	Lastinspectactiontaken  null.Val[string]    `db:"lastinspectactiontaken" `
+	Lastinspectactivity     null.Val[string]    `db:"lastinspectactivity" `
+	Lastinspectavglarvae    null.Val[float64]   `db:"lastinspectavglarvae" `
+	Lastinspectavgpupae     null.Val[float64]   `db:"lastinspectavgpupae" `
+	Lastinspectbreeding     null.Val[string]    `db:"lastinspectbreeding" `
+	Lastinspectconditions   null.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate         null.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectfieldspecies null.Val[string]    `db:"lastinspectfieldspecies" `
+	Lastinspectlstages      null.Val[string]    `db:"lastinspectlstages" `
+	Lasttreatactivity       null.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate           null.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct        null.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty            null.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit        null.Val[string]    `db:"lasttreatqtyunit" `
+	Locationnumber          null.Val[int64]     `db:"locationnumber" `
+	Name                    null.Val[string]    `db:"name" `
+	Nextactiondatescheduled null.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                int32               `db:"objectid,pk" `
+	Priority                null.Val[string]    `db:"priority" `
+	Symbology               null.Val[string]    `db:"symbology" `
+	ShapeArea               null.Val[float64]   `db:"shape__area" `
+	ShapeLength             null.Val[float64]   `db:"shape__length" `
+	Usetype                 null.Val[string]    `db:"usetype" `
+	Waterorigin             null.Val[string]    `db:"waterorigin" `
+	Zone                    null.Val[string]    `db:"zone" `
+	Zone2                   null.Val[string]    `db:"zone2" `
+	GeometryX               null.Val[float64]   `db:"geometry_x" `
+	GeometryY               null.Val[float64]   `db:"geometry_y" `
+	Version                 int32               `db:"version,pk" `
+	Created                 null.Val[time.Time] `db:"created" `
 
 	R historyPolygonlocationR `db:"-" `
 }
@@ -93,7 +95,7 @@ type historyPolygonlocationR struct {
 func buildHistoryPolygonlocationColumns(alias string) historyPolygonlocationColumns {
 	return historyPolygonlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "accessdesc", "acres", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "filter", "globalid", "habitat", "hectares", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "symbology", "shape__area", "shape__length", "usetype", "waterorigin", "zone", "zone2", "geometry_x", "geometry_y", "version",
+			"organization_id", "accessdesc", "acres", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "filter", "globalid", "habitat", "hectares", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "symbology", "shape__area", "shape__length", "usetype", "waterorigin", "zone", "zone2", "geometry_x", "geometry_y", "version", "created",
 		).WithParent("history_polygonlocation"),
 		tableAlias:              alias,
 		OrganizationID:          psql.Quote(alias, "organization_id"),
@@ -142,6 +144,7 @@ func buildHistoryPolygonlocationColumns(alias string) historyPolygonlocationColu
 		GeometryX:               psql.Quote(alias, "geometry_x"),
 		GeometryY:               psql.Quote(alias, "geometry_y"),
 		Version:                 psql.Quote(alias, "version"),
+		Created:                 psql.Quote(alias, "created"),
 	}
 }
 
@@ -194,6 +197,7 @@ type historyPolygonlocationColumns struct {
 	GeometryX               psql.Expression
 	GeometryY               psql.Expression
 	Version                 psql.Expression
+	Created                 psql.Expression
 }
 
 func (c historyPolygonlocationColumns) Alias() string {
@@ -208,56 +212,57 @@ func (historyPolygonlocationColumns) AliasedAs(alias string) historyPolygonlocat
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryPolygonlocationSetter struct {
-	OrganizationID          omit.Val[int32]       `db:"organization_id" `
-	Accessdesc              omitnull.Val[string]  `db:"accessdesc" `
-	Acres                   omitnull.Val[float64] `db:"acres" `
-	Active                  omitnull.Val[int16]   `db:"active" `
-	Comments                omitnull.Val[string]  `db:"comments" `
-	Creationdate            omitnull.Val[int64]   `db:"creationdate" `
-	Creator                 omitnull.Val[string]  `db:"creator" `
-	Description             omitnull.Val[string]  `db:"description" `
-	Externalid              omitnull.Val[string]  `db:"externalid" `
-	Editdate                omitnull.Val[int64]   `db:"editdate" `
-	Editor                  omitnull.Val[string]  `db:"editor" `
-	Filter                  omitnull.Val[string]  `db:"filter" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
-	Habitat                 omitnull.Val[string]  `db:"habitat" `
-	Hectares                omitnull.Val[float64] `db:"hectares" `
-	Jurisdiction            omitnull.Val[string]  `db:"jurisdiction" `
-	Larvinspectinterval     omitnull.Val[int16]   `db:"larvinspectinterval" `
-	Lastinspectactiontaken  omitnull.Val[string]  `db:"lastinspectactiontaken" `
-	Lastinspectactivity     omitnull.Val[string]  `db:"lastinspectactivity" `
-	Lastinspectavglarvae    omitnull.Val[float64] `db:"lastinspectavglarvae" `
-	Lastinspectavgpupae     omitnull.Val[float64] `db:"lastinspectavgpupae" `
-	Lastinspectbreeding     omitnull.Val[string]  `db:"lastinspectbreeding" `
-	Lastinspectconditions   omitnull.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate         omitnull.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectfieldspecies omitnull.Val[string]  `db:"lastinspectfieldspecies" `
-	Lastinspectlstages      omitnull.Val[string]  `db:"lastinspectlstages" `
-	Lasttreatactivity       omitnull.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate           omitnull.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct        omitnull.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty            omitnull.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit        omitnull.Val[string]  `db:"lasttreatqtyunit" `
-	Locationnumber          omitnull.Val[int64]   `db:"locationnumber" `
-	Name                    omitnull.Val[string]  `db:"name" `
-	Nextactiondatescheduled omitnull.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                omit.Val[int32]       `db:"objectid,pk" `
-	Priority                omitnull.Val[string]  `db:"priority" `
-	Symbology               omitnull.Val[string]  `db:"symbology" `
-	ShapeArea               omitnull.Val[float64] `db:"shape__area" `
-	ShapeLength             omitnull.Val[float64] `db:"shape__length" `
-	Usetype                 omitnull.Val[string]  `db:"usetype" `
-	Waterorigin             omitnull.Val[string]  `db:"waterorigin" `
-	Zone                    omitnull.Val[string]  `db:"zone" `
-	Zone2                   omitnull.Val[string]  `db:"zone2" `
-	GeometryX               omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY               omitnull.Val[float64] `db:"geometry_y" `
-	Version                 omit.Val[int32]       `db:"version,pk" `
+	OrganizationID          omit.Val[int32]         `db:"organization_id" `
+	Accessdesc              omitnull.Val[string]    `db:"accessdesc" `
+	Acres                   omitnull.Val[float64]   `db:"acres" `
+	Active                  omitnull.Val[int16]     `db:"active" `
+	Comments                omitnull.Val[string]    `db:"comments" `
+	Creationdate            omitnull.Val[int64]     `db:"creationdate" `
+	Creator                 omitnull.Val[string]    `db:"creator" `
+	Description             omitnull.Val[string]    `db:"description" `
+	Externalid              omitnull.Val[string]    `db:"externalid" `
+	Editdate                omitnull.Val[int64]     `db:"editdate" `
+	Editor                  omitnull.Val[string]    `db:"editor" `
+	Filter                  omitnull.Val[string]    `db:"filter" `
+	Globalid                omitnull.Val[string]    `db:"globalid" `
+	Habitat                 omitnull.Val[string]    `db:"habitat" `
+	Hectares                omitnull.Val[float64]   `db:"hectares" `
+	Jurisdiction            omitnull.Val[string]    `db:"jurisdiction" `
+	Larvinspectinterval     omitnull.Val[int16]     `db:"larvinspectinterval" `
+	Lastinspectactiontaken  omitnull.Val[string]    `db:"lastinspectactiontaken" `
+	Lastinspectactivity     omitnull.Val[string]    `db:"lastinspectactivity" `
+	Lastinspectavglarvae    omitnull.Val[float64]   `db:"lastinspectavglarvae" `
+	Lastinspectavgpupae     omitnull.Val[float64]   `db:"lastinspectavgpupae" `
+	Lastinspectbreeding     omitnull.Val[string]    `db:"lastinspectbreeding" `
+	Lastinspectconditions   omitnull.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate         omitnull.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectfieldspecies omitnull.Val[string]    `db:"lastinspectfieldspecies" `
+	Lastinspectlstages      omitnull.Val[string]    `db:"lastinspectlstages" `
+	Lasttreatactivity       omitnull.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate           omitnull.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct        omitnull.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty            omitnull.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit        omitnull.Val[string]    `db:"lasttreatqtyunit" `
+	Locationnumber          omitnull.Val[int64]     `db:"locationnumber" `
+	Name                    omitnull.Val[string]    `db:"name" `
+	Nextactiondatescheduled omitnull.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                omit.Val[int32]         `db:"objectid,pk" `
+	Priority                omitnull.Val[string]    `db:"priority" `
+	Symbology               omitnull.Val[string]    `db:"symbology" `
+	ShapeArea               omitnull.Val[float64]   `db:"shape__area" `
+	ShapeLength             omitnull.Val[float64]   `db:"shape__length" `
+	Usetype                 omitnull.Val[string]    `db:"usetype" `
+	Waterorigin             omitnull.Val[string]    `db:"waterorigin" `
+	Zone                    omitnull.Val[string]    `db:"zone" `
+	Zone2                   omitnull.Val[string]    `db:"zone2" `
+	GeometryX               omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY               omitnull.Val[float64]   `db:"geometry_y" `
+	Version                 omit.Val[int32]         `db:"version,pk" `
+	Created                 omitnull.Val[time.Time] `db:"created" `
 }
 
 func (s HistoryPolygonlocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 46)
+	vals := make([]string, 0, 47)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -395,6 +400,9 @@ func (s HistoryPolygonlocationSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
 	}
 	return vals
 }
@@ -538,6 +546,9 @@ func (s HistoryPolygonlocationSetter) Overwrite(t *HistoryPolygonlocation) {
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 }
 
 func (s *HistoryPolygonlocationSetter) Apply(q *dialect.InsertQuery) {
@@ -546,7 +557,7 @@ func (s *HistoryPolygonlocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 46)
+		vals := make([]bob.Expression, 47)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -823,6 +834,12 @@ func (s *HistoryPolygonlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[45] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Created.IsUnset() {
+			vals[46] = psql.Arg(s.Created.MustGetNull())
+		} else {
+			vals[46] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -832,7 +849,7 @@ func (s HistoryPolygonlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] 
 }
 
 func (s HistoryPolygonlocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 46)
+	exprs := make([]bob.Expression, 0, 47)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1153,6 +1170,13 @@ func (s HistoryPolygonlocationSetter) Expressions(prefix ...string) []bob.Expres
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "version")...),
 			psql.Arg(s.Version),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1511,6 +1535,7 @@ type historyPolygonlocationWhere[Q psql.Filterable] struct {
 	GeometryX               psql.WhereNullMod[Q, float64]
 	GeometryY               psql.WhereNullMod[Q, float64]
 	Version                 psql.WhereMod[Q, int32]
+	Created                 psql.WhereNullMod[Q, time.Time]
 }
 
 func (historyPolygonlocationWhere[Q]) AliasedAs(alias string) historyPolygonlocationWhere[Q] {
@@ -1565,6 +1590,7 @@ func buildHistoryPolygonlocationWhere[Q psql.Filterable](cols historyPolygonloca
 		GeometryX:               psql.WhereNull[Q, float64](cols.GeometryX),
 		GeometryY:               psql.WhereNull[Q, float64](cols.GeometryY),
 		Version:                 psql.Where[Q, int32](cols.Version),
+		Created:                 psql.WhereNull[Q, time.Time](cols.Created),
 	}
 }
 

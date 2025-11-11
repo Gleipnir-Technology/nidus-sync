@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,43 +26,44 @@ import (
 
 // HistoryProposedtreatmentarea is an object representing the database table.
 type HistoryProposedtreatmentarea struct {
-	OrganizationID    int32             `db:"organization_id" `
-	Acres             null.Val[float64] `db:"acres" `
-	Comments          null.Val[string]  `db:"comments" `
-	Completed         null.Val[int16]   `db:"completed" `
-	Completedby       null.Val[string]  `db:"completedby" `
-	Completeddate     null.Val[int64]   `db:"completeddate" `
-	Creationdate      null.Val[int64]   `db:"creationdate" `
-	Creator           null.Val[string]  `db:"creator" `
-	Duedate           null.Val[int64]   `db:"duedate" `
-	Exported          null.Val[int16]   `db:"exported" `
-	Editdate          null.Val[int64]   `db:"editdate" `
-	Editor            null.Val[string]  `db:"editor" `
-	Globalid          null.Val[string]  `db:"globalid" `
-	Hectares          null.Val[float64] `db:"hectares" `
-	Issprayroute      null.Val[int16]   `db:"issprayroute" `
-	Lasttreatactivity null.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate     null.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct  null.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty      null.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit  null.Val[string]  `db:"lasttreatqtyunit" `
-	Method            null.Val[string]  `db:"method" `
-	Name              null.Val[string]  `db:"name" `
-	Objectid          int32             `db:"objectid,pk" `
-	Priority          null.Val[string]  `db:"priority" `
-	Reviewed          null.Val[int16]   `db:"reviewed" `
-	Reviewedby        null.Val[string]  `db:"reviewedby" `
-	Revieweddate      null.Val[int64]   `db:"revieweddate" `
-	ShapeArea         null.Val[float64] `db:"shape__area" `
-	ShapeLength       null.Val[float64] `db:"shape__length" `
-	Targetapprate     null.Val[float64] `db:"targetapprate" `
-	Targetproduct     null.Val[string]  `db:"targetproduct" `
-	Targetspecies     null.Val[string]  `db:"targetspecies" `
-	Zone              null.Val[string]  `db:"zone" `
-	Zone2             null.Val[string]  `db:"zone2" `
-	GeometryX         null.Val[float64] `db:"geometry_x" `
-	GeometryY         null.Val[float64] `db:"geometry_y" `
-	Version           int32             `db:"version,pk" `
+	OrganizationID    int32               `db:"organization_id" `
+	Acres             null.Val[float64]   `db:"acres" `
+	Comments          null.Val[string]    `db:"comments" `
+	Completed         null.Val[int16]     `db:"completed" `
+	Completedby       null.Val[string]    `db:"completedby" `
+	Completeddate     null.Val[int64]     `db:"completeddate" `
+	Creationdate      null.Val[int64]     `db:"creationdate" `
+	Creator           null.Val[string]    `db:"creator" `
+	Duedate           null.Val[int64]     `db:"duedate" `
+	Exported          null.Val[int16]     `db:"exported" `
+	Editdate          null.Val[int64]     `db:"editdate" `
+	Editor            null.Val[string]    `db:"editor" `
+	Globalid          null.Val[string]    `db:"globalid" `
+	Hectares          null.Val[float64]   `db:"hectares" `
+	Issprayroute      null.Val[int16]     `db:"issprayroute" `
+	Lasttreatactivity null.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate     null.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct  null.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty      null.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit  null.Val[string]    `db:"lasttreatqtyunit" `
+	Method            null.Val[string]    `db:"method" `
+	Name              null.Val[string]    `db:"name" `
+	Objectid          int32               `db:"objectid,pk" `
+	Priority          null.Val[string]    `db:"priority" `
+	Reviewed          null.Val[int16]     `db:"reviewed" `
+	Reviewedby        null.Val[string]    `db:"reviewedby" `
+	Revieweddate      null.Val[int64]     `db:"revieweddate" `
+	ShapeArea         null.Val[float64]   `db:"shape__area" `
+	ShapeLength       null.Val[float64]   `db:"shape__length" `
+	Targetapprate     null.Val[float64]   `db:"targetapprate" `
+	Targetproduct     null.Val[string]    `db:"targetproduct" `
+	Targetspecies     null.Val[string]    `db:"targetspecies" `
+	Zone              null.Val[string]    `db:"zone" `
+	Zone2             null.Val[string]    `db:"zone2" `
+	GeometryX         null.Val[float64]   `db:"geometry_x" `
+	GeometryY         null.Val[float64]   `db:"geometry_y" `
+	Version           int32               `db:"version,pk" `
+	Created           null.Val[time.Time] `db:"created" `
 
 	R historyProposedtreatmentareaR `db:"-" `
 }
@@ -84,7 +86,7 @@ type historyProposedtreatmentareaR struct {
 func buildHistoryProposedtreatmentareaColumns(alias string) historyProposedtreatmentareaColumns {
 	return historyProposedtreatmentareaColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "acres", "comments", "completed", "completedby", "completeddate", "creationdate", "creator", "duedate", "exported", "editdate", "editor", "globalid", "hectares", "issprayroute", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "method", "name", "objectid", "priority", "reviewed", "reviewedby", "revieweddate", "shape__area", "shape__length", "targetapprate", "targetproduct", "targetspecies", "zone", "zone2", "geometry_x", "geometry_y", "version",
+			"organization_id", "acres", "comments", "completed", "completedby", "completeddate", "creationdate", "creator", "duedate", "exported", "editdate", "editor", "globalid", "hectares", "issprayroute", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "method", "name", "objectid", "priority", "reviewed", "reviewedby", "revieweddate", "shape__area", "shape__length", "targetapprate", "targetproduct", "targetspecies", "zone", "zone2", "geometry_x", "geometry_y", "version", "created",
 		).WithParent("history_proposedtreatmentarea"),
 		tableAlias:        alias,
 		OrganizationID:    psql.Quote(alias, "organization_id"),
@@ -124,6 +126,7 @@ func buildHistoryProposedtreatmentareaColumns(alias string) historyProposedtreat
 		GeometryX:         psql.Quote(alias, "geometry_x"),
 		GeometryY:         psql.Quote(alias, "geometry_y"),
 		Version:           psql.Quote(alias, "version"),
+		Created:           psql.Quote(alias, "created"),
 	}
 }
 
@@ -167,6 +170,7 @@ type historyProposedtreatmentareaColumns struct {
 	GeometryX         psql.Expression
 	GeometryY         psql.Expression
 	Version           psql.Expression
+	Created           psql.Expression
 }
 
 func (c historyProposedtreatmentareaColumns) Alias() string {
@@ -181,47 +185,48 @@ func (historyProposedtreatmentareaColumns) AliasedAs(alias string) historyPropos
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryProposedtreatmentareaSetter struct {
-	OrganizationID    omit.Val[int32]       `db:"organization_id" `
-	Acres             omitnull.Val[float64] `db:"acres" `
-	Comments          omitnull.Val[string]  `db:"comments" `
-	Completed         omitnull.Val[int16]   `db:"completed" `
-	Completedby       omitnull.Val[string]  `db:"completedby" `
-	Completeddate     omitnull.Val[int64]   `db:"completeddate" `
-	Creationdate      omitnull.Val[int64]   `db:"creationdate" `
-	Creator           omitnull.Val[string]  `db:"creator" `
-	Duedate           omitnull.Val[int64]   `db:"duedate" `
-	Exported          omitnull.Val[int16]   `db:"exported" `
-	Editdate          omitnull.Val[int64]   `db:"editdate" `
-	Editor            omitnull.Val[string]  `db:"editor" `
-	Globalid          omitnull.Val[string]  `db:"globalid" `
-	Hectares          omitnull.Val[float64] `db:"hectares" `
-	Issprayroute      omitnull.Val[int16]   `db:"issprayroute" `
-	Lasttreatactivity omitnull.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate     omitnull.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct  omitnull.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty      omitnull.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit  omitnull.Val[string]  `db:"lasttreatqtyunit" `
-	Method            omitnull.Val[string]  `db:"method" `
-	Name              omitnull.Val[string]  `db:"name" `
-	Objectid          omit.Val[int32]       `db:"objectid,pk" `
-	Priority          omitnull.Val[string]  `db:"priority" `
-	Reviewed          omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby        omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate      omitnull.Val[int64]   `db:"revieweddate" `
-	ShapeArea         omitnull.Val[float64] `db:"shape__area" `
-	ShapeLength       omitnull.Val[float64] `db:"shape__length" `
-	Targetapprate     omitnull.Val[float64] `db:"targetapprate" `
-	Targetproduct     omitnull.Val[string]  `db:"targetproduct" `
-	Targetspecies     omitnull.Val[string]  `db:"targetspecies" `
-	Zone              omitnull.Val[string]  `db:"zone" `
-	Zone2             omitnull.Val[string]  `db:"zone2" `
-	GeometryX         omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY         omitnull.Val[float64] `db:"geometry_y" `
-	Version           omit.Val[int32]       `db:"version,pk" `
+	OrganizationID    omit.Val[int32]         `db:"organization_id" `
+	Acres             omitnull.Val[float64]   `db:"acres" `
+	Comments          omitnull.Val[string]    `db:"comments" `
+	Completed         omitnull.Val[int16]     `db:"completed" `
+	Completedby       omitnull.Val[string]    `db:"completedby" `
+	Completeddate     omitnull.Val[int64]     `db:"completeddate" `
+	Creationdate      omitnull.Val[int64]     `db:"creationdate" `
+	Creator           omitnull.Val[string]    `db:"creator" `
+	Duedate           omitnull.Val[int64]     `db:"duedate" `
+	Exported          omitnull.Val[int16]     `db:"exported" `
+	Editdate          omitnull.Val[int64]     `db:"editdate" `
+	Editor            omitnull.Val[string]    `db:"editor" `
+	Globalid          omitnull.Val[string]    `db:"globalid" `
+	Hectares          omitnull.Val[float64]   `db:"hectares" `
+	Issprayroute      omitnull.Val[int16]     `db:"issprayroute" `
+	Lasttreatactivity omitnull.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate     omitnull.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct  omitnull.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty      omitnull.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit  omitnull.Val[string]    `db:"lasttreatqtyunit" `
+	Method            omitnull.Val[string]    `db:"method" `
+	Name              omitnull.Val[string]    `db:"name" `
+	Objectid          omit.Val[int32]         `db:"objectid,pk" `
+	Priority          omitnull.Val[string]    `db:"priority" `
+	Reviewed          omitnull.Val[int16]     `db:"reviewed" `
+	Reviewedby        omitnull.Val[string]    `db:"reviewedby" `
+	Revieweddate      omitnull.Val[int64]     `db:"revieweddate" `
+	ShapeArea         omitnull.Val[float64]   `db:"shape__area" `
+	ShapeLength       omitnull.Val[float64]   `db:"shape__length" `
+	Targetapprate     omitnull.Val[float64]   `db:"targetapprate" `
+	Targetproduct     omitnull.Val[string]    `db:"targetproduct" `
+	Targetspecies     omitnull.Val[string]    `db:"targetspecies" `
+	Zone              omitnull.Val[string]    `db:"zone" `
+	Zone2             omitnull.Val[string]    `db:"zone2" `
+	GeometryX         omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY         omitnull.Val[float64]   `db:"geometry_y" `
+	Version           omit.Val[int32]         `db:"version,pk" `
+	Created           omitnull.Val[time.Time] `db:"created" `
 }
 
 func (s HistoryProposedtreatmentareaSetter) SetColumns() []string {
-	vals := make([]string, 0, 37)
+	vals := make([]string, 0, 38)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -332,6 +337,9 @@ func (s HistoryProposedtreatmentareaSetter) SetColumns() []string {
 	}
 	if s.Version.IsValue() {
 		vals = append(vals, "version")
+	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
 	}
 	return vals
 }
@@ -448,6 +456,9 @@ func (s HistoryProposedtreatmentareaSetter) Overwrite(t *HistoryProposedtreatmen
 	if s.Version.IsValue() {
 		t.Version = s.Version.MustGet()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 }
 
 func (s *HistoryProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
@@ -456,7 +467,7 @@ func (s *HistoryProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 37)
+		vals := make([]bob.Expression, 38)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -679,6 +690,12 @@ func (s *HistoryProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 			vals[36] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Created.IsUnset() {
+			vals[37] = psql.Arg(s.Created.MustGetNull())
+		} else {
+			vals[37] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -688,7 +705,7 @@ func (s HistoryProposedtreatmentareaSetter) UpdateMod() bob.Mod[*dialect.UpdateQ
 }
 
 func (s HistoryProposedtreatmentareaSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 37)
+	exprs := make([]bob.Expression, 0, 38)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -946,6 +963,13 @@ func (s HistoryProposedtreatmentareaSetter) Expressions(prefix ...string) []bob.
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "version")...),
 			psql.Arg(s.Version),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1295,6 +1319,7 @@ type historyProposedtreatmentareaWhere[Q psql.Filterable] struct {
 	GeometryX         psql.WhereNullMod[Q, float64]
 	GeometryY         psql.WhereNullMod[Q, float64]
 	Version           psql.WhereMod[Q, int32]
+	Created           psql.WhereNullMod[Q, time.Time]
 }
 
 func (historyProposedtreatmentareaWhere[Q]) AliasedAs(alias string) historyProposedtreatmentareaWhere[Q] {
@@ -1340,6 +1365,7 @@ func buildHistoryProposedtreatmentareaWhere[Q psql.Filterable](cols historyPropo
 		GeometryX:         psql.WhereNull[Q, float64](cols.GeometryX),
 		GeometryY:         psql.WhereNull[Q, float64](cols.GeometryY),
 		Version:           psql.Where[Q, int32](cols.Version),
+		Created:           psql.WhereNull[Q, time.Time](cols.Created),
 	}
 }
 

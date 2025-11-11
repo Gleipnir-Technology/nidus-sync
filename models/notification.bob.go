@@ -7,11 +7,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -26,11 +25,12 @@ import (
 
 // Notification is an object representing the database table.
 type Notification struct {
-	ID      int32                            `db:"id,pk" `
-	UserID  null.Val[int32]                  `db:"user_id" `
-	Message null.Val[string]                 `db:"message" `
-	Link    null.Val[string]                 `db:"link" `
-	Type    null.Val[enums.Notificationtype] `db:"type" `
+	ID      int32                  `db:"id,pk" `
+	Created time.Time              `db:"created" `
+	Link    string                 `db:"link" `
+	Message string                 `db:"message" `
+	Type    enums.Notificationtype `db:"type" `
+	UserID  int32                  `db:"user_id" `
 
 	R notificationR `db:"-" `
 }
@@ -53,14 +53,15 @@ type notificationR struct {
 func buildNotificationColumns(alias string) notificationColumns {
 	return notificationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "user_id", "message", "link", "type",
+			"id", "created", "link", "message", "type", "user_id",
 		).WithParent("notification"),
 		tableAlias: alias,
 		ID:         psql.Quote(alias, "id"),
-		UserID:     psql.Quote(alias, "user_id"),
-		Message:    psql.Quote(alias, "message"),
+		Created:    psql.Quote(alias, "created"),
 		Link:       psql.Quote(alias, "link"),
+		Message:    psql.Quote(alias, "message"),
 		Type:       psql.Quote(alias, "type"),
+		UserID:     psql.Quote(alias, "user_id"),
 	}
 }
 
@@ -68,10 +69,11 @@ type notificationColumns struct {
 	expr.ColumnsExpr
 	tableAlias string
 	ID         psql.Expression
-	UserID     psql.Expression
-	Message    psql.Expression
+	Created    psql.Expression
 	Link       psql.Expression
+	Message    psql.Expression
 	Type       psql.Expression
+	UserID     psql.Expression
 }
 
 func (c notificationColumns) Alias() string {
@@ -86,29 +88,33 @@ func (notificationColumns) AliasedAs(alias string) notificationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type NotificationSetter struct {
-	ID      omit.Val[int32]                      `db:"id,pk" `
-	UserID  omitnull.Val[int32]                  `db:"user_id" `
-	Message omitnull.Val[string]                 `db:"message" `
-	Link    omitnull.Val[string]                 `db:"link" `
-	Type    omitnull.Val[enums.Notificationtype] `db:"type" `
+	ID      omit.Val[int32]                  `db:"id,pk" `
+	Created omit.Val[time.Time]              `db:"created" `
+	Link    omit.Val[string]                 `db:"link" `
+	Message omit.Val[string]                 `db:"message" `
+	Type    omit.Val[enums.Notificationtype] `db:"type" `
+	UserID  omit.Val[int32]                  `db:"user_id" `
 }
 
 func (s NotificationSetter) SetColumns() []string {
-	vals := make([]string, 0, 5)
+	vals := make([]string, 0, 6)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
-	if !s.UserID.IsUnset() {
-		vals = append(vals, "user_id")
+	if s.Created.IsValue() {
+		vals = append(vals, "created")
 	}
-	if !s.Message.IsUnset() {
-		vals = append(vals, "message")
-	}
-	if !s.Link.IsUnset() {
+	if s.Link.IsValue() {
 		vals = append(vals, "link")
 	}
-	if !s.Type.IsUnset() {
+	if s.Message.IsValue() {
+		vals = append(vals, "message")
+	}
+	if s.Type.IsValue() {
 		vals = append(vals, "type")
+	}
+	if s.UserID.IsValue() {
+		vals = append(vals, "user_id")
 	}
 	return vals
 }
@@ -117,17 +123,20 @@ func (s NotificationSetter) Overwrite(t *Notification) {
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
 	}
-	if !s.UserID.IsUnset() {
-		t.UserID = s.UserID.MustGetNull()
+	if s.Created.IsValue() {
+		t.Created = s.Created.MustGet()
 	}
-	if !s.Message.IsUnset() {
-		t.Message = s.Message.MustGetNull()
+	if s.Link.IsValue() {
+		t.Link = s.Link.MustGet()
 	}
-	if !s.Link.IsUnset() {
-		t.Link = s.Link.MustGetNull()
+	if s.Message.IsValue() {
+		t.Message = s.Message.MustGet()
 	}
-	if !s.Type.IsUnset() {
-		t.Type = s.Type.MustGetNull()
+	if s.Type.IsValue() {
+		t.Type = s.Type.MustGet()
+	}
+	if s.UserID.IsValue() {
+		t.UserID = s.UserID.MustGet()
 	}
 }
 
@@ -137,35 +146,41 @@ func (s *NotificationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 5)
+		vals := make([]bob.Expression, 6)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if !s.UserID.IsUnset() {
-			vals[1] = psql.Arg(s.UserID.MustGetNull())
+		if s.Created.IsValue() {
+			vals[1] = psql.Arg(s.Created.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Message.IsUnset() {
-			vals[2] = psql.Arg(s.Message.MustGetNull())
+		if s.Link.IsValue() {
+			vals[2] = psql.Arg(s.Link.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Link.IsUnset() {
-			vals[3] = psql.Arg(s.Link.MustGetNull())
+		if s.Message.IsValue() {
+			vals[3] = psql.Arg(s.Message.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Type.IsUnset() {
-			vals[4] = psql.Arg(s.Type.MustGetNull())
+		if s.Type.IsValue() {
+			vals[4] = psql.Arg(s.Type.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
+		}
+
+		if s.UserID.IsValue() {
+			vals[5] = psql.Arg(s.UserID.MustGet())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -177,7 +192,7 @@ func (s NotificationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s NotificationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 5)
+	exprs := make([]bob.Expression, 0, 6)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -186,31 +201,38 @@ func (s NotificationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.UserID.IsUnset() {
+	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "user_id")...),
-			psql.Arg(s.UserID),
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
-	if !s.Message.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "message")...),
-			psql.Arg(s.Message),
-		}})
-	}
-
-	if !s.Link.IsUnset() {
+	if s.Link.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "link")...),
 			psql.Arg(s.Link),
 		}})
 	}
 
-	if !s.Type.IsUnset() {
+	if s.Message.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "message")...),
+			psql.Arg(s.Message),
+		}})
+	}
+
+	if s.Type.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "type")...),
 			psql.Arg(s.Type),
+		}})
+	}
+
+	if s.UserID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "user_id")...),
+			psql.Arg(s.UserID),
 		}})
 	}
 
@@ -448,7 +470,7 @@ func (o *Notification) UserUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuer
 }
 
 func (os NotificationSlice) UserUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
-	pkUserID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkUserID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -466,7 +488,7 @@ func (os NotificationSlice) UserUser(mods ...bob.Mod[*dialect.SelectQuery]) User
 
 func attachNotificationUserUser0(ctx context.Context, exec bob.Executor, count int, notification0 *Notification, user1 *User) (*Notification, error) {
 	setter := &NotificationSetter{
-		UserID: omitnull.From(user1.ID),
+		UserID: omit.From(user1.ID),
 	}
 
 	err := notification0.Update(ctx, exec, setter)
@@ -514,10 +536,11 @@ func (notification0 *Notification) AttachUserUser(ctx context.Context, exec bob.
 
 type notificationWhere[Q psql.Filterable] struct {
 	ID      psql.WhereMod[Q, int32]
-	UserID  psql.WhereNullMod[Q, int32]
-	Message psql.WhereNullMod[Q, string]
-	Link    psql.WhereNullMod[Q, string]
-	Type    psql.WhereNullMod[Q, enums.Notificationtype]
+	Created psql.WhereMod[Q, time.Time]
+	Link    psql.WhereMod[Q, string]
+	Message psql.WhereMod[Q, string]
+	Type    psql.WhereMod[Q, enums.Notificationtype]
+	UserID  psql.WhereMod[Q, int32]
 }
 
 func (notificationWhere[Q]) AliasedAs(alias string) notificationWhere[Q] {
@@ -527,10 +550,11 @@ func (notificationWhere[Q]) AliasedAs(alias string) notificationWhere[Q] {
 func buildNotificationWhere[Q psql.Filterable](cols notificationColumns) notificationWhere[Q] {
 	return notificationWhere[Q]{
 		ID:      psql.Where[Q, int32](cols.ID),
-		UserID:  psql.WhereNull[Q, int32](cols.UserID),
-		Message: psql.WhereNull[Q, string](cols.Message),
-		Link:    psql.WhereNull[Q, string](cols.Link),
-		Type:    psql.WhereNull[Q, enums.Notificationtype](cols.Type),
+		Created: psql.Where[Q, time.Time](cols.Created),
+		Link:    psql.Where[Q, string](cols.Link),
+		Message: psql.Where[Q, string](cols.Message),
+		Type:    psql.Where[Q, enums.Notificationtype](cols.Type),
+		UserID:  psql.Where[Q, int32](cols.UserID),
 	}
 }
 
@@ -635,11 +659,8 @@ func (os NotificationSlice) LoadUserUser(ctx context.Context, exec bob.Executor,
 		}
 
 		for _, rel := range users {
-			if !o.UserID.IsValue() {
-				continue
-			}
 
-			if !(o.UserID.IsValue() && o.UserID.MustGet() == rel.ID) {
+			if !(o.UserID == rel.ID) {
 				continue
 			}
 

@@ -429,6 +429,15 @@ var HistoryPolygonlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyPolygonlocationIndexes{
 		HistoryPolygonlocationPkey: index{
@@ -521,11 +530,12 @@ type historyPolygonlocationColumns struct {
 	GeometryX               column
 	GeometryY               column
 	Version                 column
+	Created                 column
 }
 
 func (c historyPolygonlocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Acres, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Filter, c.Globalid, c.Habitat, c.Hectares, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.ShapeArea, c.ShapeLength, c.Usetype, c.Waterorigin, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Version,
+		c.OrganizationID, c.Accessdesc, c.Acres, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Filter, c.Globalid, c.Habitat, c.Hectares, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Symbology, c.ShapeArea, c.ShapeLength, c.Usetype, c.Waterorigin, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Version, c.Created,
 	}
 }
 

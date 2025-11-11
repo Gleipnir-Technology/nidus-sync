@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -94,6 +95,7 @@ type HistoryTreatmentTemplate struct {
 	GeometryY            func() null.Val[float64]
 	TempSitecond         func() null.Val[string]
 	Version              func() int32
+	Created              func() null.Val[time.Time]
 
 	r historyTreatmentR
 	f *Factory
@@ -364,6 +366,10 @@ func (o HistoryTreatmentTemplate) BuildSetter() *models.HistoryTreatmentSetter {
 		val := o.Version()
 		m.Version = omit.From(val)
 	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -559,6 +565,9 @@ func (o HistoryTreatmentTemplate) Build() *models.HistoryTreatment {
 	}
 	if o.Version != nil {
 		m.Version = o.Version()
+	}
+	if o.Created != nil {
+		m.Created = o.Created()
 	}
 
 	o.setModelRels(m)
@@ -769,6 +778,7 @@ func (m historyTreatmentMods) RandomizeAllColumns(f *faker.Faker) HistoryTreatme
 		HistoryTreatmentMods.RandomGeometryY(f),
 		HistoryTreatmentMods.RandomTempSitecond(f),
 		HistoryTreatmentMods.RandomVersion(f),
+		HistoryTreatmentMods.RandomCreated(f),
 	}
 }
 
@@ -3776,6 +3786,59 @@ func (m historyTreatmentMods) RandomVersion(f *faker.Faker) HistoryTreatmentMod 
 	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
 		o.Version = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyTreatmentMods) Created(val null.Val[time.Time]) HistoryTreatmentMod {
+	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyTreatmentMods) CreatedFunc(f func() null.Val[time.Time]) HistoryTreatmentMod {
+	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyTreatmentMods) UnsetCreated() HistoryTreatmentMod {
+	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyTreatmentMods) RandomCreated(f *faker.Faker) HistoryTreatmentMod {
+	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyTreatmentMods) RandomCreatedNotNull(f *faker.Faker) HistoryTreatmentMod {
+	return HistoryTreatmentModFunc(func(_ context.Context, o *HistoryTreatmentTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
 		}
 	})
 }

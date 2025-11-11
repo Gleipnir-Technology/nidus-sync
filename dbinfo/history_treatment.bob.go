@@ -537,6 +537,15 @@ var HistoryTreatments = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyTreatmentIndexes{
 		HistoryTreatmentPkey: index{
@@ -641,11 +650,12 @@ type historyTreatmentColumns struct {
 	GeometryY            column
 	TempSitecond         column
 	Version              column
+	Created              column
 }
 
 func (c historyTreatmentColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Activity, c.Areaunit, c.Avetemp, c.Barrierrouteid, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Editdate, c.Editor, c.Fieldtech, c.Flowrate, c.Globalid, c.Habitat, c.InspID, c.Invloc, c.Linelocid, c.Locationname, c.Method, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Product, c.Ptaid, c.Qty, c.Qtyunit, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Targetspecies, c.Tirecount, c.Treatacres, c.Treatarea, c.Treathectares, c.Treatmenthours, c.Treatmentlength, c.Treatmentlengthunits, c.Totalcostprodcut, c.Ulvrouteid, c.Warningoverride, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.TempSitecond, c.Version,
+		c.OrganizationID, c.Activity, c.Areaunit, c.Avetemp, c.Barrierrouteid, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Editdate, c.Editor, c.Fieldtech, c.Flowrate, c.Globalid, c.Habitat, c.InspID, c.Invloc, c.Linelocid, c.Locationname, c.Method, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Product, c.Ptaid, c.Qty, c.Qtyunit, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Targetspecies, c.Tirecount, c.Treatacres, c.Treatarea, c.Treathectares, c.Treatmenthours, c.Treatmentlength, c.Treatmentlengthunits, c.Totalcostprodcut, c.Ulvrouteid, c.Warningoverride, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.TempSitecond, c.Version, c.Created,
 	}
 }
 

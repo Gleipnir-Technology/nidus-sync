@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -82,6 +83,7 @@ type HistoryPolygonlocationTemplate struct {
 	GeometryX               func() null.Val[float64]
 	GeometryY               func() null.Val[float64]
 	Version                 func() int32
+	Created                 func() null.Val[time.Time]
 
 	r historyPolygonlocationR
 	f *Factory
@@ -304,6 +306,10 @@ func (o HistoryPolygonlocationTemplate) BuildSetter() *models.HistoryPolygonloca
 		val := o.Version()
 		m.Version = omit.From(val)
 	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -463,6 +469,9 @@ func (o HistoryPolygonlocationTemplate) Build() *models.HistoryPolygonlocation {
 	}
 	if o.Version != nil {
 		m.Version = o.Version()
+	}
+	if o.Created != nil {
+		m.Created = o.Created()
 	}
 
 	o.setModelRels(m)
@@ -661,6 +670,7 @@ func (m historyPolygonlocationMods) RandomizeAllColumns(f *faker.Faker) HistoryP
 		HistoryPolygonlocationMods.RandomGeometryX(f),
 		HistoryPolygonlocationMods.RandomGeometryY(f),
 		HistoryPolygonlocationMods.RandomVersion(f),
+		HistoryPolygonlocationMods.RandomCreated(f),
 	}
 }
 
@@ -3032,6 +3042,59 @@ func (m historyPolygonlocationMods) RandomVersion(f *faker.Faker) HistoryPolygon
 	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
 		o.Version = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyPolygonlocationMods) Created(val null.Val[time.Time]) HistoryPolygonlocationMod {
+	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyPolygonlocationMods) CreatedFunc(f func() null.Val[time.Time]) HistoryPolygonlocationMod {
+	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyPolygonlocationMods) UnsetCreated() HistoryPolygonlocationMod {
+	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyPolygonlocationMods) RandomCreated(f *faker.Faker) HistoryPolygonlocationMod {
+	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyPolygonlocationMods) RandomCreatedNotNull(f *faker.Faker) HistoryPolygonlocationMod {
+	return HistoryPolygonlocationModFunc(func(_ context.Context, o *HistoryPolygonlocationTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
 		}
 	})
 }

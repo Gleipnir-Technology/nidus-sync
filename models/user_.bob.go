@@ -678,7 +678,7 @@ func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 
 func insertUserUserNotifications0(ctx context.Context, exec bob.Executor, notifications1 []*NotificationSetter, user0 *User) (NotificationSlice, error) {
 	for i := range notifications1 {
-		notifications1[i].UserID = omitnull.From(user0.ID)
+		notifications1[i].UserID = omit.From(user0.ID)
 	}
 
 	ret, err := Notifications.Insert(bob.ToMods(notifications1...)).All(ctx, exec)
@@ -691,7 +691,7 @@ func insertUserUserNotifications0(ctx context.Context, exec bob.Executor, notifi
 
 func attachUserUserNotifications0(ctx context.Context, exec bob.Executor, count int, notifications1 NotificationSlice, user0 *User) (NotificationSlice, error) {
 	setter := &NotificationSetter{
-		UserID: omitnull.From(user0.ID),
+		UserID: omit.From(user0.ID),
 	}
 
 	err := notifications1.UpdateAll(ctx, exec, *setter)
@@ -1056,10 +1056,7 @@ func (os UserSlice) LoadUserNotifications(ctx context.Context, exec bob.Executor
 
 		for _, rel := range notifications {
 
-			if !rel.UserID.IsValue() {
-				continue
-			}
-			if !(rel.UserID.IsValue() && o.ID == rel.UserID.MustGet()) {
+			if !(o.ID == rel.UserID) {
 				continue
 			}
 

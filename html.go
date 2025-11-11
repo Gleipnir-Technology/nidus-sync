@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
@@ -169,7 +170,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 			Status:   "Completed",
 		})
 	}
-	notifications, err := notificationsForUser(user)
+	notifications, err := notificationsForUser(ctx, user)
 	if err != nil {
 		respondError(w, "Failed to get notifications", err, http.StatusInternalServerError)
 		return
@@ -427,15 +428,31 @@ type Notification struct {
 	Type    string
 }
 
-func notificationsForUser(u *models.User) ([]Notification, error) {
-	return []Notification{Notification{
-		Link:    "/foo/bar",
-		Message: "hey, your oauth is broken.",
-		Time:    time.Now(),
-		Type:    "alert",
-	}}, nil
+func notificationsForUser(ctx context.Context, u *models.User) ([]Notification, error) {
+	results := make([]Notification, 0)
+	notifications, err := u.UserNotifications().All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to get notifications: %v", err)
+	}
+	for _, n := range notifications {
+		results = append(results, Notification{
+			Link:    n.Link,
+			Message: n.Message,
+			Time:    n.Created,
+			Type:    notificationTypeName(n.Type),
+		})
+	}
+	return results, nil
 }
 
+func notificationTypeName(t enums.Notificationtype) string {
+	switch t {
+	case enums.NotificationtypeOauthTokenInvalidated:
+		return "alert"
+	default:
+		return "unknown-type"
+	}
+}
 func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interface{}) {
 	buf := &bytes.Buffer{}
 	err := template.ExecuteTemplate(buf, context)

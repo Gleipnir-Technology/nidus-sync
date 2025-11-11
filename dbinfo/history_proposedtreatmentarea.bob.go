@@ -348,6 +348,15 @@ var HistoryProposedtreatmentareas = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: historyProposedtreatmentareaIndexes{
 		HistoryProposedtreatmentareaPkey: index{
@@ -431,11 +440,12 @@ type historyProposedtreatmentareaColumns struct {
 	GeometryX         column
 	GeometryY         column
 	Version           column
+	Created           column
 }
 
 func (c historyProposedtreatmentareaColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Acres, c.Comments, c.Completed, c.Completedby, c.Completeddate, c.Creationdate, c.Creator, c.Duedate, c.Exported, c.Editdate, c.Editor, c.Globalid, c.Hectares, c.Issprayroute, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Method, c.Name, c.Objectid, c.Priority, c.Reviewed, c.Reviewedby, c.Revieweddate, c.ShapeArea, c.ShapeLength, c.Targetapprate, c.Targetproduct, c.Targetspecies, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Version,
+		c.OrganizationID, c.Acres, c.Comments, c.Completed, c.Completedby, c.Completeddate, c.Creationdate, c.Creator, c.Duedate, c.Exported, c.Editdate, c.Editor, c.Globalid, c.Hectares, c.Issprayroute, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Method, c.Name, c.Objectid, c.Priority, c.Reviewed, c.Reviewedby, c.Revieweddate, c.ShapeArea, c.ShapeLength, c.Targetapprate, c.Targetproduct, c.Targetspecies, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Version, c.Created,
 	}
 }
 

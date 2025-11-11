@@ -90,7 +90,7 @@ func (t UserTemplate) setModelRels(o *models.User) {
 		for _, r := range t.r.UserNotifications {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.UserID = null.From(o.ID) // h2
+				rel.UserID = o.ID // h2
 				rel.R.UserUser = o
 			}
 			rel = append(rel, related...)

@@ -4,10 +4,11 @@ CREATE TYPE NotificationType AS ENUM (
 
 CREATE TABLE notification (
 	id SERIAL PRIMARY KEY,
-	user_id INTEGER REFERENCES user_(id),
-	message TEXT,
-	link TEXT,
-	type NotificationType);
+	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+	link TEXT NOT NULL,
+	message TEXT NOT NULL,
+	type NotificationType NOT NULL,
+	user_id INTEGER REFERENCES user_(id) NOT NULL);
 
 
 
