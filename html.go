@@ -71,7 +71,7 @@ type ContentDashboard struct {
 	CountInspections     int
 	CountMosquitoSources int
 	CountServiceRequests int
-	LastSync             time.Time
+	LastSync             *time.Time
 	Org                  string
 	RecentRequests       []ServiceRequestSummary
 	User                 User
@@ -130,7 +130,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
 	}
-	var lastSync time.Time
+	var lastSync *time.Time
 	sync, err := org.FieldseekerSyncs(sm.OrderBy("created")).One(ctx, PGInstance.BobDB)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
@@ -138,7 +138,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 			return
 		}
 	} else {
-		lastSync = sync.Created
+		lastSync = &sync.Created
 	}
 	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, PGInstance.BobDB)
 	if err != nil {
@@ -400,9 +400,12 @@ func timeElapsed(seconds null.Val[float32]) string {
 	}
 }
 
-func timeSince(t time.Time) string {
+func timeSince(t *time.Time) string {
+	if t == nil {
+		return "never"
+	}
 	now := time.Now()
-	diff := now.Sub(t)
+	diff := now.Sub(*t)
 
 	hours := diff.Hours()
 	slog.Info("time since", slog.String("t", t.String()), slog.Float64("hours", hours))
