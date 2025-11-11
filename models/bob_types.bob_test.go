@@ -182,6 +182,9 @@ var _ bob.HookableType = &HistoryZone{}
 // Make sure the type HistoryZones2 runs hooks after queries
 var _ bob.HookableType = &HistoryZones2{}
 
+// Make sure the type Notification runs hooks after queries
+var _ bob.HookableType = &Notification{}
+
 // Make sure the type OauthToken runs hooks after queries
 var _ bob.HookableType = &OauthToken{}
 
@@ -193,6 +196,12 @@ var _ bob.HookableType = &Session{}
 
 // Make sure the type User runs hooks after queries
 var _ bob.HookableType = &User{}
+
+// Make sure the type enums.Notificationtype satisfies database/sql.Scanner
+var _ sql.Scanner = (*enums.Notificationtype)(nil)
+
+// Make sure the type enums.Notificationtype satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(enums.Notificationtype)
 
 // Make sure the type enums.Arcgislicensetype satisfies database/sql.Scanner
 var _ sql.Scanner = (*enums.Arcgislicensetype)(nil)

@@ -73,6 +73,7 @@ func Where[Q psql.Filterable]() struct {
 	HistoryTreatmentareas          historyTreatmentareaWhere[Q]
 	HistoryZones                   historyZoneWhere[Q]
 	HistoryZones2s                 historyZones2Where[Q]
+	Notifications                  notificationWhere[Q]
 	OauthTokens                    oauthTokenWhere[Q]
 	Organizations                  organizationWhere[Q]
 	Sessions                       sessionWhere[Q]
@@ -135,6 +136,7 @@ func Where[Q psql.Filterable]() struct {
 		HistoryTreatmentareas          historyTreatmentareaWhere[Q]
 		HistoryZones                   historyZoneWhere[Q]
 		HistoryZones2s                 historyZones2Where[Q]
+		Notifications                  notificationWhere[Q]
 		OauthTokens                    oauthTokenWhere[Q]
 		Organizations                  organizationWhere[Q]
 		Sessions                       sessionWhere[Q]
@@ -196,6 +198,7 @@ func Where[Q psql.Filterable]() struct {
 		HistoryTreatmentareas:          buildHistoryTreatmentareaWhere[Q](HistoryTreatmentareas.Columns),
 		HistoryZones:                   buildHistoryZoneWhere[Q](HistoryZones.Columns),
 		HistoryZones2s:                 buildHistoryZones2Where[Q](HistoryZones2s.Columns),
+		Notifications:                  buildNotificationWhere[Q](Notifications.Columns),
 		OauthTokens:                    buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                  buildOrganizationWhere[Q](Organizations.Columns),
 		Sessions:                       buildSessionWhere[Q](Sessions.Columns),

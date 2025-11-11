@@ -58,10 +58,15 @@ type UserTemplate struct {
 }
 
 type userR struct {
-	UserOauthTokens []*userRUserOauthTokensR
-	Organization    *userROrganizationR
+	UserNotifications []*userRUserNotificationsR
+	UserOauthTokens   []*userRUserOauthTokensR
+	Organization      *userROrganizationR
 }
 
+type userRUserNotificationsR struct {
+	number int
+	o      *NotificationTemplate
+}
 type userRUserOauthTokensR struct {
 	number int
 	o      *OauthTokenTemplate
@@ -80,6 +85,19 @@ func (o *UserTemplate) Apply(ctx context.Context, mods ...UserMod) {
 // setModelRels creates and sets the relationships on *models.User
 // according to the relationships in the template. Nothing is inserted into the db
 func (t UserTemplate) setModelRels(o *models.User) {
+	if t.r.UserNotifications != nil {
+		rel := models.NotificationSlice{}
+		for _, r := range t.r.UserNotifications {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.UserID = null.From(o.ID) // h2
+				rel.R.UserUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.UserNotifications = rel
+	}
+
 	if t.r.UserOauthTokens != nil {
 		rel := models.OauthTokenSlice{}
 		for _, r := range t.r.UserOauthTokens {
@@ -256,6 +274,26 @@ func ensureCreatableUser(m *models.UserSetter) {
 func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.User) error {
 	var err error
 
+	isUserNotificationsDone, _ := userRelUserNotificationsCtx.Value(ctx)
+	if !isUserNotificationsDone && o.r.UserNotifications != nil {
+		ctx = userRelUserNotificationsCtx.WithValue(ctx, true)
+		for _, r := range o.r.UserNotifications {
+			if r.o.alreadyPersisted {
+				m.R.UserNotifications = append(m.R.UserNotifications, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachUserNotifications(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isUserOauthTokensDone, _ := userRelUserOauthTokensCtx.Value(ctx)
 	if !isUserOauthTokensDone && o.r.UserOauthTokens != nil {
 		ctx = userRelUserOauthTokensCtx.WithValue(ctx, true)
@@ -263,12 +301,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserOauthTokens(ctx, exec, rel0...)
+				err = m.AttachUserOauthTokens(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -282,12 +320,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		if o.r.Organization.o.alreadyPersisted {
 			m.R.Organization = o.r.Organization.o.Build()
 		} else {
-			var rel1 *models.Organization
-			rel1, err = o.r.Organization.o.Create(ctx, exec)
+			var rel2 *models.Organization
+			rel2, err = o.r.Organization.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachOrganization(ctx, exec, rel1)
+			err = m.AttachOrganization(ctx, exec, rel2)
 			if err != nil {
 				return err
 			}
@@ -969,6 +1007,54 @@ func (m userMods) WithExistingOrganization(em *models.Organization) UserMod {
 func (m userMods) WithoutOrganization() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m userMods) WithUserNotifications(number int, related *NotificationTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserNotifications = []*userRUserNotificationsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewUserNotifications(number int, mods ...NotificationMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewNotificationWithContext(ctx, mods...)
+		m.WithUserNotifications(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddUserNotifications(number int, related *NotificationTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserNotifications = append(o.r.UserNotifications, &userRUserNotificationsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewUserNotifications(number int, mods ...NotificationMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewNotificationWithContext(ctx, mods...)
+		m.AddUserNotifications(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingUserNotifications(existingModels ...*models.Notification) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.UserNotifications = append(o.r.UserNotifications, &userRUserNotificationsR{
+				o: o.f.FromExistingNotification(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutUserNotifications() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserNotifications = nil
 	})
 }
 

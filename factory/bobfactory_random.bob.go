@@ -51,6 +51,16 @@ func random_enums_Hashtype(f *faker.Faker, limits ...string) enums.Hashtype {
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notificationtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Notificationtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_float64(f *faker.Faker, limits ...string) float64 {
 	if f == nil {
 		f = &defaultFaker

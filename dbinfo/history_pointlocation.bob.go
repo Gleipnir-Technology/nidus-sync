@@ -51,6 +51,15 @@ var HistoryPointlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Created: column{
+			Name:      "created",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Creationdate: column{
 			Name:      "creationdate",
 			DBType:    "bigint",
@@ -497,6 +506,7 @@ type historyPointlocationColumns struct {
 	Accessdesc              column
 	Active                  column
 	Comments                column
+	Created                 column
 	Creationdate            column
 	Creator                 column
 	Description             column
@@ -545,7 +555,7 @@ type historyPointlocationColumns struct {
 
 func (c historyPointlocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Stype, c.Symbology, c.Usetype, c.Waterorigin, c.X, c.Y, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Assignedtech, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Version,
+		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Created, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Stype, c.Symbology, c.Usetype, c.Waterorigin, c.X, c.Y, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Assignedtech, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Version,
 	}
 }
 

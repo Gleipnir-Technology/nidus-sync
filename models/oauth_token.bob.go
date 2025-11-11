@@ -26,15 +26,16 @@ import (
 
 // OauthToken is an object representing the database table.
 type OauthToken struct {
-	ID                  int32            `db:"id,pk" `
-	AccessToken         string           `db:"access_token" `
-	AccessTokenExpires  time.Time        `db:"access_token_expires" `
-	RefreshToken        string           `db:"refresh_token" `
-	Username            string           `db:"username" `
-	UserID              int32            `db:"user_id" `
-	ArcgisID            null.Val[string] `db:"arcgis_id" `
-	ArcgisLicenseTypeID null.Val[string] `db:"arcgis_license_type_id" `
-	RefreshTokenExpires time.Time        `db:"refresh_token_expires" `
+	ID                  int32               `db:"id,pk" `
+	AccessToken         string              `db:"access_token" `
+	AccessTokenExpires  time.Time           `db:"access_token_expires" `
+	RefreshToken        string              `db:"refresh_token" `
+	Username            string              `db:"username" `
+	UserID              int32               `db:"user_id" `
+	ArcgisID            null.Val[string]    `db:"arcgis_id" `
+	ArcgisLicenseTypeID null.Val[string]    `db:"arcgis_license_type_id" `
+	RefreshTokenExpires time.Time           `db:"refresh_token_expires" `
+	InvalidatedAt       null.Val[time.Time] `db:"invalidated_at" `
 
 	R oauthTokenR `db:"-" `
 }
@@ -57,7 +58,7 @@ type oauthTokenR struct {
 func buildOauthTokenColumns(alias string) oauthTokenColumns {
 	return oauthTokenColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_token", "access_token_expires", "refresh_token", "username", "user_id", "arcgis_id", "arcgis_license_type_id", "refresh_token_expires",
+			"id", "access_token", "access_token_expires", "refresh_token", "username", "user_id", "arcgis_id", "arcgis_license_type_id", "refresh_token_expires", "invalidated_at",
 		).WithParent("oauth_token"),
 		tableAlias:          alias,
 		ID:                  psql.Quote(alias, "id"),
@@ -69,6 +70,7 @@ func buildOauthTokenColumns(alias string) oauthTokenColumns {
 		ArcgisID:            psql.Quote(alias, "arcgis_id"),
 		ArcgisLicenseTypeID: psql.Quote(alias, "arcgis_license_type_id"),
 		RefreshTokenExpires: psql.Quote(alias, "refresh_token_expires"),
+		InvalidatedAt:       psql.Quote(alias, "invalidated_at"),
 	}
 }
 
@@ -84,6 +86,7 @@ type oauthTokenColumns struct {
 	ArcgisID            psql.Expression
 	ArcgisLicenseTypeID psql.Expression
 	RefreshTokenExpires psql.Expression
+	InvalidatedAt       psql.Expression
 }
 
 func (c oauthTokenColumns) Alias() string {
@@ -98,19 +101,20 @@ func (oauthTokenColumns) AliasedAs(alias string) oauthTokenColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type OauthTokenSetter struct {
-	ID                  omit.Val[int32]      `db:"id,pk" `
-	AccessToken         omit.Val[string]     `db:"access_token" `
-	AccessTokenExpires  omit.Val[time.Time]  `db:"access_token_expires" `
-	RefreshToken        omit.Val[string]     `db:"refresh_token" `
-	Username            omit.Val[string]     `db:"username" `
-	UserID              omit.Val[int32]      `db:"user_id" `
-	ArcgisID            omitnull.Val[string] `db:"arcgis_id" `
-	ArcgisLicenseTypeID omitnull.Val[string] `db:"arcgis_license_type_id" `
-	RefreshTokenExpires omit.Val[time.Time]  `db:"refresh_token_expires" `
+	ID                  omit.Val[int32]         `db:"id,pk" `
+	AccessToken         omit.Val[string]        `db:"access_token" `
+	AccessTokenExpires  omit.Val[time.Time]     `db:"access_token_expires" `
+	RefreshToken        omit.Val[string]        `db:"refresh_token" `
+	Username            omit.Val[string]        `db:"username" `
+	UserID              omit.Val[int32]         `db:"user_id" `
+	ArcgisID            omitnull.Val[string]    `db:"arcgis_id" `
+	ArcgisLicenseTypeID omitnull.Val[string]    `db:"arcgis_license_type_id" `
+	RefreshTokenExpires omit.Val[time.Time]     `db:"refresh_token_expires" `
+	InvalidatedAt       omitnull.Val[time.Time] `db:"invalidated_at" `
 }
 
 func (s OauthTokenSetter) SetColumns() []string {
-	vals := make([]string, 0, 9)
+	vals := make([]string, 0, 10)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -137,6 +141,9 @@ func (s OauthTokenSetter) SetColumns() []string {
 	}
 	if s.RefreshTokenExpires.IsValue() {
 		vals = append(vals, "refresh_token_expires")
+	}
+	if !s.InvalidatedAt.IsUnset() {
+		vals = append(vals, "invalidated_at")
 	}
 	return vals
 }
@@ -169,6 +176,9 @@ func (s OauthTokenSetter) Overwrite(t *OauthToken) {
 	if s.RefreshTokenExpires.IsValue() {
 		t.RefreshTokenExpires = s.RefreshTokenExpires.MustGet()
 	}
+	if !s.InvalidatedAt.IsUnset() {
+		t.InvalidatedAt = s.InvalidatedAt.MustGetNull()
+	}
 }
 
 func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
@@ -177,7 +187,7 @@ func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 9)
+		vals := make([]bob.Expression, 10)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -232,6 +242,12 @@ func (s *OauthTokenSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
+		if !s.InvalidatedAt.IsUnset() {
+			vals[9] = psql.Arg(s.InvalidatedAt.MustGetNull())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -241,7 +257,7 @@ func (s OauthTokenSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OauthTokenSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 9)
+	exprs := make([]bob.Expression, 0, 10)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -303,6 +319,13 @@ func (s OauthTokenSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "refresh_token_expires")...),
 			psql.Arg(s.RefreshTokenExpires),
+		}})
+	}
+
+	if !s.InvalidatedAt.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "invalidated_at")...),
+			psql.Arg(s.InvalidatedAt),
 		}})
 	}
 
@@ -614,6 +637,7 @@ type oauthTokenWhere[Q psql.Filterable] struct {
 	ArcgisID            psql.WhereNullMod[Q, string]
 	ArcgisLicenseTypeID psql.WhereNullMod[Q, string]
 	RefreshTokenExpires psql.WhereMod[Q, time.Time]
+	InvalidatedAt       psql.WhereNullMod[Q, time.Time]
 }
 
 func (oauthTokenWhere[Q]) AliasedAs(alias string) oauthTokenWhere[Q] {
@@ -631,6 +655,7 @@ func buildOauthTokenWhere[Q psql.Filterable](cols oauthTokenColumns) oauthTokenW
 		ArcgisID:            psql.WhereNull[Q, string](cols.ArcgisID),
 		ArcgisLicenseTypeID: psql.WhereNull[Q, string](cols.ArcgisLicenseTypeID),
 		RefreshTokenExpires: psql.Where[Q, time.Time](cols.RefreshTokenExpires),
+		InvalidatedAt:       psql.WhereNull[Q, time.Time](cols.InvalidatedAt),
 	}
 }
 

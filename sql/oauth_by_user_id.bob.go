@@ -21,7 +21,7 @@ import (
 //go:embed oauth_by_user_id.bob.sql
 var formattedQueries_oauth_by_user_id string
 
-var oauthTokenByUserIdSQL = formattedQueries_oauth_by_user_id[156:642]
+var oauthTokenByUserIdSQL = formattedQueries_oauth_by_user_id[156:694]
 
 type OauthTokenByUserIdQuery = orm.ModQuery[*dialect.SelectQuery, oauthTokenByUserId, OauthTokenByUserIdRow, []OauthTokenByUserIdRow, oauthTokenByUserIdTransformer]
 
@@ -51,6 +51,7 @@ func OauthTokenByUserId(UserID int32) *OauthTokenByUserIdQuery {
 						row.ScheduleScanByIndex(6, &t.ArcgisID)
 						row.ScheduleScanByIndex(7, &t.ArcgisLicenseTypeID)
 						row.ScheduleScanByIndex(8, &t.RefreshTokenExpires)
+						row.ScheduleScanByIndex(9, &t.InvalidatedAt)
 						return &t, nil
 					}, func(v any) (OauthTokenByUserIdRow, error) {
 						return *(v.(*OauthTokenByUserIdRow)), nil
@@ -58,23 +59,24 @@ func OauthTokenByUserId(UserID int32) *OauthTokenByUserIdQuery {
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendSelect(expressionTypArgs.subExpr(7, 449))
-			q.SetTable(expressionTypArgs.subExpr(455, 466))
-			q.AppendWhere(expressionTypArgs.subExpr(474, 486))
+			q.AppendSelect(expressionTypArgs.subExpr(7, 501))
+			q.SetTable(expressionTypArgs.subExpr(507, 518))
+			q.AppendWhere(expressionTypArgs.subExpr(526, 538))
 		}),
 	}
 }
 
 type OauthTokenByUserIdRow = struct {
-	ID                  int32            `db:"id"`
-	AccessToken         string           `db:"access_token"`
-	AccessTokenExpires  time.Time        `db:"access_token_expires"`
-	RefreshToken        string           `db:"refresh_token"`
-	Username            string           `db:"username"`
-	UserID              int32            `db:"user_id"`
-	ArcgisID            null.Val[string] `db:"arcgis_id"`
-	ArcgisLicenseTypeID null.Val[string] `db:"arcgis_license_type_id"`
-	RefreshTokenExpires time.Time        `db:"refresh_token_expires"`
+	ID                  int32               `db:"id"`
+	AccessToken         string              `db:"access_token"`
+	AccessTokenExpires  time.Time           `db:"access_token_expires"`
+	RefreshToken        string              `db:"refresh_token"`
+	Username            string              `db:"username"`
+	UserID              int32               `db:"user_id"`
+	ArcgisID            null.Val[string]    `db:"arcgis_id"`
+	ArcgisLicenseTypeID null.Val[string]    `db:"arcgis_license_type_id"`
+	RefreshTokenExpires time.Time           `db:"refresh_token_expires"`
+	InvalidatedAt       null.Val[time.Time] `db:"invalidated_at"`
 }
 
 type oauthTokenByUserIdTransformer = bob.SliceTransformer[OauthTokenByUserIdRow, []OauthTokenByUserIdRow]
@@ -87,8 +89,8 @@ func (o oauthTokenByUserId) args() iter.Seq[orm.ArgWithPosition] {
 	return func(yield func(arg orm.ArgWithPosition) bool) {
 		if !yield(orm.ArgWithPosition{
 			Name:       "userID",
-			Start:      484,
-			Stop:       486,
+			Start:      536,
+			Stop:       538,
 			Expression: o.UserID,
 		}) {
 			return

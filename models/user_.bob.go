@@ -55,8 +55,9 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	UserOauthTokens OauthTokenSlice // oauth_token.oauth_token_user_id_fkey
-	Organization    *Organization   // user_.user__organization_id_fkey
+	UserNotifications NotificationSlice // notification.notification_user_id_fkey
+	UserOauthTokens   OauthTokenSlice   // oauth_token.oauth_token_user_id_fkey
+	Organization      *Organization     // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -603,6 +604,30 @@ func (o UserSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// UserNotifications starts a query for related objects on notification
+func (o *User) UserNotifications(mods ...bob.Mod[*dialect.SelectQuery]) NotificationsQuery {
+	return Notifications.Query(append(mods,
+		sm.Where(Notifications.Columns.UserID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) UserNotifications(mods ...bob.Mod[*dialect.SelectQuery]) NotificationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Notifications.Query(append(mods,
+		sm.Where(psql.Group(Notifications.Columns.UserID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // UserOauthTokens starts a query for related objects on oauth_token
 func (o *User) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) OauthTokensQuery {
 	return OauthTokens.Query(append(mods,
@@ -649,6 +674,74 @@ func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 	return Organizations.Query(append(mods,
 		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertUserUserNotifications0(ctx context.Context, exec bob.Executor, notifications1 []*NotificationSetter, user0 *User) (NotificationSlice, error) {
+	for i := range notifications1 {
+		notifications1[i].UserID = omitnull.From(user0.ID)
+	}
+
+	ret, err := Notifications.Insert(bob.ToMods(notifications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserUserNotifications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserUserNotifications0(ctx context.Context, exec bob.Executor, count int, notifications1 NotificationSlice, user0 *User) (NotificationSlice, error) {
+	setter := &NotificationSetter{
+		UserID: omitnull.From(user0.ID),
+	}
+
+	err := notifications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserUserNotifications0: %w", err)
+	}
+
+	return notifications1, nil
+}
+
+func (user0 *User) InsertUserNotifications(ctx context.Context, exec bob.Executor, related ...*NotificationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	notifications1, err := insertUserUserNotifications0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserNotifications = append(user0.R.UserNotifications, notifications1...)
+
+	for _, rel := range notifications1 {
+		rel.R.UserUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachUserNotifications(ctx context.Context, exec bob.Executor, related ...*Notification) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	notifications1 := NotificationSlice(related)
+
+	_, err = attachUserUserNotifications0(ctx, exec, len(related), notifications1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserNotifications = append(user0.R.UserNotifications, notifications1...)
+
+	for _, rel := range related {
+		rel.R.UserUser = user0
+	}
+
+	return nil
 }
 
 func insertUserUserOauthTokens0(ctx context.Context, exec bob.Executor, oauthTokens1 []*OauthTokenSetter, user0 *User) (OauthTokenSlice, error) {
@@ -809,6 +902,20 @@ func (o *User) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "UserNotifications":
+		rels, ok := retrieved.(NotificationSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.UserNotifications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.UserUser = o
+			}
+		}
+		return nil
 	case "UserOauthTokens":
 		rels, ok := retrieved.(OauthTokenSlice)
 		if !ok {
@@ -863,11 +970,15 @@ func buildUserPreloader() userPreloader {
 }
 
 type userThenLoader[Q orm.Loadable] struct {
-	UserOauthTokens func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
+	type UserNotificationsLoadInterface interface {
+		LoadUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type UserOauthTokensLoadInterface interface {
 		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -876,6 +987,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 
 	return userThenLoader[Q]{
+		UserNotifications: thenLoadBuilder[Q](
+			"UserNotifications",
+			func(ctx context.Context, exec bob.Executor, retrieved UserNotificationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadUserNotifications(ctx, exec, mods...)
+			},
+		),
 		UserOauthTokens: thenLoadBuilder[Q](
 			"UserOauthTokens",
 			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -889,6 +1006,70 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadUserNotifications loads the user's UserNotifications into the .R struct
+func (o *User) LoadUserNotifications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.UserNotifications = nil
+
+	related, err := o.UserNotifications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.UserUser = o
+	}
+
+	o.R.UserNotifications = related
+	return nil
+}
+
+// LoadUserNotifications loads the user's UserNotifications into the .R struct
+func (os UserSlice) LoadUserNotifications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	notifications, err := os.UserNotifications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.UserNotifications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range notifications {
+
+			if !rel.UserID.IsValue() {
+				continue
+			}
+			if !(rel.UserID.IsValue() && o.ID == rel.UserID.MustGet()) {
+				continue
+			}
+
+			rel.R.UserUser = o
+
+			o.R.UserNotifications = append(o.R.UserNotifications, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
@@ -1008,9 +1189,10 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 }
 
 type userJoins[Q dialect.Joinable] struct {
-	typ             string
-	UserOauthTokens modAs[Q, oauthTokenColumns]
-	Organization    modAs[Q, organizationColumns]
+	typ               string
+	UserNotifications modAs[Q, notificationColumns]
+	UserOauthTokens   modAs[Q, oauthTokenColumns]
+	Organization      modAs[Q, organizationColumns]
 }
 
 func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
@@ -1020,6 +1202,20 @@ func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
 func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[Q] {
 	return userJoins[Q]{
 		typ: typ,
+		UserNotifications: modAs[Q, notificationColumns]{
+			c: Notifications.Columns,
+			f: func(to notificationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Notifications.Name().As(to.Alias())).On(
+						to.UserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		UserOauthTokens: modAs[Q, oauthTokenColumns]{
 			c: OauthTokens.Columns,
 			f: func(to oauthTokenColumns) bob.Mod[Q] {

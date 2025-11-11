@@ -133,8 +133,10 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	var lastSync time.Time
 	sync, err := org.FieldseekerSyncs(sm.OrderBy("created")).One(ctx, PGInstance.BobDB)
 	if err != nil {
-		respondError(w, "Failed to get syncs", err, http.StatusInternalServerError)
-		return
+		if err.Error() != "sql: no rows in result set" {
+			respondError(w, "Failed to get syncs", err, http.StatusInternalServerError)
+			return
+		}
 	} else {
 		lastSync = sync.Created
 	}

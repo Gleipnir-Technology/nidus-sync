@@ -96,6 +96,15 @@ var OauthTokens = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		InvalidatedAt: column{
+			Name:      "invalidated_at",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: oauthTokenIndexes{
 		OauthTokenPkey: index{
@@ -146,11 +155,12 @@ type oauthTokenColumns struct {
 	ArcgisID            column
 	ArcgisLicenseTypeID column
 	RefreshTokenExpires column
+	InvalidatedAt       column
 }
 
 func (c oauthTokenColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessToken, c.AccessTokenExpires, c.RefreshToken, c.Username, c.UserID, c.ArcgisID, c.ArcgisLicenseTypeID, c.RefreshTokenExpires,
+		c.ID, c.AccessToken, c.AccessTokenExpires, c.RefreshToken, c.Username, c.UserID, c.ArcgisID, c.ArcgisLicenseTypeID, c.RefreshTokenExpires, c.InvalidatedAt,
 	}
 }
 

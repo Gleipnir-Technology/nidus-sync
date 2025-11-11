@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -25,54 +26,55 @@ import (
 
 // HistoryPointlocation is an object representing the database table.
 type HistoryPointlocation struct {
-	OrganizationID          int32             `db:"organization_id" `
-	Accessdesc              null.Val[string]  `db:"accessdesc" `
-	Active                  null.Val[int16]   `db:"active" `
-	Comments                null.Val[string]  `db:"comments" `
-	Creationdate            null.Val[int64]   `db:"creationdate" `
-	Creator                 null.Val[string]  `db:"creator" `
-	Description             null.Val[string]  `db:"description" `
-	Externalid              null.Val[string]  `db:"externalid" `
-	Editdate                null.Val[int64]   `db:"editdate" `
-	Editor                  null.Val[string]  `db:"editor" `
-	Globalid                null.Val[string]  `db:"globalid" `
-	Habitat                 null.Val[string]  `db:"habitat" `
-	Jurisdiction            null.Val[string]  `db:"jurisdiction" `
-	Larvinspectinterval     null.Val[int16]   `db:"larvinspectinterval" `
-	Lastinspectactiontaken  null.Val[string]  `db:"lastinspectactiontaken" `
-	Lastinspectactivity     null.Val[string]  `db:"lastinspectactivity" `
-	Lastinspectavglarvae    null.Val[float64] `db:"lastinspectavglarvae" `
-	Lastinspectavgpupae     null.Val[float64] `db:"lastinspectavgpupae" `
-	Lastinspectbreeding     null.Val[string]  `db:"lastinspectbreeding" `
-	Lastinspectconditions   null.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate         null.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectfieldspecies null.Val[string]  `db:"lastinspectfieldspecies" `
-	Lastinspectlstages      null.Val[string]  `db:"lastinspectlstages" `
-	Lasttreatactivity       null.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate           null.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct        null.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty            null.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit        null.Val[string]  `db:"lasttreatqtyunit" `
-	Locationnumber          null.Val[int64]   `db:"locationnumber" `
-	Name                    null.Val[string]  `db:"name" `
-	Nextactiondatescheduled null.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                int32             `db:"objectid,pk" `
-	Priority                null.Val[string]  `db:"priority" `
-	Stype                   null.Val[string]  `db:"stype" `
-	Symbology               null.Val[string]  `db:"symbology" `
-	Usetype                 null.Val[string]  `db:"usetype" `
-	Waterorigin             null.Val[string]  `db:"waterorigin" `
-	X                       null.Val[float64] `db:"x" `
-	Y                       null.Val[float64] `db:"y" `
-	Zone                    null.Val[string]  `db:"zone" `
-	Zone2                   null.Val[string]  `db:"zone2" `
-	GeometryX               null.Val[float64] `db:"geometry_x" `
-	GeometryY               null.Val[float64] `db:"geometry_y" `
-	Assignedtech            null.Val[string]  `db:"assignedtech" `
-	DeactivateReason        null.Val[string]  `db:"deactivate_reason" `
-	Scalarpriority          null.Val[int64]   `db:"scalarpriority" `
-	Sourcestatus            null.Val[string]  `db:"sourcestatus" `
-	Version                 int32             `db:"version,pk" `
+	OrganizationID          int32               `db:"organization_id" `
+	Accessdesc              null.Val[string]    `db:"accessdesc" `
+	Active                  null.Val[int16]     `db:"active" `
+	Comments                null.Val[string]    `db:"comments" `
+	Created                 null.Val[time.Time] `db:"created" `
+	Creationdate            null.Val[int64]     `db:"creationdate" `
+	Creator                 null.Val[string]    `db:"creator" `
+	Description             null.Val[string]    `db:"description" `
+	Externalid              null.Val[string]    `db:"externalid" `
+	Editdate                null.Val[int64]     `db:"editdate" `
+	Editor                  null.Val[string]    `db:"editor" `
+	Globalid                null.Val[string]    `db:"globalid" `
+	Habitat                 null.Val[string]    `db:"habitat" `
+	Jurisdiction            null.Val[string]    `db:"jurisdiction" `
+	Larvinspectinterval     null.Val[int16]     `db:"larvinspectinterval" `
+	Lastinspectactiontaken  null.Val[string]    `db:"lastinspectactiontaken" `
+	Lastinspectactivity     null.Val[string]    `db:"lastinspectactivity" `
+	Lastinspectavglarvae    null.Val[float64]   `db:"lastinspectavglarvae" `
+	Lastinspectavgpupae     null.Val[float64]   `db:"lastinspectavgpupae" `
+	Lastinspectbreeding     null.Val[string]    `db:"lastinspectbreeding" `
+	Lastinspectconditions   null.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate         null.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectfieldspecies null.Val[string]    `db:"lastinspectfieldspecies" `
+	Lastinspectlstages      null.Val[string]    `db:"lastinspectlstages" `
+	Lasttreatactivity       null.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate           null.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct        null.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty            null.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit        null.Val[string]    `db:"lasttreatqtyunit" `
+	Locationnumber          null.Val[int64]     `db:"locationnumber" `
+	Name                    null.Val[string]    `db:"name" `
+	Nextactiondatescheduled null.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                int32               `db:"objectid,pk" `
+	Priority                null.Val[string]    `db:"priority" `
+	Stype                   null.Val[string]    `db:"stype" `
+	Symbology               null.Val[string]    `db:"symbology" `
+	Usetype                 null.Val[string]    `db:"usetype" `
+	Waterorigin             null.Val[string]    `db:"waterorigin" `
+	X                       null.Val[float64]   `db:"x" `
+	Y                       null.Val[float64]   `db:"y" `
+	Zone                    null.Val[string]    `db:"zone" `
+	Zone2                   null.Val[string]    `db:"zone2" `
+	GeometryX               null.Val[float64]   `db:"geometry_x" `
+	GeometryY               null.Val[float64]   `db:"geometry_y" `
+	Assignedtech            null.Val[string]    `db:"assignedtech" `
+	DeactivateReason        null.Val[string]    `db:"deactivate_reason" `
+	Scalarpriority          null.Val[int64]     `db:"scalarpriority" `
+	Sourcestatus            null.Val[string]    `db:"sourcestatus" `
+	Version                 int32               `db:"version,pk" `
 
 	R historyPointlocationR `db:"-" `
 }
@@ -95,13 +97,14 @@ type historyPointlocationR struct {
 func buildHistoryPointlocationColumns(alias string) historyPointlocationColumns {
 	return historyPointlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "stype", "symbology", "usetype", "waterorigin", "x", "y", "zone", "zone2", "geometry_x", "geometry_y", "assignedtech", "deactivate_reason", "scalarpriority", "sourcestatus", "version",
+			"organization_id", "accessdesc", "active", "comments", "created", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "stype", "symbology", "usetype", "waterorigin", "x", "y", "zone", "zone2", "geometry_x", "geometry_y", "assignedtech", "deactivate_reason", "scalarpriority", "sourcestatus", "version",
 		).WithParent("history_pointlocation"),
 		tableAlias:              alias,
 		OrganizationID:          psql.Quote(alias, "organization_id"),
 		Accessdesc:              psql.Quote(alias, "accessdesc"),
 		Active:                  psql.Quote(alias, "active"),
 		Comments:                psql.Quote(alias, "comments"),
+		Created:                 psql.Quote(alias, "created"),
 		Creationdate:            psql.Quote(alias, "creationdate"),
 		Creator:                 psql.Quote(alias, "creator"),
 		Description:             psql.Quote(alias, "description"),
@@ -156,6 +159,7 @@ type historyPointlocationColumns struct {
 	Accessdesc              psql.Expression
 	Active                  psql.Expression
 	Comments                psql.Expression
+	Created                 psql.Expression
 	Creationdate            psql.Expression
 	Creator                 psql.Expression
 	Description             psql.Expression
@@ -214,58 +218,59 @@ func (historyPointlocationColumns) AliasedAs(alias string) historyPointlocationC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type HistoryPointlocationSetter struct {
-	OrganizationID          omit.Val[int32]       `db:"organization_id" `
-	Accessdesc              omitnull.Val[string]  `db:"accessdesc" `
-	Active                  omitnull.Val[int16]   `db:"active" `
-	Comments                omitnull.Val[string]  `db:"comments" `
-	Creationdate            omitnull.Val[int64]   `db:"creationdate" `
-	Creator                 omitnull.Val[string]  `db:"creator" `
-	Description             omitnull.Val[string]  `db:"description" `
-	Externalid              omitnull.Val[string]  `db:"externalid" `
-	Editdate                omitnull.Val[int64]   `db:"editdate" `
-	Editor                  omitnull.Val[string]  `db:"editor" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
-	Habitat                 omitnull.Val[string]  `db:"habitat" `
-	Jurisdiction            omitnull.Val[string]  `db:"jurisdiction" `
-	Larvinspectinterval     omitnull.Val[int16]   `db:"larvinspectinterval" `
-	Lastinspectactiontaken  omitnull.Val[string]  `db:"lastinspectactiontaken" `
-	Lastinspectactivity     omitnull.Val[string]  `db:"lastinspectactivity" `
-	Lastinspectavglarvae    omitnull.Val[float64] `db:"lastinspectavglarvae" `
-	Lastinspectavgpupae     omitnull.Val[float64] `db:"lastinspectavgpupae" `
-	Lastinspectbreeding     omitnull.Val[string]  `db:"lastinspectbreeding" `
-	Lastinspectconditions   omitnull.Val[string]  `db:"lastinspectconditions" `
-	Lastinspectdate         omitnull.Val[int64]   `db:"lastinspectdate" `
-	Lastinspectfieldspecies omitnull.Val[string]  `db:"lastinspectfieldspecies" `
-	Lastinspectlstages      omitnull.Val[string]  `db:"lastinspectlstages" `
-	Lasttreatactivity       omitnull.Val[string]  `db:"lasttreatactivity" `
-	Lasttreatdate           omitnull.Val[int64]   `db:"lasttreatdate" `
-	Lasttreatproduct        omitnull.Val[string]  `db:"lasttreatproduct" `
-	Lasttreatqty            omitnull.Val[float64] `db:"lasttreatqty" `
-	Lasttreatqtyunit        omitnull.Val[string]  `db:"lasttreatqtyunit" `
-	Locationnumber          omitnull.Val[int64]   `db:"locationnumber" `
-	Name                    omitnull.Val[string]  `db:"name" `
-	Nextactiondatescheduled omitnull.Val[int64]   `db:"nextactiondatescheduled" `
-	Objectid                omit.Val[int32]       `db:"objectid,pk" `
-	Priority                omitnull.Val[string]  `db:"priority" `
-	Stype                   omitnull.Val[string]  `db:"stype" `
-	Symbology               omitnull.Val[string]  `db:"symbology" `
-	Usetype                 omitnull.Val[string]  `db:"usetype" `
-	Waterorigin             omitnull.Val[string]  `db:"waterorigin" `
-	X                       omitnull.Val[float64] `db:"x" `
-	Y                       omitnull.Val[float64] `db:"y" `
-	Zone                    omitnull.Val[string]  `db:"zone" `
-	Zone2                   omitnull.Val[string]  `db:"zone2" `
-	GeometryX               omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY               omitnull.Val[float64] `db:"geometry_y" `
-	Assignedtech            omitnull.Val[string]  `db:"assignedtech" `
-	DeactivateReason        omitnull.Val[string]  `db:"deactivate_reason" `
-	Scalarpriority          omitnull.Val[int64]   `db:"scalarpriority" `
-	Sourcestatus            omitnull.Val[string]  `db:"sourcestatus" `
-	Version                 omit.Val[int32]       `db:"version,pk" `
+	OrganizationID          omit.Val[int32]         `db:"organization_id" `
+	Accessdesc              omitnull.Val[string]    `db:"accessdesc" `
+	Active                  omitnull.Val[int16]     `db:"active" `
+	Comments                omitnull.Val[string]    `db:"comments" `
+	Created                 omitnull.Val[time.Time] `db:"created" `
+	Creationdate            omitnull.Val[int64]     `db:"creationdate" `
+	Creator                 omitnull.Val[string]    `db:"creator" `
+	Description             omitnull.Val[string]    `db:"description" `
+	Externalid              omitnull.Val[string]    `db:"externalid" `
+	Editdate                omitnull.Val[int64]     `db:"editdate" `
+	Editor                  omitnull.Val[string]    `db:"editor" `
+	Globalid                omitnull.Val[string]    `db:"globalid" `
+	Habitat                 omitnull.Val[string]    `db:"habitat" `
+	Jurisdiction            omitnull.Val[string]    `db:"jurisdiction" `
+	Larvinspectinterval     omitnull.Val[int16]     `db:"larvinspectinterval" `
+	Lastinspectactiontaken  omitnull.Val[string]    `db:"lastinspectactiontaken" `
+	Lastinspectactivity     omitnull.Val[string]    `db:"lastinspectactivity" `
+	Lastinspectavglarvae    omitnull.Val[float64]   `db:"lastinspectavglarvae" `
+	Lastinspectavgpupae     omitnull.Val[float64]   `db:"lastinspectavgpupae" `
+	Lastinspectbreeding     omitnull.Val[string]    `db:"lastinspectbreeding" `
+	Lastinspectconditions   omitnull.Val[string]    `db:"lastinspectconditions" `
+	Lastinspectdate         omitnull.Val[int64]     `db:"lastinspectdate" `
+	Lastinspectfieldspecies omitnull.Val[string]    `db:"lastinspectfieldspecies" `
+	Lastinspectlstages      omitnull.Val[string]    `db:"lastinspectlstages" `
+	Lasttreatactivity       omitnull.Val[string]    `db:"lasttreatactivity" `
+	Lasttreatdate           omitnull.Val[int64]     `db:"lasttreatdate" `
+	Lasttreatproduct        omitnull.Val[string]    `db:"lasttreatproduct" `
+	Lasttreatqty            omitnull.Val[float64]   `db:"lasttreatqty" `
+	Lasttreatqtyunit        omitnull.Val[string]    `db:"lasttreatqtyunit" `
+	Locationnumber          omitnull.Val[int64]     `db:"locationnumber" `
+	Name                    omitnull.Val[string]    `db:"name" `
+	Nextactiondatescheduled omitnull.Val[int64]     `db:"nextactiondatescheduled" `
+	Objectid                omit.Val[int32]         `db:"objectid,pk" `
+	Priority                omitnull.Val[string]    `db:"priority" `
+	Stype                   omitnull.Val[string]    `db:"stype" `
+	Symbology               omitnull.Val[string]    `db:"symbology" `
+	Usetype                 omitnull.Val[string]    `db:"usetype" `
+	Waterorigin             omitnull.Val[string]    `db:"waterorigin" `
+	X                       omitnull.Val[float64]   `db:"x" `
+	Y                       omitnull.Val[float64]   `db:"y" `
+	Zone                    omitnull.Val[string]    `db:"zone" `
+	Zone2                   omitnull.Val[string]    `db:"zone2" `
+	GeometryX               omitnull.Val[float64]   `db:"geometry_x" `
+	GeometryY               omitnull.Val[float64]   `db:"geometry_y" `
+	Assignedtech            omitnull.Val[string]    `db:"assignedtech" `
+	DeactivateReason        omitnull.Val[string]    `db:"deactivate_reason" `
+	Scalarpriority          omitnull.Val[int64]     `db:"scalarpriority" `
+	Sourcestatus            omitnull.Val[string]    `db:"sourcestatus" `
+	Version                 omit.Val[int32]         `db:"version,pk" `
 }
 
 func (s HistoryPointlocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 48)
+	vals := make([]string, 0, 49)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -277,6 +282,9 @@ func (s HistoryPointlocationSetter) SetColumns() []string {
 	}
 	if !s.Comments.IsUnset() {
 		vals = append(vals, "comments")
+	}
+	if !s.Created.IsUnset() {
+		vals = append(vals, "created")
 	}
 	if !s.Creationdate.IsUnset() {
 		vals = append(vals, "creationdate")
@@ -426,6 +434,9 @@ func (s HistoryPointlocationSetter) Overwrite(t *HistoryPointlocation) {
 	if !s.Comments.IsUnset() {
 		t.Comments = s.Comments.MustGetNull()
 	}
+	if !s.Created.IsUnset() {
+		t.Created = s.Created.MustGetNull()
+	}
 	if !s.Creationdate.IsUnset() {
 		t.Creationdate = s.Creationdate.MustGetNull()
 	}
@@ -566,7 +577,7 @@ func (s *HistoryPointlocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 48)
+		vals := make([]bob.Expression, 49)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -591,268 +602,274 @@ func (s *HistoryPointlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Creationdate.IsUnset() {
-			vals[4] = psql.Arg(s.Creationdate.MustGetNull())
+		if !s.Created.IsUnset() {
+			vals[4] = psql.Arg(s.Created.MustGetNull())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Creator.IsUnset() {
-			vals[5] = psql.Arg(s.Creator.MustGetNull())
+		if !s.Creationdate.IsUnset() {
+			vals[5] = psql.Arg(s.Creationdate.MustGetNull())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Description.IsUnset() {
-			vals[6] = psql.Arg(s.Description.MustGetNull())
+		if !s.Creator.IsUnset() {
+			vals[6] = psql.Arg(s.Creator.MustGetNull())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Externalid.IsUnset() {
-			vals[7] = psql.Arg(s.Externalid.MustGetNull())
+		if !s.Description.IsUnset() {
+			vals[7] = psql.Arg(s.Description.MustGetNull())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Editdate.IsUnset() {
-			vals[8] = psql.Arg(s.Editdate.MustGetNull())
+		if !s.Externalid.IsUnset() {
+			vals[8] = psql.Arg(s.Externalid.MustGetNull())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Editor.IsUnset() {
-			vals[9] = psql.Arg(s.Editor.MustGetNull())
+		if !s.Editdate.IsUnset() {
+			vals[9] = psql.Arg(s.Editdate.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[10] = psql.Arg(s.Globalid.MustGetNull())
+		if !s.Editor.IsUnset() {
+			vals[10] = psql.Arg(s.Editor.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Habitat.IsUnset() {
-			vals[11] = psql.Arg(s.Habitat.MustGetNull())
+		if !s.Globalid.IsUnset() {
+			vals[11] = psql.Arg(s.Globalid.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Jurisdiction.IsUnset() {
-			vals[12] = psql.Arg(s.Jurisdiction.MustGetNull())
+		if !s.Habitat.IsUnset() {
+			vals[12] = psql.Arg(s.Habitat.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Larvinspectinterval.IsUnset() {
-			vals[13] = psql.Arg(s.Larvinspectinterval.MustGetNull())
+		if !s.Jurisdiction.IsUnset() {
+			vals[13] = psql.Arg(s.Jurisdiction.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectactiontaken.IsUnset() {
-			vals[14] = psql.Arg(s.Lastinspectactiontaken.MustGetNull())
+		if !s.Larvinspectinterval.IsUnset() {
+			vals[14] = psql.Arg(s.Larvinspectinterval.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectactivity.IsUnset() {
-			vals[15] = psql.Arg(s.Lastinspectactivity.MustGetNull())
+		if !s.Lastinspectactiontaken.IsUnset() {
+			vals[15] = psql.Arg(s.Lastinspectactiontaken.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectavglarvae.IsUnset() {
-			vals[16] = psql.Arg(s.Lastinspectavglarvae.MustGetNull())
+		if !s.Lastinspectactivity.IsUnset() {
+			vals[16] = psql.Arg(s.Lastinspectactivity.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectavgpupae.IsUnset() {
-			vals[17] = psql.Arg(s.Lastinspectavgpupae.MustGetNull())
+		if !s.Lastinspectavglarvae.IsUnset() {
+			vals[17] = psql.Arg(s.Lastinspectavglarvae.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectbreeding.IsUnset() {
-			vals[18] = psql.Arg(s.Lastinspectbreeding.MustGetNull())
+		if !s.Lastinspectavgpupae.IsUnset() {
+			vals[18] = psql.Arg(s.Lastinspectavgpupae.MustGetNull())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectconditions.IsUnset() {
-			vals[19] = psql.Arg(s.Lastinspectconditions.MustGetNull())
+		if !s.Lastinspectbreeding.IsUnset() {
+			vals[19] = psql.Arg(s.Lastinspectbreeding.MustGetNull())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectdate.IsUnset() {
-			vals[20] = psql.Arg(s.Lastinspectdate.MustGetNull())
+		if !s.Lastinspectconditions.IsUnset() {
+			vals[20] = psql.Arg(s.Lastinspectconditions.MustGetNull())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectfieldspecies.IsUnset() {
-			vals[21] = psql.Arg(s.Lastinspectfieldspecies.MustGetNull())
+		if !s.Lastinspectdate.IsUnset() {
+			vals[21] = psql.Arg(s.Lastinspectdate.MustGetNull())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lastinspectlstages.IsUnset() {
-			vals[22] = psql.Arg(s.Lastinspectlstages.MustGetNull())
+		if !s.Lastinspectfieldspecies.IsUnset() {
+			vals[22] = psql.Arg(s.Lastinspectfieldspecies.MustGetNull())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lasttreatactivity.IsUnset() {
-			vals[23] = psql.Arg(s.Lasttreatactivity.MustGetNull())
+		if !s.Lastinspectlstages.IsUnset() {
+			vals[23] = psql.Arg(s.Lastinspectlstages.MustGetNull())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lasttreatdate.IsUnset() {
-			vals[24] = psql.Arg(s.Lasttreatdate.MustGetNull())
+		if !s.Lasttreatactivity.IsUnset() {
+			vals[24] = psql.Arg(s.Lasttreatactivity.MustGetNull())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lasttreatproduct.IsUnset() {
-			vals[25] = psql.Arg(s.Lasttreatproduct.MustGetNull())
+		if !s.Lasttreatdate.IsUnset() {
+			vals[25] = psql.Arg(s.Lasttreatdate.MustGetNull())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lasttreatqty.IsUnset() {
-			vals[26] = psql.Arg(s.Lasttreatqty.MustGetNull())
+		if !s.Lasttreatproduct.IsUnset() {
+			vals[26] = psql.Arg(s.Lasttreatproduct.MustGetNull())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Lasttreatqtyunit.IsUnset() {
-			vals[27] = psql.Arg(s.Lasttreatqtyunit.MustGetNull())
+		if !s.Lasttreatqty.IsUnset() {
+			vals[27] = psql.Arg(s.Lasttreatqty.MustGetNull())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Locationnumber.IsUnset() {
-			vals[28] = psql.Arg(s.Locationnumber.MustGetNull())
+		if !s.Lasttreatqtyunit.IsUnset() {
+			vals[28] = psql.Arg(s.Lasttreatqtyunit.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Name.IsUnset() {
-			vals[29] = psql.Arg(s.Name.MustGetNull())
+		if !s.Locationnumber.IsUnset() {
+			vals[29] = psql.Arg(s.Locationnumber.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Nextactiondatescheduled.IsUnset() {
-			vals[30] = psql.Arg(s.Nextactiondatescheduled.MustGetNull())
+		if !s.Name.IsUnset() {
+			vals[30] = psql.Arg(s.Name.MustGetNull())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if s.Objectid.IsValue() {
-			vals[31] = psql.Arg(s.Objectid.MustGet())
+		if !s.Nextactiondatescheduled.IsUnset() {
+			vals[31] = psql.Arg(s.Nextactiondatescheduled.MustGetNull())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Priority.IsUnset() {
-			vals[32] = psql.Arg(s.Priority.MustGetNull())
+		if s.Objectid.IsValue() {
+			vals[32] = psql.Arg(s.Objectid.MustGet())
 		} else {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Stype.IsUnset() {
-			vals[33] = psql.Arg(s.Stype.MustGetNull())
+		if !s.Priority.IsUnset() {
+			vals[33] = psql.Arg(s.Priority.MustGetNull())
 		} else {
 			vals[33] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Symbology.IsUnset() {
-			vals[34] = psql.Arg(s.Symbology.MustGetNull())
+		if !s.Stype.IsUnset() {
+			vals[34] = psql.Arg(s.Stype.MustGetNull())
 		} else {
 			vals[34] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Usetype.IsUnset() {
-			vals[35] = psql.Arg(s.Usetype.MustGetNull())
+		if !s.Symbology.IsUnset() {
+			vals[35] = psql.Arg(s.Symbology.MustGetNull())
 		} else {
 			vals[35] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Waterorigin.IsUnset() {
-			vals[36] = psql.Arg(s.Waterorigin.MustGetNull())
+		if !s.Usetype.IsUnset() {
+			vals[36] = psql.Arg(s.Usetype.MustGetNull())
 		} else {
 			vals[36] = psql.Raw("DEFAULT")
 		}
 
-		if !s.X.IsUnset() {
-			vals[37] = psql.Arg(s.X.MustGetNull())
+		if !s.Waterorigin.IsUnset() {
+			vals[37] = psql.Arg(s.Waterorigin.MustGetNull())
 		} else {
 			vals[37] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Y.IsUnset() {
-			vals[38] = psql.Arg(s.Y.MustGetNull())
+		if !s.X.IsUnset() {
+			vals[38] = psql.Arg(s.X.MustGetNull())
 		} else {
 			vals[38] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Zone.IsUnset() {
-			vals[39] = psql.Arg(s.Zone.MustGetNull())
+		if !s.Y.IsUnset() {
+			vals[39] = psql.Arg(s.Y.MustGetNull())
 		} else {
 			vals[39] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Zone2.IsUnset() {
-			vals[40] = psql.Arg(s.Zone2.MustGetNull())
+		if !s.Zone.IsUnset() {
+			vals[40] = psql.Arg(s.Zone.MustGetNull())
 		} else {
 			vals[40] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[41] = psql.Arg(s.GeometryX.MustGetNull())
+		if !s.Zone2.IsUnset() {
+			vals[41] = psql.Arg(s.Zone2.MustGetNull())
 		} else {
 			vals[41] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[42] = psql.Arg(s.GeometryY.MustGetNull())
+		if !s.GeometryX.IsUnset() {
+			vals[42] = psql.Arg(s.GeometryX.MustGetNull())
 		} else {
 			vals[42] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Assignedtech.IsUnset() {
-			vals[43] = psql.Arg(s.Assignedtech.MustGetNull())
+		if !s.GeometryY.IsUnset() {
+			vals[43] = psql.Arg(s.GeometryY.MustGetNull())
 		} else {
 			vals[43] = psql.Raw("DEFAULT")
 		}
 
-		if !s.DeactivateReason.IsUnset() {
-			vals[44] = psql.Arg(s.DeactivateReason.MustGetNull())
+		if !s.Assignedtech.IsUnset() {
+			vals[44] = psql.Arg(s.Assignedtech.MustGetNull())
 		} else {
 			vals[44] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Scalarpriority.IsUnset() {
-			vals[45] = psql.Arg(s.Scalarpriority.MustGetNull())
+		if !s.DeactivateReason.IsUnset() {
+			vals[45] = psql.Arg(s.DeactivateReason.MustGetNull())
 		} else {
 			vals[45] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Sourcestatus.IsUnset() {
-			vals[46] = psql.Arg(s.Sourcestatus.MustGetNull())
+		if !s.Scalarpriority.IsUnset() {
+			vals[46] = psql.Arg(s.Scalarpriority.MustGetNull())
 		} else {
 			vals[46] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[47] = psql.Arg(s.Version.MustGet())
+		if !s.Sourcestatus.IsUnset() {
+			vals[47] = psql.Arg(s.Sourcestatus.MustGetNull())
 		} else {
 			vals[47] = psql.Raw("DEFAULT")
+		}
+
+		if s.Version.IsValue() {
+			vals[48] = psql.Arg(s.Version.MustGet())
+		} else {
+			vals[48] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -864,7 +881,7 @@ func (s HistoryPointlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s HistoryPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 48)
+	exprs := make([]bob.Expression, 0, 49)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -891,6 +908,13 @@ func (s HistoryPointlocationSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "comments")...),
 			psql.Arg(s.Comments),
+		}})
+	}
+
+	if !s.Created.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "created")...),
+			psql.Arg(s.Created),
 		}})
 	}
 
@@ -1515,6 +1539,7 @@ type historyPointlocationWhere[Q psql.Filterable] struct {
 	Accessdesc              psql.WhereNullMod[Q, string]
 	Active                  psql.WhereNullMod[Q, int16]
 	Comments                psql.WhereNullMod[Q, string]
+	Created                 psql.WhereNullMod[Q, time.Time]
 	Creationdate            psql.WhereNullMod[Q, int64]
 	Creator                 psql.WhereNullMod[Q, string]
 	Description             psql.WhereNullMod[Q, string]
@@ -1571,6 +1596,7 @@ func buildHistoryPointlocationWhere[Q psql.Filterable](cols historyPointlocation
 		Accessdesc:              psql.WhereNull[Q, string](cols.Accessdesc),
 		Active:                  psql.WhereNull[Q, int16](cols.Active),
 		Comments:                psql.WhereNull[Q, string](cols.Comments),
+		Created:                 psql.WhereNull[Q, time.Time](cols.Created),
 		Creationdate:            psql.WhereNull[Q, int64](cols.Creationdate),
 		Creator:                 psql.WhereNull[Q, string](cols.Creator),
 		Description:             psql.WhereNull[Q, string](cols.Description),

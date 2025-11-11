@@ -72,6 +72,7 @@ type preloaders struct {
 	HistoryTreatmentarea          historyTreatmentareaPreloader
 	HistoryZone                   historyZonePreloader
 	HistoryZones2                 historyZones2Preloader
+	Notification                  notificationPreloader
 	OauthToken                    oauthTokenPreloader
 	Organization                  organizationPreloader
 	User                          userPreloader
@@ -134,6 +135,7 @@ func getPreloaders() preloaders {
 		HistoryTreatmentarea:          buildHistoryTreatmentareaPreloader(),
 		HistoryZone:                   buildHistoryZonePreloader(),
 		HistoryZones2:                 buildHistoryZones2Preloader(),
+		Notification:                  buildNotificationPreloader(),
 		OauthToken:                    buildOauthTokenPreloader(),
 		Organization:                  buildOrganizationPreloader(),
 		User:                          buildUserPreloader(),
@@ -202,6 +204,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	HistoryTreatmentarea          historyTreatmentareaThenLoader[Q]
 	HistoryZone                   historyZoneThenLoader[Q]
 	HistoryZones2                 historyZones2ThenLoader[Q]
+	Notification                  notificationThenLoader[Q]
 	OauthToken                    oauthTokenThenLoader[Q]
 	Organization                  organizationThenLoader[Q]
 	User                          userThenLoader[Q]
@@ -264,6 +267,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		HistoryTreatmentarea:          buildHistoryTreatmentareaThenLoader[Q](),
 		HistoryZone:                   buildHistoryZoneThenLoader[Q](),
 		HistoryZones2:                 buildHistoryZones2ThenLoader[Q](),
+		Notification:                  buildNotificationThenLoader[Q](),
 		OauthToken:                    buildOauthTokenThenLoader[Q](),
 		Organization:                  buildOrganizationThenLoader[Q](),
 		User:                          buildUserThenLoader[Q](),

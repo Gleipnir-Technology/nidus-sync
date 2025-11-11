@@ -22,6 +22,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
@@ -415,6 +416,7 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
 		err := refreshOAuth(ctx, oauth)
 		if err != nil {
 			slog.Error("Failed to refresh token", slog.String("err", err.Error()))
+			markTokenFailed(ctx, oauth)
 			return
 		}
 		refreshDelay = time.Until(oauth.AccessTokenExpires)
@@ -435,6 +437,33 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) {
 
 }
 
+// Mark that a given oauth token has failed. This includes a notification to
+// the user.
+func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
+	oauthSetter := models.OauthTokenSetter{
+		InvalidatedAt: omitnull.From(time.Now()),
+	}
+	err := oauth.Update(ctx, PGInstance.BobDB, &oauthSetter)
+	if err != nil {
+		slog.Error("Failed to mark token failed", slog.String("err", err.Error()))
+	}
+	user, err := models.FindUser(ctx, PGInstance.BobDB, oauth.UserID)
+	if err != nil {
+		slog.Error("Failed to get oauth user", slog.String("err", err.Error()))
+		return
+	}
+	notificationSetter := models.NotificationSetter{
+		Message: omitnull.From("Oauth token invalidated"),
+		Link:    omitnull.From("/oauth/refresh"),
+		Type:    omitnull.From(enums.NotificationtypeOauthTokenInvalidated),
+	}
+	err = user.InsertUserNotifications(ctx, PGInstance.BobDB, &notificationSetter)
+	if err != nil {
+		slog.Error("Failed to get oauth user", slog.String("err", err.Error()))
+		return
+	}
+	slog.Info("Marked oauth token invalid", slog.Int("id", int(oauth.ID)))
+}
 func refreshOAuth(ctx context.Context, oauth *models.OauthToken) error {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
 

@@ -186,3 +186,73 @@ func (e *Hashtype) Scan(value any) error {
 
 	return nil
 }
+
+// Enum values for Notificationtype
+const (
+	NotificationtypeOauthTokenInvalidated Notificationtype = "oauth_token_invalidated"
+)
+
+func AllNotificationtype() []Notificationtype {
+	return []Notificationtype{
+		NotificationtypeOauthTokenInvalidated,
+	}
+}
+
+type Notificationtype string
+
+func (e Notificationtype) String() string {
+	return string(e)
+}
+
+func (e Notificationtype) Valid() bool {
+	switch e {
+	case NotificationtypeOauthTokenInvalidated:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Notificationtype) All() []Notificationtype {
+	return AllNotificationtype()
+}
+
+func (e Notificationtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Notificationtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Notificationtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Notificationtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Notificationtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Notificationtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Notificationtype(x)
+	case []byte:
+		*e = Notificationtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Notificationtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Notificationtype value: %s", *e)
+	}
+
+	return nil
+}

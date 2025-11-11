@@ -84,8 +84,8 @@ func TestOauthTokenByUserId(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(columns) != 9 {
-			t.Fatalf("expected %d columns, got %d", 9, len(columns))
+		if len(columns) != 10 {
+			t.Fatalf("expected %d columns, got %d", 10, len(columns))
 		}
 
 		if columns[0] != "id" {
@@ -122,6 +122,10 @@ func TestOauthTokenByUserId(t *testing.T) {
 
 		if columns[8] != "refresh_token_expires" {
 			t.Fatalf("expected column %d to be %s, got %s", 8, "refresh_token_expires", columns[8])
+		}
+
+		if columns[9] != "invalidated_at" {
+			t.Fatalf("expected column %d to be %s, got %s", 9, "invalidated_at", columns[9])
 		}
 	})
 }

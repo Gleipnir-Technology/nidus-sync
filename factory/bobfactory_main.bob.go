@@ -69,6 +69,7 @@ type Factory struct {
 	baseHistoryTreatmentareaMods          HistoryTreatmentareaModSlice
 	baseHistoryZoneMods                   HistoryZoneModSlice
 	baseHistoryZones2Mods                 HistoryZones2ModSlice
+	baseNotificationMods                  NotificationModSlice
 	baseOauthTokenMods                    OauthTokenModSlice
 	baseOrganizationMods                  OrganizationModSlice
 	baseSessionMods                       SessionModSlice
@@ -2333,6 +2334,7 @@ func (f *Factory) FromExistingHistoryPointlocation(m *models.HistoryPointlocatio
 	o.Accessdesc = func() null.Val[string] { return m.Accessdesc }
 	o.Active = func() null.Val[int16] { return m.Active }
 	o.Comments = func() null.Val[string] { return m.Comments }
+	o.Created = func() null.Val[time.Time] { return m.Created }
 	o.Creationdate = func() null.Val[int64] { return m.Creationdate }
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Description = func() null.Val[string] { return m.Description }
@@ -3589,6 +3591,39 @@ func (f *Factory) FromExistingHistoryZones2(m *models.HistoryZones2) *HistoryZon
 	return o
 }
 
+func (f *Factory) NewNotification(mods ...NotificationMod) *NotificationTemplate {
+	return f.NewNotificationWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewNotificationWithContext(ctx context.Context, mods ...NotificationMod) *NotificationTemplate {
+	o := &NotificationTemplate{f: f}
+
+	if f != nil {
+		f.baseNotificationMods.Apply(ctx, o)
+	}
+
+	NotificationModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingNotification(m *models.Notification) *NotificationTemplate {
+	o := &NotificationTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.UserID = func() null.Val[int32] { return m.UserID }
+	o.Message = func() null.Val[string] { return m.Message }
+	o.Link = func() null.Val[string] { return m.Link }
+	o.Type = func() null.Val[enums.Notificationtype] { return m.Type }
+
+	ctx := context.Background()
+	if m.R.UserUser != nil {
+		NotificationMods.WithExistingUserUser(m.R.UserUser).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewOauthToken(mods ...OauthTokenMod) *OauthTokenTemplate {
 	return f.NewOauthTokenWithContext(context.Background(), mods...)
 }
@@ -3617,6 +3652,7 @@ func (f *Factory) FromExistingOauthToken(m *models.OauthToken) *OauthTokenTempla
 	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
 	o.ArcgisLicenseTypeID = func() null.Val[string] { return m.ArcgisLicenseTypeID }
 	o.RefreshTokenExpires = func() time.Time { return m.RefreshTokenExpires }
+	o.InvalidatedAt = func() null.Val[time.Time] { return m.InvalidatedAt }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {
@@ -3883,6 +3919,9 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	o.PasswordHash = func() string { return m.PasswordHash }
 
 	ctx := context.Background()
+	if len(m.R.UserNotifications) > 0 {
+		UserMods.AddExistingUserNotifications(m.R.UserNotifications...).Apply(ctx, o)
+	}
 	if len(m.R.UserOauthTokens) > 0 {
 		UserMods.AddExistingUserOauthTokens(m.R.UserOauthTokens...).Apply(ctx, o)
 	}
@@ -4339,6 +4378,14 @@ func (f *Factory) ClearBaseHistoryZones2Mods() {
 
 func (f *Factory) AddBaseHistoryZones2Mod(mods ...HistoryZones2Mod) {
 	f.baseHistoryZones2Mods = append(f.baseHistoryZones2Mods, mods...)
+}
+
+func (f *Factory) ClearBaseNotificationMods() {
+	f.baseNotificationMods = nil
+}
+
+func (f *Factory) AddBaseNotificationMod(mods ...NotificationMod) {
+	f.baseNotificationMods = append(f.baseNotificationMods, mods...)
 }
 
 func (f *Factory) ClearBaseOauthTokenMods() {

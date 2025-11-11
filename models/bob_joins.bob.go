@@ -87,6 +87,7 @@ type joins[Q dialect.Joinable] struct {
 	HistoryTreatmentareas          joinSet[historyTreatmentareaJoins[Q]]
 	HistoryZones                   joinSet[historyZoneJoins[Q]]
 	HistoryZones2s                 joinSet[historyZones2Joins[Q]]
+	Notifications                  joinSet[notificationJoins[Q]]
 	OauthTokens                    joinSet[oauthTokenJoins[Q]]
 	Organizations                  joinSet[organizationJoins[Q]]
 	Users                          joinSet[userJoins[Q]]
@@ -157,6 +158,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		HistoryTreatmentareas:          buildJoinSet[historyTreatmentareaJoins[Q]](HistoryTreatmentareas.Columns, buildHistoryTreatmentareaJoins),
 		HistoryZones:                   buildJoinSet[historyZoneJoins[Q]](HistoryZones.Columns, buildHistoryZoneJoins),
 		HistoryZones2s:                 buildJoinSet[historyZones2Joins[Q]](HistoryZones2s.Columns, buildHistoryZones2Joins),
+		Notifications:                  buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
 		OauthTokens:                    buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                  buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
 		Users:                          buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),

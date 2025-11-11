@@ -231,6 +231,10 @@ var (
 	historyZones2WithParentsCascadingCtx = newContextual[bool]("historyZones2WithParentsCascading")
 	historyZones2RelOrganizationCtx      = newContextual[bool]("history_zones2.organization.history_zones2.history_zones2_organization_id_fkey")
 
+	// Relationship Contexts for notification
+	notificationWithParentsCascadingCtx = newContextual[bool]("notificationWithParentsCascading")
+	notificationRelUserUserCtx          = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
+
 	// Relationship Contexts for oauth_token
 	oauthTokenWithParentsCascadingCtx = newContextual[bool]("oauthTokenWithParentsCascading")
 	oauthTokenRelUserUserCtx          = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
@@ -299,6 +303,7 @@ var (
 
 	// Relationship Contexts for user_
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
+	userRelUserNotificationsCtx = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
 	userRelUserOauthTokensCtx   = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
 	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )

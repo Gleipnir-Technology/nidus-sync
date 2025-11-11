@@ -6,6 +6,7 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
@@ -40,6 +41,7 @@ type HistoryPointlocationTemplate struct {
 	Accessdesc              func() null.Val[string]
 	Active                  func() null.Val[int16]
 	Comments                func() null.Val[string]
+	Created                 func() null.Val[time.Time]
 	Creationdate            func() null.Val[int64]
 	Creator                 func() null.Val[string]
 	Description             func() null.Val[string]
@@ -137,6 +139,10 @@ func (o HistoryPointlocationTemplate) BuildSetter() *models.HistoryPointlocation
 	if o.Comments != nil {
 		val := o.Comments()
 		m.Comments = omitnull.FromNull(val)
+	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omitnull.FromNull(val)
 	}
 	if o.Creationdate != nil {
 		val := o.Creationdate()
@@ -347,6 +353,9 @@ func (o HistoryPointlocationTemplate) Build() *models.HistoryPointlocation {
 	}
 	if o.Comments != nil {
 		m.Comments = o.Comments()
+	}
+	if o.Created != nil {
+		m.Created = o.Created()
 	}
 	if o.Creationdate != nil {
 		m.Creationdate = o.Creationdate()
@@ -635,6 +644,7 @@ func (m historyPointlocationMods) RandomizeAllColumns(f *faker.Faker) HistoryPoi
 		HistoryPointlocationMods.RandomAccessdesc(f),
 		HistoryPointlocationMods.RandomActive(f),
 		HistoryPointlocationMods.RandomComments(f),
+		HistoryPointlocationMods.RandomCreated(f),
 		HistoryPointlocationMods.RandomCreationdate(f),
 		HistoryPointlocationMods.RandomCreator(f),
 		HistoryPointlocationMods.RandomDescription(f),
@@ -867,6 +877,59 @@ func (m historyPointlocationMods) RandomCommentsNotNull(f *faker.Faker) HistoryP
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m historyPointlocationMods) Created(val null.Val[time.Time]) HistoryPointlocationMod {
+	return HistoryPointlocationModFunc(func(_ context.Context, o *HistoryPointlocationTemplate) {
+		o.Created = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m historyPointlocationMods) CreatedFunc(f func() null.Val[time.Time]) HistoryPointlocationMod {
+	return HistoryPointlocationModFunc(func(_ context.Context, o *HistoryPointlocationTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m historyPointlocationMods) UnsetCreated() HistoryPointlocationMod {
+	return HistoryPointlocationModFunc(func(_ context.Context, o *HistoryPointlocationTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m historyPointlocationMods) RandomCreated(f *faker.Faker) HistoryPointlocationMod {
+	return HistoryPointlocationModFunc(func(_ context.Context, o *HistoryPointlocationTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m historyPointlocationMods) RandomCreatedNotNull(f *faker.Faker) HistoryPointlocationMod {
+	return HistoryPointlocationModFunc(func(_ context.Context, o *HistoryPointlocationTemplate) {
+		o.Created = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
 			return null.From(val)
 		}
 	})
