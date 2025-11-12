@@ -64,6 +64,7 @@ func main() {
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
+	r.Get("/oauth/refresh", getOAuthRefresh)
 	r.Get("/phone-call", getPhoneCall)
 	r.Get("/report", getReport)
 	r.Get("/report/{code}", getReportDetail)

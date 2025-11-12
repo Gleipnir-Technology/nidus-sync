@@ -42,6 +42,14 @@ func getFavicon(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "static/favicon.ico")
 }
 
+func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
+	user, err := getAuthenticatedUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
+	}
+	htmlOauthPrompt(w, user)
+}
+
 func getPhoneCall(w http.ResponseWriter, r *http.Request) {
 	htmlPhoneCall(w)
 }
