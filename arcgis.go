@@ -228,7 +228,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 		workerCtx, cancel := context.WithCancel(context.Background())
 		var wg sync.WaitGroup
 
-		oauths, err := models.OauthTokens.Query().All(ctx, PGInstance.BobDB)
+		oauths, err := models.OauthTokens.Query(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, PGInstance.BobDB)
 		if err != nil {
 			slog.Error("Failed to get oauths", slog.String("err", err.Error()))
 			return
