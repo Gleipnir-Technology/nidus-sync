@@ -409,7 +409,6 @@ func timeSince(t *time.Time) string {
 	diff := now.Sub(*t)
 
 	hours := diff.Hours()
-	slog.Info("time since", slog.String("t", t.String()), slog.Float64("hours", hours))
 	if hours < 1 {
 		minutes := diff.Minutes()
 		return fmt.Sprintf("%d minutes ago", int(minutes))
