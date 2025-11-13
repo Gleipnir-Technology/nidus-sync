@@ -56,7 +56,7 @@ type OAuthTokenResponse struct {
 }
 
 // Build the ArcGIS authorization URL with PKCE
-func buildArcGISAuthURL(clientID string, expiration int) string {
+func buildArcGISAuthURL(clientID string) string {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/authorize/"
 
 	params := url.Values{}
@@ -65,6 +65,16 @@ func buildArcGISAuthURL(clientID string, expiration int) string {
 	params.Add("response_type", "code")
 	//params.Add("code_challenge", generateCodeChallenge(codeVerifier))
 	//params.Add("code_challenge_method", "S256")
+
+	// See https://developers.arcgis.com/rest/users-groups-and-items/token/
+	// expiration is defined in minutes
+	var expiration int
+	if IsProductionEnvironment() {
+		// 2 weeks is the maximum allowed
+		expiration = 20160
+	} else {
+		expiration = 20
+	}
 	params.Add("expiration", strconv.Itoa(expiration))
 
 	return baseURL + "?" + params.Encode()
@@ -456,8 +466,8 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 		if err != nil {
 			return fmt.Errorf("Failed to update oauth token from database: %v", err)
 		}
-		accessTokenDelay := time.Until(oauth.AccessTokenExpires) - (10 * time.Second)
-		refreshTokenDelay := time.Until(oauth.RefreshTokenExpires) - (10 * time.Second)
+		accessTokenDelay := time.Until(oauth.AccessTokenExpires) - (3 * time.Second)
+		refreshTokenDelay := time.Until(oauth.RefreshTokenExpires) - (3 * time.Second)
 		if oauth.AccessTokenExpires.Before(time.Now()) {
 			accessTokenDelay = 0
 		}

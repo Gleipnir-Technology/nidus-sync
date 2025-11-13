@@ -18,7 +18,7 @@ import (
 
 var sessionManager *scs.SessionManager
 
-var BaseURL, ClientID, ClientSecret string
+var BaseURL, ClientID, ClientSecret, Environment string
 
 func main() {
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
@@ -39,6 +39,15 @@ func main() {
 	bind := os.Getenv("BIND")
 	if bind == "" {
 		bind = ":9001"
+	}
+	Environment = os.Getenv("ENVIRONMENT")
+	if Environment == "" {
+		slog.Error("You must specify a non-empty ENVIRONMENT")
+		os.Exit(1)
+	}
+	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
+		slog.Error("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION", slog.String("ENVIRONMENT", Environment))
+		os.Exit(2)
 	}
 	pg_dsn := os.Getenv("POSTGRES_DSN")
 	if pg_dsn == "" {
@@ -131,4 +140,8 @@ func main() {
 	waitGroup.Wait()
 
 	slog.Info("Shutdown complete")
+}
+
+func IsProductionEnvironment() bool {
+	return Environment == "PRODUCTION"
 }
