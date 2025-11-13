@@ -48,7 +48,7 @@ type FSTimecardTemplate struct {
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
 	Fieldtech      func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Lclocid        func() null.Val[string]
 	Linelocid      func() null.Val[string]
 	Locationname   func() null.Val[string]
@@ -153,7 +153,7 @@ func (o FSTimecardTemplate) BuildSetter() *models.FSTimecardSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Lclocid != nil {
 		val := o.Lclocid()
@@ -376,6 +376,10 @@ func ensureCreatableFSTimecard(m *models.FSTimecardSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1097,14 +1101,14 @@ func (m fsTimecardMods) RandomFieldtechNotNull(f *faker.Faker) FSTimecardMod {
 }
 
 // Set the model columns to this value
-func (m fsTimecardMods) Globalid(val null.Val[string]) FSTimecardMod {
+func (m fsTimecardMods) Globalid(val string) FSTimecardMod {
 	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsTimecardMods) GlobalidFunc(f func() null.Val[string]) FSTimecardMod {
+func (m fsTimecardMods) GlobalidFunc(f func() string) FSTimecardMod {
 	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
 		o.Globalid = f
 	})
@@ -1119,32 +1123,10 @@ func (m fsTimecardMods) UnsetGlobalid() FSTimecardMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsTimecardMods) RandomGlobalid(f *faker.Faker) FSTimecardMod {
 	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsTimecardMods) RandomGlobalidNotNull(f *faker.Faker) FSTimecardMod {
-	return FSTimecardModFunc(func(_ context.Context, o *FSTimecardTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

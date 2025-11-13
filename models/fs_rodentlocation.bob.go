@@ -36,7 +36,7 @@ type FSRodentlocation struct {
 	Externalid                null.Val[string]  `db:"externalid" `
 	Editdate                  null.Val[int64]   `db:"editdate" `
 	Editor                    null.Val[string]  `db:"editor" `
-	Globalid                  null.Val[string]  `db:"globalid" `
+	Globalid                  string            `db:"globalid" `
 	Habitat                   null.Val[string]  `db:"habitat" `
 	Lastinspectaction         null.Val[string]  `db:"lastinspectaction" `
 	Lastinspectconditions     null.Val[string]  `db:"lastinspectconditions" `
@@ -183,7 +183,7 @@ type FSRodentlocationSetter struct {
 	Externalid                omitnull.Val[string]  `db:"externalid" `
 	Editdate                  omitnull.Val[int64]   `db:"editdate" `
 	Editor                    omitnull.Val[string]  `db:"editor" `
-	Globalid                  omitnull.Val[string]  `db:"globalid" `
+	Globalid                  omit.Val[string]      `db:"globalid" `
 	Habitat                   omitnull.Val[string]  `db:"habitat" `
 	Lastinspectaction         omitnull.Val[string]  `db:"lastinspectaction" `
 	Lastinspectconditions     omitnull.Val[string]  `db:"lastinspectconditions" `
@@ -241,7 +241,7 @@ func (s FSRodentlocationSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -347,8 +347,8 @@ func (s FSRodentlocationSetter) Overwrite(t *FSRodentlocation) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -488,8 +488,8 @@ func (s *FSRodentlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[10] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[10] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
@@ -713,7 +713,7 @@ func (s FSRodentlocationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1190,7 +1190,7 @@ type fsRodentlocationWhere[Q psql.Filterable] struct {
 	Externalid                psql.WhereNullMod[Q, string]
 	Editdate                  psql.WhereNullMod[Q, int64]
 	Editor                    psql.WhereNullMod[Q, string]
-	Globalid                  psql.WhereNullMod[Q, string]
+	Globalid                  psql.WhereMod[Q, string]
 	Habitat                   psql.WhereNullMod[Q, string]
 	Lastinspectaction         psql.WhereNullMod[Q, string]
 	Lastinspectconditions     psql.WhereNullMod[Q, string]
@@ -1232,7 +1232,7 @@ func buildFSRodentlocationWhere[Q psql.Filterable](cols fsRodentlocationColumns)
 		Externalid:                psql.WhereNull[Q, string](cols.Externalid),
 		Editdate:                  psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                    psql.WhereNull[Q, string](cols.Editor),
-		Globalid:                  psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                  psql.Where[Q, string](cols.Globalid),
 		Habitat:                   psql.WhereNull[Q, string](cols.Habitat),
 		Lastinspectaction:         psql.WhereNull[Q, string](cols.Lastinspectaction),
 		Lastinspectconditions:     psql.WhereNull[Q, string](cols.Lastinspectconditions),

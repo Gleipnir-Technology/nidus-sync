@@ -37,7 +37,7 @@ type FSTimecard struct {
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
 	Fieldtech      null.Val[string]  `db:"fieldtech" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Lclocid        null.Val[string]  `db:"lclocid" `
 	Linelocid      null.Val[string]  `db:"linelocid" `
 	Locationname   null.Val[string]  `db:"locationname" `
@@ -178,7 +178,7 @@ type FSTimecardSetter struct {
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
 	Fieldtech      omitnull.Val[string]  `db:"fieldtech" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Lclocid        omitnull.Val[string]  `db:"lclocid" `
 	Linelocid      omitnull.Val[string]  `db:"linelocid" `
 	Locationname   omitnull.Val[string]  `db:"locationname" `
@@ -236,7 +236,7 @@ func (s FSTimecardSetter) SetColumns() []string {
 	if !s.Fieldtech.IsUnset() {
 		vals = append(vals, "fieldtech")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Lclocid.IsUnset() {
@@ -336,8 +336,8 @@ func (s FSTimecardSetter) Overwrite(t *FSTimecard) {
 	if !s.Fieldtech.IsUnset() {
 		t.Fieldtech = s.Fieldtech.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Lclocid.IsUnset() {
 		t.Lclocid = s.Lclocid.MustGetNull()
@@ -474,8 +474,8 @@ func (s *FSTimecardSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[11] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[11] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -688,7 +688,7 @@ func (s FSTimecardSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1145,7 +1145,7 @@ type fsTimecardWhere[Q psql.Filterable] struct {
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
 	Fieldtech      psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Lclocid        psql.WhereNullMod[Q, string]
 	Linelocid      psql.WhereNullMod[Q, string]
 	Locationname   psql.WhereNullMod[Q, string]
@@ -1185,7 +1185,7 @@ func buildFSTimecardWhere[Q psql.Filterable](cols fsTimecardColumns) fsTimecardW
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
 		Fieldtech:      psql.WhereNull[Q, string](cols.Fieldtech),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Lclocid:        psql.WhereNull[Q, string](cols.Lclocid),
 		Linelocid:      psql.WhereNull[Q, string](cols.Linelocid),
 		Locationname:   psql.WhereNull[Q, string](cols.Locationname),

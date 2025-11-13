@@ -37,7 +37,7 @@ type FSPool struct {
 	Editdate               null.Val[int64]   `db:"editdate" `
 	Editor                 null.Val[string]  `db:"editor" `
 	Gatewaysync            null.Val[int16]   `db:"gatewaysync" `
-	Globalid               null.Val[string]  `db:"globalid" `
+	Globalid               string            `db:"globalid" `
 	Lab                    null.Val[string]  `db:"lab" `
 	LabID                  null.Val[string]  `db:"lab_id" `
 	Objectid               int32             `db:"objectid,pk" `
@@ -178,7 +178,7 @@ type FSPoolSetter struct {
 	Editdate               omitnull.Val[int64]   `db:"editdate" `
 	Editor                 omitnull.Val[string]  `db:"editor" `
 	Gatewaysync            omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid               omitnull.Val[string]  `db:"globalid" `
+	Globalid               omit.Val[string]      `db:"globalid" `
 	Lab                    omitnull.Val[string]  `db:"lab" `
 	LabID                  omitnull.Val[string]  `db:"lab_id" `
 	Objectid               omit.Val[int32]       `db:"objectid,pk" `
@@ -236,7 +236,7 @@ func (s FSPoolSetter) SetColumns() []string {
 	if !s.Gatewaysync.IsUnset() {
 		vals = append(vals, "gatewaysync")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Lab.IsUnset() {
@@ -336,8 +336,8 @@ func (s FSPoolSetter) Overwrite(t *FSPool) {
 	if !s.Gatewaysync.IsUnset() {
 		t.Gatewaysync = s.Gatewaysync.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Lab.IsUnset() {
 		t.Lab = s.Lab.MustGetNull()
@@ -474,8 +474,8 @@ func (s *FSPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[11] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[11] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -688,7 +688,7 @@ func (s FSPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1145,7 +1145,7 @@ type fsPoolWhere[Q psql.Filterable] struct {
 	Editdate               psql.WhereNullMod[Q, int64]
 	Editor                 psql.WhereNullMod[Q, string]
 	Gatewaysync            psql.WhereNullMod[Q, int16]
-	Globalid               psql.WhereNullMod[Q, string]
+	Globalid               psql.WhereMod[Q, string]
 	Lab                    psql.WhereNullMod[Q, string]
 	LabID                  psql.WhereNullMod[Q, string]
 	Objectid               psql.WhereMod[Q, int32]
@@ -1185,7 +1185,7 @@ func buildFSPoolWhere[Q psql.Filterable](cols fsPoolColumns) fsPoolWhere[Q] {
 		Editdate:               psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                 psql.WhereNull[Q, string](cols.Editor),
 		Gatewaysync:            psql.WhereNull[Q, int16](cols.Gatewaysync),
-		Globalid:               psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:               psql.Where[Q, string](cols.Globalid),
 		Lab:                    psql.WhereNull[Q, string](cols.Lab),
 		LabID:                  psql.WhereNull[Q, string](cols.LabID),
 		Objectid:               psql.Where[Q, int32](cols.Objectid),

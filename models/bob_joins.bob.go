@@ -60,6 +60,7 @@ type joins[Q dialect.Joinable] struct {
 	FSTreatmentareas               joinSet[fsTreatmentareaJoins[Q]]
 	FSZones                        joinSet[fsZoneJoins[Q]]
 	FSZones2s                      joinSet[fsZones2Joins[Q]]
+	H3Aggregations                 joinSet[h3AggregationJoins[Q]]
 	HistoryContainerrelates        joinSet[historyContainerrelateJoins[Q]]
 	HistoryFieldscoutinglogs       joinSet[historyFieldscoutinglogJoins[Q]]
 	HistoryHabitatrelates          joinSet[historyHabitatrelateJoins[Q]]
@@ -131,6 +132,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FSTreatmentareas:               buildJoinSet[fsTreatmentareaJoins[Q]](FSTreatmentareas.Columns, buildFSTreatmentareaJoins),
 		FSZones:                        buildJoinSet[fsZoneJoins[Q]](FSZones.Columns, buildFSZoneJoins),
 		FSZones2s:                      buildJoinSet[fsZones2Joins[Q]](FSZones2s.Columns, buildFSZones2Joins),
+		H3Aggregations:                 buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
 		HistoryContainerrelates:        buildJoinSet[historyContainerrelateJoins[Q]](HistoryContainerrelates.Columns, buildHistoryContainerrelateJoins),
 		HistoryFieldscoutinglogs:       buildJoinSet[historyFieldscoutinglogJoins[Q]](HistoryFieldscoutinglogs.Columns, buildHistoryFieldscoutinglogJoins),
 		HistoryHabitatrelates:          buildJoinSet[historyHabitatrelateJoins[Q]](HistoryHabitatrelates.Columns, buildHistoryHabitatrelateJoins),

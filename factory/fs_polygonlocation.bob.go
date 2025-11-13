@@ -49,7 +49,7 @@ type FSPolygonlocationTemplate struct {
 	Editdate                func() null.Val[int64]
 	Editor                  func() null.Val[string]
 	Filter                  func() null.Val[string]
-	Globalid                func() null.Val[string]
+	Globalid                func() string
 	Habitat                 func() null.Val[string]
 	Hectares                func() null.Val[float64]
 	Jurisdiction            func() null.Val[string]
@@ -171,7 +171,7 @@ func (o FSPolygonlocationTemplate) BuildSetter() *models.FSPolygonlocationSetter
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Habitat != nil {
 		val := o.Habitat()
@@ -488,6 +488,10 @@ func ensureCreatableFSPolygonlocation(m *models.FSPolygonlocationSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1276,14 +1280,14 @@ func (m fsPolygonlocationMods) RandomFilterNotNull(f *faker.Faker) FSPolygonloca
 }
 
 // Set the model columns to this value
-func (m fsPolygonlocationMods) Globalid(val null.Val[string]) FSPolygonlocationMod {
+func (m fsPolygonlocationMods) Globalid(val string) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPolygonlocationMods) GlobalidFunc(f func() null.Val[string]) FSPolygonlocationMod {
+func (m fsPolygonlocationMods) GlobalidFunc(f func() string) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
 		o.Globalid = f
 	})
@@ -1298,32 +1302,10 @@ func (m fsPolygonlocationMods) UnsetGlobalid() FSPolygonlocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPolygonlocationMods) RandomGlobalid(f *faker.Faker) FSPolygonlocationMod {
 	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPolygonlocationMods) RandomGlobalidNotNull(f *faker.Faker) FSPolygonlocationMod {
-	return FSPolygonlocationModFunc(func(_ context.Context, o *FSPolygonlocationTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

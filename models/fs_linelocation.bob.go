@@ -37,7 +37,7 @@ type FSLinelocation struct {
 	Externalid              null.Val[string]  `db:"externalid" `
 	Editdate                null.Val[int64]   `db:"editdate" `
 	Editor                  null.Val[string]  `db:"editor" `
-	Globalid                null.Val[string]  `db:"globalid" `
+	Globalid                string            `db:"globalid" `
 	Habitat                 null.Val[string]  `db:"habitat" `
 	Hectares                null.Val[float64] `db:"hectares" `
 	Jurisdiction            null.Val[string]  `db:"jurisdiction" `
@@ -238,7 +238,7 @@ type FSLinelocationSetter struct {
 	Externalid              omitnull.Val[string]  `db:"externalid" `
 	Editdate                omitnull.Val[int64]   `db:"editdate" `
 	Editor                  omitnull.Val[string]  `db:"editor" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
+	Globalid                omit.Val[string]      `db:"globalid" `
 	Habitat                 omitnull.Val[string]  `db:"habitat" `
 	Hectares                omitnull.Val[float64] `db:"hectares" `
 	Jurisdiction            omitnull.Val[string]  `db:"jurisdiction" `
@@ -316,7 +316,7 @@ func (s FSLinelocationSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -476,8 +476,8 @@ func (s FSLinelocationSetter) Overwrite(t *FSLinelocation) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -674,8 +674,8 @@ func (s *FSLinelocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[11] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[11] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -1008,7 +1008,7 @@ func (s FSLinelocationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1605,7 +1605,7 @@ type fsLinelocationWhere[Q psql.Filterable] struct {
 	Externalid              psql.WhereNullMod[Q, string]
 	Editdate                psql.WhereNullMod[Q, int64]
 	Editor                  psql.WhereNullMod[Q, string]
-	Globalid                psql.WhereNullMod[Q, string]
+	Globalid                psql.WhereMod[Q, string]
 	Habitat                 psql.WhereNullMod[Q, string]
 	Hectares                psql.WhereNullMod[Q, float64]
 	Jurisdiction            psql.WhereNullMod[Q, string]
@@ -1665,7 +1665,7 @@ func buildFSLinelocationWhere[Q psql.Filterable](cols fsLinelocationColumns) fsL
 		Externalid:              psql.WhereNull[Q, string](cols.Externalid),
 		Editdate:                psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                  psql.WhereNull[Q, string](cols.Editor),
-		Globalid:                psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                psql.Where[Q, string](cols.Globalid),
 		Habitat:                 psql.WhereNull[Q, string](cols.Habitat),
 		Hectares:                psql.WhereNull[Q, float64](cols.Hectares),
 		Jurisdiction:            psql.WhereNull[Q, string](cols.Jurisdiction),

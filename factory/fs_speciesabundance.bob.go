@@ -46,7 +46,7 @@ type FSSpeciesabundanceTemplate struct {
 	Editor         func() null.Val[string]
 	Females        func() null.Val[int64]
 	Gravidfem      func() null.Val[int16]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Larvae         func() null.Val[int16]
 	Males          func() null.Val[int16]
 	Objectid       func() int32
@@ -146,7 +146,7 @@ func (o FSSpeciesabundanceTemplate) BuildSetter() *models.FSSpeciesabundanceSett
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Larvae != nil {
 		val := o.Larvae()
@@ -384,6 +384,10 @@ func ensureCreatableFSSpeciesabundance(m *models.FSSpeciesabundanceSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1000,14 +1004,14 @@ func (m fsSpeciesabundanceMods) RandomGravidfemNotNull(f *faker.Faker) FSSpecies
 }
 
 // Set the model columns to this value
-func (m fsSpeciesabundanceMods) Globalid(val null.Val[string]) FSSpeciesabundanceMod {
+func (m fsSpeciesabundanceMods) Globalid(val string) FSSpeciesabundanceMod {
 	return FSSpeciesabundanceModFunc(func(_ context.Context, o *FSSpeciesabundanceTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsSpeciesabundanceMods) GlobalidFunc(f func() null.Val[string]) FSSpeciesabundanceMod {
+func (m fsSpeciesabundanceMods) GlobalidFunc(f func() string) FSSpeciesabundanceMod {
 	return FSSpeciesabundanceModFunc(func(_ context.Context, o *FSSpeciesabundanceTemplate) {
 		o.Globalid = f
 	})
@@ -1022,32 +1026,10 @@ func (m fsSpeciesabundanceMods) UnsetGlobalid() FSSpeciesabundanceMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsSpeciesabundanceMods) RandomGlobalid(f *faker.Faker) FSSpeciesabundanceMod {
 	return FSSpeciesabundanceModFunc(func(_ context.Context, o *FSSpeciesabundanceTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsSpeciesabundanceMods) RandomGlobalidNotNull(f *faker.Faker) FSSpeciesabundanceMod {
-	return FSSpeciesabundanceModFunc(func(_ context.Context, o *FSSpeciesabundanceTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

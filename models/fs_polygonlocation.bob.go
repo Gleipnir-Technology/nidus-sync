@@ -38,7 +38,7 @@ type FSPolygonlocation struct {
 	Editdate                null.Val[int64]   `db:"editdate" `
 	Editor                  null.Val[string]  `db:"editor" `
 	Filter                  null.Val[string]  `db:"filter" `
-	Globalid                null.Val[string]  `db:"globalid" `
+	Globalid                string            `db:"globalid" `
 	Habitat                 null.Val[string]  `db:"habitat" `
 	Hectares                null.Val[float64] `db:"hectares" `
 	Jurisdiction            null.Val[string]  `db:"jurisdiction" `
@@ -221,7 +221,7 @@ type FSPolygonlocationSetter struct {
 	Editdate                omitnull.Val[int64]   `db:"editdate" `
 	Editor                  omitnull.Val[string]  `db:"editor" `
 	Filter                  omitnull.Val[string]  `db:"filter" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
+	Globalid                omit.Val[string]      `db:"globalid" `
 	Habitat                 omitnull.Val[string]  `db:"habitat" `
 	Hectares                omitnull.Val[float64] `db:"hectares" `
 	Jurisdiction            omitnull.Val[string]  `db:"jurisdiction" `
@@ -295,7 +295,7 @@ func (s FSPolygonlocationSetter) SetColumns() []string {
 	if !s.Filter.IsUnset() {
 		vals = append(vals, "filter")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -437,8 +437,8 @@ func (s FSPolygonlocationSetter) Overwrite(t *FSPolygonlocation) {
 	if !s.Filter.IsUnset() {
 		t.Filter = s.Filter.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -620,8 +620,8 @@ func (s *FSPolygonlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[12] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[12] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
@@ -919,7 +919,7 @@ func (s FSPolygonlocationSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1468,7 +1468,7 @@ type fsPolygonlocationWhere[Q psql.Filterable] struct {
 	Editdate                psql.WhereNullMod[Q, int64]
 	Editor                  psql.WhereNullMod[Q, string]
 	Filter                  psql.WhereNullMod[Q, string]
-	Globalid                psql.WhereNullMod[Q, string]
+	Globalid                psql.WhereMod[Q, string]
 	Habitat                 psql.WhereNullMod[Q, string]
 	Hectares                psql.WhereNullMod[Q, float64]
 	Jurisdiction            psql.WhereNullMod[Q, string]
@@ -1522,7 +1522,7 @@ func buildFSPolygonlocationWhere[Q psql.Filterable](cols fsPolygonlocationColumn
 		Editdate:                psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                  psql.WhereNull[Q, string](cols.Editor),
 		Filter:                  psql.WhereNull[Q, string](cols.Filter),
-		Globalid:                psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                psql.Where[Q, string](cols.Globalid),
 		Habitat:                 psql.WhereNull[Q, string](cols.Habitat),
 		Hectares:                psql.WhereNull[Q, float64](cols.Hectares),
 		Jurisdiction:            psql.WhereNull[Q, string](cols.Jurisdiction),

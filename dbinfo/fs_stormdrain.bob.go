@@ -63,9 +63,9 @@ var FSStormdrains = Table[
 		Globalid: column{
 			Name:      "globalid",
 			DBType:    "text",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},

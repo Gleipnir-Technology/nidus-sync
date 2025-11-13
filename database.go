@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"embed"
@@ -11,12 +12,18 @@ import (
 
 	//"github.com/georgysavva/scany/v2/pgxscan"
 	//"github.com/jackc/pgx/v5"
+	"github.com/Gleipnir-Technology/nidus-sync/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
+	"github.com/stephenafamo/bob/dialect/psql/im"
+	"github.com/uber/h3-go/v4"
 )
 
 //go:embed migrations/*.sql
@@ -142,4 +149,55 @@ func needsMigrations(connection_string string) (*bool, error) {
 		return nil, err
 	}
 	return &hasPending, nil
+}
+
+func updateSummaryTables(ctx context.Context, org *models.Organization) {
+	/*org, err := models.FindOrganization(ctx, PGInstance.BobDB, org_id)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get organization")
+	}*/
+	log.Info().Int("org_id", int(org.ID)).Msg("Getting point locations")
+	point_locations, err := org.FSPointlocations().All(ctx, PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get organization")
+		return
+	}
+	log.Info().Int("count", len(point_locations)).Msg("Summarizing point locations")
+
+	for i := range 16 {
+		log.Info().Int("resolution", i).Msg("Working summary layer")
+		cellToCount := make(map[h3.Cell]int, 0)
+		for _, p := range point_locations {
+			cell, err := getCell(p.GeometryX, p.GeometryY, i)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get cell")
+				continue
+			}
+			//log.Info().Float64("X", p.GeometryX).Float64("Y", p.GeometryY).Str("cell", cell.String()).Msg("Converted lat/lng")
+			cellToCount[cell] = cellToCount[cell] + 1
+		}
+		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
+		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id"))
+		for cell, count := range cellToCount {
+			to_insert = append(to_insert, im.Values(psql.Arg(cell.String(), i, count, enums.H3aggregationtypeServicerequest, org.ID)))
+		}
+		//to_insert = append(to_insert, im.OnConflict("h3_aggregation_cell_organization_id_type__key").DoUpdate(
+		to_insert = append(to_insert, im.OnConflict("cell, organization_id, type_").DoUpdate(
+			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
+		))
+		//log.Info().Str("sql", insertQueryToString(psql.Insert(to_insert...))).Msg("Updating...")
+		_, err := psql.Insert(to_insert...).Exec(ctx, PGInstance.BobDB)
+		if err != nil {
+			log.Error().Err(err).Msg("Faild to add h3 aggregation")
+		}
+	}
+}
+
+func insertQueryToString(query bob.BaseQuery[*dialect.InsertQuery]) string {
+	buf := new(bytes.Buffer)
+	_, err := query.WriteQuery(context.TODO(), buf, 0)
+	if err != nil {
+		return fmt.Sprintf("Failed to write query: %v", err)
+	}
+	return buf.String()
 }

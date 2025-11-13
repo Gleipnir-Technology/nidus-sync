@@ -32,7 +32,7 @@ type FSHabitatrelate struct {
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
 	ForeignID      null.Val[string]  `db:"foreign_id" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Habitattype    null.Val[string]  `db:"habitattype" `
 	Objectid       int32             `db:"objectid,pk" `
 	CreatedDate    null.Val[int64]   `db:"created_date" `
@@ -125,7 +125,7 @@ type FSHabitatrelateSetter struct {
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
 	ForeignID      omitnull.Val[string]  `db:"foreign_id" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Habitattype    omitnull.Val[string]  `db:"habitattype" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
 	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
@@ -157,7 +157,7 @@ func (s FSHabitatrelateSetter) SetColumns() []string {
 	if !s.ForeignID.IsUnset() {
 		vals = append(vals, "foreign_id")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitattype.IsUnset() {
@@ -209,8 +209,8 @@ func (s FSHabitatrelateSetter) Overwrite(t *FSHabitatrelate) {
 	if !s.ForeignID.IsUnset() {
 		t.ForeignID = s.ForeignID.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitattype.IsUnset() {
 		t.Habitattype = s.Habitattype.MustGetNull()
@@ -284,8 +284,8 @@ func (s *FSHabitatrelateSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[6] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[6] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -397,7 +397,7 @@ func (s FSHabitatrelateSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -772,7 +772,7 @@ type fsHabitatrelateWhere[Q psql.Filterable] struct {
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
 	ForeignID      psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Habitattype    psql.WhereNullMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	CreatedDate    psql.WhereNullMod[Q, int64]
@@ -796,7 +796,7 @@ func buildFSHabitatrelateWhere[Q psql.Filterable](cols fsHabitatrelateColumns) f
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
 		ForeignID:      psql.WhereNull[Q, string](cols.ForeignID),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Habitattype:    psql.WhereNull[Q, string](cols.Habitattype),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),

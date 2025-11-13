@@ -46,7 +46,7 @@ type FSMosquitoinspection struct {
 	Editor                 null.Val[string]  `db:"editor" `
 	Fieldspecies           null.Val[string]  `db:"fieldspecies" `
 	Fieldtech              null.Val[string]  `db:"fieldtech" `
-	Globalid               null.Val[string]  `db:"globalid" `
+	Globalid               string            `db:"globalid" `
 	Jurisdiction           null.Val[string]  `db:"jurisdiction" `
 	Larvaepresent          null.Val[int16]   `db:"larvaepresent" `
 	Linelocid              null.Val[string]  `db:"linelocid" `
@@ -274,7 +274,7 @@ type FSMosquitoinspectionSetter struct {
 	Editor                 omitnull.Val[string]  `db:"editor" `
 	Fieldspecies           omitnull.Val[string]  `db:"fieldspecies" `
 	Fieldtech              omitnull.Val[string]  `db:"fieldtech" `
-	Globalid               omitnull.Val[string]  `db:"globalid" `
+	Globalid               omit.Val[string]      `db:"globalid" `
 	Jurisdiction           omitnull.Val[string]  `db:"jurisdiction" `
 	Larvaepresent          omitnull.Val[int16]   `db:"larvaepresent" `
 	Linelocid              omitnull.Val[string]  `db:"linelocid" `
@@ -379,7 +379,7 @@ func (s FSMosquitoinspectionSetter) SetColumns() []string {
 	if !s.Fieldtech.IsUnset() {
 		vals = append(vals, "fieldtech")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Jurisdiction.IsUnset() {
@@ -566,8 +566,8 @@ func (s FSMosquitoinspectionSetter) Overwrite(t *FSMosquitoinspection) {
 	if !s.Fieldtech.IsUnset() {
 		t.Fieldtech = s.Fieldtech.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Jurisdiction.IsUnset() {
 		t.Jurisdiction = s.Jurisdiction.MustGetNull()
@@ -818,8 +818,8 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[20] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[20] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
@@ -1215,7 +1215,7 @@ func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1821,7 +1821,7 @@ type fsMosquitoinspectionWhere[Q psql.Filterable] struct {
 	Editor                 psql.WhereNullMod[Q, string]
 	Fieldspecies           psql.WhereNullMod[Q, string]
 	Fieldtech              psql.WhereNullMod[Q, string]
-	Globalid               psql.WhereNullMod[Q, string]
+	Globalid               psql.WhereMod[Q, string]
 	Jurisdiction           psql.WhereNullMod[Q, string]
 	Larvaepresent          psql.WhereNullMod[Q, int16]
 	Linelocid              psql.WhereNullMod[Q, string]
@@ -1890,7 +1890,7 @@ func buildFSMosquitoinspectionWhere[Q psql.Filterable](cols fsMosquitoinspection
 		Editor:                 psql.WhereNull[Q, string](cols.Editor),
 		Fieldspecies:           psql.WhereNull[Q, string](cols.Fieldspecies),
 		Fieldtech:              psql.WhereNull[Q, string](cols.Fieldtech),
-		Globalid:               psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:               psql.Where[Q, string](cols.Globalid),
 		Jurisdiction:           psql.WhereNull[Q, string](cols.Jurisdiction),
 		Larvaepresent:          psql.WhereNull[Q, int16](cols.Larvaepresent),
 		Linelocid:              psql.WhereNull[Q, string](cols.Linelocid),

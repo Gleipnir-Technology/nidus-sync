@@ -42,7 +42,7 @@ type FSInspectionsampleTemplate struct {
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Idbytech       func() null.Val[string]
 	InspID         func() null.Val[string]
 	Objectid       func() int32
@@ -115,7 +115,7 @@ func (o FSInspectionsampleTemplate) BuildSetter() *models.FSInspectionsampleSett
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Idbytech != nil {
 		val := o.Idbytech()
@@ -264,6 +264,10 @@ func ensureCreatableFSInspectionsample(m *models.FSInspectionsampleSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -653,14 +657,14 @@ func (m fsInspectionsampleMods) RandomEditorNotNull(f *faker.Faker) FSInspection
 }
 
 // Set the model columns to this value
-func (m fsInspectionsampleMods) Globalid(val null.Val[string]) FSInspectionsampleMod {
+func (m fsInspectionsampleMods) Globalid(val string) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsInspectionsampleMods) GlobalidFunc(f func() null.Val[string]) FSInspectionsampleMod {
+func (m fsInspectionsampleMods) GlobalidFunc(f func() string) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
 		o.Globalid = f
 	})
@@ -675,32 +679,10 @@ func (m fsInspectionsampleMods) UnsetGlobalid() FSInspectionsampleMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsInspectionsampleMods) RandomGlobalid(f *faker.Faker) FSInspectionsampleMod {
 	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsInspectionsampleMods) RandomGlobalidNotNull(f *faker.Faker) FSInspectionsampleMod {
-	return FSInspectionsampleModFunc(func(_ context.Context, o *FSInspectionsampleTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

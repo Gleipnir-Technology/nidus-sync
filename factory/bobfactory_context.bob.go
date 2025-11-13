@@ -120,8 +120,18 @@ var (
 	fsZones2WithParentsCascadingCtx = newContextual[bool]("fsZones2WithParentsCascading")
 	fsZones2RelOrganizationCtx      = newContextual[bool]("fs_zones2.organization.fs_zones2.fs_zones2_organization_id_fkey")
 
+	// Relationship Contexts for geography_columns
+	geographyColumnWithParentsCascadingCtx = newContextual[bool]("geographyColumnWithParentsCascading")
+
+	// Relationship Contexts for geometry_columns
+	geometryColumnWithParentsCascadingCtx = newContextual[bool]("geometryColumnWithParentsCascading")
+
 	// Relationship Contexts for goose_db_version
 	gooseDBVersionWithParentsCascadingCtx = newContextual[bool]("gooseDBVersionWithParentsCascading")
+
+	// Relationship Contexts for h3_aggregation
+	h3AggregationWithParentsCascadingCtx = newContextual[bool]("h3AggregationWithParentsCascading")
+	h3AggregationRelOrganizationCtx      = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
 
 	// Relationship Contexts for history_containerrelate
 	historyContainerrelateWithParentsCascadingCtx = newContextual[bool]("historyContainerrelateWithParentsCascading")
@@ -269,6 +279,7 @@ var (
 	organizationRelFSTreatmentareasCtx               = newContextual[bool]("fs_treatmentarea.organization.fs_treatmentarea.fs_treatmentarea_organization_id_fkey")
 	organizationRelFSZonesCtx                        = newContextual[bool]("fs_zones.organization.fs_zones.fs_zones_organization_id_fkey")
 	organizationRelFSZones2sCtx                      = newContextual[bool]("fs_zones2.organization.fs_zones2.fs_zones2_organization_id_fkey")
+	organizationRelH3AggregationsCtx                 = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
 	organizationRelHistoryContainerrelatesCtx        = newContextual[bool]("history_containerrelate.organization.history_containerrelate.history_containerrelate_organization_id_fkey")
 	organizationRelHistoryFieldscoutinglogsCtx       = newContextual[bool]("history_fieldscoutinglog.organization.history_fieldscoutinglog.history_fieldscoutinglog_organization_id_fkey")
 	organizationRelHistoryHabitatrelatesCtx          = newContextual[bool]("history_habitatrelate.organization.history_habitatrelate.history_habitatrelate_organization_id_fkey")
@@ -298,8 +309,17 @@ var (
 	organizationRelHistoryZones2sCtx                 = newContextual[bool]("history_zones2.organization.history_zones2.history_zones2_organization_id_fkey")
 	organizationRelUserCtx                           = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
+	// Relationship Contexts for raster_columns
+	rasterColumnWithParentsCascadingCtx = newContextual[bool]("rasterColumnWithParentsCascading")
+
+	// Relationship Contexts for raster_overviews
+	rasterOverviewWithParentsCascadingCtx = newContextual[bool]("rasterOverviewWithParentsCascading")
+
 	// Relationship Contexts for sessions
 	sessionWithParentsCascadingCtx = newContextual[bool]("sessionWithParentsCascading")
+
+	// Relationship Contexts for spatial_ref_sys
+	spatialRefSyWithParentsCascadingCtx = newContextual[bool]("spatialRefSyWithParentsCascading")
 
 	// Relationship Contexts for user_
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")

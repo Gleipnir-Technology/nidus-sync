@@ -31,7 +31,7 @@ type FSZones2 struct {
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Name           null.Val[string]  `db:"name" `
 	Objectid       int32             `db:"objectid,pk" `
 	ShapeArea      null.Val[float64] `db:"shape__area" `
@@ -127,7 +127,7 @@ type FSZones2Setter struct {
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Name           omitnull.Val[string]  `db:"name" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
 	ShapeArea      omitnull.Val[float64] `db:"shape__area" `
@@ -158,7 +158,7 @@ func (s FSZones2Setter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Name.IsUnset() {
@@ -213,8 +213,8 @@ func (s FSZones2Setter) Overwrite(t *FSZones2) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Name.IsUnset() {
 		t.Name = s.Name.MustGetNull()
@@ -288,8 +288,8 @@ func (s *FSZones2Setter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[5] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[5] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
@@ -406,7 +406,7 @@ func (s FSZones2Setter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -794,7 +794,7 @@ type fsZones2Where[Q psql.Filterable] struct {
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Name           psql.WhereNullMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	ShapeArea      psql.WhereNullMod[Q, float64]
@@ -819,7 +819,7 @@ func buildFSZones2Where[Q psql.Filterable](cols fsZones2Columns) fsZones2Where[Q
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Name:           psql.WhereNull[Q, string](cols.Name),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		ShapeArea:      psql.WhereNull[Q, float64](cols.ShapeArea),

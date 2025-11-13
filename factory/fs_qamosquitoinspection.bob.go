@@ -52,7 +52,7 @@ type FSQamosquitoinspectionTemplate struct {
 	Editor                   func() null.Val[string]
 	Fieldtech                func() null.Val[string]
 	Fish                     func() null.Val[int16]
-	Globalid                 func() null.Val[string]
+	Globalid                 func() string
 	Habvalue1                func() null.Val[int16]
 	Habvalue1percent         func() null.Val[int16]
 	Habvalue2                func() null.Val[int16]
@@ -203,7 +203,7 @@ func (o FSQamosquitoinspectionTemplate) BuildSetter() *models.FSQamosquitoinspec
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Habvalue1 != nil {
 		val := o.Habvalue1()
@@ -648,6 +648,10 @@ func ensureCreatableFSQamosquitoinspection(m *models.FSQamosquitoinspectionSette
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1615,14 +1619,14 @@ func (m fsQamosquitoinspectionMods) RandomFishNotNull(f *faker.Faker) FSQamosqui
 }
 
 // Set the model columns to this value
-func (m fsQamosquitoinspectionMods) Globalid(val null.Val[string]) FSQamosquitoinspectionMod {
+func (m fsQamosquitoinspectionMods) Globalid(val string) FSQamosquitoinspectionMod {
 	return FSQamosquitoinspectionModFunc(func(_ context.Context, o *FSQamosquitoinspectionTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsQamosquitoinspectionMods) GlobalidFunc(f func() null.Val[string]) FSQamosquitoinspectionMod {
+func (m fsQamosquitoinspectionMods) GlobalidFunc(f func() string) FSQamosquitoinspectionMod {
 	return FSQamosquitoinspectionModFunc(func(_ context.Context, o *FSQamosquitoinspectionTemplate) {
 		o.Globalid = f
 	})
@@ -1637,32 +1641,10 @@ func (m fsQamosquitoinspectionMods) UnsetGlobalid() FSQamosquitoinspectionMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsQamosquitoinspectionMods) RandomGlobalid(f *faker.Faker) FSQamosquitoinspectionMod {
 	return FSQamosquitoinspectionModFunc(func(_ context.Context, o *FSQamosquitoinspectionTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsQamosquitoinspectionMods) RandomGlobalidNotNull(f *faker.Faker) FSQamosquitoinspectionMod {
-	return FSQamosquitoinspectionModFunc(func(_ context.Context, o *FSQamosquitoinspectionTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

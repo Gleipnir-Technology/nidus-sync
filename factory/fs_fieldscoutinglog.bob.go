@@ -42,7 +42,7 @@ type FSFieldscoutinglogTemplate struct {
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Objectid       func() int32
 	Status         func() null.Val[int16]
 	CreatedDate    func() null.Val[int64]
@@ -112,7 +112,7 @@ func (o FSFieldscoutinglogTemplate) BuildSetter() *models.FSFieldscoutinglogSett
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Objectid != nil {
 		val := o.Objectid()
@@ -240,6 +240,10 @@ func ensureCreatableFSFieldscoutinglog(m *models.FSFieldscoutinglogSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -626,14 +630,14 @@ func (m fsFieldscoutinglogMods) RandomEditorNotNull(f *faker.Faker) FSFieldscout
 }
 
 // Set the model columns to this value
-func (m fsFieldscoutinglogMods) Globalid(val null.Val[string]) FSFieldscoutinglogMod {
+func (m fsFieldscoutinglogMods) Globalid(val string) FSFieldscoutinglogMod {
 	return FSFieldscoutinglogModFunc(func(_ context.Context, o *FSFieldscoutinglogTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsFieldscoutinglogMods) GlobalidFunc(f func() null.Val[string]) FSFieldscoutinglogMod {
+func (m fsFieldscoutinglogMods) GlobalidFunc(f func() string) FSFieldscoutinglogMod {
 	return FSFieldscoutinglogModFunc(func(_ context.Context, o *FSFieldscoutinglogTemplate) {
 		o.Globalid = f
 	})
@@ -648,32 +652,10 @@ func (m fsFieldscoutinglogMods) UnsetGlobalid() FSFieldscoutinglogMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsFieldscoutinglogMods) RandomGlobalid(f *faker.Faker) FSFieldscoutinglogMod {
 	return FSFieldscoutinglogModFunc(func(_ context.Context, o *FSFieldscoutinglogTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsFieldscoutinglogMods) RandomGlobalidNotNull(f *faker.Faker) FSFieldscoutinglogMod {
-	return FSFieldscoutinglogModFunc(func(_ context.Context, o *FSFieldscoutinglogTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

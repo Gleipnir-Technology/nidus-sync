@@ -32,7 +32,7 @@ type FSPooldetail struct {
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
 	Females        null.Val[int16]   `db:"females" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Objectid       int32             `db:"objectid,pk" `
 	PoolID         null.Val[string]  `db:"pool_id" `
 	Species        null.Val[string]  `db:"species" `
@@ -131,7 +131,7 @@ type FSPooldetailSetter struct {
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
 	Females        omitnull.Val[int16]   `db:"females" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
 	PoolID         omitnull.Val[string]  `db:"pool_id" `
 	Species        omitnull.Val[string]  `db:"species" `
@@ -165,7 +165,7 @@ func (s FSPooldetailSetter) SetColumns() []string {
 	if !s.Females.IsUnset() {
 		vals = append(vals, "females")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if s.Objectid.IsValue() {
@@ -223,8 +223,8 @@ func (s FSPooldetailSetter) Overwrite(t *FSPooldetail) {
 	if !s.Females.IsUnset() {
 		t.Females = s.Females.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if s.Objectid.IsValue() {
 		t.Objectid = s.Objectid.MustGet()
@@ -304,8 +304,8 @@ func (s *FSPooldetailSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[6] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[6] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -429,7 +429,7 @@ func (s FSPooldetailSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -818,7 +818,7 @@ type fsPooldetailWhere[Q psql.Filterable] struct {
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
 	Females        psql.WhereNullMod[Q, int16]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	PoolID         psql.WhereNullMod[Q, string]
 	Species        psql.WhereNullMod[Q, string]
@@ -844,7 +844,7 @@ func buildFSPooldetailWhere[Q psql.Filterable](cols fsPooldetailColumns) fsPoold
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
 		Females:        psql.WhereNull[Q, int16](cols.Females),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		PoolID:         psql.WhereNull[Q, string](cols.PoolID),
 		Species:        psql.WhereNull[Q, string](cols.Species),

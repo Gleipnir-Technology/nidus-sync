@@ -49,7 +49,7 @@ type FSProposedtreatmentareaTemplate struct {
 	Exported          func() null.Val[int16]
 	Editdate          func() null.Val[int64]
 	Editor            func() null.Val[string]
-	Globalid          func() null.Val[string]
+	Globalid          func() string
 	Hectares          func() null.Val[float64]
 	Issprayroute      func() null.Val[int16]
 	Lasttreatactivity func() null.Val[string]
@@ -162,7 +162,7 @@ func (o FSProposedtreatmentareaTemplate) BuildSetter() *models.FSProposedtreatme
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Hectares != nil {
 		val := o.Hectares()
@@ -416,6 +416,10 @@ func ensureCreatableFSProposedtreatmentarea(m *models.FSProposedtreatmentareaSet
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1195,14 +1199,14 @@ func (m fsProposedtreatmentareaMods) RandomEditorNotNull(f *faker.Faker) FSPropo
 }
 
 // Set the model columns to this value
-func (m fsProposedtreatmentareaMods) Globalid(val null.Val[string]) FSProposedtreatmentareaMod {
+func (m fsProposedtreatmentareaMods) Globalid(val string) FSProposedtreatmentareaMod {
 	return FSProposedtreatmentareaModFunc(func(_ context.Context, o *FSProposedtreatmentareaTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsProposedtreatmentareaMods) GlobalidFunc(f func() null.Val[string]) FSProposedtreatmentareaMod {
+func (m fsProposedtreatmentareaMods) GlobalidFunc(f func() string) FSProposedtreatmentareaMod {
 	return FSProposedtreatmentareaModFunc(func(_ context.Context, o *FSProposedtreatmentareaTemplate) {
 		o.Globalid = f
 	})
@@ -1217,32 +1221,10 @@ func (m fsProposedtreatmentareaMods) UnsetGlobalid() FSProposedtreatmentareaMod 
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsProposedtreatmentareaMods) RandomGlobalid(f *faker.Faker) FSProposedtreatmentareaMod {
 	return FSProposedtreatmentareaModFunc(func(_ context.Context, o *FSProposedtreatmentareaTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsProposedtreatmentareaMods) RandomGlobalidNotNull(f *faker.Faker) FSProposedtreatmentareaMod {
-	return FSProposedtreatmentareaModFunc(func(_ context.Context, o *FSProposedtreatmentareaTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

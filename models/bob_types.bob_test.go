@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
+	"github.com/lib/pq"
 	"github.com/stephenafamo/bob"
 )
 
@@ -98,8 +99,17 @@ var _ bob.HookableType = &FSZone{}
 // Make sure the type FSZones2 runs hooks after queries
 var _ bob.HookableType = &FSZones2{}
 
+// Make sure the type GeographyColumn runs hooks after queries
+var _ bob.HookableType = &GeographyColumn{}
+
+// Make sure the type GeometryColumn runs hooks after queries
+var _ bob.HookableType = &GeometryColumn{}
+
 // Make sure the type GooseDBVersion runs hooks after queries
 var _ bob.HookableType = &GooseDBVersion{}
+
+// Make sure the type H3Aggregation runs hooks after queries
+var _ bob.HookableType = &H3Aggregation{}
 
 // Make sure the type HistoryContainerrelate runs hooks after queries
 var _ bob.HookableType = &HistoryContainerrelate{}
@@ -191,17 +201,50 @@ var _ bob.HookableType = &OauthToken{}
 // Make sure the type Organization runs hooks after queries
 var _ bob.HookableType = &Organization{}
 
+// Make sure the type RasterColumn runs hooks after queries
+var _ bob.HookableType = &RasterColumn{}
+
+// Make sure the type RasterOverview runs hooks after queries
+var _ bob.HookableType = &RasterOverview{}
+
 // Make sure the type Session runs hooks after queries
 var _ bob.HookableType = &Session{}
 
+// Make sure the type SpatialRefSy runs hooks after queries
+var _ bob.HookableType = &SpatialRefSy{}
+
 // Make sure the type User runs hooks after queries
 var _ bob.HookableType = &User{}
+
+// Make sure the type enums.H3aggregationtype satisfies database/sql.Scanner
+var _ sql.Scanner = (*enums.H3aggregationtype)(nil)
+
+// Make sure the type enums.H3aggregationtype satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(enums.H3aggregationtype)
 
 // Make sure the type enums.Notificationtype satisfies database/sql.Scanner
 var _ sql.Scanner = (*enums.Notificationtype)(nil)
 
 // Make sure the type enums.Notificationtype satisfies database/sql/driver.Valuer
 var _ driver.Valuer = *new(enums.Notificationtype)
+
+// Make sure the type pq.StringArray satisfies database/sql.Scanner
+var _ sql.Scanner = (*pq.StringArray)(nil)
+
+// Make sure the type pq.StringArray satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(pq.StringArray)
+
+// Make sure the type pq.Float64Array satisfies database/sql.Scanner
+var _ sql.Scanner = (*pq.Float64Array)(nil)
+
+// Make sure the type pq.Float64Array satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(pq.Float64Array)
+
+// Make sure the type pq.BoolArray satisfies database/sql.Scanner
+var _ sql.Scanner = (*pq.BoolArray)(nil)
+
+// Make sure the type pq.BoolArray satisfies database/sql/driver.Valuer
+var _ driver.Valuer = *new(pq.BoolArray)
 
 // Make sure the type enums.Arcgislicensetype satisfies database/sql.Scanner
 var _ sql.Scanner = (*enums.Arcgislicensetype)(nil)

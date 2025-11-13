@@ -31,7 +31,7 @@ type FSInspectionsample struct {
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Idbytech       null.Val[string]  `db:"idbytech" `
 	InspID         null.Val[string]  `db:"insp_id" `
 	Objectid       int32             `db:"objectid,pk" `
@@ -130,7 +130,7 @@ type FSInspectionsampleSetter struct {
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Idbytech       omitnull.Val[string]  `db:"idbytech" `
 	InspID         omitnull.Val[string]  `db:"insp_id" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
@@ -162,7 +162,7 @@ func (s FSInspectionsampleSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Idbytech.IsUnset() {
@@ -220,8 +220,8 @@ func (s FSInspectionsampleSetter) Overwrite(t *FSInspectionsample) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Idbytech.IsUnset() {
 		t.Idbytech = s.Idbytech.MustGetNull()
@@ -298,8 +298,8 @@ func (s *FSInspectionsampleSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[5] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[5] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
@@ -422,7 +422,7 @@ func (s FSInspectionsampleSetter) Expressions(prefix ...string) []bob.Expression
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -817,7 +817,7 @@ type fsInspectionsampleWhere[Q psql.Filterable] struct {
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Idbytech       psql.WhereNullMod[Q, string]
 	InspID         psql.WhereNullMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
@@ -843,7 +843,7 @@ func buildFSInspectionsampleWhere[Q psql.Filterable](cols fsInspectionsampleColu
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Idbytech:       psql.WhereNull[Q, string](cols.Idbytech),
 		InspID:         psql.WhereNull[Q, string](cols.InspID),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),

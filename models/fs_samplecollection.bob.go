@@ -43,7 +43,7 @@ type FSSamplecollection struct {
 	Fieldtech      null.Val[string]  `db:"fieldtech" `
 	Flockid        null.Val[string]  `db:"flockid" `
 	Gatewaysync    null.Val[int16]   `db:"gatewaysync" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Lab            null.Val[string]  `db:"lab" `
 	Locationname   null.Val[string]  `db:"locationname" `
 	LocID          null.Val[string]  `db:"loc_id" `
@@ -238,7 +238,7 @@ type FSSamplecollectionSetter struct {
 	Fieldtech      omitnull.Val[string]  `db:"fieldtech" `
 	Flockid        omitnull.Val[string]  `db:"flockid" `
 	Gatewaysync    omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Lab            omitnull.Val[string]  `db:"lab" `
 	Locationname   omitnull.Val[string]  `db:"locationname" `
 	LocID          omitnull.Val[string]  `db:"loc_id" `
@@ -326,7 +326,7 @@ func (s FSSamplecollectionSetter) SetColumns() []string {
 	if !s.Gatewaysync.IsUnset() {
 		vals = append(vals, "gatewaysync")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Lab.IsUnset() {
@@ -480,8 +480,8 @@ func (s FSSamplecollectionSetter) Overwrite(t *FSSamplecollection) {
 	if !s.Gatewaysync.IsUnset() {
 		t.Gatewaysync = s.Gatewaysync.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Lab.IsUnset() {
 		t.Lab = s.Lab.MustGetNull()
@@ -690,8 +690,8 @@ func (s *FSSamplecollectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[17] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[17] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
@@ -1018,7 +1018,7 @@ func (s FSSamplecollectionSetter) Expressions(prefix ...string) []bob.Expression
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1565,7 +1565,7 @@ type fsSamplecollectionWhere[Q psql.Filterable] struct {
 	Fieldtech      psql.WhereNullMod[Q, string]
 	Flockid        psql.WhereNullMod[Q, string]
 	Gatewaysync    psql.WhereNullMod[Q, int16]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Lab            psql.WhereNullMod[Q, string]
 	Locationname   psql.WhereNullMod[Q, string]
 	LocID          psql.WhereNullMod[Q, string]
@@ -1623,7 +1623,7 @@ func buildFSSamplecollectionWhere[Q psql.Filterable](cols fsSamplecollectionColu
 		Fieldtech:      psql.WhereNull[Q, string](cols.Fieldtech),
 		Flockid:        psql.WhereNull[Q, string](cols.Flockid),
 		Gatewaysync:    psql.WhereNull[Q, int16](cols.Gatewaysync),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Lab:            psql.WhereNull[Q, string](cols.Lab),
 		Locationname:   psql.WhereNull[Q, string](cols.Locationname),
 		LocID:          psql.WhereNull[Q, string](cols.LocID),

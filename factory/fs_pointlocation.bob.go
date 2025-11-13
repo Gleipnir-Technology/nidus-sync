@@ -47,7 +47,7 @@ type FSPointlocationTemplate struct {
 	Externalid              func() null.Val[string]
 	Editdate                func() null.Val[int64]
 	Editor                  func() null.Val[string]
-	Globalid                func() null.Val[string]
+	Globalid                func() string
 	Habitat                 func() null.Val[string]
 	Jurisdiction            func() null.Val[string]
 	Larvinspectinterval     func() null.Val[int16]
@@ -78,8 +78,8 @@ type FSPointlocationTemplate struct {
 	Y                       func() null.Val[float64]
 	Zone                    func() null.Val[string]
 	Zone2                   func() null.Val[string]
-	GeometryX               func() null.Val[float64]
-	GeometryY               func() null.Val[float64]
+	GeometryX               func() float64
+	GeometryY               func() float64
 	Assignedtech            func() null.Val[string]
 	DeactivateReason        func() null.Val[string]
 	Scalarpriority          func() null.Val[int64]
@@ -165,7 +165,7 @@ func (o FSPointlocationTemplate) BuildSetter() *models.FSPointlocationSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Habitat != nil {
 		val := o.Habitat()
@@ -289,11 +289,11 @@ func (o FSPointlocationTemplate) BuildSetter() *models.FSPointlocationSetter {
 	}
 	if o.GeometryX != nil {
 		val := o.GeometryX()
-		m.GeometryX = omitnull.FromNull(val)
+		m.GeometryX = omit.From(val)
 	}
 	if o.GeometryY != nil {
 		val := o.GeometryY()
-		m.GeometryY = omitnull.FromNull(val)
+		m.GeometryY = omit.From(val)
 	}
 	if o.Assignedtech != nil {
 		val := o.Assignedtech()
@@ -505,9 +505,21 @@ func ensureCreatableFSPointlocation(m *models.FSPointlocationSetter) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
 	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
+	}
+	if !(m.GeometryX.IsValue()) {
+		val := random_float64(nil)
+		m.GeometryX = omit.From(val)
+	}
+	if !(m.GeometryY.IsValue()) {
+		val := random_float64(nil)
+		m.GeometryY = omit.From(val)
 	}
 }
 
@@ -1188,14 +1200,14 @@ func (m fsPointlocationMods) RandomEditorNotNull(f *faker.Faker) FSPointlocation
 }
 
 // Set the model columns to this value
-func (m fsPointlocationMods) Globalid(val null.Val[string]) FSPointlocationMod {
+func (m fsPointlocationMods) Globalid(val string) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPointlocationMods) GlobalidFunc(f func() null.Val[string]) FSPointlocationMod {
+func (m fsPointlocationMods) GlobalidFunc(f func() string) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
 		o.Globalid = f
 	})
@@ -1210,32 +1222,10 @@ func (m fsPointlocationMods) UnsetGlobalid() FSPointlocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPointlocationMods) RandomGlobalid(f *faker.Faker) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPointlocationMods) RandomGlobalidNotNull(f *faker.Faker) FSPointlocationMod {
-	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }
@@ -2809,14 +2799,14 @@ func (m fsPointlocationMods) RandomZone2NotNull(f *faker.Faker) FSPointlocationM
 }
 
 // Set the model columns to this value
-func (m fsPointlocationMods) GeometryX(val null.Val[float64]) FSPointlocationMod {
+func (m fsPointlocationMods) GeometryX(val float64) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryX = func() null.Val[float64] { return val }
+		o.GeometryX = func() float64 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPointlocationMods) GeometryXFunc(f func() null.Val[float64]) FSPointlocationMod {
+func (m fsPointlocationMods) GeometryXFunc(f func() float64) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
 		o.GeometryX = f
 	})
@@ -2831,45 +2821,23 @@ func (m fsPointlocationMods) UnsetGeometryX() FSPointlocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPointlocationMods) RandomGeometryX(f *faker.Faker) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryX = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPointlocationMods) RandomGeometryXNotNull(f *faker.Faker) FSPointlocationMod {
-	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryX = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
+		o.GeometryX = func() float64 {
+			return random_float64(f)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m fsPointlocationMods) GeometryY(val null.Val[float64]) FSPointlocationMod {
+func (m fsPointlocationMods) GeometryY(val float64) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryY = func() null.Val[float64] { return val }
+		o.GeometryY = func() float64 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPointlocationMods) GeometryYFunc(f func() null.Val[float64]) FSPointlocationMod {
+func (m fsPointlocationMods) GeometryYFunc(f func() float64) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
 		o.GeometryY = f
 	})
@@ -2884,32 +2852,10 @@ func (m fsPointlocationMods) UnsetGeometryY() FSPointlocationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPointlocationMods) RandomGeometryY(f *faker.Faker) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryY = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPointlocationMods) RandomGeometryYNotNull(f *faker.Faker) FSPointlocationMod {
-	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
-		o.GeometryY = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
+		o.GeometryY = func() float64 {
+			return random_float64(f)
 		}
 	})
 }

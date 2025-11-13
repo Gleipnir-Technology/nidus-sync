@@ -36,7 +36,7 @@ type FSPointlocation struct {
 	Externalid              null.Val[string]  `db:"externalid" `
 	Editdate                null.Val[int64]   `db:"editdate" `
 	Editor                  null.Val[string]  `db:"editor" `
-	Globalid                null.Val[string]  `db:"globalid" `
+	Globalid                string            `db:"globalid" `
 	Habitat                 null.Val[string]  `db:"habitat" `
 	Jurisdiction            null.Val[string]  `db:"jurisdiction" `
 	Larvinspectinterval     null.Val[int16]   `db:"larvinspectinterval" `
@@ -67,8 +67,8 @@ type FSPointlocation struct {
 	Y                       null.Val[float64] `db:"y" `
 	Zone                    null.Val[string]  `db:"zone" `
 	Zone2                   null.Val[string]  `db:"zone2" `
-	GeometryX               null.Val[float64] `db:"geometry_x" `
-	GeometryY               null.Val[float64] `db:"geometry_y" `
+	GeometryX               float64           `db:"geometry_x" `
+	GeometryY               float64           `db:"geometry_y" `
 	Assignedtech            null.Val[string]  `db:"assignedtech" `
 	DeactivateReason        null.Val[string]  `db:"deactivate_reason" `
 	Scalarpriority          null.Val[int64]   `db:"scalarpriority" `
@@ -225,7 +225,7 @@ type FSPointlocationSetter struct {
 	Externalid              omitnull.Val[string]  `db:"externalid" `
 	Editdate                omitnull.Val[int64]   `db:"editdate" `
 	Editor                  omitnull.Val[string]  `db:"editor" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
+	Globalid                omit.Val[string]      `db:"globalid" `
 	Habitat                 omitnull.Val[string]  `db:"habitat" `
 	Jurisdiction            omitnull.Val[string]  `db:"jurisdiction" `
 	Larvinspectinterval     omitnull.Val[int16]   `db:"larvinspectinterval" `
@@ -256,8 +256,8 @@ type FSPointlocationSetter struct {
 	Y                       omitnull.Val[float64] `db:"y" `
 	Zone                    omitnull.Val[string]  `db:"zone" `
 	Zone2                   omitnull.Val[string]  `db:"zone2" `
-	GeometryX               omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY               omitnull.Val[float64] `db:"geometry_y" `
+	GeometryX               omit.Val[float64]     `db:"geometry_x" `
+	GeometryY               omit.Val[float64]     `db:"geometry_y" `
 	Assignedtech            omitnull.Val[string]  `db:"assignedtech" `
 	DeactivateReason        omitnull.Val[string]  `db:"deactivate_reason" `
 	Scalarpriority          omitnull.Val[int64]   `db:"scalarpriority" `
@@ -297,7 +297,7 @@ func (s FSPointlocationSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -390,10 +390,10 @@ func (s FSPointlocationSetter) SetColumns() []string {
 	if !s.Zone2.IsUnset() {
 		vals = append(vals, "zone2")
 	}
-	if !s.GeometryX.IsUnset() {
+	if s.GeometryX.IsValue() {
 		vals = append(vals, "geometry_x")
 	}
-	if !s.GeometryY.IsUnset() {
+	if s.GeometryY.IsValue() {
 		vals = append(vals, "geometry_y")
 	}
 	if !s.Assignedtech.IsUnset() {
@@ -445,8 +445,8 @@ func (s FSPointlocationSetter) Overwrite(t *FSPointlocation) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -538,11 +538,11 @@ func (s FSPointlocationSetter) Overwrite(t *FSPointlocation) {
 	if !s.Zone2.IsUnset() {
 		t.Zone2 = s.Zone2.MustGetNull()
 	}
-	if !s.GeometryX.IsUnset() {
-		t.GeometryX = s.GeometryX.MustGetNull()
+	if s.GeometryX.IsValue() {
+		t.GeometryX = s.GeometryX.MustGet()
 	}
-	if !s.GeometryY.IsUnset() {
-		t.GeometryY = s.GeometryY.MustGetNull()
+	if s.GeometryY.IsValue() {
+		t.GeometryY = s.GeometryY.MustGet()
 	}
 	if !s.Assignedtech.IsUnset() {
 		t.Assignedtech = s.Assignedtech.MustGetNull()
@@ -628,8 +628,8 @@ func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[10] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[10] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
@@ -814,14 +814,14 @@ func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[40] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[41] = psql.Arg(s.GeometryX.MustGetNull())
+		if s.GeometryX.IsValue() {
+			vals[41] = psql.Arg(s.GeometryX.MustGet())
 		} else {
 			vals[41] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[42] = psql.Arg(s.GeometryY.MustGetNull())
+		if s.GeometryY.IsValue() {
+			vals[42] = psql.Arg(s.GeometryY.MustGet())
 		} else {
 			vals[42] = psql.Raw("DEFAULT")
 		}
@@ -937,7 +937,7 @@ func (s FSPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1154,14 +1154,14 @@ func (s FSPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.GeometryX.IsUnset() {
+	if s.GeometryX.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "geometry_x")...),
 			psql.Arg(s.GeometryX),
 		}})
 	}
 
-	if !s.GeometryY.IsUnset() {
+	if s.GeometryY.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "geometry_y")...),
 			psql.Arg(s.GeometryY),
@@ -1512,7 +1512,7 @@ type fsPointlocationWhere[Q psql.Filterable] struct {
 	Externalid              psql.WhereNullMod[Q, string]
 	Editdate                psql.WhereNullMod[Q, int64]
 	Editor                  psql.WhereNullMod[Q, string]
-	Globalid                psql.WhereNullMod[Q, string]
+	Globalid                psql.WhereMod[Q, string]
 	Habitat                 psql.WhereNullMod[Q, string]
 	Jurisdiction            psql.WhereNullMod[Q, string]
 	Larvinspectinterval     psql.WhereNullMod[Q, int16]
@@ -1543,8 +1543,8 @@ type fsPointlocationWhere[Q psql.Filterable] struct {
 	Y                       psql.WhereNullMod[Q, float64]
 	Zone                    psql.WhereNullMod[Q, string]
 	Zone2                   psql.WhereNullMod[Q, string]
-	GeometryX               psql.WhereNullMod[Q, float64]
-	GeometryY               psql.WhereNullMod[Q, float64]
+	GeometryX               psql.WhereMod[Q, float64]
+	GeometryY               psql.WhereMod[Q, float64]
 	Assignedtech            psql.WhereNullMod[Q, string]
 	DeactivateReason        psql.WhereNullMod[Q, string]
 	Scalarpriority          psql.WhereNullMod[Q, int64]
@@ -1568,7 +1568,7 @@ func buildFSPointlocationWhere[Q psql.Filterable](cols fsPointlocationColumns) f
 		Externalid:              psql.WhereNull[Q, string](cols.Externalid),
 		Editdate:                psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                  psql.WhereNull[Q, string](cols.Editor),
-		Globalid:                psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                psql.Where[Q, string](cols.Globalid),
 		Habitat:                 psql.WhereNull[Q, string](cols.Habitat),
 		Jurisdiction:            psql.WhereNull[Q, string](cols.Jurisdiction),
 		Larvinspectinterval:     psql.WhereNull[Q, int16](cols.Larvinspectinterval),
@@ -1599,8 +1599,8 @@ func buildFSPointlocationWhere[Q psql.Filterable](cols fsPointlocationColumns) f
 		Y:                       psql.WhereNull[Q, float64](cols.Y),
 		Zone:                    psql.WhereNull[Q, string](cols.Zone),
 		Zone2:                   psql.WhereNull[Q, string](cols.Zone2),
-		GeometryX:               psql.WhereNull[Q, float64](cols.GeometryX),
-		GeometryY:               psql.WhereNull[Q, float64](cols.GeometryY),
+		GeometryX:               psql.Where[Q, float64](cols.GeometryX),
+		GeometryY:               psql.Where[Q, float64](cols.GeometryY),
 		Assignedtech:            psql.WhereNull[Q, string](cols.Assignedtech),
 		DeactivateReason:        psql.WhereNull[Q, string](cols.DeactivateReason),
 		Scalarpriority:          psql.WhereNull[Q, int64](cols.Scalarpriority),

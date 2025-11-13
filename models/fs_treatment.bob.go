@@ -42,7 +42,7 @@ type FSTreatment struct {
 	Editor               null.Val[string]  `db:"editor" `
 	Fieldtech            null.Val[string]  `db:"fieldtech" `
 	Flowrate             null.Val[float64] `db:"flowrate" `
-	Globalid             null.Val[string]  `db:"globalid" `
+	Globalid             string            `db:"globalid" `
 	Habitat              null.Val[string]  `db:"habitat" `
 	InspID               null.Val[string]  `db:"insp_id" `
 	Invloc               null.Val[string]  `db:"invloc" `
@@ -261,7 +261,7 @@ type FSTreatmentSetter struct {
 	Editor               omitnull.Val[string]  `db:"editor" `
 	Fieldtech            omitnull.Val[string]  `db:"fieldtech" `
 	Flowrate             omitnull.Val[float64] `db:"flowrate" `
-	Globalid             omitnull.Val[string]  `db:"globalid" `
+	Globalid             omit.Val[string]      `db:"globalid" `
 	Habitat              omitnull.Val[string]  `db:"habitat" `
 	InspID               omitnull.Val[string]  `db:"insp_id" `
 	Invloc               omitnull.Val[string]  `db:"invloc" `
@@ -355,7 +355,7 @@ func (s FSTreatmentSetter) SetColumns() []string {
 	if !s.Flowrate.IsUnset() {
 		vals = append(vals, "flowrate")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -533,8 +533,8 @@ func (s FSTreatmentSetter) Overwrite(t *FSTreatment) {
 	if !s.Flowrate.IsUnset() {
 		t.Flowrate = s.Flowrate.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -764,8 +764,8 @@ func (s *FSTreatmentSetter) Apply(q *dialect.InsertQuery) {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[16] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[16] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
@@ -1139,7 +1139,7 @@ func (s FSTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1748,7 +1748,7 @@ type fsTreatmentWhere[Q psql.Filterable] struct {
 	Editor               psql.WhereNullMod[Q, string]
 	Fieldtech            psql.WhereNullMod[Q, string]
 	Flowrate             psql.WhereNullMod[Q, float64]
-	Globalid             psql.WhereNullMod[Q, string]
+	Globalid             psql.WhereMod[Q, string]
 	Habitat              psql.WhereNullMod[Q, string]
 	InspID               psql.WhereNullMod[Q, string]
 	Invloc               psql.WhereNullMod[Q, string]
@@ -1814,7 +1814,7 @@ func buildFSTreatmentWhere[Q psql.Filterable](cols fsTreatmentColumns) fsTreatme
 		Editor:               psql.WhereNull[Q, string](cols.Editor),
 		Fieldtech:            psql.WhereNull[Q, string](cols.Fieldtech),
 		Flowrate:             psql.WhereNull[Q, float64](cols.Flowrate),
-		Globalid:             psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:             psql.Where[Q, string](cols.Globalid),
 		Habitat:              psql.WhereNull[Q, string](cols.Habitat),
 		InspID:               psql.WhereNull[Q, string](cols.InspID),
 		Invloc:               psql.WhereNull[Q, string](cols.Invloc),

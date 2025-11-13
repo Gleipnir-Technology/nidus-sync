@@ -10,6 +10,7 @@ import (
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
+	"github.com/lib/pq"
 )
 
 type Factory struct {
@@ -41,7 +42,10 @@ type Factory struct {
 	baseFSTreatmentareaMods               FSTreatmentareaModSlice
 	baseFSZoneMods                        FSZoneModSlice
 	baseFSZones2Mods                      FSZones2ModSlice
+	baseGeographyColumnMods               GeographyColumnModSlice
+	baseGeometryColumnMods                GeometryColumnModSlice
 	baseGooseDBVersionMods                GooseDBVersionModSlice
+	baseH3AggregationMods                 H3AggregationModSlice
 	baseHistoryContainerrelateMods        HistoryContainerrelateModSlice
 	baseHistoryFieldscoutinglogMods       HistoryFieldscoutinglogModSlice
 	baseHistoryHabitatrelateMods          HistoryHabitatrelateModSlice
@@ -72,7 +76,10 @@ type Factory struct {
 	baseNotificationMods                  NotificationModSlice
 	baseOauthTokenMods                    OauthTokenModSlice
 	baseOrganizationMods                  OrganizationModSlice
+	baseRasterColumnMods                  RasterColumnModSlice
+	baseRasterOverviewMods                RasterOverviewModSlice
 	baseSessionMods                       SessionModSlice
+	baseSpatialRefSyMods                  SpatialRefSyModSlice
 	baseUserMods                          UserModSlice
 }
 
@@ -139,7 +146,7 @@ func (f *Factory) FromExistingFSContainerrelate(m *models.FSContainerrelate) *FS
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Inspsampleid = func() null.Val[string] { return m.Inspsampleid }
 	o.Mosquitoinspid = func() null.Val[string] { return m.Mosquitoinspid }
 	o.Objectid = func() int32 { return m.Objectid }
@@ -184,7 +191,7 @@ func (f *Factory) FromExistingFSFieldscoutinglog(m *models.FSFieldscoutinglog) *
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.Status = func() null.Val[int16] { return m.Status }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
@@ -228,7 +235,7 @@ func (f *Factory) FromExistingFSHabitatrelate(m *models.FSHabitatrelate) *FSHabi
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.ForeignID = func() null.Val[string] { return m.ForeignID }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitattype = func() null.Val[string] { return m.Habitattype }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
@@ -271,7 +278,7 @@ func (f *Factory) FromExistingFSInspectionsample(m *models.FSInspectionsample) *
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Idbytech = func() null.Val[string] { return m.Idbytech }
 	o.InspID = func() null.Val[string] { return m.InspID }
 	o.Objectid = func() int32 { return m.Objectid }
@@ -325,7 +332,7 @@ func (f *Factory) FromExistingFSInspectionsampledetail(m *models.FSInspectionsam
 	o.Flarvcount = func() null.Val[int16] { return m.Flarvcount }
 	o.Flstages = func() null.Val[string] { return m.Flstages }
 	o.Fpupcount = func() null.Val[int16] { return m.Fpupcount }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.InspsampleID = func() null.Val[string] { return m.InspsampleID }
 	o.Labspecies = func() null.Val[string] { return m.Labspecies }
 	o.Ldomstage = func() null.Val[string] { return m.Ldomstage }
@@ -380,7 +387,7 @@ func (f *Factory) FromExistingFSLinelocation(m *models.FSLinelocation) *FSLinelo
 	o.Externalid = func() null.Val[string] { return m.Externalid }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Hectares = func() null.Val[float64] { return m.Hectares }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
@@ -456,7 +463,7 @@ func (f *Factory) FromExistingFSLocationtracking(m *models.FSLocationtracking) *
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
@@ -513,7 +520,7 @@ func (f *Factory) FromExistingFSMosquitoinspection(m *models.FSMosquitoinspectio
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Fieldspecies = func() null.Val[string] { return m.Fieldspecies }
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 	o.Larvaepresent = func() null.Val[int16] { return m.Larvaepresent }
 	o.Linelocid = func() null.Val[string] { return m.Linelocid }
@@ -592,7 +599,7 @@ func (f *Factory) FromExistingFSPointlocation(m *models.FSPointlocation) *FSPoin
 	o.Externalid = func() null.Val[string] { return m.Externalid }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 	o.Larvinspectinterval = func() null.Val[int16] { return m.Larvinspectinterval }
@@ -623,8 +630,8 @@ func (f *Factory) FromExistingFSPointlocation(m *models.FSPointlocation) *FSPoin
 	o.Y = func() null.Val[float64] { return m.Y }
 	o.Zone = func() null.Val[string] { return m.Zone }
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
-	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
-	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
+	o.GeometryX = func() float64 { return m.GeometryX }
+	o.GeometryY = func() float64 { return m.GeometryY }
 	o.Assignedtech = func() null.Val[string] { return m.Assignedtech }
 	o.DeactivateReason = func() null.Val[string] { return m.DeactivateReason }
 	o.Scalarpriority = func() null.Val[int64] { return m.Scalarpriority }
@@ -670,7 +677,7 @@ func (f *Factory) FromExistingFSPolygonlocation(m *models.FSPolygonlocation) *FS
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Filter = func() null.Val[string] { return m.Filter }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Hectares = func() null.Val[float64] { return m.Hectares }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
@@ -743,7 +750,7 @@ func (f *Factory) FromExistingFSPool(m *models.FSPool) *FSPoolTemplate {
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Gatewaysync = func() null.Val[int16] { return m.Gatewaysync }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Lab = func() null.Val[string] { return m.Lab }
 	o.LabID = func() null.Val[string] { return m.LabID }
 	o.Objectid = func() int32 { return m.Objectid }
@@ -798,7 +805,7 @@ func (f *Factory) FromExistingFSPooldetail(m *models.FSPooldetail) *FSPooldetail
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Females = func() null.Val[int16] { return m.Females }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.PoolID = func() null.Val[string] { return m.PoolID }
 	o.Species = func() null.Val[string] { return m.Species }
@@ -850,7 +857,7 @@ func (f *Factory) FromExistingFSProposedtreatmentarea(m *models.FSProposedtreatm
 	o.Exported = func() null.Val[int16] { return m.Exported }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Hectares = func() null.Val[float64] { return m.Hectares }
 	o.Issprayroute = func() null.Val[int16] { return m.Issprayroute }
 	o.Lasttreatactivity = func() null.Val[string] { return m.Lasttreatactivity }
@@ -918,7 +925,7 @@ func (f *Factory) FromExistingFSQamosquitoinspection(m *models.FSQamosquitoinspe
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
 	o.Fish = func() null.Val[int16] { return m.Fish }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habvalue1 = func() null.Val[int16] { return m.Habvalue1 }
 	o.Habvalue1percent = func() null.Val[int16] { return m.Habvalue1percent }
 	o.Habvalue2 = func() null.Val[int16] { return m.Habvalue2 }
@@ -1007,7 +1014,7 @@ func (f *Factory) FromExistingFSRodentlocation(m *models.FSRodentlocation) *FSRo
 	o.Externalid = func() null.Val[string] { return m.Externalid }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Lastinspectaction = func() null.Val[string] { return m.Lastinspectaction }
 	o.Lastinspectconditions = func() null.Val[string] { return m.Lastinspectconditions }
@@ -1076,7 +1083,7 @@ func (f *Factory) FromExistingFSSamplecollection(m *models.FSSamplecollection) *
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
 	o.Flockid = func() null.Val[string] { return m.Flockid }
 	o.Gatewaysync = func() null.Val[int16] { return m.Gatewaysync }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Lab = func() null.Val[string] { return m.Lab }
 	o.Locationname = func() null.Val[string] { return m.Locationname }
 	o.LocID = func() null.Val[string] { return m.LocID }
@@ -1148,7 +1155,7 @@ func (f *Factory) FromExistingFSSamplelocation(m *models.FSSamplelocation) *FSSa
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Gatewaysync = func() null.Val[int16] { return m.Gatewaysync }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Locationnumber = func() null.Val[int64] { return m.Locationnumber }
 	o.Name = func() null.Val[string] { return m.Name }
@@ -1224,7 +1231,7 @@ func (f *Factory) FromExistingFSServicerequest(m *models.FSServicerequest) *FSSe
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Firstresponsedate = func() null.Val[int64] { return m.Firstresponsedate }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Issuesreported = func() null.Val[string] { return m.Issuesreported }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 	o.Nextaction = func() null.Val[string] { return m.Nextaction }
@@ -1274,8 +1281,8 @@ func (f *Factory) FromExistingFSServicerequest(m *models.FSServicerequest) *FSSe
 	o.Zone2 = func() null.Val[string] { return m.Zone2 }
 	o.CreatedDate = func() null.Val[int64] { return m.CreatedDate }
 	o.CreatedUser = func() null.Val[string] { return m.CreatedUser }
-	o.GeometryX = func() null.Val[float64] { return m.GeometryX }
-	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
+	o.GeometryX = func() float64 { return m.GeometryX }
+	o.GeometryY = func() float64 { return m.GeometryY }
 	o.LastEditedDate = func() null.Val[int64] { return m.LastEditedDate }
 	o.LastEditedUser = func() null.Val[string] { return m.LastEditedUser }
 	o.Dog = func() null.Val[int64] { return m.Dog }
@@ -1320,7 +1327,7 @@ func (f *Factory) FromExistingFSSpeciesabundance(m *models.FSSpeciesabundance) *
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Females = func() null.Val[int64] { return m.Females }
 	o.Gravidfem = func() null.Val[int16] { return m.Gravidfem }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Larvae = func() null.Val[int16] { return m.Larvae }
 	o.Males = func() null.Val[int16] { return m.Males }
 	o.Objectid = func() int32 { return m.Objectid }
@@ -1377,7 +1384,7 @@ func (f *Factory) FromExistingFSStormdrain(m *models.FSStormdrain) *FSStormdrain
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Jurisdiction = func() null.Val[string] { return m.Jurisdiction }
 	o.Lastaction = func() null.Val[string] { return m.Lastaction }
 	o.Laststatus = func() null.Val[string] { return m.Laststatus }
@@ -1434,7 +1441,7 @@ func (f *Factory) FromExistingFSTimecard(m *models.FSTimecard) *FSTimecardTempla
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Lclocid = func() null.Val[string] { return m.Lclocid }
 	o.Linelocid = func() null.Val[string] { return m.Linelocid }
 	o.Locationname = func() null.Val[string] { return m.Locationname }
@@ -1494,7 +1501,7 @@ func (f *Factory) FromExistingFSTrapdatum(m *models.FSTrapdatum) *FSTrapdatumTem
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
 	o.Field = func() null.Val[int64] { return m.Field }
 	o.Gatewaysync = func() null.Val[int16] { return m.Gatewaysync }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Idbytech = func() null.Val[string] { return m.Idbytech }
 	o.Locationname = func() null.Val[string] { return m.Locationname }
 	o.LocID = func() null.Val[string] { return m.LocID }
@@ -1568,7 +1575,7 @@ func (f *Factory) FromExistingFSTraplocation(m *models.FSTraplocation) *FSTraplo
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Gatewaysync = func() null.Val[int16] { return m.Gatewaysync }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.Locationnumber = func() null.Val[int64] { return m.Locationnumber }
 	o.Name = func() null.Val[string] { return m.Name }
@@ -1635,7 +1642,7 @@ func (f *Factory) FromExistingFSTreatment(m *models.FSTreatment) *FSTreatmentTem
 	o.Editor = func() null.Val[string] { return m.Editor }
 	o.Fieldtech = func() null.Val[string] { return m.Fieldtech }
 	o.Flowrate = func() null.Val[float64] { return m.Flowrate }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Habitat = func() null.Val[string] { return m.Habitat }
 	o.InspID = func() null.Val[string] { return m.InspID }
 	o.Invloc = func() null.Val[string] { return m.Invloc }
@@ -1711,7 +1718,7 @@ func (f *Factory) FromExistingFSTreatmentarea(m *models.FSTreatmentarea) *FSTrea
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Notified = func() null.Val[int16] { return m.Notified }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.SessionID = func() null.Val[string] { return m.SessionID }
@@ -1761,7 +1768,7 @@ func (f *Factory) FromExistingFSZone(m *models.FSZone) *FSZoneTemplate {
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Name = func() null.Val[string] { return m.Name }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.ShapeArea = func() null.Val[float64] { return m.ShapeArea }
@@ -1806,7 +1813,7 @@ func (f *Factory) FromExistingFSZones2(m *models.FSZones2) *FSZones2Template {
 	o.Creator = func() null.Val[string] { return m.Creator }
 	o.Editdate = func() null.Val[int64] { return m.Editdate }
 	o.Editor = func() null.Val[string] { return m.Editor }
-	o.Globalid = func() null.Val[string] { return m.Globalid }
+	o.Globalid = func() string { return m.Globalid }
 	o.Name = func() null.Val[string] { return m.Name }
 	o.Objectid = func() int32 { return m.Objectid }
 	o.ShapeArea = func() null.Val[float64] { return m.ShapeArea }
@@ -1823,6 +1830,66 @@ func (f *Factory) FromExistingFSZones2(m *models.FSZones2) *FSZones2Template {
 	if m.R.Organization != nil {
 		FSZones2Mods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
+
+	return o
+}
+
+func (f *Factory) NewGeographyColumn(mods ...GeographyColumnMod) *GeographyColumnTemplate {
+	return f.NewGeographyColumnWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewGeographyColumnWithContext(ctx context.Context, mods ...GeographyColumnMod) *GeographyColumnTemplate {
+	o := &GeographyColumnTemplate{f: f}
+
+	if f != nil {
+		f.baseGeographyColumnMods.Apply(ctx, o)
+	}
+
+	GeographyColumnModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingGeographyColumn(m *models.GeographyColumn) *GeographyColumnTemplate {
+	o := &GeographyColumnTemplate{f: f, alreadyPersisted: true}
+
+	o.FTableCatalog = func() null.Val[string] { return m.FTableCatalog }
+	o.FTableSchema = func() null.Val[string] { return m.FTableSchema }
+	o.FTableName = func() null.Val[string] { return m.FTableName }
+	o.FGeographyColumn = func() null.Val[string] { return m.FGeographyColumn }
+	o.CoordDimension = func() null.Val[int32] { return m.CoordDimension }
+	o.Srid = func() null.Val[int32] { return m.Srid }
+	o.Type = func() null.Val[string] { return m.Type }
+
+	return o
+}
+
+func (f *Factory) NewGeometryColumn(mods ...GeometryColumnMod) *GeometryColumnTemplate {
+	return f.NewGeometryColumnWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewGeometryColumnWithContext(ctx context.Context, mods ...GeometryColumnMod) *GeometryColumnTemplate {
+	o := &GeometryColumnTemplate{f: f}
+
+	if f != nil {
+		f.baseGeometryColumnMods.Apply(ctx, o)
+	}
+
+	GeometryColumnModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingGeometryColumn(m *models.GeometryColumn) *GeometryColumnTemplate {
+	o := &GeometryColumnTemplate{f: f, alreadyPersisted: true}
+
+	o.FTableCatalog = func() null.Val[string] { return m.FTableCatalog }
+	o.FTableSchema = func() null.Val[string] { return m.FTableSchema }
+	o.FTableName = func() null.Val[string] { return m.FTableName }
+	o.FGeometryColumn = func() null.Val[string] { return m.FGeometryColumn }
+	o.CoordDimension = func() null.Val[int32] { return m.CoordDimension }
+	o.Srid = func() null.Val[int32] { return m.Srid }
+	o.Type = func() null.Val[string] { return m.Type }
 
 	return o
 }
@@ -1850,6 +1917,40 @@ func (f *Factory) FromExistingGooseDBVersion(m *models.GooseDBVersion) *GooseDBV
 	o.VersionID = func() int64 { return m.VersionID }
 	o.IsApplied = func() bool { return m.IsApplied }
 	o.Tstamp = func() time.Time { return m.Tstamp }
+
+	return o
+}
+
+func (f *Factory) NewH3Aggregation(mods ...H3AggregationMod) *H3AggregationTemplate {
+	return f.NewH3AggregationWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewH3AggregationWithContext(ctx context.Context, mods ...H3AggregationMod) *H3AggregationTemplate {
+	o := &H3AggregationTemplate{f: f}
+
+	if f != nil {
+		f.baseH3AggregationMods.Apply(ctx, o)
+	}
+
+	H3AggregationModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingH3Aggregation(m *models.H3Aggregation) *H3AggregationTemplate {
+	o := &H3AggregationTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.Cell = func() string { return m.Cell }
+	o.Resolution = func() int32 { return m.Resolution }
+	o.Count = func() int32 { return m.Count }
+	o.Type = func() enums.H3aggregationtype { return m.Type }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.Organization != nil {
+		H3AggregationMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -3777,6 +3878,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if len(m.R.FSZones2s) > 0 {
 		OrganizationMods.AddExistingFSZones2s(m.R.FSZones2s...).Apply(ctx, o)
 	}
+	if len(m.R.H3Aggregations) > 0 {
+		OrganizationMods.AddExistingH3Aggregations(m.R.H3Aggregations...).Apply(ctx, o)
+	}
 	if len(m.R.HistoryContainerrelates) > 0 {
 		OrganizationMods.AddExistingHistoryContainerrelates(m.R.HistoryContainerrelates...).Apply(ctx, o)
 	}
@@ -3865,6 +3969,78 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	return o
 }
 
+func (f *Factory) NewRasterColumn(mods ...RasterColumnMod) *RasterColumnTemplate {
+	return f.NewRasterColumnWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewRasterColumnWithContext(ctx context.Context, mods ...RasterColumnMod) *RasterColumnTemplate {
+	o := &RasterColumnTemplate{f: f}
+
+	if f != nil {
+		f.baseRasterColumnMods.Apply(ctx, o)
+	}
+
+	RasterColumnModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingRasterColumn(m *models.RasterColumn) *RasterColumnTemplate {
+	o := &RasterColumnTemplate{f: f, alreadyPersisted: true}
+
+	o.RTableCatalog = func() null.Val[string] { return m.RTableCatalog }
+	o.RTableSchema = func() null.Val[string] { return m.RTableSchema }
+	o.RTableName = func() null.Val[string] { return m.RTableName }
+	o.RRasterColumn = func() null.Val[string] { return m.RRasterColumn }
+	o.Srid = func() null.Val[int32] { return m.Srid }
+	o.ScaleX = func() null.Val[float64] { return m.ScaleX }
+	o.ScaleY = func() null.Val[float64] { return m.ScaleY }
+	o.BlocksizeX = func() null.Val[int32] { return m.BlocksizeX }
+	o.BlocksizeY = func() null.Val[int32] { return m.BlocksizeY }
+	o.SameAlignment = func() null.Val[bool] { return m.SameAlignment }
+	o.RegularBlocking = func() null.Val[bool] { return m.RegularBlocking }
+	o.NumBands = func() null.Val[int32] { return m.NumBands }
+	o.PixelTypes = func() null.Val[pq.StringArray] { return m.PixelTypes }
+	o.NodataValues = func() null.Val[pq.Float64Array] { return m.NodataValues }
+	o.OutDB = func() null.Val[pq.BoolArray] { return m.OutDB }
+	o.Extent = func() null.Val[string] { return m.Extent }
+	o.SpatialIndex = func() null.Val[bool] { return m.SpatialIndex }
+
+	return o
+}
+
+func (f *Factory) NewRasterOverview(mods ...RasterOverviewMod) *RasterOverviewTemplate {
+	return f.NewRasterOverviewWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewRasterOverviewWithContext(ctx context.Context, mods ...RasterOverviewMod) *RasterOverviewTemplate {
+	o := &RasterOverviewTemplate{f: f}
+
+	if f != nil {
+		f.baseRasterOverviewMods.Apply(ctx, o)
+	}
+
+	RasterOverviewModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingRasterOverview(m *models.RasterOverview) *RasterOverviewTemplate {
+	o := &RasterOverviewTemplate{f: f, alreadyPersisted: true}
+
+	o.OTableCatalog = func() null.Val[string] { return m.OTableCatalog }
+	o.OTableSchema = func() null.Val[string] { return m.OTableSchema }
+	o.OTableName = func() null.Val[string] { return m.OTableName }
+	o.ORasterColumn = func() null.Val[string] { return m.ORasterColumn }
+	o.RTableCatalog = func() null.Val[string] { return m.RTableCatalog }
+	o.RTableSchema = func() null.Val[string] { return m.RTableSchema }
+	o.RTableName = func() null.Val[string] { return m.RTableName }
+	o.RRasterColumn = func() null.Val[string] { return m.RRasterColumn }
+	o.OverviewFactor = func() null.Val[int32] { return m.OverviewFactor }
+
+	return o
+}
+
 func (f *Factory) NewSession(mods ...SessionMod) *SessionTemplate {
 	return f.NewSessionWithContext(context.Background(), mods...)
 }
@@ -3887,6 +4063,34 @@ func (f *Factory) FromExistingSession(m *models.Session) *SessionTemplate {
 	o.Token = func() string { return m.Token }
 	o.Data = func() []byte { return m.Data }
 	o.Expiry = func() time.Time { return m.Expiry }
+
+	return o
+}
+
+func (f *Factory) NewSpatialRefSy(mods ...SpatialRefSyMod) *SpatialRefSyTemplate {
+	return f.NewSpatialRefSyWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewSpatialRefSyWithContext(ctx context.Context, mods ...SpatialRefSyMod) *SpatialRefSyTemplate {
+	o := &SpatialRefSyTemplate{f: f}
+
+	if f != nil {
+		f.baseSpatialRefSyMods.Apply(ctx, o)
+	}
+
+	SpatialRefSyModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingSpatialRefSy(m *models.SpatialRefSy) *SpatialRefSyTemplate {
+	o := &SpatialRefSyTemplate{f: f, alreadyPersisted: true}
+
+	o.Srid = func() int32 { return m.Srid }
+	o.AuthName = func() null.Val[string] { return m.AuthName }
+	o.AuthSrid = func() null.Val[int32] { return m.AuthSrid }
+	o.Srtext = func() null.Val[string] { return m.Srtext }
+	o.Proj4text = func() null.Val[string] { return m.Proj4text }
 
 	return o
 }
@@ -4161,12 +4365,36 @@ func (f *Factory) AddBaseFSZones2Mod(mods ...FSZones2Mod) {
 	f.baseFSZones2Mods = append(f.baseFSZones2Mods, mods...)
 }
 
+func (f *Factory) ClearBaseGeographyColumnMods() {
+	f.baseGeographyColumnMods = nil
+}
+
+func (f *Factory) AddBaseGeographyColumnMod(mods ...GeographyColumnMod) {
+	f.baseGeographyColumnMods = append(f.baseGeographyColumnMods, mods...)
+}
+
+func (f *Factory) ClearBaseGeometryColumnMods() {
+	f.baseGeometryColumnMods = nil
+}
+
+func (f *Factory) AddBaseGeometryColumnMod(mods ...GeometryColumnMod) {
+	f.baseGeometryColumnMods = append(f.baseGeometryColumnMods, mods...)
+}
+
 func (f *Factory) ClearBaseGooseDBVersionMods() {
 	f.baseGooseDBVersionMods = nil
 }
 
 func (f *Factory) AddBaseGooseDBVersionMod(mods ...GooseDBVersionMod) {
 	f.baseGooseDBVersionMods = append(f.baseGooseDBVersionMods, mods...)
+}
+
+func (f *Factory) ClearBaseH3AggregationMods() {
+	f.baseH3AggregationMods = nil
+}
+
+func (f *Factory) AddBaseH3AggregationMod(mods ...H3AggregationMod) {
+	f.baseH3AggregationMods = append(f.baseH3AggregationMods, mods...)
 }
 
 func (f *Factory) ClearBaseHistoryContainerrelateMods() {
@@ -4409,12 +4637,36 @@ func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
 }
 
+func (f *Factory) ClearBaseRasterColumnMods() {
+	f.baseRasterColumnMods = nil
+}
+
+func (f *Factory) AddBaseRasterColumnMod(mods ...RasterColumnMod) {
+	f.baseRasterColumnMods = append(f.baseRasterColumnMods, mods...)
+}
+
+func (f *Factory) ClearBaseRasterOverviewMods() {
+	f.baseRasterOverviewMods = nil
+}
+
+func (f *Factory) AddBaseRasterOverviewMod(mods ...RasterOverviewMod) {
+	f.baseRasterOverviewMods = append(f.baseRasterOverviewMods, mods...)
+}
+
 func (f *Factory) ClearBaseSessionMods() {
 	f.baseSessionMods = nil
 }
 
 func (f *Factory) AddBaseSessionMod(mods ...SessionMod) {
 	f.baseSessionMods = append(f.baseSessionMods, mods...)
+}
+
+func (f *Factory) ClearBaseSpatialRefSyMods() {
+	f.baseSpatialRefSyMods = nil
+}
+
+func (f *Factory) AddBaseSpatialRefSyMod(mods ...SpatialRefSyMod) {
+	f.baseSpatialRefSyMods = append(f.baseSpatialRefSyMods, mods...)
 }
 
 func (f *Factory) ClearBaseUserMods() {

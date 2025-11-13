@@ -43,7 +43,7 @@ type FSHabitatrelateTemplate struct {
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
 	ForeignID      func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Habitattype    func() null.Val[string]
 	Objectid       func() int32
 	CreatedDate    func() null.Val[int64]
@@ -117,7 +117,7 @@ func (o FSHabitatrelateTemplate) BuildSetter() *models.FSHabitatrelateSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Habitattype != nil {
 		val := o.Habitattype()
@@ -248,6 +248,10 @@ func ensureCreatableFSHabitatrelate(m *models.FSHabitatrelateSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -688,14 +692,14 @@ func (m fsHabitatrelateMods) RandomForeignIDNotNull(f *faker.Faker) FSHabitatrel
 }
 
 // Set the model columns to this value
-func (m fsHabitatrelateMods) Globalid(val null.Val[string]) FSHabitatrelateMod {
+func (m fsHabitatrelateMods) Globalid(val string) FSHabitatrelateMod {
 	return FSHabitatrelateModFunc(func(_ context.Context, o *FSHabitatrelateTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsHabitatrelateMods) GlobalidFunc(f func() null.Val[string]) FSHabitatrelateMod {
+func (m fsHabitatrelateMods) GlobalidFunc(f func() string) FSHabitatrelateMod {
 	return FSHabitatrelateModFunc(func(_ context.Context, o *FSHabitatrelateTemplate) {
 		o.Globalid = f
 	})
@@ -710,32 +714,10 @@ func (m fsHabitatrelateMods) UnsetGlobalid() FSHabitatrelateMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsHabitatrelateMods) RandomGlobalid(f *faker.Faker) FSHabitatrelateMod {
 	return FSHabitatrelateModFunc(func(_ context.Context, o *FSHabitatrelateTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsHabitatrelateMods) RandomGlobalidNotNull(f *faker.Faker) FSHabitatrelateMod {
-	return FSHabitatrelateModFunc(func(_ context.Context, o *FSHabitatrelateTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

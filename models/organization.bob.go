@@ -74,6 +74,7 @@ type organizationR struct {
 	FSTreatmentareas               FSTreatmentareaSlice               // fs_treatmentarea.fs_treatmentarea_organization_id_fkey
 	FSZones                        FSZoneSlice                        // fs_zones.fs_zones_organization_id_fkey
 	FSZones2s                      FSZones2Slice                      // fs_zones2.fs_zones2_organization_id_fkey
+	H3Aggregations                 H3AggregationSlice                 // h3_aggregation.h3_aggregation_organization_id_fkey
 	HistoryContainerrelates        HistoryContainerrelateSlice        // history_containerrelate.history_containerrelate_organization_id_fkey
 	HistoryFieldscoutinglogs       HistoryFieldscoutinglogSlice       // history_fieldscoutinglog.history_fieldscoutinglog_organization_id_fkey
 	HistoryHabitatrelates          HistoryHabitatrelateSlice          // history_habitatrelate.history_habitatrelate_organization_id_fkey
@@ -1163,6 +1164,30 @@ func (os OrganizationSlice) FSZones2s(mods ...bob.Mod[*dialect.SelectQuery]) FSZ
 
 	return FSZones2s.Query(append(mods,
 		sm.Where(psql.Group(FSZones2s.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// H3Aggregations starts a query for related objects on h3_aggregation
+func (o *Organization) H3Aggregations(mods ...bob.Mod[*dialect.SelectQuery]) H3AggregationsQuery {
+	return H3Aggregations.Query(append(mods,
+		sm.Where(H3Aggregations.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) H3Aggregations(mods ...bob.Mod[*dialect.SelectQuery]) H3AggregationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return H3Aggregations.Query(append(mods,
+		sm.Where(psql.Group(H3Aggregations.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -3742,6 +3767,74 @@ func (organization0 *Organization) AttachFSZones2s(ctx context.Context, exec bob
 	return nil
 }
 
+func insertOrganizationH3Aggregations0(ctx context.Context, exec bob.Executor, h3Aggregations1 []*H3AggregationSetter, organization0 *Organization) (H3AggregationSlice, error) {
+	for i := range h3Aggregations1 {
+		h3Aggregations1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := H3Aggregations.Insert(bob.ToMods(h3Aggregations1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationH3Aggregations0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationH3Aggregations0(ctx context.Context, exec bob.Executor, count int, h3Aggregations1 H3AggregationSlice, organization0 *Organization) (H3AggregationSlice, error) {
+	setter := &H3AggregationSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := h3Aggregations1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationH3Aggregations0: %w", err)
+	}
+
+	return h3Aggregations1, nil
+}
+
+func (organization0 *Organization) InsertH3Aggregations(ctx context.Context, exec bob.Executor, related ...*H3AggregationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	h3Aggregations1, err := insertOrganizationH3Aggregations0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.H3Aggregations = append(organization0.R.H3Aggregations, h3Aggregations1...)
+
+	for _, rel := range h3Aggregations1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachH3Aggregations(ctx context.Context, exec bob.Executor, related ...*H3Aggregation) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	h3Aggregations1 := H3AggregationSlice(related)
+
+	_, err = attachOrganizationH3Aggregations0(ctx, exec, len(related), h3Aggregations1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.H3Aggregations = append(organization0.R.H3Aggregations, h3Aggregations1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationHistoryContainerrelates0(ctx context.Context, exec bob.Executor, historyContainerrelates1 []*HistoryContainerrelateSetter, organization0 *Organization) (HistoryContainerrelateSlice, error) {
 	for i := range historyContainerrelates1 {
 		historyContainerrelates1[i].OrganizationID = omit.From(organization0.ID)
@@ -6066,6 +6159,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "H3Aggregations":
+		rels, ok := retrieved.(H3AggregationSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.H3Aggregations = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "HistoryContainerrelates":
 		rels, ok := retrieved.(HistoryContainerrelateSlice)
 		if !ok {
@@ -6498,6 +6605,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	FSTreatmentareas               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FSZones                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FSZones2s                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	H3Aggregations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	HistoryContainerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	HistoryFieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	HistoryHabitatrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -6612,6 +6720,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type FSZones2sLoadInterface interface {
 		LoadFSZones2s(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type H3AggregationsLoadInterface interface {
+		LoadH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type HistoryContainerrelatesLoadInterface interface {
 		LoadHistoryContainerrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6865,6 +6976,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"FSZones2s",
 			func(ctx context.Context, exec bob.Executor, retrieved FSZones2sLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadFSZones2s(ctx, exec, mods...)
+			},
+		),
+		H3Aggregations: thenLoadBuilder[Q](
+			"H3Aggregations",
+			func(ctx context.Context, exec bob.Executor, retrieved H3AggregationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadH3Aggregations(ctx, exec, mods...)
 			},
 		),
 		HistoryContainerrelates: thenLoadBuilder[Q](
@@ -8746,6 +8863,67 @@ func (os OrganizationSlice) LoadFSZones2s(ctx context.Context, exec bob.Executor
 	return nil
 }
 
+// LoadH3Aggregations loads the organization's H3Aggregations into the .R struct
+func (o *Organization) LoadH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.H3Aggregations = nil
+
+	related, err := o.H3Aggregations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.H3Aggregations = related
+	return nil
+}
+
+// LoadH3Aggregations loads the organization's H3Aggregations into the .R struct
+func (os OrganizationSlice) LoadH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	h3Aggregations, err := os.H3Aggregations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.H3Aggregations = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range h3Aggregations {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.H3Aggregations = append(o.R.H3Aggregations, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadHistoryContainerrelates loads the organization's HistoryContainerrelates into the .R struct
 func (o *Organization) LoadHistoryContainerrelates(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -10487,6 +10665,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	FSTreatmentareas               modAs[Q, fsTreatmentareaColumns]
 	FSZones                        modAs[Q, fsZoneColumns]
 	FSZones2s                      modAs[Q, fsZones2Columns]
+	H3Aggregations                 modAs[Q, h3AggregationColumns]
 	HistoryContainerrelates        modAs[Q, historyContainerrelateColumns]
 	HistoryFieldscoutinglogs       modAs[Q, historyFieldscoutinglogColumns]
 	HistoryHabitatrelates          modAs[Q, historyHabitatrelateColumns]
@@ -10909,6 +11088,20 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, FSZones2s.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		H3Aggregations: modAs[Q, h3AggregationColumns]{
+			c: H3Aggregations.Columns,
+			f: func(to h3AggregationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, H3Aggregations.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
 					))
 				}

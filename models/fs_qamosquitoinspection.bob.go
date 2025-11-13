@@ -41,7 +41,7 @@ type FSQamosquitoinspection struct {
 	Editor                   null.Val[string]  `db:"editor" `
 	Fieldtech                null.Val[string]  `db:"fieldtech" `
 	Fish                     null.Val[int16]   `db:"fish" `
-	Globalid                 null.Val[string]  `db:"globalid" `
+	Globalid                 string            `db:"globalid" `
 	Habvalue1                null.Val[int16]   `db:"habvalue1" `
 	Habvalue1percent         null.Val[int16]   `db:"habvalue1percent" `
 	Habvalue2                null.Val[int16]   `db:"habvalue2" `
@@ -284,7 +284,7 @@ type FSQamosquitoinspectionSetter struct {
 	Editor                   omitnull.Val[string]  `db:"editor" `
 	Fieldtech                omitnull.Val[string]  `db:"fieldtech" `
 	Fish                     omitnull.Val[int16]   `db:"fish" `
-	Globalid                 omitnull.Val[string]  `db:"globalid" `
+	Globalid                 omit.Val[string]      `db:"globalid" `
 	Habvalue1                omitnull.Val[int16]   `db:"habvalue1" `
 	Habvalue1percent         omitnull.Val[int16]   `db:"habvalue1percent" `
 	Habvalue2                omitnull.Val[int16]   `db:"habvalue2" `
@@ -384,7 +384,7 @@ func (s FSQamosquitoinspectionSetter) SetColumns() []string {
 	if !s.Fish.IsUnset() {
 		vals = append(vals, "fish")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habvalue1.IsUnset() {
@@ -586,8 +586,8 @@ func (s FSQamosquitoinspectionSetter) Overwrite(t *FSQamosquitoinspection) {
 	if !s.Fish.IsUnset() {
 		t.Fish = s.Fish.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habvalue1.IsUnset() {
 		t.Habvalue1 = s.Habvalue1.MustGetNull()
@@ -838,8 +838,8 @@ func (s *FSQamosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[15] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[15] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
@@ -1260,7 +1260,7 @@ func (s FSQamosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expres
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1931,7 +1931,7 @@ type fsQamosquitoinspectionWhere[Q psql.Filterable] struct {
 	Editor                   psql.WhereNullMod[Q, string]
 	Fieldtech                psql.WhereNullMod[Q, string]
 	Fish                     psql.WhereNullMod[Q, int16]
-	Globalid                 psql.WhereNullMod[Q, string]
+	Globalid                 psql.WhereMod[Q, string]
 	Habvalue1                psql.WhereNullMod[Q, int16]
 	Habvalue1percent         psql.WhereNullMod[Q, int16]
 	Habvalue2                psql.WhereNullMod[Q, int16]
@@ -2005,7 +2005,7 @@ func buildFSQamosquitoinspectionWhere[Q psql.Filterable](cols fsQamosquitoinspec
 		Editor:                   psql.WhereNull[Q, string](cols.Editor),
 		Fieldtech:                psql.WhereNull[Q, string](cols.Fieldtech),
 		Fish:                     psql.WhereNull[Q, int16](cols.Fish),
-		Globalid:                 psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                 psql.Where[Q, string](cols.Globalid),
 		Habvalue1:                psql.WhereNull[Q, int16](cols.Habvalue1),
 		Habvalue1percent:         psql.WhereNull[Q, int16](cols.Habvalue1percent),
 		Habvalue2:                psql.WhereNull[Q, int16](cols.Habvalue2),

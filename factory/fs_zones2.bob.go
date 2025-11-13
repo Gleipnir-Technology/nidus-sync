@@ -42,7 +42,7 @@ type FSZones2Template struct {
 	Creator        func() null.Val[string]
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Name           func() null.Val[string]
 	Objectid       func() int32
 	ShapeArea      func() null.Val[float64]
@@ -114,7 +114,7 @@ func (o FSZones2Template) BuildSetter() *models.FSZones2Setter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Name != nil {
 		val := o.Name()
@@ -256,6 +256,10 @@ func ensureCreatableFSZones2(m *models.FSZones2Setter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -644,14 +648,14 @@ func (m fsZones2Mods) RandomEditorNotNull(f *faker.Faker) FSZones2Mod {
 }
 
 // Set the model columns to this value
-func (m fsZones2Mods) Globalid(val null.Val[string]) FSZones2Mod {
+func (m fsZones2Mods) Globalid(val string) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsZones2Mods) GlobalidFunc(f func() null.Val[string]) FSZones2Mod {
+func (m fsZones2Mods) GlobalidFunc(f func() string) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
 		o.Globalid = f
 	})
@@ -666,32 +670,10 @@ func (m fsZones2Mods) UnsetGlobalid() FSZones2Mod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsZones2Mods) RandomGlobalid(f *faker.Faker) FSZones2Mod {
 	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsZones2Mods) RandomGlobalidNotNull(f *faker.Faker) FSZones2Mod {
-	return FSZones2ModFunc(func(_ context.Context, o *FSZones2Template) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

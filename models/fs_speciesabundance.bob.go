@@ -35,7 +35,7 @@ type FSSpeciesabundance struct {
 	Editor         null.Val[string]  `db:"editor" `
 	Females        null.Val[int64]   `db:"females" `
 	Gravidfem      null.Val[int16]   `db:"gravidfem" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Larvae         null.Val[int16]   `db:"larvae" `
 	Males          null.Val[int16]   `db:"males" `
 	Objectid       int32             `db:"objectid,pk" `
@@ -179,7 +179,7 @@ type FSSpeciesabundanceSetter struct {
 	Editor         omitnull.Val[string]  `db:"editor" `
 	Females        omitnull.Val[int64]   `db:"females" `
 	Gravidfem      omitnull.Val[int16]   `db:"gravidfem" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Larvae         omitnull.Val[int16]   `db:"larvae" `
 	Males          omitnull.Val[int16]   `db:"males" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
@@ -234,7 +234,7 @@ func (s FSSpeciesabundanceSetter) SetColumns() []string {
 	if !s.Gravidfem.IsUnset() {
 		vals = append(vals, "gravidfem")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Larvae.IsUnset() {
@@ -337,8 +337,8 @@ func (s FSSpeciesabundanceSetter) Overwrite(t *FSSpeciesabundance) {
 	if !s.Gravidfem.IsUnset() {
 		t.Gravidfem = s.Gravidfem.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Larvae.IsUnset() {
 		t.Larvae = s.Larvae.MustGetNull()
@@ -472,8 +472,8 @@ func (s *FSSpeciesabundanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[9] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[9] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
@@ -690,7 +690,7 @@ func (s FSSpeciesabundanceSetter) Expressions(prefix ...string) []bob.Expression
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1166,7 +1166,7 @@ type fsSpeciesabundanceWhere[Q psql.Filterable] struct {
 	Editor         psql.WhereNullMod[Q, string]
 	Females        psql.WhereNullMod[Q, int64]
 	Gravidfem      psql.WhereNullMod[Q, int16]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Larvae         psql.WhereNullMod[Q, int16]
 	Males          psql.WhereNullMod[Q, int16]
 	Objectid       psql.WhereMod[Q, int32]
@@ -1207,7 +1207,7 @@ func buildFSSpeciesabundanceWhere[Q psql.Filterable](cols fsSpeciesabundanceColu
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
 		Females:        psql.WhereNull[Q, int64](cols.Females),
 		Gravidfem:      psql.WhereNull[Q, int16](cols.Gravidfem),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Larvae:         psql.WhereNull[Q, int16](cols.Larvae),
 		Males:          psql.WhereNull[Q, int16](cols.Males),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),

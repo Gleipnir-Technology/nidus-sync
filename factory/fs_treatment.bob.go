@@ -53,7 +53,7 @@ type FSTreatmentTemplate struct {
 	Editor               func() null.Val[string]
 	Fieldtech            func() null.Val[string]
 	Flowrate             func() null.Val[float64]
-	Globalid             func() null.Val[string]
+	Globalid             func() string
 	Habitat              func() null.Val[string]
 	InspID               func() null.Val[string]
 	Invloc               func() null.Val[string]
@@ -199,7 +199,7 @@ func (o FSTreatmentTemplate) BuildSetter() *models.FSTreatmentSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Habitat != nil {
 		val := o.Habitat()
@@ -584,6 +584,10 @@ func ensureCreatableFSTreatment(m *models.FSTreatmentSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1596,14 +1600,14 @@ func (m fsTreatmentMods) RandomFlowrateNotNull(f *faker.Faker) FSTreatmentMod {
 }
 
 // Set the model columns to this value
-func (m fsTreatmentMods) Globalid(val null.Val[string]) FSTreatmentMod {
+func (m fsTreatmentMods) Globalid(val string) FSTreatmentMod {
 	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsTreatmentMods) GlobalidFunc(f func() null.Val[string]) FSTreatmentMod {
+func (m fsTreatmentMods) GlobalidFunc(f func() string) FSTreatmentMod {
 	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
 		o.Globalid = f
 	})
@@ -1618,32 +1622,10 @@ func (m fsTreatmentMods) UnsetGlobalid() FSTreatmentMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsTreatmentMods) RandomGlobalid(f *faker.Faker) FSTreatmentMod {
 	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsTreatmentMods) RandomGlobalidNotNull(f *faker.Faker) FSTreatmentMod {
-	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

@@ -48,7 +48,7 @@ type FSTrapdatumTemplate struct {
 	Fieldtech                func() null.Val[string]
 	Field                    func() null.Val[int64]
 	Gatewaysync              func() null.Val[int16]
-	Globalid                 func() null.Val[string]
+	Globalid                 func() string
 	Idbytech                 func() null.Val[string]
 	Locationname             func() null.Val[string]
 	LocID                    func() null.Val[string]
@@ -167,7 +167,7 @@ func (o FSTrapdatumTemplate) BuildSetter() *models.FSTrapdatumSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Idbytech != nil {
 		val := o.Idbytech()
@@ -488,6 +488,10 @@ func ensureCreatableFSTrapdatum(m *models.FSTrapdatumSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1223,14 +1227,14 @@ func (m fsTrapdatumMods) RandomGatewaysyncNotNull(f *faker.Faker) FSTrapdatumMod
 }
 
 // Set the model columns to this value
-func (m fsTrapdatumMods) Globalid(val null.Val[string]) FSTrapdatumMod {
+func (m fsTrapdatumMods) Globalid(val string) FSTrapdatumMod {
 	return FSTrapdatumModFunc(func(_ context.Context, o *FSTrapdatumTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsTrapdatumMods) GlobalidFunc(f func() null.Val[string]) FSTrapdatumMod {
+func (m fsTrapdatumMods) GlobalidFunc(f func() string) FSTrapdatumMod {
 	return FSTrapdatumModFunc(func(_ context.Context, o *FSTrapdatumTemplate) {
 		o.Globalid = f
 	})
@@ -1245,32 +1249,10 @@ func (m fsTrapdatumMods) UnsetGlobalid() FSTrapdatumMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsTrapdatumMods) RandomGlobalid(f *faker.Faker) FSTrapdatumMod {
 	return FSTrapdatumModFunc(func(_ context.Context, o *FSTrapdatumTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsTrapdatumMods) RandomGlobalidNotNull(f *faker.Faker) FSTrapdatumMod {
-	return FSTrapdatumModFunc(func(_ context.Context, o *FSTrapdatumTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

@@ -68,7 +68,7 @@ type FSServicerequestTemplate struct {
 	Editdate              func() null.Val[int64]
 	Editor                func() null.Val[string]
 	Firstresponsedate     func() null.Val[int64]
-	Globalid              func() null.Val[string]
+	Globalid              func() string
 	Issuesreported        func() null.Val[string]
 	Jurisdiction          func() null.Val[string]
 	Nextaction            func() null.Val[string]
@@ -118,8 +118,8 @@ type FSServicerequestTemplate struct {
 	Zone2                 func() null.Val[string]
 	CreatedDate           func() null.Val[int64]
 	CreatedUser           func() null.Val[string]
-	GeometryX             func() null.Val[float64]
-	GeometryY             func() null.Val[float64]
+	GeometryX             func() float64
+	GeometryY             func() float64
 	LastEditedDate        func() null.Val[int64]
 	LastEditedUser        func() null.Val[string]
 	Dog                   func() null.Val[int64]
@@ -291,7 +291,7 @@ func (o FSServicerequestTemplate) BuildSetter() *models.FSServicerequestSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Issuesreported != nil {
 		val := o.Issuesreported()
@@ -491,11 +491,11 @@ func (o FSServicerequestTemplate) BuildSetter() *models.FSServicerequestSetter {
 	}
 	if o.GeometryX != nil {
 		val := o.GeometryX()
-		m.GeometryX = omitnull.FromNull(val)
+		m.GeometryX = omit.From(val)
 	}
 	if o.GeometryY != nil {
 		val := o.GeometryY()
-		m.GeometryY = omitnull.FromNull(val)
+		m.GeometryY = omit.From(val)
 	}
 	if o.LastEditedDate != nil {
 		val := o.LastEditedDate()
@@ -841,9 +841,21 @@ func ensureCreatableFSServicerequest(m *models.FSServicerequestSetter) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
 	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
+	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
 		m.Objectid = omit.From(val)
+	}
+	if !(m.GeometryX.IsValue()) {
+		val := random_float64(nil)
+		m.GeometryX = omit.From(val)
+	}
+	if !(m.GeometryY.IsValue()) {
+		val := random_float64(nil)
+		m.GeometryY = omit.From(val)
 	}
 }
 
@@ -2679,14 +2691,14 @@ func (m fsServicerequestMods) RandomFirstresponsedateNotNull(f *faker.Faker) FSS
 }
 
 // Set the model columns to this value
-func (m fsServicerequestMods) Globalid(val null.Val[string]) FSServicerequestMod {
+func (m fsServicerequestMods) Globalid(val string) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsServicerequestMods) GlobalidFunc(f func() null.Val[string]) FSServicerequestMod {
+func (m fsServicerequestMods) GlobalidFunc(f func() string) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
 		o.Globalid = f
 	})
@@ -2701,32 +2713,10 @@ func (m fsServicerequestMods) UnsetGlobalid() FSServicerequestMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsServicerequestMods) RandomGlobalid(f *faker.Faker) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsServicerequestMods) RandomGlobalidNotNull(f *faker.Faker) FSServicerequestMod {
-	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }
@@ -5307,14 +5297,14 @@ func (m fsServicerequestMods) RandomCreatedUserNotNull(f *faker.Faker) FSService
 }
 
 // Set the model columns to this value
-func (m fsServicerequestMods) GeometryX(val null.Val[float64]) FSServicerequestMod {
+func (m fsServicerequestMods) GeometryX(val float64) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryX = func() null.Val[float64] { return val }
+		o.GeometryX = func() float64 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsServicerequestMods) GeometryXFunc(f func() null.Val[float64]) FSServicerequestMod {
+func (m fsServicerequestMods) GeometryXFunc(f func() float64) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
 		o.GeometryX = f
 	})
@@ -5329,45 +5319,23 @@ func (m fsServicerequestMods) UnsetGeometryX() FSServicerequestMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsServicerequestMods) RandomGeometryX(f *faker.Faker) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryX = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsServicerequestMods) RandomGeometryXNotNull(f *faker.Faker) FSServicerequestMod {
-	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryX = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
+		o.GeometryX = func() float64 {
+			return random_float64(f)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m fsServicerequestMods) GeometryY(val null.Val[float64]) FSServicerequestMod {
+func (m fsServicerequestMods) GeometryY(val float64) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryY = func() null.Val[float64] { return val }
+		o.GeometryY = func() float64 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsServicerequestMods) GeometryYFunc(f func() null.Val[float64]) FSServicerequestMod {
+func (m fsServicerequestMods) GeometryYFunc(f func() float64) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
 		o.GeometryY = f
 	})
@@ -5382,32 +5350,10 @@ func (m fsServicerequestMods) UnsetGeometryY() FSServicerequestMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsServicerequestMods) RandomGeometryY(f *faker.Faker) FSServicerequestMod {
 	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryY = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsServicerequestMods) RandomGeometryYNotNull(f *faker.Faker) FSServicerequestMod {
-	return FSServicerequestModFunc(func(_ context.Context, o *FSServicerequestTemplate) {
-		o.GeometryY = func() null.Val[float64] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_float64(f)
-			return null.From(val)
+		o.GeometryY = func() float64 {
+			return random_float64(f)
 		}
 	})
 }

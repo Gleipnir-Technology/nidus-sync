@@ -45,6 +45,7 @@ type preloaders struct {
 	FSTreatmentarea               fsTreatmentareaPreloader
 	FSZone                        fsZonePreloader
 	FSZones2                      fsZones2Preloader
+	H3Aggregation                 h3AggregationPreloader
 	HistoryContainerrelate        historyContainerrelatePreloader
 	HistoryFieldscoutinglog       historyFieldscoutinglogPreloader
 	HistoryHabitatrelate          historyHabitatrelatePreloader
@@ -108,6 +109,7 @@ func getPreloaders() preloaders {
 		FSTreatmentarea:               buildFSTreatmentareaPreloader(),
 		FSZone:                        buildFSZonePreloader(),
 		FSZones2:                      buildFSZones2Preloader(),
+		H3Aggregation:                 buildH3AggregationPreloader(),
 		HistoryContainerrelate:        buildHistoryContainerrelatePreloader(),
 		HistoryFieldscoutinglog:       buildHistoryFieldscoutinglogPreloader(),
 		HistoryHabitatrelate:          buildHistoryHabitatrelatePreloader(),
@@ -177,6 +179,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	FSTreatmentarea               fsTreatmentareaThenLoader[Q]
 	FSZone                        fsZoneThenLoader[Q]
 	FSZones2                      fsZones2ThenLoader[Q]
+	H3Aggregation                 h3AggregationThenLoader[Q]
 	HistoryContainerrelate        historyContainerrelateThenLoader[Q]
 	HistoryFieldscoutinglog       historyFieldscoutinglogThenLoader[Q]
 	HistoryHabitatrelate          historyHabitatrelateThenLoader[Q]
@@ -240,6 +243,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FSTreatmentarea:               buildFSTreatmentareaThenLoader[Q](),
 		FSZone:                        buildFSZoneThenLoader[Q](),
 		FSZones2:                      buildFSZones2ThenLoader[Q](),
+		H3Aggregation:                 buildH3AggregationThenLoader[Q](),
 		HistoryContainerrelate:        buildHistoryContainerrelateThenLoader[Q](),
 		HistoryFieldscoutinglog:       buildHistoryFieldscoutinglogThenLoader[Q](),
 		HistoryHabitatrelate:          buildHistoryHabitatrelateThenLoader[Q](),

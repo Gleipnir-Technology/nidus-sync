@@ -44,7 +44,7 @@ type FSLocationtrackingTemplate struct {
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
 	Fieldtech      func() null.Val[string]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Objectid       func() int32
 	CreatedDate    func() null.Val[int64]
 	CreatedUser    func() null.Val[string]
@@ -121,7 +121,7 @@ func (o FSLocationtrackingTemplate) BuildSetter() *models.FSLocationtrackingSett
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Objectid != nil {
 		val := o.Objectid()
@@ -248,6 +248,10 @@ func ensureCreatableFSLocationtracking(m *models.FSLocationtrackingSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -741,14 +745,14 @@ func (m fsLocationtrackingMods) RandomFieldtechNotNull(f *faker.Faker) FSLocatio
 }
 
 // Set the model columns to this value
-func (m fsLocationtrackingMods) Globalid(val null.Val[string]) FSLocationtrackingMod {
+func (m fsLocationtrackingMods) Globalid(val string) FSLocationtrackingMod {
 	return FSLocationtrackingModFunc(func(_ context.Context, o *FSLocationtrackingTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsLocationtrackingMods) GlobalidFunc(f func() null.Val[string]) FSLocationtrackingMod {
+func (m fsLocationtrackingMods) GlobalidFunc(f func() string) FSLocationtrackingMod {
 	return FSLocationtrackingModFunc(func(_ context.Context, o *FSLocationtrackingTemplate) {
 		o.Globalid = f
 	})
@@ -763,32 +767,10 @@ func (m fsLocationtrackingMods) UnsetGlobalid() FSLocationtrackingMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsLocationtrackingMods) RandomGlobalid(f *faker.Faker) FSLocationtrackingMod {
 	return FSLocationtrackingModFunc(func(_ context.Context, o *FSLocationtrackingTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsLocationtrackingMods) RandomGlobalidNotNull(f *faker.Faker) FSLocationtrackingMod {
-	return FSLocationtrackingModFunc(func(_ context.Context, o *FSLocationtrackingTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

@@ -43,7 +43,7 @@ type FSPooldetailTemplate struct {
 	Editdate       func() null.Val[int64]
 	Editor         func() null.Val[string]
 	Females        func() null.Val[int16]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Objectid       func() int32
 	PoolID         func() null.Val[string]
 	Species        func() null.Val[string]
@@ -119,7 +119,7 @@ func (o FSPooldetailTemplate) BuildSetter() *models.FSPooldetailSetter {
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Objectid != nil {
 		val := o.Objectid()
@@ -264,6 +264,10 @@ func ensureCreatableFSPooldetail(m *models.FSPooldetailSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -706,14 +710,14 @@ func (m fsPooldetailMods) RandomFemalesNotNull(f *faker.Faker) FSPooldetailMod {
 }
 
 // Set the model columns to this value
-func (m fsPooldetailMods) Globalid(val null.Val[string]) FSPooldetailMod {
+func (m fsPooldetailMods) Globalid(val string) FSPooldetailMod {
 	return FSPooldetailModFunc(func(_ context.Context, o *FSPooldetailTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsPooldetailMods) GlobalidFunc(f func() null.Val[string]) FSPooldetailMod {
+func (m fsPooldetailMods) GlobalidFunc(f func() string) FSPooldetailMod {
 	return FSPooldetailModFunc(func(_ context.Context, o *FSPooldetailTemplate) {
 		o.Globalid = f
 	})
@@ -728,32 +732,10 @@ func (m fsPooldetailMods) UnsetGlobalid() FSPooldetailMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsPooldetailMods) RandomGlobalid(f *faker.Faker) FSPooldetailMod {
 	return FSPooldetailModFunc(func(_ context.Context, o *FSPooldetailTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsPooldetailMods) RandomGlobalidNotNull(f *faker.Faker) FSPooldetailMod {
-	return FSPooldetailModFunc(func(_ context.Context, o *FSPooldetailTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

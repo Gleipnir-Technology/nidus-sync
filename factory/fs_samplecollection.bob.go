@@ -54,7 +54,7 @@ type FSSamplecollectionTemplate struct {
 	Fieldtech      func() null.Val[string]
 	Flockid        func() null.Val[string]
 	Gatewaysync    func() null.Val[int16]
-	Globalid       func() null.Val[string]
+	Globalid       func() string
 	Lab            func() null.Val[string]
 	Locationname   func() null.Val[string]
 	LocID          func() null.Val[string]
@@ -195,7 +195,7 @@ func (o FSSamplecollectionTemplate) BuildSetter() *models.FSSamplecollectionSett
 	}
 	if o.Globalid != nil {
 		val := o.Globalid()
-		m.Globalid = omitnull.FromNull(val)
+		m.Globalid = omit.From(val)
 	}
 	if o.Lab != nil {
 		val := o.Lab()
@@ -520,6 +520,10 @@ func ensureCreatableFSSamplecollection(m *models.FSSamplecollectionSetter) {
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Globalid.IsValue()) {
+		val := random_string(nil)
+		m.Globalid = omit.From(val)
 	}
 	if !(m.Objectid.IsValue()) {
 		val := random_int32(nil)
@@ -1577,14 +1581,14 @@ func (m fsSamplecollectionMods) RandomGatewaysyncNotNull(f *faker.Faker) FSSampl
 }
 
 // Set the model columns to this value
-func (m fsSamplecollectionMods) Globalid(val null.Val[string]) FSSamplecollectionMod {
+func (m fsSamplecollectionMods) Globalid(val string) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.Globalid = func() null.Val[string] { return val }
+		o.Globalid = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fsSamplecollectionMods) GlobalidFunc(f func() null.Val[string]) FSSamplecollectionMod {
+func (m fsSamplecollectionMods) GlobalidFunc(f func() string) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
 		o.Globalid = f
 	})
@@ -1599,32 +1603,10 @@ func (m fsSamplecollectionMods) UnsetGlobalid() FSSamplecollectionMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m fsSamplecollectionMods) RandomGlobalid(f *faker.Faker) FSSamplecollectionMod {
 	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fsSamplecollectionMods) RandomGlobalidNotNull(f *faker.Faker) FSSamplecollectionMod {
-	return FSSamplecollectionModFunc(func(_ context.Context, o *FSSamplecollectionTemplate) {
-		o.Globalid = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Globalid = func() string {
+			return random_string(f)
 		}
 	})
 }

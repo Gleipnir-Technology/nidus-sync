@@ -22,7 +22,7 @@ require (
 	github.com/stephenafamo/bob v0.41.1
 	github.com/stephenafamo/scan v0.7.0
 	github.com/tidwall/geojson v1.4.5
-	github.com/uber/h3-go/v3 v3.7.1
+	github.com/uber/h3-go/v4 v4.3.0
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07
 	golang.org/x/crypto v0.42.0
 )
@@ -49,6 +49,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/rtree v1.3.1 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
+	github.com/uber/h3-go/v3 v3.7.1 // indirect
 	github.com/wasilibs/wazero-helpers v0.0.0-20240620070341-3dff1577cd52 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

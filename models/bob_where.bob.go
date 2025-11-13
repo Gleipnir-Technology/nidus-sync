@@ -45,7 +45,10 @@ func Where[Q psql.Filterable]() struct {
 	FSTreatmentareas               fsTreatmentareaWhere[Q]
 	FSZones                        fsZoneWhere[Q]
 	FSZones2s                      fsZones2Where[Q]
+	GeographyColumns               geographyColumnWhere[Q]
+	GeometryColumns                geometryColumnWhere[Q]
 	GooseDBVersions                gooseDBVersionWhere[Q]
+	H3Aggregations                 h3AggregationWhere[Q]
 	HistoryContainerrelates        historyContainerrelateWhere[Q]
 	HistoryFieldscoutinglogs       historyFieldscoutinglogWhere[Q]
 	HistoryHabitatrelates          historyHabitatrelateWhere[Q]
@@ -76,7 +79,10 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                  notificationWhere[Q]
 	OauthTokens                    oauthTokenWhere[Q]
 	Organizations                  organizationWhere[Q]
+	RasterColumns                  rasterColumnWhere[Q]
+	RasterOverviews                rasterOverviewWhere[Q]
 	Sessions                       sessionWhere[Q]
+	SpatialRefSys                  spatialRefSyWhere[Q]
 	Users                          userWhere[Q]
 } {
 	return struct {
@@ -108,7 +114,10 @@ func Where[Q psql.Filterable]() struct {
 		FSTreatmentareas               fsTreatmentareaWhere[Q]
 		FSZones                        fsZoneWhere[Q]
 		FSZones2s                      fsZones2Where[Q]
+		GeographyColumns               geographyColumnWhere[Q]
+		GeometryColumns                geometryColumnWhere[Q]
 		GooseDBVersions                gooseDBVersionWhere[Q]
+		H3Aggregations                 h3AggregationWhere[Q]
 		HistoryContainerrelates        historyContainerrelateWhere[Q]
 		HistoryFieldscoutinglogs       historyFieldscoutinglogWhere[Q]
 		HistoryHabitatrelates          historyHabitatrelateWhere[Q]
@@ -139,7 +148,10 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                  notificationWhere[Q]
 		OauthTokens                    oauthTokenWhere[Q]
 		Organizations                  organizationWhere[Q]
+		RasterColumns                  rasterColumnWhere[Q]
+		RasterOverviews                rasterOverviewWhere[Q]
 		Sessions                       sessionWhere[Q]
+		SpatialRefSys                  spatialRefSyWhere[Q]
 		Users                          userWhere[Q]
 	}{
 		FieldseekerSyncs:               buildFieldseekerSyncWhere[Q](FieldseekerSyncs.Columns),
@@ -170,7 +182,10 @@ func Where[Q psql.Filterable]() struct {
 		FSTreatmentareas:               buildFSTreatmentareaWhere[Q](FSTreatmentareas.Columns),
 		FSZones:                        buildFSZoneWhere[Q](FSZones.Columns),
 		FSZones2s:                      buildFSZones2Where[Q](FSZones2s.Columns),
+		GeographyColumns:               buildGeographyColumnWhere[Q](GeographyColumns.Columns),
+		GeometryColumns:                buildGeometryColumnWhere[Q](GeometryColumns.Columns),
 		GooseDBVersions:                buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),
+		H3Aggregations:                 buildH3AggregationWhere[Q](H3Aggregations.Columns),
 		HistoryContainerrelates:        buildHistoryContainerrelateWhere[Q](HistoryContainerrelates.Columns),
 		HistoryFieldscoutinglogs:       buildHistoryFieldscoutinglogWhere[Q](HistoryFieldscoutinglogs.Columns),
 		HistoryHabitatrelates:          buildHistoryHabitatrelateWhere[Q](HistoryHabitatrelates.Columns),
@@ -201,7 +216,10 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                  buildNotificationWhere[Q](Notifications.Columns),
 		OauthTokens:                    buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                  buildOrganizationWhere[Q](Organizations.Columns),
+		RasterColumns:                  buildRasterColumnWhere[Q](RasterColumns.Columns),
+		RasterOverviews:                buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Sessions:                       buildSessionWhere[Q](Sessions.Columns),
+		SpatialRefSys:                  buildSpatialRefSyWhere[Q](SpatialRefSys.Columns),
 		Users:                          buildUserWhere[Q](Users.Columns),
 	}
 }

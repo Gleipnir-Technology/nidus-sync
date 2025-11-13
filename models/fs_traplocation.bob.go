@@ -37,7 +37,7 @@ type FSTraplocation struct {
 	Editdate                null.Val[int64]   `db:"editdate" `
 	Editor                  null.Val[string]  `db:"editor" `
 	Gatewaysync             null.Val[int16]   `db:"gatewaysync" `
-	Globalid                null.Val[string]  `db:"globalid" `
+	Globalid                string            `db:"globalid" `
 	Habitat                 null.Val[string]  `db:"habitat" `
 	Locationnumber          null.Val[int64]   `db:"locationnumber" `
 	Name                    null.Val[string]  `db:"name" `
@@ -184,7 +184,7 @@ type FSTraplocationSetter struct {
 	Editdate                omitnull.Val[int64]   `db:"editdate" `
 	Editor                  omitnull.Val[string]  `db:"editor" `
 	Gatewaysync             omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid                omitnull.Val[string]  `db:"globalid" `
+	Globalid                omit.Val[string]      `db:"globalid" `
 	Habitat                 omitnull.Val[string]  `db:"habitat" `
 	Locationnumber          omitnull.Val[int64]   `db:"locationnumber" `
 	Name                    omitnull.Val[string]  `db:"name" `
@@ -244,7 +244,7 @@ func (s FSTraplocationSetter) SetColumns() []string {
 	if !s.Gatewaysync.IsUnset() {
 		vals = append(vals, "gatewaysync")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Habitat.IsUnset() {
@@ -350,8 +350,8 @@ func (s FSTraplocationSetter) Overwrite(t *FSTraplocation) {
 	if !s.Gatewaysync.IsUnset() {
 		t.Gatewaysync = s.Gatewaysync.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Habitat.IsUnset() {
 		t.Habitat = s.Habitat.MustGetNull()
@@ -494,8 +494,8 @@ func (s *FSTraplocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[11] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[11] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -720,7 +720,7 @@ func (s FSTraplocationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1191,7 +1191,7 @@ type fsTraplocationWhere[Q psql.Filterable] struct {
 	Editdate                psql.WhereNullMod[Q, int64]
 	Editor                  psql.WhereNullMod[Q, string]
 	Gatewaysync             psql.WhereNullMod[Q, int16]
-	Globalid                psql.WhereNullMod[Q, string]
+	Globalid                psql.WhereMod[Q, string]
 	Habitat                 psql.WhereNullMod[Q, string]
 	Locationnumber          psql.WhereNullMod[Q, int64]
 	Name                    psql.WhereNullMod[Q, string]
@@ -1233,7 +1233,7 @@ func buildFSTraplocationWhere[Q psql.Filterable](cols fsTraplocationColumns) fsT
 		Editdate:                psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                  psql.WhereNull[Q, string](cols.Editor),
 		Gatewaysync:             psql.WhereNull[Q, int16](cols.Gatewaysync),
-		Globalid:                psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                psql.Where[Q, string](cols.Globalid),
 		Habitat:                 psql.WhereNull[Q, string](cols.Habitat),
 		Locationnumber:          psql.WhereNull[Q, int64](cols.Locationnumber),
 		Name:                    psql.WhereNull[Q, string](cols.Name),

@@ -32,7 +32,7 @@ type FSTreatmentarea struct {
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Notified       null.Val[int16]   `db:"notified" `
 	Objectid       int32             `db:"objectid,pk" `
 	SessionID      null.Val[string]  `db:"session_id" `
@@ -143,7 +143,7 @@ type FSTreatmentareaSetter struct {
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Notified       omitnull.Val[int16]   `db:"notified" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
 	SessionID      omitnull.Val[string]  `db:"session_id" `
@@ -181,7 +181,7 @@ func (s FSTreatmentareaSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Notified.IsUnset() {
@@ -251,8 +251,8 @@ func (s FSTreatmentareaSetter) Overwrite(t *FSTreatmentarea) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Notified.IsUnset() {
 		t.Notified = s.Notified.MustGetNull()
@@ -344,8 +344,8 @@ func (s *FSTreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[6] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[6] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -493,7 +493,7 @@ func (s FSTreatmentareaSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -910,7 +910,7 @@ type fsTreatmentareaWhere[Q psql.Filterable] struct {
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Notified       psql.WhereNullMod[Q, int16]
 	Objectid       psql.WhereMod[Q, int32]
 	SessionID      psql.WhereNullMod[Q, string]
@@ -940,7 +940,7 @@ func buildFSTreatmentareaWhere[Q psql.Filterable](cols fsTreatmentareaColumns) f
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Notified:       psql.WhereNull[Q, int16](cols.Notified),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		SessionID:      psql.WhereNull[Q, string](cols.SessionID),

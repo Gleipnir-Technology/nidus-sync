@@ -26,96 +26,96 @@ import (
 
 // FSServicerequest is an object representing the database table.
 type FSServicerequest struct {
-	OrganizationID        int32             `db:"organization_id" `
-	Accepted              null.Val[int16]   `db:"accepted" `
-	Acceptedby            null.Val[string]  `db:"acceptedby" `
-	Accepteddate          null.Val[int64]   `db:"accepteddate" `
-	Allowed               null.Val[string]  `db:"allowed" `
-	Assignedtech          null.Val[string]  `db:"assignedtech" `
-	Clraddr1              null.Val[string]  `db:"clraddr1" `
-	Clraddr2              null.Val[string]  `db:"clraddr2" `
-	Clranon               null.Val[int16]   `db:"clranon" `
-	Clrcity               null.Val[string]  `db:"clrcity" `
-	Clrcompany            null.Val[string]  `db:"clrcompany" `
-	Clrcontpref           null.Val[string]  `db:"clrcontpref" `
-	Clremail              null.Val[string]  `db:"clremail" `
-	Clrfname              null.Val[string]  `db:"clrfname" `
-	Clrother              null.Val[string]  `db:"clrother" `
-	Clrphone1             null.Val[string]  `db:"clrphone1" `
-	Clrphone2             null.Val[string]  `db:"clrphone2" `
-	Clrstate              null.Val[string]  `db:"clrstate" `
-	Clrzip                null.Val[string]  `db:"clrzip" `
-	Comments              null.Val[string]  `db:"comments" `
-	Creationdate          null.Val[int64]   `db:"creationdate" `
-	Creator               null.Val[string]  `db:"creator" `
-	Datetimeclosed        null.Val[int64]   `db:"datetimeclosed" `
-	Duedate               null.Val[int64]   `db:"duedate" `
-	Entrytech             null.Val[string]  `db:"entrytech" `
-	Estcompletedate       null.Val[int64]   `db:"estcompletedate" `
-	Externalerror         null.Val[string]  `db:"externalerror" `
-	Externalid            null.Val[string]  `db:"externalid" `
-	Editdate              null.Val[int64]   `db:"editdate" `
-	Editor                null.Val[string]  `db:"editor" `
-	Firstresponsedate     null.Val[int64]   `db:"firstresponsedate" `
-	Globalid              null.Val[string]  `db:"globalid" `
-	Issuesreported        null.Val[string]  `db:"issuesreported" `
-	Jurisdiction          null.Val[string]  `db:"jurisdiction" `
-	Nextaction            null.Val[string]  `db:"nextaction" `
-	Notificationtimestamp null.Val[string]  `db:"notificationtimestamp" `
-	Notified              null.Val[int16]   `db:"notified" `
-	Notifieddate          null.Val[int64]   `db:"notifieddate" `
-	Objectid              int32             `db:"objectid,pk" `
-	Pointlocid            null.Val[string]  `db:"pointlocid" `
-	Priority              null.Val[string]  `db:"priority" `
-	Recdatetime           null.Val[int64]   `db:"recdatetime" `
-	Recordstatus          null.Val[int16]   `db:"recordstatus" `
-	Rejectedby            null.Val[string]  `db:"rejectedby" `
-	Rejecteddate          null.Val[int64]   `db:"rejecteddate" `
-	Rejectedreason        null.Val[string]  `db:"rejectedreason" `
-	Reqaddr1              null.Val[string]  `db:"reqaddr1" `
-	Reqaddr2              null.Val[string]  `db:"reqaddr2" `
-	Reqcity               null.Val[string]  `db:"reqcity" `
-	Reqcompany            null.Val[string]  `db:"reqcompany" `
-	Reqcrossst            null.Val[string]  `db:"reqcrossst" `
-	Reqdescr              null.Val[string]  `db:"reqdescr" `
-	Reqfldnotes           null.Val[string]  `db:"reqfldnotes" `
-	Reqmapgrid            null.Val[string]  `db:"reqmapgrid" `
-	Reqnotesforcust       null.Val[string]  `db:"reqnotesforcust" `
-	Reqnotesfortech       null.Val[string]  `db:"reqnotesfortech" `
-	Reqpermission         null.Val[int16]   `db:"reqpermission" `
-	Reqprogramactions     null.Val[string]  `db:"reqprogramactions" `
-	Reqstate              null.Val[string]  `db:"reqstate" `
-	Reqsubdiv             null.Val[string]  `db:"reqsubdiv" `
-	Reqtarget             null.Val[string]  `db:"reqtarget" `
-	Reqzip                null.Val[string]  `db:"reqzip" `
-	Responsedaycount      null.Val[int16]   `db:"responsedaycount" `
-	Reviewed              null.Val[int16]   `db:"reviewed" `
-	Reviewedby            null.Val[string]  `db:"reviewedby" `
-	Revieweddate          null.Val[int64]   `db:"revieweddate" `
-	Scheduled             null.Val[int16]   `db:"scheduled" `
-	Scheduleddate         null.Val[int64]   `db:"scheduleddate" `
-	Source                null.Val[string]  `db:"source" `
-	SRNumber              null.Val[int64]   `db:"sr_number" `
-	Status                null.Val[string]  `db:"status" `
-	Supervisor            null.Val[string]  `db:"supervisor" `
-	Techclosed            null.Val[string]  `db:"techclosed" `
-	Validx                null.Val[string]  `db:"validx" `
-	Validy                null.Val[string]  `db:"validy" `
-	Xvalue                null.Val[string]  `db:"xvalue" `
-	Yvalue                null.Val[string]  `db:"yvalue" `
-	Zone                  null.Val[string]  `db:"zone" `
-	Zone2                 null.Val[string]  `db:"zone2" `
-	CreatedDate           null.Val[int64]   `db:"created_date" `
-	CreatedUser           null.Val[string]  `db:"created_user" `
-	GeometryX             null.Val[float64] `db:"geometry_x" `
-	GeometryY             null.Val[float64] `db:"geometry_y" `
-	LastEditedDate        null.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser        null.Val[string]  `db:"last_edited_user" `
-	Dog                   null.Val[int64]   `db:"dog" `
-	Spanish               null.Val[int64]   `db:"spanish" `
-	ScheduleNotes         null.Val[string]  `db:"schedule_notes" `
-	SchedulePeriod        null.Val[string]  `db:"schedule_period" `
-	Updated               time.Time         `db:"updated" `
+	OrganizationID        int32            `db:"organization_id" `
+	Accepted              null.Val[int16]  `db:"accepted" `
+	Acceptedby            null.Val[string] `db:"acceptedby" `
+	Accepteddate          null.Val[int64]  `db:"accepteddate" `
+	Allowed               null.Val[string] `db:"allowed" `
+	Assignedtech          null.Val[string] `db:"assignedtech" `
+	Clraddr1              null.Val[string] `db:"clraddr1" `
+	Clraddr2              null.Val[string] `db:"clraddr2" `
+	Clranon               null.Val[int16]  `db:"clranon" `
+	Clrcity               null.Val[string] `db:"clrcity" `
+	Clrcompany            null.Val[string] `db:"clrcompany" `
+	Clrcontpref           null.Val[string] `db:"clrcontpref" `
+	Clremail              null.Val[string] `db:"clremail" `
+	Clrfname              null.Val[string] `db:"clrfname" `
+	Clrother              null.Val[string] `db:"clrother" `
+	Clrphone1             null.Val[string] `db:"clrphone1" `
+	Clrphone2             null.Val[string] `db:"clrphone2" `
+	Clrstate              null.Val[string] `db:"clrstate" `
+	Clrzip                null.Val[string] `db:"clrzip" `
+	Comments              null.Val[string] `db:"comments" `
+	Creationdate          null.Val[int64]  `db:"creationdate" `
+	Creator               null.Val[string] `db:"creator" `
+	Datetimeclosed        null.Val[int64]  `db:"datetimeclosed" `
+	Duedate               null.Val[int64]  `db:"duedate" `
+	Entrytech             null.Val[string] `db:"entrytech" `
+	Estcompletedate       null.Val[int64]  `db:"estcompletedate" `
+	Externalerror         null.Val[string] `db:"externalerror" `
+	Externalid            null.Val[string] `db:"externalid" `
+	Editdate              null.Val[int64]  `db:"editdate" `
+	Editor                null.Val[string] `db:"editor" `
+	Firstresponsedate     null.Val[int64]  `db:"firstresponsedate" `
+	Globalid              string           `db:"globalid" `
+	Issuesreported        null.Val[string] `db:"issuesreported" `
+	Jurisdiction          null.Val[string] `db:"jurisdiction" `
+	Nextaction            null.Val[string] `db:"nextaction" `
+	Notificationtimestamp null.Val[string] `db:"notificationtimestamp" `
+	Notified              null.Val[int16]  `db:"notified" `
+	Notifieddate          null.Val[int64]  `db:"notifieddate" `
+	Objectid              int32            `db:"objectid,pk" `
+	Pointlocid            null.Val[string] `db:"pointlocid" `
+	Priority              null.Val[string] `db:"priority" `
+	Recdatetime           null.Val[int64]  `db:"recdatetime" `
+	Recordstatus          null.Val[int16]  `db:"recordstatus" `
+	Rejectedby            null.Val[string] `db:"rejectedby" `
+	Rejecteddate          null.Val[int64]  `db:"rejecteddate" `
+	Rejectedreason        null.Val[string] `db:"rejectedreason" `
+	Reqaddr1              null.Val[string] `db:"reqaddr1" `
+	Reqaddr2              null.Val[string] `db:"reqaddr2" `
+	Reqcity               null.Val[string] `db:"reqcity" `
+	Reqcompany            null.Val[string] `db:"reqcompany" `
+	Reqcrossst            null.Val[string] `db:"reqcrossst" `
+	Reqdescr              null.Val[string] `db:"reqdescr" `
+	Reqfldnotes           null.Val[string] `db:"reqfldnotes" `
+	Reqmapgrid            null.Val[string] `db:"reqmapgrid" `
+	Reqnotesforcust       null.Val[string] `db:"reqnotesforcust" `
+	Reqnotesfortech       null.Val[string] `db:"reqnotesfortech" `
+	Reqpermission         null.Val[int16]  `db:"reqpermission" `
+	Reqprogramactions     null.Val[string] `db:"reqprogramactions" `
+	Reqstate              null.Val[string] `db:"reqstate" `
+	Reqsubdiv             null.Val[string] `db:"reqsubdiv" `
+	Reqtarget             null.Val[string] `db:"reqtarget" `
+	Reqzip                null.Val[string] `db:"reqzip" `
+	Responsedaycount      null.Val[int16]  `db:"responsedaycount" `
+	Reviewed              null.Val[int16]  `db:"reviewed" `
+	Reviewedby            null.Val[string] `db:"reviewedby" `
+	Revieweddate          null.Val[int64]  `db:"revieweddate" `
+	Scheduled             null.Val[int16]  `db:"scheduled" `
+	Scheduleddate         null.Val[int64]  `db:"scheduleddate" `
+	Source                null.Val[string] `db:"source" `
+	SRNumber              null.Val[int64]  `db:"sr_number" `
+	Status                null.Val[string] `db:"status" `
+	Supervisor            null.Val[string] `db:"supervisor" `
+	Techclosed            null.Val[string] `db:"techclosed" `
+	Validx                null.Val[string] `db:"validx" `
+	Validy                null.Val[string] `db:"validy" `
+	Xvalue                null.Val[string] `db:"xvalue" `
+	Yvalue                null.Val[string] `db:"yvalue" `
+	Zone                  null.Val[string] `db:"zone" `
+	Zone2                 null.Val[string] `db:"zone2" `
+	CreatedDate           null.Val[int64]  `db:"created_date" `
+	CreatedUser           null.Val[string] `db:"created_user" `
+	GeometryX             float64          `db:"geometry_x" `
+	GeometryY             float64          `db:"geometry_y" `
+	LastEditedDate        null.Val[int64]  `db:"last_edited_date" `
+	LastEditedUser        null.Val[string] `db:"last_edited_user" `
+	Dog                   null.Val[int64]  `db:"dog" `
+	Spanish               null.Val[int64]  `db:"spanish" `
+	ScheduleNotes         null.Val[string] `db:"schedule_notes" `
+	SchedulePeriod        null.Val[string] `db:"schedule_period" `
+	Updated               time.Time        `db:"updated" `
 
 	R fsServicerequestR `db:"-" `
 }
@@ -341,96 +341,96 @@ func (fsServicerequestColumns) AliasedAs(alias string) fsServicerequestColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FSServicerequestSetter struct {
-	OrganizationID        omit.Val[int32]       `db:"organization_id" `
-	Accepted              omitnull.Val[int16]   `db:"accepted" `
-	Acceptedby            omitnull.Val[string]  `db:"acceptedby" `
-	Accepteddate          omitnull.Val[int64]   `db:"accepteddate" `
-	Allowed               omitnull.Val[string]  `db:"allowed" `
-	Assignedtech          omitnull.Val[string]  `db:"assignedtech" `
-	Clraddr1              omitnull.Val[string]  `db:"clraddr1" `
-	Clraddr2              omitnull.Val[string]  `db:"clraddr2" `
-	Clranon               omitnull.Val[int16]   `db:"clranon" `
-	Clrcity               omitnull.Val[string]  `db:"clrcity" `
-	Clrcompany            omitnull.Val[string]  `db:"clrcompany" `
-	Clrcontpref           omitnull.Val[string]  `db:"clrcontpref" `
-	Clremail              omitnull.Val[string]  `db:"clremail" `
-	Clrfname              omitnull.Val[string]  `db:"clrfname" `
-	Clrother              omitnull.Val[string]  `db:"clrother" `
-	Clrphone1             omitnull.Val[string]  `db:"clrphone1" `
-	Clrphone2             omitnull.Val[string]  `db:"clrphone2" `
-	Clrstate              omitnull.Val[string]  `db:"clrstate" `
-	Clrzip                omitnull.Val[string]  `db:"clrzip" `
-	Comments              omitnull.Val[string]  `db:"comments" `
-	Creationdate          omitnull.Val[int64]   `db:"creationdate" `
-	Creator               omitnull.Val[string]  `db:"creator" `
-	Datetimeclosed        omitnull.Val[int64]   `db:"datetimeclosed" `
-	Duedate               omitnull.Val[int64]   `db:"duedate" `
-	Entrytech             omitnull.Val[string]  `db:"entrytech" `
-	Estcompletedate       omitnull.Val[int64]   `db:"estcompletedate" `
-	Externalerror         omitnull.Val[string]  `db:"externalerror" `
-	Externalid            omitnull.Val[string]  `db:"externalid" `
-	Editdate              omitnull.Val[int64]   `db:"editdate" `
-	Editor                omitnull.Val[string]  `db:"editor" `
-	Firstresponsedate     omitnull.Val[int64]   `db:"firstresponsedate" `
-	Globalid              omitnull.Val[string]  `db:"globalid" `
-	Issuesreported        omitnull.Val[string]  `db:"issuesreported" `
-	Jurisdiction          omitnull.Val[string]  `db:"jurisdiction" `
-	Nextaction            omitnull.Val[string]  `db:"nextaction" `
-	Notificationtimestamp omitnull.Val[string]  `db:"notificationtimestamp" `
-	Notified              omitnull.Val[int16]   `db:"notified" `
-	Notifieddate          omitnull.Val[int64]   `db:"notifieddate" `
-	Objectid              omit.Val[int32]       `db:"objectid,pk" `
-	Pointlocid            omitnull.Val[string]  `db:"pointlocid" `
-	Priority              omitnull.Val[string]  `db:"priority" `
-	Recdatetime           omitnull.Val[int64]   `db:"recdatetime" `
-	Recordstatus          omitnull.Val[int16]   `db:"recordstatus" `
-	Rejectedby            omitnull.Val[string]  `db:"rejectedby" `
-	Rejecteddate          omitnull.Val[int64]   `db:"rejecteddate" `
-	Rejectedreason        omitnull.Val[string]  `db:"rejectedreason" `
-	Reqaddr1              omitnull.Val[string]  `db:"reqaddr1" `
-	Reqaddr2              omitnull.Val[string]  `db:"reqaddr2" `
-	Reqcity               omitnull.Val[string]  `db:"reqcity" `
-	Reqcompany            omitnull.Val[string]  `db:"reqcompany" `
-	Reqcrossst            omitnull.Val[string]  `db:"reqcrossst" `
-	Reqdescr              omitnull.Val[string]  `db:"reqdescr" `
-	Reqfldnotes           omitnull.Val[string]  `db:"reqfldnotes" `
-	Reqmapgrid            omitnull.Val[string]  `db:"reqmapgrid" `
-	Reqnotesforcust       omitnull.Val[string]  `db:"reqnotesforcust" `
-	Reqnotesfortech       omitnull.Val[string]  `db:"reqnotesfortech" `
-	Reqpermission         omitnull.Val[int16]   `db:"reqpermission" `
-	Reqprogramactions     omitnull.Val[string]  `db:"reqprogramactions" `
-	Reqstate              omitnull.Val[string]  `db:"reqstate" `
-	Reqsubdiv             omitnull.Val[string]  `db:"reqsubdiv" `
-	Reqtarget             omitnull.Val[string]  `db:"reqtarget" `
-	Reqzip                omitnull.Val[string]  `db:"reqzip" `
-	Responsedaycount      omitnull.Val[int16]   `db:"responsedaycount" `
-	Reviewed              omitnull.Val[int16]   `db:"reviewed" `
-	Reviewedby            omitnull.Val[string]  `db:"reviewedby" `
-	Revieweddate          omitnull.Val[int64]   `db:"revieweddate" `
-	Scheduled             omitnull.Val[int16]   `db:"scheduled" `
-	Scheduleddate         omitnull.Val[int64]   `db:"scheduleddate" `
-	Source                omitnull.Val[string]  `db:"source" `
-	SRNumber              omitnull.Val[int64]   `db:"sr_number" `
-	Status                omitnull.Val[string]  `db:"status" `
-	Supervisor            omitnull.Val[string]  `db:"supervisor" `
-	Techclosed            omitnull.Val[string]  `db:"techclosed" `
-	Validx                omitnull.Val[string]  `db:"validx" `
-	Validy                omitnull.Val[string]  `db:"validy" `
-	Xvalue                omitnull.Val[string]  `db:"xvalue" `
-	Yvalue                omitnull.Val[string]  `db:"yvalue" `
-	Zone                  omitnull.Val[string]  `db:"zone" `
-	Zone2                 omitnull.Val[string]  `db:"zone2" `
-	CreatedDate           omitnull.Val[int64]   `db:"created_date" `
-	CreatedUser           omitnull.Val[string]  `db:"created_user" `
-	GeometryX             omitnull.Val[float64] `db:"geometry_x" `
-	GeometryY             omitnull.Val[float64] `db:"geometry_y" `
-	LastEditedDate        omitnull.Val[int64]   `db:"last_edited_date" `
-	LastEditedUser        omitnull.Val[string]  `db:"last_edited_user" `
-	Dog                   omitnull.Val[int64]   `db:"dog" `
-	Spanish               omitnull.Val[int64]   `db:"spanish" `
-	ScheduleNotes         omitnull.Val[string]  `db:"schedule_notes" `
-	SchedulePeriod        omitnull.Val[string]  `db:"schedule_period" `
-	Updated               omit.Val[time.Time]   `db:"updated" `
+	OrganizationID        omit.Val[int32]      `db:"organization_id" `
+	Accepted              omitnull.Val[int16]  `db:"accepted" `
+	Acceptedby            omitnull.Val[string] `db:"acceptedby" `
+	Accepteddate          omitnull.Val[int64]  `db:"accepteddate" `
+	Allowed               omitnull.Val[string] `db:"allowed" `
+	Assignedtech          omitnull.Val[string] `db:"assignedtech" `
+	Clraddr1              omitnull.Val[string] `db:"clraddr1" `
+	Clraddr2              omitnull.Val[string] `db:"clraddr2" `
+	Clranon               omitnull.Val[int16]  `db:"clranon" `
+	Clrcity               omitnull.Val[string] `db:"clrcity" `
+	Clrcompany            omitnull.Val[string] `db:"clrcompany" `
+	Clrcontpref           omitnull.Val[string] `db:"clrcontpref" `
+	Clremail              omitnull.Val[string] `db:"clremail" `
+	Clrfname              omitnull.Val[string] `db:"clrfname" `
+	Clrother              omitnull.Val[string] `db:"clrother" `
+	Clrphone1             omitnull.Val[string] `db:"clrphone1" `
+	Clrphone2             omitnull.Val[string] `db:"clrphone2" `
+	Clrstate              omitnull.Val[string] `db:"clrstate" `
+	Clrzip                omitnull.Val[string] `db:"clrzip" `
+	Comments              omitnull.Val[string] `db:"comments" `
+	Creationdate          omitnull.Val[int64]  `db:"creationdate" `
+	Creator               omitnull.Val[string] `db:"creator" `
+	Datetimeclosed        omitnull.Val[int64]  `db:"datetimeclosed" `
+	Duedate               omitnull.Val[int64]  `db:"duedate" `
+	Entrytech             omitnull.Val[string] `db:"entrytech" `
+	Estcompletedate       omitnull.Val[int64]  `db:"estcompletedate" `
+	Externalerror         omitnull.Val[string] `db:"externalerror" `
+	Externalid            omitnull.Val[string] `db:"externalid" `
+	Editdate              omitnull.Val[int64]  `db:"editdate" `
+	Editor                omitnull.Val[string] `db:"editor" `
+	Firstresponsedate     omitnull.Val[int64]  `db:"firstresponsedate" `
+	Globalid              omit.Val[string]     `db:"globalid" `
+	Issuesreported        omitnull.Val[string] `db:"issuesreported" `
+	Jurisdiction          omitnull.Val[string] `db:"jurisdiction" `
+	Nextaction            omitnull.Val[string] `db:"nextaction" `
+	Notificationtimestamp omitnull.Val[string] `db:"notificationtimestamp" `
+	Notified              omitnull.Val[int16]  `db:"notified" `
+	Notifieddate          omitnull.Val[int64]  `db:"notifieddate" `
+	Objectid              omit.Val[int32]      `db:"objectid,pk" `
+	Pointlocid            omitnull.Val[string] `db:"pointlocid" `
+	Priority              omitnull.Val[string] `db:"priority" `
+	Recdatetime           omitnull.Val[int64]  `db:"recdatetime" `
+	Recordstatus          omitnull.Val[int16]  `db:"recordstatus" `
+	Rejectedby            omitnull.Val[string] `db:"rejectedby" `
+	Rejecteddate          omitnull.Val[int64]  `db:"rejecteddate" `
+	Rejectedreason        omitnull.Val[string] `db:"rejectedreason" `
+	Reqaddr1              omitnull.Val[string] `db:"reqaddr1" `
+	Reqaddr2              omitnull.Val[string] `db:"reqaddr2" `
+	Reqcity               omitnull.Val[string] `db:"reqcity" `
+	Reqcompany            omitnull.Val[string] `db:"reqcompany" `
+	Reqcrossst            omitnull.Val[string] `db:"reqcrossst" `
+	Reqdescr              omitnull.Val[string] `db:"reqdescr" `
+	Reqfldnotes           omitnull.Val[string] `db:"reqfldnotes" `
+	Reqmapgrid            omitnull.Val[string] `db:"reqmapgrid" `
+	Reqnotesforcust       omitnull.Val[string] `db:"reqnotesforcust" `
+	Reqnotesfortech       omitnull.Val[string] `db:"reqnotesfortech" `
+	Reqpermission         omitnull.Val[int16]  `db:"reqpermission" `
+	Reqprogramactions     omitnull.Val[string] `db:"reqprogramactions" `
+	Reqstate              omitnull.Val[string] `db:"reqstate" `
+	Reqsubdiv             omitnull.Val[string] `db:"reqsubdiv" `
+	Reqtarget             omitnull.Val[string] `db:"reqtarget" `
+	Reqzip                omitnull.Val[string] `db:"reqzip" `
+	Responsedaycount      omitnull.Val[int16]  `db:"responsedaycount" `
+	Reviewed              omitnull.Val[int16]  `db:"reviewed" `
+	Reviewedby            omitnull.Val[string] `db:"reviewedby" `
+	Revieweddate          omitnull.Val[int64]  `db:"revieweddate" `
+	Scheduled             omitnull.Val[int16]  `db:"scheduled" `
+	Scheduleddate         omitnull.Val[int64]  `db:"scheduleddate" `
+	Source                omitnull.Val[string] `db:"source" `
+	SRNumber              omitnull.Val[int64]  `db:"sr_number" `
+	Status                omitnull.Val[string] `db:"status" `
+	Supervisor            omitnull.Val[string] `db:"supervisor" `
+	Techclosed            omitnull.Val[string] `db:"techclosed" `
+	Validx                omitnull.Val[string] `db:"validx" `
+	Validy                omitnull.Val[string] `db:"validy" `
+	Xvalue                omitnull.Val[string] `db:"xvalue" `
+	Yvalue                omitnull.Val[string] `db:"yvalue" `
+	Zone                  omitnull.Val[string] `db:"zone" `
+	Zone2                 omitnull.Val[string] `db:"zone2" `
+	CreatedDate           omitnull.Val[int64]  `db:"created_date" `
+	CreatedUser           omitnull.Val[string] `db:"created_user" `
+	GeometryX             omit.Val[float64]    `db:"geometry_x" `
+	GeometryY             omit.Val[float64]    `db:"geometry_y" `
+	LastEditedDate        omitnull.Val[int64]  `db:"last_edited_date" `
+	LastEditedUser        omitnull.Val[string] `db:"last_edited_user" `
+	Dog                   omitnull.Val[int64]  `db:"dog" `
+	Spanish               omitnull.Val[int64]  `db:"spanish" `
+	ScheduleNotes         omitnull.Val[string] `db:"schedule_notes" `
+	SchedulePeriod        omitnull.Val[string] `db:"schedule_period" `
+	Updated               omit.Val[time.Time]  `db:"updated" `
 }
 
 func (s FSServicerequestSetter) SetColumns() []string {
@@ -528,7 +528,7 @@ func (s FSServicerequestSetter) SetColumns() []string {
 	if !s.Firstresponsedate.IsUnset() {
 		vals = append(vals, "firstresponsedate")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Issuesreported.IsUnset() {
@@ -678,10 +678,10 @@ func (s FSServicerequestSetter) SetColumns() []string {
 	if !s.CreatedUser.IsUnset() {
 		vals = append(vals, "created_user")
 	}
-	if !s.GeometryX.IsUnset() {
+	if s.GeometryX.IsValue() {
 		vals = append(vals, "geometry_x")
 	}
-	if !s.GeometryY.IsUnset() {
+	if s.GeometryY.IsValue() {
 		vals = append(vals, "geometry_y")
 	}
 	if !s.LastEditedDate.IsUnset() {
@@ -802,8 +802,8 @@ func (s FSServicerequestSetter) Overwrite(t *FSServicerequest) {
 	if !s.Firstresponsedate.IsUnset() {
 		t.Firstresponsedate = s.Firstresponsedate.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Issuesreported.IsUnset() {
 		t.Issuesreported = s.Issuesreported.MustGetNull()
@@ -952,11 +952,11 @@ func (s FSServicerequestSetter) Overwrite(t *FSServicerequest) {
 	if !s.CreatedUser.IsUnset() {
 		t.CreatedUser = s.CreatedUser.MustGetNull()
 	}
-	if !s.GeometryX.IsUnset() {
-		t.GeometryX = s.GeometryX.MustGetNull()
+	if s.GeometryX.IsValue() {
+		t.GeometryX = s.GeometryX.MustGet()
 	}
-	if !s.GeometryY.IsUnset() {
-		t.GeometryY = s.GeometryY.MustGetNull()
+	if s.GeometryY.IsValue() {
+		t.GeometryY = s.GeometryY.MustGet()
 	}
 	if !s.LastEditedDate.IsUnset() {
 		t.LastEditedDate = s.LastEditedDate.MustGetNull()
@@ -1174,8 +1174,8 @@ func (s *FSServicerequestSetter) Apply(q *dialect.InsertQuery) {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[31] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[31] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
@@ -1474,14 +1474,14 @@ func (s *FSServicerequestSetter) Apply(q *dialect.InsertQuery) {
 			vals[80] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryX.IsUnset() {
-			vals[81] = psql.Arg(s.GeometryX.MustGetNull())
+		if s.GeometryX.IsValue() {
+			vals[81] = psql.Arg(s.GeometryX.MustGet())
 		} else {
 			vals[81] = psql.Raw("DEFAULT")
 		}
 
-		if !s.GeometryY.IsUnset() {
-			vals[82] = psql.Arg(s.GeometryY.MustGetNull())
+		if s.GeometryY.IsValue() {
+			vals[82] = psql.Arg(s.GeometryY.MustGet())
 		} else {
 			vals[82] = psql.Raw("DEFAULT")
 		}
@@ -1756,7 +1756,7 @@ func (s FSServicerequestSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -2106,14 +2106,14 @@ func (s FSServicerequestSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.GeometryX.IsUnset() {
+	if s.GeometryX.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "geometry_x")...),
 			psql.Arg(s.GeometryX),
 		}})
 	}
 
-	if !s.GeometryY.IsUnset() {
+	if s.GeometryY.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "geometry_y")...),
 			psql.Arg(s.GeometryY),
@@ -2499,7 +2499,7 @@ type fsServicerequestWhere[Q psql.Filterable] struct {
 	Editdate              psql.WhereNullMod[Q, int64]
 	Editor                psql.WhereNullMod[Q, string]
 	Firstresponsedate     psql.WhereNullMod[Q, int64]
-	Globalid              psql.WhereNullMod[Q, string]
+	Globalid              psql.WhereMod[Q, string]
 	Issuesreported        psql.WhereNullMod[Q, string]
 	Jurisdiction          psql.WhereNullMod[Q, string]
 	Nextaction            psql.WhereNullMod[Q, string]
@@ -2549,8 +2549,8 @@ type fsServicerequestWhere[Q psql.Filterable] struct {
 	Zone2                 psql.WhereNullMod[Q, string]
 	CreatedDate           psql.WhereNullMod[Q, int64]
 	CreatedUser           psql.WhereNullMod[Q, string]
-	GeometryX             psql.WhereNullMod[Q, float64]
-	GeometryY             psql.WhereNullMod[Q, float64]
+	GeometryX             psql.WhereMod[Q, float64]
+	GeometryY             psql.WhereMod[Q, float64]
 	LastEditedDate        psql.WhereNullMod[Q, int64]
 	LastEditedUser        psql.WhereNullMod[Q, string]
 	Dog                   psql.WhereNullMod[Q, int64]
@@ -2597,7 +2597,7 @@ func buildFSServicerequestWhere[Q psql.Filterable](cols fsServicerequestColumns)
 		Editdate:              psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:                psql.WhereNull[Q, string](cols.Editor),
 		Firstresponsedate:     psql.WhereNull[Q, int64](cols.Firstresponsedate),
-		Globalid:              psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:              psql.Where[Q, string](cols.Globalid),
 		Issuesreported:        psql.WhereNull[Q, string](cols.Issuesreported),
 		Jurisdiction:          psql.WhereNull[Q, string](cols.Jurisdiction),
 		Nextaction:            psql.WhereNull[Q, string](cols.Nextaction),
@@ -2647,8 +2647,8 @@ func buildFSServicerequestWhere[Q psql.Filterable](cols fsServicerequestColumns)
 		Zone2:                 psql.WhereNull[Q, string](cols.Zone2),
 		CreatedDate:           psql.WhereNull[Q, int64](cols.CreatedDate),
 		CreatedUser:           psql.WhereNull[Q, string](cols.CreatedUser),
-		GeometryX:             psql.WhereNull[Q, float64](cols.GeometryX),
-		GeometryY:             psql.WhereNull[Q, float64](cols.GeometryY),
+		GeometryX:             psql.Where[Q, float64](cols.GeometryX),
+		GeometryY:             psql.Where[Q, float64](cols.GeometryY),
 		LastEditedDate:        psql.WhereNull[Q, int64](cols.LastEditedDate),
 		LastEditedUser:        psql.WhereNull[Q, string](cols.LastEditedUser),
 		Dog:                   psql.WhereNull[Q, int64](cols.Dog),

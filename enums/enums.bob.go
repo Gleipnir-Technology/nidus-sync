@@ -117,6 +117,79 @@ func (e *Arcgislicensetype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for H3aggregationtype
+const (
+	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"
+	H3aggregationtypeServicerequest H3aggregationtype = "ServiceRequest"
+)
+
+func AllH3aggregationtype() []H3aggregationtype {
+	return []H3aggregationtype{
+		H3aggregationtypeMosquitosource,
+		H3aggregationtypeServicerequest,
+	}
+}
+
+type H3aggregationtype string
+
+func (e H3aggregationtype) String() string {
+	return string(e)
+}
+
+func (e H3aggregationtype) Valid() bool {
+	switch e {
+	case H3aggregationtypeMosquitosource,
+		H3aggregationtypeServicerequest:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e H3aggregationtype) All() []H3aggregationtype {
+	return AllH3aggregationtype()
+}
+
+func (e H3aggregationtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *H3aggregationtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e H3aggregationtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *H3aggregationtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e H3aggregationtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *H3aggregationtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = H3aggregationtype(x)
+	case []byte:
+		*e = H3aggregationtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into H3aggregationtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid H3aggregationtype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Hashtype
 const (
 	HashtypeBcrypt14 Hashtype = "bcrypt-14"

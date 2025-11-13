@@ -39,7 +39,7 @@ type FSInspectionsampledetail struct {
 	Flarvcount     null.Val[int16]   `db:"flarvcount" `
 	Flstages       null.Val[string]  `db:"flstages" `
 	Fpupcount      null.Val[int16]   `db:"fpupcount" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	InspsampleID   null.Val[string]  `db:"inspsample_id" `
 	Labspecies     null.Val[string]  `db:"labspecies" `
 	Ldomstage      null.Val[string]  `db:"ldomstage" `
@@ -171,7 +171,7 @@ type FSInspectionsampledetailSetter struct {
 	Flarvcount     omitnull.Val[int16]   `db:"flarvcount" `
 	Flstages       omitnull.Val[string]  `db:"flstages" `
 	Fpupcount      omitnull.Val[int16]   `db:"fpupcount" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	InspsampleID   omitnull.Val[string]  `db:"inspsample_id" `
 	Labspecies     omitnull.Val[string]  `db:"labspecies" `
 	Ldomstage      omitnull.Val[string]  `db:"ldomstage" `
@@ -230,7 +230,7 @@ func (s FSInspectionsampledetailSetter) SetColumns() []string {
 	if !s.Fpupcount.IsUnset() {
 		vals = append(vals, "fpupcount")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.InspsampleID.IsUnset() {
@@ -321,8 +321,8 @@ func (s FSInspectionsampledetailSetter) Overwrite(t *FSInspectionsampledetail) {
 	if !s.Fpupcount.IsUnset() {
 		t.Fpupcount = s.Fpupcount.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.InspsampleID.IsUnset() {
 		t.InspsampleID = s.InspsampleID.MustGetNull()
@@ -456,8 +456,8 @@ func (s *FSInspectionsampledetailSetter) Apply(q *dialect.InsertQuery) {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[13] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[13] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
@@ -654,7 +654,7 @@ func (s FSInspectionsampledetailSetter) Expressions(prefix ...string) []bob.Expr
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1078,7 +1078,7 @@ type fsInspectionsampledetailWhere[Q psql.Filterable] struct {
 	Flarvcount     psql.WhereNullMod[Q, int16]
 	Flstages       psql.WhereNullMod[Q, string]
 	Fpupcount      psql.WhereNullMod[Q, int16]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	InspsampleID   psql.WhereNullMod[Q, string]
 	Labspecies     psql.WhereNullMod[Q, string]
 	Ldomstage      psql.WhereNullMod[Q, string]
@@ -1115,7 +1115,7 @@ func buildFSInspectionsampledetailWhere[Q psql.Filterable](cols fsInspectionsamp
 		Flarvcount:     psql.WhereNull[Q, int16](cols.Flarvcount),
 		Flstages:       psql.WhereNull[Q, string](cols.Flstages),
 		Fpupcount:      psql.WhereNull[Q, int16](cols.Fpupcount),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		InspsampleID:   psql.WhereNull[Q, string](cols.InspsampleID),
 		Labspecies:     psql.WhereNull[Q, string](cols.Labspecies),
 		Ldomstage:      psql.WhereNull[Q, string](cols.Ldomstage),

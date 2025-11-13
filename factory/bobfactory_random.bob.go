@@ -11,6 +11,7 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/jaswdr/faker/v2"
+	"github.com/lib/pq"
 )
 
 var defaultFaker = faker.New()
@@ -37,6 +38,16 @@ func random_enums_Arcgislicensetype(f *faker.Faker, limits ...string) enums.Arcg
 	}
 
 	var e enums.Arcgislicensetype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_H3aggregationtype(f *faker.Faker, limits ...string) enums.H3aggregationtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.H3aggregationtype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }
@@ -112,6 +123,42 @@ func random_int64(f *faker.Faker, limits ...string) int64 {
 	}
 
 	return f.Int64()
+}
+
+func random_pq_BoolArray(f *faker.Faker, limits ...string) pq.BoolArray {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	arr := make(pq.BoolArray, f.IntBetween(1, 5))
+	for i := range arr {
+		arr[i] = random_bool(f, limits...)
+	}
+	return arr
+}
+
+func random_pq_Float64Array(f *faker.Faker, limits ...string) pq.Float64Array {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	arr := make(pq.Float64Array, f.IntBetween(1, 5))
+	for i := range arr {
+		arr[i] = random_float64(f, limits...)
+	}
+	return arr
+}
+
+func random_pq_StringArray(f *faker.Faker, limits ...string) pq.StringArray {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	arr := make(pq.StringArray, f.IntBetween(1, 5))
+	for i := range arr {
+		arr[i] = random_string(f, limits...)
+	}
+	return arr
 }
 
 func random_string(f *faker.Faker, limits ...string) string {

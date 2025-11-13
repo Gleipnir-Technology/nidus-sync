@@ -37,7 +37,7 @@ type FSTrapdatum struct {
 	Fieldtech                null.Val[string]  `db:"fieldtech" `
 	Field                    null.Val[int64]   `db:"field" `
 	Gatewaysync              null.Val[int16]   `db:"gatewaysync" `
-	Globalid                 null.Val[string]  `db:"globalid" `
+	Globalid                 string            `db:"globalid" `
 	Idbytech                 null.Val[string]  `db:"idbytech" `
 	Locationname             null.Val[string]  `db:"locationname" `
 	LocID                    null.Val[string]  `db:"loc_id" `
@@ -220,7 +220,7 @@ type FSTrapdatumSetter struct {
 	Fieldtech                omitnull.Val[string]  `db:"fieldtech" `
 	Field                    omitnull.Val[int64]   `db:"field" `
 	Gatewaysync              omitnull.Val[int16]   `db:"gatewaysync" `
-	Globalid                 omitnull.Val[string]  `db:"globalid" `
+	Globalid                 omit.Val[string]      `db:"globalid" `
 	Idbytech                 omitnull.Val[string]  `db:"idbytech" `
 	Locationname             omitnull.Val[string]  `db:"locationname" `
 	LocID                    omitnull.Val[string]  `db:"loc_id" `
@@ -292,7 +292,7 @@ func (s FSTrapdatumSetter) SetColumns() []string {
 	if !s.Gatewaysync.IsUnset() {
 		vals = append(vals, "gatewaysync")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Idbytech.IsUnset() {
@@ -434,8 +434,8 @@ func (s FSTrapdatumSetter) Overwrite(t *FSTrapdatum) {
 	if !s.Gatewaysync.IsUnset() {
 		t.Gatewaysync = s.Gatewaysync.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Idbytech.IsUnset() {
 		t.Idbytech = s.Idbytech.MustGetNull()
@@ -614,8 +614,8 @@ func (s *FSTrapdatumSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[11] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[11] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -912,7 +912,7 @@ func (s FSTrapdatumSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1467,7 +1467,7 @@ type fsTrapdatumWhere[Q psql.Filterable] struct {
 	Fieldtech                psql.WhereNullMod[Q, string]
 	Field                    psql.WhereNullMod[Q, int64]
 	Gatewaysync              psql.WhereNullMod[Q, int16]
-	Globalid                 psql.WhereNullMod[Q, string]
+	Globalid                 psql.WhereMod[Q, string]
 	Idbytech                 psql.WhereNullMod[Q, string]
 	Locationname             psql.WhereNullMod[Q, string]
 	LocID                    psql.WhereNullMod[Q, string]
@@ -1521,7 +1521,7 @@ func buildFSTrapdatumWhere[Q psql.Filterable](cols fsTrapdatumColumns) fsTrapdat
 		Fieldtech:                psql.WhereNull[Q, string](cols.Fieldtech),
 		Field:                    psql.WhereNull[Q, int64](cols.Field),
 		Gatewaysync:              psql.WhereNull[Q, int16](cols.Gatewaysync),
-		Globalid:                 psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:                 psql.Where[Q, string](cols.Globalid),
 		Idbytech:                 psql.WhereNull[Q, string](cols.Idbytech),
 		Locationname:             psql.WhereNull[Q, string](cols.Locationname),
 		LocID:                    psql.WhereNull[Q, string](cols.LocID),

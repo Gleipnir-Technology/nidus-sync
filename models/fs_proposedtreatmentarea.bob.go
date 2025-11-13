@@ -38,7 +38,7 @@ type FSProposedtreatmentarea struct {
 	Exported          null.Val[int16]   `db:"exported" `
 	Editdate          null.Val[int64]   `db:"editdate" `
 	Editor            null.Val[string]  `db:"editor" `
-	Globalid          null.Val[string]  `db:"globalid" `
+	Globalid          string            `db:"globalid" `
 	Hectares          null.Val[float64] `db:"hectares" `
 	Issprayroute      null.Val[int16]   `db:"issprayroute" `
 	Lasttreatactivity null.Val[string]  `db:"lasttreatactivity" `
@@ -194,7 +194,7 @@ type FSProposedtreatmentareaSetter struct {
 	Exported          omitnull.Val[int16]   `db:"exported" `
 	Editdate          omitnull.Val[int64]   `db:"editdate" `
 	Editor            omitnull.Val[string]  `db:"editor" `
-	Globalid          omitnull.Val[string]  `db:"globalid" `
+	Globalid          omit.Val[string]      `db:"globalid" `
 	Hectares          omitnull.Val[float64] `db:"hectares" `
 	Issprayroute      omitnull.Val[int16]   `db:"issprayroute" `
 	Lasttreatactivity omitnull.Val[string]  `db:"lasttreatactivity" `
@@ -259,7 +259,7 @@ func (s FSProposedtreatmentareaSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if !s.Hectares.IsUnset() {
@@ -374,8 +374,8 @@ func (s FSProposedtreatmentareaSetter) Overwrite(t *FSProposedtreatmentarea) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if !s.Hectares.IsUnset() {
 		t.Hectares = s.Hectares.MustGetNull()
@@ -530,8 +530,8 @@ func (s *FSProposedtreatmentareaSetter) Apply(q *dialect.InsertQuery) {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[12] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[12] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
@@ -775,7 +775,7 @@ func (s FSProposedtreatmentareaSetter) Expressions(prefix ...string) []bob.Expre
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -1261,7 +1261,7 @@ type fsProposedtreatmentareaWhere[Q psql.Filterable] struct {
 	Exported          psql.WhereNullMod[Q, int16]
 	Editdate          psql.WhereNullMod[Q, int64]
 	Editor            psql.WhereNullMod[Q, string]
-	Globalid          psql.WhereNullMod[Q, string]
+	Globalid          psql.WhereMod[Q, string]
 	Hectares          psql.WhereNullMod[Q, float64]
 	Issprayroute      psql.WhereNullMod[Q, int16]
 	Lasttreatactivity psql.WhereNullMod[Q, string]
@@ -1306,7 +1306,7 @@ func buildFSProposedtreatmentareaWhere[Q psql.Filterable](cols fsProposedtreatme
 		Exported:          psql.WhereNull[Q, int16](cols.Exported),
 		Editdate:          psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:            psql.WhereNull[Q, string](cols.Editor),
-		Globalid:          psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:          psql.Where[Q, string](cols.Globalid),
 		Hectares:          psql.WhereNull[Q, float64](cols.Hectares),
 		Issprayroute:      psql.WhereNull[Q, int16](cols.Issprayroute),
 		Lasttreatactivity: psql.WhereNull[Q, string](cols.Lasttreatactivity),

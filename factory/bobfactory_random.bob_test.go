@@ -5,6 +5,7 @@ package factory
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 
 	"github.com/stephenafamo/bob"
@@ -65,6 +66,28 @@ func TestRandom_int64(t *testing.T) {
 
 	if val1 == val2 {
 		t.Fatalf("random_int64() returned the same value twice: %v", val1)
+	}
+}
+
+func TestRandom_pq_Float64Array(t *testing.T) {
+	t.Parallel()
+
+	val1 := random_pq_Float64Array(nil)
+	val2 := random_pq_Float64Array(nil)
+
+	if slices.Equal(val1, val2) {
+		t.Fatalf("random_pq_Float64Array() returned the same value twice: %v", val1)
+	}
+}
+
+func TestRandom_pq_StringArray(t *testing.T) {
+	t.Parallel()
+
+	val1 := random_pq_StringArray(nil)
+	val2 := random_pq_StringArray(nil)
+
+	if slices.Equal(val1, val2) {
+		t.Fatalf("random_pq_StringArray() returned the same value twice: %v", val1)
 	}
 }
 

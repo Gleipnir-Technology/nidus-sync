@@ -31,7 +31,7 @@ type FSFieldscoutinglog struct {
 	Creator        null.Val[string]  `db:"creator" `
 	Editdate       null.Val[int64]   `db:"editdate" `
 	Editor         null.Val[string]  `db:"editor" `
-	Globalid       null.Val[string]  `db:"globalid" `
+	Globalid       string            `db:"globalid" `
 	Objectid       int32             `db:"objectid,pk" `
 	Status         null.Val[int16]   `db:"status" `
 	CreatedDate    null.Val[int64]   `db:"created_date" `
@@ -121,7 +121,7 @@ type FSFieldscoutinglogSetter struct {
 	Creator        omitnull.Val[string]  `db:"creator" `
 	Editdate       omitnull.Val[int64]   `db:"editdate" `
 	Editor         omitnull.Val[string]  `db:"editor" `
-	Globalid       omitnull.Val[string]  `db:"globalid" `
+	Globalid       omit.Val[string]      `db:"globalid" `
 	Objectid       omit.Val[int32]       `db:"objectid,pk" `
 	Status         omitnull.Val[int16]   `db:"status" `
 	CreatedDate    omitnull.Val[int64]   `db:"created_date" `
@@ -150,7 +150,7 @@ func (s FSFieldscoutinglogSetter) SetColumns() []string {
 	if !s.Editor.IsUnset() {
 		vals = append(vals, "editor")
 	}
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		vals = append(vals, "globalid")
 	}
 	if s.Objectid.IsValue() {
@@ -199,8 +199,8 @@ func (s FSFieldscoutinglogSetter) Overwrite(t *FSFieldscoutinglog) {
 	if !s.Editor.IsUnset() {
 		t.Editor = s.Editor.MustGetNull()
 	}
-	if !s.Globalid.IsUnset() {
-		t.Globalid = s.Globalid.MustGetNull()
+	if s.Globalid.IsValue() {
+		t.Globalid = s.Globalid.MustGet()
 	}
 	if s.Objectid.IsValue() {
 		t.Objectid = s.Objectid.MustGet()
@@ -268,8 +268,8 @@ func (s *FSFieldscoutinglogSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Globalid.IsUnset() {
-			vals[5] = psql.Arg(s.Globalid.MustGetNull())
+		if s.Globalid.IsValue() {
+			vals[5] = psql.Arg(s.Globalid.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
@@ -374,7 +374,7 @@ func (s FSFieldscoutinglogSetter) Expressions(prefix ...string) []bob.Expression
 		}})
 	}
 
-	if !s.Globalid.IsUnset() {
+	if s.Globalid.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "globalid")...),
 			psql.Arg(s.Globalid),
@@ -748,7 +748,7 @@ type fsFieldscoutinglogWhere[Q psql.Filterable] struct {
 	Creator        psql.WhereNullMod[Q, string]
 	Editdate       psql.WhereNullMod[Q, int64]
 	Editor         psql.WhereNullMod[Q, string]
-	Globalid       psql.WhereNullMod[Q, string]
+	Globalid       psql.WhereMod[Q, string]
 	Objectid       psql.WhereMod[Q, int32]
 	Status         psql.WhereNullMod[Q, int16]
 	CreatedDate    psql.WhereNullMod[Q, int64]
@@ -771,7 +771,7 @@ func buildFSFieldscoutinglogWhere[Q psql.Filterable](cols fsFieldscoutinglogColu
 		Creator:        psql.WhereNull[Q, string](cols.Creator),
 		Editdate:       psql.WhereNull[Q, int64](cols.Editdate),
 		Editor:         psql.WhereNull[Q, string](cols.Editor),
-		Globalid:       psql.WhereNull[Q, string](cols.Globalid),
+		Globalid:       psql.Where[Q, string](cols.Globalid),
 		Objectid:       psql.Where[Q, int32](cols.Objectid),
 		Status:         psql.WhereNull[Q, int16](cols.Status),
 		CreatedDate:    psql.WhereNull[Q, int64](cols.CreatedDate),
