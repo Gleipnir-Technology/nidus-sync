@@ -13,7 +13,7 @@ import (
 
 func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
 	expiration := 60
-	authURL := buildArcGISAuthURL(ClientID, redirectURL(), expiration)
+	authURL := buildArcGISAuthURL(ClientID, expiration)
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 

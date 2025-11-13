@@ -56,12 +56,12 @@ type OAuthTokenResponse struct {
 }
 
 // Build the ArcGIS authorization URL with PKCE
-func buildArcGISAuthURL(clientID string, redirectURI string, expiration int) string {
+func buildArcGISAuthURL(clientID string, expiration int) string {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/authorize/"
 
 	params := url.Values{}
 	params.Add("client_id", clientID)
-	params.Add("redirect_uri", redirectURI)
+	params.Add("redirect_uri", redirectURL())
 	params.Add("response_type", "code")
 	//params.Add("code_challenge", generateCodeChallenge(codeVerifier))
 	//params.Add("code_challenge_method", "S256")
