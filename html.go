@@ -111,7 +111,7 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	if bt.template == nil {
 		templ, err := parseFromDisk(bt.files)
 		if err != nil {
-			return fmt.Errorf("Failed to parse template file: %v", err)
+			return fmt.Errorf("Failed to parse template file: %w", err)
 		}
 		if templ == nil {
 			w.Write([]byte("Failed to read from disk: "))
@@ -430,7 +430,7 @@ func parseFromDisk(files []string) (*template.Template, error) {
 	//slog.Info("Rendering templates from disk", slog.Any("paths", slogutil.SliceString(paths)))
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse %s: %v", paths, err)
+		return nil, fmt.Errorf("Failed to parse %s: %w", paths, err)
 	}
 	return templ, nil
 }

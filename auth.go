@@ -104,7 +104,7 @@ func getAuthenticatedUser(r *http.Request) (*models.User, error) {
 	if user_id_str != "" {
 		user_id, err := strconv.Atoi(user_id_str)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to convert user_id to int: %v", err)
+			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
 		}
 		username := sessionManager.GetString(r.Context(), "username")
 		slog.Info("Current session info",
@@ -147,7 +147,7 @@ func signinUser(r *http.Request, username string, password string) (*models.User
 func signupUser(username string, name string, password string) (*models.User, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot signup user: %v", err)
+		return nil, fmt.Errorf("Cannot signup user: %w", err)
 	}
 	setter := models.UserSetter{
 		DisplayName:      omit.From(name),
@@ -157,7 +157,7 @@ func signupUser(username string, name string, password string) (*models.User, er
 	}
 	u, err := models.Users.Insert(&setter).One(context.TODO(), PGInstance.BobDB)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create user: %v", err)
+		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
 	slog.Info("Created user",
 		slog.Int("ID", int(u.ID)),
@@ -174,7 +174,7 @@ func validatePassword(password, hash string) bool {
 func validateUser(ctx context.Context, username string, password string) (*models.User, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to hash password: %v", err)
+		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
 	slog.Info("Validating user",
 		slog.String("username", username),
@@ -182,7 +182,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 		slog.String("hash", passwordHash))
 	result, err := sql.UserByUsername(username).All(ctx, PGInstance.BobDB)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to query for user: %v", err)
+		return nil, fmt.Errorf("Failed to query for user: %w", err)
 	}
 	switch len(result) {
 	case 0:

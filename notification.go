@@ -61,7 +61,7 @@ func notificationsForUser(ctx context.Context, u *models.User) ([]Notification, 
 		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
 	).All(ctx, PGInstance.BobDB)
 	if err != nil {
-		return results, fmt.Errorf("Failed to get notifications: %v", err)
+		return results, fmt.Errorf("Failed to get notifications: %w", err)
 	}
 	for _, n := range notifications {
 		results = append(results, Notification{

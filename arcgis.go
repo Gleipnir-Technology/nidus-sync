@@ -30,6 +30,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// When there is no oauth for an organization
+type NoOAuthForOrg struct{}
+
+func (e NoOAuthForOrg) Error() string { return "No oauth available for organization" }
+
 var NewOAuthTokenChannel chan struct{}
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
 
@@ -221,12 +226,12 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 
 	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		return fmt.Errorf("Failed to create request: %v", err)
+		return fmt.Errorf("Failed to create request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	token, err := handleTokenRequest(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to exchange authorization code for token: %v", err)
+		return fmt.Errorf("Failed to exchange authorization code for token: %w", err)
 	}
 	accessExpires := futureUTCTimestamp(token.ExpiresIn)
 	refreshExpires := futureUTCTimestamp(token.RefreshTokenExpiresIn)
@@ -239,7 +244,7 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	}
 	err = user.InsertUserOauthTokens(ctx, PGInstance.BobDB, &setter)
 	if err != nil {
-		return fmt.Errorf("Failed to save token to database: %v", err)
+		return fmt.Errorf("Failed to save token to database: %w", err)
 	}
 	go updateArcgisUserData(context.Background(), user, token.AccessToken, accessExpires, token.RefreshToken, refreshExpires)
 	return nil
@@ -289,6 +294,10 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				defer wg.Done()
 				err := periodicallyExportFieldseeker(workerCtx, org)
 				if err != nil {
+					if errors.Is(err, &NoOAuthForOrg{}) {
+						log.Info().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
+						return
+					}
 					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
 				}
 			}()
@@ -318,7 +327,7 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 	var stats SyncStats
 	count, err := fssync.QueryCount(layer.ID)
 	if err != nil {
-		return stats, fmt.Errorf("Failed to get counts for layer %s (%d): %v", layer.Name, layer.ID, err)
+		return stats, fmt.Errorf("Failed to get counts for layer %s (%d): %w", layer.Name, layer.ID, err)
 	}
 	log.Info().Str("name", layer.Name).Int("id", layer.ID).Msg("Starting on layer")
 	if count.Count == 0 {
@@ -339,14 +348,14 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 				layer.ID,
 				query)
 			if err != nil {
-				return SyncStats{}, fmt.Errorf("Failed to get layer %s (%d) at offset %d: %v", layer.Name, layer.ID, offset, err)
+				return SyncStats{}, fmt.Errorf("Failed to get layer %s (%d) at offset %d: %w", layer.Name, layer.ID, offset, err)
 			}
 			i, u, err := saveOrUpdateDBRecords(ctx, "FS_"+layer.Name, qr, org_id)
 			if err != nil {
 				filename := fmt.Sprintf("failure-%s-%d-%d.json", layer.Name, layer.ID, offset)
 				saveRawQuery(fssync, layer, query, filename)
 				log.Error().Err(err).Msg("Faild to save DB records")
-				return SyncStats{}, fmt.Errorf("Failed to save records: %v", err)
+				return SyncStats{}, fmt.Errorf("Failed to save records: %w", err)
 			}
 			return SyncStats{
 				Inserts:   i,
@@ -357,7 +366,7 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 	}
 	results, err := group.Wait()
 	if err != nil {
-		return stats, fmt.Errorf("one or more tasks in the work pool failed: %v", err)
+		return stats, fmt.Errorf("one or more tasks in the work pool failed: %w", err)
 	}
 	for _, r := range results {
 		stats.Inserts += r.Inserts
@@ -371,18 +380,18 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.OauthToken, error) {
 	users, err := org.User().All(ctx, PGInstance.BobDB)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to query all users for org: %v", err)
+		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
 	}
 	for _, user := range users {
 		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, PGInstance.BobDB)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %v", err)
+			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
 		for _, oauth := range oauths {
 			return oauth, nil
 		}
 	}
-	return nil, errors.New("No oauth tokens found")
+	return nil, &NoOAuthForOrg{}
 }
 
 func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization) error {
@@ -394,11 +403,11 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 		case <-pollTicker.C:
 			oauth, err := getOAuthForOrg(ctx, org)
 			if err != nil {
-				return fmt.Errorf("Failed to get oauth for org: %v", err)
+				return fmt.Errorf("Failed to get oauth for org: %w", err)
 			}
 			err = exportFieldseekerData(ctx, org, oauth)
 			if err != nil {
-				return fmt.Errorf("Failed to export Fieldseeker data: %v", err)
+				return fmt.Errorf("Failed to export Fieldseeker data: %w", err)
 			}
 			log.Info().Msg("Completed exporting data, waiting 15 minutes to go agoin.")
 			pollTicker = time.NewTicker(15 * time.Minute)
@@ -417,20 +426,20 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 	)
 	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, PGInstance.BobDB)
 	if err != nil {
-		return fmt.Errorf("Failed to get org ID: %v", err)
+		return fmt.Errorf("Failed to get org ID: %w", err)
 	}
 	fssync, err := fieldseeker.NewFieldSeeker(
 		ar,
 		row.FieldseekerURL.MustGet(),
 	)
 	if err != nil {
-		return fmt.Errorf("Failed to create fssync: %v", err)
+		return fmt.Errorf("Failed to create fssync: %w", err)
 	}
 	var stats SyncStats
 	for _, layer := range fssync.FeatureServerLayers() {
 		ss, err := downloadAllRecords(ctx, fssync, layer, row.OrganizationID)
 		if err != nil {
-			return fmt.Errorf("Failed to get layer %s: %v", layer, err)
+			return fmt.Errorf("Failed to get layer %s: %w", layer, err)
 		}
 		stats.Inserts += ss.Inserts
 		stats.Updates += ss.Updates
@@ -444,7 +453,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 	}
 	err = org.InsertFieldseekerSyncs(ctx, PGInstance.BobDB, &setter)
 	if err != nil {
-		return fmt.Errorf("Failed to insert sync: %v", err)
+		return fmt.Errorf("Failed to insert sync: %w", err)
 	}
 
 	return nil
@@ -455,7 +464,7 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 		// Refresh from the database
 		oauth, err := models.FindOauthToken(ctx, PGInstance.BobDB, oauth.ID)
 		if err != nil {
-			return fmt.Errorf("Failed to update oauth token from database: %v", err)
+			return fmt.Errorf("Failed to update oauth token from database: %w", err)
 		}
 		accessTokenDelay := time.Until(oauth.AccessTokenExpires) - (3 * time.Second)
 		refreshTokenDelay := time.Until(oauth.RefreshTokenExpires) - (3 * time.Second)
@@ -476,13 +485,13 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 			err := refreshAccessToken(ctx, oauth)
 			if err != nil {
 				markTokenFailed(ctx, oauth)
-				return fmt.Errorf("Failed to refresh access token: %v", err)
+				return fmt.Errorf("Failed to refresh access token: %w", err)
 			}
 		case <-refreshTokenTicker.C:
 			err := refreshRefreshToken(ctx, oauth)
 			if err != nil {
 				markTokenFailed(ctx, oauth)
-				return fmt.Errorf("Failed to maintain refresh token: %v", err)
+				return fmt.Errorf("Failed to maintain refresh token: %w", err)
 			}
 		}
 	}
@@ -520,12 +529,12 @@ func refreshAccessToken(ctx context.Context, oauth *models.OauthToken) error {
 
 	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		return fmt.Errorf("Failed to create request: %v", err)
+		return fmt.Errorf("Failed to create request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	token, err := handleTokenRequest(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to handle request: %v", err)
+		return fmt.Errorf("Failed to handle request: %w", err)
 	}
 	accessExpires := futureUTCTimestamp(token.ExpiresIn)
 	setter := models.OauthTokenSetter{
@@ -535,7 +544,7 @@ func refreshAccessToken(ctx context.Context, oauth *models.OauthToken) error {
 	}
 	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
 	if err != nil {
-		return fmt.Errorf("Failed to update oauth in database: %v", err)
+		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
 	log.Info().Int("oauth token id", int(oauth.ID)).Msg("Updated oauth token")
 	return nil
@@ -554,12 +563,12 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 
 	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		return fmt.Errorf("Failed to create request: %v", err)
+		return fmt.Errorf("Failed to create request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	token, err := handleTokenRequest(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to handle request: %v", err)
+		return fmt.Errorf("Failed to handle request: %w", err)
 	}
 	refreshExpires := futureUTCTimestamp(token.ExpiresIn)
 	setter := models.OauthTokenSetter{
@@ -569,7 +578,7 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 	}
 	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
 	if err != nil {
-		return fmt.Errorf("Failed to update oauth in database: %v", err)
+		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
 	log.Info().Int("oauth token id", int(oauth.ID)).Msg("Updated oauth token")
 	return nil
@@ -585,7 +594,7 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 	log.Info().Str("url", req.URL.String()).Msg("POST")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to do request: %v", err)
+		return nil, fmt.Errorf("Failed to do request: %w", err)
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
@@ -594,12 +603,12 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 	saveResponse(bodyBytes, filename)
 	if resp.StatusCode >= http.StatusBadRequest {
 		if err != nil {
-			return nil, fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)
+			return nil, fmt.Errorf("Got status code %d and failed to read response body: %w", resp.StatusCode, err)
 		}
 		bodyString := string(bodyBytes)
 		var errorResp map[string]interface{}
 		if err := json.Unmarshal(bodyBytes, &errorResp); err == nil {
-			return nil, fmt.Errorf("API response JSON error: %d: %v", resp.StatusCode, errorResp)
+			return nil, fmt.Errorf("API response JSON error: %d: %w", resp.StatusCode, errorResp)
 		}
 		return nil, fmt.Errorf("API returned error status %d: %s", resp.StatusCode, bodyString)
 	}
@@ -607,7 +616,7 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 	var tokenResponse OAuthTokenResponse
 	err = json.Unmarshal(bodyBytes, &tokenResponse)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal JSON: %v", err)
+		return nil, fmt.Errorf("Failed to unmarshal JSON: %w", err)
 	}
 	// Just because we got a 200-level status code doesn't mean it worked. Experience has taught us that
 	// we can get errors without anything indicated in the headers or the status code
@@ -615,7 +624,7 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 		var errorResponse ErrorResponse
 		err = json.Unmarshal(bodyBytes, &errorResponse)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to unmarshal error JSON: %v", err)
+			return nil, fmt.Errorf("Failed to unmarshal error JSON: %w", err)
 		}
 		if errorResponse.Error.Code > 0 {
 			return nil, errors.New(fmt.Sprintf("API error %d: %s: %s (%s)",
@@ -694,7 +703,7 @@ func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 
 	rows_by_objectid, err := rowmapViaQuery(ctx, table, sorted_columns, objectids)
 	if err != nil {
-		return inserts, updates, fmt.Errorf("Failed to get existing rows: %v", err)
+		return inserts, updates, fmt.Errorf("Failed to get existing rows: %w", err)
 	}
 	// log.Println("Rows from query", len(rows_by_objectid))
 
@@ -705,12 +714,12 @@ func saveOrUpdateDBRecords(ctx context.Context, table string, qr *arcgis.QueryRe
 		if len(row) == 0 {
 
 			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature, org_id); err != nil {
-				return inserts, updates, fmt.Errorf("Failed to insert row: %v", err)
+				return inserts, updates, fmt.Errorf("Failed to insert row: %w", err)
 			}
 			inserts += 1
 		} else if hasUpdates(row, feature) {
 			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature, org_id); err != nil {
-				return inserts, updates, fmt.Errorf("Failed to update row: %v", err)
+				return inserts, updates, fmt.Errorf("Failed to update row: %w", err)
 			}
 			updates += 1
 		}
@@ -729,7 +738,7 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 	}
 	rows, err := PGInstance.PGXPool.Query(ctx, query, args)
 	if err != nil {
-		return result, fmt.Errorf("Failed to query rows: %v", err)
+		return result, fmt.Errorf("Failed to query rows: %w", err)
 	}
 	defer rows.Close()
 
@@ -767,13 +776,13 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 		return result, nil
 	})
 	if err != nil {
-		return result, fmt.Errorf("Failed to collect rows: %v", err)
+		return result, fmt.Errorf("Failed to collect rows: %w", err)
 	}
 	for _, row := range rowSlice {
 		o := row["objectid"]
 		objectid, err := strconv.Atoi(o)
 		if err != nil {
-			return result, fmt.Errorf("Failed to parse objectid %s: %v", o, err)
+			return result, fmt.Errorf("Failed to parse objectid %s: %w", o, err)
 		}
 		result[objectid] = row
 	}
@@ -790,18 +799,18 @@ func insertRowFromFeature(ctx context.Context, table string, sorted_columns []st
 	err = insertRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature, org_id)
 	if err != nil {
 		transaction.Rollback(ctx)
-		return fmt.Errorf("Unable to insert FS: %v", err)
+		return fmt.Errorf("Unable to insert FS: %w", err)
 	}
 
 	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, org_id, 1)
 	if err != nil {
 		transaction.Rollback(ctx)
-		return fmt.Errorf("Failed to insert history: %v", err)
+		return fmt.Errorf("Failed to insert history: %w", err)
 	}
 
 	err = transaction.Commit(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to commit transaction: %v", err)
+		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	return nil
 }
@@ -839,7 +848,7 @@ func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 
 	_, err := transaction.Exec(ctx, sb.String(), args)
 	if err != nil {
-		return fmt.Errorf("Failed to insert row into %s: %v", table, err)
+		return fmt.Errorf("Failed to insert row into %s: %w", table, err)
 	}
 	return nil
 }
@@ -891,7 +900,7 @@ func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
 				continue
 			}
 		}
-		log.Info().Msg(fmt.Sprintf("key: %s\tvalue: %v (type %T)\trow: %s\n", key, value, value, rowdata))
+		log.Info().Msg(fmt.Sprintf("key: %s\tvalue: %w (type %T)\trow: %s\n", key, value, value, rowdata))
 		log.Error().Msg("we've hit a point where we can't tell if we have an update or not, need a programmer to look at the above")
 	}
 	return false
@@ -910,7 +919,7 @@ func updateRowFromFeature(ctx context.Context, table string, sorted_columns []st
 
 	var version int
 	if err := PGInstance.PGXPool.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
-		return fmt.Errorf("Failed to query for version: %v", err)
+		return fmt.Errorf("Failed to query for version: %w", err)
 	}
 
 	var options pgx.TxOptions
@@ -922,17 +931,17 @@ func updateRowFromFeature(ctx context.Context, table string, sorted_columns []st
 	err = insertRowFromFeatureHistory(ctx, transaction, table, sorted_columns, feature, org_id, version+1)
 	if err != nil {
 		transaction.Rollback(ctx)
-		return fmt.Errorf("Failed to insert history: %v", err)
+		return fmt.Errorf("Failed to insert history: %w", err)
 	}
 	err = updateRowFromFeatureFS(ctx, transaction, table, sorted_columns, feature)
 	if err != nil {
 		transaction.Rollback(ctx)
-		return fmt.Errorf("Failed to update row from feature: %v", err)
+		return fmt.Errorf("Failed to update row from feature: %w", err)
 	}
 
 	err = transaction.Commit(ctx)
 	if err != nil {
-		return fmt.Errorf("Failed to commit transaction: %v", err)
+		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	return nil
 }
@@ -964,7 +973,7 @@ func insertRowFromFeatureHistory(ctx context.Context, transaction pgx.Tx, table 
 	args["organization_id"] = org_id
 	args["version"] = version
 	if _, err := transaction.Exec(ctx, sb.String(), args); err != nil {
-		return fmt.Errorf("Failed to insert history row into %s: %v", table, err)
+		return fmt.Errorf("Failed to insert history row into %s: %w", table, err)
 	}
 	return nil
 }
@@ -1009,7 +1018,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 
 	_, err := transaction.Exec(ctx, sb.String(), args)
 	if err != nil {
-		return fmt.Errorf("Failed to update row into %s: %v", table, err)
+		return fmt.Errorf("Failed to update row into %s: %w", table, err)
 	}
 	return nil
 }

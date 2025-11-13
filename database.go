@@ -78,7 +78,7 @@ func doMigrations(connection_string string) error {
 func initializeDatabase(ctx context.Context, uri string) error {
 	needs, err := needsMigrations(uri)
 	if err != nil {
-		return fmt.Errorf("Failed to determine if migrations are needed: %v", err)
+		return fmt.Errorf("Failed to determine if migrations are needed: %w", err)
 	}
 	if needs == nil {
 		return errors.New("Can't read variable 'needs' - it's nil")
@@ -88,7 +88,7 @@ func initializeDatabase(ctx context.Context, uri string) error {
 		log.Info().Msg("Handling database migrations")
 		err = doMigrations(uri)
 		if err != nil {
-			return fmt.Errorf("Failed to handle migrations: %v", err)
+			return fmt.Errorf("Failed to handle migrations: %w", err)
 		}
 	} else {
 		log.Info().Msg("No database migrations necessary")

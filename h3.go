@@ -22,7 +22,7 @@ func h3Indexes() []h3.H3Index {
 func h3ToGeoJSON(indexes []h3.H3Index) (string, error) {
 	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
 	if err != nil {
-		return "", fmt.Errorf("Failed to get feature collection: %v", err)
+		return "", fmt.Errorf("Failed to get feature collection: %w", err)
 	}
 	return featureCollection.JSON(), nil
 }
