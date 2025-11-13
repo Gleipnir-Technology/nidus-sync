@@ -373,7 +373,7 @@ func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.Oaut
 		return nil, fmt.Errorf("Failed to query all users for org: %v", err)
 	}
 	for _, user := range users {
-		oauths, err := user.UserOauthTokens().All(ctx, PGInstance.BobDB)
+		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, PGInstance.BobDB)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %v", err)
 		}
