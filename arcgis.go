@@ -450,25 +450,43 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 }
 
 func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
-	refreshDelay := time.Until(oauth.AccessTokenExpires)
-	slog.Info("Need to refresh oauth", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshDelay.Seconds()))
+	accessTokenDelay := time.Until(oauth.AccessTokenExpires)
+	refreshTokenDelay := time.Until(oauth.RefreshTokenExpires)
+	slog.Info("Need to refresh access token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", accessTokenDelay.Seconds()))
+	slog.Info("Need to refresh refresh token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshTokenDelay.Seconds()))
 	if oauth.AccessTokenExpires.Before(time.Now()) {
-		err := refreshOAuth(ctx, oauth)
+		err := refreshAccessToken(ctx, oauth)
 		if err != nil {
 			markTokenFailed(ctx, oauth)
-			return fmt.Errorf("Failed to refresh token: %v", err)
+			return fmt.Errorf("Failed to refresh access token: %v", err)
 		}
-		refreshDelay = time.Until(oauth.AccessTokenExpires)
+		accessTokenDelay = time.Until(oauth.AccessTokenExpires)
 	}
-	refreshTicker := time.NewTicker(refreshDelay)
+	if oauth.RefreshTokenExpires.Before(time.Now()) {
+		err := refreshRefreshToken(ctx, oauth)
+		if err != nil {
+			markTokenFailed(ctx, oauth)
+			return fmt.Errorf("Failed to refresh refresh token: %v", err)
+		}
+		accessTokenDelay = time.Until(oauth.RefreshTokenExpires)
+	}
+	accessTokenTicker := time.NewTicker(accessTokenDelay)
+	refreshTokenTicker := time.NewTicker(refreshTokenDelay)
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-refreshTicker.C:
-			err := refreshOAuth(ctx, oauth)
+		case <-accessTokenTicker.C:
+			err := refreshAccessToken(ctx, oauth)
 			if err != nil {
-				return fmt.Errorf("Failed to refresh token: %v", err)
+				markTokenFailed(ctx, oauth)
+				return fmt.Errorf("Failed to refresh access token: %v", err)
+			}
+		case <-refreshTokenTicker.C:
+			err := refreshRefreshToken(ctx, oauth)
+			if err != nil {
+				markTokenFailed(ctx, oauth)
+				return fmt.Errorf("Failed to maintain refresh token: %v", err)
 			}
 		}
 	}
@@ -503,7 +521,9 @@ func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
 	}
 	slog.Info("Marked oauth token invalid", slog.Int("id", int(oauth.ID)))
 }
-func refreshOAuth(ctx context.Context, oauth *models.OauthToken) error {
+
+// Update the access token to keep it fresh and alive
+func refreshAccessToken(ctx context.Context, oauth *models.OauthToken) error {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
 
 	form := url.Values{
@@ -533,6 +553,45 @@ func refreshOAuth(ctx context.Context, oauth *models.OauthToken) error {
 	}
 	slog.Info("Updated oauth token", slog.Int("oauth token id", int(oauth.ID)))
 	return nil
+}
+
+// Update the refresh token to keep it fresh and alive
+func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
+	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
+
+	form := url.Values{
+		"grant_type":    []string{"exchange_refresh_token"},
+		"client_id":     []string{ClientID},
+		"redirect_uri":  []string{redirectURL()},
+		"refresh_token": []string{oauth.RefreshToken},
+	}
+
+	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return fmt.Errorf("Failed to create request: %v", err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	token, err := handleTokenRequest(ctx, req)
+	if err != nil {
+		return fmt.Errorf("Failed to handle request: %v", err)
+	}
+	refreshExpires := futureUTCTimestamp(token.ExpiresIn)
+	setter := models.OauthTokenSetter{
+		RefreshToken:        omit.From(token.AccessToken),
+		RefreshTokenExpires: omit.From(refreshExpires),
+		Username:            omit.From(token.Username),
+	}
+	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
+	if err != nil {
+		return fmt.Errorf("Failed to update oauth in database: %v", err)
+	}
+	slog.Info("Updated oauth token", slog.Int("oauth token id", int(oauth.ID)))
+	return nil
+}
+
+func newTimestampedFilename(prefix, suffix string) string {
+	timestamp := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS format
+	return prefix + timestamp + suffix
 }
 
 func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResponse, error) {
