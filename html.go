@@ -25,9 +25,15 @@ import (
 //go:embed templates/*
 var embeddedFiles embed.FS
 
+// Authenticated pages
 var (
-	dashboard                       = newBuiltTemplate("dashboard", "authenticated")
-	oauthPrompt                     = newBuiltTemplate("oauth-prompt", "authenticated")
+	dashboard   = newBuiltTemplate("dashboard", "authenticated")
+	oauthPrompt = newBuiltTemplate("oauth-prompt", "authenticated")
+	settings    = newBuiltTemplate("settings", "authenticated")
+)
+
+// Unauthenticated pages
+var (
 	phoneCall                       = newBuiltTemplate("phone-call", "base")
 	report                          = newBuiltTemplate("report", "base")
 	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
@@ -58,6 +64,9 @@ type BuiltTemplate struct {
 type Link struct {
 	Href  string
 	Title string
+}
+type ContentAuthenticatedPlaceholder struct {
+	User User
 }
 type ContentPhoneCall struct {
 	DistrictName string
@@ -129,6 +138,19 @@ func bigNumber(n int) string {
 	return result.String()
 }
 
+func contentForUser(ctx context.Context, user *models.User) (User, error) {
+	notifications, err := notificationsForUser(ctx, user)
+	if err != nil {
+		return User{}, err
+	}
+	return User{
+		DisplayName:   user.DisplayName,
+		Initials:      extractInitials(user.DisplayName),
+		Notifications: notifications,
+		Username:      user.Username,
+	}, nil
+
+}
 func extractInitials(name string) string {
 	parts := strings.Fields(name)
 	var initials strings.Builder
@@ -187,11 +209,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 			Status:   "Completed",
 		})
 	}
-	notifications, err := notificationsForUser(ctx, user)
-	if err != nil {
-		respondError(w, "Failed to get notifications", err, http.StatusInternalServerError)
-		return
-	}
+	userContent, err := contentForUser(ctx, user)
 	data := ContentDashboard{
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
@@ -199,12 +217,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		LastSync:             lastSync,
 		Org:                  org.Name.MustGet(),
 		RecentRequests:       requests,
-		User: User{
-			DisplayName:   user.DisplayName,
-			Initials:      extractInitials(user.DisplayName),
-			Notifications: notifications,
-			Username:      user.Username,
-		},
+		User:                 userContent,
 	}
 	renderOrError(w, dashboard, data)
 }
@@ -324,6 +337,18 @@ func htmlServiceRequestUpdates(w http.ResponseWriter) {
 	renderOrError(w, serviceRequestUpdates, data)
 }
 
+func htmlSettings(w http.ResponseWriter, r *http.Request, user *models.User) {
+	userContent, err := contentForUser(r.Context(), user)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentAuthenticatedPlaceholder{
+		User: userContent,
+	}
+	renderOrError(w, settings, data)
+}
+
 func htmlSignin(w http.ResponseWriter, errorCode string) {
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
@@ -401,6 +426,7 @@ func parseFromDisk(files []string) (*template.Template, error) {
 	}
 	return templ, nil
 }
+
 func timeElapsed(seconds null.Val[float32]) string {
 	if !seconds.IsValue() {
 		return "none"

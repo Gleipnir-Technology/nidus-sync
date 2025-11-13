@@ -19,6 +19,10 @@ type NoCredentialsError struct{}
 
 func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
 
+type NoUserError struct{}
+
+func (e NoUserError) Error() string { return "That user does not exist" }
+
 type InvalidCredentials struct{}
 
 func (e InvalidCredentials) Error() string { return "No username with that password exists" }
@@ -27,6 +31,49 @@ type InvalidUsername struct{}
 
 func (e InvalidUsername) Error() string { return "That username doesn't exist" }
 
+type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *models.User)
+type EnsureAuth struct {
+	handler AuthenticatedHandler
+}
+
+func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
+	return &EnsureAuth{handlerToWrap}
+}
+
+func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// If this is an API request respond with a more machine-readable error state
+	accept := r.Header.Values("Accept")
+	offers := []string{"application/json", "text/html"}
+
+	content_type := NegotiateContent(accept, offers)
+	user, err := getAuthenticatedUser(r)
+	if err != nil {
+		var msg []byte
+		// Separate return codes for different authentication failures
+		if _, ok := err.(*NoCredentialsError); ok {
+			fmt.Println("No credentials present and no session")
+			w.Header().Set("WWW-Authenticate-Error", "no-credentials")
+			msg = []byte("Please provide credentials.\n")
+		} else if _, ok := err.(*NoUserError); ok {
+			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
+			msg = []byte("Invalid credentials provided.\n")
+		} else if _, ok := err.(*InvalidCredentials); ok {
+			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
+			msg = []byte("Invalid credentials provided.\n")
+		}
+
+		if content_type == "text/html" {
+			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
+			return
+		}
+		w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
+		w.WriteHeader(401)
+		w.Write(msg)
+		return
+	}
+
+	ea.handler(w, r, user)
+}
 func addUserSession(r *http.Request, user *models.User) {
 	id := strconv.Itoa(int(user.ID))
 	sessionManager.Put(r.Context(), "user_id", id)
@@ -34,6 +81,21 @@ func addUserSession(r *http.Request, user *models.User) {
 	slog.Info("Created new user session",
 		slog.String("username", user.Username),
 		slog.String("user_id", id))
+}
+
+// Helper function to translate strings into solid error types for operating on
+func findUser(ctx context.Context, user_id int) (*models.User, error) {
+	user, err := models.FindUser(ctx, PGInstance.BobDB, int32(user_id))
+	if err != nil {
+		if err.Error() == "No such user" {
+			return nil, &NoUserError{}
+		} else {
+			LogErrorTypeInfo(err)
+			slog.Error("Unrecognized error. This should be updated in the findUser code", slog.String("err", err.Error()))
+			return nil, err
+		}
+	}
+	return user, err
 }
 
 func getAuthenticatedUser(r *http.Request) (*models.User, error) {
@@ -49,7 +111,7 @@ func getAuthenticatedUser(r *http.Request) (*models.User, error) {
 			slog.Int("user_id", user_id),
 			slog.String("username", username))
 		if user_id > 0 && username != "" {
-			return models.FindUser(r.Context(), PGInstance.BobDB, int32(user_id))
+			return findUser(r.Context(), user_id)
 		}
 	}
 	// If we can't get the user from the session try to get from auth headers

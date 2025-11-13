@@ -69,12 +69,18 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(sessionManager.LoadAndSave)
 
+	// Root is a special endpoint that is neither authenticated nor unauthenticated
 	r.Get("/", getRoot)
+
+	// Unauthenticated endpoints
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
-	r.Get("/qr-code/report/{code}", getQRCodeReport)
+	r.Get("/favicon.ico", getFavicon)
+
 	r.Get("/oauth/refresh", getOAuthRefresh)
+
 	r.Get("/phone-call", getPhoneCall)
+	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/report", getReport)
 	r.Get("/report/{code}", getReportDetail)
 	r.Get("/report/{code}/confirm", getReportConfirmation)
@@ -93,7 +99,9 @@ func main() {
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
-	r.Get("/favicon.ico", getFavicon)
+
+	// Authenticated endpoints
+	r.Method("GET", "/settings", NewEnsureAuth(getSettings))
 
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")

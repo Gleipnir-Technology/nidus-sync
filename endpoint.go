@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/skip2/go-qrcode"
 )
@@ -209,6 +210,9 @@ func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
 	htmlServiceRequestUpdates(w)
 }
 
+func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
+	htmlSettings(w, r, u)
+}
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	htmlSignup(w, r.URL.Path)
 }
