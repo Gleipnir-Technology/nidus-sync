@@ -156,6 +156,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 		slog.Error("Failed to get search FieldseekerGIS data", slog.String("err", err.Error()))
 		return
 	}
+	var fieldseekerClient *fieldseeker.FieldSeeker
 	for _, result := range search.Results {
 		slog.Info("Got result", slog.String("name", result.Name))
 		if result.Name == "FieldSeekerGIS" {
@@ -168,9 +169,41 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 				slog.Error("Failed to create new organization", slog.String("err", err.Error()))
 				return
 			}
+			fieldseekerClient, err = fieldseeker.NewFieldSeeker(
+				client,
+				result.URL,
+			)
+			if err != nil {
+				slog.Error("Failed to create fieldseeker client", slog.String("err", err.Error()))
+				return
+			}
 		}
 	}
+	arcgis_id, ok := org.ArcgisID.Get()
+	if !ok {
+		slog.Error("Cannot get webhooks - ArcGIS ID is null", slog.Int("org.id", int(org.ID)))
+	}
+	client.Context = &arcgis_id
+	err = maybeCreateWebhook(ctx, fieldseekerClient)
+	if err != nil {
+		slog.Error("Failed to manage webhooks", slog.String("err", err.Error()))
+	}
 	NewOAuthTokenChannel <- struct{}{}
+}
+
+func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) error {
+	webhooks, err := client.WebhookList()
+	if err != nil {
+		return fmt.Errorf("Failed to get webhooks: %v", err)
+	}
+	for _, hook := range webhooks {
+		if hook.Name == "Nidus Sync" {
+			return nil
+		} else {
+			slog.Info("Found webhook", slog.String("name", hook.Name))
+		}
+	}
+	return errors.New("Not implemented")
 }
 
 func handleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
