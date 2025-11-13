@@ -49,7 +49,8 @@ func notifyOauthInvalid(ctx context.Context, user *models.User) {
 	}
 	err := user.InsertUserNotifications(ctx, PGInstance.BobDB, &notificationSetter)
 	if err != nil {
-		slog.Error("Failed to get oauth user", slog.String("err", err.Error()))
+		LogErrorTypeInfo(err)
+		slog.Error("Failed to insert new notification. Update this clause to detect duplicate inserts.", slog.String("err", err.Error()))
 		return
 	}
 }
