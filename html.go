@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -110,6 +111,22 @@ func (bt *BuiltTemplate) ExecuteTemplate(w io.Writer, data any) error {
 	} else {
 		return bt.template.ExecuteTemplate(w, name, data)
 	}
+}
+
+func bigNumber(n int) string {
+	// Convert the number to a string
+	numStr := strconv.FormatInt(int64(n), 10)
+
+	// Add commas every three digits from the right
+	var result strings.Builder
+	for i, char := range numStr {
+		if i > 0 && (len(numStr)-i)%3 == 0 {
+			result.WriteByte(',')
+		}
+		result.WriteRune(char)
+	}
+
+	return result.String()
 }
 
 func extractInitials(name string) string {
@@ -321,6 +338,7 @@ func htmlSignup(w http.ResponseWriter, path string) {
 
 func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
+		"bigNumber":   bigNumber,
 		"timeElapsed": timeElapsed,
 		"timeSince":   timeSince,
 	}
