@@ -1,3 +1,6 @@
 [submodule "arcgis-go"]
 	path = arcgis-go
 	url = git@github.com:Gleipnir-Technology/arcgis-go.git
+[submodule "go-geojson2h3"]
+	path = go-geojson2h3
+	url = git@github.com:Gleipnir-Technology/go-geojson2h3.git

@@ -5,8 +5,9 @@
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
 <script>
+const geojson = {{.Geo}};
 function onLoad() {
-	console.log("Setting up the map...");
+	console.log("Setting up the map...", geojson);
 	mapboxgl.accessToken = {{ .MapboxToken }};
 	const map = new mapboxgl.Map({
 		container: 'map', // container ID
@@ -14,7 +15,33 @@ function onLoad() {
 		center: [-74.5, 40], // starting position [lng, lat]
 		zoom: 9, // starting zoom
 	});
-	console.log("done.");
+	map.on("load", function() {
+		console.log("Map post-load...");
+		const sourceId = 'h3-hexes';
+		const layerId = 'h3-hexes-layer';
+		let source = map.getSource(sourceId);
+
+		if (!source) {
+			map.addSource(sourceId, {
+				type: 'geojson',
+				data: geojson
+			});
+			map.addLayer({
+				id: layerId,
+				source: sourceId,
+				type: 'fill',
+				interactive: false,
+				paint: {
+					'fill-color': '#F00000',
+					'fill-opacity': 0.3
+				}
+			});
+			source = map.getSource(sourceId);
+		}
+		source.setData(geojson);
+		console.log("Map post-load done.");
+	});
+	console.log("Map init done.");
 }
 window.addEventListener("load", onLoad);
 </script>

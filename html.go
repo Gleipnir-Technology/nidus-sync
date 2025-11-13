@@ -81,6 +81,7 @@ type ContentDashboard struct {
 	CountInspections     int
 	CountMosquitoSources int
 	CountServiceRequests int
+	Geo                  template.JS
 	MapboxToken          string
 	LastSync             *time.Time
 	Org                  string
@@ -165,6 +166,11 @@ func extractInitials(name string) string {
 }
 
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
+	geo, err := h3ToGeoJSON(h3Indexes())
+	if err != nil {
+		respondError(w, "Failed to get geo", err, http.StatusInternalServerError)
+		return
+	}
 	org, err := user.Organization().One(ctx, PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
@@ -214,6 +220,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
+		Geo:                  template.JS(geo),
 		LastSync:             lastSync,
 		MapboxToken:          MapboxToken,
 		Org:                  org.Name.MustGet(),
