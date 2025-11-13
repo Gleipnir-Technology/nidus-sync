@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +13,8 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var sessionManager *scs.SessionManager
@@ -21,19 +22,22 @@ var sessionManager *scs.SessionManager
 var BaseURL, ClientID, ClientSecret, Environment, MapboxToken string
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
 	if ClientID == "" {
-		slog.Error("You must specify a non-empty ARCGIS_CLIENT_ID")
+		log.Error().Msg("You must specify a non-empty ARCGIS_CLIENT_ID")
 		os.Exit(1)
 	}
 	ClientSecret = os.Getenv("ARCGIS_CLIENT_SECRET")
 	if ClientSecret == "" {
-		slog.Error("You must specify a non-empty ARCGIS_CLIENT_SECRET")
+		log.Error().Msg("You must specify a non-empty ARCGIS_CLIENT_SECRET")
 		os.Exit(1)
 	}
 	BaseURL = os.Getenv("BASE_URL")
 	if BaseURL == "" {
-		slog.Error("You must specify a non-empty BASE_URL")
+		log.Error().Msg("You must specify a non-empty BASE_URL")
 		os.Exit(1)
 	}
 	bind := os.Getenv("BIND")
@@ -42,28 +46,28 @@ func main() {
 	}
 	Environment = os.Getenv("ENVIRONMENT")
 	if Environment == "" {
-		slog.Error("You must specify a non-empty ENVIRONMENT")
+		log.Error().Msg("You must specify a non-empty ENVIRONMENT")
 		os.Exit(1)
 	}
 	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
-		slog.Error("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION", slog.String("ENVIRONMENT", Environment))
+		log.Error().Str("ENVIRONMENT", Environment).Msg("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
 		os.Exit(2)
 	}
 	MapboxToken = os.Getenv("MAPBOX_TOKEN")
 	if MapboxToken == "" {
-		slog.Error("You must specify a non-empty MAPBOX_TOKEN")
+		log.Error().Msg("You must specify a non-empty MAPBOX_TOKEN")
 		os.Exit(1)
 	}
 	pg_dsn := os.Getenv("POSTGRES_DSN")
 	if pg_dsn == "" {
-		slog.Error("You must specify a non-empty POSTGRES_DSN")
+		log.Error().Msg("You must specify a non-empty POSTGRES_DSN")
 		os.Exit(1)
 	}
 
-	slog.Info("Starting...")
+	log.Info().Msg("Starting...")
 	err := initializeDatabase(context.TODO(), pg_dsn)
 	if err != nil {
-		slog.Error("Failed to connect to database", slog.String("err", err.Error()))
+		log.Error().Str("err", err.Error()).Msg("Failed to connect to database")
 		os.Exit(2)
 	}
 	sessionManager = scs.New()
@@ -129,9 +133,9 @@ func main() {
 		Handler: r,
 	}
 	go func() {
-		slog.Info("Serving HTTP requests", slog.String("address", bind))
+		log.Info().Str("address", bind).Msg("Serving HTTP requests")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("HTTP Server Error", slog.String("err", err.Error()))
+			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
 		}
 	}()
 
@@ -140,19 +144,19 @@ func main() {
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	<-signalCh
 
-	slog.Info("Received shutdown signal, shutting down...")
+	log.Info().Msg("Received shutdown signal, shutting down...")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("HTTP server shutdown error", slog.String("err", err.Error()))
+		log.Error().Str("err", err.Error()).Msg("HTTP server shutdown error")
 	}
 
 	cancel()
 
 	waitGroup.Wait()
 
-	slog.Info("Shutdown complete")
+	log.Info().Msg("Shutdown complete")
 }
 
 func IsProductionEnvironment() bool {
