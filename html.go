@@ -81,6 +81,7 @@ type ContentDashboard struct {
 	CountInspections     int
 	CountMosquitoSources int
 	CountServiceRequests int
+	MapboxToken          string
 	LastSync             *time.Time
 	Org                  string
 	RecentRequests       []ServiceRequestSummary
@@ -214,6 +215,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
 		LastSync:             lastSync,
+		MapboxToken:          MapboxToken,
 		Org:                  org.Name.MustGet(),
 		RecentRequests:       requests,
 		User:                 userContent,

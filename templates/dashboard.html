@@ -1,7 +1,24 @@
 {{template "authenticated.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script>
+function onLoad() {
+	console.log("Setting up the map...");
+	mapboxgl.accessToken = {{ .MapboxToken }};
+	const map = new mapboxgl.Map({
+		container: 'map', // container ID
+		style: 'mapbox://styles/mapbox/streets-v12', // style URL
+		center: [-74.5, 40], // starting position [lng, lat]
+		zoom: 9, // starting zoom
+	});
+	console.log("done.");
+}
+window.addEventListener("load", onLoad);
+</script>
+<style>
 body {
 	background-color: #f8f9fa;
 }
@@ -58,6 +75,7 @@ body {
 	font-size: 2rem;
 	font-weight: bold;
 }
+</style>
 {{end}}
 {{define "content"}}
 <div class="container dashboard-container">
@@ -151,6 +169,7 @@ body {
 	<div class="row">
 		<div class="col-12">
 			<div class="map-container" id="mosquito-heatmap">
+				<div id='map' style='width: 400px; height: 300px;'></div>
 				<div class="text-center">
 					<i class="fas fa-map-marked-alt fa-4x text-muted mb-3"></i>
 					<h4>Mosquito Activity Heatmap</h4>

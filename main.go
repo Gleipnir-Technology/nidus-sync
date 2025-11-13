@@ -18,7 +18,7 @@ import (
 
 var sessionManager *scs.SessionManager
 
-var BaseURL, ClientID, ClientSecret, Environment string
+var BaseURL, ClientID, ClientSecret, Environment, MapboxToken string
 
 func main() {
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
@@ -48,6 +48,11 @@ func main() {
 	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
 		slog.Error("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION", slog.String("ENVIRONMENT", Environment))
 		os.Exit(2)
+	}
+	MapboxToken = os.Getenv("MAPBOX_TOKEN")
+	if MapboxToken == "" {
+		slog.Error("You must specify a non-empty MAPBOX_TOKEN")
+		os.Exit(1)
 	}
 	pg_dsn := os.Getenv("POSTGRES_DSN")
 	if pg_dsn == "" {

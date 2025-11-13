@@ -8,9 +8,7 @@
 	<link href="/static/vendor/css/bootstrap.min.css" rel="stylesheet">
 	<!-- Fontawesome Icons -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-	<style>
-		{{template "style" .}}
-	</style>
+	{{block "extraheader" .}} {{end}}
 </head>
 <body>
 {{if .User}}
