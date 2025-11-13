@@ -22,7 +22,6 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
-	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/omit"
@@ -194,26 +193,23 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 		slog.Error("Cannot get webhooks - ArcGIS ID is null", slog.Int("org.id", int(org.ID)))
 	}
 	client.Context = &arcgis_id
-	err = maybeCreateWebhook(ctx, fieldseekerClient)
-	if err != nil {
-		slog.Error("Failed to manage webhooks", slog.String("err", err.Error()))
-	}
+	maybeCreateWebhook(ctx, fieldseekerClient)
+	clearNotificationsOauth(ctx, user)
 	NewOAuthTokenChannel <- struct{}{}
 }
 
-func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) error {
+func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
 	webhooks, err := client.WebhookList()
 	if err != nil {
-		return fmt.Errorf("Failed to get webhooks: %v", err)
+		slog.Error("Failed to get webhooks", slog.String("err", err.Error()))
 	}
 	for _, hook := range webhooks {
 		if hook.Name == "Nidus Sync" {
-			return nil
+			slog.Info("Found nidus sync hook")
 		} else {
 			slog.Info("Found webhook", slog.String("name", hook.Name))
 		}
 	}
-	return errors.New("Not implemented")
 }
 
 func handleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
@@ -513,17 +509,7 @@ func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
 		slog.Error("Failed to get oauth user", slog.String("err", err.Error()))
 		return
 	}
-	notificationSetter := models.NotificationSetter{
-		Created: omit.From(time.Now()),
-		Message: omit.From("Oauth token invalidated"),
-		Link:    omit.From("/oauth/refresh"),
-		Type:    omit.From(enums.NotificationtypeOauthTokenInvalidated),
-	}
-	err = user.InsertUserNotifications(ctx, PGInstance.BobDB, &notificationSetter)
-	if err != nil {
-		slog.Error("Failed to get oauth user", slog.String("err", err.Error()))
-		return
-	}
+	notifyOauthInvalid(ctx, user)
 	slog.Info("Marked oauth token invalid", slog.Int("id", int(oauth.ID)))
 }
 

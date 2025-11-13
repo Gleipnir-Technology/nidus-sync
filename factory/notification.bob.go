@@ -10,7 +10,9 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -36,12 +38,13 @@ func (mods NotificationModSlice) Apply(ctx context.Context, n *NotificationTempl
 // NotificationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type NotificationTemplate struct {
-	ID      func() int32
-	Created func() time.Time
-	Link    func() string
-	Message func() string
-	Type    func() enums.Notificationtype
-	UserID  func() int32
+	ID         func() int32
+	Created    func() time.Time
+	Link       func() string
+	Message    func() string
+	Type       func() enums.Notificationtype
+	UserID     func() int32
+	ResolvedAt func() null.Val[time.Time]
 
 	r notificationR
 	f *Factory
@@ -104,6 +107,10 @@ func (o NotificationTemplate) BuildSetter() *models.NotificationSetter {
 		val := o.UserID()
 		m.UserID = omit.From(val)
 	}
+	if o.ResolvedAt != nil {
+		val := o.ResolvedAt()
+		m.ResolvedAt = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -143,6 +150,9 @@ func (o NotificationTemplate) Build() *models.Notification {
 	}
 	if o.UserID != nil {
 		m.UserID = o.UserID()
+	}
+	if o.ResolvedAt != nil {
+		m.ResolvedAt = o.ResolvedAt()
 	}
 
 	o.setModelRels(m)
@@ -309,6 +319,7 @@ func (m notificationMods) RandomizeAllColumns(f *faker.Faker) NotificationMod {
 		NotificationMods.RandomMessage(f),
 		NotificationMods.RandomType(f),
 		NotificationMods.RandomUserID(f),
+		NotificationMods.RandomResolvedAt(f),
 	}
 }
 
@@ -494,6 +505,59 @@ func (m notificationMods) RandomUserID(f *faker.Faker) NotificationMod {
 	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
 		o.UserID = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m notificationMods) ResolvedAt(val null.Val[time.Time]) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.ResolvedAt = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m notificationMods) ResolvedAtFunc(f func() null.Val[time.Time]) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.ResolvedAt = f
+	})
+}
+
+// Clear any values for the column
+func (m notificationMods) UnsetResolvedAt() NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.ResolvedAt = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m notificationMods) RandomResolvedAt(f *faker.Faker) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.ResolvedAt = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m notificationMods) RandomResolvedAtNotNull(f *faker.Faker) NotificationMod {
+	return NotificationModFunc(func(_ context.Context, o *NotificationTemplate) {
+		o.ResolvedAt = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
 		}
 	})
 }

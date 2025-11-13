@@ -3619,6 +3619,7 @@ func (f *Factory) FromExistingNotification(m *models.Notification) *Notification
 	o.Message = func() string { return m.Message }
 	o.Type = func() enums.Notificationtype { return m.Type }
 	o.UserID = func() int32 { return m.UserID }
+	o.ResolvedAt = func() null.Val[time.Time] { return m.ResolvedAt }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {

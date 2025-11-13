@@ -69,6 +69,15 @@ var Notifications = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ResolvedAt: column{
+			Name:      "resolved_at",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: notificationIndexes{
 		NotificationPkey: index{
@@ -86,6 +95,28 @@ var Notifications = Table[
 			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
+			Include:       []string{},
+		},
+		UniqueUserLinkNotResolved: index{
+			Type: "btree",
+			Name: "unique_user_link_not_resolved",
+			Columns: []indexColumn{
+				{
+					Name:         "user_id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+				{
+					Name:         "link",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false, false},
+			NullsDistinct: false,
+			Where:         "(resolved_at IS NULL)",
 			Include:       []string{},
 		},
 	},
@@ -110,27 +141,29 @@ var Notifications = Table[
 }
 
 type notificationColumns struct {
-	ID      column
-	Created column
-	Link    column
-	Message column
-	Type    column
-	UserID  column
+	ID         column
+	Created    column
+	Link       column
+	Message    column
+	Type       column
+	UserID     column
+	ResolvedAt column
 }
 
 func (c notificationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Created, c.Link, c.Message, c.Type, c.UserID,
+		c.ID, c.Created, c.Link, c.Message, c.Type, c.UserID, c.ResolvedAt,
 	}
 }
 
 type notificationIndexes struct {
-	NotificationPkey index
+	NotificationPkey          index
+	UniqueUserLinkNotResolved index
 }
 
 func (i notificationIndexes) AsSlice() []index {
 	return []index{
-		i.NotificationPkey,
+		i.NotificationPkey, i.UniqueUserLinkNotResolved,
 	}
 }
 
