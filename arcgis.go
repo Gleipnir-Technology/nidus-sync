@@ -577,7 +577,7 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 	}
 	refreshExpires := futureUTCTimestamp(token.ExpiresIn)
 	setter := models.OauthTokenSetter{
-		RefreshToken:        omit.From(token.AccessToken),
+		RefreshToken:        omit.From(token.RefreshToken),
 		RefreshTokenExpires: omit.From(refreshExpires),
 		Username:            omit.From(token.Username),
 	}
