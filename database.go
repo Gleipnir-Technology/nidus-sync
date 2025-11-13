@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"sync"
 
 	//"github.com/georgysavva/scany/v2/pgxscan"
@@ -16,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
 )
 
@@ -33,7 +33,7 @@ var (
 )
 
 func doMigrations(connection_string string) error {
-	slog.Info("Connecting to database", slog.String("dsn", connection_string))
+	log.Info().Str("dsn", connection_string).Msg("Connecting to database")
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
 		return fmt.Errorf("Failed to open database connection: %w", err)
@@ -44,7 +44,7 @@ func doMigrations(connection_string string) error {
 	if err := row.Scan(&val); err != nil {
 		return fmt.Errorf("Failed to get database version query result: %w", err)
 	}
-	slog.Info("Connected to database", slog.String("version", val))
+	log.Info().Str("version", val).Msg("Connected to database")
 
 	fsys, err := fs.Sub(embedMigrations, "migrations")
 	if err != nil {
@@ -60,17 +60,17 @@ func doMigrations(connection_string string) error {
 	if err != nil {
 		return fmt.Errorf("Faield to get goose versions: %w", err)
 	}
-	slog.Info("Migration status", slog.Int("current", int(current)), slog.Int("target", int(target)))
+	log.Info().Int("current", int(current)).Int("target", int(target)).Msg("Migration status")
 	results, err := provider.Up(context.Background())
 	if err != nil {
 		return fmt.Errorf("Failed to run migrations: %w", err)
 	}
 	if len(results) > 0 {
 		for _, r := range results {
-			slog.Info("Migration done", slog.Int("version", int(r.Source.Version)), slog.String("direction", r.Direction))
+			log.Info().Int("version", int(r.Source.Version)).Str("direction", r.Direction).Msg("Migration done")
 		}
 	} else {
-		slog.Info("No migrations necessary.")
+		log.Info().Msg("No migrations necessary.")
 	}
 	return nil
 }
@@ -85,13 +85,13 @@ func initializeDatabase(ctx context.Context, uri string) error {
 	}
 	if *needs {
 		//return errors.New(fmt.Sprintf("Must migrate database before connecting: %t", *needs))
-		slog.Info("Handling database migrations")
+		log.Info().Msg("Handling database migrations")
 		err = doMigrations(uri)
 		if err != nil {
 			return fmt.Errorf("Failed to handle migrations: %v", err)
 		}
 	} else {
-		slog.Info("No database migrations necessary")
+		log.Info().Msg("No database migrations necessary")
 	}
 
 	pgOnce.Do(func() {
@@ -110,12 +110,12 @@ func initializeDatabase(ctx context.Context, uri string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get database current: %w", err)
 	}
-	slog.Info("Connected to database", slog.String("database", current))
+	log.Info().Str("database", current).Msg("Connected to database")
 	return nil
 }
 
 func needsMigrations(connection_string string) (*bool, error) {
-	slog.Info("Connecting to database", slog.String("dsn", connection_string))
+	log.Info().Str("dsn", connection_string).Msg("Connecting to database")
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open database connection: %w", err)
@@ -126,7 +126,7 @@ func needsMigrations(connection_string string) (*bool, error) {
 	if err := row.Scan(&val); err != nil {
 		return nil, fmt.Errorf("Failed to get database version query result: %w", err)
 	}
-	slog.Info("Connected to database", slog.String("dsn", val))
+	log.Info().Str("dsn", val).Msg("Connected to database")
 
 	fsys, err := fs.Sub(embedMigrations, "migrations")
 	if err != nil {
