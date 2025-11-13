@@ -44,6 +44,16 @@ body {
 	justify-content: center;
 	margin-top: 20px;
 }
+#map {
+	height: 500px;
+	width:100%;
+	margin-bottom: 10px;
+}
+#map img {
+	max-width: none;
+	min-width: 0px;
+	height: auto;
+}
 .section-title {
 	margin: 30px 0 20px;
 	padding-bottom: 10px;
@@ -169,13 +179,7 @@ body {
 	<div class="row">
 		<div class="col-12">
 			<div class="map-container" id="mosquito-heatmap">
-				<div id='map' style='width: 400px; height: 300px;'></div>
-				<div class="text-center">
-					<i class="fas fa-map-marked-alt fa-4x text-muted mb-3"></i>
-					<h4>Mosquito Activity Heatmap</h4>
-					<p class="text-muted">Map visualization will be displayed here</p>
-					<small>Showing activity data for the Central District area</small>
-				</div>
+				<div id='map'></div>
 			</div>
 		</div>
 	</div>
