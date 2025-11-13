@@ -450,29 +450,24 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 }
 
 func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
-	accessTokenDelay := time.Until(oauth.AccessTokenExpires)
-	refreshTokenDelay := time.Until(oauth.RefreshTokenExpires)
-	slog.Info("Need to refresh access token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", accessTokenDelay.Seconds()))
-	slog.Info("Need to refresh refresh token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshTokenDelay.Seconds()))
-	if oauth.AccessTokenExpires.Before(time.Now()) {
-		err := refreshAccessToken(ctx, oauth)
-		if err != nil {
-			markTokenFailed(ctx, oauth)
-			return fmt.Errorf("Failed to refresh access token: %v", err)
-		}
-		accessTokenDelay = time.Until(oauth.AccessTokenExpires)
-	}
-	if oauth.RefreshTokenExpires.Before(time.Now()) {
-		err := refreshRefreshToken(ctx, oauth)
-		if err != nil {
-			markTokenFailed(ctx, oauth)
-			return fmt.Errorf("Failed to refresh refresh token: %v", err)
-		}
-		accessTokenDelay = time.Until(oauth.RefreshTokenExpires)
-	}
-	accessTokenTicker := time.NewTicker(accessTokenDelay)
-	refreshTokenTicker := time.NewTicker(refreshTokenDelay)
 	for {
+		// Refresh from the database
+		oauth, err := models.FindOauthToken(ctx, PGInstance.BobDB, oauth.ID)
+		if err != nil {
+			return fmt.Errorf("Failed to update oauth token from database: %v", err)
+		}
+		accessTokenDelay := time.Until(oauth.AccessTokenExpires) - (10 * time.Second)
+		refreshTokenDelay := time.Until(oauth.RefreshTokenExpires) - (10 * time.Second)
+		if oauth.AccessTokenExpires.Before(time.Now()) {
+			accessTokenDelay = 0
+		}
+		if oauth.RefreshTokenExpires.Before(time.Now()) {
+			refreshTokenDelay = 0
+		}
+		slog.Info("Need to refresh access token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", accessTokenDelay.Seconds()), slog.String("access_token", oauth.AccessToken))
+		slog.Info("Need to refresh refresh token", slog.Int("id", int(oauth.ID)), slog.Float64("seconds", refreshTokenDelay.Seconds()), slog.String("refresh_token", oauth.RefreshToken))
+		accessTokenTicker := time.NewTicker(accessTokenDelay)
+		refreshTokenTicker := time.NewTicker(refreshTokenDelay)
 		select {
 		case <-ctx.Done():
 			return nil
