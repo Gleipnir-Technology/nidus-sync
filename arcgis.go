@@ -604,7 +604,8 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	slog.Info("Token request", slog.Int("status", resp.StatusCode))
-	saveResponse(bodyBytes, "token.json")
+	filename := newTimestampedFilename("token", ".json")
+	saveResponse(bodyBytes, filename)
 	if resp.StatusCode >= http.StatusBadRequest {
 		if err != nil {
 			return nil, fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)
