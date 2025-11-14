@@ -30,6 +30,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// When the API responds that the token is now invalidated
+type InvalidatedTokenError struct{}
+
+func (e InvalidatedTokenError) Error() string { return "The token has been invalidated by the server" }
+
 // When there is no oauth for an organization
 type NoOAuthForOrg struct{}
 
@@ -37,18 +42,6 @@ func (e NoOAuthForOrg) Error() string { return "No oauth available for organizat
 
 var NewOAuthTokenChannel chan struct{}
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
-
-type ErrorResponse struct {
-	Error ErrorResponseContent `json:"error"`
-}
-
-type ErrorResponseContent struct {
-	Code             int      `json:"code"`
-	Error            string   `json:"error"`
-	ErrorDescription string   `json:"error_description"`
-	Message          string   `json:"message"`
-	Details          []string `json:"details"`
-}
 
 type OAuthTokenResponse struct {
 	AccessToken           string `json:"access_token"`
@@ -278,6 +271,11 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				defer wg.Done()
 				err := maintainOAuth(workerCtx, oauth)
 				if err != nil {
+					LogErrorTypeInfo(err)
+					if errors.Is(err, &InvalidatedTokenError{}) {
+						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("The server has marked the token invalid")
+						return
+					}
 					log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
 				}
 			}()
@@ -606,8 +604,11 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 			return nil, fmt.Errorf("Got status code %d and failed to read response body: %w", resp.StatusCode, err)
 		}
 		bodyString := string(bodyBytes)
-		var errorResp map[string]interface{}
+		var errorResp arcgis.ErrorResponse
 		if err := json.Unmarshal(bodyBytes, &errorResp); err == nil {
+			if errorResp.Error.Code == 498 && errorResp.Error.Description == "invalidated refresh_token" {
+				return nil, InvalidatedTokenError{}
+			}
 			return nil, fmt.Errorf("API response JSON error: %d: %w", resp.StatusCode, errorResp)
 		}
 		return nil, fmt.Errorf("API returned error status %d: %s", resp.StatusCode, bodyString)
@@ -621,18 +622,13 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 	// Just because we got a 200-level status code doesn't mean it worked. Experience has taught us that
 	// we can get errors without anything indicated in the headers or the status code
 	if tokenResponse == (OAuthTokenResponse{}) {
-		var errorResponse ErrorResponse
+		var errorResponse arcgis.ErrorResponse
 		err = json.Unmarshal(bodyBytes, &errorResponse)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to unmarshal error JSON: %w", err)
 		}
 		if errorResponse.Error.Code > 0 {
-			return nil, errors.New(fmt.Sprintf("API error %d: %s: %s (%s)",
-				errorResponse.Error.Code,
-				errorResponse.Error.Error,
-				errorResponse.Error.ErrorDescription,
-				errorResponse.Error.Message,
-			))
+			return nil, errorResponse.AsError()
 		}
 	}
 	log.Info().Str("refresh token", tokenResponse.RefreshToken).Str("access token", tokenResponse.AccessToken).Int("access expires", tokenResponse.ExpiresIn).Int("refresh expires", tokenResponse.RefreshTokenExpiresIn).Msg("Oauth token acquired")

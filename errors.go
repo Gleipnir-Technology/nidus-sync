@@ -2,27 +2,25 @@ package main
 
 import (
 	"errors"
-	"log/slog"
 	"reflect"
+
+	"github.com/rs/zerolog/log"
 )
 
 func LogErrorTypeInfo(err error) {
 	if err == nil {
-		slog.Info("Error is nil")
+		log.Error().Msg("Error is nil")
 		return
 	}
 
 	// Log current error type
 	errType := reflect.TypeOf(err)
-	slog.Info("Error type info",
-		"type", errType.String(),
-		"pkgPath", errType.PkgPath(),
-		"error", err.Error())
+	log.Warn().Err(err).Str("type", errType.String()).Str("pkgPath", errType.PkgPath()).Msg("Error type info")
 
 	// Recursively log wrapped errors
 	wrappedErr := errors.Unwrap(err)
 	if wrappedErr != nil {
-		slog.Info("Contains wrapped error")
+		log.Info().Msg("Contains wrapped error")
 		LogErrorTypeInfo(wrappedErr)
 	}
 }
