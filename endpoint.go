@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 	"github.com/skip2/go-qrcode"
 )
 
@@ -19,7 +19,7 @@ func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
 
 func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
-	slog.Info("Handling oauth callback", slog.String("code", code))
+	log.Info().Str("code", code).Msg("Handling oauth callback")
 	if code == "" {
 		respondError(w, "Access code is empty", nil, http.StatusBadRequest)
 		return
@@ -216,9 +216,19 @@ func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	htmlSignup(w, r.URL.Path)
 }
+func getVectorTiles(w http.ResponseWriter, r *http.Request, u *models.User) {
+	org_id := chi.URLParam(r, "org_id")
+	tileset_id := chi.URLParam(r, "tileset_id")
+	zoom := chi.URLParam(r, "zoom")
+	x := chi.URLParam(r, "x")
+	y := chi.URLParam(r, "y")
+	format := chi.URLParam(r, "format")
 
+	log.Info().Str("org_id", org_id).Str("tileset_id", tileset_id).Str("zoom", zoom).Str("x", x).Str("y", y).Str("format", format).Msg("Get vector tiles")
+
+}
 func respondError(w http.ResponseWriter, m string, e error, s int) {
-	slog.Error(m, slog.Int("status", s), slog.String("err", e.Error()))
+	log.Warn().Int("status", s).Err(e).Msg("Responding with an error")
 	http.Error(w, m, http.StatusBadRequest)
 }
 
@@ -231,9 +241,7 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	slog.Info("Signin",
-		slog.String("username", username),
-		slog.String("password", strings.Repeat("*", len(password))))
+	log.Info().Str("username", username).Msg("Signin")
 
 	_, err := signinUser(r, username, password)
 	if err != nil {
@@ -259,13 +267,10 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	terms := r.FormValue("terms")
 
-	slog.Info("Signup",
-		slog.String("username", username),
-		slog.String("name", name),
-		slog.String("password", strings.Repeat("*", len(password))))
+	log.Info().Str("username", username).Str("name", name).Str("password", strings.Repeat("*", len(password))).Msg("Signup")
 
 	if terms != "on" {
-		slog.Error("Terms not agreed", slog.String("terms", terms))
+		log.Warn().Msg("Terms not agreed")
 		http.Error(w, "You must agree to the terms to register", http.StatusBadRequest)
 		return
 	}
