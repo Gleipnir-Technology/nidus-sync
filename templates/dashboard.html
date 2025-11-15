@@ -41,32 +41,21 @@ function onLoad() {
 			'type': 'fill',
 			'source': 'tegola-bonn', // ID of the tile source created above
 			'source-layer': 'lakes',
-			'layout': {
-				'line-cap': 'round',
-				'line-join': 'round'
-			},
 			'paint': {
 				'fill-opacity': 0.1,
-				'line-opacity': 0.6,
-				'line-color': 'rgb(53, 175, 109)',
-				'line-width': 2
+				'fill-color': 'rgb(100, 50, 20)'
 			}
 			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
 		map.addLayer({
 			'id': 'nidus', // Layer ID
 			'type': 'fill',
+			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
 			'source': 'tegola-nidus', // ID of the tile source created above
 			'source-layer': 'h3_aggregation',
-			'layout': {
-				'line-cap': 'round',
-				'line-join': 'round'
-			},
 			'paint': {
 				'fill-opacity': 0.3,
-				'line-opacity': 0.6,
-				'line-color': 'rgb(53, 175, 109)',
-				'line-width': 2
+				'fill-color': 'rgb(250, 100, 100)'
 			}
 			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
