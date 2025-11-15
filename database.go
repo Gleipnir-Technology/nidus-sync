@@ -177,11 +177,16 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 			cellToCount[cell] = cellToCount[cell] + 1
 		}
 		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
-		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id"))
+		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
 		for cell, count := range cellToCount {
-			to_insert = append(to_insert, im.Values(psql.Arg(cell.String(), i, count, enums.H3aggregationtypeServicerequest, org.ID)))
+			polygon, err := cellToPostgisGeometry(cell)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get PostGIS geometry")
+				continue
+			}
+			// log.Info().Str("polygon", polygon).Msg("Going to insert")
+			to_insert = append(to_insert, im.Values(psql.Arg(cell.String(), i, count, enums.H3aggregationtypeServicerequest, org.ID), psql.F("st_geomfromtext", psql.S(polygon), 4326)))
 		}
-		//to_insert = append(to_insert, im.OnConflict("h3_aggregation_cell_organization_id_type__key").DoUpdate(
 		to_insert = append(to_insert, im.OnConflict("cell, organization_id, type_").DoUpdate(
 			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
 		))

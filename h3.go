@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Gleipnir-Technology/go-geojson2h3"
 	"github.com/tidwall/geojson"
@@ -29,6 +30,15 @@ func h3Indexes() []h3.Cell {
 	}
 }
 func h3ToGeoJSON(indexes []h3.Cell) (string, error) {
+	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get feature collection: %w", err)
+	}
+	return featureCollection.JSON(), nil
+}
+
+func sampleGeoJSON() (string, error) {
+	indexes := h3Indexes()
 	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get feature collection: %w", err)
@@ -78,4 +88,24 @@ func scaleCell(cell h3.Cell, resolution int) (h3.Cell, error) {
 func getCell(x, y float64, resolution int) (h3.Cell, error) {
 	latLng := h3.NewLatLng(y, x)
 	return h3.LatLngToCell(latLng, resolution)
+}
+
+func cellToPostgisGeometry(c h3.Cell) (string, error) {
+	boundary, err := h3.CellToBoundary(c)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get cell boundary: %w", err)
+	}
+	var sb strings.Builder
+
+	for i, p := range boundary {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		fmt.Fprintf(&sb, "%g %g", p.Lng, p.Lat)
+	}
+	// add the first point on to the end to close the polygon
+	sb.WriteString(",")
+	fmt.Fprintf(&sb, "%g %g", boundary[0].Lng, boundary[0].Lat)
+
+	return fmt.Sprintf("POLYGON((%s))", sb.String()), nil
 }

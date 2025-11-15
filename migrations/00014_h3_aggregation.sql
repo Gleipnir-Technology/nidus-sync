@@ -8,10 +8,11 @@ CREATE TYPE H3AggregationType AS ENUM (
 CREATE TABLE h3_aggregation (
 	id SERIAL PRIMARY KEY,
 	cell h3index NOT NULL,
-	resolution INT NOT NULL,
 	count_ INTEGER NOT NULL,
-	type_ H3AggregationType NOT NULL,
+	geometry public.geometry(Polygon,4326),
 	organization_id INTEGER REFERENCES organization (id) NOT NULL,
+	resolution INT NOT NULL,
+	type_ H3AggregationType NOT NULL,
 	UNIQUE(cell, organization_id, type_));
 
 -- +goose Down

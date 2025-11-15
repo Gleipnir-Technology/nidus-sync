@@ -111,6 +111,7 @@ func main() {
 
 	// Authenticated endpoints
 	r.Method("GET", "/settings", NewEnsureAuth(getSettings))
+	r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", NewEnsureAuth(getVectorTiles))
 
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")

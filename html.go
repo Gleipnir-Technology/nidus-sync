@@ -166,7 +166,7 @@ func extractInitials(name string) string {
 }
 
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
-	geo, err := h3ToGeoJSON(h3Indexes())
+	geo, err := sampleGeoJSON()
 	if err != nil {
 		respondError(w, "Failed to get geo", err, http.StatusInternalServerError)
 		return
