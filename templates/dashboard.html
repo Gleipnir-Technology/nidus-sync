@@ -59,6 +59,34 @@ function onLoad() {
 			}
 			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
+		map.addInteraction("nidus-click-interaction", {
+			type: 'click',
+			target: { layerId: 'nidus' },
+			handler: (e) => {
+				const coordinates = e.feature.geometry.coordinates.slice();
+				const properties = e.feature.properties;
+				//console.log("Coordinates", coordinates[0]);
+				//console.log("Properties", properties.cell, properties.count_);
+				new mapboxgl.Popup()
+					.setLngLat(coordinates[0][0])
+					.setHTML("Cell: " + properties.cell)
+					.addTo(map);
+			}
+		});
+		map.addInteraction('nidus-mouseenter-interaction', {
+			type: 'mouseenter',
+			target: { layerId: 'nidus' },
+			handler: () => {
+				map.getCanvas().style.cursor = 'pointer';
+			}
+		});
+		map.addInteraction('nidus-mouseleave-interaction', {
+			type: 'mouseleave',
+			target: { layerId: 'nidus' },
+			handler: () => {
+				map.getCanvas().style.cursor = '';
+			}
+		});
 
 		console.log("Map post-load done.");
 	});
