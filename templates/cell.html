@@ -55,6 +55,8 @@
 							</tbody>
 						</table>
 					</div>
+					<hr class="location-divider">
+					<p>{{.CellBoundary|GISStatement}}</p>
 				</div>
 			</div>
 		</div>
@@ -79,24 +81,14 @@
 								</tr>
 							</thead>
 							<tbody>
+								{{ range .BreedingSources }}
 								<tr>
-									<td>123 Main St</td>
-									<td>Standing Water</td>
-									<td>04/15/2023</td>
-									<td>04/16/2023</td>
+									<td>{{.Address}}</td>
+									<td>{{.Type}}</td>
+									<td>{{.LastInspected}}</td>
+									<td>{{.LastTreated}}</td>
 								</tr>
-								<tr>
-									<td>125 Main St</td>
-									<td>Catch Basin</td>
-									<td>04/15/2023</td>
-									<td>04/16/2023</td>
-								</tr>
-								<tr>
-									<td>130 Main St</td>
-									<td>Drainage Ditch</td>
-									<td>04/14/2023</td>
-									<td>04/15/2023</td>
-								</tr>
+								{{ end }}
 							</tbody>
 						</table>
 					</div>

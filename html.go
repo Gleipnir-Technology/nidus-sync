@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
+	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/uber/h3-go/v4"
 )
@@ -56,6 +57,13 @@ var (
 )
 var components = [...]string{"header", "map"}
 
+type BreedingSource struct {
+	Address       string
+	Type          string
+	LastInspected string
+	LastTreated   string
+}
+
 type BuiltTemplate struct {
 	files    []string
 	name     string
@@ -72,9 +80,10 @@ type ContentAuthenticatedPlaceholder struct {
 	User User
 }
 type ContentCell struct {
-	CellBoundary h3.CellBoundary
-	MapData      ComponentMap
-	User         User
+	BreedingSources []BreedingSource
+	CellBoundary    h3.CellBoundary
+	MapData         ComponentMap
+	User            User
 }
 type ContentPhoneCall struct {
 	DistrictName string
@@ -183,6 +192,11 @@ func extractInitials(name string) string {
 }
 
 func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
+	org, err := user.Organization().One(ctx, PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
+		return
+	}
 	userContent, err := contentForUser(ctx, user)
 	if err != nil {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
@@ -204,8 +218,14 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 		return
 	}
 	resolution := h3.Cell(c).Resolution()
+	sources, err := breedingSourcesByCell(ctx, org, h3.Cell(c))
+	if err != nil {
+		respondError(w, "Failed to get boundaries", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentCell{
-		CellBoundary: boundary,
+		BreedingSources: sources,
+		CellBoundary:    boundary,
 		MapData: ComponentMap{
 			Center: LatLng{
 				Lat: center.Lat,
@@ -420,6 +440,19 @@ func htmlSignup(w http.ResponseWriter, path string) {
 	renderOrError(w, signup, data)
 }
 
+func gisStatement(cb h3.CellBoundary) string {
+	var content strings.Builder
+	for i, p := range cb {
+		if i != 0 {
+			content.WriteString(", ")
+		}
+		content.WriteString(fmt.Sprintf("%f %f", p.Lng, p.Lat))
+	}
+	// Repeat the first coordinate to close the polygon
+	content.WriteString(fmt.Sprintf(", %f %f", cb[0].Lng, cb[0].Lat))
+	return fmt.Sprintf("ST_GeomFromText('POLYGON((%s))', 3857)", content.String())
+}
+
 func latLngDisplay(ll h3.LatLng) string {
 	latDir := "N"
 	latVal := ll.Lat
@@ -441,6 +474,7 @@ func latLngDisplay(ll h3.LatLng) string {
 func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
 		"bigNumber":     bigNumber,
+		"GISStatement":  gisStatement,
 		"latLngDisplay": latLngDisplay,
 		"timeElapsed":   timeElapsed,
 		"timeSince":     timeSince,
@@ -551,4 +585,31 @@ func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interf
 		return
 	}
 	buf.WriteTo(w)
+}
+
+func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]BreedingSource, error) {
+	var results []BreedingSource
+
+	boundary, err := c.Boundary()
+	if err != nil {
+		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
+	}
+	geom_query := gisStatement(boundary)
+	rows, err := org.FSPointlocations(
+		sm.Where(
+			psql.F("ST_Within", "geom", geom_query),
+		),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
+	}
+	for _, r := range rows {
+		results = append(results, BreedingSource{
+			Address:       "nowhere",
+			Type:          r.Habitat.GetOr("none"),
+			LastInspected: "never",
+			LastTreated:   "never",
+		})
+	}
+	return results, nil
 }
