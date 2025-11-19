@@ -654,6 +654,8 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
+		sm.OrderBy("pointlocid"),
+		sm.OrderBy("enddatetime"),
 	).All(ctx, PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
@@ -681,6 +683,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
+		sm.OrderBy("lasttreatdate"),
 	).All(ctx, PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
