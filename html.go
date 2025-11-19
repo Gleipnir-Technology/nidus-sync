@@ -82,6 +82,7 @@ type ContentAuthenticatedPlaceholder struct {
 type ContentCell struct {
 	BreedingSources []BreedingSource
 	CellBoundary    h3.CellBoundary
+	Inspections     []Inspection
 	MapData         ComponentMap
 	Treatments      []Treatment
 	User            User
@@ -116,6 +117,13 @@ type ContentSignup struct{}
 type LatLng struct {
 	Lat float64
 	Lng float64
+}
+type Inspection struct {
+	Action     string
+	Date       time.Time
+	Notes      string
+	Location   string
+	LocationID string
 }
 type Link struct {
 	Href  string
@@ -219,6 +227,11 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 		respondError(w, "Failed to get boundary", err, http.StatusInternalServerError)
 		return
 	}
+	inspections, err := inspectionsByCell(ctx, org, h3.Cell(c))
+	if err != nil {
+		respondError(w, "Failed to get inspections", err, http.StatusInternalServerError)
+		return
+	}
 	geojson, err := h3ToGeoJSON([]h3.Cell{h3.Cell(c)})
 	if err != nil {
 		respondError(w, "Failed to get boundaries", err, http.StatusInternalServerError)
@@ -238,6 +251,7 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 	data := ContentCell{
 		BreedingSources: sources,
 		CellBoundary:    boundary,
+		Inspections:     inspections,
 		MapData: ComponentMap{
 			Center: LatLng{
 				Lat: center.Lat,
@@ -612,6 +626,8 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
+		sm.OrderBy("pointlocid"),
+		sm.OrderBy("enddatetime"),
 	).All(ctx, PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
@@ -622,6 +638,33 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 			LocationID: r.Pointlocid.GetOr("none"),
 			Notes:      r.Comments.GetOr("none"),
 			Product:    r.Product.GetOr("none"),
+		})
+	}
+	return results, nil
+}
+func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Inspection, error) {
+	var results []Inspection
+
+	boundary, err := c.Boundary()
+	if err != nil {
+		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
+	}
+	geom_query := gisStatement(boundary)
+	rows, err := org.FSMosquitoinspections(
+		sm.Where(
+			psql.F("ST_Within", "geom", geom_query),
+		),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
+	}
+	for _, r := range rows {
+		results = append(results, Inspection{
+			Action:     r.Actiontaken.GetOr("none"),
+			Date:       *fsTimestampToTime(r.Enddatetime),
+			Notes:      r.Comments.GetOr("none"),
+			Location:   r.Locationname.GetOr("none"),
+			LocationID: r.Pointlocid.GetOr(""),
 		})
 	}
 	return results, nil
