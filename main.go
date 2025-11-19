@@ -105,6 +105,7 @@ func main() {
 	r.Get("/service-request-quick", getServiceRequestQuick)
 	r.Get("/service-request-quick-confirmation", getServiceRequestQuickConfirmation)
 	r.Get("/service-request-updates", getServiceRequestUpdates)
+	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)

@@ -213,6 +213,11 @@ func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
 func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
 	htmlSettings(w, r, u)
 }
+
+func getSignin(w http.ResponseWriter, r *http.Request) {
+	errorCode := r.URL.Query().Get("error")
+	htmlSignin(w, errorCode)
+}
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	htmlSignup(w, r.URL.Path)
 }

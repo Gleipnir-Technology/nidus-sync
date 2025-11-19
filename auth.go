@@ -63,7 +63,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if content_type == "text/html" {
-			http.Redirect(w, r, "/login?next="+r.URL.Path, http.StatusSeeOther)
+			http.Redirect(w, r, "/signin?next="+r.URL.Path, http.StatusSeeOther)
 			return
 		}
 		w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
