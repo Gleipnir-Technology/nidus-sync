@@ -36,6 +36,21 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, BaseURL+"/", http.StatusFound)
 }
+
+func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
+	cell_str := chi.URLParam(r, "cell")
+	if cell_str == "" {
+		respondError(w, "There should always be a cell", nil, http.StatusBadRequest)
+		return
+	}
+	cell, err := HexToInt64(cell_str)
+	if err != nil {
+		respondError(w, "Cannot convert provided cell to uint64", err, http.StatusBadRequest)
+		return
+	}
+	htmlCell(r.Context(), w, user, cell)
+}
+
 func getFavicon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "image/x-icon")
 

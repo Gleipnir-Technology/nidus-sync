@@ -111,6 +111,7 @@ func main() {
 	r.Post("/signup", postSignup)
 
 	// Authenticated endpoints
+	r.Method("GET", "/cell/{cell}", NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/settings", NewEnsureAuth(getSettings))
 	r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", NewEnsureAuth(getVectorTiles))
 

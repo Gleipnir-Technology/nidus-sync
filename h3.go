@@ -9,27 +9,20 @@ import (
 	"github.com/uber/h3-go/v4"
 )
 
-func h3Indexes() []h3.Cell {
-	//[] uint64{0x852a134ffffffff})
-	/*result := make([]h3.H3Index, 0)
-	for _, v := range values {
-		result = append(result, v)
+/*
+func h3ToBoundsGeoJSON(c h3.Cell) (string, error) {
+	b, err := h3.CellToBoundary(c)
+	if err != nil {
+		respondError(w, "Failed to get cell boundary", err, http.StatusInternalServerError)
+		return
 	}
-	return result*/
-	return []h3.Cell{
-		0x8629aab2fffffff,
-		0x8629a8627ffffff,
-		0x8629a8607ffffff,
-		0x8629a8717ffffff,
-		0x8629a8617ffffff,
-		0x8629a8407ffffff,
-		0x8629a871fffffff,
-		0x8629a845fffffff,
-		0x8629aab27ffffff,
-		0x8629a84e7ffffff,
-	}
+	features, err := geojson2h3.ToFeatureCollection(b)
+	if err != nil {
+		return "", fmt.Errorf("Failed to convert boundary to
 }
-func h3ToGeoJSON(indexes []h3.Cell) (string, error) {
+*/
+
+func h3ToGeoJSON(indexes []h3.Cell) (interface{}, error) {
 	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get feature collection: %w", err)
@@ -37,14 +30,6 @@ func h3ToGeoJSON(indexes []h3.Cell) (string, error) {
 	return featureCollection.JSON(), nil
 }
 
-func sampleGeoJSON() (string, error) {
-	indexes := h3Indexes()
-	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
-	if err != nil {
-		return "", fmt.Errorf("Failed to get feature collection: %w", err)
-	}
-	return featureCollection.JSON(), nil
-}
 func main2() {
 	resolution := 9
 	object, err := geojson.Parse(`{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"shape":"Polygon","name":"Unnamed Layer","category":"default"},"geometry":{"type":"Polygon","coordinates":[[[-73.901303,40.756892],[-73.893924,40.743755],[-73.871476,40.756278],[-73.863378,40.764175],[-73.871444,40.768467],[-73.879852,40.760014],[-73.885515,40.764045],[-73.891522,40.761054],[-73.901303,40.756892]]]},"id":"a6ca1b7e-9ddf-4425-ad07-8a895f7d6ccf"}]}`, nil)

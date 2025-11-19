@@ -19,6 +19,7 @@ import (
 	"github.com/aarondl/opt/null"
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
+	"github.com/uber/h3-go/v4"
 )
 
 //go:embed templates/*
@@ -26,6 +27,7 @@ var embeddedFiles embed.FS
 
 // Authenticated pages
 var (
+	cell        = newBuiltTemplate("cell", "authenticated")
 	dashboard   = newBuiltTemplate("dashboard", "authenticated")
 	oauthPrompt = newBuiltTemplate("oauth-prompt", "authenticated")
 	settings    = newBuiltTemplate("settings", "authenticated")
@@ -52,7 +54,7 @@ var (
 	signin                          = newBuiltTemplate("signin", "base")
 	signup                          = newBuiltTemplate("signup", "base")
 )
-var components = [...]string{"header"}
+var components = [...]string{"header", "map"}
 
 type BuiltTemplate struct {
 	files    []string
@@ -60,12 +62,19 @@ type BuiltTemplate struct {
 	template *template.Template
 }
 
-type Link struct {
-	Href  string
-	Title string
+type ComponentMap struct {
+	Center      LatLng
+	GeoJSON     interface{}
+	MapboxToken string
+	Zoom        int
 }
 type ContentAuthenticatedPlaceholder struct {
 	User User
+}
+type ContentCell struct {
+	CellBoundary h3.CellBoundary
+	MapData      ComponentMap
+	User         User
 }
 type ContentPhoneCall struct {
 	DistrictName string
@@ -82,8 +91,8 @@ type ContentDashboard struct {
 	CountMosquitoSources int
 	CountServiceRequests int
 	Geo                  template.JS
-	MapboxToken          string
 	LastSync             *time.Time
+	MapData              ComponentMap
 	Org                  string
 	RecentRequests       []ServiceRequestSummary
 	User                 User
@@ -94,6 +103,14 @@ type ContentSignin struct {
 	InvalidCredentials bool
 }
 type ContentSignup struct{}
+type LatLng struct {
+	Lat float64
+	Lng float64
+}
+type Link struct {
+	Href  string
+	Title string
+}
 type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string
@@ -165,12 +182,45 @@ func extractInitials(name string) string {
 	return initials.String()
 }
 
-func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
-	geo, err := sampleGeoJSON()
+func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
+	userContent, err := contentForUser(ctx, user)
 	if err != nil {
-		respondError(w, "Failed to get geo", err, http.StatusInternalServerError)
+		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
+	center, err := h3.Cell(c).LatLng()
+	if err != nil {
+		respondError(w, "Failed to get center", err, http.StatusInternalServerError)
+		return
+	}
+	boundary, err := h3.Cell(c).Boundary()
+	if err != nil {
+		respondError(w, "Failed to get boundary", err, http.StatusInternalServerError)
+		return
+	}
+	geojson, err := h3ToGeoJSON([]h3.Cell{h3.Cell(c)})
+	if err != nil {
+		respondError(w, "Failed to get boundaries", err, http.StatusInternalServerError)
+		return
+	}
+	resolution := h3.Cell(c).Resolution()
+	data := ContentCell{
+		CellBoundary: boundary,
+		MapData: ComponentMap{
+			Center: LatLng{
+				Lat: center.Lat,
+				Lng: center.Lng,
+			},
+			GeoJSON:     geojson,
+			MapboxToken: MapboxToken,
+			Zoom:        resolution + 5,
+		},
+		User: userContent,
+	}
+	renderOrError(w, cell, &data)
+}
+
+func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
@@ -220,12 +270,13 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
-		Geo:                  template.JS(geo),
 		LastSync:             lastSync,
-		MapboxToken:          MapboxToken,
-		Org:                  org.Name.MustGet(),
-		RecentRequests:       requests,
-		User:                 userContent,
+		MapData: ComponentMap{
+			MapboxToken: MapboxToken,
+		},
+		Org:            org.Name.MustGet(),
+		RecentRequests: requests,
+		User:           userContent,
 	}
 	renderOrError(w, dashboard, data)
 }
@@ -369,11 +420,30 @@ func htmlSignup(w http.ResponseWriter, path string) {
 	renderOrError(w, signup, data)
 }
 
+func latLngDisplay(ll h3.LatLng) string {
+	latDir := "N"
+	latVal := ll.Lat
+	if ll.Lat < 0 {
+		latDir = "S"
+		latVal = -ll.Lat
+	}
+
+	lngDir := "E"
+	lngVal := ll.Lng
+	if ll.Lng < 0 {
+		lngDir = "W"
+		lngVal = -ll.Lng
+	}
+
+	return fmt.Sprintf("%.4f° %s, %.4f° %s", latVal, latDir, lngVal, lngDir)
+}
+
 func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
-		"bigNumber":   bigNumber,
-		"timeElapsed": timeElapsed,
-		"timeSince":   timeSince,
+		"bigNumber":     bigNumber,
+		"latLngDisplay": latLngDisplay,
+		"timeElapsed":   timeElapsed,
+		"timeSince":     timeSince,
 	}
 	return funcMap
 }
