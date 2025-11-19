@@ -58,10 +58,10 @@ var (
 var components = [...]string{"header", "map"}
 
 type BreedingSource struct {
-	Address       string
+	ID            string
 	Type          string
-	LastInspected string
-	LastTreated   string
+	LastInspected *time.Time
+	LastTreated   *time.Time
 }
 
 type BuiltTemplate struct {
@@ -83,6 +83,7 @@ type ContentCell struct {
 	BreedingSources []BreedingSource
 	CellBoundary    h3.CellBoundary
 	MapData         ComponentMap
+	Treatments      []Treatment
 	User            User
 }
 type ContentPhoneCall struct {
@@ -124,6 +125,12 @@ type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string
 	Status   string
+}
+type Treatment struct {
+	Date       time.Time
+	LocationID string
+	Notes      string
+	Product    string
 }
 type User struct {
 	DisplayName   string
@@ -220,7 +227,12 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 	resolution := h3.Cell(c).Resolution()
 	sources, err := breedingSourcesByCell(ctx, org, h3.Cell(c))
 	if err != nil {
-		respondError(w, "Failed to get boundaries", err, http.StatusInternalServerError)
+		respondError(w, "Failed to get sources", err, http.StatusInternalServerError)
+		return
+	}
+	treatments, err := treatmentsByCell(ctx, org, h3.Cell(c))
+	if err != nil {
+		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
 		return
 	}
 	data := ContentCell{
@@ -235,7 +247,8 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 			MapboxToken: MapboxToken,
 			Zoom:        resolution + 5,
 		},
-		User: userContent,
+		Treatments: treatments,
+		User:       userContent,
 	}
 	renderOrError(w, cell, &data)
 }
@@ -478,6 +491,7 @@ func makeFuncMap() template.FuncMap {
 		"latLngDisplay": latLngDisplay,
 		"timeElapsed":   timeElapsed,
 		"timeSince":     timeSince,
+		"uuidShort":     uuidShort,
 	}
 	return funcMap
 }
@@ -587,6 +601,31 @@ func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interf
 	buf.WriteTo(w)
 }
 
+func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Treatment, error) {
+	var results []Treatment
+	boundary, err := c.Boundary()
+	if err != nil {
+		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
+	}
+	geom_query := gisStatement(boundary)
+	rows, err := org.FSTreatments(
+		sm.Where(
+			psql.F("ST_Within", "geom", geom_query),
+		),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
+	}
+	for _, r := range rows {
+		results = append(results, Treatment{
+			Date:       *fsTimestampToTime(r.Enddatetime),
+			LocationID: r.Pointlocid.GetOr("none"),
+			Notes:      r.Comments.GetOr("none"),
+			Product:    r.Product.GetOr("none"),
+		})
+	}
+	return results, nil
+}
 func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]BreedingSource, error) {
 	var results []BreedingSource
 
@@ -605,11 +644,19 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 	}
 	for _, r := range rows {
 		results = append(results, BreedingSource{
-			Address:       "nowhere",
+			ID:            r.Globalid,
+			LastInspected: fsTimestampToTime(r.Lastinspectdate),
+			LastTreated:   fsTimestampToTime(r.Lasttreatdate),
 			Type:          r.Habitat.GetOr("none"),
-			LastInspected: "never",
-			LastTreated:   "never",
 		})
 	}
 	return results, nil
+}
+
+func uuidShort(uuid string) string {
+	if len(uuid) < 7 {
+		return uuid // Return as is if too short
+	}
+
+	return uuid[:3] + "..." + uuid[len(uuid)-4:]
 }
