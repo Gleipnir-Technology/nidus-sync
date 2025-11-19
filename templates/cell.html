@@ -83,7 +83,7 @@
 							<tbody>
 								{{ range .BreedingSources }}
 								<tr>
-									<td>{{.ID|uuidShort}}</td>
+									<td><a href="/source/{{.ID}}">{{.ID|uuidShort}}</a></td>
 									<td>{{.Type}}</td>
 									<td>{{.LastInspected|timeSince}}</td>
 									<td>{{.LastTreated|timeSince}}</td>
@@ -128,7 +128,7 @@
 							<tbody>
 								{{ range .Inspections }}
 								<tr>
-									<td>{{.LocationID|uuidShort}}</td>
+									<td><a href="/source/{{.LocationID}}">{{.LocationID|uuidShort}}</a></td>
 									<td>{{.Location}}</td>
 									<td>{{.Date|timeSince}}</td>
 									<td>{{.Action}}</td>
@@ -177,7 +177,7 @@
 							<tbody>
 								{{ range .Treatments }}
 								<tr>
-									<td>{{.LocationID|uuidShort}}</td>
+									<td><a href="/source/{{.LocationID}}">{{.LocationID|uuidShort}}</a></td>
 									<td>{{.Date|timeSince}}</td>
 									<td>{{.Product}}</td>
 									<td>{{.Notes}}</td>
