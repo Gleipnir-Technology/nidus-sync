@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/aarondl/opt/null"
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
+	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/uber/h3-go/v4"
@@ -120,9 +121,11 @@ type ContentSignin struct {
 }
 type ContentSignup struct{}
 type ContentSource struct {
-	MapData ComponentMap
-	Source  *BreedingSourceDetail
-	User    User
+	Inspections []Inspection
+	MapData     ComponentMap
+	Source      *BreedingSourceDetail
+	Treatments  []Treatment
+	User        User
 }
 type LatLng struct {
 	Lat float64
@@ -493,7 +496,18 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 		respondError(w, "Failed to get source", err, http.StatusInternalServerError)
 		return
 	}
+	inspections, err := inspectionsBySource(r.Context(), org, id)
+	if err != nil {
+		respondError(w, "Failed to get inspections", err, http.StatusInternalServerError)
+		return
+	}
+	treatments, err := treatmentsBySource(r.Context(), org, id)
+	if err != nil {
+		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentSource{
+		Inspections: inspections,
 		MapData: ComponentMap{
 			Center: LatLng{
 				Lat: s.GeometryY,
@@ -511,8 +525,9 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 			},
 			Zoom: 13,
 		},
-		Source: s,
-		User:   userContent,
+		Source:     s,
+		Treatments: treatments,
+		User:       userContent,
 	}
 
 	renderOrError(w, source, data)
@@ -666,6 +681,21 @@ func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interf
 	buf.WriteTo(w)
 }
 
+func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]Treatment, error) {
+	var results []Treatment
+	rows, err := org.FSTreatments(
+		sm.Where(
+			models.FSTreatments.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
+		),
+		sm.OrderBy("enddatetime"),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
+	}
+	//log.Info().Int("row count", len(rows)).Msg("Getting treatments")
+	return toTemplateTreatment(rows)
+}
+
 func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Treatment, error) {
 	var results []Treatment
 	boundary, err := c.Boundary()
@@ -683,15 +713,7 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
-	for _, r := range rows {
-		results = append(results, Treatment{
-			Date:       *fsTimestampToTime(r.Enddatetime),
-			LocationID: r.Pointlocid.GetOr("none"),
-			Notes:      r.Comments.GetOr("none"),
-			Product:    r.Product.GetOr("none"),
-		})
-	}
-	return results, nil
+	return toTemplateTreatment(rows)
 }
 func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Inspection, error) {
 	var results []Inspection
@@ -711,16 +733,21 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
-	for _, r := range rows {
-		results = append(results, Inspection{
-			Action:     r.Actiontaken.GetOr("none"),
-			Date:       *fsTimestampToTime(r.Enddatetime),
-			Notes:      r.Comments.GetOr("none"),
-			Location:   r.Locationname.GetOr("none"),
-			LocationID: r.Pointlocid.GetOr(""),
-		})
+	return toTemplateInspection(rows)
+}
+func inspectionsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]Inspection, error) {
+	var results []Inspection
+
+	rows, err := org.FSMosquitoinspections(
+		sm.Where(
+			models.FSMosquitoinspections.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
+		),
+		sm.OrderBy("enddatetime").Desc(),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
-	return results, nil
+	return toTemplateInspection(rows)
 }
 func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]BreedingSourceSummary, error) {
 	var results []BreedingSourceSummary
@@ -765,5 +792,5 @@ func sourceByGlobalId(ctx context.Context, org *models.Organization, id string) 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get point location: %w", err)
 	}
-	return ConvertToDisplayModel(row), nil
+	return toTemplateBreedingSource(row), nil
 }

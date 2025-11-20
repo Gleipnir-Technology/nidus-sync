@@ -244,53 +244,17 @@
 								</tr>
 							</thead>
 							<tbody>
+								{{ range .Treatments }}
 								<tr>
-									<td>04/16/2023</td>
-									<td>Bacillus thuringiensis israelensis (Bti)</td>
+									<td>{{.Date|timeSince}}</td>
+									<td>{{.Product}}</td>
 									<td class="time-delta-neutral">On time</td>
-									<td>Applied larvicide to standing water.</td>
+									<td>{{.Notes}}</td>
 								</tr>
-								<tr>
-									<td>04/02/2023</td>
-									<td>Methoprene</td>
-									<td class="time-delta-neutral">On time</td>
-									<td>Applied to ditch with extended release formula.</td>
-								</tr>
-								<tr>
-									<td>03/18/2023</td>
-									<td>Bacillus sphaericus</td>
-									<td class="time-delta-negative">-1 day</td>
-									<td>Preemptive treatment before rain event.</td>
-								</tr>
-								<tr>
-									<td>03/01/2023</td>
-									<td>Bacillus thuringiensis israelensis (Bti)</td>
-									<td class="time-delta-positive">+3 days</td>
-									<td>Delayed due to weather conditions.</td>
-								</tr>
-								<tr>
-									<td>02/15/2023</td>
-									<td>Methoprene</td>
-									<td class="time-delta-neutral">On time</td>
-									<td>Regular treatment cycle.</td>
-								</tr>
+								{{ end }}
 							</tbody>
 						</table>
 					</div>
-					
-					<nav aria-label="Treatments pagination">
-						<ul class="pagination justify-content-center">
-							<li class="page-item disabled">
-								<a class="page-link" href="#" tabindex="-1">Previous</a>
-							</li>
-							<li class="page-item active"><a class="page-link" href="#">1</a></li>
-							<li class="page-item"><a class="page-link" href="#">2</a></li>
-							<li class="page-item"><a class="page-link" href="#">3</a></li>
-							<li class="page-item">
-								<a class="page-link" href="#">Next</a>
-							</li>
-						</ul>
-					</nav>
 				</div>
 			</div>
 
@@ -303,42 +267,18 @@
 							<thead>
 								<tr>
 									<th>Inspection Date</th>
-									<th>Inspector</th>
-									<th>Larvae Present</th>
-									<th>Comments</th>
+									<th>Action</th>
+									<th>Notes</th>
 								</tr>
 							</thead>
 							<tbody>
+								{{ range .Inspections }}
 								<tr>
-									<td>04/15/2023</td>
-									<td>J. Smith</td>
-									<td><span class="badge bg-danger">Yes</span></td>
-									<td>Moderate larvae presence, treatment recommended.</td>
+									<td>{{.Date|timeSince}}</td>
+									<td>{{.Action}}</td>
+									<td>{{.Notes}}</td>
 								</tr>
-								<tr>
-									<td>04/01/2023</td>
-									<td>M. Johnson</td>
-									<td><span class="badge bg-danger">Yes</span></td>
-									<td>High larvae count, immediate treatment needed.</td>
-								</tr>
-								<tr>
-									<td>03/17/2023</td>
-									<td>J. Smith</td>
-									<td><span class="badge bg-success">No</span></td>
-									<td>No larvae observed, previous treatment effective.</td>
-								</tr>
-								<tr>
-									<td>03/03/2023</td>
-									<td>R. Williams</td>
-									<td><span class="badge bg-danger">Yes</span></td>
-									<td>Low larvae count, monitoring recommended.</td>
-								</tr>
-								<tr>
-									<td>02/14/2023</td>
-									<td>M. Johnson</td>
-									<td><span class="badge bg-danger">Yes</span></td>
-									<td>Moderate larvae count, treatment scheduled.</td>
-								</tr>
+								{{ end }}
 							</tbody>
 						</table>
 					</div>

@@ -72,8 +72,35 @@ type BreedingSourceDetail struct {
 	Comments string    `json:"comments"`
 }
 
-// ConvertToDisplayModel transforms the DB model into the display model
-func ConvertToDisplayModel(source *models.FSPointlocation) *BreedingSourceDetail {
+func toTemplateTreatment(rows models.FSTreatmentSlice) ([]Treatment, error) {
+	var results []Treatment
+	for _, r := range rows {
+		results = append(results, Treatment{
+			Date:       *fsTimestampToTime(r.Enddatetime),
+			LocationID: r.Pointlocid.GetOr("none"),
+			Notes:      r.Comments.GetOr("none"),
+			Product:    r.Product.GetOr("none"),
+		})
+	}
+	return results, nil
+}
+
+func toTemplateInspection(rows models.FSMosquitoinspectionSlice) ([]Inspection, error) {
+	var results []Inspection
+	for _, r := range rows {
+		results = append(results, Inspection{
+			Action:     r.Actiontaken.GetOr("none"),
+			Date:       *fsTimestampToTime(r.Enddatetime),
+			Notes:      r.Comments.GetOr("none"),
+			Location:   r.Locationname.GetOr("none"),
+			LocationID: r.Pointlocid.GetOr(""),
+		})
+	}
+	return results, nil
+}
+
+// toTemplateBreedingSource transforms the DB model into the display model
+func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDetail {
 	// Helper function to convert unix timestamp to time.Time
 	toTime := func(val null.Val[int64]) time.Time {
 		v, ok := val.Get()
