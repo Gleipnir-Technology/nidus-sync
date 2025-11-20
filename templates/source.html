@@ -1,0 +1,469 @@
+{{template "authenticated.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+{{template "map" .MapData}}
+<style>
+.map-container {
+	background-color: #e9ecef;
+	height: 500px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	margin-bottom: 20px;
+}
+
+.section-header {
+	margin-top: 30px;
+	margin-bottom: 15px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #dee2e6;
+}
+
+.source-info {
+	background-color: #f8f9fa;
+	padding: 15px;
+	border-radius: 4px;
+	margin-bottom: 20px;
+}
+
+.time-delta-positive {
+	color: #dc3545; /* red for late */
+}
+
+.time-delta-negative {
+	color: #28a745; /* green for early */
+}
+
+.time-delta-neutral {
+	color: #6c757d; /* gray for on time */
+}
+</style>
+{{end}}
+{{define "content"}}
+<div class="container mt-4 mb-5">
+	<!-- Source Header Section -->
+	<div class="row mb-2">
+		<div class="col-12">
+			<h1>Breeding Source Detail</h1>
+		</div>
+	</div>
+
+	   <div class="row mb-2">
+		<div class="col-12">
+			<div class="source-info">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="source-id">Source ID: {{ .Source.GlobalID }}</div>
+						<table class="info-table">
+							<tr>
+								<td class="info-label">Access:</td>
+								<td>{{ .Source.AccessDescription }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Address:</td>
+								<td>Not implemented</td>
+							</tr>
+							<tr>
+								<td class="info-label">Comments:</td>
+								<td>{{ .Source.Comments }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Deactivate Reason:</td>
+								<td>{{ .Source.DeactivateReason }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Description:</td>
+								<td>{{ .Source.Description }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Habitat:</td>
+								<td>{{ .Source.Habitat }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Jurisdiction:</td>
+								<td>{{ .Source.Jurisdiction }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Location Number:</td>
+								<td>{{ .Source.LocationNumber }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Name:</td>
+								<td>{{ .Source.Name }}</td>
+							</tr>
+							<tr>
+								<td>Status</td>
+								<td>
+									{{ if .Source.Active }}<span class="badge bg-warning">Active</span>
+									{{ else }}<span class="badge bg-info">Inactive</span>
+									{{ end }}
+								</td>
+							</tr>
+							<tr>
+								<td class="info-label">Priority:</td>
+								<td>{{ .Source.Priority }} ({{.Source.ScalarPriority}})</td>
+							</tr>
+							<tr>
+								<td class="info-label">S Type:</td>
+								<td>{{ .Source.SourceType }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Source Status:</td>
+								<td>{{ .Source.SourceStatus }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Symbology:</td>
+								<td>{{ .Source.Symbology }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Use Type:</td>
+								<td>{{ .Source.UseType }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Water Origin:</td>
+								<td>{{ .Source.WaterOrigin }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Zone:</td>
+								<td>{{ .Source.Zone }}.{{ .Source.Zone2 }}</td>
+							</tr>
+						</table>
+					</div>
+					<div class="col-md-6">
+						<table class="info-table">
+							<tr>
+								<td class="info-label">Creation date</td>
+								<td>{{ .Source.Created|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Edit date</td>
+								<td>{{ .Source.EditedAt|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Larva Inspect Interval</td>
+								<td>{{ .Source.LarvaeInspectInterval }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Activity</td>
+								<td>{{ .Source.LastInspectionActivity }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Avg Larva</td>
+								<td>{{ .Source.LastInspectionAverageLarvae }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Avg Pupae</td>
+								<td>{{ .Source.LastInspectionAveragePupae }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Breeding</td>
+								<td>{{ .Source.LastInspectionBreeding }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Conditions</td>
+								<td>{{ .Source.LastInspectionConditions }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Date</td>
+								<td>{{ .Source.LastInspectionDate|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Species</td>
+								<td>{{ .Source.LastInspectionFieldSpecies }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Inspect Life Stages</td>
+								<td>{{ .Source.LastInspectionLifeStages }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Treat Activity</td>
+								<td>{{ .Source.LastTreatmentActivity }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Treat Date</td>
+								<td>{{ .Source.LastTreatmentDate|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Treat Product</td>
+								<td>{{ .Source.LastTreatmentProduct }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Treat Quantity</td>
+								<td>{{ .Source.LastTreatmentQuantity }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Last Treat Quantity Unit</td>
+								<td>{{ .Source.LastTreatmentQuantityUnit }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Next action date scheduled:</td>
+								<td>{{ .Source.NextActionScheduledDate|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Updated:</td>
+								<td>{{ .Source.Updated|timeSince }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Treatment Cadence:</td>
+								<td>Not implemented</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Map Section -->
+	<div class="row">
+		<div class="col-12">
+			<div class="map-container">
+				<div id="map"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Two-Column Layout for Tables -->
+	<div class="row">
+		<!-- Left Column -->
+		<div class="col-md-6">
+			<!-- Treatments Section -->
+			<h2 class="section-header">Treatment History</h2>
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped table-hover">
+							<thead>
+								<tr>
+									<th>Treatment Date</th>
+									<th>Insecticide Used</th>
+									<th>Cadence Delta</th>
+									<th>Technician Notes</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>04/16/2023</td>
+									<td>Bacillus thuringiensis israelensis (Bti)</td>
+									<td class="time-delta-neutral">On time</td>
+									<td>Applied larvicide to standing water.</td>
+								</tr>
+								<tr>
+									<td>04/02/2023</td>
+									<td>Methoprene</td>
+									<td class="time-delta-neutral">On time</td>
+									<td>Applied to ditch with extended release formula.</td>
+								</tr>
+								<tr>
+									<td>03/18/2023</td>
+									<td>Bacillus sphaericus</td>
+									<td class="time-delta-negative">-1 day</td>
+									<td>Preemptive treatment before rain event.</td>
+								</tr>
+								<tr>
+									<td>03/01/2023</td>
+									<td>Bacillus thuringiensis israelensis (Bti)</td>
+									<td class="time-delta-positive">+3 days</td>
+									<td>Delayed due to weather conditions.</td>
+								</tr>
+								<tr>
+									<td>02/15/2023</td>
+									<td>Methoprene</td>
+									<td class="time-delta-neutral">On time</td>
+									<td>Regular treatment cycle.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					
+					<nav aria-label="Treatments pagination">
+						<ul class="pagination justify-content-center">
+							<li class="page-item disabled">
+								<a class="page-link" href="#" tabindex="-1">Previous</a>
+							</li>
+							<li class="page-item active"><a class="page-link" href="#">1</a></li>
+							<li class="page-item"><a class="page-link" href="#">2</a></li>
+							<li class="page-item"><a class="page-link" href="#">3</a></li>
+							<li class="page-item">
+								<a class="page-link" href="#">Next</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
+			</div>
+
+			<!-- Inspections Section -->
+			<h2 class="section-header">Inspection History</h2>
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped table-hover">
+							<thead>
+								<tr>
+									<th>Inspection Date</th>
+									<th>Inspector</th>
+									<th>Larvae Present</th>
+									<th>Comments</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>04/15/2023</td>
+									<td>J. Smith</td>
+									<td><span class="badge bg-danger">Yes</span></td>
+									<td>Moderate larvae presence, treatment recommended.</td>
+								</tr>
+								<tr>
+									<td>04/01/2023</td>
+									<td>M. Johnson</td>
+									<td><span class="badge bg-danger">Yes</span></td>
+									<td>High larvae count, immediate treatment needed.</td>
+								</tr>
+								<tr>
+									<td>03/17/2023</td>
+									<td>J. Smith</td>
+									<td><span class="badge bg-success">No</span></td>
+									<td>No larvae observed, previous treatment effective.</td>
+								</tr>
+								<tr>
+									<td>03/03/2023</td>
+									<td>R. Williams</td>
+									<td><span class="badge bg-danger">Yes</span></td>
+									<td>Low larvae count, monitoring recommended.</td>
+								</tr>
+								<tr>
+									<td>02/14/2023</td>
+									<td>M. Johnson</td>
+									<td><span class="badge bg-danger">Yes</span></td>
+									<td>Moderate larvae count, treatment scheduled.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					
+					<nav aria-label="Inspections pagination">
+						<ul class="pagination justify-content-center">
+							<li class="page-item disabled">
+								<a class="page-link" href="#" tabindex="-1">Previous</a>
+							</li>
+							<li class="page-item active"><a class="page-link" href="#">1</a></li>
+							<li class="page-item"><a class="page-link" href="#">2</a></li>
+							<li class="page-item"><a class="page-link" href="#">3</a></li>
+							<li class="page-item">
+								<a class="page-link" href="#">Next</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
+			</div>
+		</div>
+
+		<!-- Right Column -->
+		<div class="col-md-6">
+			<!-- Nearby Traps Section -->
+			<h2 class="section-header">Nearby Mosquito Traps</h2>
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-striped table-hover">
+							<thead>
+								<tr>
+									<th>Trap ID</th>
+									<th>Distance</th>
+									<th>Collection Date</th>
+									<th>Mosquito Count</th>
+								</tr>
+							</thead>
+							<tbody>
+								<!-- Trap 1 with multiple collections -->
+								<tr>
+									<td rowspan="3">TR-105</td>
+									<td rowspan="3">0.2 mi</td>
+									<td>04/17/2023</td>
+									<td>37</td>
+								</tr>
+								<tr>
+									<td>04/10/2023</td>
+									<td>52</td>
+								</tr>
+								<tr>
+									<td>04/03/2023</td>
+									<td>61</td>
+								</tr>
+								
+								<!-- Trap 2 with multiple collections -->
+								<tr>
+									<td rowspan="3">TR-108</td>
+									<td rowspan="3">0.4 mi</td>
+									<td>04/17/2023</td>
+									<td>22</td>
+								</tr>
+								<tr>
+									<td>04/10/2023</td>
+									<td>35</td>
+								</tr>
+								<tr>
+									<td>04/03/2023</td>
+									<td>41</td>
+								</tr>
+								
+								<!-- Trap 3 with multiple collections -->
+								<tr>
+									<td rowspan="3">TR-112</td>
+									<td rowspan="3">0.6 mi</td>
+									<td>04/17/2023</td>
+									<td>18</td>
+								</tr>
+								<tr>
+									<td>04/10/2023</td>
+									<td>24</td>
+								</tr>
+								<tr>
+									<td>04/03/2023</td>
+									<td>27</td>
+								</tr>
+								
+								<!-- Trap 4 with multiple collections -->
+								<tr>
+									<td rowspan="3">TR-117</td>
+									<td rowspan="3">0.8 mi</td>
+									<td>04/17/2023</td>
+									<td>12</td>
+								</tr>
+								<tr>
+									<td>04/10/2023</td>
+									<td>19</td>
+								</tr>
+								<tr>
+									<td>04/03/2023</td>
+									<td>15</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- Source Analysis Box -->
+			<div class="card mb-4">
+				<div class="card-header">
+					<h5 class="mb-0">Source Analysis & Recommendations</h5>
+				</div>
+				<div class="card-body">
+					<p><strong>Risk Level:</strong> <span class="badge bg-danger">High</span></p>
+					<p><strong>Associated Species:</strong> Culex pipiens, Aedes albopictus</p>
+					<p><strong>Trend Analysis:</strong> Mosquito counts in nearby traps show a gradual decrease following recent treatments, indicating positive impact of abatement efforts.</p>
+					<p><strong>Recommendations:</strong></p>
+					<ul>
+						<li>Maintain 14-day treatment schedule through summer months</li>
+						<li>Consider physical modification to reduce standing water retention</li>
+						<li>Increase trap surveillance in May-June (peak breeding season)</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{{end}}

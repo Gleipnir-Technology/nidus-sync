@@ -233,9 +233,20 @@ func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
 	htmlSignin(w, errorCode)
 }
+
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	htmlSignup(w, r.URL.Path)
 }
+
+func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
+	globalid := chi.URLParam(r, "globalid")
+	if globalid == "" {
+		respondError(w, "No globalid provided", nil, http.StatusBadRequest)
+		return
+	}
+	htmlSource(w, r, u, globalid)
+}
+
 func getVectorTiles(w http.ResponseWriter, r *http.Request, u *models.User) {
 	org_id := chi.URLParam(r, "org_id")
 	tileset_id := chi.URLParam(r, "tileset_id")

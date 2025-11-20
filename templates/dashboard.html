@@ -6,7 +6,7 @@
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
 <script>
 function onLoad() {
-	console.log("Setting up the map...", geojson);
+	console.log("Setting up the map...");
 	mapboxgl.accessToken = {{ .MapData.MapboxToken }};
 	const map = new mapboxgl.Map({
 		container: 'map', // container ID

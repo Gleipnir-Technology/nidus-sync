@@ -32,6 +32,7 @@ var (
 	dashboard   = newBuiltTemplate("dashboard", "authenticated")
 	oauthPrompt = newBuiltTemplate("oauth-prompt", "authenticated")
 	settings    = newBuiltTemplate("settings", "authenticated")
+	source      = newBuiltTemplate("source", "authenticated")
 )
 
 // Unauthenticated pages
@@ -57,7 +58,7 @@ var (
 )
 var components = [...]string{"header", "map"}
 
-type BreedingSource struct {
+type BreedingSourceSummary struct {
 	ID            string
 	Type          string
 	LastInspected *time.Time
@@ -70,17 +71,21 @@ type BuiltTemplate struct {
 	template *template.Template
 }
 
+type MapMarker struct {
+	LatLng LatLng
+}
 type ComponentMap struct {
 	Center      LatLng
 	GeoJSON     interface{}
 	MapboxToken string
+	Markers     []MapMarker
 	Zoom        int
 }
 type ContentAuthenticatedPlaceholder struct {
 	User User
 }
 type ContentCell struct {
-	BreedingSources []BreedingSource
+	BreedingSources []BreedingSourceSummary
 	CellBoundary    h3.CellBoundary
 	Inspections     []Inspection
 	MapData         ComponentMap
@@ -114,6 +119,11 @@ type ContentSignin struct {
 	InvalidCredentials bool
 }
 type ContentSignup struct{}
+type ContentSource struct {
+	MapData ComponentMap
+	Source  *BreedingSourceDetail
+	User    User
+}
 type LatLng struct {
 	Lat float64
 	Lng float64
@@ -467,6 +477,47 @@ func htmlSignup(w http.ResponseWriter, path string) {
 	renderOrError(w, signup, data)
 }
 
+func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id string) {
+	org, err := user.Organization().One(r.Context(), PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
+		return
+	}
+	userContent, err := contentForUser(r.Context(), user)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	s, err := sourceByGlobalId(r.Context(), org, id)
+	if err != nil {
+		respondError(w, "Failed to get source", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentSource{
+		MapData: ComponentMap{
+			Center: LatLng{
+				Lat: s.GeometryY,
+				Lng: s.GeometryX,
+			},
+			//GeoJSON:
+			MapboxToken: MapboxToken,
+			Markers: []MapMarker{
+				MapMarker{
+					LatLng: LatLng{
+						Lat: s.GeometryY,
+						Lng: s.GeometryX,
+					},
+				},
+			},
+			Zoom: 13,
+		},
+		Source: s,
+		User:   userContent,
+	}
+
+	renderOrError(w, source, data)
+}
+
 func gisStatement(cb h3.CellBoundary) string {
 	var content strings.Builder
 	for i, p := range cb {
@@ -671,8 +722,8 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 	}
 	return results, nil
 }
-func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]BreedingSource, error) {
-	var results []BreedingSource
+func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]BreedingSourceSummary, error) {
+	var results []BreedingSourceSummary
 
 	boundary, err := c.Boundary()
 	if err != nil {
@@ -689,7 +740,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
 	for _, r := range rows {
-		results = append(results, BreedingSource{
+		results = append(results, BreedingSourceSummary{
 			ID:            r.Globalid,
 			LastInspected: fsTimestampToTime(r.Lastinspectdate),
 			LastTreated:   fsTimestampToTime(r.Lasttreatdate),
@@ -705,4 +756,14 @@ func uuidShort(uuid string) string {
 	}
 
 	return uuid[:3] + "..." + uuid[len(uuid)-4:]
+}
+
+func sourceByGlobalId(ctx context.Context, org *models.Organization, id string) (*BreedingSourceDetail, error) {
+	row, err := org.FSPointlocations(
+		sm.Where(models.FSPointlocations.Columns.Globalid.EQ(psql.Arg(id))),
+	).One(ctx, PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get point location: %w", err)
+	}
+	return ConvertToDisplayModel(row), nil
 }
