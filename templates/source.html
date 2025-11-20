@@ -4,6 +4,19 @@
 {{define "extraheader"}}
 {{template "map" .MapData}}
 <style>
+.info-table {
+	width: 100%;
+}
+
+.info-table td {
+	padding: 5px 0;
+}
+
+.info-label {
+	font-weight: 600;
+	width: 140px;
+	vertical-align: top;
+}
 .map-container {
 	background-color: #e9ecef;
 	height: 500px;
@@ -50,7 +63,7 @@
 		</div>
 	</div>
 
-	   <div class="row mb-2">
+	<div class="row mb-2">
 		<div class="col-12">
 			<div class="source-info">
 				<div class="row">
@@ -262,6 +275,10 @@
 				</div>
 			</div>
 
+		</div>
+
+		<!-- Right Column -->
+		<div class="col-md-6">
 			<!-- Inspections Section -->
 			<h2 class="section-header">Inspection History</h2>
 			<div class="card mb-4">
@@ -286,78 +303,51 @@
 							</tbody>
 						</table>
 					</div>
-					
-					<nav aria-label="Inspections pagination">
-						<ul class="pagination justify-content-center">
-							<li class="page-item disabled">
-								<a class="page-link" href="#" tabindex="-1">Previous</a>
-							</li>
-							<li class="page-item active"><a class="page-link" href="#">1</a></li>
-							<li class="page-item"><a class="page-link" href="#">2</a></li>
-							<li class="page-item"><a class="page-link" href="#">3</a></li>
-							<li class="page-item">
-								<a class="page-link" href="#">Next</a>
-							</li>
-						</ul>
-					</nav>
 				</div>
 			</div>
 		</div>
-
-		<!-- Right Column -->
-		<div class="col-md-6">
-			<!-- Nearby Traps Section -->
+	</div>
+	<div class="row mb-2">
+		<div class="col-12">
 			<h2 class="section-header">Nearby Mosquito Traps</h2>
-			<div class="card mb-4">
-				<div class="card-body">
-					<div class="table-responsive">
-						<table class="table table-striped table-hover">
-							<thead>
-								<tr>
-									<th>Trap ID</th>
-									<th>Distance</th>
-									<th>Collection Date</th>
-									<th>Mosquito Count</th>
-								</tr>
-							</thead>
-							<tbody>
-								{{ range .Traps }}
-								<!-- Trap 1 with multiple collections -->
-								<tr>
-									<td rowspan="3">{{ .ID }}</td>
-									<td rowspan="3">{{ .Distance }}</td>
-									<td></td>
-									<td></td>
-								</tr>
-									{{ range .Counts }}
-									<tr>
-										<td>{{ .Ended|timeSince }}</td>
-										<td>{{ .Total }}</td>
-									</tr>
-									{{ end }}
-								{{ end }}
-							</tbody>
-						</table>
-					</div>
-				</div>
+			{{ range .Traps }}
+			<div class="trap-info">
+				<table class="info-table">
+					<tbody>
+						<tr>
+							<td class="info-label">Trap ID:</td>
+							<td>{{ .ID }}</td>
+						</tr>
+						<tr>
+							<td class="info-label">Distance</td>
+							<td>{{ .Distance }}</td>
+						</tr>
+					</tbody>
+				</table>
 			</div>
-
-			<!-- Source Analysis Box -->
-			<div class="card mb-4">
-				<div class="card-header">
-					<h5 class="mb-0">Source Analysis & Recommendations</h5>
-				</div>
-				<div class="card-body">
-					<p><strong>Risk Level:</strong> <span class="badge bg-danger">High</span></p>
-					<p><strong>Associated Species:</strong> Culex pipiens, Aedes albopictus</p>
-					<p><strong>Trend Analysis:</strong> Mosquito counts in nearby traps show a gradual decrease following recent treatments, indicating positive impact of abatement efforts.</p>
-					<p><strong>Recommendations:</strong></p>
-					<ul>
-						<li>Maintain 14-day treatment schedule through summer months</li>
-						<li>Consider physical modification to reduce standing water retention</li>
-						<li>Increase trap surveillance in May-June (peak breeding season)</li>
-					</ul>
-				</div>
+			<div class="table-responsive">
+				<table class="table table-striped table-hover">
+					<thead>
+						<tr>
+							<th>Collection Date</th>
+							<th>Female Count</th>
+							<th>Male Count</th>
+							<th>Total Count</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Trap 1 with multiple collections -->
+							{{ range .Counts }}
+							<tr>
+								<td>{{ .Ended|timeSince }}</td>
+								<td>{{ .Females }}</td>
+								<td>{{ .Males }}</td>
+								<td>{{ .Total }}</td>
+							</tr>
+							{{ end }}
+						{{ end }}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
