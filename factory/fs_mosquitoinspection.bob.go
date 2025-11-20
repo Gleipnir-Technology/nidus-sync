@@ -98,6 +98,7 @@ type FSMosquitoinspectionTemplate struct {
 	Adminaction            func() null.Val[string]
 	Ptaid                  func() null.Val[string]
 	Updated                func() time.Time
+	Geom                   func() null.Val[string]
 
 	r fsMosquitoinspectionR
 	f *Factory
@@ -380,6 +381,10 @@ func (o FSMosquitoinspectionTemplate) BuildSetter() *models.FSMosquitoinspection
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -584,6 +589,9 @@ func (o FSMosquitoinspectionTemplate) Build() *models.FSMosquitoinspection {
 	}
 	if o.Updated != nil {
 		m.Updated = o.Updated()
+	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
 	}
 
 	o.setModelRels(m)
@@ -797,6 +805,7 @@ func (m fsMosquitoinspectionMods) RandomizeAllColumns(f *faker.Faker) FSMosquito
 		FSMosquitoinspectionMods.RandomAdminaction(f),
 		FSMosquitoinspectionMods.RandomPtaid(f),
 		FSMosquitoinspectionMods.RandomUpdated(f),
+		FSMosquitoinspectionMods.RandomGeom(f),
 	}
 }
 
@@ -3941,6 +3950,59 @@ func (m fsMosquitoinspectionMods) RandomUpdated(f *faker.Faker) FSMosquitoinspec
 	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsMosquitoinspectionMods) Geom(val null.Val[string]) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsMosquitoinspectionMods) GeomFunc(f func() null.Val[string]) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fsMosquitoinspectionMods) UnsetGeom() FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsMosquitoinspectionMods) RandomGeom(f *faker.Faker) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsMosquitoinspectionMods) RandomGeomNotNull(f *faker.Faker) FSMosquitoinspectionMod {
+	return FSMosquitoinspectionModFunc(func(_ context.Context, o *FSMosquitoinspectionTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

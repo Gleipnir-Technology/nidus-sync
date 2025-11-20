@@ -537,6 +537,15 @@ var FSTreatments = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fsTreatmentIndexes{
 		FSTreatmentPkey: index{
@@ -550,6 +559,23 @@ var FSTreatments = Table[
 				},
 			},
 			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		IdxFSTreatmentGeom: index{
+			Type: "gist",
+			Name: "idx_fs_treatment_geom",
+			Columns: []indexColumn{
+				{
+					Name:         "geom",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        false,
 			Comment:       "",
 			NullsFirst:    []bool{false},
 			NullsDistinct: false,
@@ -636,21 +662,23 @@ type fsTreatmentColumns struct {
 	GeometryY            column
 	TempSitecond         column
 	Updated              column
+	Geom                 column
 }
 
 func (c fsTreatmentColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Activity, c.Areaunit, c.Avetemp, c.Barrierrouteid, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Editdate, c.Editor, c.Fieldtech, c.Flowrate, c.Globalid, c.Habitat, c.InspID, c.Invloc, c.Linelocid, c.Locationname, c.Method, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Product, c.Ptaid, c.Qty, c.Qtyunit, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Targetspecies, c.Tirecount, c.Treatacres, c.Treatarea, c.Treathectares, c.Treatmenthours, c.Treatmentlength, c.Treatmentlengthunits, c.Totalcostprodcut, c.Ulvrouteid, c.Warningoverride, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.TempSitecond, c.Updated,
+		c.OrganizationID, c.Activity, c.Areaunit, c.Avetemp, c.Barrierrouteid, c.Cbcount, c.Comments, c.Containercount, c.Creationdate, c.Creator, c.Enddatetime, c.Equiptype, c.Editdate, c.Editor, c.Fieldtech, c.Flowrate, c.Globalid, c.Habitat, c.InspID, c.Invloc, c.Linelocid, c.Locationname, c.Method, c.Objectid, c.Pointlocid, c.Polygonlocid, c.Product, c.Ptaid, c.Qty, c.Qtyunit, c.Raingauge, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Sdid, c.Sitecond, c.Srid, c.Startdatetime, c.Targetspecies, c.Tirecount, c.Treatacres, c.Treatarea, c.Treathectares, c.Treatmenthours, c.Treatmentlength, c.Treatmentlengthunits, c.Totalcostprodcut, c.Ulvrouteid, c.Warningoverride, c.Winddir, c.Windspeed, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.TempSitecond, c.Updated, c.Geom,
 	}
 }
 
 type fsTreatmentIndexes struct {
-	FSTreatmentPkey index
+	FSTreatmentPkey    index
+	IdxFSTreatmentGeom index
 }
 
 func (i fsTreatmentIndexes) AsSlice() []index {
 	return []index{
-		i.FSTreatmentPkey,
+		i.FSTreatmentPkey, i.IdxFSTreatmentGeom,
 	}
 }
 

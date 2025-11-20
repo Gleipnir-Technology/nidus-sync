@@ -84,6 +84,7 @@ type FSTreatment struct {
 	GeometryY            null.Val[float64] `db:"geometry_y" `
 	TempSitecond         null.Val[string]  `db:"temp_sitecond" `
 	Updated              time.Time         `db:"updated" `
+	Geom                 null.Val[string]  `db:"geom" `
 
 	R fsTreatmentR `db:"-" `
 }
@@ -106,7 +107,7 @@ type fsTreatmentR struct {
 func buildFSTreatmentColumns(alias string) fsTreatmentColumns {
 	return fsTreatmentColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "activity", "areaunit", "avetemp", "barrierrouteid", "cbcount", "comments", "containercount", "creationdate", "creator", "enddatetime", "equiptype", "editdate", "editor", "fieldtech", "flowrate", "globalid", "habitat", "insp_id", "invloc", "linelocid", "locationname", "method", "objectid", "pointlocid", "polygonlocid", "product", "ptaid", "qty", "qtyunit", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "targetspecies", "tirecount", "treatacres", "treatarea", "treathectares", "treatmenthours", "treatmentlength", "treatmentlengthunits", "totalcostprodcut", "ulvrouteid", "warningoverride", "winddir", "windspeed", "zone", "zone2", "geometry_x", "geometry_y", "temp_sitecond", "updated",
+			"organization_id", "activity", "areaunit", "avetemp", "barrierrouteid", "cbcount", "comments", "containercount", "creationdate", "creator", "enddatetime", "equiptype", "editdate", "editor", "fieldtech", "flowrate", "globalid", "habitat", "insp_id", "invloc", "linelocid", "locationname", "method", "objectid", "pointlocid", "polygonlocid", "product", "ptaid", "qty", "qtyunit", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "targetspecies", "tirecount", "treatacres", "treatarea", "treathectares", "treatmenthours", "treatmentlength", "treatmentlengthunits", "totalcostprodcut", "ulvrouteid", "warningoverride", "winddir", "windspeed", "zone", "zone2", "geometry_x", "geometry_y", "temp_sitecond", "updated", "geom",
 		).WithParent("fs_treatment"),
 		tableAlias:           alias,
 		OrganizationID:       psql.Quote(alias, "organization_id"),
@@ -167,6 +168,7 @@ func buildFSTreatmentColumns(alias string) fsTreatmentColumns {
 		GeometryY:            psql.Quote(alias, "geometry_y"),
 		TempSitecond:         psql.Quote(alias, "temp_sitecond"),
 		Updated:              psql.Quote(alias, "updated"),
+		Geom:                 psql.Quote(alias, "geom"),
 	}
 }
 
@@ -231,6 +233,7 @@ type fsTreatmentColumns struct {
 	GeometryY            psql.Expression
 	TempSitecond         psql.Expression
 	Updated              psql.Expression
+	Geom                 psql.Expression
 }
 
 func (c fsTreatmentColumns) Alias() string {
@@ -303,10 +306,11 @@ type FSTreatmentSetter struct {
 	GeometryY            omitnull.Val[float64] `db:"geometry_y" `
 	TempSitecond         omitnull.Val[string]  `db:"temp_sitecond" `
 	Updated              omit.Val[time.Time]   `db:"updated" `
+	Geom                 omitnull.Val[string]  `db:"geom" `
 }
 
 func (s FSTreatmentSetter) SetColumns() []string {
-	vals := make([]string, 0, 58)
+	vals := make([]string, 0, 59)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -480,6 +484,9 @@ func (s FSTreatmentSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Geom.IsUnset() {
+		vals = append(vals, "geom")
 	}
 	return vals
 }
@@ -659,6 +666,9 @@ func (s FSTreatmentSetter) Overwrite(t *FSTreatment) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Geom.IsUnset() {
+		t.Geom = s.Geom.MustGetNull()
+	}
 }
 
 func (s *FSTreatmentSetter) Apply(q *dialect.InsertQuery) {
@@ -667,7 +677,7 @@ func (s *FSTreatmentSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 58)
+		vals := make([]bob.Expression, 59)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -1016,6 +1026,12 @@ func (s *FSTreatmentSetter) Apply(q *dialect.InsertQuery) {
 			vals[57] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Geom.IsUnset() {
+			vals[58] = psql.Arg(s.Geom.MustGetNull())
+		} else {
+			vals[58] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -1025,7 +1041,7 @@ func (s FSTreatmentSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 58)
+	exprs := make([]bob.Expression, 0, 59)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1433,6 +1449,13 @@ func (s FSTreatmentSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if !s.Geom.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geom")...),
+			psql.Arg(s.Geom),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1790,6 +1813,7 @@ type fsTreatmentWhere[Q psql.Filterable] struct {
 	GeometryY            psql.WhereNullMod[Q, float64]
 	TempSitecond         psql.WhereNullMod[Q, string]
 	Updated              psql.WhereMod[Q, time.Time]
+	Geom                 psql.WhereNullMod[Q, string]
 }
 
 func (fsTreatmentWhere[Q]) AliasedAs(alias string) fsTreatmentWhere[Q] {
@@ -1856,6 +1880,7 @@ func buildFSTreatmentWhere[Q psql.Filterable](cols fsTreatmentColumns) fsTreatme
 		GeometryY:            psql.WhereNull[Q, float64](cols.GeometryY),
 		TempSitecond:         psql.WhereNull[Q, string](cols.TempSitecond),
 		Updated:              psql.Where[Q, time.Time](cols.Updated),
+		Geom:                 psql.WhereNull[Q, string](cols.Geom),
 	}
 }
 

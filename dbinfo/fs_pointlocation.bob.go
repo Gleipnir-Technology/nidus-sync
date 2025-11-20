@@ -447,6 +447,15 @@ var FSPointlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fsPointlocationIndexes{
 		FSPointlocationPkey: index{
@@ -460,6 +469,23 @@ var FSPointlocations = Table[
 				},
 			},
 			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		IdxFSPointlocationGeom: index{
+			Type: "gist",
+			Name: "idx_fs_pointlocation_geom",
+			Columns: []indexColumn{
+				{
+					Name:         "geom",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        false,
 			Comment:       "",
 			NullsFirst:    []bool{false},
 			NullsDistinct: false,
@@ -536,21 +562,23 @@ type fsPointlocationColumns struct {
 	Scalarpriority          column
 	Sourcestatus            column
 	Updated                 column
+	Geom                    column
 }
 
 func (c fsPointlocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Stype, c.Symbology, c.Usetype, c.Waterorigin, c.X, c.Y, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Assignedtech, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Updated,
+		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Globalid, c.Habitat, c.Jurisdiction, c.Larvinspectinterval, c.Lastinspectactiontaken, c.Lastinspectactivity, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectbreeding, c.Lastinspectconditions, c.Lastinspectdate, c.Lastinspectfieldspecies, c.Lastinspectlstages, c.Lasttreatactivity, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Stype, c.Symbology, c.Usetype, c.Waterorigin, c.X, c.Y, c.Zone, c.Zone2, c.GeometryX, c.GeometryY, c.Assignedtech, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Updated, c.Geom,
 	}
 }
 
 type fsPointlocationIndexes struct {
-	FSPointlocationPkey index
+	FSPointlocationPkey    index
+	IdxFSPointlocationGeom index
 }
 
 func (i fsPointlocationIndexes) AsSlice() []index {
 	return []index{
-		i.FSPointlocationPkey,
+		i.FSPointlocationPkey, i.IdxFSPointlocationGeom,
 	}
 }
 

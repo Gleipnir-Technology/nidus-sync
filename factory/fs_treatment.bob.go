@@ -95,6 +95,7 @@ type FSTreatmentTemplate struct {
 	GeometryY            func() null.Val[float64]
 	TempSitecond         func() null.Val[string]
 	Updated              func() time.Time
+	Geom                 func() null.Val[string]
 
 	r fsTreatmentR
 	f *Factory
@@ -365,6 +366,10 @@ func (o FSTreatmentTemplate) BuildSetter() *models.FSTreatmentSetter {
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -560,6 +565,9 @@ func (o FSTreatmentTemplate) Build() *models.FSTreatment {
 	}
 	if o.Updated != nil {
 		m.Updated = o.Updated()
+	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
 	}
 
 	o.setModelRels(m)
@@ -770,6 +778,7 @@ func (m fsTreatmentMods) RandomizeAllColumns(f *faker.Faker) FSTreatmentMod {
 		FSTreatmentMods.RandomGeometryY(f),
 		FSTreatmentMods.RandomTempSitecond(f),
 		FSTreatmentMods.RandomUpdated(f),
+		FSTreatmentMods.RandomGeom(f),
 	}
 }
 
@@ -3755,6 +3764,59 @@ func (m fsTreatmentMods) RandomUpdated(f *faker.Faker) FSTreatmentMod {
 	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsTreatmentMods) Geom(val null.Val[string]) FSTreatmentMod {
+	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsTreatmentMods) GeomFunc(f func() null.Val[string]) FSTreatmentMod {
+	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fsTreatmentMods) UnsetGeom() FSTreatmentMod {
+	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsTreatmentMods) RandomGeom(f *faker.Faker) FSTreatmentMod {
+	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsTreatmentMods) RandomGeomNotNull(f *faker.Faker) FSTreatmentMod {
+	return FSTreatmentModFunc(func(_ context.Context, o *FSTreatmentTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

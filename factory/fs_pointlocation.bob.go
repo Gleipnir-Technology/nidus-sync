@@ -85,6 +85,7 @@ type FSPointlocationTemplate struct {
 	Scalarpriority          func() null.Val[int64]
 	Sourcestatus            func() null.Val[string]
 	Updated                 func() time.Time
+	Geom                    func() null.Val[string]
 
 	r fsPointlocationR
 	f *Factory
@@ -315,6 +316,10 @@ func (o FSPointlocationTemplate) BuildSetter() *models.FSPointlocationSetter {
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -480,6 +485,9 @@ func (o FSPointlocationTemplate) Build() *models.FSPointlocation {
 	}
 	if o.Updated != nil {
 		m.Updated = o.Updated()
+	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
 	}
 
 	o.setModelRels(m)
@@ -688,6 +696,7 @@ func (m fsPointlocationMods) RandomizeAllColumns(f *faker.Faker) FSPointlocation
 		FSPointlocationMods.RandomScalarpriority(f),
 		FSPointlocationMods.RandomSourcestatus(f),
 		FSPointlocationMods.RandomUpdated(f),
+		FSPointlocationMods.RandomGeom(f),
 	}
 }
 
@@ -3099,6 +3108,59 @@ func (m fsPointlocationMods) RandomUpdated(f *faker.Faker) FSPointlocationMod {
 	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsPointlocationMods) Geom(val null.Val[string]) FSPointlocationMod {
+	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsPointlocationMods) GeomFunc(f func() null.Val[string]) FSPointlocationMod {
+	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fsPointlocationMods) UnsetGeom() FSPointlocationMod {
+	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsPointlocationMods) RandomGeom(f *faker.Faker) FSPointlocationMod {
+	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsPointlocationMods) RandomGeomNotNull(f *faker.Faker) FSPointlocationMod {
+	return FSPointlocationModFunc(func(_ context.Context, o *FSPointlocationTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

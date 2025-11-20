@@ -9,7 +9,9 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -37,10 +39,11 @@ func (mods H3AggregationModSlice) Apply(ctx context.Context, n *H3AggregationTem
 type H3AggregationTemplate struct {
 	ID             func() int32
 	Cell           func() string
-	Resolution     func() int32
 	Count          func() int32
-	Type           func() enums.H3aggregationtype
+	Geometry       func() null.Val[string]
 	OrganizationID func() int32
+	Resolution     func() int32
+	Type           func() enums.H3aggregationtype
 
 	r h3AggregationR
 	f *Factory
@@ -87,21 +90,25 @@ func (o H3AggregationTemplate) BuildSetter() *models.H3AggregationSetter {
 		val := o.Cell()
 		m.Cell = omit.From(val)
 	}
-	if o.Resolution != nil {
-		val := o.Resolution()
-		m.Resolution = omit.From(val)
-	}
 	if o.Count != nil {
 		val := o.Count()
 		m.Count = omit.From(val)
 	}
-	if o.Type != nil {
-		val := o.Type()
-		m.Type = omit.From(val)
+	if o.Geometry != nil {
+		val := o.Geometry()
+		m.Geometry = omitnull.FromNull(val)
 	}
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
 		m.OrganizationID = omit.From(val)
+	}
+	if o.Resolution != nil {
+		val := o.Resolution()
+		m.Resolution = omit.From(val)
+	}
+	if o.Type != nil {
+		val := o.Type()
+		m.Type = omit.From(val)
 	}
 
 	return m
@@ -131,17 +138,20 @@ func (o H3AggregationTemplate) Build() *models.H3Aggregation {
 	if o.Cell != nil {
 		m.Cell = o.Cell()
 	}
-	if o.Resolution != nil {
-		m.Resolution = o.Resolution()
-	}
 	if o.Count != nil {
 		m.Count = o.Count()
 	}
-	if o.Type != nil {
-		m.Type = o.Type()
+	if o.Geometry != nil {
+		m.Geometry = o.Geometry()
 	}
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
+	}
+	if o.Resolution != nil {
+		m.Resolution = o.Resolution()
+	}
+	if o.Type != nil {
+		m.Type = o.Type()
 	}
 
 	o.setModelRels(m)
@@ -167,21 +177,21 @@ func ensureCreatableH3Aggregation(m *models.H3AggregationSetter) {
 		val := random_string(nil)
 		m.Cell = omit.From(val)
 	}
-	if !(m.Resolution.IsValue()) {
-		val := random_int32(nil)
-		m.Resolution = omit.From(val)
-	}
 	if !(m.Count.IsValue()) {
 		val := random_int32(nil)
 		m.Count = omit.From(val)
 	}
-	if !(m.Type.IsValue()) {
-		val := random_enums_H3aggregationtype(nil)
-		m.Type = omit.From(val)
-	}
 	if !(m.OrganizationID.IsValue()) {
 		val := random_int32(nil)
 		m.OrganizationID = omit.From(val)
+	}
+	if !(m.Resolution.IsValue()) {
+		val := random_int32(nil)
+		m.Resolution = omit.From(val)
+	}
+	if !(m.Type.IsValue()) {
+		val := random_enums_H3aggregationtype(nil)
+		m.Type = omit.From(val)
 	}
 }
 
@@ -304,10 +314,11 @@ func (m h3AggregationMods) RandomizeAllColumns(f *faker.Faker) H3AggregationMod 
 	return H3AggregationModSlice{
 		H3AggregationMods.RandomID(f),
 		H3AggregationMods.RandomCell(f),
-		H3AggregationMods.RandomResolution(f),
 		H3AggregationMods.RandomCount(f),
-		H3AggregationMods.RandomType(f),
+		H3AggregationMods.RandomGeometry(f),
 		H3AggregationMods.RandomOrganizationID(f),
+		H3AggregationMods.RandomResolution(f),
+		H3AggregationMods.RandomType(f),
 	}
 }
 
@@ -374,37 +385,6 @@ func (m h3AggregationMods) RandomCell(f *faker.Faker) H3AggregationMod {
 }
 
 // Set the model columns to this value
-func (m h3AggregationMods) Resolution(val int32) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.Resolution = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m h3AggregationMods) ResolutionFunc(f func() int32) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.Resolution = f
-	})
-}
-
-// Clear any values for the column
-func (m h3AggregationMods) UnsetResolution() H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.Resolution = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m h3AggregationMods) RandomResolution(f *faker.Faker) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.Resolution = func() int32 {
-			return random_int32(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m h3AggregationMods) Count(val int32) H3AggregationMod {
 	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
 		o.Count = func() int32 { return val }
@@ -430,6 +410,121 @@ func (m h3AggregationMods) UnsetCount() H3AggregationMod {
 func (m h3AggregationMods) RandomCount(f *faker.Faker) H3AggregationMod {
 	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
 		o.Count = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m h3AggregationMods) Geometry(val null.Val[string]) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Geometry = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m h3AggregationMods) GeometryFunc(f func() null.Val[string]) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Geometry = f
+	})
+}
+
+// Clear any values for the column
+func (m h3AggregationMods) UnsetGeometry() H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Geometry = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m h3AggregationMods) RandomGeometry(f *faker.Faker) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Geometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m h3AggregationMods) RandomGeometryNotNull(f *faker.Faker) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Geometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m h3AggregationMods) OrganizationID(val int32) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.OrganizationID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m h3AggregationMods) OrganizationIDFunc(f func() int32) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.OrganizationID = f
+	})
+}
+
+// Clear any values for the column
+func (m h3AggregationMods) UnsetOrganizationID() H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.OrganizationID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m h3AggregationMods) RandomOrganizationID(f *faker.Faker) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m h3AggregationMods) Resolution(val int32) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Resolution = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m h3AggregationMods) ResolutionFunc(f func() int32) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Resolution = f
+	})
+}
+
+// Clear any values for the column
+func (m h3AggregationMods) UnsetResolution() H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Resolution = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m h3AggregationMods) RandomResolution(f *faker.Faker) H3AggregationMod {
+	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
+		o.Resolution = func() int32 {
 			return random_int32(f)
 		}
 	})
@@ -462,37 +557,6 @@ func (m h3AggregationMods) RandomType(f *faker.Faker) H3AggregationMod {
 	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
 		o.Type = func() enums.H3aggregationtype {
 			return random_enums_H3aggregationtype(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m h3AggregationMods) OrganizationID(val int32) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.OrganizationID = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m h3AggregationMods) OrganizationIDFunc(f func() int32) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.OrganizationID = f
-	})
-}
-
-// Clear any values for the column
-func (m h3AggregationMods) UnsetOrganizationID() H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.OrganizationID = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m h3AggregationMods) RandomOrganizationID(f *faker.Faker) H3AggregationMod {
-	return H3AggregationModFunc(func(_ context.Context, o *H3AggregationTemplate) {
-		o.OrganizationID = func() int32 {
-			return random_int32(f)
 		}
 	})
 }

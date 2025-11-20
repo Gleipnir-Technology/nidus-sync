@@ -33,8 +33,8 @@ var H3Aggregations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Resolution: column{
-			Name:      "resolution",
+		Count: column{
+			Name:      "count_",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -42,8 +42,26 @@ var H3Aggregations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Count: column{
-			Name:      "count_",
+		Geometry: column{
+			Name:      "geometry",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Resolution: column{
+			Name:      "resolution",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -54,15 +72,6 @@ var H3Aggregations = Table[
 		Type: column{
 			Name:      "type_",
 			DBType:    "public.h3aggregationtype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		OrganizationID: column{
-			Name:      "organization_id",
-			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -146,15 +155,16 @@ var H3Aggregations = Table[
 type h3AggregationColumns struct {
 	ID             column
 	Cell           column
-	Resolution     column
 	Count          column
-	Type           column
+	Geometry       column
 	OrganizationID column
+	Resolution     column
+	Type           column
 }
 
 func (c h3AggregationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Cell, c.Resolution, c.Count, c.Type, c.OrganizationID,
+		c.ID, c.Cell, c.Count, c.Geometry, c.OrganizationID, c.Resolution, c.Type,
 	}
 }
 

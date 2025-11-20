@@ -74,6 +74,7 @@ type FSPointlocation struct {
 	Scalarpriority          null.Val[int64]   `db:"scalarpriority" `
 	Sourcestatus            null.Val[string]  `db:"sourcestatus" `
 	Updated                 time.Time         `db:"updated" `
+	Geom                    null.Val[string]  `db:"geom" `
 
 	R fsPointlocationR `db:"-" `
 }
@@ -96,7 +97,7 @@ type fsPointlocationR struct {
 func buildFSPointlocationColumns(alias string) fsPointlocationColumns {
 	return fsPointlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "stype", "symbology", "usetype", "waterorigin", "x", "y", "zone", "zone2", "geometry_x", "geometry_y", "assignedtech", "deactivate_reason", "scalarpriority", "sourcestatus", "updated",
+			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "globalid", "habitat", "jurisdiction", "larvinspectinterval", "lastinspectactiontaken", "lastinspectactivity", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectbreeding", "lastinspectconditions", "lastinspectdate", "lastinspectfieldspecies", "lastinspectlstages", "lasttreatactivity", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "stype", "symbology", "usetype", "waterorigin", "x", "y", "zone", "zone2", "geometry_x", "geometry_y", "assignedtech", "deactivate_reason", "scalarpriority", "sourcestatus", "updated", "geom",
 		).WithParent("fs_pointlocation"),
 		tableAlias:              alias,
 		OrganizationID:          psql.Quote(alias, "organization_id"),
@@ -147,6 +148,7 @@ func buildFSPointlocationColumns(alias string) fsPointlocationColumns {
 		Scalarpriority:          psql.Quote(alias, "scalarpriority"),
 		Sourcestatus:            psql.Quote(alias, "sourcestatus"),
 		Updated:                 psql.Quote(alias, "updated"),
+		Geom:                    psql.Quote(alias, "geom"),
 	}
 }
 
@@ -201,6 +203,7 @@ type fsPointlocationColumns struct {
 	Scalarpriority          psql.Expression
 	Sourcestatus            psql.Expression
 	Updated                 psql.Expression
+	Geom                    psql.Expression
 }
 
 func (c fsPointlocationColumns) Alias() string {
@@ -263,10 +266,11 @@ type FSPointlocationSetter struct {
 	Scalarpriority          omitnull.Val[int64]   `db:"scalarpriority" `
 	Sourcestatus            omitnull.Val[string]  `db:"sourcestatus" `
 	Updated                 omit.Val[time.Time]   `db:"updated" `
+	Geom                    omitnull.Val[string]  `db:"geom" `
 }
 
 func (s FSPointlocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 48)
+	vals := make([]string, 0, 49)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -410,6 +414,9 @@ func (s FSPointlocationSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Geom.IsUnset() {
+		vals = append(vals, "geom")
 	}
 	return vals
 }
@@ -559,6 +566,9 @@ func (s FSPointlocationSetter) Overwrite(t *FSPointlocation) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Geom.IsUnset() {
+		t.Geom = s.Geom.MustGetNull()
+	}
 }
 
 func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
@@ -567,7 +577,7 @@ func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 48)
+		vals := make([]bob.Expression, 49)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -856,6 +866,12 @@ func (s *FSPointlocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[47] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Geom.IsUnset() {
+			vals[48] = psql.Arg(s.Geom.MustGetNull())
+		} else {
+			vals[48] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -865,7 +881,7 @@ func (s FSPointlocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 48)
+	exprs := make([]bob.Expression, 0, 49)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1200,6 +1216,13 @@ func (s FSPointlocationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "updated")...),
 			psql.Arg(s.Updated),
+		}})
+	}
+
+	if !s.Geom.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geom")...),
+			psql.Arg(s.Geom),
 		}})
 	}
 
@@ -1550,6 +1573,7 @@ type fsPointlocationWhere[Q psql.Filterable] struct {
 	Scalarpriority          psql.WhereNullMod[Q, int64]
 	Sourcestatus            psql.WhereNullMod[Q, string]
 	Updated                 psql.WhereMod[Q, time.Time]
+	Geom                    psql.WhereNullMod[Q, string]
 }
 
 func (fsPointlocationWhere[Q]) AliasedAs(alias string) fsPointlocationWhere[Q] {
@@ -1606,6 +1630,7 @@ func buildFSPointlocationWhere[Q psql.Filterable](cols fsPointlocationColumns) f
 		Scalarpriority:          psql.WhereNull[Q, int64](cols.Scalarpriority),
 		Sourcestatus:            psql.WhereNull[Q, string](cols.Sourcestatus),
 		Updated:                 psql.Where[Q, time.Time](cols.Updated),
+		Geom:                    psql.WhereNull[Q, string](cols.Geom),
 	}
 }
 

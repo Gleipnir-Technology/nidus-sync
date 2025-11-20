@@ -87,6 +87,7 @@ type FSMosquitoinspection struct {
 	Adminaction            null.Val[string]  `db:"adminaction" `
 	Ptaid                  null.Val[string]  `db:"ptaid" `
 	Updated                time.Time         `db:"updated" `
+	Geom                   null.Val[string]  `db:"geom" `
 
 	R fsMosquitoinspectionR `db:"-" `
 }
@@ -109,7 +110,7 @@ type fsMosquitoinspectionR struct {
 func buildFSMosquitoinspectionColumns(alias string) fsMosquitoinspectionColumns {
 	return fsMosquitoinspectionColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "adminaction", "ptaid", "updated",
+			"organization_id", "actiontaken", "activity", "adultact", "avetemp", "avglarvae", "avgpupae", "breeding", "cbcount", "comments", "containercount", "creationdate", "creator", "domstage", "eggs", "enddatetime", "editdate", "editor", "fieldspecies", "fieldtech", "globalid", "jurisdiction", "larvaepresent", "linelocid", "locationname", "lstages", "numdips", "objectid", "personalcontact", "pointlocid", "polygonlocid", "posdips", "positivecontainercount", "pupaepresent", "raingauge", "recordstatus", "reviewed", "reviewedby", "revieweddate", "sdid", "sitecond", "srid", "startdatetime", "tirecount", "totlarvae", "totpupae", "visualmonitoring", "vmcomments", "winddir", "windspeed", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "adminaction", "ptaid", "updated", "geom",
 		).WithParent("fs_mosquitoinspection"),
 		tableAlias:             alias,
 		OrganizationID:         psql.Quote(alias, "organization_id"),
@@ -173,6 +174,7 @@ func buildFSMosquitoinspectionColumns(alias string) fsMosquitoinspectionColumns 
 		Adminaction:            psql.Quote(alias, "adminaction"),
 		Ptaid:                  psql.Quote(alias, "ptaid"),
 		Updated:                psql.Quote(alias, "updated"),
+		Geom:                   psql.Quote(alias, "geom"),
 	}
 }
 
@@ -240,6 +242,7 @@ type fsMosquitoinspectionColumns struct {
 	Adminaction            psql.Expression
 	Ptaid                  psql.Expression
 	Updated                psql.Expression
+	Geom                   psql.Expression
 }
 
 func (c fsMosquitoinspectionColumns) Alias() string {
@@ -315,10 +318,11 @@ type FSMosquitoinspectionSetter struct {
 	Adminaction            omitnull.Val[string]  `db:"adminaction" `
 	Ptaid                  omitnull.Val[string]  `db:"ptaid" `
 	Updated                omit.Val[time.Time]   `db:"updated" `
+	Geom                   omitnull.Val[string]  `db:"geom" `
 }
 
 func (s FSMosquitoinspectionSetter) SetColumns() []string {
-	vals := make([]string, 0, 61)
+	vals := make([]string, 0, 62)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -501,6 +505,9 @@ func (s FSMosquitoinspectionSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Geom.IsUnset() {
+		vals = append(vals, "geom")
 	}
 	return vals
 }
@@ -689,6 +696,9 @@ func (s FSMosquitoinspectionSetter) Overwrite(t *FSMosquitoinspection) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Geom.IsUnset() {
+		t.Geom = s.Geom.MustGetNull()
+	}
 }
 
 func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
@@ -697,7 +707,7 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 61)
+		vals := make([]bob.Expression, 62)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -1064,6 +1074,12 @@ func (s *FSMosquitoinspectionSetter) Apply(q *dialect.InsertQuery) {
 			vals[60] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Geom.IsUnset() {
+			vals[61] = psql.Arg(s.Geom.MustGetNull())
+		} else {
+			vals[61] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -1073,7 +1089,7 @@ func (s FSMosquitoinspectionSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 61)
+	exprs := make([]bob.Expression, 0, 62)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -1502,6 +1518,13 @@ func (s FSMosquitoinspectionSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
+	if !s.Geom.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geom")...),
+			psql.Arg(s.Geom),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1862,6 +1885,7 @@ type fsMosquitoinspectionWhere[Q psql.Filterable] struct {
 	Adminaction            psql.WhereNullMod[Q, string]
 	Ptaid                  psql.WhereNullMod[Q, string]
 	Updated                psql.WhereMod[Q, time.Time]
+	Geom                   psql.WhereNullMod[Q, string]
 }
 
 func (fsMosquitoinspectionWhere[Q]) AliasedAs(alias string) fsMosquitoinspectionWhere[Q] {
@@ -1931,6 +1955,7 @@ func buildFSMosquitoinspectionWhere[Q psql.Filterable](cols fsMosquitoinspection
 		Adminaction:            psql.WhereNull[Q, string](cols.Adminaction),
 		Ptaid:                  psql.WhereNull[Q, string](cols.Ptaid),
 		Updated:                psql.Where[Q, time.Time](cols.Updated),
+		Geom:                   psql.WhereNull[Q, string](cols.Geom),
 	}
 }
 

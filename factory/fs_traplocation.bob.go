@@ -71,6 +71,7 @@ type FSTraplocationTemplate struct {
 	H3R7                    func() null.Val[string]
 	H3R8                    func() null.Val[string]
 	Updated                 func() time.Time
+	Geom                    func() null.Val[string]
 
 	r fsTraplocationR
 	f *Factory
@@ -245,6 +246,10 @@ func (o FSTraplocationTemplate) BuildSetter() *models.FSTraplocationSetter {
 		val := o.Updated()
 		m.Updated = omit.From(val)
 	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -368,6 +373,9 @@ func (o FSTraplocationTemplate) Build() *models.FSTraplocation {
 	}
 	if o.Updated != nil {
 		m.Updated = o.Updated()
+	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
 	}
 
 	o.setModelRels(m)
@@ -554,6 +562,7 @@ func (m fsTraplocationMods) RandomizeAllColumns(f *faker.Faker) FSTraplocationMo
 		FSTraplocationMods.RandomH3R7(f),
 		FSTraplocationMods.RandomH3R8(f),
 		FSTraplocationMods.RandomUpdated(f),
+		FSTraplocationMods.RandomGeom(f),
 	}
 }
 
@@ -2267,6 +2276,59 @@ func (m fsTraplocationMods) RandomUpdated(f *faker.Faker) FSTraplocationMod {
 	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
 		o.Updated = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fsTraplocationMods) Geom(val null.Val[string]) FSTraplocationMod {
+	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fsTraplocationMods) GeomFunc(f func() null.Val[string]) FSTraplocationMod {
+	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fsTraplocationMods) UnsetGeom() FSTraplocationMod {
+	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fsTraplocationMods) RandomGeom(f *faker.Faker) FSTraplocationMod {
+	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fsTraplocationMods) RandomGeomNotNull(f *faker.Faker) FSTraplocationMod {
+	return FSTraplocationModFunc(func(_ context.Context, o *FSTraplocationTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

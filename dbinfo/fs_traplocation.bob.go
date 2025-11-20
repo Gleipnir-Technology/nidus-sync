@@ -321,6 +321,15 @@ var FSTraplocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fsTraplocationIndexes{
 		FSTraplocationPkey: index{
@@ -334,6 +343,23 @@ var FSTraplocations = Table[
 				},
 			},
 			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		IdxFSTraplocationGeom: index{
+			Type: "gist",
+			Name: "idx_fs_traplocation_geom",
+			Columns: []indexColumn{
+				{
+					Name:         "geom",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        false,
 			Comment:       "",
 			NullsFirst:    []bool{false},
 			NullsDistinct: false,
@@ -396,21 +422,23 @@ type fsTraplocationColumns struct {
 	H3R7                    column
 	H3R8                    column
 	Updated                 column
+	Geom                    column
 }
 
 func (c fsTraplocationColumns) AsSlice() []column {
 	return []column{
-		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Habitat, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Usetype, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Route, c.RouteOrder, c.SetDow, c.Vectorsurvsiteid, c.H3R7, c.H3R8, c.Updated,
+		c.OrganizationID, c.Accessdesc, c.Active, c.Comments, c.Creationdate, c.Creator, c.Description, c.Externalid, c.Editdate, c.Editor, c.Gatewaysync, c.Globalid, c.Habitat, c.Locationnumber, c.Name, c.Nextactiondatescheduled, c.Objectid, c.Priority, c.Usetype, c.Zone, c.Zone2, c.CreatedDate, c.CreatedUser, c.GeometryX, c.GeometryY, c.LastEditedDate, c.LastEditedUser, c.Route, c.RouteOrder, c.SetDow, c.Vectorsurvsiteid, c.H3R7, c.H3R8, c.Updated, c.Geom,
 	}
 }
 
 type fsTraplocationIndexes struct {
-	FSTraplocationPkey index
+	FSTraplocationPkey    index
+	IdxFSTraplocationGeom index
 }
 
 func (i fsTraplocationIndexes) AsSlice() []index {
 	return []index{
-		i.FSTraplocationPkey,
+		i.FSTraplocationPkey, i.IdxFSTraplocationGeom,
 	}
 }
 

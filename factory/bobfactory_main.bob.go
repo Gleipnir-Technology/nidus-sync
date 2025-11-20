@@ -561,6 +561,7 @@ func (f *Factory) FromExistingFSMosquitoinspection(m *models.FSMosquitoinspectio
 	o.Adminaction = func() null.Val[string] { return m.Adminaction }
 	o.Ptaid = func() null.Val[string] { return m.Ptaid }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Geom = func() null.Val[string] { return m.Geom }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -637,6 +638,7 @@ func (f *Factory) FromExistingFSPointlocation(m *models.FSPointlocation) *FSPoin
 	o.Scalarpriority = func() null.Val[int64] { return m.Scalarpriority }
 	o.Sourcestatus = func() null.Val[string] { return m.Sourcestatus }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Geom = func() null.Val[string] { return m.Geom }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1598,6 +1600,7 @@ func (f *Factory) FromExistingFSTraplocation(m *models.FSTraplocation) *FSTraplo
 	o.H3R7 = func() null.Val[string] { return m.H3R7 }
 	o.H3R8 = func() null.Val[string] { return m.H3R8 }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Geom = func() null.Val[string] { return m.Geom }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1684,6 +1687,7 @@ func (f *Factory) FromExistingFSTreatment(m *models.FSTreatment) *FSTreatmentTem
 	o.GeometryY = func() null.Val[float64] { return m.GeometryY }
 	o.TempSitecond = func() null.Val[string] { return m.TempSitecond }
 	o.Updated = func() time.Time { return m.Updated }
+	o.Geom = func() null.Val[string] { return m.Geom }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1942,10 +1946,11 @@ func (f *Factory) FromExistingH3Aggregation(m *models.H3Aggregation) *H3Aggregat
 
 	o.ID = func() int32 { return m.ID }
 	o.Cell = func() string { return m.Cell }
-	o.Resolution = func() int32 { return m.Resolution }
 	o.Count = func() int32 { return m.Count }
-	o.Type = func() enums.H3aggregationtype { return m.Type }
+	o.Geometry = func() null.Val[string] { return m.Geometry }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.Resolution = func() int32 { return m.Resolution }
+	o.Type = func() enums.H3aggregationtype { return m.Type }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

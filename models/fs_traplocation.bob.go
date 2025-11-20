@@ -60,6 +60,7 @@ type FSTraplocation struct {
 	H3R7                    null.Val[string]  `db:"h3r7" `
 	H3R8                    null.Val[string]  `db:"h3r8" `
 	Updated                 time.Time         `db:"updated" `
+	Geom                    null.Val[string]  `db:"geom" `
 
 	R fsTraplocationR `db:"-" `
 }
@@ -82,7 +83,7 @@ type fsTraplocationR struct {
 func buildFSTraplocationColumns(alias string) fsTraplocationColumns {
 	return fsTraplocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "gatewaysync", "globalid", "habitat", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "usetype", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "route", "route_order", "set_dow", "vectorsurvsiteid", "h3r7", "h3r8", "updated",
+			"organization_id", "accessdesc", "active", "comments", "creationdate", "creator", "description", "externalid", "editdate", "editor", "gatewaysync", "globalid", "habitat", "locationnumber", "name", "nextactiondatescheduled", "objectid", "priority", "usetype", "zone", "zone2", "created_date", "created_user", "geometry_x", "geometry_y", "last_edited_date", "last_edited_user", "route", "route_order", "set_dow", "vectorsurvsiteid", "h3r7", "h3r8", "updated", "geom",
 		).WithParent("fs_traplocation"),
 		tableAlias:              alias,
 		OrganizationID:          psql.Quote(alias, "organization_id"),
@@ -119,6 +120,7 @@ func buildFSTraplocationColumns(alias string) fsTraplocationColumns {
 		H3R7:                    psql.Quote(alias, "h3r7"),
 		H3R8:                    psql.Quote(alias, "h3r8"),
 		Updated:                 psql.Quote(alias, "updated"),
+		Geom:                    psql.Quote(alias, "geom"),
 	}
 }
 
@@ -159,6 +161,7 @@ type fsTraplocationColumns struct {
 	H3R7                    psql.Expression
 	H3R8                    psql.Expression
 	Updated                 psql.Expression
+	Geom                    psql.Expression
 }
 
 func (c fsTraplocationColumns) Alias() string {
@@ -207,10 +210,11 @@ type FSTraplocationSetter struct {
 	H3R7                    omitnull.Val[string]  `db:"h3r7" `
 	H3R8                    omitnull.Val[string]  `db:"h3r8" `
 	Updated                 omit.Val[time.Time]   `db:"updated" `
+	Geom                    omitnull.Val[string]  `db:"geom" `
 }
 
 func (s FSTraplocationSetter) SetColumns() []string {
-	vals := make([]string, 0, 34)
+	vals := make([]string, 0, 35)
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
@@ -312,6 +316,9 @@ func (s FSTraplocationSetter) SetColumns() []string {
 	}
 	if s.Updated.IsValue() {
 		vals = append(vals, "updated")
+	}
+	if !s.Geom.IsUnset() {
+		vals = append(vals, "geom")
 	}
 	return vals
 }
@@ -419,6 +426,9 @@ func (s FSTraplocationSetter) Overwrite(t *FSTraplocation) {
 	if s.Updated.IsValue() {
 		t.Updated = s.Updated.MustGet()
 	}
+	if !s.Geom.IsUnset() {
+		t.Geom = s.Geom.MustGetNull()
+	}
 }
 
 func (s *FSTraplocationSetter) Apply(q *dialect.InsertQuery) {
@@ -427,7 +437,7 @@ func (s *FSTraplocationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 34)
+		vals := make([]bob.Expression, 35)
 		if s.OrganizationID.IsValue() {
 			vals[0] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
@@ -632,6 +642,12 @@ func (s *FSTraplocationSetter) Apply(q *dialect.InsertQuery) {
 			vals[33] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Geom.IsUnset() {
+			vals[34] = psql.Arg(s.Geom.MustGetNull())
+		} else {
+			vals[34] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -641,7 +657,7 @@ func (s FSTraplocationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FSTraplocationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 34)
+	exprs := make([]bob.Expression, 0, 35)
 
 	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -878,6 +894,13 @@ func (s FSTraplocationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "updated")...),
 			psql.Arg(s.Updated),
+		}})
+	}
+
+	if !s.Geom.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geom")...),
+			psql.Arg(s.Geom),
 		}})
 	}
 
@@ -1214,6 +1237,7 @@ type fsTraplocationWhere[Q psql.Filterable] struct {
 	H3R7                    psql.WhereNullMod[Q, string]
 	H3R8                    psql.WhereNullMod[Q, string]
 	Updated                 psql.WhereMod[Q, time.Time]
+	Geom                    psql.WhereNullMod[Q, string]
 }
 
 func (fsTraplocationWhere[Q]) AliasedAs(alias string) fsTraplocationWhere[Q] {
@@ -1256,6 +1280,7 @@ func buildFSTraplocationWhere[Q psql.Filterable](cols fsTraplocationColumns) fsT
 		H3R7:                    psql.WhereNull[Q, string](cols.H3R7),
 		H3R8:                    psql.WhereNull[Q, string](cols.H3R8),
 		Updated:                 psql.Where[Q, time.Time](cols.Updated),
+		Geom:                    psql.WhereNull[Q, string](cols.Geom),
 	}
 }
 

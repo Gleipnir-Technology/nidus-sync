@@ -16,9 +16,11 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/null"
 	//"github.com/riverqueue/river/rivershared/util/slogutil"
 	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/uber/h3-go/v4"
@@ -73,10 +75,10 @@ type BuiltTemplate struct {
 }
 
 type MapMarker struct {
-	LatLng LatLng
+	LatLng h3.LatLng
 }
 type ComponentMap struct {
-	Center      LatLng
+	Center      h3.LatLng
 	GeoJSON     interface{}
 	MapboxToken string
 	Markers     []MapMarker
@@ -124,12 +126,9 @@ type ContentSource struct {
 	Inspections []Inspection
 	MapData     ComponentMap
 	Source      *BreedingSourceDetail
+	Traps       []TrapNearby
 	Treatments  []Treatment
 	User        User
-}
-type LatLng struct {
-	Lat float64
-	Lng float64
 }
 type Inspection struct {
 	Action     string
@@ -266,7 +265,7 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 		CellBoundary:    boundary,
 		Inspections:     inspections,
 		MapData: ComponentMap{
-			Center: LatLng{
+			Center: h3.LatLng{
 				Lat: center.Lat,
 				Lng: center.Lng,
 			},
@@ -501,6 +500,12 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 		respondError(w, "Failed to get inspections", err, http.StatusInternalServerError)
 		return
 	}
+	traps, err := trapsBySource(r.Context(), org, id)
+	if err != nil {
+		respondError(w, "Failed to get traps", err, http.StatusInternalServerError)
+		return
+	}
+
 	treatments, err := treatmentsBySource(r.Context(), org, id)
 	if err != nil {
 		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
@@ -509,23 +514,18 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 	data := ContentSource{
 		Inspections: inspections,
 		MapData: ComponentMap{
-			Center: LatLng{
-				Lat: s.GeometryY,
-				Lng: s.GeometryX,
-			},
+			Center: s.LatLng,
 			//GeoJSON:
 			MapboxToken: MapboxToken,
 			Markers: []MapMarker{
 				MapMarker{
-					LatLng: LatLng{
-						Lat: s.GeometryY,
-						Lng: s.GeometryX,
-					},
+					LatLng: s.LatLng,
 				},
 			},
 			Zoom: 13,
 		},
 		Source:     s,
+		Traps:      traps,
 		Treatments: treatments,
 		User:       userContent,
 	}
@@ -668,6 +668,40 @@ func timeSince(t *time.Time) string {
 		days := hours / 24
 		return fmt.Sprintf("%d days ago", int(days))
 	}
+}
+
+func trapsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]TrapNearby, error) {
+	locations, err := sql.TrapLocationBySourceID(org.ID, sourceID).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query rows: %w", err)
+	}
+
+	location_ids := make([]string, 0)
+	var args []bob.Expression
+	for _, location := range locations {
+		location_ids = append(location_ids, location.TrapLocationGlobalid)
+		args = append(args, psql.Arg(location.TrapLocationGlobalid))
+	}
+	trap_data, err := org.FSTrapdata(
+		sm.Where(
+			models.FSTrapdata.Columns.LocID.In(args...),
+		),
+		sm.OrderBy("enddatetime"),
+	).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query trap data: %w", err)
+	}
+
+	counts, err := sql.TrapCountByLocationID(org.ID, location_ids).All(ctx, PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query trap counts: %w", err)
+	}
+
+	traps, err := toTemplateTraps(locations, trap_data, counts)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert trap data: %w", err)
+	}
+	return traps, nil
 }
 
 func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interface{}) {

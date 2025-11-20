@@ -9,7 +9,9 @@ import (
 	"io"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -26,10 +28,11 @@ import (
 type H3Aggregation struct {
 	ID             int32                   `db:"id,pk" `
 	Cell           string                  `db:"cell" `
-	Resolution     int32                   `db:"resolution" `
 	Count          int32                   `db:"count_" `
-	Type           enums.H3aggregationtype `db:"type_" `
+	Geometry       null.Val[string]        `db:"geometry" `
 	OrganizationID int32                   `db:"organization_id" `
+	Resolution     int32                   `db:"resolution" `
+	Type           enums.H3aggregationtype `db:"type_" `
 
 	R h3AggregationR `db:"-" `
 }
@@ -52,15 +55,16 @@ type h3AggregationR struct {
 func buildH3AggregationColumns(alias string) h3AggregationColumns {
 	return h3AggregationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "cell", "resolution", "count_", "type_", "organization_id",
+			"id", "cell", "count_", "geometry", "organization_id", "resolution", "type_",
 		).WithParent("h3_aggregation"),
 		tableAlias:     alias,
 		ID:             psql.Quote(alias, "id"),
 		Cell:           psql.Quote(alias, "cell"),
-		Resolution:     psql.Quote(alias, "resolution"),
 		Count:          psql.Quote(alias, "count_"),
-		Type:           psql.Quote(alias, "type_"),
+		Geometry:       psql.Quote(alias, "geometry"),
 		OrganizationID: psql.Quote(alias, "organization_id"),
+		Resolution:     psql.Quote(alias, "resolution"),
+		Type:           psql.Quote(alias, "type_"),
 	}
 }
 
@@ -69,10 +73,11 @@ type h3AggregationColumns struct {
 	tableAlias     string
 	ID             psql.Expression
 	Cell           psql.Expression
-	Resolution     psql.Expression
 	Count          psql.Expression
-	Type           psql.Expression
+	Geometry       psql.Expression
 	OrganizationID psql.Expression
+	Resolution     psql.Expression
+	Type           psql.Expression
 }
 
 func (c h3AggregationColumns) Alias() string {
@@ -89,31 +94,35 @@ func (h3AggregationColumns) AliasedAs(alias string) h3AggregationColumns {
 type H3AggregationSetter struct {
 	ID             omit.Val[int32]                   `db:"id,pk" `
 	Cell           omit.Val[string]                  `db:"cell" `
-	Resolution     omit.Val[int32]                   `db:"resolution" `
 	Count          omit.Val[int32]                   `db:"count_" `
-	Type           omit.Val[enums.H3aggregationtype] `db:"type_" `
+	Geometry       omitnull.Val[string]              `db:"geometry" `
 	OrganizationID omit.Val[int32]                   `db:"organization_id" `
+	Resolution     omit.Val[int32]                   `db:"resolution" `
+	Type           omit.Val[enums.H3aggregationtype] `db:"type_" `
 }
 
 func (s H3AggregationSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 7)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
 	if s.Cell.IsValue() {
 		vals = append(vals, "cell")
 	}
-	if s.Resolution.IsValue() {
-		vals = append(vals, "resolution")
-	}
 	if s.Count.IsValue() {
 		vals = append(vals, "count_")
 	}
-	if s.Type.IsValue() {
-		vals = append(vals, "type_")
+	if !s.Geometry.IsUnset() {
+		vals = append(vals, "geometry")
 	}
 	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
+	}
+	if s.Resolution.IsValue() {
+		vals = append(vals, "resolution")
+	}
+	if s.Type.IsValue() {
+		vals = append(vals, "type_")
 	}
 	return vals
 }
@@ -125,17 +134,20 @@ func (s H3AggregationSetter) Overwrite(t *H3Aggregation) {
 	if s.Cell.IsValue() {
 		t.Cell = s.Cell.MustGet()
 	}
-	if s.Resolution.IsValue() {
-		t.Resolution = s.Resolution.MustGet()
-	}
 	if s.Count.IsValue() {
 		t.Count = s.Count.MustGet()
 	}
-	if s.Type.IsValue() {
-		t.Type = s.Type.MustGet()
+	if !s.Geometry.IsUnset() {
+		t.Geometry = s.Geometry.MustGetNull()
 	}
 	if s.OrganizationID.IsValue() {
 		t.OrganizationID = s.OrganizationID.MustGet()
+	}
+	if s.Resolution.IsValue() {
+		t.Resolution = s.Resolution.MustGet()
+	}
+	if s.Type.IsValue() {
+		t.Type = s.Type.MustGet()
 	}
 }
 
@@ -145,7 +157,7 @@ func (s *H3AggregationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.Writer, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 7)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -158,28 +170,34 @@ func (s *H3AggregationSetter) Apply(q *dialect.InsertQuery) {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Resolution.IsValue() {
-			vals[2] = psql.Arg(s.Resolution.MustGet())
+		if s.Count.IsValue() {
+			vals[2] = psql.Arg(s.Count.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Count.IsValue() {
-			vals[3] = psql.Arg(s.Count.MustGet())
+		if !s.Geometry.IsUnset() {
+			vals[3] = psql.Arg(s.Geometry.MustGetNull())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.Type.IsValue() {
-			vals[4] = psql.Arg(s.Type.MustGet())
+		if s.OrganizationID.IsValue() {
+			vals[4] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.OrganizationID.IsValue() {
-			vals[5] = psql.Arg(s.OrganizationID.MustGet())
+		if s.Resolution.IsValue() {
+			vals[5] = psql.Arg(s.Resolution.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
+		}
+
+		if s.Type.IsValue() {
+			vals[6] = psql.Arg(s.Type.MustGet())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -191,7 +209,7 @@ func (s H3AggregationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s H3AggregationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -207,13 +225,6 @@ func (s H3AggregationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Resolution.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "resolution")...),
-			psql.Arg(s.Resolution),
-		}})
-	}
-
 	if s.Count.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "count_")...),
@@ -221,10 +232,10 @@ func (s H3AggregationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Type.IsValue() {
+	if !s.Geometry.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "type_")...),
-			psql.Arg(s.Type),
+			psql.Quote(append(prefix, "geometry")...),
+			psql.Arg(s.Geometry),
 		}})
 	}
 
@@ -232,6 +243,20 @@ func (s H3AggregationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
+		}})
+	}
+
+	if s.Resolution.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "resolution")...),
+			psql.Arg(s.Resolution),
+		}})
+	}
+
+	if s.Type.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "type_")...),
+			psql.Arg(s.Type),
 		}})
 	}
 
@@ -536,10 +561,11 @@ func (h3Aggregation0 *H3Aggregation) AttachOrganization(ctx context.Context, exe
 type h3AggregationWhere[Q psql.Filterable] struct {
 	ID             psql.WhereMod[Q, int32]
 	Cell           psql.WhereMod[Q, string]
-	Resolution     psql.WhereMod[Q, int32]
 	Count          psql.WhereMod[Q, int32]
-	Type           psql.WhereMod[Q, enums.H3aggregationtype]
+	Geometry       psql.WhereNullMod[Q, string]
 	OrganizationID psql.WhereMod[Q, int32]
+	Resolution     psql.WhereMod[Q, int32]
+	Type           psql.WhereMod[Q, enums.H3aggregationtype]
 }
 
 func (h3AggregationWhere[Q]) AliasedAs(alias string) h3AggregationWhere[Q] {
@@ -550,10 +576,11 @@ func buildH3AggregationWhere[Q psql.Filterable](cols h3AggregationColumns) h3Agg
 	return h3AggregationWhere[Q]{
 		ID:             psql.Where[Q, int32](cols.ID),
 		Cell:           psql.Where[Q, string](cols.Cell),
-		Resolution:     psql.Where[Q, int32](cols.Resolution),
 		Count:          psql.Where[Q, int32](cols.Count),
-		Type:           psql.Where[Q, enums.H3aggregationtype](cols.Type),
+		Geometry:       psql.WhereNull[Q, string](cols.Geometry),
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
+		Resolution:     psql.Where[Q, int32](cols.Resolution),
+		Type:           psql.Where[Q, enums.H3aggregationtype](cols.Type),
 	}
 }
 

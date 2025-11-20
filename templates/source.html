@@ -58,6 +58,10 @@
 						<div class="source-id">Source ID: {{ .Source.GlobalID }}</div>
 						<table class="info-table">
 							<tr>
+								<td class="info-label">Location:</td>
+								<td>{{ .Source.LatLng|latLngDisplay }}</td>
+							</tr>
+							<tr>
 								<td class="info-label">Access:</td>
 								<td>{{ .Source.AccessDescription }}</td>
 							</tr>
@@ -317,69 +321,21 @@
 								</tr>
 							</thead>
 							<tbody>
+								{{ range .Traps }}
 								<!-- Trap 1 with multiple collections -->
 								<tr>
-									<td rowspan="3">TR-105</td>
-									<td rowspan="3">0.2 mi</td>
-									<td>04/17/2023</td>
-									<td>37</td>
+									<td rowspan="3">{{ .ID }}</td>
+									<td rowspan="3">{{ .Distance }}</td>
+									<td></td>
+									<td></td>
 								</tr>
-								<tr>
-									<td>04/10/2023</td>
-									<td>52</td>
-								</tr>
-								<tr>
-									<td>04/03/2023</td>
-									<td>61</td>
-								</tr>
-								
-								<!-- Trap 2 with multiple collections -->
-								<tr>
-									<td rowspan="3">TR-108</td>
-									<td rowspan="3">0.4 mi</td>
-									<td>04/17/2023</td>
-									<td>22</td>
-								</tr>
-								<tr>
-									<td>04/10/2023</td>
-									<td>35</td>
-								</tr>
-								<tr>
-									<td>04/03/2023</td>
-									<td>41</td>
-								</tr>
-								
-								<!-- Trap 3 with multiple collections -->
-								<tr>
-									<td rowspan="3">TR-112</td>
-									<td rowspan="3">0.6 mi</td>
-									<td>04/17/2023</td>
-									<td>18</td>
-								</tr>
-								<tr>
-									<td>04/10/2023</td>
-									<td>24</td>
-								</tr>
-								<tr>
-									<td>04/03/2023</td>
-									<td>27</td>
-								</tr>
-								
-								<!-- Trap 4 with multiple collections -->
-								<tr>
-									<td rowspan="3">TR-117</td>
-									<td rowspan="3">0.8 mi</td>
-									<td>04/17/2023</td>
-									<td>12</td>
-								</tr>
-								<tr>
-									<td>04/10/2023</td>
-									<td>19</td>
-								</tr>
-								<tr>
-									<td>04/03/2023</td>
-									<td>15</td>
-								</tr>
+									{{ range .Counts }}
+									<tr>
+										<td>{{ .Ended|timeSince }}</td>
+										<td>{{ .Total }}</td>
+									</tr>
+									{{ end }}
+								{{ end }}
 							</tbody>
 						</table>
 					</div>
