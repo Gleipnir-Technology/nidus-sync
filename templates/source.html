@@ -250,7 +250,24 @@
 			<div class="card mb-4">
 				<div class="card-body">
 					<div class="table-responsive">
-						<p>Estimated Treatment Cadence: {{.TreatmentCadence|timeInterval}}</p>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<th>Year</th>
+									<th>Start</th>
+									<th>End</th>
+									<th>Interval</th>
+								</tr>
+								{{ range .TreatmentModels }}
+								<tr>
+									<td>{{.Year}}</td>
+									<td>{{.SeasonStart|timeAsRelativeDate}}</td>
+									<td>{{.SeasonEnd|timeAsRelativeDate}}</td>
+									<td>{{.Interval|timeInterval}}</td>
+								</tr>
+								{{ end }}
+							</tbody>
+						</table>
 						<table class="table table-striped table-hover">
 							<thead>
 								<tr>
@@ -316,7 +333,7 @@
 					<tbody>
 						<tr>
 							<td class="info-label">Trap ID:</td>
-							<td>{{ .ID }}</td>
+							<td><a href="/trap/{{.ID}}">{{ .ID }}</a></td>
 						</tr>
 						<tr>
 							<td class="info-label">Distance</td>

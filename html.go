@@ -123,13 +123,14 @@ type ContentSignin struct {
 }
 type ContentSignup struct{}
 type ContentSource struct {
-	Inspections      []Inspection
-	MapData          ComponentMap
-	Source           *BreedingSourceDetail
-	Traps            []TrapNearby
-	Treatments       []Treatment
-	TreatmentCadence time.Duration
-	User             User
+	Inspections []Inspection
+	MapData     ComponentMap
+	Source      *BreedingSourceDetail
+	Traps       []TrapNearby
+	Treatments  []Treatment
+	//TreatmentCadence TreatmentCadence
+	TreatmentModels []TreatmentModel
+	User            User
 }
 type Inspection struct {
 	Action     string
@@ -506,18 +507,7 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
 		return
 	}
-	treatment_times := make([]time.Time, 0)
-	for _, treatment := range treatments {
-		treatment_times = append(treatment_times, treatment.Date)
-	}
-	cadence, deltas := calculateCadenceVariance(treatment_times)
-	for i, treatment := range treatments {
-		if i >= len(deltas) {
-			break
-		}
-		treatment.CadenceDelta = deltas[i]
-		treatments[i] = treatment
-	}
+	treatment_models := modelTreatment(treatments)
 	data := ContentSource{
 		Inspections: inspections,
 		MapData: ComponentMap{
@@ -531,11 +521,11 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 			},
 			Zoom: 13,
 		},
-		Source:           s,
-		Traps:            traps,
-		Treatments:       treatments,
-		TreatmentCadence: cadence,
-		User:             userContent,
+		Source:          s,
+		Traps:           traps,
+		Treatments:      treatments,
+		TreatmentModels: treatment_models,
+		User:            userContent,
 	}
 
 	renderOrError(w, source, data)
@@ -574,14 +564,15 @@ func latLngDisplay(ll h3.LatLng) string {
 
 func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
-		"bigNumber":     bigNumber,
-		"GISStatement":  gisStatement,
-		"latLngDisplay": latLngDisplay,
-		"timeDelta":     timeDelta,
-		"timeElapsed":   timeElapsed,
-		"timeInterval":  timeInterval,
-		"timeSince":     timeSince,
-		"uuidShort":     uuidShort,
+		"bigNumber":          bigNumber,
+		"GISStatement":       gisStatement,
+		"latLngDisplay":      latLngDisplay,
+		"timeAsRelativeDate": timeAsRelativeDate,
+		"timeDelta":          timeDelta,
+		"timeElapsed":        timeElapsed,
+		"timeInterval":       timeInterval,
+		"timeSince":          timeSince,
+		"uuidShort":          uuidShort,
 	}
 	return funcMap
 }
@@ -640,6 +631,10 @@ func parseFromDisk(files []string) (*template.Template, error) {
 		return nil, fmt.Errorf("Failed to parse %s: %w", paths, err)
 	}
 	return templ, nil
+}
+
+func timeAsRelativeDate(d time.Time) string {
+	return d.Format("01-02")
 }
 
 // FormatTimeDuration returns a human-readable string representing a time.Duration
