@@ -454,6 +454,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 		return fmt.Errorf("Failed to insert sync: %w", err)
 	}
 
+	updateSummaryTables(ctx, org)
 	return nil
 }
 
