@@ -4,7 +4,7 @@ go 1.24.9
 
 require (
 	github.com/Gleipnir-Technology/arcgis-go v0.0.3
-	github.com/Gleipnir-Technology/go-geojson2h3 v0.0.0-00010101000000-000000000000
+	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0

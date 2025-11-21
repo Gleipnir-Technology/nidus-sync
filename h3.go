@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Gleipnir-Technology/go-geojson2h3"
+	"github.com/Gleipnir-Technology/go-geojson2h3/v2"
 	"github.com/tidwall/geojson"
 	"github.com/uber/h3-go/v4"
 )
