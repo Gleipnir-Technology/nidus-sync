@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"embed"
@@ -196,13 +195,4 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 			log.Error().Err(err).Msg("Faild to add h3 aggregation")
 		}
 	}
-}
-
-func insertQueryToString(query bob.BaseQuery[*dialect.InsertQuery]) string {
-	buf := new(bytes.Buffer)
-	_, err := query.WriteQuery(context.TODO(), buf, 0)
-	if err != nil {
-		return fmt.Sprintf("Failed to write query: %v", err)
-	}
-	return buf.String()
 }

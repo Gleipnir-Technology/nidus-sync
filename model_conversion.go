@@ -162,7 +162,7 @@ type Treatment struct {
 	Product      string
 }
 
-func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data models.FSTrapdatumSlice, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
+func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.TrapDataByLocationIDRecentRow, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
 	results := make([]TrapNearby, 0)
 	count_by_trap_data_id := make(map[string]*sql.TrapCountByLocationIDRow)
 	for _, c := range counts {
@@ -174,12 +174,9 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data models
 		if !ok {
 			return results, errors.New(fmt.Sprintf("Failed to find trap count for %s", td.Globalid))
 		}
-		if td.LocID.IsNull() {
-			return results, errors.New("Got a trap data with no location ID")
-		}
-		loc_id := td.LocID.MustGet()
+		loc_id := td.LocID
 		count := &TrapCount{
-			Ended:   fsToTime(td.Enddatetime),
+			Ended:   time.UnixMilli(td.Enddatetime),
 			Females: int(c.TotalFemales.IntPart()),
 			ID:      td.Globalid,
 			Males:   int(c.TotalMales),

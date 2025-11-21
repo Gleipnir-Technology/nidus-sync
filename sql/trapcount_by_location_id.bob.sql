@@ -16,4 +16,4 @@ WHERE
     td.organization_id = $1
     AND td.loc_id IN ($2)
 GROUP BY 
-    td.globalid, td.enddatetime;
+    td.globalid, td.loc_id, td.enddatetime;

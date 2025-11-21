@@ -512,6 +512,9 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 	}
 	cadence, deltas := calculateCadenceVariance(treatment_times)
 	for i, treatment := range treatments {
+		if i >= len(deltas) {
+			break
+		}
 		treatment.CadenceDelta = deltas[i]
 		treatments[i] = treatment
 	}
@@ -782,12 +785,57 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID strin
 		location_ids = append(location_ids, location.TrapLocationGlobalid)
 		args = append(args, psql.Arg(location.TrapLocationGlobalid))
 	}
-	trap_data, err := org.FSTrapdata(
-		sm.Where(
-			models.FSTrapdata.Columns.LocID.In(args...),
-		),
-		sm.OrderBy("enddatetime"),
-	).All(ctx, PGInstance.BobDB)
+	/*
+		trap_data, err := org.FSTrapdata(
+			sm.Where(
+				models.FSTrapdata.Columns.LocID.In(args...),
+			),
+			sm.OrderBy("enddatetime"),
+		).All(ctx, PGInstance.BobDB)
+	*/
+
+	/*
+		query := org.FSTrapdata(
+			sm.From(
+				psql.Select(
+					sm.From(psql.F("ROW_NUMBER")(
+						fm.Over(
+							wm.PartitionBy(models.FSTrapdata.Columns.LocID),
+							wm.OrderBy(models.FSTrapdata.Columns.Enddatetime).Desc(),
+						),
+					)).As("row_num"),
+				sm.Where(models.FSTrapdata.Columns.LocID.In(args...))),
+			),
+			sm.Where(psql.Quote("row_num").LTE(psql.Arg(10))),
+			sm.OrderBy(models.FSTrapdata.Columns.LocID),
+			sm.OrderBy(models.FSTrapdata.Columns.Enddatetime).Desc(),
+		)
+	*/
+	/*
+		query := psql.Select(
+			sm.From(
+				psql.Select(
+					sm.Columns(
+						models.FSTrapdata.Columns.Globalid,
+						psql.F("ROW_NUMBER")(
+						fm.Over(
+							wm.PartitionBy(models.FSTrapdata.Columns.LocID),
+							wm.OrderBy(models.FSTrapdata.Columns.Enddatetime).Desc(),
+						),
+					).As("row_num"),
+					sm.From(models.FSTrapdata.Name()),
+				),
+				sm.Where(models.FSTrapdata.Columns.LocID.In(args...))),
+			),
+			sm.Where(psql.Quote("row_num").LTE(psql.Arg(10))),
+			sm.OrderBy(models.FSTrapdata.Columns.LocID),
+			sm.OrderBy(models.FSTrapdata.Columns.Enddatetime).Desc(),
+		)
+		log.Info().Str("trapdata", queryToString(query)).Msg("Getting trap data")
+		trap_data, err := query.Exec(ctx, PGInstance.BobDB)
+	*/
+
+	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, location_ids).All(ctx, PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap data: %w", err)
 	}

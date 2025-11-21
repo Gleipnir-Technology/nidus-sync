@@ -22,7 +22,7 @@ import (
 //go:embed trapcount_by_location_id.bob.sql
 var formattedQueries_trapcount_by_location_id string
 
-var trapCountByLocationIDSQL = formattedQueries_trapcount_by_location_id[159:580]
+var trapCountByLocationIDSQL = formattedQueries_trapcount_by_location_id[159:591]
 
 type TrapCountByLocationIDQuery = orm.ModQuery[*dialect.SelectQuery, trapCountByLocationID, TrapCountByLocationIDRow, []TrapCountByLocationIDRow, trapCountByLocationIDTransformer]
 
@@ -59,7 +59,7 @@ func TrapCountByLocationID(OrganizationID int32, LocID []string) *TrapCountByLoc
 			q.AppendSelect(expressionTypArgs.subExpr(12, 223))
 			q.SetTable(expressionTypArgs.subExpr(234, 318))
 			q.AppendWhere(expressionTypArgs.subExpr(330, 379))
-			q.AppendGroup(expressionTypArgs.subExpr(394, 421))
+			q.AppendGroup(expressionTypArgs.subExpr(394, 432))
 		}),
 	}
 }
