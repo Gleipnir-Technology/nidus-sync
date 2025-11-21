@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,8 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/models"
 	"github.com/Gleipnir-Technology/nidus-sync/sql"
 	"github.com/aarondl/opt/null"
-	//"github.com/riverqueue/river/rivershared/util/slogutil"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
@@ -123,12 +123,13 @@ type ContentSignin struct {
 }
 type ContentSignup struct{}
 type ContentSource struct {
-	Inspections []Inspection
-	MapData     ComponentMap
-	Source      *BreedingSourceDetail
-	Traps       []TrapNearby
-	Treatments  []Treatment
-	User        User
+	Inspections      []Inspection
+	MapData          ComponentMap
+	Source           *BreedingSourceDetail
+	Traps            []TrapNearby
+	Treatments       []Treatment
+	TreatmentCadence time.Duration
+	User             User
 }
 type Inspection struct {
 	Action     string
@@ -145,12 +146,6 @@ type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string
 	Status   string
-}
-type Treatment struct {
-	Date       time.Time
-	LocationID string
-	Notes      string
-	Product    string
 }
 type User struct {
 	DisplayName   string
@@ -511,6 +506,15 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
 		return
 	}
+	treatment_times := make([]time.Time, 0)
+	for _, treatment := range treatments {
+		treatment_times = append(treatment_times, treatment.Date)
+	}
+	cadence, deltas := calculateCadenceVariance(treatment_times)
+	for i, treatment := range treatments {
+		treatment.CadenceDelta = deltas[i]
+		treatments[i] = treatment
+	}
 	data := ContentSource{
 		Inspections: inspections,
 		MapData: ComponentMap{
@@ -524,10 +528,11 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id st
 			},
 			Zoom: 13,
 		},
-		Source:     s,
-		Traps:      traps,
-		Treatments: treatments,
-		User:       userContent,
+		Source:           s,
+		Traps:            traps,
+		Treatments:       treatments,
+		TreatmentCadence: cadence,
+		User:             userContent,
 	}
 
 	renderOrError(w, source, data)
@@ -569,7 +574,9 @@ func makeFuncMap() template.FuncMap {
 		"bigNumber":     bigNumber,
 		"GISStatement":  gisStatement,
 		"latLngDisplay": latLngDisplay,
+		"timeDelta":     timeDelta,
 		"timeElapsed":   timeElapsed,
+		"timeInterval":  timeInterval,
 		"timeSince":     timeSince,
 		"uuidShort":     uuidShort,
 	}
@@ -625,12 +632,64 @@ func parseFromDisk(files []string) (*template.Template, error) {
 	for _, f := range components {
 		paths = append(paths, "templates/components/"+f+".html")
 	}
-	//slog.Info("Rendering templates from disk", slog.Any("paths", slogutil.SliceString(paths)))
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(paths...)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse %s: %w", paths, err)
 	}
 	return templ, nil
+}
+
+// FormatTimeDuration returns a human-readable string representing a time.Duration
+// as "X units early" or "X units late"
+func timeDelta(d time.Duration) string {
+	suffix := "late"
+	if d < 0 {
+		suffix = "early"
+		d = -d // Make duration positive for calculations
+	}
+
+	const (
+		day  = 24 * time.Hour
+		week = 7 * day
+	)
+
+	log.Info().Int64("delta", int64(d)).Str("suffix", suffix).Msg("Time delta")
+	switch {
+	case d >= week:
+		weeks := d / week
+		if weeks == 1 {
+			return "1 week " + suffix
+		}
+		return fmt.Sprintf("%d weeks %s", weeks, suffix)
+
+	case d >= day:
+		days := d / day
+		if days == 1 {
+			return "1 day " + suffix
+		}
+		return fmt.Sprintf("%d days %s", days, suffix)
+
+	case d >= time.Hour:
+		hours := d / time.Hour
+		if hours == 1 {
+			return "1 hour " + suffix
+		}
+		return fmt.Sprintf("%d hours %s", hours, suffix)
+
+	case d >= time.Minute:
+		minutes := d / time.Minute
+		if minutes == 1 {
+			return "1 minute " + suffix
+		}
+		return fmt.Sprintf("%d minutes %s", minutes, suffix)
+
+	default:
+		seconds := d / time.Second
+		if seconds == 1 {
+			return "1 second " + suffix
+		}
+		return fmt.Sprintf("%d seconds %s", seconds, suffix)
+	}
 }
 
 func timeElapsed(seconds null.Val[float32]) string {
@@ -651,6 +710,47 @@ func timeElapsed(seconds null.Val[float32]) string {
 	}
 }
 
+func timeInterval(d time.Duration) string {
+	seconds := d.Seconds()
+
+	// Less than 120 seconds -> show in seconds
+	if seconds < 120 {
+		return fmt.Sprintf("every %d seconds", int(math.Round(seconds)))
+	}
+
+	minutes := d.Minutes()
+	// Less than 120 minutes -> show in minutes
+	if minutes < 120 {
+		return fmt.Sprintf("every %d minutes", int(math.Round(minutes)))
+	}
+
+	hours := d.Hours()
+	// Less than 48 hours -> show in hours
+	if hours < 48 {
+		return fmt.Sprintf("every %d hours", int(math.Round(hours)))
+	}
+
+	days := hours / 24
+	// Less than 14 days -> show in days
+	if days < 14 {
+		return fmt.Sprintf("every %d days", int(math.Round(days)))
+	}
+
+	weeks := days / 7
+	// Less than 8 weeks -> show in weeks
+	if weeks < 8 {
+		return fmt.Sprintf("every %d weeks", int(math.Round(weeks)))
+	}
+
+	months := days / 30
+	// Less than 24 months -> show in months
+	if months < 24 {
+		return fmt.Sprintf("every %d months", int(math.Round(months)))
+	}
+
+	years := days / 365
+	return fmt.Sprintf("every %d years", int(math.Round(years)))
+}
 func timeSince(t *time.Time) string {
 	if t == nil {
 		return "never"
@@ -721,7 +821,7 @@ func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID 
 		sm.Where(
 			models.FSTreatments.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
 		),
-		sm.OrderBy("enddatetime"),
+		sm.OrderBy("enddatetime").Desc(),
 	).All(ctx, PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)

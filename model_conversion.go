@@ -154,6 +154,14 @@ type TrapData struct {
 	Comments       string    `json:"comments"`
 }
 
+type Treatment struct {
+	CadenceDelta time.Duration
+	Date         time.Time
+	LocationID   string
+	Notes        string
+	Product      string
+}
+
 func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data models.FSTrapdatumSlice, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
 	results := make([]TrapNearby, 0)
 	count_by_trap_data_id := make(map[string]*sql.TrapCountByLocationIDRow)
