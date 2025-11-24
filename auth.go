@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Gleipnir-Technology/nidus-sync/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/models"
-	"github.com/Gleipnir-Technology/nidus-sync/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/omit"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -85,7 +86,7 @@ func addUserSession(r *http.Request, user *models.User) {
 
 // Helper function to translate strings into solid error types for operating on
 func findUser(ctx context.Context, user_id int) (*models.User, error) {
-	user, err := models.FindUser(ctx, PGInstance.BobDB, int32(user_id))
+	user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
 	if err != nil {
 		if err.Error() == "No such user" {
 			return nil, &NoUserError{}
@@ -155,7 +156,7 @@ func signupUser(username string, name string, password string) (*models.User, er
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
 		Username:         omit.From(username),
 	}
-	u, err := models.Users.Insert(&setter).One(context.TODO(), PGInstance.BobDB)
+	u, err := models.Users.Insert(&setter).One(context.TODO(), db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
@@ -180,7 +181,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 		slog.String("username", username),
 		slog.String("password", password),
 		slog.String("hash", passwordHash))
-	result, err := sql.UserByUsername(username).All(ctx, PGInstance.BobDB)
+	result, err := sql.UserByUsername(username).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query for user: %w", err)
 	}

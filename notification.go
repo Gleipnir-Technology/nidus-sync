@@ -6,8 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	enums "github.com/Gleipnir-Technology/nidus-sync/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 )
@@ -34,7 +35,7 @@ func clearNotificationsOauth(ctx context.Context, user *models.User) {
 		models.UpdateWhere.Notifications.UserID.EQ(user.ID),
 		setter.UpdateMod(),
 	)
-	updater.Exec(ctx, PGInstance.BobDB)
+	updater.Exec(ctx, db.PGInstance.BobDB)
 	//user.UserNotifications(
 	//models.SelectWhere.Notifications.Link.EQ(NotificationPathOauthReset),
 	//).UpdateAll()
@@ -47,7 +48,7 @@ func notifyOauthInvalid(ctx context.Context, user *models.User) {
 		Link:    omit.From(NotificationPathOauthReset),
 		Type:    omit.From(enums.NotificationtypeOauthTokenInvalidated),
 	}
-	err := user.InsertUserNotifications(ctx, PGInstance.BobDB, &notificationSetter)
+	err := user.InsertUserNotifications(ctx, db.PGInstance.BobDB, &notificationSetter)
 	if err != nil {
 		LogErrorTypeInfo(err)
 		slog.Error("Failed to insert new notification. Update this clause to detect duplicate inserts.", slog.String("err", err.Error()))
@@ -59,7 +60,7 @@ func notificationsForUser(ctx context.Context, u *models.User) ([]Notification, 
 	results := make([]Notification, 0)
 	notifications, err := u.UserNotifications(
 		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to get notifications: %w", err)
 	}

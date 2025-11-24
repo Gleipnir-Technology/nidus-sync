@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
@@ -65,13 +66,13 @@ func main() {
 	}
 
 	log.Info().Msg("Starting...")
-	err := initializeDatabase(context.TODO(), pg_dsn)
+	err := db.InitializeDatabase(context.TODO(), pg_dsn)
 	if err != nil {
 		log.Error().Str("err", err.Error()).Msg("Failed to connect to database")
 		os.Exit(2)
 	}
 	sessionManager = scs.New()
-	sessionManager.Store = pgxstore.New(PGInstance.PGXPool)
+	sessionManager.Store = pgxstore.New(db.PGInstance.PGXPool)
 	sessionManager.Lifetime = 24 * time.Hour
 
 	r := chi.NewRouter()

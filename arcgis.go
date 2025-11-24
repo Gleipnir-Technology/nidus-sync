@@ -21,13 +21,20 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
-	"github.com/Gleipnir-Technology/nidus-sync/models"
-	"github.com/Gleipnir-Technology/nidus-sync/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
+	"github.com/stephenafamo/bob/dialect/psql/im"
+	"github.com/uber/h3-go/v4"
 )
 
 // When the API responds that the token is now invalidated
@@ -111,13 +118,13 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	}
 	log.Info().Str("Username", portal.User.Username).Str("user_id", portal.User.ID).Str("org_id", portal.User.OrgID).Str("org_name", portal.Name).Str("license_type_id", portal.User.UserLicenseTypeID).Msg("Got portals data")
 
-	_, err = sql.UpdateOauthTokenOrg(portal.User.ID, portal.User.UserLicenseTypeID, refresh_token).Exec(ctx, PGInstance.BobDB)
+	_, err = sql.UpdateOauthTokenOrg(portal.User.ID, portal.User.UserLicenseTypeID, refresh_token).Exec(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
 	}
 	var org *models.Organization
-	orgs, err := models.Organizations.Query(models.SelectWhere.Organizations.ArcgisName.EQ(portal.Name)).All(ctx, PGInstance.BobDB)
+	orgs, err := models.Organizations.Query(models.SelectWhere.Organizations.ArcgisName.EQ(portal.Name)).All(ctx, db.PGInstance.BobDB)
 	switch len(orgs) {
 	case 0:
 		setter := models.OrganizationSetter{
@@ -125,7 +132,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 			ArcgisID:   omitnull.From(portal.User.OrgID),
 			ArcgisName: omitnull.From(portal.Name),
 		}
-		org, err = models.Organizations.Insert(&setter).One(ctx, PGInstance.BobDB)
+		org, err = models.Organizations.Insert(&setter).One(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to create new organization")
 			return
@@ -147,7 +154,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 			return
 		}
 	}
-	err = org.AttachUser(ctx, PGInstance.BobDB, user)
+	err = org.AttachUser(ctx, db.PGInstance.BobDB, user)
 	if err != nil {
 		log.Error().Err(err).Int("user_id", int(user.ID)).Int("org_id", int(org.ID)).Msg("Failed to attach user to organization")
 		return
@@ -166,7 +173,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 			setter := models.OrganizationSetter{
 				FieldseekerURL: omitnull.From(result.URL),
 			}
-			err = org.Update(ctx, PGInstance.BobDB, &setter)
+			err = org.Update(ctx, db.PGInstance.BobDB, &setter)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to create new organization")
 				return
@@ -235,7 +242,7 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 		RefreshTokenExpires: omit.From(refreshExpires),
 		Username:            omit.From(token.Username),
 	}
-	err = user.InsertUserOauthTokens(ctx, PGInstance.BobDB, &setter)
+	err = user.InsertUserOauthTokens(ctx, db.PGInstance.BobDB, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %w", err)
 	}
@@ -244,7 +251,7 @@ func handleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 }
 
 func hasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
-	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, PGInstance.BobDB)
+	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return false, err
 	}
@@ -260,7 +267,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 		workerCtx, cancel := context.WithCancel(context.Background())
 		var wg sync.WaitGroup
 
-		oauths, err := models.OauthTokens.Query(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, PGInstance.BobDB)
+		oauths, err := models.OauthTokens.Query(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get oauths")
 			return
@@ -281,7 +288,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 			}()
 		}
 
-		orgs, err := models.Organizations.Query().All(ctx, PGInstance.BobDB)
+		orgs, err := models.Organizations.Query().All(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get orgs")
 			return
@@ -376,12 +383,12 @@ func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, la
 }
 
 func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.OauthToken, error) {
-	users, err := org.User().All(ctx, PGInstance.BobDB)
+	users, err := org.User().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
 	}
 	for _, user := range users {
-		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, PGInstance.BobDB)
+		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
@@ -422,7 +429,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 			RefreshTokenExpires: oauth.RefreshTokenExpires,
 		},
 	)
-	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, PGInstance.BobDB)
+	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fmt.Errorf("Failed to get org ID: %w", err)
 	}
@@ -449,7 +456,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 		RecordsUpdated:   omit.From(int32(stats.Updates)),
 		RecordsUnchanged: omit.From(int32(stats.Unchanged)),
 	}
-	err = org.InsertFieldseekerSyncs(ctx, PGInstance.BobDB, &setter)
+	err = org.InsertFieldseekerSyncs(ctx, db.PGInstance.BobDB, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to insert sync: %w", err)
 	}
@@ -461,7 +468,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 	for {
 		// Refresh from the database
-		oauth, err := models.FindOauthToken(ctx, PGInstance.BobDB, oauth.ID)
+		oauth, err := models.FindOauthToken(ctx, db.PGInstance.BobDB, oauth.ID)
 		if err != nil {
 			return fmt.Errorf("Failed to update oauth token from database: %w", err)
 		}
@@ -503,11 +510,11 @@ func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
 	oauthSetter := models.OauthTokenSetter{
 		InvalidatedAt: omitnull.From(time.Now()),
 	}
-	err := oauth.Update(ctx, PGInstance.BobDB, &oauthSetter)
+	err := oauth.Update(ctx, db.PGInstance.BobDB, &oauthSetter)
 	if err != nil {
 		log.Error().Str("err", err.Error()).Msg("Failed to mark token failed")
 	}
-	user, err := models.FindUser(ctx, PGInstance.BobDB, oauth.UserID)
+	user, err := models.FindUser(ctx, db.PGInstance.BobDB, oauth.UserID)
 	if err != nil {
 		log.Error().Str("err", err.Error()).Msg("Failed to get oauth user")
 		return
@@ -541,7 +548,7 @@ func refreshAccessToken(ctx context.Context, oauth *models.OauthToken) error {
 		AccessTokenExpires: omit.From(accessExpires),
 		Username:           omit.From(token.Username),
 	}
-	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
+	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
@@ -575,7 +582,7 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 		RefreshTokenExpires: omit.From(refreshExpires),
 		Username:            omit.From(token.Username),
 	}
-	err = oauth.Update(ctx, PGInstance.BobDB, &setter)
+	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
@@ -733,7 +740,7 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 	args := pgx.NamedArgs{
 		"objectids": objectids,
 	}
-	rows, err := PGInstance.PGXPool.Query(ctx, query, args)
+	rows, err := db.PGInstance.PGXPool.Query(ctx, query, args)
 	if err != nil {
 		return result, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -788,7 +795,7 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 
 func insertRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *arcgis.Feature, org_id int32) error {
 	var options pgx.TxOptions
-	transaction, err := PGInstance.PGXPool.BeginTx(ctx, options)
+	transaction, err := db.PGInstance.PGXPool.BeginTx(ctx, options)
 	if err != nil {
 		return fmt.Errorf("Unable to start transaction")
 	}
@@ -915,12 +922,12 @@ func updateRowFromFeature(ctx context.Context, table string, sorted_columns []st
 	args["objectid"] = int(o)
 
 	var version int
-	if err := PGInstance.PGXPool.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
+	if err := db.PGInstance.PGXPool.QueryRow(ctx, sb.String(), args).Scan(&version); err != nil {
 		return fmt.Errorf("Failed to query for version: %w", err)
 	}
 
 	var options pgx.TxOptions
-	transaction, err := PGInstance.PGXPool.BeginTx(ctx, options)
+	transaction, err := db.PGInstance.PGXPool.BeginTx(ctx, options)
 	if err != nil {
 		return fmt.Errorf("Unable to start transaction")
 	}
@@ -1018,4 +1025,51 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		return fmt.Errorf("Failed to update row into %s: %w", table, err)
 	}
 	return nil
+}
+
+func updateSummaryTables(ctx context.Context, org *models.Organization) {
+	/*org, err := models.FindOrganization(ctx, PGInstance.BobDB, org_id)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get organization")
+	}*/
+	log.Info().Int("org_id", int(org.ID)).Msg("Getting point locations")
+	point_locations, err := org.FSPointlocations().All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get organization")
+		return
+	}
+	log.Info().Int("count", len(point_locations)).Msg("Summarizing point locations")
+
+	for i := range 16 {
+		log.Info().Int("resolution", i).Msg("Working summary layer")
+		cellToCount := make(map[h3.Cell]int, 0)
+		for _, p := range point_locations {
+			cell, err := getCell(p.GeometryX, p.GeometryY, i)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get cell")
+				continue
+			}
+			//log.Info().Float64("X", p.GeometryX).Float64("Y", p.GeometryY).Str("cell", cell.String()).Msg("Converted lat/lng")
+			cellToCount[cell] = cellToCount[cell] + 1
+		}
+		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
+		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
+		for cell, count := range cellToCount {
+			polygon, err := cellToPostgisGeometry(cell)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get PostGIS geometry")
+				continue
+			}
+			// log.Info().Str("polygon", polygon).Msg("Going to insert")
+			to_insert = append(to_insert, im.Values(psql.Arg(cell.String(), i, count, enums.H3aggregationtypeServicerequest, org.ID), psql.F("st_geomfromtext", psql.S(polygon), 4326)))
+		}
+		to_insert = append(to_insert, im.OnConflict("cell, organization_id, type_").DoUpdate(
+			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
+		))
+		//log.Info().Str("sql", insertQueryToString(psql.Insert(to_insert...))).Msg("Updating...")
+		_, err := psql.Insert(to_insert...).Exec(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			log.Error().Err(err).Msg("Faild to add h3 aggregation")
+		}
+	}
 }

@@ -16,8 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/models"
-	"github.com/Gleipnir-Technology/nidus-sync/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/null"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
@@ -215,7 +216,7 @@ func extractInitials(name string) string {
 }
 
 func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
-	org, err := user.Organization().One(ctx, PGInstance.BobDB)
+	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
@@ -276,13 +277,13 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 }
 
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
-	org, err := user.Organization().One(ctx, PGInstance.BobDB)
+	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
 	}
 	var lastSync *time.Time
-	sync, err := org.FieldseekerSyncs(sm.OrderBy("created").Desc()).One(ctx, PGInstance.BobDB)
+	sync, err := org.FieldseekerSyncs(sm.OrderBy("created").Desc()).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			respondError(w, "Failed to get syncs", err, http.StatusInternalServerError)
@@ -291,22 +292,22 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	} else {
 		lastSync = &sync.Created
 	}
-	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, PGInstance.BobDB)
+	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
 		return
 	}
-	sourceCount, err := org.FSPointlocations().Count(ctx, PGInstance.BobDB)
+	sourceCount, err := org.FSPointlocations().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get source count", err, http.StatusInternalServerError)
 		return
 	}
-	serviceCount, err := org.FSServicerequests().Count(ctx, PGInstance.BobDB)
+	serviceCount, err := org.FSServicerequests().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get service count", err, http.StatusInternalServerError)
 		return
 	}
-	recentRequests, err := org.FSServicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, PGInstance.BobDB)
+	recentRequests, err := org.FSServicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get recent service", err, http.StatusInternalServerError)
 		return
@@ -337,10 +338,11 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 }
 
 func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
+	dp := user.DisplayName
 	data := ContentDashboard{
 		User: User{
-			DisplayName: user.DisplayName,
-			Initials:    extractInitials(user.DisplayName),
+			DisplayName: dp,
+			Initials:    extractInitials(dp),
 			Username:    user.Username,
 		},
 	}
@@ -476,7 +478,7 @@ func htmlSignup(w http.ResponseWriter, path string) {
 }
 
 func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id string) {
-	org, err := user.Organization().One(r.Context(), PGInstance.BobDB)
+	org, err := user.Organization().One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
@@ -769,7 +771,7 @@ func timeSince(t *time.Time) string {
 }
 
 func trapsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]TrapNearby, error) {
-	locations, err := sql.TrapLocationBySourceID(org.ID, sourceID).All(ctx, PGInstance.BobDB)
+	locations, err := sql.TrapLocationBySourceID(org.ID, sourceID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -786,7 +788,7 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID strin
 				models.FSTrapdata.Columns.LocID.In(args...),
 			),
 			sm.OrderBy("enddatetime"),
-		).All(ctx, PGInstance.BobDB)
+		).All(ctx, db.PGInstance.BobDB)
 	*/
 
 	/*
@@ -827,15 +829,15 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID strin
 			sm.OrderBy(models.FSTrapdata.Columns.Enddatetime).Desc(),
 		)
 		log.Info().Str("trapdata", queryToString(query)).Msg("Getting trap data")
-		trap_data, err := query.Exec(ctx, PGInstance.BobDB)
+		trap_data, err := query.Exec(ctx, db.PGInstance.BobDB)
 	*/
 
-	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, location_ids).All(ctx, PGInstance.BobDB)
+	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, location_ids).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap data: %w", err)
 	}
 
-	counts, err := sql.TrapCountByLocationID(org.ID, location_ids).All(ctx, PGInstance.BobDB)
+	counts, err := sql.TrapCountByLocationID(org.ID, location_ids).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap counts: %w", err)
 	}
@@ -865,7 +867,7 @@ func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID 
 			models.FSTreatments.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
 		),
 		sm.OrderBy("enddatetime").Desc(),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -886,7 +888,7 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 		),
 		sm.OrderBy("pointlocid"),
 		sm.OrderBy("enddatetime"),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -906,7 +908,7 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 		),
 		sm.OrderBy("pointlocid"),
 		sm.OrderBy("enddatetime"),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -920,7 +922,7 @@ func inspectionsBySource(ctx context.Context, org *models.Organization, sourceID
 			models.FSMosquitoinspections.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
 		),
 		sm.OrderBy("enddatetime").Desc(),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -939,7 +941,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 			psql.F("ST_Within", "geom", geom_query),
 		),
 		sm.OrderBy("lasttreatdate"),
-	).All(ctx, PGInstance.BobDB)
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -965,7 +967,7 @@ func uuidShort(uuid string) string {
 func sourceByGlobalId(ctx context.Context, org *models.Organization, id string) (*BreedingSourceDetail, error) {
 	row, err := org.FSPointlocations(
 		sm.Where(models.FSPointlocations.Columns.Globalid.EQ(psql.Arg(id))),
-	).One(ctx, PGInstance.BobDB)
+	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get point location: %w", err)
 	}

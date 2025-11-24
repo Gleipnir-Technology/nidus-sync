@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/models"
-	"github.com/Gleipnir-Technology/nidus-sync/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/null"
 	"github.com/uber/h3-go/v4"
 )

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Gleipnir-Technology/nidus-sync/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"github.com/skip2/go-qrcode"
