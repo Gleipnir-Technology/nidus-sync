@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
@@ -75,8 +76,9 @@ func main() {
 	sessionManager.Store = pgxstore.New(db.PGInstance.PGXPool)
 	sessionManager.Lifetime = 24 * time.Hour
 
+	router_logger := log.With().Logger()
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(LoggerMiddleware(&router_logger))
 	r.Use(sessionManager.LoadAndSave)
 
 	// Root is a special endpoint that is neither authenticated nor unauthenticated
@@ -166,4 +168,55 @@ func main() {
 
 func IsProductionEnvironment() bool {
 	return Environment == "PRODUCTION"
+}
+
+func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			log := logger.With().Logger()
+
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+			t1 := time.Now()
+			defer func() {
+				t2 := time.Now()
+
+				// Recover and record stack traces in case of a panic
+				if rec := recover(); rec != nil {
+					log.Error().
+						Str("type", "error").
+						Timestamp().
+						Interface("recover_info", rec).
+						Bytes("debug_stack", debug.Stack()).
+						Msg("log system error")
+					http.Error(ww, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				}
+
+				remote_addr := r.RemoteAddr
+				forwarded_for := r.Header.Get("X-Forwarded-For")
+				if forwarded_for != "" {
+					remote_addr = forwarded_for
+				}
+				// log end request
+				log.Info().
+					Str("type", "access").
+					Timestamp().
+					Fields(map[string]interface{}{
+						"remote_ip":  remote_addr,
+						"url":        r.URL.Path,
+						"proto":      r.Proto,
+						"method":     r.Method,
+						"user_agent": r.Header.Get("User-Agent"),
+						"status":     ww.Status(),
+						"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000000.0,
+						"bytes_in":   r.Header.Get("Content-Length"),
+						"bytes_out":  ww.BytesWritten(),
+					}).
+					Msg("incoming_request")
+			}()
+
+			next.ServeHTTP(ww, r)
+		}
+		return http.HandlerFunc(fn)
+	}
 }
