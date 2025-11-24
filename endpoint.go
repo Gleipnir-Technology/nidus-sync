@@ -61,6 +61,7 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 	user, err := getAuthenticatedUser(r)
 	if err != nil {
 		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
+		return
 	}
 	htmlOauthPrompt(w, user)
 }

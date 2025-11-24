@@ -48,7 +48,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	content_type := NegotiateContent(accept, offers)
 	user, err := getAuthenticatedUser(r)
-	if err != nil {
+	if err != nil || user == nil {
 		var msg []byte
 		// Separate return codes for different authentication failures
 		if _, ok := err.(*NoCredentialsError); ok {
