@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/omit"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -79,9 +79,7 @@ func addUserSession(r *http.Request, user *models.User) {
 	id := strconv.Itoa(int(user.ID))
 	sessionManager.Put(r.Context(), "user_id", id)
 	sessionManager.Put(r.Context(), "username", user.Username)
-	slog.Info("Created new user session",
-		slog.String("username", user.Username),
-		slog.String("user_id", id))
+	log.Info().Str("username", user.Username).Str("user_id", id).Msg("Created new user session")
 }
 
 // Helper function to translate strings into solid error types for operating on
@@ -92,7 +90,7 @@ func findUser(ctx context.Context, user_id int) (*models.User, error) {
 			return nil, &NoUserError{}
 		} else {
 			LogErrorTypeInfo(err)
-			slog.Error("Unrecognized error. This should be updated in the findUser code", slog.String("err", err.Error()))
+			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
 			return nil, err
 		}
 	}
@@ -108,9 +106,7 @@ func getAuthenticatedUser(r *http.Request) (*models.User, error) {
 			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
 		}
 		username := sessionManager.GetString(r.Context(), "username")
-		slog.Info("Current session info",
-			slog.Int("user_id", user_id),
-			slog.String("username", username))
+		log.Info().Int("user_id", user_id).Str("username", username).Msg("Current session info")
 		if user_id > 0 && username != "" {
 			return findUser(r.Context(), user_id)
 		}
@@ -160,9 +156,7 @@ func signupUser(username string, name string, password string) (*models.User, er
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
-	slog.Info("Created user",
-		slog.Int("ID", int(u.ID)),
-		slog.String("username", u.Username))
+	log.Info().Int("ID", int(u.ID)).Str("username", u.Username).Msg("Created user")
 
 	return u, nil
 }
@@ -177,10 +171,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 	if err != nil {
 		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
-	slog.Info("Validating user",
-		slog.String("username", username),
-		slog.String("password", password),
-		slog.String("hash", passwordHash))
+	log.Info().Str("username", username).Str("password", password).Str("hash", passwordHash).Msg("Validating user")
 	result, err := sql.UserByUsername(username).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query for user: %w", err)
