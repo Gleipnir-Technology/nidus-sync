@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -42,16 +43,21 @@ func clearNotificationsOauth(ctx context.Context, user *models.User) {
 }
 
 func notifyOauthInvalid(ctx context.Context, user *models.User) {
+	msg := "Oauth token invalidated"
 	notificationSetter := models.NotificationSetter{
 		Created: omit.From(time.Now()),
-		Message: omit.From("Oauth token invalidated"),
+		Message: omit.From(msg),
 		Link:    omit.From(NotificationPathOauthReset),
 		Type:    omit.From(enums.NotificationtypeOauthTokenInvalidated),
 	}
 	err := user.InsertUserNotifications(ctx, db.PGInstance.BobDB, &notificationSetter)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "ERROR: duplicate key value violates unique constraint") {
+			log.Info().Str("msg", msg).Int("user_id", int(user.ID)).Msg("Refusing to add another notification with the same type")
+			return
+		}
 		LogErrorTypeInfo(err)
-		slog.Error("Failed to insert new notification. Update this clause to detect duplicate inserts.", slog.String("err", err.Error()))
+		log.Error().Err(err).Msg("Failed to insert new notification. This is a programmer bug.")
 		return
 	}
 }
