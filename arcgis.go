@@ -85,6 +85,31 @@ func buildArcGISAuthURL(clientID string) string {
 	return baseURL + "?" + params.Encode()
 }
 
+func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseeker.FieldSeeker, arcgis_id string) {
+	for _, layer := range fieldseekerClient.FeatureServerLayers() {
+		err := os.MkdirAll(filepath.Join(FieldseekerSchemaDirectory, arcgis_id), os.ModePerm)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create parent directory")
+			return
+		}
+		output, err := os.Create(fmt.Sprintf("%s/%s/%s.json", FieldseekerSchemaDirectory, arcgis_id, layer.Name))
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to open output")
+			return
+		}
+		schema, err := fieldseekerClient.Schema(layer.ID)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get schema")
+			return
+		}
+		_, err = output.Write(schema)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to write schema file")
+			continue
+		}
+	}
+}
+
 func futureUTCTimestamp(secondsFromNow int) time.Time {
 	return time.Now().UTC().Add(time.Duration(secondsFromNow) * time.Second)
 }
@@ -195,6 +220,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	}
 	client.Context = &arcgis_id
 	maybeCreateWebhook(ctx, fieldseekerClient)
+	downloadFieldseekerSchema(ctx, fieldseekerClient, arcgis_id)
 	clearNotificationsOauth(ctx, user)
 	NewOAuthTokenChannel <- struct{}{}
 }

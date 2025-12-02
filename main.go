@@ -21,7 +21,7 @@ import (
 
 var sessionManager *scs.SessionManager
 
-var BaseURL, ClientID, ClientSecret, Environment, MapboxToken string
+var BaseURL, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken string
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -63,6 +63,11 @@ func main() {
 	pg_dsn := os.Getenv("POSTGRES_DSN")
 	if pg_dsn == "" {
 		log.Error().Msg("You must specify a non-empty POSTGRES_DSN")
+		os.Exit(1)
+	}
+	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")
+	if FieldseekerSchemaDirectory == "" {
+		log.Error().Msg("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
 		os.Exit(1)
 	}
 
