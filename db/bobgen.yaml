@@ -5,6 +5,9 @@ aliases:
     down_plural: "users"
     down_singular: "user"
 psql:
+  schemas:
+    - "public"
+    - "fieldseeker"
   queries:
     - ./sql
 plugins_preset: "all"
