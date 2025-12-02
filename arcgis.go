@@ -305,12 +305,13 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				defer wg.Done()
 				err := maintainOAuth(workerCtx, oauth)
 				if err != nil {
-					LogErrorTypeInfo(err)
-					if errors.Is(err, &InvalidatedTokenError{}) {
-						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("The server has marked the token invalid")
-						return
+					markTokenFailed(ctx, oauth)
+					if errors.Is(err, arcgis.InvalidatedRefreshTokenError) {
+						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
+					} else {
+						LogErrorTypeInfo(err)
+						log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
 					}
-					log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
 				}
 			}()
 		}
@@ -448,6 +449,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 }
 func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth *models.OauthToken) error {
 	log.Info().Msg("Update Fieldseeker data")
+	var err error
 	ar := arcgis.NewArcGIS(
 		arcgis.AuthenticatorOAuth{
 			AccessToken:         oauth.AccessToken,
@@ -517,13 +519,11 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 		case <-accessTokenTicker.C:
 			err := refreshAccessToken(ctx, oauth)
 			if err != nil {
-				markTokenFailed(ctx, oauth)
 				return fmt.Errorf("Failed to refresh access token: %w", err)
 			}
 		case <-refreshTokenTicker.C:
 			err := refreshRefreshToken(ctx, oauth)
 			if err != nil {
-				markTokenFailed(ctx, oauth)
 				return fmt.Errorf("Failed to maintain refresh token: %w", err)
 			}
 		}
