@@ -67,7 +67,8 @@ func TestPreparedQuery(ctx context.Context) error {
 	type Skn struct {
 		Result int
 	}
-	query := psql.RawQuery("EXECUTE test_function(4)")
+	q := fmt.Sprintf("EXECUTE test_function(%d)", 4)
+	query := psql.RawQuery(q)
 	result, err := bob.One[Skn](ctx, PGInstance.BobDB, query, scan.StructMapper[Skn]())
 	if err != nil {
 		return fmt.Errorf("Failed to exectue test function: %w", err)
