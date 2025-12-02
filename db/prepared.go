@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/scan"
 )
 
 //go:embed prepared_functions/*.sql
@@ -63,8 +64,11 @@ func prepareStatements(ctx context.Context) error {
 	return nil
 }
 func TestPreparedQuery(ctx context.Context) error {
-	query := psql.RawQuery("EXECUTE test_function")
-	result, err := bob.Exec(ctx, PGInstance.BobDB, query)
+	type Skn struct {
+		Result int
+	}
+	query := psql.RawQuery("EXECUTE test_function(4)")
+	result, err := bob.One[Skn](ctx, PGInstance.BobDB, query, scan.StructMapper[Skn]())
 	if err != nil {
 		return fmt.Errorf("Failed to exectue test function: %w", err)
 	}
@@ -73,13 +77,16 @@ func TestPreparedQuery(ctx context.Context) error {
 		log.Error().Err(err).Msg("failed insert id")
 		return fmt.Errorf("Failed to get insert ID: %w", err)
 	}*/
-	rows_affected, err := result.RowsAffected()
-	if err != nil {
-		log.Error().Err(err).Msg("failed rows affected")
-		return fmt.Errorf("Failed to get rows affected: %w", err)
-	}
+	/*
+		rows_affected, err := result.RowsAffected()
+		if err != nil {
+			log.Error().Err(err).Msg("failed rows affected")
+			return fmt.Errorf("Failed to get rows affected: %w", err)
+		}
+	*/
 	//log.Info().Int64("insert id", insert_id).Int64("rows", rows_affected).Msg("bah")
-	log.Info().Int64("rows", rows_affected).Msg("got rows")
+	//log.Info().Int64("rows", rows_affected).Msg("got rows")
+	log.Info().Int("value", result.Result).Msg("got result")
 
 	return nil
 }
