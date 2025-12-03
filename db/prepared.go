@@ -124,13 +124,13 @@ func TestPreparedQuery(ctx context.Context, row *fslayer.RodentLocation) error {
 	}
 	query := psql.RawQuery(q)
 	log.Info().Str("query", q).Msg("querying")
-	result, err := bob.One[InsertResult](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResult]())
+	result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
 	if err != nil {
 		return fmt.Errorf("Failed to execute test function: %w", err)
 	}
 	//log.Info().Int("version", result.NextVersion).Msg("got result")
 	//log.Info().Bool("added", result.Row.Added).Int("version", result.Row.Version).Msg("done")
-	log.Info().Str("row", result.Row).Msg("done")
+	log.Info().Bool("inserted", result.Added).Int("version", result.Version).Msg("done")
 
 	return nil
 }
@@ -272,7 +272,7 @@ func (p TimestamptzParam) ToSql() string {
 
 func queryStoredProcedure(procedure string, params ...SqlParam) string {
 	if len(params) == 0 {
-		return fmt.Sprintf("SELECT %s()", procedure)
+		return fmt.Sprintf("SELECT * FROM %s()", procedure)
 	}
 
 	// Convert each parameter to its SQL representation
@@ -282,7 +282,7 @@ func queryStoredProcedure(procedure string, params ...SqlParam) string {
 	}
 
 	// Join parameters and return the execute statement
-	return fmt.Sprintf("SELECT %s(%s)", procedure, strings.Join(paramStrings, ", "))
+	return fmt.Sprintf("SELECT * FROM %s(%s)", procedure, strings.Join(paramStrings, ", "))
 }
 
 func executeFunction(functionName string, params ...SqlParam) string {
