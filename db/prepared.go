@@ -139,8 +139,20 @@ type StringParam struct {
 }
 
 func (p StringParam) ToSql() string {
-	escapedStr := strings.ReplaceAll(string(p.Value), "'", "''")
-	return fmt.Sprintf("%s => '%s'::varchar", p.Name, escapedStr)
+	// Escape quotes since we are writing text directly into the SQL query and this is a key delimiter
+	escapedQuotes := strings.ReplaceAll(string(p.Value), "'", "''")
+	// Escape question marks because they are a special signal for replacement to bob
+	escapedQuestions := strings.ReplaceAll(escapedQuotes, "?", "\\?")
+	return fmt.Sprintf("%s => '%s'::varchar", p.Name, escapedQuestions)
+}
+
+type Float64Param struct {
+	Name  string
+	Value float64
+}
+
+func (p Float64Param) ToSql() string {
+	return fmt.Sprintf("%s => %f::double precision", p.Name, p.Value)
 }
 
 // IntParam wraps an int parameter
@@ -251,6 +263,9 @@ type Stringable interface {
 
 func Enum(n string, e Stringable) EnumParam {
 	return EnumParam(e.String())
+}
+func Float64(n string, f float64) Float64Param {
+	return Float64Param{n, f}
 }
 func Int16(n string, i int16) Int16Param {
 	return Int16Param{n, i}

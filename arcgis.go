@@ -1142,294 +1142,292 @@ func exportFieldseekerLayer(ctx context.Context, org *models.Organization, fssyn
 			var inserts, unchanged, updates uint
 			var err error
 			switch l {
-			/*
-				case fieldseeker.LayerAerialSpraySession:
-					name = "AerialSpraySession"
-					rows, err := fssync.AerialSpraySession(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateAerialSpraySession(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerAerialSprayLine:
-					name = "LayerAerialSprayLine"
-					rows, err := fssync.AerialSprayLine(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateAerialSprayLine(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerBarrierSpray:
-					name = "LayerBarrierSpray"
-					rows, err := fssync.BarrierSpray(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateBarrierSpray(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerBarrierSprayRoute:
-					name = "LayerBarrierSprayRoute"
-					rows, err := fssync.BarrierSprayRoute(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateBarrierSprayRoute(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerContainerRelate:
-					name = "LayerContainerRelate"
-					rows, err := fssync.ContainerRelate(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateContainerRelate(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerFieldScoutingLog:
-					name = "LayerFieldScoutingLog"
-					rows, err := fssync.FieldScoutingLog(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateFieldScoutingLog(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerHabitatRelate:
-					name = "LayerHabitatRelate"
-					rows, err := fssync.HabitatRelate(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateHabitatRelate(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerInspectionSample:
-					name = "LayerInspectionSample"
-					rows, err := fssync.InspectionSample(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateInspectionSample(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerInspectionSampleDetail:
-					name = "LayerInspectionSampleDetail"
-					rows, err := fssync.InspectionSampleDetail(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateInspectionSampleDetail(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerLandingCount:
-					name = "LayerLandingCount"
-					rows, err := fssync.LandingCount(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateLandingCount(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerLandingCountLocation:
-					name = "LayerLandingCountLocation"
-					rows, err := fssync.LandingCountLocation(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateLandingCountLocation(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerLineLocation:
-					name = "LayerLineLocation"
-					rows, err := fssync.LineLocation(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateLineLocation(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerLocationTracking:
-					name = "LayerLocationTracking"
-					rows, err := fssync.LocationTracking(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateLocationTracking(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerMosquitoInspection:
-					name = "LayerMosquitoInspection"
-					rows, err := fssync.MosquitoInspection(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateMosquitoInspection(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerOfflineMapAreas:
-					name = "LayerOfflineMapAreas"
-					rows, err := fssync.OfflineMapAreas(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateOfflineMapAreas(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerProposedTreatmentArea:
-					name = "LayerProposedTreatmentArea"
-					rows, err := fssync.ProposedTreatmentArea(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateProposedTreatmentArea(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerPointLocation:
-					name = "LayerPointLocation"
-					rows, err := fssync.PointLocation(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdatePointLocation(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerPolygonLocation:
-					name = "LayerPolygonLocation"
-					rows, err := fssync.PolygonLocation(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdatePolygonLocation(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerPoolDetail:
-					name = "LayerPoolDetail"
-					rows, err := fssync.PoolDetail(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdatePoolDetail(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerPool:
-					name = "LayerPool"
-					rows, err := fssync.Pool(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdatePool(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerPoolBuffer:
-					name = "LayerPoolBuffer"
-					rows, err := fssync.PoolBuffer(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdatePoolBuffer(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerQALarvCount:
-					name = "LayerQALarvCount"
-					rows, err := fssync.QALarvCount(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateQALarvCount(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerQAMosquitoInspection:
-					name = "LayerQAMosquitoInspection"
-					rows, err := fssync.QAMosquitoInspection(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateQAMosquitoInspection(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerQAProductObservation:
-					name = "LayerQAProductObservation"
-					rows, err := fssync.QAProductObservation(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateQAProductObservation(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerRestrictedArea:
-					name = "LayerRestrictedArea"
-					rows, err := fssync.RestrictedArea(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateRestrictedArea(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-				case fieldseeker.LayerRodentInspection:
-					name = "LayerRodentInspection"
-					rows, err := fssync.RodentInspection(offset)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-					}
-					inserts, updates, err = db.SaveOrUpdateRodentInspection(rows)
-					if err != nil {
-						return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-					}
-					unchanged = uint(len(rows)) - inserts - updates
-			*/
+			case fieldseeker.LayerAerialSpraySession:
+				name = "AerialSpraySession"
+				rows, err := fssync.AerialSpraySession(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateAerialSpraySession(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerAerialSprayLine:
+				name = "LayerAerialSprayLine"
+				rows, err := fssync.AerialSprayLine(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateAerialSprayLine(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerBarrierSpray:
+				name = "LayerBarrierSpray"
+				rows, err := fssync.BarrierSpray(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateBarrierSpray(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerBarrierSprayRoute:
+				name = "LayerBarrierSprayRoute"
+				rows, err := fssync.BarrierSprayRoute(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateBarrierSprayRoute(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerContainerRelate:
+				name = "LayerContainerRelate"
+				rows, err := fssync.ContainerRelate(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateContainerRelate(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerFieldScoutingLog:
+				name = "LayerFieldScoutingLog"
+				rows, err := fssync.FieldScoutingLog(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateFieldScoutingLog(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerHabitatRelate:
+				name = "LayerHabitatRelate"
+				rows, err := fssync.HabitatRelate(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateHabitatRelate(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerInspectionSample:
+				name = "LayerInspectionSample"
+				rows, err := fssync.InspectionSample(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateInspectionSample(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerInspectionSampleDetail:
+				name = "LayerInspectionSampleDetail"
+				rows, err := fssync.InspectionSampleDetail(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateInspectionSampleDetail(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerLandingCount:
+				name = "LayerLandingCount"
+				rows, err := fssync.LandingCount(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateLandingCount(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerLandingCountLocation:
+				name = "LayerLandingCountLocation"
+				rows, err := fssync.LandingCountLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateLandingCountLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerLineLocation:
+				name = "LayerLineLocation"
+				rows, err := fssync.LineLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateLineLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerLocationTracking:
+				name = "LayerLocationTracking"
+				rows, err := fssync.LocationTracking(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateLocationTracking(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerMosquitoInspection:
+				name = "LayerMosquitoInspection"
+				rows, err := fssync.MosquitoInspection(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateMosquitoInspection(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerOfflineMapAreas:
+				name = "LayerOfflineMapAreas"
+				rows, err := fssync.OfflineMapAreas(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateOfflineMapAreas(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerProposedTreatmentArea:
+				name = "LayerProposedTreatmentArea"
+				rows, err := fssync.ProposedTreatmentArea(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateProposedTreatmentArea(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerPointLocation:
+				name = "LayerPointLocation"
+				rows, err := fssync.PointLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdatePointLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerPolygonLocation:
+				name = "LayerPolygonLocation"
+				rows, err := fssync.PolygonLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdatePolygonLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerPoolDetail:
+				name = "LayerPoolDetail"
+				rows, err := fssync.PoolDetail(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdatePoolDetail(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerPool:
+				name = "LayerPool"
+				rows, err := fssync.Pool(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdatePool(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerPoolBuffer:
+				name = "LayerPoolBuffer"
+				rows, err := fssync.PoolBuffer(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdatePoolBuffer(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerQALarvCount:
+				name = "LayerQALarvCount"
+				rows, err := fssync.QALarvCount(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateQALarvCount(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerQAMosquitoInspection:
+				name = "LayerQAMosquitoInspection"
+				rows, err := fssync.QAMosquitoInspection(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateQAMosquitoInspection(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerQAProductObservation:
+				name = "LayerQAProductObservation"
+				rows, err := fssync.QAProductObservation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateQAProductObservation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerRestrictedArea:
+				name = "LayerRestrictedArea"
+				rows, err := fssync.RestrictedArea(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateRestrictedArea(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerRodentInspection:
+				name = "LayerRodentInspection"
+				rows, err := fssync.RodentInspection(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateRodentInspection(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerRodentLocation:
 				name = "LayerRodentLocation"
 				rows, err := fssync.RodentLocation(offset)
@@ -1441,165 +1439,162 @@ func exportFieldseekerLayer(ctx context.Context, org *models.Organization, fssyn
 					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
 				}
 				unchanged = uint(len(rows)) - inserts - updates
-				/*
-					case fieldseeker.LayerSampleCollection:
-						name = "LayerSampleCollection"
-						rows, err := fssync.SampleCollection(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateSampleCollection(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerSampleLocation:
-						name = "LayerSampleLocation"
-						rows, err := fssync.SampleLocation(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateSampleLocation(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerServiceRequest:
-						name = "LayerServiceRequest"
-						rows, err := fssync.ServiceRequest(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateServiceRequest(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerSpeciesAbundance:
-						name = "LayerSpeciesAbundance"
-						rows, err := fssync.SpeciesAbundance(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateSpeciesAbundance(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerStormDrain:
-						name = "LayerStormDrain"
-						rows, err := fssync.StormDrain(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateStormDrain(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTracklog:
-						name = "LayerTracklog"
-						rows, err := fssync.Tracklog(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTracklog(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTrapLocation:
-						name = "LayerTrapLocation"
-						rows, err := fssync.TrapLocation(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTrapLocation(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTrapData:
-						name = "LayerTrapData"
-						rows, err := fssync.TrapData(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTrapData(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTimeCard:
-						name = "LayerTimeCard"
-						rows, err := fssync.TimeCard(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTimeCard(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTreatment:
-						name = "LayerTreatment"
-						rows, err := fssync.Treatment(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTreatment(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerTreatmentArea:
-						name = "LayerTreatmentArea"
-						rows, err := fssync.TreatmentArea(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateTreatmentArea(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerULVSprayRoute:
-						name = "LayerULVSprayRoute"
-						rows, err := fssync.ULVSprayRoute(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateULVSprayRoute(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerZones:
-						name = "LayerZones"
-						rows, err := fssync.Zones(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateZones(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-					case fieldseeker.LayerZones2:
-						name = "LayerZones2"
-						rows, err := fssync.Zones2(offset)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
-						}
-						inserts, updates, err = db.SaveOrUpdateZones2(rows)
-						if err != nil {
-							return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
-						}
-						unchanged = uint(len(rows)) - inserts - updates
-				*/
+			case fieldseeker.LayerSampleCollection:
+				name = "LayerSampleCollection"
+				rows, err := fssync.SampleCollection(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateSampleCollection(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerSampleLocation:
+				name = "LayerSampleLocation"
+				rows, err := fssync.SampleLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateSampleLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerServiceRequest:
+				name = "LayerServiceRequest"
+				rows, err := fssync.ServiceRequest(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateServiceRequest(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerSpeciesAbundance:
+				name = "LayerSpeciesAbundance"
+				rows, err := fssync.SpeciesAbundance(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateSpeciesAbundance(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerStormDrain:
+				name = "LayerStormDrain"
+				rows, err := fssync.StormDrain(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateStormDrain(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTracklog:
+				name = "LayerTracklog"
+				rows, err := fssync.Tracklog(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTracklog(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTrapLocation:
+				name = "LayerTrapLocation"
+				rows, err := fssync.TrapLocation(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTrapLocation(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTrapData:
+				name = "LayerTrapData"
+				rows, err := fssync.TrapData(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTrapData(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTimeCard:
+				name = "LayerTimeCard"
+				rows, err := fssync.TimeCard(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTimeCard(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTreatment:
+				name = "LayerTreatment"
+				rows, err := fssync.Treatment(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTreatment(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerTreatmentArea:
+				name = "LayerTreatmentArea"
+				rows, err := fssync.TreatmentArea(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateTreatmentArea(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerULVSprayRoute:
+				name = "LayerULVSprayRoute"
+				rows, err := fssync.ULVSprayRoute(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateULVSprayRoute(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerZones:
+				name = "LayerZones"
+				rows, err := fssync.Zones(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateZones(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
+			case fieldseeker.LayerZones2:
+				name = "LayerZones2"
+				rows, err := fssync.Zones2(offset)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
+				}
+				inserts, updates, err = db.SaveOrUpdateZones2(ctx, org, rows)
+				if err != nil {
+					return SyncStats{}, fmt.Errorf("Failed to update %s: %w", name, err)
+				}
+				unchanged = uint(len(rows)) - inserts - updates
 			default:
-				//return ss, errors.New("Unrecognized layer")
-				return ss, nil
+				return ss, errors.New("Unrecognized layer")
 			}
 			ss.Inserts = inserts
 			ss.Updates = updates
