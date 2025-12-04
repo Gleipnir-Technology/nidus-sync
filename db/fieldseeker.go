@@ -138,11 +138,34 @@ type InsertResultRow struct {
 	Version  int  `db:"version_num"`
 }
 
-func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, fs []*fslayer.RodentLocation) (inserts uint, updates uint, err error) {
-	log.Info().Int("rows", len(fs)).Msg("Processing RodentLocation")
+type rowConverter[T any] func(*T) []SqlParam
+
+func doUpdatesViaFunction[T any](ctx context.Context, org *models.Organization, fs []*T, table string, procedure string, converter rowConverter[T]) (inserts uint, updates uint, err error) {
+	//log.Info().Int("rows", len(fs)).Msg("Processing RodentLocation")
 	for _, row := range fs {
-		procedure := "fieldseeker.insert_rodentlocation"
-		q := queryStoredProcedure(procedure,
+		params := converter(row)
+		q := queryStoredProcedure(procedure, params...)
+		query := psql.RawQuery(q)
+		log.Info().Str("query", q).Msg("querying")
+		result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
+		if err != nil {
+			return inserts, updates, fmt.Errorf("Failed to execute %s: %w", procedure, err)
+		}
+		if result.Inserted {
+			if result.Version == 1 {
+				inserts += 1
+			} else {
+				updates += 1
+			}
+		}
+		log.Info().Bool("inserted", result.Inserted).Int("version", result.Version).Msg("querying")
+	}
+	return inserts, updates, err
+
+}
+func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, fs []*fslayer.RodentLocation) (inserts uint, updates uint, err error) {
+	return doUpdatesViaFunction(ctx, org, fs, "RodentLocation", "fieldseeker.insert_rodentlocation", func(row *fslayer.RodentLocation) []SqlParam {
+		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_locationname", row.LocationName),
 			String("p_zone", row.Zone),
@@ -173,23 +196,10 @@ func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, f
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
 			String("p_jurisdiction", row.Jurisdiction),
-		)
-		query := psql.RawQuery(q)
-		log.Info().Str("query", q).Msg("querying")
-		result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
-		if err != nil {
-			return inserts, updates, fmt.Errorf("Failed to execute %s: %w", procedure, err)
 		}
-		if result.Inserted {
-			if result.Version == 1 {
-				inserts += 1
-			} else {
-				updates += 1
-			}
-		}
-	}
-	return inserts, updates, err
+	})
 }
+
 func SaveOrUpdateSampleCollection(fs []*fslayer.SampleCollection) (inserts uint, updates uint, err error) {
 	//log.Warn().Int("len", len(fs)).Msg("Ignoring SampleCollection rows")
 	return 0, 0, nil
