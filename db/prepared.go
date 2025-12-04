@@ -83,45 +83,37 @@ func TestPreparedQueryOld(ctx context.Context) error {
 }
 func TestPreparedQuery(ctx context.Context, row *fslayer.RodentLocation) error {
 	q := queryStoredProcedure("fieldseeker.insert_rodentlocation",
-		Uint(row.ObjectID),
-		String(row.LocationName),
-		String(row.Zone),
-		String(row.Zone2),
-		Enum(row.Habitat),
-		Enum(row.Priority),
-		Enum(row.Usetype),
-		Enum(row.Active),
-		String(row.Description),
-		String(row.Accessdesc),
-		String(row.Comments),
-		Enum(row.Symbology),
-		String(row.ExternalID),
-		Timestamp(row.Nextactiondatescheduled),
-		Int32(row.Locationnumber),
-		Timestamp(row.LastInspectionDate),
-		String(row.LastInspectionSpecies),
-		String(row.LastInspectionAction),
-		String(row.LastInspectionConditions),
-		String(row.LastInspectionRodentEvidence),
-		UUID(row.GlobalID),
-		String(row.CreatedUser),
-		Timestamp(row.CreatedDate),
-		String(row.LastEditedUser),
-		Timestamp(row.LastEditedDate),
-		Timestamp(row.CreationDate),
-		String(row.Creator),
-		Timestamp(row.EditDate),
-		String(row.Editor),
-		String(row.Jurisdiction),
+		Uint("p_objectid", row.ObjectID),
+		String("p_locationname", row.LocationName),
+		String("p_zone", row.Zone),
+		String("p_zone2", row.Zone2),
+		String("p_habitat", row.Habitat),
+		String("p_priority", row.Priority),
+		String("p_usetype", row.Usetype),
+		Int16("p_active", row.Active),
+		String("p_description", row.Description),
+		String("p_accessdesc", row.Accessdesc),
+		String("p_comments", row.Comments),
+		String("p_symbology", row.Symbology),
+		String("p_externalid", row.ExternalID),
+		Timestamp("p_nextactiondatescheduled", row.Nextactiondatescheduled),
+		Int32("p_locationnumber", row.Locationnumber),
+		Timestamp("p_lastinspectdate", row.LastInspectionDate),
+		String("p_lastinspectspecies", row.LastInspectionSpecies),
+		String("p_lastinspectaction", row.LastInspectionAction),
+		String("p_lastinspectconditions", row.LastInspectionConditions),
+		String("p_lastinspectrodentevidence", row.LastInspectionRodentEvidence),
+		UUID("p_globalid", row.GlobalID),
+		String("p_created_user", row.CreatedUser),
+		Timestamp("p_created_date", row.CreatedDate),
+		String("p_last_edited_user", row.LastEditedUser),
+		Timestamp("p_last_edited_date", row.LastEditedDate),
+		Timestamp("p_creationdate", row.CreationDate),
+		String("p_creator", row.Creator),
+		Timestamp("p_editdate", row.EditDate),
+		String("p_editor", row.Editor),
+		String("p_jurisdiction", row.Jurisdiction),
 	)
-	type InsertResultRow struct {
-		Added   bool `db:"row_inserted"`
-		Version int  `db:"version_num"`
-	}
-	type InsertResult struct {
-		//Row InsertResultRow `db:"insert_rodentlocation"`
-		Row string `db:"insert_rodentlocation"`
-	}
 	query := psql.RawQuery(q)
 	log.Info().Str("query", q).Msg("querying")
 	result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
@@ -130,7 +122,7 @@ func TestPreparedQuery(ctx context.Context, row *fslayer.RodentLocation) error {
 	}
 	//log.Info().Int("version", result.NextVersion).Msg("got result")
 	//log.Info().Bool("added", result.Row.Added).Int("version", result.Row.Version).Msg("done")
-	log.Info().Bool("inserted", result.Added).Int("version", result.Version).Msg("done")
+	log.Info().Bool("inserted", result.Inserted).Int("version", result.Version).Msg("done")
 
 	return nil
 }
@@ -141,31 +133,79 @@ type SqlParam interface {
 }
 
 // StringParam wraps a string parameter
-type StringParam string
+type StringParam struct {
+	Name  string
+	Value string
+}
 
 func (p StringParam) ToSql() string {
-	escapedStr := strings.ReplaceAll(string(p), "'", "''")
-	return fmt.Sprintf("'%s'", escapedStr)
+	escapedStr := strings.ReplaceAll(string(p.Value), "'", "''")
+	return fmt.Sprintf("%s => '%s'::varchar", p.Name, escapedStr)
 }
 
 // IntParam wraps an int parameter
-type IntParam int64
+type Int16Param struct {
+	Name  string
+	Value int16
+}
 
-func (p IntParam) ToSql() string {
-	return fmt.Sprintf("%d", p)
+func (p Int16Param) ToSql() string {
+	return fmt.Sprintf("%s => %d::smallint", p.Name, p.Value)
+}
+
+type Int32Param struct {
+	Name  string
+	Value int32
+}
+
+func (p Int32Param) ToSql() string {
+	return fmt.Sprintf("%s => %d::int", p.Name, p.Value)
+}
+
+type Int64Param struct {
+	Name  string
+	Value int64
+}
+
+func (p Int64Param) ToSql() string {
+	return fmt.Sprintf("%s => %d::bigint", p.Name, p.Value)
 }
 
 // UintParam wraps a uint parameter
-type UintParam uint64
-
-func (p UintParam) ToSql() string {
-	return fmt.Sprintf("%d", p)
+type UintParam struct {
+	Name  string
+	Value uint
 }
 
-type UUIDParam string
+func (p UintParam) ToSql() string {
+	return fmt.Sprintf("%s => %d::int", p.Name, p.Value)
+}
+
+type Uint32Param struct {
+	Name  string
+	Value uint32
+}
+
+func (p Uint32Param) ToSql() string {
+	return fmt.Sprintf("%s => %d::int", p.Name, p.Value)
+}
+
+type Uint64Param struct {
+	Name  string
+	Value uint64
+}
+
+func (p Uint64Param) ToSql() string {
+	return fmt.Sprintf("%s => %d::bigint", p.Name, p.Value)
+}
+
+type UUIDParam struct {
+	Name  string
+	Value string
+}
 
 func (p UUIDParam) ToSql() string {
-	return fmt.Sprintf("'%s'", p)
+	return fmt.Sprintf("%s => '%s'", p.Name, p.Value)
 }
 
 // FloatParam wraps a float parameter
@@ -198,30 +238,33 @@ func (NullParam) ToSql() string {
 }
 
 // Convenience functions to create typed parameters
-func String(s string) StringParam {
-	return StringParam(s)
+func String(n, s string) StringParam {
+	return StringParam{
+		Name:  n,
+		Value: s,
+	}
 }
 
 type Stringable interface {
 	String() string
 }
 
-func Enum(e Stringable) EnumParam {
+func Enum(n string, e Stringable) EnumParam {
 	return EnumParam(e.String())
 }
-func Int(i int) IntParam {
-	return IntParam(i)
+func Int16(n string, i int16) Int16Param {
+	return Int16Param{n, i}
 }
-func Int32(i int32) IntParam {
-	return IntParam(i)
+func Int32(n string, i int32) Int32Param {
+	return Int32Param{n, i}
 }
-func Int64(i int64) IntParam {
-	return IntParam(i)
+func Int64(n string, i int64) Int64Param {
+	return Int64Param{n, i}
 }
 
 // Timestamp creates a PostgreSQL TIMESTAMP WITHOUT TIME ZONE parameter
-func Timestamp(t time.Time) TimestampParam {
-	return TimestampParam(t)
+func Timestamp(name string, t time.Time) TimestampParam {
+	return TimestampParam{name, t}
 }
 
 // Timestamptz creates a PostgreSQL TIMESTAMP WITH TIME ZONE parameter
@@ -229,14 +272,17 @@ func Timestamptz(t time.Time) TimestamptzParam {
 	return TimestamptzParam(t)
 }
 
-func Uint(u uint) UintParam {
-	return UintParam(u)
+func Uint(name string, u uint) UintParam {
+	return UintParam{name, u}
 }
-func Uint64(u uint64) UintParam {
-	return UintParam(u)
+func Uint32(name string, u uint) Uint32Param {
+	return Uint32Param{name, uint32(u)}
 }
-func UUID(u uuid.UUID) UUIDParam {
-	return UUIDParam(u.String())
+func Uint64(name string, u uint64) Uint64Param {
+	return Uint64Param{name, u}
+}
+func UUID(name string, u uuid.UUID) UUIDParam {
+	return UUIDParam{name, u.String()}
 }
 
 func Float(f float64) FloatParam {
@@ -252,13 +298,16 @@ func Null() NullParam {
 }
 
 // TimestampParam wraps a time.Time parameter for PostgreSQL TIMESTAMP WITHOUT TIME ZONE
-type TimestampParam time.Time
+type TimestampParam struct {
+	Name  string
+	Value time.Time
+}
 
 func (p TimestampParam) ToSql() string {
 	// Format as PostgreSQL timestamp without timezone
 	// The format string is based on PostgreSQL's expected format
-	t := time.Time(p)
-	return fmt.Sprintf("'%s'::timestamp", t.Format("2006-01-02 15:04:05.999999"))
+	t := time.Time(p.Value)
+	return fmt.Sprintf("%s => '%s'::timestamp", p.Name, t.Format("2006-01-02 15:04:05.999999"))
 }
 
 // TimestamptzParam wraps a time.Time parameter for PostgreSQL TIMESTAMP WITH TIME ZONE

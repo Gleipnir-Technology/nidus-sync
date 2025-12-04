@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/scan"
 )
 
 func SaveOrUpdateAerialSpraySession(fs []*fslayer.AerialSpraySession) (inserts uint, updates uint, err error) {
@@ -131,62 +132,61 @@ func toUUID(u googleuuid.UUID) omitnull.Val[uuid.UUID] {
 func toObjectID(o uint) omit.Val[int64] {
 	return omit.From[int64](int64(o))
 }
+
+type InsertResultRow struct {
+	Inserted bool `db:"row_inserted"`
+	Version  int  `db:"version_num"`
+}
+
 func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, fs []*fslayer.RodentLocation) (inserts uint, updates uint, err error) {
 	log.Info().Int("rows", len(fs)).Msg("Processing RodentLocation")
 	for _, row := range fs {
-		//query := fmt.Sprintf("EXECUTE insert_rodentlocation_versioned(%s);", row.ObjectID)
-		query := psql.RawQuery(`EXECUTE insert_rodentlocation_versioned(
-			?,?,?,?,?,?,?,?,?,?,
-			?,?,?,?,?,?,?,?,?,?,
-			?,?,?,?,?,?,?,?,?,?
-		)`,
-			row.ObjectID,
-			row.LocationName,
-			row.Zone,
-			row.Zone2,
-			row.Habitat,
-			row.Priority,
-			row.Usetype,
-			row.Active,
-			row.Description,
-			row.Accessdesc,
-			row.Comments,
-			row.Symbology,
-			row.ExternalID,
-			row.Nextactiondatescheduled,
-			row.Locationnumber,
-			row.LastInspectionDate,
-			row.LastInspectionSpecies,
-			row.LastInspectionAction,
-			row.LastInspectionConditions,
-			row.LastInspectionRodentEvidence,
-			row.GlobalID,
-			row.CreatedUser,
-			row.CreatedDate,
-			row.LastEditedUser,
-			row.LastEditedDate,
-			row.CreationDate,
-			row.Creator,
-			row.EditDate,
-			row.Editor,
-			row.Jurisdiction,
+		procedure := "fieldseeker.insert_rodentlocation"
+		q := queryStoredProcedure(procedure,
+			Uint("p_objectid", row.ObjectID),
+			String("p_locationname", row.LocationName),
+			String("p_zone", row.Zone),
+			String("p_zone2", row.Zone2),
+			String("p_habitat", row.Habitat),
+			String("p_priority", row.Priority),
+			String("p_usetype", row.Usetype),
+			Int16("p_active", row.Active),
+			String("p_description", row.Description),
+			String("p_accessdesc", row.Accessdesc),
+			String("p_comments", row.Comments),
+			String("p_symbology", row.Symbology),
+			String("p_externalid", row.ExternalID),
+			Timestamp("p_nextactiondatescheduled", row.Nextactiondatescheduled),
+			Int32("p_locationnumber", row.Locationnumber),
+			Timestamp("p_lastinspectdate", row.LastInspectionDate),
+			String("p_lastinspectspecies", row.LastInspectionSpecies),
+			String("p_lastinspectaction", row.LastInspectionAction),
+			String("p_lastinspectconditions", row.LastInspectionConditions),
+			String("p_lastinspectrodentevidence", row.LastInspectionRodentEvidence),
+			UUID("p_globalid", row.GlobalID),
+			String("p_created_user", row.CreatedUser),
+			Timestamp("p_created_date", row.CreatedDate),
+			String("p_last_edited_user", row.LastEditedUser),
+			Timestamp("p_last_edited_date", row.LastEditedDate),
+			Timestamp("p_creationdate", row.CreationDate),
+			String("p_creator", row.Creator),
+			Timestamp("p_editdate", row.EditDate),
+			String("p_editor", row.Editor),
+			String("p_jurisdiction", row.Jurisdiction),
 		)
-		result, err := bob.Exec(ctx, PGInstance.BobDB, query)
+		query := psql.RawQuery(q)
+		log.Info().Str("query", q).Msg("querying")
+		result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
 		if err != nil {
-			log.Error().Err(err).Msg("failed exec")
-			return inserts, updates, fmt.Errorf("Failed to execute '%s': %w", query, err)
+			return inserts, updates, fmt.Errorf("Failed to execute %s: %w", procedure, err)
 		}
-		insert_id, err := result.LastInsertId()
-		if err != nil {
-			log.Error().Err(err).Msg("failed insert id")
-			return inserts, updates, fmt.Errorf("Failed to get insert ID: %w", err)
+		if result.Inserted {
+			if result.Version == 1 {
+				inserts += 1
+			} else {
+				updates += 1
+			}
 		}
-		rows_affected, err := result.RowsAffected()
-		if err != nil {
-			log.Error().Err(err).Msg("failed rows affected")
-			return inserts, updates, fmt.Errorf("Failed to get rows affected: %w", err)
-		}
-		log.Info().Int64("insert id", insert_id).Int64("rows", rows_affected).Msg("bah")
 	}
 	return inserts, updates, err
 }
