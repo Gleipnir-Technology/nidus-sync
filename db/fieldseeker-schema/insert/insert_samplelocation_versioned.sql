@@ -1,84 +1,149 @@
--- Prepared statement for conditional insert with versioning for fieldseeker.samplelocation
--- Only inserts a new version if data has changed
 
-PREPARE insert_samplelocation_versioned(bigint, varchar, varchar, fieldseeker.samplelocation_locationhabitattype_enum, fieldseeker.samplelocation_locationpriority_enum, fieldseeker.samplelocation_samplelocationusetype_enum, fieldseeker.samplelocation_notinuit_f_enum, varchar, varchar, varchar, varchar, timestamp, varchar, integer, uuid, varchar, timestamp, varchar, timestamp, smallint, timestamp, varchar, timestamp, varchar) AS
-WITH
--- Get the current latest version of this record
-latest_version AS (
-  SELECT * FROM fieldseeker.samplelocation
-  WHERE objectid = $1
-  ORDER BY VERSION DESC
-  LIMIT 1
-),
--- Calculate the next version number
-next_version AS (
-  SELECT COALESCE(MAX(VERSION) + 1, 1) as version_num
-  FROM fieldseeker.samplelocation
-  WHERE objectid = $1
-)
--- Perform conditional insert
-INSERT INTO fieldseeker.samplelocation (
-  objectid, name, zone, habitat, priority, usetype, active, description, accessdesc, comments, externalid, nextactiondatescheduled, zone2, locationnumber, globalid, created_user, created_date, last_edited_user, last_edited_date, gatewaysync, creationdate, creator, editdate, editor,
-  VERSION
-)
-SELECT
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
-  v.version_num
-FROM next_version v
-WHERE
-  -- Only insert if no record exists yet OR data has changed
-  NOT EXISTS (SELECT 1 FROM latest_version lv WHERE
-    lv.objectid IS NOT DISTINCT FROM $1 AND
-    lv.name IS NOT DISTINCT FROM $2 AND
-    lv.zone IS NOT DISTINCT FROM $3 AND
-    lv.habitat IS NOT DISTINCT FROM $4 AND
-    lv.priority IS NOT DISTINCT FROM $5 AND
-    lv.usetype IS NOT DISTINCT FROM $6 AND
-    lv.active IS NOT DISTINCT FROM $7 AND
-    lv.description IS NOT DISTINCT FROM $8 AND
-    lv.accessdesc IS NOT DISTINCT FROM $9 AND
-    lv.comments IS NOT DISTINCT FROM $10 AND
-    lv.externalid IS NOT DISTINCT FROM $11 AND
-    lv.nextactiondatescheduled IS NOT DISTINCT FROM $12 AND
-    lv.zone2 IS NOT DISTINCT FROM $13 AND
-    lv.locationnumber IS NOT DISTINCT FROM $14 AND
-    lv.globalid IS NOT DISTINCT FROM $15 AND
-    lv.created_user IS NOT DISTINCT FROM $16 AND
-    lv.created_date IS NOT DISTINCT FROM $17 AND
-    lv.last_edited_user IS NOT DISTINCT FROM $18 AND
-    lv.last_edited_date IS NOT DISTINCT FROM $19 AND
-    lv.gatewaysync IS NOT DISTINCT FROM $20 AND
-    lv.creationdate IS NOT DISTINCT FROM $21 AND
-    lv.creator IS NOT DISTINCT FROM $22 AND
-    lv.editdate IS NOT DISTINCT FROM $23 AND
-    lv.editor IS NOT DISTINCT FROM $24
-  )
-RETURNING *;
-
--- Example usage: EXECUTE insert_samplelocation_versioned(id, value1, value2, ...);
-
--- Parameters in order:
--- $1: OBJECTID (bigint)
--- $2: NAME (varchar)
--- $3: ZONE (varchar)
--- $4: HABITAT (fieldseeker.samplelocation_locationhabitattype_enum)
--- $5: PRIORITY (fieldseeker.samplelocation_locationpriority_enum)
--- $6: USETYPE (fieldseeker.samplelocation_samplelocationusetype_enum)
--- $7: ACTIVE (fieldseeker.samplelocation_notinuit_f_enum)
--- $8: DESCRIPTION (varchar)
--- $9: ACCESSDESC (varchar)
--- $10: COMMENTS (varchar)
--- $11: EXTERNALID (varchar)
--- $12: NEXTACTIONDATESCHEDULED (timestamp)
--- $13: ZONE2 (varchar)
--- $14: LOCATIONNUMBER (integer)
--- $15: GlobalID (uuid)
--- $16: created_user (varchar)
--- $17: created_date (timestamp)
--- $18: last_edited_user (varchar)
--- $19: last_edited_date (timestamp)
--- $20: GATEWAYSYNC (smallint)
--- $21: CreationDate (timestamp)
--- $22: Creator (varchar)
--- $23: EditDate (timestamp)
--- $24: Editor (varchar)
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fieldseeker.insert_samplelocation(
+	p_objectid bigint,
+	
+	p_name varchar,
+	p_zone varchar,
+	p_habitat varchar,
+	p_priority varchar,
+	p_usetype varchar,
+	p_active smallint,
+	p_description varchar,
+	p_accessdesc varchar,
+	p_comments varchar,
+	p_externalid varchar,
+	p_nextactiondatescheduled timestamp,
+	p_zone2 varchar,
+	p_locationnumber integer,
+	p_globalid uuid,
+	p_created_user varchar,
+	p_created_date timestamp,
+	p_last_edited_user varchar,
+	p_last_edited_date timestamp,
+	p_gatewaysync smallint,
+	p_creationdate timestamp,
+	p_creator varchar,
+	p_editdate timestamp,
+	p_editor varchar,
+	p_geometry jsonb,
+	p_geospatial geometry
+) RETURNS TABLE(row_inserted boolean, version_num integer) AS $$
+DECLARE
+	v_next_version integer;
+	v_changes_exist boolean;
+BEGIN
+	-- Check if changes exist
+	SELECT NOT EXISTS (
+		SELECT 1 FROM fieldseeker.samplelocation lv 
+		WHERE lv.objectid = p_objectid
+		
+		AND lv.name IS NOT DISTINCT FROM p_name 
+		AND lv.zone IS NOT DISTINCT FROM p_zone 
+		AND lv.habitat IS NOT DISTINCT FROM p_habitat 
+		AND lv.priority IS NOT DISTINCT FROM p_priority 
+		AND lv.usetype IS NOT DISTINCT FROM p_usetype 
+		AND lv.active IS NOT DISTINCT FROM p_active 
+		AND lv.description IS NOT DISTINCT FROM p_description 
+		AND lv.accessdesc IS NOT DISTINCT FROM p_accessdesc 
+		AND lv.comments IS NOT DISTINCT FROM p_comments 
+		AND lv.externalid IS NOT DISTINCT FROM p_externalid 
+		AND lv.nextactiondatescheduled IS NOT DISTINCT FROM p_nextactiondatescheduled 
+		AND lv.zone2 IS NOT DISTINCT FROM p_zone2 
+		AND lv.locationnumber IS NOT DISTINCT FROM p_locationnumber 
+		AND lv.globalid IS NOT DISTINCT FROM p_globalid 
+		AND lv.created_user IS NOT DISTINCT FROM p_created_user 
+		AND lv.created_date IS NOT DISTINCT FROM p_created_date 
+		AND lv.last_edited_user IS NOT DISTINCT FROM p_last_edited_user 
+		AND lv.last_edited_date IS NOT DISTINCT FROM p_last_edited_date 
+		AND lv.gatewaysync IS NOT DISTINCT FROM p_gatewaysync 
+		AND lv.creationdate IS NOT DISTINCT FROM p_creationdate 
+		AND lv.creator IS NOT DISTINCT FROM p_creator 
+		AND lv.editdate IS NOT DISTINCT FROM p_editdate 
+		AND lv.editor IS NOT DISTINCT FROM p_editor 
+		AND lv.geometry IS NOT DISTINCT FROM p_geometry
+		AND lv.geospatial IS NOT DISTINCT FROM p_geospatial
+		ORDER BY VERSION DESC LIMIT 1
+	) INTO v_changes_exist;
+	
+	-- If no changes, return false with current version
+	IF NOT v_changes_exist THEN
+		RETURN QUERY 
+			SELECT 
+				FALSE AS row_inserted, 
+				(SELECT VERSION FROM fieldseeker.samplelocation 
+				 WHERE objectid = p_objectid ORDER BY VERSION DESC LIMIT 1) AS version_num;
+		RETURN;
+	END IF;
+	
+	-- Calculate next version
+	SELECT COALESCE(MAX(VERSION) + 1, 1) INTO v_next_version
+	FROM fieldseeker.samplelocation
+	WHERE objectid = p_objectid;
+	
+	-- Insert new version
+	INSERT INTO fieldseeker.samplelocation (
+		objectid,
+		
+		name,
+		zone,
+		habitat,
+		priority,
+		usetype,
+		active,
+		description,
+		accessdesc,
+		comments,
+		externalid,
+		nextactiondatescheduled,
+		zone2,
+		locationnumber,
+		globalid,
+		created_user,
+		created_date,
+		last_edited_user,
+		last_edited_date,
+		gatewaysync,
+		creationdate,
+		creator,
+		editdate,
+		editor,
+		geometry,
+		geospatial,
+		VERSION
+	) VALUES (
+		p_objectid,
+		
+		p_name,
+		p_zone,
+		p_habitat,
+		p_priority,
+		p_usetype,
+		p_active,
+		p_description,
+		p_accessdesc,
+		p_comments,
+		p_externalid,
+		p_nextactiondatescheduled,
+		p_zone2,
+		p_locationnumber,
+		p_globalid,
+		p_created_user,
+		p_created_date,
+		p_last_edited_user,
+		p_last_edited_date,
+		p_gatewaysync,
+		p_creationdate,
+		p_creator,
+		p_editdate,
+		p_editor,
+		p_geometry,
+		p_geospatial,
+		v_next_version
+	);
+	
+	-- Return success with new version
+	RETURN QUERY SELECT TRUE AS row_inserted, v_next_version AS version_num;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd

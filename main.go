@@ -204,14 +204,14 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 				}
 				// log end request
 				log.Info().
-					Str("type", "access").
+					//Str("type", "access").
 					Timestamp().
 					Fields(map[string]interface{}{
-						"remote_ip":  remote_addr,
-						"url":        r.URL.Path,
-						"proto":      r.Proto,
-						"method":     r.Method,
-						"user_agent": r.Header.Get("User-Agent"),
+						"remote_ip": remote_addr,
+						"url":       r.URL.Path,
+						//"proto":      r.Proto,
+						"method": r.Method,
+						//"user_agent": r.Header.Get("User-Agent"),
 						"status":     ww.Status(),
 						"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000000.0,
 						"bytes_in":   r.Header.Get("Content-Length"),

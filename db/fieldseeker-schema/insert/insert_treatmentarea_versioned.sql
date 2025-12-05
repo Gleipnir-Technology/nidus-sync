@@ -1,72 +1,125 @@
--- Prepared statement for conditional insert with versioning for fieldseeker.treatmentarea
--- Only inserts a new version if data has changed
 
-PREPARE insert_treatmentarea_versioned(bigint, uuid, uuid, timestamp, varchar, uuid, varchar, timestamp, varchar, timestamp, smallint, varchar, timestamp, varchar, timestamp, varchar, double precision, double precision) AS
-WITH
--- Get the current latest version of this record
-latest_version AS (
-  SELECT * FROM fieldseeker.treatmentarea
-  WHERE objectid = $1
-  ORDER BY VERSION DESC
-  LIMIT 1
-),
--- Calculate the next version number
-next_version AS (
-  SELECT COALESCE(MAX(VERSION) + 1, 1) as version_num
-  FROM fieldseeker.treatmentarea
-  WHERE objectid = $1
-)
--- Perform conditional insert
-INSERT INTO fieldseeker.treatmentarea (
-  objectid, treat_id, session_id, treatdate, comments, globalid, created_user, created_date, last_edited_user, last_edited_date, notified, type, creationdate, creator, editdate, editor, shape__area, shape__length,
-  VERSION
-)
-SELECT
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
-  v.version_num
-FROM next_version v
-WHERE
-  -- Only insert if no record exists yet OR data has changed
-  NOT EXISTS (SELECT 1 FROM latest_version lv WHERE
-    lv.objectid IS NOT DISTINCT FROM $1 AND
-    lv.treat_id IS NOT DISTINCT FROM $2 AND
-    lv.session_id IS NOT DISTINCT FROM $3 AND
-    lv.treatdate IS NOT DISTINCT FROM $4 AND
-    lv.comments IS NOT DISTINCT FROM $5 AND
-    lv.globalid IS NOT DISTINCT FROM $6 AND
-    lv.created_user IS NOT DISTINCT FROM $7 AND
-    lv.created_date IS NOT DISTINCT FROM $8 AND
-    lv.last_edited_user IS NOT DISTINCT FROM $9 AND
-    lv.last_edited_date IS NOT DISTINCT FROM $10 AND
-    lv.notified IS NOT DISTINCT FROM $11 AND
-    lv.type IS NOT DISTINCT FROM $12 AND
-    lv.creationdate IS NOT DISTINCT FROM $13 AND
-    lv.creator IS NOT DISTINCT FROM $14 AND
-    lv.editdate IS NOT DISTINCT FROM $15 AND
-    lv.editor IS NOT DISTINCT FROM $16 AND
-    lv.shape__area IS NOT DISTINCT FROM $17 AND
-    lv.shape__length IS NOT DISTINCT FROM $18
-  )
-RETURNING *;
-
--- Example usage: EXECUTE insert_treatmentarea_versioned(id, value1, value2, ...);
-
--- Parameters in order:
--- $1: OBJECTID (bigint)
--- $2: TREAT_ID (uuid)
--- $3: SESSION_ID (uuid)
--- $4: TREATDATE (timestamp)
--- $5: COMMENTS (varchar)
--- $6: GlobalID (uuid)
--- $7: created_user (varchar)
--- $8: created_date (timestamp)
--- $9: last_edited_user (varchar)
--- $10: last_edited_date (timestamp)
--- $11: Notified (smallint)
--- $12: Type (varchar)
--- $13: CreationDate (timestamp)
--- $14: Creator (varchar)
--- $15: EditDate (timestamp)
--- $16: Editor (varchar)
--- $17: Shape__Area (double precision)
--- $18: Shape__Length (double precision)
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fieldseeker.insert_treatmentarea(
+	p_objectid bigint,
+	
+	p_treat_id uuid,
+	p_session_id uuid,
+	p_treatdate timestamp,
+	p_comments varchar,
+	p_globalid uuid,
+	p_created_user varchar,
+	p_created_date timestamp,
+	p_last_edited_user varchar,
+	p_last_edited_date timestamp,
+	p_notified smallint,
+	p_type varchar,
+	p_creationdate timestamp,
+	p_creator varchar,
+	p_editdate timestamp,
+	p_editor varchar,
+	p_shape__area double precision,
+	p_shape__length double precision,
+	p_geometry jsonb,
+	p_geospatial geometry
+) RETURNS TABLE(row_inserted boolean, version_num integer) AS $$
+DECLARE
+	v_next_version integer;
+	v_changes_exist boolean;
+BEGIN
+	-- Check if changes exist
+	SELECT NOT EXISTS (
+		SELECT 1 FROM fieldseeker.treatmentarea lv 
+		WHERE lv.objectid = p_objectid
+		
+		AND lv.treat_id IS NOT DISTINCT FROM p_treat_id 
+		AND lv.session_id IS NOT DISTINCT FROM p_session_id 
+		AND lv.treatdate IS NOT DISTINCT FROM p_treatdate 
+		AND lv.comments IS NOT DISTINCT FROM p_comments 
+		AND lv.globalid IS NOT DISTINCT FROM p_globalid 
+		AND lv.created_user IS NOT DISTINCT FROM p_created_user 
+		AND lv.created_date IS NOT DISTINCT FROM p_created_date 
+		AND lv.last_edited_user IS NOT DISTINCT FROM p_last_edited_user 
+		AND lv.last_edited_date IS NOT DISTINCT FROM p_last_edited_date 
+		AND lv.notified IS NOT DISTINCT FROM p_notified 
+		AND lv.type IS NOT DISTINCT FROM p_type 
+		AND lv.creationdate IS NOT DISTINCT FROM p_creationdate 
+		AND lv.creator IS NOT DISTINCT FROM p_creator 
+		AND lv.editdate IS NOT DISTINCT FROM p_editdate 
+		AND lv.editor IS NOT DISTINCT FROM p_editor 
+		AND lv.shape__area IS NOT DISTINCT FROM p_shape__area 
+		AND lv.shape__length IS NOT DISTINCT FROM p_shape__length 
+		AND lv.geometry IS NOT DISTINCT FROM p_geometry
+		AND lv.geospatial IS NOT DISTINCT FROM p_geospatial
+		ORDER BY VERSION DESC LIMIT 1
+	) INTO v_changes_exist;
+	
+	-- If no changes, return false with current version
+	IF NOT v_changes_exist THEN
+		RETURN QUERY 
+			SELECT 
+				FALSE AS row_inserted, 
+				(SELECT VERSION FROM fieldseeker.treatmentarea 
+				 WHERE objectid = p_objectid ORDER BY VERSION DESC LIMIT 1) AS version_num;
+		RETURN;
+	END IF;
+	
+	-- Calculate next version
+	SELECT COALESCE(MAX(VERSION) + 1, 1) INTO v_next_version
+	FROM fieldseeker.treatmentarea
+	WHERE objectid = p_objectid;
+	
+	-- Insert new version
+	INSERT INTO fieldseeker.treatmentarea (
+		objectid,
+		
+		treat_id,
+		session_id,
+		treatdate,
+		comments,
+		globalid,
+		created_user,
+		created_date,
+		last_edited_user,
+		last_edited_date,
+		notified,
+		type,
+		creationdate,
+		creator,
+		editdate,
+		editor,
+		shape__area,
+		shape__length,
+		geometry,
+		geospatial,
+		VERSION
+	) VALUES (
+		p_objectid,
+		
+		p_treat_id,
+		p_session_id,
+		p_treatdate,
+		p_comments,
+		p_globalid,
+		p_created_user,
+		p_created_date,
+		p_last_edited_user,
+		p_last_edited_date,
+		p_notified,
+		p_type,
+		p_creationdate,
+		p_creator,
+		p_editdate,
+		p_editor,
+		p_shape__area,
+		p_shape__length,
+		p_geometry,
+		p_geospatial,
+		v_next_version
+	);
+	
+	-- Return success with new version
+	RETURN QUERY SELECT TRUE AS row_inserted, v_next_version AS version_num;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd

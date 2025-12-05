@@ -97,6 +97,7 @@ func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseek
 			log.Error().Err(err).Msg("Failed to open output")
 			return
 		}
+		defer output.Close()
 		schema, err := fieldseekerClient.Schema(layer.ID)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get schema")
@@ -888,8 +889,8 @@ func insertRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		args[k] = v
 	}
 	// specially add geometry since it isn't in the list of attributes
-	args["geometry_x"] = feature.Geometry.X
-	args["geometry_y"] = feature.Geometry.Y
+	//args["geometry_x"] = feature.Geometry.X
+	//args["geometry_y"] = feature.Geometry.Y
 	args["organization_id"] = org_id
 	args["updated"] = time.Now()
 
@@ -1059,8 +1060,8 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		args[k] = v
 	}
 	// specially add geometry since it isn't in the list of attributes
-	args["geometry_x"] = feature.Geometry.X
-	args["geometry_y"] = feature.Geometry.Y
+	//args["geometry_x"] = feature.Geometry.X
+	//args["geometry_y"] = feature.Geometry.Y
 	args["updated"] = time.Now()
 
 	_, err := transaction.Exec(ctx, sb.String(), args)

@@ -1,128 +1,237 @@
--- Prepared statement for conditional insert with versioning for fieldseeker.samplecollection
--- Only inserts a new version if data has changed
 
-PREPARE insert_samplecollection_versioned(bigint, uuid, timestamp, timestamp, fieldseeker.samplecollection_mosquitositecondition_enum, varchar, varchar, timestamp, timestamp, varchar, varchar, fieldseeker.samplecollection_notinuit_f_enum, fieldseeker.samplecollection_mosquitosampletype_enum, fieldseeker.samplecollection_mosquitosamplecondition_enum, fieldseeker.samplecollection_mosquitosamplespecies_enum, fieldseeker.samplecollection_notinuisex_enum, double precision, double precision, fieldseeker.samplecollection_notinuiwinddirection_enum, double precision, fieldseeker.samplecollection_mosquitoactivity_enum, fieldseeker.samplecollection_mosquitotestmethod_enum, fieldseeker.samplecollection_mosquitodisease_enum, fieldseeker.samplecollection_mosquitodisease_enum, fieldseeker.samplecollection_notinuit_f_enum, varchar, timestamp, varchar, varchar, smallint, varchar, uuid, varchar, timestamp, varchar, timestamp, fieldseeker.samplecollection_mosquitolabname_enum, varchar, uuid, smallint, uuid, smallint, timestamp, varchar, timestamp, varchar) AS
-WITH
--- Get the current latest version of this record
-latest_version AS (
-  SELECT * FROM fieldseeker.samplecollection
-  WHERE objectid = $1
-  ORDER BY VERSION DESC
-  LIMIT 1
-),
--- Calculate the next version number
-next_version AS (
-  SELECT COALESCE(MAX(VERSION) + 1, 1) as version_num
-  FROM fieldseeker.samplecollection
-  WHERE objectid = $1
-)
--- Perform conditional insert
-INSERT INTO fieldseeker.samplecollection (
-  objectid, loc_id, startdatetime, enddatetime, sitecond, sampleid, survtech, datesent, datetested, testtech, comments, processed, sampletype, samplecond, species, sex, avetemp, windspeed, winddir, raingauge, activity, testmethod, diseasetested, diseasepos, reviewed, reviewedby, revieweddate, locationname, zone, recordstatus, zone2, globalid, created_user, created_date, last_edited_user, last_edited_date, lab, fieldtech, flockid, samplecount, chickenid, gatewaysync, creationdate, creator, editdate, editor,
-  VERSION
-)
-SELECT
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46,
-  v.version_num
-FROM next_version v
-WHERE
-  -- Only insert if no record exists yet OR data has changed
-  NOT EXISTS (SELECT 1 FROM latest_version lv WHERE
-    lv.objectid IS NOT DISTINCT FROM $1 AND
-    lv.loc_id IS NOT DISTINCT FROM $2 AND
-    lv.startdatetime IS NOT DISTINCT FROM $3 AND
-    lv.enddatetime IS NOT DISTINCT FROM $4 AND
-    lv.sitecond IS NOT DISTINCT FROM $5 AND
-    lv.sampleid IS NOT DISTINCT FROM $6 AND
-    lv.survtech IS NOT DISTINCT FROM $7 AND
-    lv.datesent IS NOT DISTINCT FROM $8 AND
-    lv.datetested IS NOT DISTINCT FROM $9 AND
-    lv.testtech IS NOT DISTINCT FROM $10 AND
-    lv.comments IS NOT DISTINCT FROM $11 AND
-    lv.processed IS NOT DISTINCT FROM $12 AND
-    lv.sampletype IS NOT DISTINCT FROM $13 AND
-    lv.samplecond IS NOT DISTINCT FROM $14 AND
-    lv.species IS NOT DISTINCT FROM $15 AND
-    lv.sex IS NOT DISTINCT FROM $16 AND
-    lv.avetemp IS NOT DISTINCT FROM $17 AND
-    lv.windspeed IS NOT DISTINCT FROM $18 AND
-    lv.winddir IS NOT DISTINCT FROM $19 AND
-    lv.raingauge IS NOT DISTINCT FROM $20 AND
-    lv.activity IS NOT DISTINCT FROM $21 AND
-    lv.testmethod IS NOT DISTINCT FROM $22 AND
-    lv.diseasetested IS NOT DISTINCT FROM $23 AND
-    lv.diseasepos IS NOT DISTINCT FROM $24 AND
-    lv.reviewed IS NOT DISTINCT FROM $25 AND
-    lv.reviewedby IS NOT DISTINCT FROM $26 AND
-    lv.revieweddate IS NOT DISTINCT FROM $27 AND
-    lv.locationname IS NOT DISTINCT FROM $28 AND
-    lv.zone IS NOT DISTINCT FROM $29 AND
-    lv.recordstatus IS NOT DISTINCT FROM $30 AND
-    lv.zone2 IS NOT DISTINCT FROM $31 AND
-    lv.globalid IS NOT DISTINCT FROM $32 AND
-    lv.created_user IS NOT DISTINCT FROM $33 AND
-    lv.created_date IS NOT DISTINCT FROM $34 AND
-    lv.last_edited_user IS NOT DISTINCT FROM $35 AND
-    lv.last_edited_date IS NOT DISTINCT FROM $36 AND
-    lv.lab IS NOT DISTINCT FROM $37 AND
-    lv.fieldtech IS NOT DISTINCT FROM $38 AND
-    lv.flockid IS NOT DISTINCT FROM $39 AND
-    lv.samplecount IS NOT DISTINCT FROM $40 AND
-    lv.chickenid IS NOT DISTINCT FROM $41 AND
-    lv.gatewaysync IS NOT DISTINCT FROM $42 AND
-    lv.creationdate IS NOT DISTINCT FROM $43 AND
-    lv.creator IS NOT DISTINCT FROM $44 AND
-    lv.editdate IS NOT DISTINCT FROM $45 AND
-    lv.editor IS NOT DISTINCT FROM $46
-  )
-RETURNING *;
-
--- Example usage: EXECUTE insert_samplecollection_versioned(id, value1, value2, ...);
-
--- Parameters in order:
--- $1: OBJECTID (bigint)
--- $2: LOC_ID (uuid)
--- $3: STARTDATETIME (timestamp)
--- $4: ENDDATETIME (timestamp)
--- $5: SITECOND (fieldseeker.samplecollection_mosquitositecondition_enum)
--- $6: SAMPLEID (varchar)
--- $7: SURVTECH (varchar)
--- $8: DATESENT (timestamp)
--- $9: DATETESTED (timestamp)
--- $10: TESTTECH (varchar)
--- $11: COMMENTS (varchar)
--- $12: PROCESSED (fieldseeker.samplecollection_notinuit_f_enum)
--- $13: SAMPLETYPE (fieldseeker.samplecollection_mosquitosampletype_enum)
--- $14: SAMPLECOND (fieldseeker.samplecollection_mosquitosamplecondition_enum)
--- $15: SPECIES (fieldseeker.samplecollection_mosquitosamplespecies_enum)
--- $16: SEX (fieldseeker.samplecollection_notinuisex_enum)
--- $17: AVETEMP (double precision)
--- $18: WINDSPEED (double precision)
--- $19: WINDDIR (fieldseeker.samplecollection_notinuiwinddirection_enum)
--- $20: RAINGAUGE (double precision)
--- $21: ACTIVITY (fieldseeker.samplecollection_mosquitoactivity_enum)
--- $22: TESTMETHOD (fieldseeker.samplecollection_mosquitotestmethod_enum)
--- $23: DISEASETESTED (fieldseeker.samplecollection_mosquitodisease_enum)
--- $24: DISEASEPOS (fieldseeker.samplecollection_mosquitodisease_enum)
--- $25: REVIEWED (fieldseeker.samplecollection_notinuit_f_enum)
--- $26: REVIEWEDBY (varchar)
--- $27: REVIEWEDDATE (timestamp)
--- $28: LOCATIONNAME (varchar)
--- $29: ZONE (varchar)
--- $30: RECORDSTATUS (smallint)
--- $31: ZONE2 (varchar)
--- $32: GlobalID (uuid)
--- $33: created_user (varchar)
--- $34: created_date (timestamp)
--- $35: last_edited_user (varchar)
--- $36: last_edited_date (timestamp)
--- $37: LAB (fieldseeker.samplecollection_mosquitolabname_enum)
--- $38: FIELDTECH (varchar)
--- $39: FLOCKID (uuid)
--- $40: SAMPLECOUNT (smallint)
--- $41: CHICKENID (uuid)
--- $42: GATEWAYSYNC (smallint)
--- $43: CreationDate (timestamp)
--- $44: Creator (varchar)
--- $45: EditDate (timestamp)
--- $46: Editor (varchar)
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fieldseeker.insert_samplecollection(
+	p_objectid bigint,
+	
+	p_loc_id uuid,
+	p_startdatetime timestamp,
+	p_enddatetime timestamp,
+	p_sitecond varchar,
+	p_sampleid varchar,
+	p_survtech varchar,
+	p_datesent timestamp,
+	p_datetested timestamp,
+	p_testtech varchar,
+	p_comments varchar,
+	p_processed smallint,
+	p_sampletype varchar,
+	p_samplecond varchar,
+	p_species varchar,
+	p_sex varchar,
+	p_avetemp double precision,
+	p_windspeed double precision,
+	p_winddir varchar,
+	p_raingauge double precision,
+	p_activity varchar,
+	p_testmethod varchar,
+	p_diseasetested varchar,
+	p_diseasepos varchar,
+	p_reviewed smallint,
+	p_reviewedby varchar,
+	p_revieweddate timestamp,
+	p_locationname varchar,
+	p_zone varchar,
+	p_recordstatus smallint,
+	p_zone2 varchar,
+	p_globalid uuid,
+	p_created_user varchar,
+	p_created_date timestamp,
+	p_last_edited_user varchar,
+	p_last_edited_date timestamp,
+	p_lab varchar,
+	p_fieldtech varchar,
+	p_flockid uuid,
+	p_samplecount smallint,
+	p_chickenid uuid,
+	p_gatewaysync smallint,
+	p_creationdate timestamp,
+	p_creator varchar,
+	p_editdate timestamp,
+	p_editor varchar,
+	p_geometry jsonb,
+	p_geospatial geometry
+) RETURNS TABLE(row_inserted boolean, version_num integer) AS $$
+DECLARE
+	v_next_version integer;
+	v_changes_exist boolean;
+BEGIN
+	-- Check if changes exist
+	SELECT NOT EXISTS (
+		SELECT 1 FROM fieldseeker.samplecollection lv 
+		WHERE lv.objectid = p_objectid
+		
+		AND lv.loc_id IS NOT DISTINCT FROM p_loc_id 
+		AND lv.startdatetime IS NOT DISTINCT FROM p_startdatetime 
+		AND lv.enddatetime IS NOT DISTINCT FROM p_enddatetime 
+		AND lv.sitecond IS NOT DISTINCT FROM p_sitecond 
+		AND lv.sampleid IS NOT DISTINCT FROM p_sampleid 
+		AND lv.survtech IS NOT DISTINCT FROM p_survtech 
+		AND lv.datesent IS NOT DISTINCT FROM p_datesent 
+		AND lv.datetested IS NOT DISTINCT FROM p_datetested 
+		AND lv.testtech IS NOT DISTINCT FROM p_testtech 
+		AND lv.comments IS NOT DISTINCT FROM p_comments 
+		AND lv.processed IS NOT DISTINCT FROM p_processed 
+		AND lv.sampletype IS NOT DISTINCT FROM p_sampletype 
+		AND lv.samplecond IS NOT DISTINCT FROM p_samplecond 
+		AND lv.species IS NOT DISTINCT FROM p_species 
+		AND lv.sex IS NOT DISTINCT FROM p_sex 
+		AND lv.avetemp IS NOT DISTINCT FROM p_avetemp 
+		AND lv.windspeed IS NOT DISTINCT FROM p_windspeed 
+		AND lv.winddir IS NOT DISTINCT FROM p_winddir 
+		AND lv.raingauge IS NOT DISTINCT FROM p_raingauge 
+		AND lv.activity IS NOT DISTINCT FROM p_activity 
+		AND lv.testmethod IS NOT DISTINCT FROM p_testmethod 
+		AND lv.diseasetested IS NOT DISTINCT FROM p_diseasetested 
+		AND lv.diseasepos IS NOT DISTINCT FROM p_diseasepos 
+		AND lv.reviewed IS NOT DISTINCT FROM p_reviewed 
+		AND lv.reviewedby IS NOT DISTINCT FROM p_reviewedby 
+		AND lv.revieweddate IS NOT DISTINCT FROM p_revieweddate 
+		AND lv.locationname IS NOT DISTINCT FROM p_locationname 
+		AND lv.zone IS NOT DISTINCT FROM p_zone 
+		AND lv.recordstatus IS NOT DISTINCT FROM p_recordstatus 
+		AND lv.zone2 IS NOT DISTINCT FROM p_zone2 
+		AND lv.globalid IS NOT DISTINCT FROM p_globalid 
+		AND lv.created_user IS NOT DISTINCT FROM p_created_user 
+		AND lv.created_date IS NOT DISTINCT FROM p_created_date 
+		AND lv.last_edited_user IS NOT DISTINCT FROM p_last_edited_user 
+		AND lv.last_edited_date IS NOT DISTINCT FROM p_last_edited_date 
+		AND lv.lab IS NOT DISTINCT FROM p_lab 
+		AND lv.fieldtech IS NOT DISTINCT FROM p_fieldtech 
+		AND lv.flockid IS NOT DISTINCT FROM p_flockid 
+		AND lv.samplecount IS NOT DISTINCT FROM p_samplecount 
+		AND lv.chickenid IS NOT DISTINCT FROM p_chickenid 
+		AND lv.gatewaysync IS NOT DISTINCT FROM p_gatewaysync 
+		AND lv.creationdate IS NOT DISTINCT FROM p_creationdate 
+		AND lv.creator IS NOT DISTINCT FROM p_creator 
+		AND lv.editdate IS NOT DISTINCT FROM p_editdate 
+		AND lv.editor IS NOT DISTINCT FROM p_editor 
+		AND lv.geometry IS NOT DISTINCT FROM p_geometry
+		AND lv.geospatial IS NOT DISTINCT FROM p_geospatial
+		ORDER BY VERSION DESC LIMIT 1
+	) INTO v_changes_exist;
+	
+	-- If no changes, return false with current version
+	IF NOT v_changes_exist THEN
+		RETURN QUERY 
+			SELECT 
+				FALSE AS row_inserted, 
+				(SELECT VERSION FROM fieldseeker.samplecollection 
+				 WHERE objectid = p_objectid ORDER BY VERSION DESC LIMIT 1) AS version_num;
+		RETURN;
+	END IF;
+	
+	-- Calculate next version
+	SELECT COALESCE(MAX(VERSION) + 1, 1) INTO v_next_version
+	FROM fieldseeker.samplecollection
+	WHERE objectid = p_objectid;
+	
+	-- Insert new version
+	INSERT INTO fieldseeker.samplecollection (
+		objectid,
+		
+		loc_id,
+		startdatetime,
+		enddatetime,
+		sitecond,
+		sampleid,
+		survtech,
+		datesent,
+		datetested,
+		testtech,
+		comments,
+		processed,
+		sampletype,
+		samplecond,
+		species,
+		sex,
+		avetemp,
+		windspeed,
+		winddir,
+		raingauge,
+		activity,
+		testmethod,
+		diseasetested,
+		diseasepos,
+		reviewed,
+		reviewedby,
+		revieweddate,
+		locationname,
+		zone,
+		recordstatus,
+		zone2,
+		globalid,
+		created_user,
+		created_date,
+		last_edited_user,
+		last_edited_date,
+		lab,
+		fieldtech,
+		flockid,
+		samplecount,
+		chickenid,
+		gatewaysync,
+		creationdate,
+		creator,
+		editdate,
+		editor,
+		geometry,
+		geospatial,
+		VERSION
+	) VALUES (
+		p_objectid,
+		
+		p_loc_id,
+		p_startdatetime,
+		p_enddatetime,
+		p_sitecond,
+		p_sampleid,
+		p_survtech,
+		p_datesent,
+		p_datetested,
+		p_testtech,
+		p_comments,
+		p_processed,
+		p_sampletype,
+		p_samplecond,
+		p_species,
+		p_sex,
+		p_avetemp,
+		p_windspeed,
+		p_winddir,
+		p_raingauge,
+		p_activity,
+		p_testmethod,
+		p_diseasetested,
+		p_diseasepos,
+		p_reviewed,
+		p_reviewedby,
+		p_revieweddate,
+		p_locationname,
+		p_zone,
+		p_recordstatus,
+		p_zone2,
+		p_globalid,
+		p_created_user,
+		p_created_date,
+		p_last_edited_user,
+		p_last_edited_date,
+		p_lab,
+		p_fieldtech,
+		p_flockid,
+		p_samplecount,
+		p_chickenid,
+		p_gatewaysync,
+		p_creationdate,
+		p_creator,
+		p_editdate,
+		p_editor,
+		p_geometry,
+		p_geospatial,
+		v_next_version
+	);
+	
+	-- Return success with new version
+	RETURN QUERY SELECT TRUE AS row_inserted, v_next_version AS version_num;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd

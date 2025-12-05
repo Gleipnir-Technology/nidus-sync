@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -132,6 +133,104 @@ type SqlParam interface {
 	ToSql() string
 }
 
+type JsonBParam struct {
+	Name  string
+	Value json.RawMessage
+}
+
+func (p JsonBParam) ToSql() string {
+	if len(p.Value) == 0 {
+		return fmt.Sprintf("%s => '{}'::jsonb", p.Name)
+	}
+	return fmt.Sprintf("%s => '%s'::jsonb", p.Name, p.Value)
+}
+
+type GeometryLine struct {
+	Paths [][][]float64 `json:"paths"`
+}
+type GISLineParam struct {
+	Name  string
+	Value GeometryLine
+	WKID  int
+}
+
+func (p GISLineParam) ToSql() string {
+	pairs := make([]string, 0)
+	if len(p.Value.Paths) > 1 {
+		log.Warn().Msg("Looks like we need to implement multi-path lines")
+	}
+	for _, path := range p.Value.Paths {
+		for _, pair := range path {
+			if len(pair) != 2 {
+				log.Warn().Int("len", len(pair)).Msg("Too many coords in line point")
+				continue
+			}
+			pairs = append(pairs, fmt.Sprintf("%f %f", pair[0], pair[1]))
+		}
+	}
+	var b strings.Builder
+	for i, p := range pairs {
+		b.WriteString(p)
+		if i < len(pairs)-1 {
+			b.WriteString(", ")
+		}
+	}
+	// Not sure why this isn't working, postgres is complaining that "function x is not uinque" and that
+	// I may want to add explicit casts...
+	//return fmt.Sprintf("%s => ST_SetSRID('LINESTRING(%s)', %d)::geometry(LineString,%d)", p.Name, b.String(), p.WKID, p.WKID)
+	return fmt.Sprintf("%s => 'LINESTRING(%s)'::geometry", p.Name, b.String())
+}
+
+type GeometryPoint struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}
+type GISPointParam struct {
+	Name  string
+	Value GeometryPoint
+	WKID  int
+}
+
+func (p GISPointParam) ToSql() string {
+	return fmt.Sprintf("%s => ST_SetSRID(ST_MakePoint(%f, %f), %d)", p.Name, p.Value.X, p.Value.Y, p.WKID)
+}
+
+type GeometryPolygon struct {
+	Rings [][][]float64 `json:"rings"`
+}
+type GISPolygonParam struct {
+	Name  string
+	Value GeometryPolygon
+	WKID  int
+}
+
+func (p GISPolygonParam) ToSql() string {
+	pairs := make([]string, 0)
+	if len(p.Value.Rings) > 1 {
+		log.Warn().Msg("Looks like we need to implement multi-path lines")
+	}
+	for _, path := range p.Value.Rings {
+		for _, pair := range path {
+			if len(pair) != 2 {
+				log.Warn().Int("len", len(pair)).Msg("Too many coords in line point")
+				continue
+			}
+			pairs = append(pairs, fmt.Sprintf("%f %f", pair[0], pair[1]))
+		}
+	}
+	var b strings.Builder
+	for i, p := range pairs {
+		b.WriteString(p)
+		if i < len(pairs)-1 {
+			b.WriteString(", ")
+		}
+	}
+	// Not sure why this isn't working, postgres is complaining that "function x is not uinque" and that
+	// I may want to add explicit casts...
+	//return fmt.Sprintf("%s => ST_SetSRID('LINESTRING(%s)', %d)::geometry(LineString,%d)", p.Name, b.String(), p.WKID, p.WKID)
+	return fmt.Sprintf("%s => ST_MakePolygon('LINESTRING(%s)')::geometry", p.Name, b.String())
+}
+
 // StringParam wraps a string parameter
 type StringParam struct {
 	Name  string
@@ -243,10 +342,12 @@ func (p EnumParam) ToSql() string {
 }
 
 // NullParam represents a NULL value
-type NullParam struct{}
+type NullParam struct {
+	Name string
+}
 
-func (NullParam) ToSql() string {
-	return "NULL"
+func (p NullParam) ToSql() string {
+	return fmt.Sprintf("%s => NULL", p.Name)
 }
 
 // Convenience functions to create typed parameters
@@ -267,6 +368,15 @@ func Enum(n string, e Stringable) EnumParam {
 func Float64(n string, f float64) Float64Param {
 	return Float64Param{n, f}
 }
+func GISLine(n string, v GeometryLine, wkid int) GISLineParam {
+	return GISLineParam{n, v, wkid}
+}
+func GISPoint(n string, v GeometryPoint, wkid int) GISPointParam {
+	return GISPointParam{n, v, wkid}
+}
+func GISPolygon(n string, v GeometryPolygon, wkid int) GISPolygonParam {
+	return GISPolygonParam{n, v, wkid}
+}
 func Int16(n string, i int16) Int16Param {
 	return Int16Param{n, i}
 }
@@ -275,6 +385,9 @@ func Int32(n string, i int32) Int32Param {
 }
 func Int64(n string, i int64) Int64Param {
 	return Int64Param{n, i}
+}
+func JsonB(n string, v json.RawMessage) JsonBParam {
+	return JsonBParam{n, v}
 }
 
 // Timestamp creates a PostgreSQL TIMESTAMP WITHOUT TIME ZONE parameter
@@ -362,4 +475,64 @@ func executeFunction(functionName string, params ...SqlParam) string {
 
 	// Join parameters and return the execute statement
 	return fmt.Sprintf("EXECUTE %s(%s)", functionName, strings.Join(paramStrings, ", "))
+}
+
+func parseLine(msg json.RawMessage) (result GeometryLine, err error) {
+	err = json.Unmarshal(msg, &result)
+	if err != nil {
+		return result, fmt.Errorf("Failed to parse line from '%s': %w", string(msg), err)
+	}
+	return result, nil
+}
+
+func parsePoint(msg json.RawMessage) (result GeometryPoint, err error) {
+	err = json.Unmarshal(msg, &result)
+	if err != nil {
+		return result, fmt.Errorf("Failed to parse point from '%s': %w", string(msg), err)
+	}
+	return result, nil
+}
+
+func parsePolygon(msg json.RawMessage) (result GeometryPolygon, err error) {
+	err = json.Unmarshal(msg, &result)
+	if err != nil {
+		return result, fmt.Errorf("Failed to parse polygon from '%s': %w", string(msg), err)
+	}
+	return result, nil
+}
+
+func lineOrNull(msg json.RawMessage) (SqlParam, error) {
+	// Surprisingly some geos are actually empty
+	if len(msg) == 0 {
+		return NullParam{"p_geospatial"}, nil
+	}
+	geo, err := parseLine(msg)
+	if err != nil {
+		return NullParam{"p_geospatial"}, fmt.Errorf("Failed to pepare GISLine: %w", err)
+	}
+	return GISLine("p_geospatial", geo, 3857), nil
+}
+
+func pointOrNull(msg json.RawMessage) (SqlParam, error) {
+	// Surprisingly some geos are actually empty
+	if len(msg) == 0 {
+		return NullParam{"p_geospatial"}, nil
+	}
+	geo, err := parsePoint(msg)
+	if err != nil {
+		return NullParam{"p_geospatial"}, fmt.Errorf("Failed to pepare GISPoint: %w", err)
+	}
+	return GISPoint("p_geospatial", geo, 3857), nil
+}
+
+func polygonOrNull(msg json.RawMessage) (SqlParam, error) {
+	// Surprisingly some geos are actually empty
+	if len(msg) == 0 {
+		return NullParam{"p_geospatial"}, nil
+	}
+	geo, err := parsePolygon(msg)
+	if err != nil {
+		return NullParam{"p_geospatial"}, fmt.Errorf("Failed to pepare GISPolygon: %w", err)
+	}
+	return GISPolygon("p_geospatial", geo, 3857), nil
 }

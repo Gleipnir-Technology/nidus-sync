@@ -1,64 +1,109 @@
--- Prepared statement for conditional insert with versioning for fieldseeker.inspectionsample
--- Only inserts a new version if data has changed
 
-PREPARE insert_inspectionsample_versioned(bigint, uuid, varchar, fieldseeker.inspectionsample_notinuit_f_enum, varchar, uuid, varchar, timestamp, varchar, timestamp, timestamp, varchar, timestamp, varchar) AS
-WITH
--- Get the current latest version of this record
-latest_version AS (
-  SELECT * FROM fieldseeker.inspectionsample
-  WHERE objectid = $1
-  ORDER BY VERSION DESC
-  LIMIT 1
-),
--- Calculate the next version number
-next_version AS (
-  SELECT COALESCE(MAX(VERSION) + 1, 1) as version_num
-  FROM fieldseeker.inspectionsample
-  WHERE objectid = $1
-)
--- Perform conditional insert
-INSERT INTO fieldseeker.inspectionsample (
-  objectid, insp_id, sampleid, processed, idbytech, globalid, created_user, created_date, last_edited_user, last_edited_date, creationdate, creator, editdate, editor,
-  VERSION
-)
-SELECT
-  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
-  v.version_num
-FROM next_version v
-WHERE
-  -- Only insert if no record exists yet OR data has changed
-  NOT EXISTS (SELECT 1 FROM latest_version lv WHERE
-    lv.objectid IS NOT DISTINCT FROM $1 AND
-    lv.insp_id IS NOT DISTINCT FROM $2 AND
-    lv.sampleid IS NOT DISTINCT FROM $3 AND
-    lv.processed IS NOT DISTINCT FROM $4 AND
-    lv.idbytech IS NOT DISTINCT FROM $5 AND
-    lv.globalid IS NOT DISTINCT FROM $6 AND
-    lv.created_user IS NOT DISTINCT FROM $7 AND
-    lv.created_date IS NOT DISTINCT FROM $8 AND
-    lv.last_edited_user IS NOT DISTINCT FROM $9 AND
-    lv.last_edited_date IS NOT DISTINCT FROM $10 AND
-    lv.creationdate IS NOT DISTINCT FROM $11 AND
-    lv.creator IS NOT DISTINCT FROM $12 AND
-    lv.editdate IS NOT DISTINCT FROM $13 AND
-    lv.editor IS NOT DISTINCT FROM $14
-  )
-RETURNING *;
-
--- Example usage: EXECUTE insert_inspectionsample_versioned(id, value1, value2, ...);
-
--- Parameters in order:
--- $1: OBJECTID (bigint)
--- $2: INSP_ID (uuid)
--- $3: SAMPLEID (varchar)
--- $4: PROCESSED (fieldseeker.inspectionsample_notinuit_f_enum)
--- $5: IDBYTECH (varchar)
--- $6: GlobalID (uuid)
--- $7: created_user (varchar)
--- $8: created_date (timestamp)
--- $9: last_edited_user (varchar)
--- $10: last_edited_date (timestamp)
--- $11: CreationDate (timestamp)
--- $12: Creator (varchar)
--- $13: EditDate (timestamp)
--- $14: Editor (varchar)
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION fieldseeker.insert_inspectionsample(
+	p_objectid bigint,
+	
+	p_insp_id uuid,
+	p_sampleid varchar,
+	p_processed smallint,
+	p_idbytech varchar,
+	p_globalid uuid,
+	p_created_user varchar,
+	p_created_date timestamp,
+	p_last_edited_user varchar,
+	p_last_edited_date timestamp,
+	p_creationdate timestamp,
+	p_creator varchar,
+	p_editdate timestamp,
+	p_editor varchar,
+	p_geometry jsonb,
+	p_geospatial geometry
+) RETURNS TABLE(row_inserted boolean, version_num integer) AS $$
+DECLARE
+	v_next_version integer;
+	v_changes_exist boolean;
+BEGIN
+	-- Check if changes exist
+	SELECT NOT EXISTS (
+		SELECT 1 FROM fieldseeker.inspectionsample lv 
+		WHERE lv.objectid = p_objectid
+		
+		AND lv.insp_id IS NOT DISTINCT FROM p_insp_id 
+		AND lv.sampleid IS NOT DISTINCT FROM p_sampleid 
+		AND lv.processed IS NOT DISTINCT FROM p_processed 
+		AND lv.idbytech IS NOT DISTINCT FROM p_idbytech 
+		AND lv.globalid IS NOT DISTINCT FROM p_globalid 
+		AND lv.created_user IS NOT DISTINCT FROM p_created_user 
+		AND lv.created_date IS NOT DISTINCT FROM p_created_date 
+		AND lv.last_edited_user IS NOT DISTINCT FROM p_last_edited_user 
+		AND lv.last_edited_date IS NOT DISTINCT FROM p_last_edited_date 
+		AND lv.creationdate IS NOT DISTINCT FROM p_creationdate 
+		AND lv.creator IS NOT DISTINCT FROM p_creator 
+		AND lv.editdate IS NOT DISTINCT FROM p_editdate 
+		AND lv.editor IS NOT DISTINCT FROM p_editor 
+		AND lv.geometry IS NOT DISTINCT FROM p_geometry
+		AND lv.geospatial IS NOT DISTINCT FROM p_geospatial
+		ORDER BY VERSION DESC LIMIT 1
+	) INTO v_changes_exist;
+	
+	-- If no changes, return false with current version
+	IF NOT v_changes_exist THEN
+		RETURN QUERY 
+			SELECT 
+				FALSE AS row_inserted, 
+				(SELECT VERSION FROM fieldseeker.inspectionsample 
+				 WHERE objectid = p_objectid ORDER BY VERSION DESC LIMIT 1) AS version_num;
+		RETURN;
+	END IF;
+	
+	-- Calculate next version
+	SELECT COALESCE(MAX(VERSION) + 1, 1) INTO v_next_version
+	FROM fieldseeker.inspectionsample
+	WHERE objectid = p_objectid;
+	
+	-- Insert new version
+	INSERT INTO fieldseeker.inspectionsample (
+		objectid,
+		
+		insp_id,
+		sampleid,
+		processed,
+		idbytech,
+		globalid,
+		created_user,
+		created_date,
+		last_edited_user,
+		last_edited_date,
+		creationdate,
+		creator,
+		editdate,
+		editor,
+		geometry,
+		geospatial,
+		VERSION
+	) VALUES (
+		p_objectid,
+		
+		p_insp_id,
+		p_sampleid,
+		p_processed,
+		p_idbytech,
+		p_globalid,
+		p_created_user,
+		p_created_date,
+		p_last_edited_user,
+		p_last_edited_date,
+		p_creationdate,
+		p_creator,
+		p_editdate,
+		p_editor,
+		p_geometry,
+		p_geospatial,
+		v_next_version
+	);
+	
+	-- Return success with new version
+	RETURN QUERY SELECT TRUE AS row_inserted, v_next_version AS version_num;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd

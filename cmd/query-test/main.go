@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
+	fslayer "github.com/Gleipnir-Technology/arcgis-go/fieldseeker/layer"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/alexedwards/scs/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -69,9 +72,41 @@ func main() {
 		os.Exit(2)
 	}
 	ctx := context.Background()
-	err = db.TestPreparedQuery(ctx)
+	row := fslayer.RodentLocation{
+		ObjectID:                     1,
+		LocationName:                 "some location",
+		Zone:                         "",
+		Zone2:                        "",
+		Habitat:                      fslayer.RodentLocationRodentLocationHabitatCommercial,
+		Priority:                     fslayer.RodentLocationLocationPriority1None,
+		Usetype:                      fslayer.RodentLocationLocationUseType1Residential,
+		Active:                       fslayer.RodentLocationNotInUITF1True,
+		Description:                  "",
+		Accessdesc:                   "",
+		Comments:                     "",
+		Symbology:                    fslayer.RodentLocationRodentLocationSymbologyActionrequired,
+		ExternalID:                   "",
+		Nextactiondatescheduled:      time.Now(),
+		Locationnumber:               1,
+		LastInspectionDate:           time.Now(),
+		LastInspectionSpecies:        "",
+		LastInspectionAction:         "",
+		LastInspectionConditions:     "",
+		LastInspectionRodentEvidence: "",
+		GlobalID:                     uuid.New(),
+		CreatedUser:                  "",
+		CreatedDate:                  time.Now(),
+		LastEditedUser:               "",
+		LastEditedDate:               time.Now(),
+		CreationDate:                 time.Now(),
+		Creator:                      "",
+		EditDate:                     time.Now(),
+		Editor:                       "",
+		Jurisdiction:                 "",
+	}
+	err = db.TestPreparedQuery(ctx, &row)
 	if err != nil {
-		log.Error().Str("err", err.Error()).Msg("Failed to connect to database")
+		log.Error().Str("err", err.Error()).Msg("Failed to run prepared query")
 		os.Exit(3)
 	}
 	log.Info().Msg("Complete.")

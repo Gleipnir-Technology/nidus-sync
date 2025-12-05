@@ -20,10 +20,10 @@ func SaveOrUpdateAerialSpraySession(ctx context.Context, org *models.Organizatio
 	log.Warn().Msg("Ignoring AerialSpraySession data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "AerialSpraySession", "fieldseeker.insert_aerialspraysession", func(row *fslayer.AerialSpraySession) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "AerialSpraySession", "fieldseeker.insert_aerialspraysession", func(row *fslayer.AerialSpraySession) ([]SqlParam, error) {
 			return []SqlParam{
 				//Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
@@ -31,9 +31,9 @@ func SaveOrUpdateAerialSprayLine(ctx context.Context, org *models.Organization, 
 	log.Warn().Msg("Ignoring AerialSprayLine data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "AerialSprayLine", "fieldseeker.insert_aerialsprayline", func(row *fslayer.AerialSprayLine) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "AerialSprayLine", "fieldseeker.insert_aerialsprayline", func(row *fslayer.AerialSprayLine) ([]SqlParam, error) {
 			return []SqlParam{
-			}
+			}, nil
 		})
 	*/
 }
@@ -41,9 +41,9 @@ func SaveOrUpdateBarrierSpray(ctx context.Context, org *models.Organization, fs 
 	log.Warn().Msg("Ignoring BarrierSpray data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "BarrierSpray", "fieldseeker.insert_barrierspray", func(row *fslayer.BarrierSpray) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "BarrierSpray", "fieldseeker.insert_barrierspray", func(row *fslayer.BarrierSpray) ([]SqlParam, error) {
 			return []SqlParam{
-			}
+			}, nil
 		})
 	*/
 }
@@ -51,14 +51,18 @@ func SaveOrUpdateBarrierSprayRoute(ctx context.Context, org *models.Organization
 	log.Warn().Msg("Ignoring BarrierSprayRoute data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "BarrierSprayRoute", "fieldseeker.insert_barriersprayroute", func(row *fslayer.BarrierSprayRoute) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "BarrierSprayRoute", "fieldseeker.insert_barriersprayroute", func(row *fslayer.BarrierSprayRoute) ([]SqlParam, error) {
 			return []SqlParam{
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateContainerRelate(ctx context.Context, org *models.Organization, fs []*fslayer.ContainerRelate) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "ContainerRelate", "fieldseeker.insert_containerrelate", func(row *fslayer.ContainerRelate) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "ContainerRelate", "fieldseeker.insert_containerrelate", func(row *fslayer.ContainerRelate) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_globalid", row.GlobalID),
@@ -74,11 +78,17 @@ func SaveOrUpdateContainerRelate(ctx context.Context, org *models.Organization, 
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 }
 func SaveOrUpdateFieldScoutingLog(ctx context.Context, org *models.Organization, fs []*fslayer.FieldScoutingLog) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "FieldScoutingLog", "fieldseeker.insert_fieldscoutinglog", func(row *fslayer.FieldScoutingLog) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "FieldScoutingLog", "fieldseeker.insert_fieldscoutinglog", func(row *fslayer.FieldScoutingLog) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Int16("p_status", row.Status),
@@ -91,12 +101,18 @@ func SaveOrUpdateFieldScoutingLog(ctx context.Context, org *models.Organization,
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateHabitatRelate(ctx context.Context, org *models.Organization, fs []*fslayer.HabitatRelate) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "HabitatRelate", "fieldseeker.insert_habitatrelate", func(row *fslayer.HabitatRelate) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "HabitatRelate", "fieldseeker.insert_habitatrelate", func(row *fslayer.HabitatRelate) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_foreign_id", row.ForeignID),
@@ -110,12 +126,18 @@ func SaveOrUpdateHabitatRelate(ctx context.Context, org *models.Organization, fs
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateInspectionSample(ctx context.Context, org *models.Organization, fs []*fslayer.InspectionSample) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "InspectionSample", "fieldseeker.insert_inspectionsample", func(row *fslayer.InspectionSample) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "InspectionSample", "fieldseeker.insert_inspectionsample", func(row *fslayer.InspectionSample) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_insp_id", row.InspID),
@@ -131,12 +153,18 @@ func SaveOrUpdateInspectionSample(ctx context.Context, org *models.Organization,
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateInspectionSampleDetail(ctx context.Context, org *models.Organization, fs []*fslayer.InspectionSampleDetail) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "InspectionSampleDetail", "fieldseeker.insert_inspectionsampledetail", func(row *fslayer.InspectionSampleDetail) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "InspectionSampleDetail", "fieldseeker.insert_inspectionsampledetail", func(row *fslayer.InspectionSampleDetail) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_inspsample_id", row.InspsampleID),
@@ -163,7 +191,9 @@ func SaveOrUpdateInspectionSampleDetail(ctx context.Context, org *models.Organiz
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -171,10 +201,10 @@ func SaveOrUpdateLandingCount(ctx context.Context, org *models.Organization, fs 
 	log.Warn().Msg("Ignoring LandingCount data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "LandingCount", "fieldseeker.insert_landingcount", func(row *fslayer.LandingCount) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "LandingCount", "fieldseeker.insert_landingcount", func(row *fslayer.LandingCount) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
@@ -182,15 +212,19 @@ func SaveOrUpdateLandingCountLocation(ctx context.Context, org *models.Organizat
 	log.Warn().Msg("Ignoring LandingCountLocation data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "LandingCountLocation", "fieldseeker.insert_landingcountlocation", func(row *fslayer.LandingCountLocation) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "LandingCountLocation", "fieldseeker.insert_landingcountlocation", func(row *fslayer.LandingCountLocation) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateLineLocation(ctx context.Context, org *models.Organization, fs []*fslayer.LineLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "LineLocation", "fieldseeker.insert_linelocation", func(row *fslayer.LineLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "LineLocation", "fieldseeker.insert_linelocation", func(row *fslayer.LineLocation) ([]SqlParam, error) {
+		gisPoint, err := lineOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -240,12 +274,18 @@ func SaveOrUpdateLineLocation(ctx context.Context, org *models.Organization, fs 
 			String("p_editor", row.Editor),
 			String("p_jurisdiction", row.Jurisdiction),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateLocationTracking(ctx context.Context, org *models.Organization, fs []*fslayer.LocationTracking) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "LocationTracking", "fieldseeker.insert_locationtracking", func(row *fslayer.LocationTracking) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "LocationTracking", "fieldseeker.insert_locationtracking", func(row *fslayer.LocationTracking) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Float64("p_accuracy", row.Accuracym),
@@ -259,12 +299,18 @@ func SaveOrUpdateLocationTracking(ctx context.Context, org *models.Organization,
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateMosquitoInspection(ctx context.Context, org *models.Organization, fs []*fslayer.MosquitoInspection) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "MosquitoInspection", "fieldseeker.insert_mosquitoinspection", func(row *fslayer.MosquitoInspection) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "MosquitoInspection", "fieldseeker.insert_mosquitoinspection", func(row *fslayer.MosquitoInspection) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Int16("p_numdips", row.Dips),
@@ -323,22 +369,31 @@ func SaveOrUpdateMosquitoInspection(ctx context.Context, org *models.Organizatio
 			String("p_vmcomments", row.VmComments),
 			String("p_adminaction", row.AdminAction),
 			UUID("p_ptaid", row.PtaID),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 }
 func SaveOrUpdateOfflineMapAreas(ctx context.Context, org *models.Organization, fs []*fslayer.OfflineMapAreas) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring OfflineMapAreas data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "OfflineMapAreas", "fieldseeker.insert_offlinemapareas", func(row *fslayer.OfflineMapAreas) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "OfflineMapAreas", "fieldseeker.insert_offlinemapareas", func(row *fslayer.OfflineMapAreas) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateProposedTreatmentArea(ctx context.Context, org *models.Organization, fs []*fslayer.ProposedTreatmentArea) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "ProposedTreatmentArea", "fieldseeker.insert_proposedtreatmentarea", func(row *fslayer.ProposedTreatmentArea) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "ProposedTreatmentArea", "fieldseeker.insert_proposedtreatmentarea", func(row *fslayer.ProposedTreatmentArea) ([]SqlParam, error) {
+		gisPoint, err := polygonOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
+		// At this point we've got data that's bad and can't actually be inserted in the database
+		// so let's just always make the geo null
+		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_method", row.Method),
@@ -373,11 +428,17 @@ func SaveOrUpdateProposedTreatmentArea(ctx context.Context, org *models.Organiza
 			String("p_targetspecies", row.TargetSpecies),
 			Float64("p_shape__area", row.ShapeArea),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 }
 func SaveOrUpdatePointLocation(ctx context.Context, org *models.Organization, fs []*fslayer.PointLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "PointLocation", "fieldseeker.insert_pointlocation", func(row *fslayer.PointLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "PointLocation", "fieldseeker.insert_pointlocation", func(row *fslayer.PointLocation) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -423,12 +484,21 @@ func SaveOrUpdatePointLocation(ctx context.Context, org *models.Organization, fs
 			String("p_deactivate_reason", row.ReasonForDeactivation),
 			Int32("p_scalarpriority", row.ScalarPriority),
 			String("p_sourcestatus", row.SourceStatus),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdatePolygonLocation(ctx context.Context, org *models.Organization, fs []*fslayer.PolygonLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "PolygonLocation", "fieldseeker.insert_polygonlocation", func(row *fslayer.PolygonLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "PolygonLocation", "fieldseeker.insert_polygonlocation", func(row *fslayer.PolygonLocation) ([]SqlParam, error) {
+		gisPoint, err := polygonOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
+		// At this point we've got data that's bad and can't actually be inserted in the database
+		// so let's just always make the geo null
+		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -472,12 +542,18 @@ func SaveOrUpdatePolygonLocation(ctx context.Context, org *models.Organization, 
 			String("p_jurisdiction", row.Jurisdiction),
 			Float64("p_shape__area", row.ShapeArea),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdatePoolDetail(ctx context.Context, org *models.Organization, fs []*fslayer.PoolDetail) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "PoolDetail", "fieldseeker.insert_pooldetail", func(row *fslayer.PoolDetail) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "PoolDetail", "fieldseeker.insert_pooldetail", func(row *fslayer.PoolDetail) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_trapdata_id", row.TrapDataID),
@@ -493,12 +569,18 @@ func SaveOrUpdatePoolDetail(ctx context.Context, org *models.Organization, fs []
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdatePool(ctx context.Context, org *models.Organization, fs []*fslayer.Pool) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "Pool", "fieldseeker.insert_pool", func(row *fslayer.Pool) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "Pool", "fieldseeker.insert_pool", func(row *fslayer.Pool) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_trapdata_id", row.TrapDataID),
@@ -528,7 +610,9 @@ func SaveOrUpdatePool(ctx context.Context, org *models.Organization, fs []*fslay
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -536,10 +620,10 @@ func SaveOrUpdatePoolBuffer(ctx context.Context, org *models.Organization, fs []
 	log.Warn().Msg("Ignoring PoolBuffer data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "PoolBuffer", "fieldseeker.insert_poolbuffer", func(row *fslayer.PoolBuffer) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "PoolBuffer", "fieldseeker.insert_poolbuffer", func(row *fslayer.PoolBuffer) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
@@ -547,15 +631,19 @@ func SaveOrUpdateQALarvCount(ctx context.Context, org *models.Organization, fs [
 	log.Warn().Msg("Ignoring QALarvCount data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "QALarvCount", "fieldseeker.insert_qalarvcount", func(row *fslayer.QALarvCount) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "QALarvCount", "fieldseeker.insert_qalarvcount", func(row *fslayer.QALarvCount) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateQAMosquitoInspection(ctx context.Context, org *models.Organization, fs []*fslayer.QAMosquitoInspection) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "QAMosquitoInspection", "fieldseeker.insert_qamosquitoinspection", func(row *fslayer.QAMosquitoInspection) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "QAMosquitoInspection", "fieldseeker.insert_qamosquitoinspection", func(row *fslayer.QAMosquitoInspection) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Int16("p_posdips", row.PositiveDips),
@@ -619,7 +707,9 @@ func SaveOrUpdateQAMosquitoInspection(ctx context.Context, org *models.Organizat
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -627,10 +717,10 @@ func SaveOrUpdateQAProductObservation(ctx context.Context, org *models.Organizat
 	log.Warn().Msg("Ignoring QAProductObservation data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "QAProductObservation", "fieldseeker.insert_qaproductobservation", func(row *fslayer.QAProductObservation) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "QAProductObservation", "fieldseeker.insert_qaproductobservation", func(row *fslayer.QAProductObservation) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
@@ -638,10 +728,10 @@ func SaveOrUpdateRestrictedArea(ctx context.Context, org *models.Organization, f
 	log.Warn().Msg("Ignoring RestrictedArea data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "RestrictedArea", "fieldseeker.insert_restrictedarea", func(row *fslayer.RestrictedArea) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "RestrictedArea", "fieldseeker.insert_restrictedarea", func(row *fslayer.RestrictedArea) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
@@ -649,15 +739,19 @@ func SaveOrUpdateRodentInspection(ctx context.Context, org *models.Organization,
 	log.Warn().Msg("Ignoring RodentInspection data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "RodentInspection", "fieldseeker.insert_rodentinspection", func(row *fslayer.RodentInspection) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "RodentInspection", "fieldseeker.insert_rodentinspection", func(row *fslayer.RodentInspection) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, fs []*fslayer.RodentLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "RodentLocation", "fieldseeker.insert_rodentlocation", func(row *fslayer.RodentLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "RodentLocation", "fieldseeker.insert_rodentlocation", func(row *fslayer.RodentLocation) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_locationname", row.LocationName),
@@ -689,12 +783,18 @@ func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, f
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
 			String("p_jurisdiction", row.Jurisdiction),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 }
 
 func SaveOrUpdateSampleCollection(ctx context.Context, org *models.Organization, fs []*fslayer.SampleCollection) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "SampleCollection", "fieldseeker.insert_samplecollection", func(row *fslayer.SampleCollection) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "SampleCollection", "fieldseeker.insert_samplecollection", func(row *fslayer.SampleCollection) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_loc_id", row.LocID),
@@ -742,12 +842,18 @@ func SaveOrUpdateSampleCollection(ctx context.Context, org *models.Organization,
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateSampleLocation(ctx context.Context, org *models.Organization, fs []*fslayer.SampleLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "SampleLocation", "fieldseeker.insert_samplelocation", func(row *fslayer.SampleLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "SampleLocation", "fieldseeker.insert_samplelocation", func(row *fslayer.SampleLocation) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -773,12 +879,18 @@ func SaveOrUpdateSampleLocation(ctx context.Context, org *models.Organization, f
 			String("p_creator", row.Creator),
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateServiceRequest(ctx context.Context, org *models.Organization, fs []*fslayer.ServiceRequest) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "ServiceRequest", "fieldseeker.insert_servicerequest", func(row *fslayer.ServiceRequest) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "ServiceRequest", "fieldseeker.insert_servicerequest", func(row *fslayer.ServiceRequest) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Timestamp("p_recdatetime", row.Received),
@@ -866,12 +978,18 @@ func SaveOrUpdateServiceRequest(ctx context.Context, org *models.Organization, f
 			String("p_notificationtimestamp", row.NotificationTimestamp),
 			String("p_zone", row.Zone),
 			String("p_zone2", row.Zone2),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateSpeciesAbundance(ctx context.Context, org *models.Organization, fs []*fslayer.SpeciesAbundance) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "SpeciesAbundance", "fieldseeker.insert_speciesabundance", func(row *fslayer.SpeciesAbundance) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "SpeciesAbundance", "fieldseeker.insert_speciesabundance", func(row *fslayer.SpeciesAbundance) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_trapdata_id", row.TrapDataID),
@@ -902,12 +1020,18 @@ func SaveOrUpdateSpeciesAbundance(ctx context.Context, org *models.Organization,
 			Float64("p_r8score", row.R8Score),
 			String("p_h3r7", row.H3r7),
 			String("p_h3r8", row.H3r8),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateStormDrain(ctx context.Context, org *models.Organization, fs []*fslayer.StormDrain) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "StormDrain", "fieldseeker.insert_stormdrain", func(row *fslayer.StormDrain) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "StormDrain", "fieldseeker.insert_stormdrain", func(row *fslayer.StormDrain) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			Timestamp("p_nexttreatmentdate", row.NextTreatmentDate),
@@ -928,7 +1052,9 @@ func SaveOrUpdateStormDrain(ctx context.Context, org *models.Organization, fs []
 			String("p_editor", row.Editor),
 			String("p_type", row.Type),
 			String("p_jurisdiction", row.Jurisdiction),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -936,15 +1062,19 @@ func SaveOrUpdateTracklog(ctx context.Context, org *models.Organization, fs []*f
 	log.Warn().Msg("Ignoring RodentInspection data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "Tracklog", "fieldseeker.insert_tracklog", func(row *fslayer.Tracklog) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "Tracklog", "fieldseeker.insert_tracklog", func(row *fslayer.Tracklog) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateTrapLocation(ctx context.Context, org *models.Organization, fs []*fslayer.TrapLocation) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "TrapLocation", "fieldseeker.insert_traplocation", func(row *fslayer.TrapLocation) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "TrapLocation", "fieldseeker.insert_traplocation", func(row *fslayer.TrapLocation) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -976,12 +1106,18 @@ func SaveOrUpdateTrapLocation(ctx context.Context, org *models.Organization, fs 
 			String("p_editor", row.Editor),
 			String("p_h3r7", row.H3r7),
 			String("p_h3r8", row.H3r8),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateTrapData(ctx context.Context, org *models.Organization, fs []*fslayer.TrapData) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "TrapData", "fieldseeker.insert_trapdata", func(row *fslayer.TrapData) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "TrapData", "fieldseeker.insert_trapdata", func(row *fslayer.TrapData) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_traptype", row.TrapType),
@@ -1025,12 +1161,18 @@ func SaveOrUpdateTrapData(ctx context.Context, org *models.Organization, fs []*f
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
 			String("p_lure", row.Lure),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateTimeCard(ctx context.Context, org *models.Organization, fs []*fslayer.TimeCard) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "TimeCard", "fieldseeker.insert_timecard", func(row *fslayer.TimeCard) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "TimeCard", "fieldseeker.insert_timecard", func(row *fslayer.TimeCard) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_activity", row.Activity),
@@ -1060,12 +1202,18 @@ func SaveOrUpdateTimeCard(ctx context.Context, org *models.Organization, fs []*f
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
 			UUID("p_rodentlocid", row.RodentlocID),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateTreatment(ctx context.Context, org *models.Organization, fs []*fslayer.Treatment) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "Treatment", "fieldseeker.insert_treatment", func(row *fslayer.Treatment) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "Treatment", "fieldseeker.insert_treatment", func(row *fslayer.Treatment) ([]SqlParam, error) {
+		gisPoint, err := pointOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_activity", row.Activity),
@@ -1121,12 +1269,19 @@ func SaveOrUpdateTreatment(ctx context.Context, org *models.Organization, fs []*
 			Timestamp("p_editdate", row.EditDate),
 			String("p_editor", row.Editor),
 			String("p_targetspecies", row.TargetSpecies),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateTreatmentArea(ctx context.Context, org *models.Organization, fs []*fslayer.TreatmentArea) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "TreatmentArea", "fieldseeker.insert_treatmentarea", func(row *fslayer.TreatmentArea) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "TreatmentArea", "fieldseeker.insert_treatmentarea", func(row *fslayer.TreatmentArea) ([]SqlParam, error) {
+		gisPoint, err := polygonOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
+		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			UUID("p_treat_id", row.TreatID),
@@ -1146,7 +1301,9 @@ func SaveOrUpdateTreatmentArea(ctx context.Context, org *models.Organization, fs
 			String("p_editor", row.Editor),
 			Float64("p_shape__area", row.ShapeArea),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -1154,15 +1311,22 @@ func SaveOrUpdateULVSprayRoute(ctx context.Context, org *models.Organization, fs
 	log.Warn().Msg("Ignoring RodentInspection data")
 	return 0, 0, nil
 	/*
-		return doUpdatesViaFunction(ctx, org, fs, "ULVSprayRoute", "fieldseeker.insert_ulvsprayroute", func(row *fslayer.ULVSprayRoute) []SqlParam {
+		return doUpdatesViaFunction(ctx, org, fs, "ULVSprayRoute", "fieldseeker.insert_ulvsprayroute", func(row *fslayer.ULVSprayRoute) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
-			}
+			}, nil
 		})
 	*/
 }
 func SaveOrUpdateZones(ctx context.Context, org *models.Organization, fs []*fslayer.Zones) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "Zones", "fieldseeker.insert_zones", func(row *fslayer.Zones) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "Zones", "fieldseeker.insert_zones", func(row *fslayer.Zones) ([]SqlParam, error) {
+		gisPoint, err := polygonOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
+		// At this point we've got data that's bad and can't actually be inserted in the database
+		// so let's just always make the geo null
+		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -1178,12 +1342,21 @@ func SaveOrUpdateZones(ctx context.Context, org *models.Organization, fs []*fsla
 			String("p_editor", row.Editor),
 			Float64("p_shape__area", row.ShapeArea),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
 func SaveOrUpdateZones2(ctx context.Context, org *models.Organization, fs []*fslayer.Zones2) (inserts uint, updates uint, err error) {
-	return doUpdatesViaFunction(ctx, org, fs, "Zones2", "fieldseeker.insert_zones2", func(row *fslayer.Zones2) []SqlParam {
+	return doUpdatesViaFunction(ctx, org, fs, "Zones2", "fieldseeker.insert_zones2", func(row *fslayer.Zones2) ([]SqlParam, error) {
+		gisPoint, err := polygonOrNull(row.Geometry)
+		if err != nil {
+			return []SqlParam{}, err
+		}
+		// At this point we've got data that's bad and can't actually be inserted in the database
+		// so let's just always make the geo null
+		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
 			String("p_name", row.Name),
@@ -1198,7 +1371,9 @@ func SaveOrUpdateZones2(ctx context.Context, org *models.Organization, fs []*fsl
 			String("p_editor", row.Editor),
 			Float64("p_shape__area", row.ShapeArea),
 			Float64("p_shape__length", row.ShapeLength),
-		}
+			JsonB("p_geometry", row.Geometry),
+			gisPoint,
+		}, nil
 	})
 	return 0, 0, nil
 }
@@ -1208,17 +1383,20 @@ type InsertResultRow struct {
 	Version  int  `db:"version_num"`
 }
 
-type rowConverter[T any] func(*T) []SqlParam
+type rowConverter[T any] func(*T) ([]SqlParam, error)
 
 func doUpdatesViaFunction[T any](ctx context.Context, org *models.Organization, fs []*T, table string, procedure string, converter rowConverter[T]) (inserts uint, updates uint, err error) {
 	//log.Info().Int("rows", len(fs)).Msg("Processing RodentLocation")
 	for _, row := range fs {
-		params := converter(row)
+		params, err := converter(row)
+		if err != nil {
+			return inserts, updates, fmt.Errorf("Failed to convert row '%s': %w", row, err)
+		}
 		q := queryStoredProcedure(procedure, params...)
 		query := psql.RawQuery(q)
-		log.Info().Str("query", q).Msg("querying")
 		result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
 		if err != nil {
+			log.Error().Str("query", q).Msg("Query failed")
 			return inserts, updates, fmt.Errorf("Failed to execute %s: %w", procedure, err)
 		}
 		if result.Inserted {
@@ -1228,7 +1406,6 @@ func doUpdatesViaFunction[T any](ctx context.Context, org *models.Organization, 
 				updates += 1
 			}
 		}
-		log.Info().Bool("inserted", result.Inserted).Int("version", result.Version).Msg("querying")
 	}
 	return inserts, updates, err
 
