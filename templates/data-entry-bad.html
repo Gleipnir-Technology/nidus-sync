@@ -1,0 +1,198 @@
+{{template "base.html" .}}
+
+{{define "title"}}Data Entry{{end}}
+{{define "style"}}
+.results-container {
+	max-width: 1000px;
+	margin: 0 auto;
+}
+.error-code {
+	font-family: monospace;
+	padding: 0.2rem 0.4rem;
+	background-color: rgba(220, 53, 69, 0.1);
+	border-radius: 0.2rem;
+	color: #dc3545;
+}
+.error-table {
+	font-size: 0.9rem;
+}
+.error-suggestions {
+	color: #495057;
+}
+.table-header-error {
+	width: 40%;
+}
+.table-header-suggestion {
+	width: 40%;
+}
+.table-header-line {
+	width: 20%;
+}
+{{end}}
+{{define "content"}}
+<div class="container mt-4 results-container mb-5">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h2>Upload Failed: pools-data-2023.csv</h2>
+		<span class="badge bg-danger rounded-pill">
+			<i class="bi bi-x-circle me-1"></i> Validation Errors
+		</span>
+	</div>
+	
+	<div class="alert alert-danger" role="alert">
+		<div class="d-flex align-items-center">
+			<div class="me-3">
+				<i class="bi bi-exclamation-triangle-fill" style="font-size: 2rem;"></i>
+			</div>
+			<div>
+				<h4 class="alert-heading">CSV Upload Failed</h4>
+				<p class="mb-0">Your file contains several errors that must be fixed before it can be processed. Details are provided below.</p>
+			</div>
+		</div>
+	</div>
+	
+	<div class="card mb-4">
+		<div class="card-header bg-light d-flex justify-content-between align-items-center">
+			<h5 class="mb-0">Error Summary</h5>
+			<a href="#" class="btn btn-sm btn-outline-secondary">
+				<i class="bi bi-download me-1"></i> Download Error Log
+			</a>
+		</div>
+		<div class="card-body">
+			<p>We found <strong>12 errors</strong> in your CSV file. The most common issues are:</p>
+			<ul>
+				<li><strong>Missing required column:</strong> The "Latitude" column is not present in your file</li>
+				<li><strong>Invalid data format:</strong> 8 GPS coordinates contain non-numeric values</li>
+				<li><strong>Empty required fields:</strong> 3 records are missing Plat ID values</li>
+			</ul>
+			
+			<div class="alert alert-info" role="alert">
+				<i class="bi bi-info-circle me-2"></i>
+				<strong>Tip:</strong> Make sure your column names exactly match the required format. Column names are case-sensitive.
+			</div>
+		</div>
+	</div>
+	
+	<div class="card mb-4">
+		<div class="card-header bg-light">
+			<h5 class="mb-0">Detailed Error Report</h5>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-striped error-table mb-0">
+				<thead class="table-light">
+					<tr>
+						<th class="table-header-line">Line Number</th>
+						<th class="table-header-error">Error</th>
+						<th class="table-header-suggestion">Suggestion</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td class="fw-bold text-center">1</td>
+						<td>
+							<span class="error-code">MISSING_COLUMN</span><br>
+							Required column "Latitude" is missing from the header row
+						</td>
+						<td class="error-suggestions">
+							Add a "Latitude" column to your CSV file. Make sure the spelling and capitalization match exactly.
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-bold text-center">5</td>
+						<td>
+							<span class="error-code">INVALID_DATA_FORMAT</span><br>
+							GPS coordinate "37.45N" is not a valid decimal number
+						</td>
+						<td class="error-suggestions">
+							Change "37.45N" to a decimal format (e.g., "37.45"). Remove any non-numeric characters except for the decimal point.
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-bold text-center">8</td>
+						<td>
+							<span class="error-code">EMPTY_REQUIRED_FIELD</span><br>
+							Plat ID is empty or missing
+						</td>
+						<td class="error-suggestions">
+							Add a Plat ID value for this record. Each pool must have a unique identifier.
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-bold text-center">12</td>
+						<td>
+							<span class="error-code">INVALID_DATA_FORMAT</span><br>
+							GPS coordinate "unknown" is not a valid decimal number
+						</td>
+						<td class="error-suggestions">
+							Replace "unknown" with the actual longitude value in decimal format (e.g., "-122.4194").
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-bold text-center">17</td>
+						<td>
+							<span class="error-code">INVALID_DATA_FORMAT</span><br>
+							GPS coordinate "N/A" is not a valid decimal number
+						</td>
+						<td class="error-suggestions">
+							Replace "N/A" with the actual latitude value in decimal format (e.g., "37.7749").
+						</td>
+					</tr>
+					<tr>
+						<td class="fw-bold text-center">21</td>
+						<td>
+							<span class="error-code">EMPTY_REQUIRED_FIELD</span><br>
+							Plat ID is empty or missing
+						</td>
+						<td class="error-suggestions">
+							Add a Plat ID value for this record. Each pool must have a unique identifier.
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<div class="card-footer bg-white">
+			<nav aria-label="Error pagination">
+				<ul class="pagination justify-content-center m-0">
+					<li class="page-item disabled">
+						<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+					</li>
+					<li class="page-item active"><a class="page-link" href="#">1</a></li>
+					<li class="page-item"><a class="page-link" href="#">2</a></li>
+					<li class="page-item">
+						<a class="page-link" href="#">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+	
+	<div class="card mb-4">
+		<div class="card-header bg-light">
+			<h5 class="mb-0">Next Steps</h5>
+		</div>
+		<div class="card-body">
+			<ol>
+				<li>Download the error log for a complete list of issues (optional)</li>
+				<li>Fix the errors in your CSV file</li>
+				<li>Re-upload the corrected file using the button below</li>
+			</ol>
+			
+			<div class="alert alert-warning" role="alert">
+				<i class="bi bi-lightbulb me-2"></i>
+				<strong>Recommendation:</strong> Review our <a href="#" class="alert-link">CSV formatting guide</a> to ensure your file meets all requirements.
+			</div>
+			
+			<div class="mt-4 text-center">
+				<button class="btn btn-primary btn-lg" id="uploadNewBtn">
+					<i class="bi bi-arrow-repeat me-2"></i> Upload Corrected File
+				</button>
+			</div>
+		</div>
+	</div>
+	
+	<div class="mt-4 text-center">
+		<a href="#" class="text-muted">
+			<i class="bi bi-question-circle me-1"></i> Need help? Contact support
+		</a>
+	</div>
+</div>
+{{end}}

@@ -94,6 +94,10 @@ func main() {
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/favicon.ico", getFavicon)
 
+	r.Get("/mock/data-entry", getDataEntry)
+	r.Get("/mock/data-entry/bad", getDataEntryBad)
+	r.Get("/mock/data-entry/good", getDataEntryGood)
+
 	r.Get("/oauth/refresh", getOAuthRefresh)
 
 	r.Get("/phone-call", getPhoneCall)

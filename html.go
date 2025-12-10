@@ -41,6 +41,9 @@ var (
 
 // Unauthenticated pages
 var (
+	dataEntry                       = newBuiltTemplate("data-entry", "base")
+	dataEntryGood                   = newBuiltTemplate("data-entry-good", "base")
+	dataEntryBad                    = newBuiltTemplate("data-entry-bad", "base")
 	phoneCall                       = newBuiltTemplate("phone-call", "base")
 	report                          = newBuiltTemplate("report", "base")
 	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
@@ -274,6 +277,21 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 		User:       userContent,
 	}
 	renderOrError(w, cell, &data)
+}
+
+func htmlDataEntry(w http.ResponseWriter) {
+	data := ContentPlaceholder{}
+	renderOrError(w, dataEntry, data)
+}
+
+func htmlDataEntryBad(w http.ResponseWriter) {
+	data := ContentPlaceholder{}
+	renderOrError(w, dataEntryBad, data)
+}
+
+func htmlDataEntryGood(w http.ResponseWriter) {
+	data := ContentPlaceholder{}
+	renderOrError(w, dataEntryGood, data)
 }
 
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {

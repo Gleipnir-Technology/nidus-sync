@@ -70,6 +70,15 @@ func getPhoneCall(w http.ResponseWriter, r *http.Request) {
 	htmlPhoneCall(w)
 }
 
+func getDataEntry(w http.ResponseWriter, r *http.Request) {
+	htmlDataEntry(w)
+}
+func getDataEntryBad(w http.ResponseWriter, r *http.Request) {
+	htmlDataEntryBad(w)
+}
+func getDataEntryGood(w http.ResponseWriter, r *http.Request) {
+	htmlDataEntryGood(w)
+}
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {
