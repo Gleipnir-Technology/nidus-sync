@@ -3,7 +3,7 @@ module github.com/Gleipnir-Technology/nidus-sync
 go 1.24.9
 
 require (
-	github.com/Gleipnir-Technology/arcgis-go v0.0.4
+	github.com/Gleipnir-Technology/arcgis-go v0.0.5
 	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
@@ -14,6 +14,7 @@ require (
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-cmp v0.7.0
+	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jaswdr/faker/v2 v2.8.1
 	github.com/lib/pq v1.10.9
@@ -33,7 +34,6 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-webauthn/x v0.1.25 // indirect
 	github.com/google/go-tpm v0.9.5 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
