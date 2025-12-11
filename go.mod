@@ -22,7 +22,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	github.com/stephenafamo/bob v0.41.1
+	github.com/stephenafamo/bob v0.42.0
 	github.com/stephenafamo/scan v0.7.0
 	github.com/tidwall/geojson v1.4.5
 	github.com/uber/h3-go/v4 v4.3.0
