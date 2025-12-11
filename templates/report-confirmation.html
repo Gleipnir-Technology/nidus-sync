@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Login{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
         body {
             background-color: #f8f9fa;
         }
@@ -114,6 +115,7 @@
             font-weight: 600;
             letter-spacing: 1px;
         }
+</style>
 {{end}}
 {{define "content"}}
     <div class="page-container">

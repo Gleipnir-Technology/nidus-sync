@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "script"}}
+{{define "extraheader"}}
+<script>
 // Handle inspection type selection
 function selectInspectionType(type) {
 	// Remove selected class from both cards
@@ -41,8 +42,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	});
 });
-{{end}}
-{{define "style"}}
+</script>
+<style>
 .district-logo {
 	max-height: 80px;
 	width: auto;
@@ -139,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	border-left: 4px solid #0d6efd;
 	background-color: #f8f9fa;
 }
+</style>
 {{end}}
 {{define "content"}}
 <!-- Header -->

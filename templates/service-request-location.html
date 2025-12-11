@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 .district-logo {
 	max-height: 80px;
 	width: auto;
@@ -69,6 +70,7 @@
 .instruction-card {
 	border-left: 4px solid #0d6efd;
 }
+</style>
 {{end}}
 {{define "content"}}
 <!-- Header -->

@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Data Entry{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 .results-container {
 	max-width: 1000px;
 	margin: 0 auto;
@@ -28,6 +29,7 @@
 .table-header-line {
 	width: 20%;
 }
+</style>
 {{end}}
 {{define "content"}}
 <div class="container mt-4 results-container mb-5">

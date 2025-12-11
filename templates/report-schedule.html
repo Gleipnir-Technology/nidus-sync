@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Login{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
         body {
             background-color: #f8f9fa;
         }
@@ -125,6 +126,7 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
+</style>
 {{end}}
 {{define "content"}}
     <div class="page-container">
@@ -298,10 +300,10 @@
                     
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-between mt-4">
-                        <button type="button" class="btn btn-outline-secondary">
+			<a href="{{ .URLs.ReportContribute }}" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-2"></i> Back
-                        </button>
-			<a href="{{ .NextURL }}" class="btn btn-success">
+                        </a>
+			<a href="{{ .URLs.ReportConfirmation }}" class="btn btn-success">
                             <i class="bi bi-calendar-check me-2"></i> Confirm Appointment
                         </a>
                     </div>

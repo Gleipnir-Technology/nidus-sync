@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Login{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
         body {
             background-color: #f8f9fa;
         }
@@ -84,6 +85,7 @@
         .trap-low {
             color: #198754;
         }
+</style>
 {{end}}
 {{define "content"}}
     <div class="page-container">
@@ -227,7 +229,7 @@
             
             <!-- Action Button -->
             <div class="d-grid gap-2 mt-4">
-		    <a href="{{ .NextURL }}" class="btn btn-primary btn-lg">
+		    <a href="{{ .URLs.ReportContribute }}" class="btn btn-primary btn-lg">
 			    <i class="bi bi-arrow-right-circle me-2"></i> Next Step: Upload Current Photos
 		    </a>
             </div>

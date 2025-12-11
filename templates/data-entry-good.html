@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Data Entry{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 .results-container {
 	max-width: 1200px;
 	margin: 0 auto;
@@ -18,6 +19,7 @@
 .status-badge {
 	font-size: 0.85rem;
 }
+</style>
 {{end}}
 {{define "content"}}
 <div class="container mt-4 results-container">

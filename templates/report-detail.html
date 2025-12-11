@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Login{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 body {
 	background-color: #f8f9fa;
 }
@@ -70,6 +71,7 @@ body {
 .progress {
 	height: 8px;
 }
+</style>
 {{end}}
 {{define "content"}}
 <div class="page-container">
@@ -113,10 +115,10 @@ body {
 		
 		<!-- Action Buttons -->
 		<div class="action-buttons">
-			<a href="{{ .NextURL }}" class="btn btn-success flex-grow-1">
+			<a href="{{ .URLs.ReportEvidence }}" class="btn btn-success flex-grow-1">
 				<i class="bi bi-check-circle me-2"></i> Correct
 			</a>
-			<a href="{{ .UpdateURL }}" class="btn btn-outline-primary flex-grow-1">
+			<a href="{{ .URLs.ReportUpdate }}" class="btn btn-outline-primary flex-grow-1">
 				<i class="bi bi-geo-alt me-2"></i> Update Location
 			</a>
 		</div>

@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 .service-card {
 	transition: transform 0.3s;
 	height: 100%;
@@ -21,6 +22,7 @@
 	background-color: #ffefd5;
 	border-left: 4px solid #ff9800;
 }
+</style>
 {{end}}
 {{define "content"}}
 <!-- Header -->
@@ -28,7 +30,7 @@
 	<div class="container">
 		<div class="row align-items-center">
 			<div class="col-md-6">
-				<h1 class="district-name">[District Name]</h1>
+				<h1 class="district-name">{{ .DistrictName }}</h1>
 			</div>
 			<div class="col-md-6 text-md-end">
 				<img src="placeholder-logo.png" alt="District Logo" class="district-logo">
@@ -61,7 +63,7 @@
 			<div class="row">
 				<div class="col-12 text-center">
 					<h4 class="mb-2">On the go?</h4>
-					<a href="/service-request-quick" class="btn btn-dark btn-lg">Make a Quick Report</a>
+					<a href="/mock/service-request-quick" class="btn btn-dark btn-lg">Make a Quick Report</a>
 					<p class="mb-0 mt-2"><small>Report mosquito issues in under 60 seconds</small></p>
 				</div>
 			</div>
@@ -84,7 +86,7 @@
 							</div>
 							<h4 class="card-title">Follow-up or Check Status</h4>
 							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
-							<a href="/service-request-updates" class="btn btn-primary mt-3">Get Updates</a>
+							<a href="/mock/service-request-updates" class="btn btn-primary mt-3">Get Updates</a>
 						</div>
 					</div>
 				</div>
@@ -100,7 +102,7 @@
 							</div>
 							<h4 class="card-title">Report a Green Pool</h4>
 							<p class="card-text">Report stagnant water sources like abandoned pools that may breed mosquitoes.</p>
-							<a href="/service-request-pool" class="btn btn-primary mt-3">Report Source</a>
+							<a href="/mock/service-request-pool" class="btn btn-primary mt-3">Report Source</a>
 						</div>
 					</div>
 				</div>
@@ -116,7 +118,7 @@
 							</div>
 							<h4 class="card-title">Report Mosquito Nuisance</h4>
 							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
-							<a href="/service-request-mosquito" class="btn btn-primary mt-3">Report Problem</a>
+							<a href="/mock/service-request-mosquito" class="btn btn-primary mt-3">Report Problem</a>
 						</div>
 					</div>
 				</div>
@@ -133,7 +135,7 @@
 									<p class="mb-0">Use our streamlined form to report mosquito issues in under 60 seconds</p>
 								</div>
 								<div class="col-md-4 text-md-end mt-3 mt-md-0">
-									<a href="/service-request-quick" class="btn btn-warning">Quick Report</a>
+									<a href="/mock/service-request-quick" class="btn btn-warning">Quick Report</a>
 								</div>
 							</div>
 						</div>
@@ -149,7 +151,7 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-6">
-				<p class="mb-0">&copy; 2023 [District Name] Mosquito Management District</p>
+				<p class="mb-0">&copy; 2023 {{.DistrictName}}</p>
 			</div>
 			<div class="col-md-6 text-md-end">
 				<p class="mb-0">Contact: (555) 123-4567 | info@mosquitodistrict.gov</p>

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log/slog"
 	"math"
 	"net/http"
 	"os"
@@ -41,10 +40,13 @@ var (
 
 // Unauthenticated pages
 var (
+	admin                           = newBuiltTemplate("admin", "base")
 	dataEntry                       = newBuiltTemplate("data-entry", "base")
 	dataEntryGood                   = newBuiltTemplate("data-entry-good", "base")
 	dataEntryBad                    = newBuiltTemplate("data-entry-bad", "base")
-	phoneCall                       = newBuiltTemplate("phone-call", "base")
+	dispatch                        = newBuiltTemplate("dispatch", "base")
+	dispatchResults                 = newBuiltTemplate("dispatch-results", "base")
+	mockRoot                        = newBuiltTemplate("mock-root", "base")
 	report                          = newBuiltTemplate("report", "base")
 	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
 	reportContribute                = newBuiltTemplate("report-contribute", "base")
@@ -64,6 +66,7 @@ var (
 	signup                          = newBuiltTemplate("signup", "base")
 )
 var components = [...]string{"header", "map"}
+var templatesByFilename = make(map[string]BuiltTemplate, 0)
 
 type BreedingSourceSummary struct {
 	ID            string
@@ -99,15 +102,26 @@ type ContentCell struct {
 	Treatments      []Treatment
 	User            User
 }
-type ContentPhoneCall struct {
+type ContentMockURLs struct {
+	Dispatch           string
+	DispatchResults    string
+	ReportConfirmation string
+	ReportDetail       string
+	ReportContribute   string
+	ReportEvidence     string
+	ReportSchedule     string
+	ReportUpdate       string
+	Root               string
+}
+type ContentMock struct {
 	DistrictName string
+	URLs         ContentMockURLs
 }
 type ContentReportDetail struct {
 	NextURL   string
 	UpdateURL string
 }
 type ContentReportDiagnostic struct {
-	URL string
 }
 type ContentDashboard struct {
 	CountInspections     int
@@ -279,21 +293,6 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 	renderOrError(w, cell, &data)
 }
 
-func htmlDataEntry(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, dataEntry, data)
-}
-
-func htmlDataEntryBad(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, dataEntryBad, data)
-}
-
-func htmlDataEntryGood(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, dataEntryGood, data)
-}
-
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -355,6 +354,30 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	renderOrError(w, dashboard, data)
 }
 
+func htmlMock(t string, w http.ResponseWriter, code string) {
+	data := ContentMock{
+		DistrictName: "Delta MVCD",
+		URLs: ContentMockURLs{
+			Dispatch:           "/mock/dispatch",
+			DispatchResults:    "/mock/dispatch-results",
+			ReportConfirmation: fmt.Sprintf("/mock/report/%s/confirm", code),
+			ReportDetail:       fmt.Sprintf("/mock/report/%s", code),
+			ReportContribute:   fmt.Sprintf("/mock/report/%s/contribute", code),
+			ReportEvidence:     fmt.Sprintf("/mock/report/%s/evidence", code),
+			ReportSchedule:     fmt.Sprintf("/mock/report/%s/schedule", code),
+			ReportUpdate:       fmt.Sprintf("/mock/report/%s/update", code),
+			Root:               "/mock",
+		},
+	}
+	template, ok := templatesByFilename[t]
+	if !ok {
+		log.Error().Str("template", t).Msg("Failed to find template")
+		respondError(w, "Failed to render template", nil, http.StatusInternalServerError)
+		return
+	}
+	renderOrError(w, &template, data)
+}
+
 func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
 	dp := user.DisplayName
 	data := ContentDashboard{
@@ -365,110 +388,6 @@ func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
 		},
 	}
 	renderOrError(w, oauthPrompt, data)
-}
-
-func htmlPhoneCall(w http.ResponseWriter) {
-	data := ContentPhoneCall{
-		DistrictName: "[District Name]",
-	}
-	renderOrError(w, phoneCall, data)
-}
-
-func htmlReport(w http.ResponseWriter) {
-	url := BaseURL + "/report/t78fd3"
-	data := ContentReportDiagnostic{
-		URL: url,
-	}
-	renderOrError(w, report, data)
-}
-
-func htmlReportConfirmation(w http.ResponseWriter, code string) {
-	url := BaseURL + "/report/" + code + "/history"
-	data := ContentReportDiagnostic{
-		URL: url,
-	}
-	renderOrError(w, reportConfirmation, data)
-}
-
-func htmlReportContribute(w http.ResponseWriter, code string) {
-	nextURL := BaseURL + "/report/" + code + "/schedule"
-	data := ContentReportDetail{
-		NextURL: nextURL,
-	}
-	renderOrError(w, reportContribute, data)
-}
-
-func htmlReportDetail(w http.ResponseWriter, code string) {
-	nextURL := BaseURL + "/report/" + code + "/evidence"
-	data := ContentReportDetail{
-		NextURL:   nextURL,
-		UpdateURL: BaseURL + "/report/" + code + "/update",
-	}
-	renderOrError(w, reportDetail, data)
-}
-
-func htmlReportEvidence(w http.ResponseWriter, code string) {
-	nextURL := BaseURL + "/report/" + code + "/contribute"
-	data := ContentReportDetail{
-		NextURL: nextURL,
-	}
-	renderOrError(w, reportEvidence, data)
-}
-
-func htmlReportSchedule(w http.ResponseWriter, code string) {
-	nextURL := BaseURL + "/report/" + code + "/confirm"
-	data := ContentReportDetail{
-		NextURL: nextURL,
-	}
-	renderOrError(w, reportSchedule, data)
-}
-
-func htmlReportUpdate(w http.ResponseWriter, code string) {
-	nextURL := BaseURL + "/report/" + code + "/evidence"
-	data := ContentReportDetail{
-		NextURL: nextURL,
-	}
-	renderOrError(w, reportUpdate, data)
-}
-
-func htmlServiceRequest(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequest, data)
-}
-
-func htmlServiceRequestDetail(w http.ResponseWriter, code string) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestDetail, data)
-}
-
-func htmlServiceRequestLocation(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestLocation, data)
-}
-
-func htmlServiceRequestMosquito(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestMosquito, data)
-}
-
-func htmlServiceRequestPool(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestPool, data)
-}
-
-func htmlServiceRequestQuick(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestQuick, data)
-}
-
-func htmlServiceRequestQuickConfirmation(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestQuickConfirmation, data)
-}
-
-func htmlServiceRequestUpdates(w http.ResponseWriter) {
-	data := ContentPlaceholder{}
-	renderOrError(w, serviceRequestUpdates, data)
 }
 
 func htmlSettings(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -596,7 +515,7 @@ func makeFuncMap() template.FuncMap {
 	}
 	return funcMap
 }
-func newBuiltTemplate(name string, files ...string) BuiltTemplate {
+func newBuiltTemplate(name string, files ...string) *BuiltTemplate {
 	files_on_disk := true
 	all_files := append([]string{name}, files...)
 	for _, f := range all_files {
@@ -607,18 +526,22 @@ func newBuiltTemplate(name string, files ...string) BuiltTemplate {
 			break
 		}
 	}
+	var result BuiltTemplate
 	if files_on_disk {
-		return BuiltTemplate{
+		result = BuiltTemplate{
 			files:    all_files,
 			name:     name,
 			template: nil,
 		}
+	} else {
+		result = BuiltTemplate{
+			files:    all_files,
+			name:     name,
+			template: parseEmbedded(all_files),
+		}
 	}
-	return BuiltTemplate{
-		files:    all_files,
-		name:     name,
-		template: parseEmbedded(all_files),
-	}
+	templatesByFilename[name] = result
+	return &result
 }
 
 func parseEmbedded(files []string) *template.Template {
@@ -867,11 +790,11 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID strin
 	return traps, nil
 }
 
-func renderOrError(w http.ResponseWriter, template BuiltTemplate, context interface{}) {
+func renderOrError(w http.ResponseWriter, template *BuiltTemplate, context interface{}) {
 	buf := &bytes.Buffer{}
 	err := template.ExecuteTemplate(buf, context)
 	if err != nil {
-		slog.Error("Failed to render template", slog.String("err", err.Error()), slog.String("template", template.name))
+		log.Error().Err(err).Str("template", template.name).Msg("Failed to render template")
 		respondError(w, "Failed to render template", err, http.StatusInternalServerError)
 		return
 	}

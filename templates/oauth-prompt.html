@@ -1,7 +1,8 @@
 {{template "authenticated.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
         .connect-container {
             max-width: 800px;
             margin: 0 auto;
@@ -42,6 +43,7 @@
         .connect-btn {
             margin-top: 30px;
         }
+</style>
 {{end}}
 {{define "content"}}
 <div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">

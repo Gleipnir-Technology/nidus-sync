@@ -1,7 +1,8 @@
 {{template "base.html" .}}
 
 {{define "title"}}Dash{{end}}
-{{define "style"}}
+{{define "extraheader"}}
+<style>
 .district-logo {
 	max-height: 80px;
 	width: auto;
@@ -85,6 +86,7 @@
 	color: #6c757d;
 	margin-bottom: 2px;
 }
+</style>
 {{end}}
 {{define "content"}}
 <!-- Header -->

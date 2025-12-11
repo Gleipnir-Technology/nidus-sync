@@ -66,19 +66,6 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 	htmlOauthPrompt(w, user)
 }
 
-func getPhoneCall(w http.ResponseWriter, r *http.Request) {
-	htmlPhoneCall(w)
-}
-
-func getDataEntry(w http.ResponseWriter, r *http.Request) {
-	htmlDataEntry(w)
-}
-func getDataEntryBad(w http.ResponseWriter, r *http.Request) {
-	htmlDataEntryBad(w)
-}
-func getDataEntryGood(w http.ResponseWriter, r *http.Request) {
-	htmlDataEntryGood(w)
-}
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {
@@ -138,40 +125,6 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Error writing response", err, http.StatusInternalServerError)
 	}
 }
-func getReport(w http.ResponseWriter, r *http.Request) {
-	//org := r.URL.Query().Get("org")
-	htmlReport(w)
-}
-
-func getReportConfirmation(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportConfirmation(w, code)
-}
-
-func getReportContribute(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportContribute(w, code)
-}
-
-func getReportDetail(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportDetail(w, code)
-}
-
-func getReportEvidence(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportEvidence(w, code)
-}
-
-func getReportSchedule(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportSchedule(w, code)
-}
-
-func getReportUpdate(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlReportUpdate(w, code)
-}
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	user, err := getAuthenticatedUser(r)
@@ -200,39 +153,6 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondError(w, "Failed to render root", err, http.StatusInternalServerError)
 	}
-}
-
-func getServiceRequest(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequest(w)
-}
-
-func getServiceRequestDetail(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-	htmlServiceRequestDetail(w, code)
-}
-
-func getServiceRequestLocation(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestLocation(w)
-}
-
-func getServiceRequestMosquito(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestMosquito(w)
-}
-
-func getServiceRequestPool(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestPool(w)
-}
-
-func getServiceRequestQuick(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestQuick(w)
-}
-
-func getServiceRequestQuickConfirmation(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestQuickConfirmation(w)
-}
-
-func getServiceRequestUpdates(w http.ResponseWriter, r *http.Request) {
-	htmlServiceRequestUpdates(w)
 }
 
 func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -325,4 +245,14 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 	addUserSession(r, user)
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func renderMock(templateName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := chi.URLParam(r, "code")
+		if code == "" {
+			code = "abc-123"
+		}
+		htmlMock(templateName, w, code)
+	}
 }
