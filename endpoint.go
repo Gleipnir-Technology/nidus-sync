@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -177,6 +178,22 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	htmlSource(w, r, u, globalid)
 }
 
+func getSMS(w http.ResponseWriter, r *http.Request) {
+	org := chi.URLParam(r, "org")
+
+	to := r.URL.Query().Get("error")
+	from := r.URL.Query().Get("error")
+	message := r.URL.Query().Get("error")
+	files := r.URL.Query().Get("error")
+	id := r.URL.Query().Get("error")
+	date := r.URL.Query().Get("error")
+
+	log.Info().Str("org", org).Str("to", to).Str("from", from).Str("message", message).Str("files", files).Str("id", id).Str("date", date).Msg("Got SMS Message")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-type", "text/plain")
+	// Signifies to Voip.ms that the callback worked.
+	fmt.Fprintf(w, "ok")
+}
 func getVectorTiles(w http.ResponseWriter, r *http.Request, u *models.User) {
 	org_id := chi.URLParam(r, "org_id")
 	tileset_id := chi.URLParam(r, "tileset_id")

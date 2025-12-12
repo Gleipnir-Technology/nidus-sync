@@ -131,6 +131,9 @@ func main() {
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
+	r.Get("/sms", getSMS)
+	r.Get("/sms.php", getSMS)
+	r.Get("/sms/{org}", getSMS)
 
 	// Authenticated endpoints
 	r.Method("GET", "/cell/{cell}", NewEnsureAuth(getCellDetails))
