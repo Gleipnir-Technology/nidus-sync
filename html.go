@@ -62,6 +62,12 @@ var (
 	serviceRequestQuick             = newBuiltTemplate("service-request-quick", "base")
 	serviceRequestQuickConfirmation = newBuiltTemplate("service-request-quick-confirmation", "base")
 	serviceRequestUpdates           = newBuiltTemplate("service-request-updates", "base")
+	settingRoot                     = newBuiltTemplate("setting-mock", "base")
+	settingIntegration              = newBuiltTemplate("setting-integration", "base")
+	settingPesticide                = newBuiltTemplate("setting-pesticide", "base")
+	settingPesticideAdd             = newBuiltTemplate("setting-pesticide-add", "base")
+	settingUsers                    = newBuiltTemplate("setting-user", "base")
+	settingUsersAdd                 = newBuiltTemplate("setting-user-add", "base")
 	signin                          = newBuiltTemplate("signin", "base")
 	signup                          = newBuiltTemplate("signup", "base")
 )
@@ -103,15 +109,21 @@ type ContentCell struct {
 	User            User
 }
 type ContentMockURLs struct {
-	Dispatch           string
-	DispatchResults    string
-	ReportConfirmation string
-	ReportDetail       string
-	ReportContribute   string
-	ReportEvidence     string
-	ReportSchedule     string
-	ReportUpdate       string
-	Root               string
+	Dispatch            string
+	DispatchResults     string
+	ReportConfirmation  string
+	ReportDetail        string
+	ReportContribute    string
+	ReportEvidence      string
+	ReportSchedule      string
+	ReportUpdate        string
+	Root                string
+	Setting             string
+	SettingIntegration  string
+	SettingPesticide    string
+	SettingPesticideAdd string
+	SettingUser         string
+	SettingUserAdd      string
 }
 type ContentMock struct {
 	DistrictName string
@@ -358,15 +370,21 @@ func htmlMock(t string, w http.ResponseWriter, code string) {
 	data := ContentMock{
 		DistrictName: "Delta MVCD",
 		URLs: ContentMockURLs{
-			Dispatch:           "/mock/dispatch",
-			DispatchResults:    "/mock/dispatch-results",
-			ReportConfirmation: fmt.Sprintf("/mock/report/%s/confirm", code),
-			ReportDetail:       fmt.Sprintf("/mock/report/%s", code),
-			ReportContribute:   fmt.Sprintf("/mock/report/%s/contribute", code),
-			ReportEvidence:     fmt.Sprintf("/mock/report/%s/evidence", code),
-			ReportSchedule:     fmt.Sprintf("/mock/report/%s/schedule", code),
-			ReportUpdate:       fmt.Sprintf("/mock/report/%s/update", code),
-			Root:               "/mock",
+			Dispatch:            "/mock/dispatch",
+			DispatchResults:     "/mock/dispatch-results",
+			ReportConfirmation:  fmt.Sprintf("/mock/report/%s/confirm", code),
+			ReportDetail:        fmt.Sprintf("/mock/report/%s", code),
+			ReportContribute:    fmt.Sprintf("/mock/report/%s/contribute", code),
+			ReportEvidence:      fmt.Sprintf("/mock/report/%s/evidence", code),
+			ReportSchedule:      fmt.Sprintf("/mock/report/%s/schedule", code),
+			ReportUpdate:        fmt.Sprintf("/mock/report/%s/update", code),
+			Root:                "/mock",
+			Setting:             "/mock/setting",
+			SettingIntegration:  "/mock/setting/integration",
+			SettingPesticide:    "/mock/setting/pesticide",
+			SettingPesticideAdd: "/mock/setting/pesticide/add",
+			SettingUser:         "/mock/setting/user",
+			SettingUserAdd:      "/mock/setting/user/add",
 		},
 	}
 	template, ok := templatesByFilename[t]

@@ -117,6 +117,12 @@ func main() {
 	r.Get("/mock/service-request-quick", renderMock("service-request-quick"))
 	r.Get("/mock/service-request-quick-confirmation", renderMock("service-request-quick-confirmation"))
 	r.Get("/mock/service-request-updates", renderMock("service-request-updates"))
+	r.Get("/mock/setting", renderMock("setting-mock"))
+	r.Get("/mock/setting/integration", renderMock("setting-integration"))
+	r.Get("/mock/setting/pesticide", renderMock("setting-pesticide"))
+	r.Get("/mock/setting/pesticide/add", renderMock("setting-pesticide-add"))
+	r.Get("/mock/setting/user", renderMock("setting-user"))
+	r.Get("/mock/setting/user/add", renderMock("setting-user-add"))
 
 	r.Get("/oauth/refresh", getOAuthRefresh)
 

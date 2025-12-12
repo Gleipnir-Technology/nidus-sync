@@ -1,0 +1,211 @@
+{{template "base.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+<style>
+.target-icon {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	text-align: center;
+	line-height: 24px;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: bold;
+	margin-right: 2px;
+	color: white;
+}
+
+.target-active {
+	background-color: #0d6efd;
+}
+
+.target-inactive {
+	background-color: #dee2e6;
+	color: #6c757d;
+}
+
+.table-responsive {
+	overflow-x: auto;
+}
+
+th {
+	white-space: nowrap;
+}
+</style>
+{{end}}
+{{define "content"}}
+<div class="container-fluid p-4">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h1 class="mb-0">Pesticide Products Configuration</h1>
+		<a href="{{ .URLs.SettingPesticideAdd }}" class="btn btn-primary" id="addProductBtn">
+			<i class="bi bi-plus-circle me-2"></i>Add New Product
+		</a>
+	</div>
+
+	<div class="card">
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-striped table-hover align-middle">
+					<thead class="table-light">
+						<tr>
+							<th>Product</th>
+							<th>Formulation</th>
+							<th>Targets</th>
+							<th>Residual (days)</th>
+							<th>Low Rate</th>
+							<th>Max Rate</th>
+							<th>Pools</th>
+							<th>Info</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Sample pesticide data -->
+						<tr>
+							<td><strong>BVA Oil</strong></td>
+							<td>Liquid</td>
+							<td>
+								<span class="target-icon target-inactive" title="Instar Stage 1">I1</span>
+								<span class="target-icon target-inactive" title="Instar Stage 2">I2</span>
+								<span class="target-icon target-inactive" title="Instar Stage 3">I3</span>
+								<span class="target-icon target-inactive" title="Instar Stage 4">I4</span>
+								<span class="target-icon target-active" title="Pupae">P</span>
+							</td>
+							<td>1</td>
+							<td>0.5 gal/acre</td>
+							<td>5 gal/acre</td>
+							<td><span class="badge bg-success">Recommended</span></td>
+							<td>
+								<a href="product-details.html?id=bva-oil" class="btn btn-sm btn-info" title="Product Information">
+									<i class="bi bi-info-circle"></i>
+								</a>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-primary" title="Edit">
+									<i class="bi bi-pencil"></i>
+								</button>
+								<button class="btn btn-sm btn-danger" title="Delete">
+									<i class="bi bi-trash"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td><strong>VectoMax FG</strong></td>
+							<td>Granule</td>
+							<td>
+								<span class="target-icon target-active" title="Instar Stage 1">I1</span>
+								<span class="target-icon target-active" title="Instar Stage 2">I2</span>
+								<span class="target-icon target-active" title="Instar Stage 3">I3</span>
+								<span class="target-icon target-active" title="Instar Stage 4">I4</span>
+								<span class="target-icon target-inactive" title="Pupae">P</span>
+							</td>
+							<td>30</td>
+							<td>5 lbs/acre</td>
+							<td>20 lbs/acre</td>
+							<td><span class="badge bg-success">Recommended</span></td>
+							<td>
+								<a href="product-details.html?id=vectomax-fg" class="btn btn-sm btn-info" title="Product Information">
+									<i class="bi bi-info-circle"></i>
+								</a>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-primary" title="Edit">
+									<i class="bi bi-pencil"></i>
+								</button>
+								<button class="btn btn-sm btn-danger" title="Delete">
+									<i class="bi bi-trash"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td><strong>Censor</strong></td>
+							<td>Liquid</td>
+							<td>
+								<span class="target-icon target-active" title="Instar Stage 1">I1</span>
+								<span class="target-icon target-active" title="Instar Stage 2">I2</span>
+								<span class="target-icon target-active" title="Instar Stage 3">I3</span>
+								<span class="target-icon target-active" title="Instar Stage 4">I4</span>
+								<span class="target-icon target-inactive" title="Pupae">P</span>
+							</td>
+							<td>21</td>
+							<td>0.75 gal/acre</td>
+							<td>2.5 gal/acre</td>
+							<td><span class="badge bg-warning text-dark">Allowed</span></td>
+							<td>
+								<a href="product-details.html?id=censor" class="btn btn-sm btn-info" title="Product Information">
+									<i class="bi bi-info-circle"></i>
+								</a>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-primary" title="Edit">
+									<i class="bi bi-pencil"></i>
+								</button>
+								<button class="btn btn-sm btn-danger" title="Delete">
+									<i class="bi bi-trash"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td><strong>AquaBac XT</strong></td>
+							<td>Liquid</td>
+							<td>
+								<span class="target-icon target-active" title="Instar Stage 1">I1</span>
+								<span class="target-icon target-active" title="Instar Stage 2">I2</span>
+								<span class="target-icon target-active" title="Instar Stage 3">I3</span>
+								<span class="target-icon target-inactive" title="Instar Stage 4">I4</span>
+								<span class="target-icon target-inactive" title="Pupae">P</span>
+							</td>
+							<td>14</td>
+							<td>0.25 gal/acre</td>
+							<td>2 gal/acre</td>
+							<td><span class="badge bg-danger">Prohibited</span></td>
+							<td>
+								<a href="product-details.html?id=aquabac-xt" class="btn btn-sm btn-info" title="Product Information">
+									<i class="bi bi-info-circle"></i>
+								</a>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-primary" title="Edit">
+									<i class="bi bi-pencil"></i>
+								</button>
+								<button class="btn btn-sm btn-danger" title="Delete">
+									<i class="bi bi-trash"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td><strong>Natular G30</strong></td>
+							<td>Granule</td>
+							<td>
+								<span class="target-icon target-active" title="Instar Stage 1">I1</span>
+								<span class="target-icon target-active" title="Instar Stage 2">I2</span>
+								<span class="target-icon target-active" title="Instar Stage 3">I3</span>
+								<span class="target-icon target-active" title="Instar Stage 4">I4</span>
+								<span class="target-icon target-inactive" title="Pupae">P</span>
+							</td>
+							<td>30</td>
+							<td>5 lbs/acre</td>
+							<td>12 lbs/acre</td>
+							<td><span class="badge bg-secondary">Discouraged</span></td>
+							<td>
+								<a href="product-details.html?id=natular-g30" class="btn btn-sm btn-info" title="Product Information">
+									<i class="bi bi-info-circle"></i>
+								</a>
+							</td>
+							<td>
+								<button class="btn btn-sm btn-primary" title="Edit">
+									<i class="bi bi-pencil"></i>
+								</button>
+								<button class="btn btn-sm btn-danger" title="Delete">
+									<i class="bi bi-trash"></i>
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{{end}}
