@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -178,6 +179,36 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	htmlSource(w, r, u, globalid)
 }
 
+func postSMS(w http.ResponseWriter, r *http.Request) {
+	// Log all request headers
+	log.Info().Msg("===== REQUEST HEADERS =====")
+	for name, values := range r.Header {
+		for _, value := range values {
+			log.Info().Str("name", name).Str("value", value).Msg("header")
+		}
+	}
+
+	// Read and log the request body
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Close the original body
+	r.Body.Close()
+
+	// Create a new body for further processing if needed
+	//r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// Log the body
+	log.Info().Str("body", string(bodyBytes)).Msg("got body")
+
+	// Respond with "ok"
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
 func getSMS(w http.ResponseWriter, r *http.Request) {
 	org := chi.URLParam(r, "org")
 
