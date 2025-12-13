@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -181,31 +182,34 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 
 func postSMS(w http.ResponseWriter, r *http.Request) {
 	// Log all request headers
-	log.Info().Msg("===== REQUEST HEADERS =====")
 	for name, values := range r.Header {
 		for _, value := range values {
 			log.Info().Str("name", name).Str("value", value).Msg("header")
 		}
 	}
 
-	// Read and log the request body
+	// Read the request body
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		//return nil, fmt.Errorf("failed to read request body: %w", err)
+		respondError(w, "Failed to read request body", err, http.StatusInternalServerError)
+		return
+	}
+	log.Info().Str("body", string(bodyBytes)).Msg("body")
+	// Close the original body
+	defer r.Body.Close()
+
+	// Parse JSON into webhook struct
+	var body SMSWebhookBody
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		respondError(w, "Failed to parse JSON", err, http.StatusBadRequest)
 		return
 	}
 
-	// Close the original body
-	r.Body.Close()
+	if err := handleSMSMessage(&body.Data); err != nil {
+		log.Error().Err(err).Msg("Failed to handle SMS Message")
+	}
 
-	// Create a new body for further processing if needed
-	//r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	// Log the body
-	log.Info().Str("body", string(bodyBytes)).Msg("got body")
-
-	// Respond with "ok"
-	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }
