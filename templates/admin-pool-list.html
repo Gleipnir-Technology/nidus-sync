@@ -1,0 +1,273 @@
+{{template "base.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+<style>
+ .table img {
+		width: 80px;
+		height: 60px;
+		object-fit: cover;
+		border-radius: 4px;
+	}
+	.priority-1 { background-color: #f8d7da; }
+	.priority-2 { background-color: #fff3cd; }
+	.priority-3 { background-color: #fffde7; }
+	.priority-4 { background-color: #e7f5fe; }
+	.priority-5 { background-color: #d7f8e6; }
+	.status-pill {
+		display: inline-block;
+		padding: 0.25em 0.6em;
+		border-radius: 10rem;
+		font-size: 0.875em;
+		font-weight: 500;
+		line-height: 1;
+		text-align: center;
+		white-space: nowrap;
+		vertical-align: baseline;
+	}
+	.status-unknown { background-color: #6c757d; color: white; }
+	.status-maintained { background-color: #28a745; color: white; }
+	.status-scheduled { background-color: #ffc107; color: black; }
+	.status-green { background-color: #198754; color: white; }
+	.status-controlled { background-color: #0d6efd; color: white; }
+	.dropdown-menu {
+		min-width: 200px;
+	}
+	.table th {
+		white-space: nowrap;
+		cursor: pointer;
+	}
+</style>
+{{end}}
+{{define "content"}}
+<h2 class="mb-4">Swimming Pool Monitoring</h2>
+	
+<!-- Search and Filters -->
+<div class="row mb-4">
+	<div class="col-md-6">
+		<div class="input-group">
+			<input type="text" class="form-control" placeholder="Search pools...">
+			<button class="btn btn-primary" type="button">
+				<i class="bi bi-search"></i> Search
+			</button>
+		</div>
+	</div>
+	<div class="col-md-6 text-end">
+		<button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+			<i class="bi bi-funnel"></i> Filters
+		</button>
+		<div class="dropdown-menu p-3">
+			<div class="mb-3">
+				<label class="form-label">Status</label>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="statusUnknown">
+					<label class="form-check-label" for="statusUnknown">Unknown</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="statusMaintained">
+					<label class="form-check-label" for="statusMaintained">Maintained</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="statusScheduled">
+					<label class="form-check-label" for="statusScheduled">Scheduled for inspection</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="statusGreen">
+					<label class="form-check-label" for="statusGreen">Green</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="statusControlled">
+					<label class="form-check-label" for="statusControlled">Controlled</label>
+				</div>
+			</div>
+			<div class="mb-3">
+				<label class="form-label">Priority</label>
+				<select class="form-select">
+					<option value="">Any Priority</option>
+					<option value="1">1 (Highest)</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5 (Lowest)</option>
+				</select>
+			</div>
+			<div class="mb-3">
+				<label class="form-label">Next Action</label>
+				<select class="form-select">
+					<option value="">Any Action</option>
+					<option value="investigate">Investigate</option>
+					<option value="none">None</option>
+					<option value="inspect">Inspect</option>
+					<option value="treat">Treat</option>
+				</select>
+			</div>
+			<div class="mb-3">
+				<label class="form-label">Next Action Date Range</label>
+				<div class="input-group mb-2">
+					<span class="input-group-text">From</span>
+					<input type="date" class="form-control">
+				</div>
+				<div class="input-group">
+					<span class="input-group-text">To</span>
+					<input type="date" class="form-control">
+				</div>
+			</div>
+			<div class="d-flex justify-content-end">
+				<button type="button" class="btn btn-secondary me-2">Reset</button>
+				<button type="button" class="btn btn-primary">Apply Filters</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="d-flex justify-content-between mb-3 align-items-center">
+	<div>
+		<button class="btn btn-sm btn-outline-primary me-1" disabled>
+			<i class="bi bi-flag"></i> Set Priority
+		</button>
+		<button class="btn btn-sm btn-outline-primary me-1" disabled>
+			<i class="bi bi-arrow-up"></i> Increase Priority
+		</button>
+		<button class="btn btn-sm btn-outline-primary me-1" disabled>
+			<i class="bi bi-arrow-down"></i> Decrease Priority
+		</button>
+		<button class="btn btn-sm btn-outline-primary me-1" disabled>
+			<i class="bi bi-toggles"></i> Set Status
+		</button>
+		<button class="btn btn-sm btn-outline-primary me-1" disabled>
+			<i class="bi bi-calendar"></i> Schedule Action
+		</button>
+	</div>
+	<span class="text-muted">Showing 1-20 of 187 pools</span>
+</div>
+
+<!-- Pool Table -->
+<div class="table-responsive">
+	<table class="table table-bordered table-hover">
+		<thead class="table-light">
+			<tr>
+				<th width="40px">
+					<input class="form-check-input" type="checkbox" id="selectAll">
+				</th>
+				<th width="90px">Picture</th>
+				<th>Address <i class="bi bi-sort-alpha-down"></i></th>
+				<th>Status <i class="bi bi-sort-down"></i></th>
+				<th>Priority <i class="bi bi-sort"></i></th>
+				<th>Next Action <i class="bi bi-sort"></i></th>
+				<th>Next Action Date <i class="bi bi-sort"></i></th>
+				<th width="90px">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<!-- Row 1 -->
+			<tr class="priority-1">
+				<td><input class="form-check-input" type="checkbox"></td>
+				<td><img src="https://placehold.co/80x60?text=Pool+1" alt="Pool image"></td>
+				<td>1234 Elm Street, Springfield</td>
+				<td><span class="status-pill status-unknown">Unknown</span></td>
+				<td>1</td>
+				<td>Investigate</td>
+				<td>05/15/2023</td>
+				<td>
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+						<button type="button" class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+					</div>
+				</td>
+			</tr>
+			<!-- Row 2 -->
+			<tr class="priority-3">
+				<td><input class="form-check-input" type="checkbox"></td>
+				<td><img src="https://placehold.co/80x60?text=Pool+2" alt="Pool image"></td>
+				<td>567 Oak Avenue, Springfield</td>
+				<td><span class="status-pill status-scheduled">Scheduled</span></td>
+				<td>3</td>
+				<td>Inspect</td>
+				<td>05/18/2023</td>
+				<td>
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+						<button type="button" class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+					</div>
+				</td>
+			</tr>
+			<!-- Row 3 -->
+			<tr class="priority-2">
+				<td><input class="form-check-input" type="checkbox"></td>
+				<td><img src="https://placehold.co/80x60?text=Pool+3" alt="Pool image"></td>
+				<td>789 Pine Road, Springfield</td>
+				<td><span class="status-pill status-green">Green</span></td>
+				<td>2</td>
+				<td>Treat</td>
+				<td>05/20/2023</td>
+				<td>
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+						<button type="button" class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+					</div>
+				</td>
+			</tr>
+			<!-- Row 4 -->
+			<tr class="priority-5">
+				<td><input class="form-check-input" type="checkbox"></td>
+				<td><img src="https://placehold.co/80x60?text=Pool+4" alt="Pool image"></td>
+				<td>101 Maple Court, Springfield</td>
+				<td><span class="status-pill status-maintained">Maintained</span></td>
+				<td>5</td>
+				<td>None</td>
+				<td>-</td>
+				<td>
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+						<button type="button" class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+					</div>
+				</td>
+			</tr>
+			<!-- Row 5 -->
+			<tr class="priority-4">
+				<td><input class="form-check-input" type="checkbox"></td>
+				<td><img src="https://placehold.co/80x60?text=Pool+5" alt="Pool image"></td>
+				<td>202 Birch Lane, Springfield</td>
+				<td><span class="status-pill status-controlled">Controlled</span></td>
+				<td>4</td>
+				<td>Inspect</td>
+				<td>06/01/2023</td>
+				<td>
+					<div class="btn-group btn-group-sm">
+						<button type="button" class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+						<button type="button" class="btn btn-outline-primary"><i class="bi bi-eye"></i></button>
+					</div>
+				</td>
+			</tr>
+			
+			<!-- Additional rows would be added here -->
+			<!-- For brevity, I've only included 5 example rows -->
+		</tbody>
+	</table>
+</div>
+
+<!-- Pagination -->
+<div class="d-flex justify-content-between align-items-center">
+	<div>
+		<select class="form-select form-select-sm" style="width: auto;">
+			<option value="20">20 per page</option>
+			<option value="50">50 per page</option>
+			<option value="100">100 per page</option>
+		</select>
+	</div>
+	<nav>
+		<ul class="pagination">
+			<li class="page-item disabled">
+				<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+			</li>
+			<li class="page-item active"><a class="page-link" href="#">1</a></li>
+			<li class="page-item"><a class="page-link" href="#">2</a></li>
+			<li class="page-item"><a class="page-link" href="#">3</a></li>
+			<li class="page-item">
+				<a class="page-link" href="#">Next</a>
+			</li>
+		</ul>
+	</nav>
+</div>
+{{end}}

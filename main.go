@@ -96,6 +96,7 @@ func main() {
 
 	r.Get("/mock", renderMock("mock-root"))
 	r.Get("/mock/admin", renderMock("admin"))
+	r.Get("/mock/admin/pool-list", renderMock("admin-pool-list"))
 	r.Get("/mock/admin/service-request", renderMock("admin-service-request"))
 	r.Get("/mock/data-entry", renderMock("data-entry"))
 	r.Get("/mock/data-entry/bad", renderMock("data-entry-bad"))

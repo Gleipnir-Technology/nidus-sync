@@ -41,6 +41,7 @@ var (
 // Unauthenticated pages
 var (
 	admin                           = newBuiltTemplate("admin", "base")
+	adminPoolList                   = newBuiltTemplate("admin-pool-list", "base")
 	dataEntry                       = newBuiltTemplate("data-entry", "base")
 	dataEntryGood                   = newBuiltTemplate("data-entry-good", "base")
 	dataEntryBad                    = newBuiltTemplate("data-entry-bad", "base")
