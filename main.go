@@ -10,16 +10,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/api"
+	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/alexedwards/scs/pgxstore"
-	"github.com/alexedwards/scs/v2"
+	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-var sessionManager *scs.SessionManager
 
 var BaseURL, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken string
 
@@ -70,6 +70,11 @@ func main() {
 		log.Error().Msg("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
 		os.Exit(1)
 	}
+	userfile.UserFilesDirectory = os.Getenv("USER_FILES_DIRECTORY")
+	if userfile.UserFilesDirectory == "" {
+		log.Error().Msg("You must specify a non-empty USER_FILES_DIRECTORY")
+		os.Exit(1)
+	}
 
 	log.Info().Msg("Starting...")
 	err := db.InitializeDatabase(context.TODO(), pg_dsn)
@@ -77,14 +82,11 @@ func main() {
 		log.Error().Str("err", err.Error()).Msg("Failed to connect to database")
 		os.Exit(2)
 	}
-	sessionManager = scs.New()
-	sessionManager.Store = pgxstore.New(db.PGInstance.PGXPool)
-	sessionManager.Lifetime = 24 * time.Hour
 
 	router_logger := log.With().Logger()
 	r := chi.NewRouter()
 	r.Use(LoggerMiddleware(&router_logger))
-	r.Use(sessionManager.LoadAndSave)
+	r.Use(auth.NewSessionManager().LoadAndSave)
 
 	// Root is a special endpoint that is neither authenticated nor unauthenticated
 	r.Get("/", getRoot)
@@ -138,10 +140,11 @@ func main() {
 	r.Post("/sms/{org}", postSMS)
 
 	// Authenticated endpoints
-	r.Method("GET", "/cell/{cell}", NewEnsureAuth(getCellDetails))
-	r.Method("GET", "/settings", NewEnsureAuth(getSettings))
-	r.Method("GET", "/source/{globalid}", NewEnsureAuth(getSource))
-	r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", NewEnsureAuth(getVectorTiles))
+	r.Route("/api", api.AddRoutes)
+	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
+	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
+	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
+	r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
 
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")

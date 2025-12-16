@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -37,6 +37,40 @@ type EnsureAuth struct {
 	handler AuthenticatedHandler
 }
 
+func AddUserSession(r *http.Request, user *models.User) {
+	id := strconv.Itoa(int(user.ID))
+	sessionManager.Put(r.Context(), "user_id", id)
+	sessionManager.Put(r.Context(), "username", user.Username)
+	log.Info().Str("username", user.Username).Str("user_id", id).Msg("Created new user session")
+}
+
+func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
+	//user_id := sessionManager.GetInt(r.Context(), "user_id")
+	user_id_str := sessionManager.GetString(r.Context(), "user_id")
+	if user_id_str != "" {
+		user_id, err := strconv.Atoi(user_id_str)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
+		}
+		username := sessionManager.GetString(r.Context(), "username")
+		log.Info().Int("user_id", user_id).Str("username", username).Msg("Current session info")
+		if user_id > 0 && username != "" {
+			return findUser(r.Context(), user_id)
+		}
+	}
+	// If we can't get the user from the session try to get from auth headers
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		return nil, &NoCredentialsError{}
+	}
+	user, err := validateUser(r.Context(), username, password)
+	if err != nil {
+		return nil, err
+	}
+	AddUserSession(r, user)
+	return user, nil
+}
+
 func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
 	return &EnsureAuth{handlerToWrap}
 }
@@ -47,7 +81,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	offers := []string{"application/json", "text/html"}
 
 	content_type := NegotiateContent(accept, offers)
-	user, err := getAuthenticatedUser(r)
+	user, err := GetAuthenticatedUser(r)
 	if err != nil || user == nil {
 		var msg []byte
 		// Separate return codes for different authentication failures
@@ -75,61 +109,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	ea.handler(w, r, user)
 }
-func addUserSession(r *http.Request, user *models.User) {
-	id := strconv.Itoa(int(user.ID))
-	sessionManager.Put(r.Context(), "user_id", id)
-	sessionManager.Put(r.Context(), "username", user.Username)
-	log.Info().Str("username", user.Username).Str("user_id", id).Msg("Created new user session")
-}
-
-// Helper function to translate strings into solid error types for operating on
-func findUser(ctx context.Context, user_id int) (*models.User, error) {
-	user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
-	if err != nil {
-		if err.Error() == "No such user" {
-			return nil, &NoUserError{}
-		} else {
-			LogErrorTypeInfo(err)
-			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
-			return nil, err
-		}
-	}
-	return user, err
-}
-
-func getAuthenticatedUser(r *http.Request) (*models.User, error) {
-	//user_id := sessionManager.GetInt(r.Context(), "user_id")
-	user_id_str := sessionManager.GetString(r.Context(), "user_id")
-	if user_id_str != "" {
-		user_id, err := strconv.Atoi(user_id_str)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
-		}
-		username := sessionManager.GetString(r.Context(), "username")
-		log.Info().Int("user_id", user_id).Str("username", username).Msg("Current session info")
-		if user_id > 0 && username != "" {
-			return findUser(r.Context(), user_id)
-		}
-	}
-	// If we can't get the user from the session try to get from auth headers
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		return nil, &NoCredentialsError{}
-	}
-	user, err := validateUser(r.Context(), username, password)
-	if err != nil {
-		return nil, err
-	}
-	addUserSession(r, user)
-	return user, nil
-}
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-func signinUser(r *http.Request, username string, password string) (*models.User, error) {
+func SigninUser(r *http.Request, username string, password string) (*models.User, error) {
 	user, err := validateUser(r.Context(), username, password)
 	if err != nil {
 		return nil, err
@@ -137,11 +117,11 @@ func signinUser(r *http.Request, username string, password string) (*models.User
 	if user == nil {
 		return nil, errors.New("No matching user")
 	}
-	addUserSession(r, user)
+	AddUserSession(r, user)
 	return user, nil
 }
 
-func signupUser(username string, name string, password string) (*models.User, error) {
+func SignupUser(username string, name string, password string) (*models.User, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot signup user: %w", err)
@@ -159,6 +139,27 @@ func signupUser(username string, name string, password string) (*models.User, er
 	log.Info().Int("ID", int(u.ID)).Str("username", u.Username).Msg("Created user")
 
 	return u, nil
+}
+
+
+// Helper function to translate strings into solid error types for operating on
+func findUser(ctx context.Context, user_id int) (*models.User, error) {
+	user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
+	if err != nil {
+		if err.Error() == "No such user" {
+			return nil, &NoUserError{}
+		} else {
+			//LogErrorTypeInfo(err)
+			//log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
+			return nil, err
+		}
+	}
+	return user, err
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func validatePassword(password, hash string) bool {

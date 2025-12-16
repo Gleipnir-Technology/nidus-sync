@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -27,7 +28,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Access code is empty", nil, http.StatusBadRequest)
 		return
 	}
-	user, err := getAuthenticatedUser(r)
+	user, err := auth.GetAuthenticatedUser(r)
 	if err != nil {
 		respondError(w, "You're not currently authenticated, which really shouldn't happen.", err, http.StatusUnauthorized)
 		return
@@ -61,7 +62,7 @@ func getFavicon(w http.ResponseWriter, r *http.Request) {
 }
 
 func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
-	user, err := getAuthenticatedUser(r)
+	user, err := auth.GetAuthenticatedUser(r)
 	if err != nil {
 		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
 		return
@@ -130,8 +131,8 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-	user, err := getAuthenticatedUser(r)
-	if err != nil && !errors.Is(err, &NoCredentialsError{}) {
+	user, err := auth.GetAuthenticatedUser(r)
+	if err != nil && !errors.Is(err, &auth.NoCredentialsError{}) {
 		respondError(w, "Failed to get root", err, http.StatusInternalServerError)
 		return
 	}
@@ -256,9 +257,9 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Str("username", username).Msg("Signin")
 
-	_, err := signinUser(r, username, password)
+	_, err := auth.SigninUser(r, username, password)
 	if err != nil {
-		if errors.Is(err, InvalidCredentials{}) {
+		if errors.Is(err, auth.InvalidCredentials{}) {
 			http.Redirect(w, r, "/?error=invalid-credentials", http.StatusFound)
 			return
 		}
@@ -288,13 +289,13 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := signupUser(username, name, password)
+	user, err := auth.SignupUser(username, name, password)
 	if err != nil {
 		respondError(w, "Failed to signup user", err, http.StatusInternalServerError)
 		return
 	}
 
-	addUserSession(r, user)
+	auth.AddUserSession(r, user)
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
