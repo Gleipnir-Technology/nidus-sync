@@ -1,1 +1,2 @@
-GOOSE_DRIVER=postgres GOOSE_DBSTRING=dbname=nidus-sync sslmode=disable goose up
+#!/run/current-system/sw/bin/bash
+GOOSE_DRIVER=postgres GOOSE_DBSTRING=dbname=nidus-sync sslmode=disable goose $*
