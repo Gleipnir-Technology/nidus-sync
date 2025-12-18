@@ -15,6 +15,18 @@ go build .
 
 ## Running
 
+You'll need a number of environment variables for configuring things;
+
+ * ARCGIS_CLIENT_ID - The client ID for ArcGIS oauth, configured with esri.
+ * ARCGIS_CLIENT_SECRET - The client secret for ArcGIS oauth, configured with esri.
+ * BASE_URL - The URL the site is hosted at, used for forming callback URLs. Should be complete like 'https://foo.bar'
+ * BIND - The address and port to bind to. Use ':9001' for 'any address, port 9001'
+ * ENVIRONMENT - either 'PRODUCTION' or 'DEVELOPMENT'. It's used to set things like oauth token length.
+ * MAPBOX_TOKEN - The token to use with mapbox which is important for rendering maps.
+ * POSTGRES_DSN - The DSN for connecting to the postgres database.
+ * FIELDSEEKER_SCHEMA_DIRECTORY - The directory to write fieldseeker schema files for debugging.
+ * USER_FILES_DIRECTORY - The directory for writing uploaded user data files (audio, images).
+
 ```sh
 > BASE_URL=https://sync.nidus.cloud ARCGIS_CLIENT_ID=foo ARCGIS_CLIENT_SECRET=bar POSTGRES_DSN='postgresql://?host=/var/run/postgresql&dbname=nidus-sync' ./nidus-sync
 ```
