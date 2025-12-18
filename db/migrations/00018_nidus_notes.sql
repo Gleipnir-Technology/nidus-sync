@@ -34,7 +34,7 @@ CREATE TYPE AudioDataType AS ENUM (
 CREATE TABLE note_audio_data (
 	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	note_audio_version INTEGER NOT NULL,
-	node_audio_uuid UUID NOT NULL,
+	note_audio_uuid UUID NOT NULL,
 	type_ AudioDataType NOT NULL,
 
 	FOREIGN KEY (note_audio_version, note_audio_uuid) REFERENCES note_audio (version, uuid),
@@ -55,14 +55,16 @@ CREATE TABLE note_image (
 
 CREATE TYPE ImageDataType AS ENUM (
 	'raw',
-	'png',
-);
+	'png');
 
 CREATE TABLE note_image_data (
 	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	note_image_version INTEGER NOT NULL,
-	node_image_uuid UUID NOT NULL,
+	note_image_uuid UUID NOT NULL,
 	type_ AudioDataType NOT NULL,
+
+	FOREIGN KEY (note_image_version, note_image_uuid) REFERENCES note_image (version, uuid),
+	PRIMARY KEY (note_image_version, note_image_uuid, type_)
 );
 
 
@@ -71,7 +73,7 @@ CREATE TABLE note_image_breadcrumb (
 	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	manually_selected BOOLEAN NOT NULL,
 	note_image_version INTEGER NOT NULL,
-	node_image_uuid UUID NOT NULL,
+	note_image_uuid UUID NOT NULL,
 	position INTEGER NOT NULL,
 
 	FOREIGN KEY (note_image_version, note_image_uuid) REFERENCES note_image (version, uuid),
