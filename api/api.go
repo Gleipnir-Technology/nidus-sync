@@ -36,15 +36,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		log.Error().Err(err).Msg("Audio note POST JSON decode error")
-		output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
-		if err != nil {
-			log.Info().Msg("Failed to open temp request.bady")
-		}
-		defer output.Close()
-		output.Write(body)
-		log.Info().Msg("Wrote request to /tmp/request.body")
-
+		debugSaveRequest(body, err, "Audio note POST JSON decode error")
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
@@ -112,15 +104,7 @@ func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *models.User)
 		return
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		log.Error().Err(err).Msg("Note PUT JSON decode error")
-		output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
-		if err != nil {
-			log.Info().Msg("Failed to open temp request.bady")
-		}
-		defer output.Close()
-		output.Write(body)
-		log.Info().Msg("Wrote request to /tmp/request.body")
-
+		debugSaveRequest(body, err, "Note PUT JSON decode error")
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
@@ -146,15 +130,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		log.Error().Err(err).Msg("Image note POST JSON decode error")
-		output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
-		if err != nil {
-			log.Info().Msg("Failed to open temp request.bady")
-		}
-		defer output.Close()
-		output.Write(body)
-		log.Info().Msg("Wrote request to /tmp/request.body")
-
+		debugSaveRequest(body, err, "Image note POST JSON decode error")
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
