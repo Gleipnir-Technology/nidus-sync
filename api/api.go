@@ -149,28 +149,14 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 		log.Error().Err(err).Msg("Failed to parse image UUID")
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
-	// Read first 8 bytes to check PNG signature
-	filepath := fmt.Sprintf("%s/%s.photo", userfile.UserFilesDirectory, imageUUID.String())
-
-	// Create file in configured directory
-	dst, err := os.Create(filepath)
+	err = userfile.ImageFileContentWrite(imageUUID, r.Body)
 	if err != nil {
-		log.Printf("Failed to create image file %s: %v", filepath, err)
-		http.Error(w, "Unable to create file", http.StatusInternalServerError)
+		render.Render(w, r, errRender(err))
 		return
 	}
-	defer dst.Close()
-
-	// Copy rest of request body to file
-	_, err = io.Copy(dst, r.Body)
-	if err != nil {
-		http.Error(w, "Unable to save file", http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 	log.Printf("Saved image file %s\n", imageUUID)
-	fmt.Fprintf(w, "PNG uploaded successfully to %s", filepath)
+	fmt.Fprintf(w, "PNG uploaded successfully")
 }
 
 func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {

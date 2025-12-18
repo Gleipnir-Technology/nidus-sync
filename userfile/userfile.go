@@ -41,3 +41,23 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	log.Printf("Saved audio content to %s\n", filepath)
 	return nil
 }
+func ImageFileContentPathRaw(uid string) string {
+	return fmt.Sprintf("%s/%s.raw", UserFilesDirectory, uid)
+}
+func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
+	filepath := ImageFileContentPathRaw(uid.String())
+
+	// Create file in configured directory
+	dst, err := os.Create(filepath)
+	if err != nil {
+		return fmt.Errorf("Failed to create image file %s: %w", filepath, err)
+	}
+	defer dst.Close()
+
+	// Copy rest of request body to file
+	_, err = io.Copy(dst, body)
+	if err != nil {
+		return fmt.Errorf("Unable to save file %s: %w", filepath, err)
+	}
+	return nil
+}
