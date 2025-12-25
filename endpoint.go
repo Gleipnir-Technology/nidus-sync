@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/skip2/go-qrcode"
 )
@@ -173,9 +174,14 @@ func getSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
-	globalid := chi.URLParam(r, "globalid")
-	if globalid == "" {
+	globalid_s := chi.URLParam(r, "globalid")
+	if globalid_s == "" {
 		respondError(w, "No globalid provided", nil, http.StatusBadRequest)
+		return
+	}
+	globalid, err := uuid.Parse(globalid_s)
+	if err != nil {
+		respondError(w, "globalid is not a UUID", nil, http.StatusBadRequest)
 		return
 	}
 	htmlSource(w, r, u, globalid)

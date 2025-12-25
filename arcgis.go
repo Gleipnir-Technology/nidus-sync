@@ -1077,7 +1077,7 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 		log.Error().Err(err).Msg("Failed to get organization")
 	}*/
 	log.Info().Int("org_id", int(org.ID)).Msg("Getting point locations")
-	point_locations, err := org.FSPointlocations().All(ctx, db.PGInstance.BobDB)
+	point_locations, err := org.Pointlocations().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get organization")
 		return
@@ -1088,7 +1088,12 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 		log.Info().Int("resolution", i).Msg("Working summary layer")
 		cellToCount := make(map[h3.Cell]int, 0)
 		for _, p := range point_locations {
-			cell, err := getCell(p.GeometryX, p.GeometryY, i)
+			p, err := getPoint(p.Geometry)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get geometry point")
+				continue
+			}
+			cell, err := h3.LatLngToCell(p, i)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get cell")
 				continue
@@ -1615,3 +1620,5 @@ func exportFieldseekerLayer(ctx context.Context, org *models.Organization, fssyn
 	log.Info().Uint("inserts", stats.Inserts).Uint("updates", stats.Updates).Uint("no change", stats.Unchanged).Str("layer", layer.Name).Msg("Finished layer")
 	return stats, nil
 }
+
+

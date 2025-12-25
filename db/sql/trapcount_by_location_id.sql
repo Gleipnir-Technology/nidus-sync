@@ -6,9 +6,9 @@ SELECT
     COALESCE(SUM(sa.males), 0) AS total_males,
     COALESCE(SUM(sa.total), 0) AS total
 FROM 
-    fs_trapdata td
+    fieldseeker.trapdata td
 LEFT JOIN 
-    fs_speciesabundance sa ON td.globalid = sa.trapdata_id
+    fieldseeker.speciesabundance sa ON td.globalid = sa.trapdata_id
 WHERE 
     td.organization_id = $1
     AND td.loc_id IN ($2)

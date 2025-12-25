@@ -10,4 +10,5 @@ psql:
     - "fieldseeker"
   queries:
     - ./sql
+  uuid_pkg: google
 plugins_preset: "all"

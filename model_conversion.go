@@ -8,6 +8,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/aarondl/opt/null"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
 )
 
@@ -17,8 +19,8 @@ type BreedingSourceDetail struct {
 	Name           string `json:"name"`
 	Description    string `json:"description"`
 	LocationNumber int64  `json:"locationNumber"`
-	ObjectID       int32  `json:"objectId"`
-	GlobalID       string `json:"globalId"`
+	ObjectID       int64  `json:"objectId"`
+	GlobalID       uuid.UUID `json:"globalId"`
 	ExternalID     string `json:"externalId"`
 
 	// Status Information
@@ -44,7 +46,7 @@ type BreedingSourceDetail struct {
 
 	// Inspection Data
 	LarvaeInspectInterval       int16     `json:"larvaeInspectInterval"`
-	LastInspectionDate          time.Time `json:"lastInspectionDate"`
+	LastInspectionDate          *time.Time `json:"lastInspectionDate"`
 	LastInspectionActivity      string    `json:"lastInspectionActivity"`
 	LastInspectionActionTaken   string    `json:"lastInspectionActionTaken"`
 	LastInspectionAverageLarvae float64   `json:"lastInspectionAverageLarvae"`
@@ -55,7 +57,7 @@ type BreedingSourceDetail struct {
 	LastInspectionLifeStages    string    `json:"lastInspectionLifeStages"`
 
 	// Treatment Data
-	LastTreatmentDate         time.Time `json:"lastTreatmentDate"`
+	LastTreatmentDate         *time.Time `json:"lastTreatmentDate"`
 	LastTreatmentActivity     string    `json:"lastTreatmentActivity"`
 	LastTreatmentProduct      string    `json:"lastTreatmentProduct"`
 	LastTreatmentQuantity     float64   `json:"lastTreatmentQuantity"`
@@ -63,27 +65,27 @@ type BreedingSourceDetail struct {
 
 	// Assignment & Schedule
 	AssignedTechnician      string    `json:"assignedTechnician"`
-	NextActionScheduledDate time.Time `json:"nextActionScheduledDate"`
+	NextActionScheduledDate *time.Time `json:"nextActionScheduledDate"`
 
 	// Metadata
-	Created  time.Time `json:"created"`
+	Created  *time.Time `json:"created"`
 	Creator  string    `json:"creator"`
-	EditedAt time.Time `json:"editedAt"`
+	EditedAt *time.Time `json:"editedAt"`
 	Editor   string    `json:"editor"`
-	Updated  time.Time `json:"updated"`
+	//Updated  *time.Time `json:"updated"`
 	Comments string    `json:"comments"`
 }
 
 type TrapNearby struct {
 	Counts   []*TrapCount
 	Distance string
-	ID       string
+	ID       uuid.UUID
 }
 
 type TrapCount struct {
 	Ended   time.Time
 	Females int
-	ID      string
+	ID      uuid.UUID
 	Males   int
 	Total   int
 }
@@ -91,11 +93,11 @@ type TrapCount struct {
 type TrapData struct {
 	// Basic Identifiers
 	OrganizationID int32  `json:"organizationId"`
-	ObjectID       int32  `json:"objectId"`
-	GlobalID       string `json:"globalId"`
+	ObjectID       int64  `json:"objectId"`
+	GlobalID       uuid.UUID `json:"globalId"`
 	LocationName   string `json:"locationName"`
-	LocationID     string `json:"locationId"`
-	SRID           string `json:"srid"`
+	LocationID     uuid.UUID `json:"locationId"`
+	SRID           uuid.UUID `json:"srid"`
 	Field          int64  `json:"field"`
 
 	// Trap Information
@@ -111,8 +113,8 @@ type TrapData struct {
 	SortedByTechnician     string `json:"sortedByTechnician"`
 
 	// Timing
-	StartDateTime time.Time `json:"startDateTime"`
-	EndDateTime   time.Time `json:"endDateTime"`
+	StartDateTime *time.Time `json:"startDateTime"`
+	EndDateTime   *time.Time `json:"endDateTime"`
 
 	// Environmental Conditions
 	AverageTemperature float64 `json:"averageTemperature"`
@@ -126,7 +128,7 @@ type TrapData struct {
 	RecordStatus  int16     `json:"recordStatus"`
 	Reviewed      bool      `json:"reviewed"`
 	ReviewedBy    string    `json:"reviewedBy"`
-	ReviewedDate  time.Time `json:"reviewedDate"`
+	ReviewedDate  *time.Time `json:"reviewedDate"`
 	GatewaySynced bool      `json:"gatewaySynced"`
 	LR            bool      `json:"laboratoryReported"`
 	Voltage       float64   `json:"voltage"`
@@ -142,33 +144,33 @@ type TrapData struct {
 	VectorSurveyTrapLocationID string `json:"vectorSurveyTrapLocationId"`
 
 	// Metadata
-	Created        time.Time `json:"created"`
+	Created        *time.Time `json:"created"`
 	Creator        string    `json:"creator"`
 	CreatedByUser  string    `json:"createdByUser"`
-	CreatedDateAlt time.Time `json:"createdDateAlt"`
-	Edited         time.Time `json:"edited"`
+	CreatedDateAlt *time.Time `json:"createdDateAlt"`
+	Edited         *time.Time `json:"edited"`
 	Editor         string    `json:"editor"`
-	LastEditedDate time.Time `json:"lastEditedDate"`
+	LastEditedDate *time.Time `json:"lastEditedDate"`
 	LastEditedUser string    `json:"lastEditedUser"`
-	Updated        time.Time `json:"updated"`
+	//Updated        *time.Time `json:"updated"`
 	Comments       string    `json:"comments"`
 }
 
 type Treatment struct {
 	CadenceDelta time.Duration
-	Date         time.Time
-	LocationID   string
+	Date         *time.Time
+	LocationID   uuid.UUID
 	Notes        string
 	Product      string
 }
 
 func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.TrapDataByLocationIDRecentRow, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
 	results := make([]TrapNearby, 0)
-	count_by_trap_data_id := make(map[string]*sql.TrapCountByLocationIDRow)
+	count_by_trap_data_id := make(map[uuid.UUID]*sql.TrapCountByLocationIDRow)
 	for _, c := range counts {
-		count_by_trap_data_id[c.TrapdataGlobalid] = &c
+		count_by_trap_data_id[c.TrapdataGlobalid.MustGet()] = &c
 	}
-	counts_by_location_id := make(map[string][]*TrapCount)
+	counts_by_location_id := make(map[uuid.UUID][]*TrapCount)
 	for _, td := range trap_data {
 		c, ok := count_by_trap_data_id[td.Globalid]
 		if !ok {
@@ -176,11 +178,11 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.
 		}
 		loc_id := td.LocID
 		count := &TrapCount{
-			Ended:   time.UnixMilli(td.Enddatetime),
-			Females: int(c.TotalFemales.IntPart()),
+			Ended:   td.Enddatetime,
+			Females: int(c.TotalFemales),
 			ID:      td.Globalid,
 			Males:   int(c.TotalMales),
-			Total:   int(c.Total.IntPart()),
+			Total:   int(c.Total),
 		}
 		counts, ok := counts_by_location_id[loc_id]
 		if !ok {
@@ -191,32 +193,37 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.
 		counts_by_location_id[loc_id] = counts
 	}
 	for _, location := range locations {
-		counts, ok := counts_by_location_id[location.TrapLocationGlobalid]
+		counts, ok := counts_by_location_id[location.TrapLocationGlobalid.MustGet()]
 		if !ok {
 			return results, errors.New(fmt.Sprintf("Failed to find counts for %s", location.TrapLocationGlobalid))
 		}
 		trap := TrapNearby{
 			Counts:   counts,
 			Distance: location.Distance,
-			ID:       location.TrapLocationGlobalid,
+			ID:       location.TrapLocationGlobalid.MustGet(),
 		}
 		results = append(results, trap)
 	}
 	return results, nil
 }
 
-func toTemplateTrapData(trap_data models.FSTrapdatumSlice) ([]TrapData, error) {
+func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData, error) {
 	var results []TrapData
 	for _, r := range trap_data {
+		geometry, err := getPoint(r.Geometry)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get geometry for trap data")
+			continue
+		}
 		results = append(results, TrapData{
 			// Basic Identifiers
 			OrganizationID: r.OrganizationID,
 			ObjectID:       r.Objectid,
-			GlobalID:       r.Globalid,
+			GlobalID:       r.Globalid.MustGet(),
 			LocationName:   r.Locationname.GetOr(""),
-			LocationID:     r.LocID.GetOr(""),
-			SRID:           r.Srid.GetOr(""),
-			Field:          r.Field.GetOr(0),
+			LocationID:     r.LocID.GetOr(uuid.UUID{}),
+			SRID:           r.Srid.GetOr(uuid.UUID{}),
+			Field:          int64(r.Field.GetOr(0)),
 
 			// Trap Information
 			TrapType:         r.Traptype.GetOr(""),
@@ -231,8 +238,8 @@ func toTemplateTrapData(trap_data models.FSTrapdatumSlice) ([]TrapData, error) {
 			SortedByTechnician:     r.Sortbytech.GetOr(""),
 
 			// Timing
-			StartDateTime: fsToTime(r.Startdatetime),
-			EndDateTime:   fsToTime(r.Enddatetime),
+			StartDateTime: getTimeOrNull(r.Startdatetime),
+			EndDateTime:   getTimeOrNull(r.Enddatetime),
 
 			// Environmental Conditions
 			AverageTemperature: r.Avetemp.GetOr(0),
@@ -246,14 +253,14 @@ func toTemplateTrapData(trap_data models.FSTrapdatumSlice) ([]TrapData, error) {
 			RecordStatus:  r.Recordstatus.GetOr(0),
 			Reviewed:      fsIntToBool(r.Reviewed),
 			ReviewedBy:    r.Reviewedby.GetOr(""),
-			ReviewedDate:  fsToTime(r.Revieweddate),
+			ReviewedDate:  getTimeOrNull(r.Revieweddate),
 			GatewaySynced: fsIntToBool(r.Gatewaysync),
 			LR:            fsIntToBool(r.LR),
 			Voltage:       r.Voltage.GetOr(0),
 
 			// Location Data
-			GeometryX: r.GeometryX.GetOr(0),
-			GeometryY: r.GeometryY.GetOr(0),
+			GeometryX: geometry.Lng,
+			GeometryY: geometry.Lat,
 			Zone:      r.Zone.GetOr(""),
 			Zone2:     r.Zone2.GetOr(""),
 
@@ -262,26 +269,26 @@ func toTemplateTrapData(trap_data models.FSTrapdatumSlice) ([]TrapData, error) {
 			VectorSurveyTrapLocationID: r.Vectorsurvtraplocationid.GetOr(""),
 
 			// Metadata
-			Created:        fsToTime(r.Creationdate),
+			Created:        getTimeOrNull(r.Creationdate),
 			Creator:        r.Creator.GetOr(""),
 			CreatedByUser:  r.CreatedUser.GetOr(""),
-			CreatedDateAlt: fsToTime(r.CreatedDate),
-			Edited:         fsToTime(r.Editdate),
+			CreatedDateAlt: getTimeOrNull(r.CreatedDate),
+			Edited:         getTimeOrNull(r.Editdate),
 			Editor:         r.Editor.GetOr(""),
-			LastEditedDate: fsToTime(r.LastEditedDate),
+			LastEditedDate: getTimeOrNull(r.LastEditedDate),
 			LastEditedUser: r.LastEditedUser.GetOr(""),
-			Updated:        r.Updated,
+			//Updated:        r.Updated,
 			Comments:       r.Comments.GetOr(""),
 		})
 	}
 	return results, nil
 }
-func toTemplateTreatment(rows models.FSTreatmentSlice) ([]Treatment, error) {
+func toTemplateTreatment(rows models.FieldseekerTreatmentSlice) ([]Treatment, error) {
 	var results []Treatment
 	for _, r := range rows {
 		results = append(results, Treatment{
-			Date:       *fsTimestampToTime(r.Enddatetime),
-			LocationID: r.Pointlocid.GetOr("none"),
+			Date:       getTimeOrNull(r.Enddatetime),
+			LocationID: r.Pointlocid.GetOr(uuid.UUID{}),
 			Notes:      r.Comments.GetOr("none"),
 			Product:    r.Product.GetOr("none"),
 		})
@@ -289,15 +296,15 @@ func toTemplateTreatment(rows models.FSTreatmentSlice) ([]Treatment, error) {
 	return results, nil
 }
 
-func toTemplateInspection(rows models.FSMosquitoinspectionSlice) ([]Inspection, error) {
+func toTemplateInspection(rows models.FieldseekerMosquitoinspectionSlice) ([]Inspection, error) {
 	var results []Inspection
 	for _, r := range rows {
 		results = append(results, Inspection{
 			Action:     r.Actiontaken.GetOr("none"),
-			Date:       *fsTimestampToTime(r.Enddatetime),
+			Date:       getTimeOrNull(r.Enddatetime),
 			Notes:      r.Comments.GetOr("none"),
 			Location:   r.Locationname.GetOr("none"),
-			LocationID: r.Pointlocid.GetOr(""),
+			LocationID: r.Pointlocid.GetOr(uuid.UUID{}),
 		})
 	}
 	return results, nil
@@ -323,15 +330,20 @@ func fsIntToBool(val null.Val[int16]) bool {
 }
 
 // toTemplateBreedingSource transforms the DB model into the display model
-func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDetail {
+func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *BreedingSourceDetail {
+	lat_lng, err := getPoint(source.Geometry)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get point from point location")
+		return nil
+	}
 	return &BreedingSourceDetail{
 		// Basic Information
 		OrganizationID: source.OrganizationID,
 		Name:           source.Name.MustGet(),
 		Description:    source.Description.MustGet(),
-		LocationNumber: source.Locationnumber.GetOr(0),
+		LocationNumber: int64(source.Locationnumber.GetOr(0)),
 		ObjectID:       source.Objectid,
-		GlobalID:       source.Globalid,
+		GlobalID:       source.Globalid.MustGet(),
 		ExternalID:     source.Externalid.GetOr(""),
 
 		// Status Information
@@ -339,7 +351,7 @@ func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDet
 		DeactivateReason: source.DeactivateReason.GetOr(""),
 		SourceStatus:     source.Sourcestatus.GetOr(""),
 		Priority:         source.Priority.GetOr(""),
-		ScalarPriority:   source.Scalarpriority.GetOr(0),
+		ScalarPriority:   int64(source.Scalarpriority.GetOr(0)),
 
 		// Classification
 		SourceType:  source.Stype.GetOr(""),
@@ -349,10 +361,7 @@ func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDet
 		Symbology:   source.Symbology.GetOr(""),
 
 		// Geographical Data
-		LatLng: h3.LatLng{
-			Lat: source.GeometryY,
-			Lng: source.GeometryX,
-		},
+		LatLng: lat_lng,
 		Zone:              source.Zone.GetOr(""),
 		Zone2:             source.Zone2.GetOr(""),
 		Jurisdiction:      source.Jurisdiction.GetOr(""),
@@ -360,7 +369,7 @@ func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDet
 
 		// Inspection Data
 		LarvaeInspectInterval:       source.Larvinspectinterval.GetOr(0),
-		LastInspectionDate:          fsToTime(source.Lastinspectdate),
+		LastInspectionDate:          getTimeOrNull(source.Lastinspectdate),
 		LastInspectionActivity:      source.Lastinspectactivity.GetOr(""),
 		LastInspectionActionTaken:   source.Lastinspectactiontaken.GetOr(""),
 		LastInspectionAverageLarvae: source.Lastinspectavglarvae.GetOr(0),
@@ -371,7 +380,7 @@ func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDet
 		LastInspectionLifeStages:    source.Lastinspectlstages.GetOr(""),
 
 		// Treatment Data
-		LastTreatmentDate:         fsToTime(source.Lasttreatdate),
+		LastTreatmentDate:         getTimeOrNull(source.Lasttreatdate),
 		LastTreatmentActivity:     source.Lasttreatactivity.GetOr(""),
 		LastTreatmentProduct:      source.Lasttreatproduct.GetOr(""),
 		LastTreatmentQuantity:     source.Lasttreatqty.GetOr(0),
@@ -379,14 +388,22 @@ func toTemplateBreedingSource(source *models.FSPointlocation) *BreedingSourceDet
 
 		// Assignment & Schedule
 		AssignedTechnician:      source.Assignedtech.GetOr(""),
-		NextActionScheduledDate: fsToTime(source.Nextactiondatescheduled),
+		NextActionScheduledDate: getTimeOrNull(source.Nextactiondatescheduled),
 
 		// Metadata
-		Created:  fsToTime(source.Creationdate),
+		Created:  getTimeOrNull(source.Creationdate),
 		Creator:  source.Creator.GetOr(""),
-		EditedAt: fsToTime(source.Editdate),
+		EditedAt: getTimeOrNull(source.Editdate),
 		Editor:   source.Editor.GetOr(""),
-		Updated:  source.Updated,
+		//Updated:  source.Updated,
 		Comments: source.Comments.GetOr(""),
 	}
+}
+
+func getTimeOrNull(v null.Val[time.Time]) *time.Time {
+	if v.IsNull() {
+		return nil
+	}
+	val := v.MustGet()
+	return &val
 }

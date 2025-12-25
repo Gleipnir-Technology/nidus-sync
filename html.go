@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/google/uuid"
 	"github.com/aarondl/opt/null"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
@@ -75,7 +76,7 @@ var components = [...]string{"header", "map"}
 var templatesByFilename = make(map[string]BuiltTemplate, 0)
 
 type BreedingSourceSummary struct {
-	ID            string
+	ID            uuid.UUID
 	Type          string
 	LastInspected *time.Time
 	LastTreated   *time.Time
@@ -164,10 +165,10 @@ type ContentSource struct {
 }
 type Inspection struct {
 	Action     string
-	Date       time.Time
+	Date       *time.Time
 	Notes      string
 	Location   string
-	LocationID string
+	LocationID uuid.UUID
 }
 type Link struct {
 	Href  string
@@ -321,22 +322,22 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	} else {
 		lastSync = &sync.Created
 	}
-	inspectionCount, err := org.FSMosquitoinspections().Count(ctx, db.PGInstance.BobDB)
+	inspectionCount, err := org.Mosquitoinspections().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
 		return
 	}
-	sourceCount, err := org.FSPointlocations().Count(ctx, db.PGInstance.BobDB)
+	sourceCount, err := org.Pointlocations().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get source count", err, http.StatusInternalServerError)
 		return
 	}
-	serviceCount, err := org.FSServicerequests().Count(ctx, db.PGInstance.BobDB)
+	serviceCount, err := org.Servicerequests().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get service count", err, http.StatusInternalServerError)
 		return
 	}
-	recentRequests, err := org.FSServicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
+	recentRequests, err := org.Servicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get recent service", err, http.StatusInternalServerError)
 		return
@@ -345,7 +346,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	requests := make([]ServiceRequestSummary, 0)
 	for _, r := range recentRequests {
 		requests = append(requests, ServiceRequestSummary{
-			Date:     time.UnixMilli(r.Creationdate.MustGet()),
+			Date:     r.Creationdate.MustGet(),
 			Location: r.Reqaddr1.MustGet(),
 			Status:   "Completed",
 		})
@@ -432,7 +433,7 @@ func htmlSignup(w http.ResponseWriter, path string) {
 	renderOrError(w, signup, data)
 }
 
-func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id string) {
+func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
 	org, err := user.Organization().One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
@@ -729,16 +730,16 @@ func timeSince(t *time.Time) string {
 	}
 }
 
-func trapsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]TrapNearby, error) {
+func trapsBySource(ctx context.Context, org *models.Organization, sourceID uuid.UUID) ([]TrapNearby, error) {
 	locations, err := sql.TrapLocationBySourceID(org.ID, sourceID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query rows: %w", err)
 	}
 
-	location_ids := make([]string, 0)
+	location_ids := make([]uuid.UUID, 0)
 	var args []bob.Expression
 	for _, location := range locations {
-		location_ids = append(location_ids, location.TrapLocationGlobalid)
+		location_ids = append(location_ids, location.TrapLocationGlobalid.MustGet())
 		args = append(args, psql.Arg(location.TrapLocationGlobalid))
 	}
 	/*
@@ -819,11 +820,11 @@ func renderOrError(w http.ResponseWriter, template *BuiltTemplate, context inter
 	buf.WriteTo(w)
 }
 
-func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]Treatment, error) {
+func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID uuid.UUID) ([]Treatment, error) {
 	var results []Treatment
-	rows, err := org.FSTreatments(
+	rows, err := org.Treatments(
 		sm.Where(
-			models.FSTreatments.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
+			models.FieldseekerTreatments.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
 		),
 		sm.OrderBy("enddatetime").Desc(),
 	).All(ctx, db.PGInstance.BobDB)
@@ -841,7 +842,7 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
 	}
 	geom_query := gisStatement(boundary)
-	rows, err := org.FSTreatments(
+	rows, err := org.Treatments(
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
@@ -861,7 +862,7 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
 	}
 	geom_query := gisStatement(boundary)
-	rows, err := org.FSMosquitoinspections(
+	rows, err := org.Mosquitoinspections(
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
@@ -873,12 +874,12 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 	}
 	return toTemplateInspection(rows)
 }
-func inspectionsBySource(ctx context.Context, org *models.Organization, sourceID string) ([]Inspection, error) {
+func inspectionsBySource(ctx context.Context, org *models.Organization, sourceID uuid.UUID) ([]Inspection, error) {
 	var results []Inspection
 
-	rows, err := org.FSMosquitoinspections(
+	rows, err := org.Mosquitoinspections(
 		sm.Where(
-			models.FSMosquitoinspections.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
+			models.FieldseekerMosquitoinspections.Columns.Pointlocid.EQ(psql.Arg(sourceID)),
 		),
 		sm.OrderBy("enddatetime").Desc(),
 	).All(ctx, db.PGInstance.BobDB)
@@ -895,7 +896,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
 	}
 	geom_query := gisStatement(boundary)
-	rows, err := org.FSPointlocations(
+	rows, err := org.Pointlocations(
 		sm.Where(
 			psql.F("ST_Within", "geom", geom_query),
 		),
@@ -905,10 +906,20 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
 	for _, r := range rows {
+		var last_inspected *time.Time
+		if !r.Lastinspectdate.IsNull() {
+			l := r.Lastinspectdate.MustGet()
+			last_inspected = &l
+		}
+		var last_treat_date *time.Time
+		if !r.Lasttreatdate.IsNull() {
+			l := r.Lasttreatdate.MustGet()
+			last_treat_date = &l
+		}
 		results = append(results, BreedingSourceSummary{
-			ID:            r.Globalid,
-			LastInspected: fsTimestampToTime(r.Lastinspectdate),
-			LastTreated:   fsTimestampToTime(r.Lasttreatdate),
+			ID:            r.Globalid.MustGet(),
+			LastInspected: last_inspected,
+			LastTreated:   last_treat_date,
 			Type:          r.Habitat.GetOr("none"),
 		})
 	}
@@ -923,9 +934,9 @@ func uuidShort(uuid string) string {
 	return uuid[:3] + "..." + uuid[len(uuid)-4:]
 }
 
-func sourceByGlobalId(ctx context.Context, org *models.Organization, id string) (*BreedingSourceDetail, error) {
-	row, err := org.FSPointlocations(
-		sm.Where(models.FSPointlocations.Columns.Globalid.EQ(psql.Arg(id))),
+func sourceByGlobalId(ctx context.Context, org *models.Organization, id uuid.UUID) (*BreedingSourceDetail, error) {
+	row, err := org.Pointlocations(
+		sm.Where(models.FieldseekerPointlocations.Columns.Globalid.EQ(psql.Arg(id))),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get point location: %w", err)

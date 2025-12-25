@@ -65,6 +65,7 @@ func SaveOrUpdateContainerRelate(ctx context.Context, org *models.Organization, 
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),
 			Timestamp("p_created_date", row.CreatedDate),
@@ -91,6 +92,7 @@ func SaveOrUpdateFieldScoutingLog(ctx context.Context, org *models.Organization,
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Int16("p_status", row.Status),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),
@@ -115,6 +117,7 @@ func SaveOrUpdateHabitatRelate(ctx context.Context, org *models.Organization, fs
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_foreign_id", row.ForeignID),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),
@@ -140,6 +143,7 @@ func SaveOrUpdateInspectionSample(ctx context.Context, org *models.Organization,
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_insp_id", row.InspID),
 			String("p_sampleid", row.SampleID),
 			Int16("p_processed", row.Processed),
@@ -167,6 +171,7 @@ func SaveOrUpdateInspectionSampleDetail(ctx context.Context, org *models.Organiz
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_inspsample_id", row.InspsampleID),
 			String("p_fieldspecies", row.FieldSpecies),
 			Int16("p_flarvcount", row.FieldLarvaCount),
@@ -227,6 +232,7 @@ func SaveOrUpdateLineLocation(ctx context.Context, org *models.Organization, fs 
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			String("p_zone", row.Zone),
 			String("p_habitat", row.Habitat),
@@ -288,6 +294,7 @@ func SaveOrUpdateLocationTracking(ctx context.Context, org *models.Organization,
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Float64("p_accuracy", row.Accuracym),
 			String("p_created_user", row.CreatedUser),
 			Timestamp("p_created_date", row.CreatedDate),
@@ -313,6 +320,7 @@ func SaveOrUpdateMosquitoInspection(ctx context.Context, org *models.Organizatio
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Int16("p_numdips", row.Dips),
 			String("p_activity", row.Activity),
 			String("p_breeding", row.Breeding),
@@ -396,6 +404,7 @@ func SaveOrUpdateProposedTreatmentArea(ctx context.Context, org *models.Organiza
 		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_method", row.Method),
 			String("p_comments", row.Comments),
 			String("p_zone", row.Zone),
@@ -441,6 +450,7 @@ func SaveOrUpdatePointLocation(ctx context.Context, org *models.Organization, fs
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			String("p_zone", row.Zone),
 			String("p_habitat", row.Habitat),
@@ -501,6 +511,7 @@ func SaveOrUpdatePolygonLocation(ctx context.Context, org *models.Organization, 
 		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			String("p_zone", row.Zone),
 			String("p_habitat", row.Habitat),
@@ -556,6 +567,7 @@ func SaveOrUpdatePoolDetail(ctx context.Context, org *models.Organization, fs []
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_trapdata_id", row.TrapDataID),
 			UUID("p_pool_id", row.PoolID),
 			String("p_species", row.Species),
@@ -583,6 +595,7 @@ func SaveOrUpdatePool(ctx context.Context, org *models.Organization, fs []*fslay
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_trapdata_id", row.TrapDataID),
 			Timestamp("p_datesent", row.DateSent),
 			String("p_survtech", row.SurveyTech),
@@ -646,6 +659,7 @@ func SaveOrUpdateQAMosquitoInspection(ctx context.Context, org *models.Organizat
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Int16("p_posdips", row.PositiveDips),
 			String("p_actiontaken", row.Action),
 			String("p_comments", row.Comments),
@@ -754,6 +768,7 @@ func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, f
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_locationname", row.LocationName),
 			String("p_zone", row.Zone),
 			String("p_zone2", row.Zone2),
@@ -797,6 +812,7 @@ func SaveOrUpdateSampleCollection(ctx context.Context, org *models.Organization,
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_loc_id", row.LocID),
 			Timestamp("p_startdatetime", row.Start),
 			Timestamp("p_enddatetime", row.Finish),
@@ -856,6 +872,7 @@ func SaveOrUpdateSampleLocation(ctx context.Context, org *models.Organization, f
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			String("p_zone", row.Zone),
 			String("p_habitat", row.Habitat),
@@ -893,6 +910,7 @@ func SaveOrUpdateServiceRequest(ctx context.Context, org *models.Organization, f
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Timestamp("p_recdatetime", row.Received),
 			String("p_source", row.Source),
 			String("p_entrytech", row.EnteredBy),
@@ -992,6 +1010,7 @@ func SaveOrUpdateSpeciesAbundance(ctx context.Context, org *models.Organization,
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_trapdata_id", row.TrapDataID),
 			String("p_species", row.Species),
 			Int16("p_males", row.Males),
@@ -1034,6 +1053,7 @@ func SaveOrUpdateStormDrain(ctx context.Context, org *models.Organization, fs []
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			Timestamp("p_nexttreatmentdate", row.NextTreatmentDate),
 			Timestamp("p_lasttreatdate", row.LastTreatDate),
 			String("p_lastaction", row.LastAction),
@@ -1077,6 +1097,7 @@ func SaveOrUpdateTrapLocation(ctx context.Context, org *models.Organization, fs 
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			String("p_zone", row.Zone),
 			String("p_habitat", row.Habitat),
@@ -1120,6 +1141,7 @@ func SaveOrUpdateTrapData(ctx context.Context, org *models.Organization, fs []*f
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_traptype", row.TrapType),
 			String("p_trapactivitytype", row.TrapActivityType),
 			Timestamp("p_startdatetime", row.Start),
@@ -1175,6 +1197,7 @@ func SaveOrUpdateTimeCard(ctx context.Context, org *models.Organization, fs []*f
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_activity", row.Activity),
 			Timestamp("p_startdatetime", row.Start),
 			Timestamp("p_enddatetime", row.Finish),
@@ -1216,6 +1239,7 @@ func SaveOrUpdateTreatment(ctx context.Context, org *models.Organization, fs []*
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_activity", row.Activity),
 			Float64("p_treatarea", row.AreaTreated),
 			String("p_areaunit", row.AreaUnit),
@@ -1284,6 +1308,7 @@ func SaveOrUpdateTreatmentArea(ctx context.Context, org *models.Organization, fs
 		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			UUID("p_treat_id", row.TreatID),
 			UUID("p_session_id", row.SessionID),
 			Timestamp("p_treatdate", row.TreatmentDate),
@@ -1329,6 +1354,7 @@ func SaveOrUpdateZones(ctx context.Context, org *models.Organization, fs []*fsla
 		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),
@@ -1359,6 +1385,7 @@ func SaveOrUpdateZones2(ctx context.Context, org *models.Organization, fs []*fsl
 		gisPoint = NullParam{"p_geospatial"}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
+			Int32("p_organization_id", org.ID),
 			String("p_name", row.Name),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),

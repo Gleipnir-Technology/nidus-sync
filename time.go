@@ -20,7 +20,9 @@ type TreatmentModel struct {
 func modelTreatment(treatments []Treatment) []TreatmentModel {
 	treatment_times := make([]time.Time, 0)
 	for _, treatment := range treatments {
-		treatment_times = append(treatment_times, treatment.Date)
+		if treatment.Date != nil {
+			treatment_times = append(treatment_times, *treatment.Date)
+		}
 	}
 	models := calculateTreatmentModels(treatment_times)
 	/*models_by_year := make(map[int]TreatmentModel)
