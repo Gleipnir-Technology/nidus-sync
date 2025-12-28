@@ -17,7 +17,7 @@ type MosquitoTreatment struct { }
 type ServiceRequest struct { }
 type TrapData struct { }
 
-func MosquitoSourceQuery(q *GeoQuery) ([]MosquitoSource, error) {
+func MosquitoSourceQuery() ([]MosquitoSource, error) {
 	return make([]MosquitoSource, 0), nil
 }
 func NoteAudioCreate(ctx context.Context, noteUUID uuid.UUID, payload NoteAudio, userID int32) error {
@@ -38,9 +38,9 @@ func NoteImageCreate(ctx context.Context, noteUUID uuid.UUID, payload NoteImage,
 func NoteUpdate(ctx context.Context, noteUUID uuid.UUID, payload NidusNotePayload) error {
 	return nil
 }
-func ServiceRequestQuery(q *GeoQuery) ([]ServiceRequest, error) {
+func ServiceRequestQuery() ([]ServiceRequest, error) {
 	return make([]ServiceRequest, 0), nil
 }
-func TrapDataQuery(q *GeoQuery) ([]TrapData, error) {
+func TrapDataQuery() ([]TrapData, error) {
 	return make([]TrapData, 0), nil
 }

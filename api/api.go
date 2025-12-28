@@ -65,19 +65,17 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 }
 
 func apiClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
-	query := db.NewGeoQuery()
-	query.Limit = 0
-	sources, err := db.MosquitoSourceQuery(&query)
+	sources, err := db.MosquitoSourceQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	requests, err := db.ServiceRequestQuery(&query)
+	requests, err := db.ServiceRequestQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-	traps, err := db.TrapDataQuery(&query)
+	traps, err := db.TrapDataQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -169,7 +167,7 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	sources, err := db.MosquitoSourceQuery(&query)
+	sources, err := db.MosquitoSourceQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -194,7 +192,7 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	trap_data, err := db.TrapDataQuery(&query)
+	trap_data, err := db.TrapDataQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -218,7 +216,7 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	requests, err := db.ServiceRequestQuery(&query)
+	requests, err := db.ServiceRequestQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
