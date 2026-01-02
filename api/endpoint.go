@@ -13,7 +13,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("GET", "/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource))
 	r.Method("GET", "/service-request", auth.NewEnsureAuth(apiServiceRequest))
 	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))
-	r.Method("GET", "/client/ios", auth.NewEnsureAuth(apiClientIos))
+	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
 	r.Method("PUT", "/client/ios/note/{uuid}", auth.NewEnsureAuth(apiClientIosNotePut))
 	r.Method("POST", "/audio/{uuid}", auth.NewEnsureAuth(apiAudioPost))
 	r.Method("POST", "/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost))

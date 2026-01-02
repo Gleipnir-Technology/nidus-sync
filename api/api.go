@@ -13,6 +13,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/go-chi/chi/v5"
@@ -64,24 +65,36 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 	w.WriteHeader(http.StatusOK)
 }
 
-func apiClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
-	sources, err := db.MosquitoSourceQuery()
+func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
+	var sinceStr string
+	err := r.ParseForm()
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		render.Render(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
 		return
+	} else {
+		sinceStr = r.FormValue("since")
 	}
-	requests, err := db.ServiceRequestQuery()
-	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
+
+	var since *time.Time
+	if sinceStr == "" {
+		since = nil
+	} else {
+		since, err = parseTime(sinceStr)
+		if err != nil {
+			render.Render(w, r, errRender(fmt.Errorf("Failed to parse 'since' value: %w", err)))
+			return
+		}
 	}
-	traps, err := db.TrapDataQuery()
+
+	csync, err := platform.ContentClientIos(r.Context(), u, since)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
-	response := NewResponseClientIos(sources, requests, traps)
+	response := ResponseClientIos{
+		Fieldseeker: toResponseFieldseeker(csync),
+	}
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -324,12 +337,12 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func parseTime(x string) time.Time {
+func parseTime(x string) (*time.Time, error) {
 	created_epoch, err := strconv.ParseInt(x, 10, 64)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to convert inspection timestamp")
+		return &time.Time{}, fmt.Errorf("Failed to parse time '%s': %w", x, err)
 	}
 	created := time.UnixMilli(created_epoch)
-	return created
+	return &created, nil
 }
 
