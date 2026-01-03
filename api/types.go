@@ -98,7 +98,7 @@ type NoteAudioPayload struct {
 
 type ResponseMosquitoSource struct {
 	Access                  string                       `json:"access"`
-	Active                  *bool                        `json:"active"`
+	//Active                  *bool                        `json:"active"`
 	Comments                string                       `json:"comments"`
 	Created                 string                       `json:"created"`
 	Description             string                       `json:"description"`
@@ -216,27 +216,25 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseMosquitoSource(ms platform.MosquitoSource) ResponseMosquitoSource {
+func NewResponseMosquitoSource(ms *models.FieldseekerPointlocation) ResponseMosquitoSource {
 
 	return ResponseMosquitoSource{
-		/*
-		Active:                  ms.Active(),
-		Access:                  ms.Access(),
-		Comments:                ms.Comments(),
-		Created:                 ms.Created().Format("2006-01-02T15:04:05.000Z"),
-		Description:             ms.Description(),
-		ID:                      ms.ID().String(),
-		LastInspectionDate:      ms.LastInspectionDate().Format("2006-01-02T15:04:05.000Z"),
-		Location:                NewResponseLocation(ms.Location()),
-		Habitat:                 ms.Habitat(),
+		//Active:                  ms.Active.GetOr(0) > 1,
+		Access:                  ms.Access.GetOr(""),
+		Comments:                ms.Comments.GetOr(""),
+		Created:                 ms.Created.Format("2006-01-02T15:04:05.000Z"),
+		Description:             ms.Description.GetOr(""),
+		ID:                      ms.ID.String(),
+		LastInspectionDate:      ms.LastInspectionDate.Format("2006-01-02T15:04:05.000Z"),
+		Location:                NewResponseLocation(ms.Location),
+		Habitat:                 ms.Habitat,
 		Inspections:             NewResponseMosquitoInspections(ms.Inspections),
-		Name:                    ms.Name(),
-		NextActionDateScheduled: ms.NextActionDateScheduled().Format("2006-01-02T15:04:05.000Z"),
+		Name:                    ms.Name,
+		NextActionDateScheduled: ms.NextActionDateScheduled.Format("2006-01-02T15:04:05.000Z"),
 		Treatments:              NewResponseMosquitoTreatments(ms.Treatments),
-		UseType:                 ms.UseType(),
-		WaterOrigin:             ms.WaterOrigin(),
-		Zone:                    ms.Zone(),
-		*/
+		UseType:                 ms.UseType,
+		WaterOrigin:             ms.WaterOrigin,
+		Zone:                    ms.Zone,
 	}
 }
 func NewResponseMosquitoSources(sources []platform.MosquitoSource) []ResponseMosquitoSource {
@@ -265,7 +263,7 @@ type ResponseMosquitoTreatment struct {
 func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseMosquitoTreatment(i platform.MosquitoTreatment) ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatment(i *models.FieldseekerTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
 		/*
 		Comments:        i.Comments(),
@@ -282,7 +280,7 @@ func NewResponseMosquitoTreatment(i platform.MosquitoTreatment) ResponseMosquito
 		*/
 	}
 }
-func NewResponseMosquitoTreatments(treatments []platform.MosquitoTreatment) []ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatments(treatments models.FieldseekerTreatmentSlice) []ResponseMosquitoTreatment {
 	results := make([]ResponseMosquitoTreatment, 0)
 	for _, i := range treatments {
 		results = append(results, NewResponseMosquitoTreatment(i))
@@ -324,7 +322,7 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseServiceRequest(sr platform.ServiceRequest) ResponseServiceRequest {
+func NewResponseServiceRequest(sr models.FieldseekerServicerequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
 		/*
 		Address:            sr.Address(),
@@ -362,7 +360,7 @@ type ResponseTrapData struct {
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseTrapDatum(td platform.TrapData) ResponseTrapData {
+func NewResponseTrapDatum(td *models.FieldseekerTraplocation) ResponseTrapData {
 	return ResponseTrapData{
 		/*
 		Created:     td.Created.Format("2006-01-02T15:04:05.000Z"),
@@ -373,7 +371,7 @@ func NewResponseTrapDatum(td platform.TrapData) ResponseTrapData {
 		*/
 	}
 }
-func NewResponseTrapData(data []platform.TrapData) []ResponseTrapData {
+func NewResponseTrapData(data *models.FieldseekerTraplocation) []ResponseTrapData {
 	results := make([]ResponseTrapData, 0)
 	for _, i := range data {
 		results = append(results, NewResponseTrapDatum(i))
