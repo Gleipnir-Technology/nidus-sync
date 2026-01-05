@@ -15,15 +15,6 @@ type H3Cell uint64
 type hasCreated interface {
 	getCreated() string
 }
-/*
-type User struct {
-	DisplayName      string `db:"display_name"`
-	ID               int    `db:"id"`
-	PasswordHashType string `db:"password_hash_type"`
-	PasswordHash     string `db:"password_hash"`
-	Username         string `db:"username"`
-}
-*/
 
 type Bounds struct {
 	East  float64
@@ -41,27 +32,11 @@ func NewBounds() Bounds {
 	}
 }
 
-type MosquitoInspection struct {
-}
-type MosquitoTreatment struct {
-}
-
-type MosquitoSource struct {
-	//location    *FS_PointLocation
-	Inspections []MosquitoInspection
-	Treatments  []MosquitoTreatment
-}
-
 type LatLong interface {
 	Latitude() float64
 	Longitude() float64
 }
 
-type ServiceRequest struct {
-}
-
-type TrapData struct {
-}
 type Location struct {
 	Latitude  float64
 	Longitude float64
@@ -99,7 +74,7 @@ type NoteAudioPayload struct {
 
 type ResponseMosquitoSource struct {
 	Access                  string                       `json:"access"`
-	//Active                  *bool                        `json:"active"`
+	Active                  *bool                        `json:"active"`
 	Comments                string                       `json:"comments"`
 	Created                 string                       `json:"created"`
 	Description             string                       `json:"description"`
@@ -220,7 +195,7 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSource {
 	pl := ms.PointLocation
 	return ResponseMosquitoSource{
-		//Active:                  ms.Active.GetOr(0) > 1,
+		Active:                  toBool16(pl.Active),
 		Access:                  pl.Accessdesc.GetOr(""),
 		Comments:                pl.Comments.GetOr(""),
 		Created:                 formatTime(pl.Creationdate),
@@ -389,6 +364,19 @@ func formatTime(t null.Val[time.Time]) string {
 	return v.Format("2006-01-02T15:04:05.000Z")
 }
 
+func toBool16(t null.Val[int16]) *bool {
+	if t.IsNull() {
+		return nil
+	}
+	val := t.MustGet()
+	var b bool
+	if val == 0 {
+		b = false
+	} else {
+		b = true
+	}
+	return &b
+}
 func toBool(t null.Val[int32]) *bool {
 	if t.IsNull() {
 		return nil
