@@ -3,10 +3,10 @@ package api
 import (
 	"net/http"
 	"time"
-	
-	"github.com/aarondl/opt/null"
+
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/aarondl/opt/null"
 	"github.com/go-chi/render"
 )
 
@@ -78,9 +78,9 @@ type ResponseMosquitoSource struct {
 	Comments                string                       `json:"comments"`
 	Created                 string                       `json:"created"`
 	Description             string                       `json:"description"`
+	H3Cell                  int64                        `json:"h3cell"`
 	ID                      string                       `json:"id"`
 	LastInspectionDate      string                       `json:"last_inspection_date"`
-	Location                ResponseLocation             `json:"location"`
 	Habitat                 string                       `json:"habitat"`
 	Inspections             []ResponseMosquitoInspection `json:"inspections"`
 	Name                    string                       `json:"name"`
@@ -91,7 +91,6 @@ type ResponseMosquitoSource struct {
 	Zone                    string                       `json:"zone"`
 }
 
-
 type NoteAudioBreadcrumbPayload struct {
 	Cell             H3Cell    `json:"cell"`
 	Created          time.Time `json:"created"`
@@ -101,20 +100,20 @@ type NoteAudioBreadcrumbPayload struct {
 type NidusNotePayload struct {
 	UUID      string    `json:"uuid"`
 	Timestamp time.Time `json:"timestamp"`
+	H3Cell    int64     `json:"h3cell"`
 	Images    []string  `json:"images"`
-	Location  Location  `json:"location"`
 	Text      string    `json:"text"`
 }
-
 
 type ResponseFieldseeker struct {
 	MosquitoSources []ResponseMosquitoSource `json:"sources"`
 	ServiceRequests []ResponseServiceRequest `json:"requests"`
 	TrapData        []ResponseTrapData       `json:"traps"`
 }
+
 // ResponseErr renderer type for handling all sorts of errors.
 type ResponseClientIos struct {
-	Fieldseeker     ResponseFieldseeker      `json:"fieldseeker"`
+	Fieldseeker ResponseFieldseeker `json:"fieldseeker"`
 }
 
 func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
@@ -195,14 +194,14 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSource {
 	pl := ms.PointLocation
 	return ResponseMosquitoSource{
-		Active:                  toBool16(pl.Active),
-		Access:                  pl.Accessdesc.GetOr(""),
-		Comments:                pl.Comments.GetOr(""),
-		Created:                 formatTime(pl.Creationdate),
-		Description:             pl.Description.GetOr(""),
+		Active:      toBool16(pl.Active),
+		Access:      pl.Accessdesc.GetOr(""),
+		Comments:    pl.Comments.GetOr(""),
+		Created:     formatTime(pl.Creationdate),
+		Description: pl.Description.GetOr(""),
+		//H3Cell:                  pl.H3Cell,
 		ID:                      pl.Globalid.String(),
 		LastInspectionDate:      formatTime(pl.Lastinspectdate),
-		//Location:                NewResponseLocation(ms.Location),
 		Habitat:                 pl.Habitat.GetOr(""),
 		Inspections:             NewResponseMosquitoInspections(ms.Inspections),
 		Name:                    pl.Name.GetOr(""),
@@ -242,17 +241,17 @@ func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Reque
 func NewResponseMosquitoTreatment(i *models.FieldseekerTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
 		/*
-		Comments:        i.Comments(),
-		Created:         i.Created().Format("2006-01-02T15:04:05.000Z"),
-		FieldTechnician: i.FieldTechnician(),
-		Habitat:         i.Habitat(),
-		ID:              i.ID(),
-		Product:         i.Product(),
-		Quantity:        i.Quantity(),
-		QuantityUnit:    i.QuantityUnit(),
-		SiteCondition:   i.SiteCondition(),
-		TreatAcres:      i.TreatAcres(),
-		TreatHectares:   i.TreatHectares(),
+			Comments:        i.Comments(),
+			Created:         i.Created().Format("2006-01-02T15:04:05.000Z"),
+			FieldTechnician: i.FieldTechnician(),
+			Habitat:         i.Habitat(),
+			ID:              i.ID(),
+			Product:         i.Product(),
+			Quantity:        i.Quantity(),
+			QuantityUnit:    i.QuantityUnit(),
+			SiteCondition:   i.SiteCondition(),
+			TreatAcres:      i.TreatAcres(),
+			TreatHectares:   i.TreatHectares(),
 		*/
 	}
 }
@@ -268,9 +267,9 @@ type ResponseNote struct {
 	CategoryName string `json:"categoryName"`
 	Content      string `json:"content"`
 
-	ID        string           `json:"id"`
-	Location  ResponseLocation `json:"location"`
-	Timestamp string           `json:"timestamp"`
+	H3Cell    int64  `json:"h3cell"`
+	ID        string `json:"id"`
+	Timestamp string `json:"timestamp"`
 }
 
 func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
@@ -278,20 +277,20 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type ResponseServiceRequest struct {
-	Address            string           `json:"address"`
-	AssignedTechnician string           `json:"assigned_technician"`
-	City               string           `json:"city"`
-	Created            string           `json:"created"`
-	HasDog             *bool            `json:"has_dog"`
-	HasSpanishSpeaker  *bool            `json:"has_spanish_speaker"`
-	ID                 string           `json:"id"`
-	Location           ResponseLocation `json:"location"`
-	Priority           string           `json:"priority"`
-	RecordedDate       string           `json:"recorded_date"`
-	Source             string           `json:"source"`
-	Status             string           `json:"status"`
-	Target             string           `json:"target"`
-	Zip                string           `json:"zip"`
+	Address            string `json:"address"`
+	AssignedTechnician string `json:"assigned_technician"`
+	City               string `json:"city"`
+	Created            string `json:"created"`
+	H3Cell             int64  `json:"h3cell"`
+	HasDog             *bool  `json:"has_dog"`
+	HasSpanishSpeaker  *bool  `json:"has_spanish_speaker"`
+	ID                 string `json:"id"`
+	Priority           string `json:"priority"`
+	RecordedDate       string `json:"recorded_date"`
+	Source             string `json:"source"`
+	Status             string `json:"status"`
+	Target             string `json:"target"`
+	Zip                string `json:"zip"`
 }
 
 func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
@@ -304,15 +303,15 @@ func NewResponseServiceRequest(sr *models.FieldseekerServicerequest) ResponseSer
 		AssignedTechnician: sr.Assignedtech.GetOr(""),
 		City:               sr.Reqcity.GetOr(""),
 		Created:            formatTime(sr.Creationdate),
-		HasDog:             toBool(sr.Dog),
-		HasSpanishSpeaker:  toBool(sr.Spanish),
-		ID:                 sr.Globalid.String(),
-		//Location:           NewResponseLocation(sr.Location()),
-		Priority:           sr.Priority.GetOr(""),
-		Status:             sr.Status.GetOr(""),
-		Source:             sr.Source.GetOr(""),
-		Target:             sr.Reqtarget.GetOr(""),
-		Zip:                sr.Reqzip.GetOr(""),
+		//H3Cell:             sr.H3Cell,
+		HasDog:            toBool(sr.Dog),
+		HasSpanishSpeaker: toBool(sr.Spanish),
+		ID:                sr.Globalid.String(),
+		Priority:          sr.Priority.GetOr(""),
+		Status:            sr.Status.GetOr(""),
+		Source:            sr.Source.GetOr(""),
+		Target:            sr.Reqtarget.GetOr(""),
+		Zip:               sr.Reqzip.GetOr(""),
 	}
 }
 func NewResponseServiceRequests(requests *models.FieldseekerServicerequestSlice) []ResponseServiceRequest {
@@ -324,11 +323,11 @@ func NewResponseServiceRequests(requests *models.FieldseekerServicerequestSlice)
 }
 
 type ResponseTrapData struct {
-	Created     string           `json:"created"`
-	Description string           `json:"description"`
-	ID          string           `json:"id"`
-	Location    ResponseLocation `json:"location"`
-	Name        string           `json:"name"`
+	Created     string `json:"created"`
+	Description string `json:"description"`
+	H3Cell      int64  `json:"h3cell"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
 }
 
 func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error {
@@ -339,8 +338,8 @@ func NewResponseTrapDatum(td *models.FieldseekerTraplocation) ResponseTrapData {
 		Created:     formatTime(td.Creationdate),
 		Description: td.Description.GetOr(""),
 		ID:          td.Globalid.String(),
-		//Location:    NewResponseLocation(td.Location),
-		Name:        td.Name.GetOr(""),
+		//H3Cell:    td.H3Cell,
+		Name: td.Name.GetOr(""),
 	}
 }
 func NewResponseTrapData(data *models.FieldseekerTraplocationSlice) []ResponseTrapData {
@@ -352,8 +351,7 @@ func NewResponseTrapData(data *models.FieldseekerTraplocationSlice) []ResponseTr
 }
 
 func toResponseFieldseeker(csync platform.ClientSync) ResponseFieldseeker {
-	return ResponseFieldseeker{
-	}
+	return ResponseFieldseeker{}
 }
 
 func formatTime(t null.Val[time.Time]) string {
