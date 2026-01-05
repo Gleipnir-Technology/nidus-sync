@@ -1,0 +1,26 @@
+{{template "authenticated.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script>
+function onLoad() {
+	console.log("Map init done.");
+}
+window.addEventListener("load", onLoad);
+</script>
+<style>
+body {
+	background-color: #f8f9fa;
+}
+.dashboard-container {
+	padding: 20px 0;
+}
+</style>
+{{end}}
+{{define "content"}}
+<div class="container dashboard-container">
+	<p>We're downloading the data we need, hold on. This page will refresh every 10 seconds automatically until we've got it.</p>
+</div>
+{{end}}

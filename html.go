@@ -18,8 +18,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/google/uuid"
 	"github.com/aarondl/opt/null"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
@@ -32,11 +32,12 @@ var embeddedFiles embed.FS
 
 // Authenticated pages
 var (
-	cell        = newBuiltTemplate("cell", "authenticated")
-	dashboard   = newBuiltTemplate("dashboard", "authenticated")
-	oauthPrompt = newBuiltTemplate("oauth-prompt", "authenticated")
-	settings    = newBuiltTemplate("settings", "authenticated")
-	source      = newBuiltTemplate("source", "authenticated")
+	cell             = newBuiltTemplate("cell", "authenticated")
+	dashboard        = newBuiltTemplate("dashboard", "authenticated")
+	dashboardLoading = newBuiltTemplate("dashboard-loading", "authenticated")
+	oauthPrompt      = newBuiltTemplate("oauth-prompt", "authenticated")
+	settings         = newBuiltTemplate("settings", "authenticated")
+	source           = newBuiltTemplate("source", "authenticated")
 )
 
 // Unauthenticated pages
@@ -147,6 +148,11 @@ type ContentDashboard struct {
 	RecentRequests       []ServiceRequestSummary
 	User                 User
 }
+
+type ContentDashboardLoading struct {
+	User User
+}
+
 type ContentPlaceholder struct {
 }
 type ContentSignin struct {
@@ -309,6 +315,10 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			htmlDashboardLoading(ctx, w, user)
+			return
+		}
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
 	}
@@ -365,6 +375,19 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		User:           userContent,
 	}
 	renderOrError(w, dashboard, data)
+}
+
+// A dashboard to show while we are still downloading information about their organization
+func htmlDashboardLoading(ctx context.Context, w http.ResponseWriter, user *models.User) {
+	userContent, err := contentForUser(ctx, user)
+	if err != nil {
+		respondError(w, "Failed to get user context", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentDashboardLoading{
+		User: userContent,
+	}
+	renderOrError(w, dashboardLoading, data)
 }
 
 func htmlMock(t string, w http.ResponseWriter, code string) {
