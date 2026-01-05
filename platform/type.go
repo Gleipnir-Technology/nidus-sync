@@ -13,3 +13,9 @@ type ClientSync struct {
 type FieldseekerRecordsSync struct {
 	MosquitoSources models.FieldseekerPointlocationSlice
 }
+
+type MosquitoSource struct {
+	PointLocation *models.FieldseekerPointlocation
+	Inspections *models.FieldseekerMosquitoinspectionSlice
+	Treatments *models.FieldseekerTreatmentSlice
+}

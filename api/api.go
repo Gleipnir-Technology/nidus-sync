@@ -180,14 +180,14 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	sources, err := db.MosquitoSourceQuery()
+	sources, err := platform.MosquitoSourceQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
 	data := []render.Renderer{}
-	for _, s := range sources {
+	for _, s := range *sources {
 		data = append(data, NewResponseMosquitoSource(s))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
@@ -205,14 +205,14 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	trap_data, err := db.TrapDataQuery()
+	trap_data, err := platform.TrapDataQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
 	data := []render.Renderer{}
-	for _, td := range trap_data {
+	for _, td := range *trap_data {
 		data = append(data, NewResponseTrapDatum(td))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
@@ -229,14 +229,14 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *models.User) {
 	query := db.NewGeoQuery()
 	query.Bounds = *bounds
 	query.Limit = 100
-	requests, err := db.ServiceRequestQuery()
+	requests, err := platform.ServiceRequestQuery()
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 
 	data := []render.Renderer{}
-	for _, sr := range requests {
+	for _, sr := range *requests {
 		data = append(data, NewResponseServiceRequest(sr))
 	}
 	if err := render.RenderList(w, r, data); err != nil {

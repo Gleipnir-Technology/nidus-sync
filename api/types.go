@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 	
+	"github.com/aarondl/opt/null"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/go-chi/render"
@@ -193,7 +194,7 @@ type ResponseMosquitoInspection struct {
 func (rtd ResponseMosquitoInspection) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-func NewResponseMosquitoInspection(i models.FieldseekerMosquitoinspection) ResponseMosquitoInspection {
+func NewResponseMosquitoInspection(i *models.FieldseekerMosquitoinspection) ResponseMosquitoInspection {
 	return ResponseMosquitoInspection{
 		ActionTaken:   i.Actiontaken.GetOr(""),
 		Comments:      i.Comments.GetOr(""),
@@ -204,9 +205,9 @@ func NewResponseMosquitoInspection(i models.FieldseekerMosquitoinspection) Respo
 		SiteCondition: i.Sitecond.GetOr(""),
 	}
 }
-func NewResponseMosquitoInspections(inspections []models.FieldseekerMosquitoinspection) []ResponseMosquitoInspection {
+func NewResponseMosquitoInspections(inspections *models.FieldseekerMosquitoinspectionSlice) []ResponseMosquitoInspection {
 	results := make([]ResponseMosquitoInspection, 0)
-	for _, i := range inspections {
+	for _, i := range *inspections {
 		results = append(results, NewResponseMosquitoInspection(i))
 	}
 	return results
@@ -216,30 +217,30 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseMosquitoSource(ms *models.FieldseekerPointlocation) ResponseMosquitoSource {
-
+func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSource {
+	pl := ms.PointLocation
 	return ResponseMosquitoSource{
 		//Active:                  ms.Active.GetOr(0) > 1,
-		Access:                  ms.Access.GetOr(""),
-		Comments:                ms.Comments.GetOr(""),
-		Created:                 ms.Created.Format("2006-01-02T15:04:05.000Z"),
-		Description:             ms.Description.GetOr(""),
-		ID:                      ms.ID.String(),
-		LastInspectionDate:      ms.LastInspectionDate.Format("2006-01-02T15:04:05.000Z"),
-		Location:                NewResponseLocation(ms.Location),
-		Habitat:                 ms.Habitat,
+		Access:                  pl.Accessdesc.GetOr(""),
+		Comments:                pl.Comments.GetOr(""),
+		Created:                 formatTime(pl.Creationdate),
+		Description:             pl.Description.GetOr(""),
+		ID:                      pl.Globalid.MustGet().String(),
+		LastInspectionDate:      formatTime(pl.Lastinspectdate),
+		//Location:                NewResponseLocation(ms.Location),
+		Habitat:                 pl.Habitat.GetOr(""),
 		Inspections:             NewResponseMosquitoInspections(ms.Inspections),
-		Name:                    ms.Name,
-		NextActionDateScheduled: ms.NextActionDateScheduled.Format("2006-01-02T15:04:05.000Z"),
+		Name:                    pl.Name.GetOr(""),
+		NextActionDateScheduled: formatTime(pl.Nextactiondatescheduled),
 		Treatments:              NewResponseMosquitoTreatments(ms.Treatments),
-		UseType:                 ms.UseType,
-		WaterOrigin:             ms.WaterOrigin,
-		Zone:                    ms.Zone,
+		UseType:                 pl.Usetype.GetOr(""),
+		WaterOrigin:             pl.Waterorigin.GetOr(""),
+		Zone:                    pl.Zone.GetOr(""),
 	}
 }
-func NewResponseMosquitoSources(sources []platform.MosquitoSource) []ResponseMosquitoSource {
+func NewResponseMosquitoSources(sources *[]*platform.MosquitoSource) []ResponseMosquitoSource {
 	results := make([]ResponseMosquitoSource, 0)
-	for _, i := range sources {
+	for _, i := range *sources {
 		results = append(results, NewResponseMosquitoSource(i))
 	}
 	return results
@@ -280,9 +281,9 @@ func NewResponseMosquitoTreatment(i *models.FieldseekerTreatment) ResponseMosqui
 		*/
 	}
 }
-func NewResponseMosquitoTreatments(treatments models.FieldseekerTreatmentSlice) []ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatments(treatments *models.FieldseekerTreatmentSlice) []ResponseMosquitoTreatment {
 	results := make([]ResponseMosquitoTreatment, 0)
-	for _, i := range treatments {
+	for _, i := range *treatments {
 		results = append(results, NewResponseMosquitoTreatment(i))
 	}
 	return results
@@ -322,28 +323,26 @@ func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseServiceRequest(sr models.FieldseekerServicerequest) ResponseServiceRequest {
+func NewResponseServiceRequest(sr *models.FieldseekerServicerequest) ResponseServiceRequest {
 	return ResponseServiceRequest{
-		/*
-		Address:            sr.Address(),
-		AssignedTechnician: sr.AssignedTechnician(),
-		City:               sr.City(),
-		Created:            sr.Created().Format("2006-01-02T15:04:05.000Z"),
-		HasDog:             sr.HasDog(),
-		HasSpanishSpeaker:  sr.HasSpanishSpeaker(),
-		ID:                 sr.ID().String(),
-		Location:           NewResponseLocation(sr.Location()),
-		Priority:           sr.Priority(),
-		Status:             sr.Status(),
-		Source:             sr.Source(),
-		Target:             sr.Target(),
-		Zip:                sr.Zip(),
-		*/
+		Address:            sr.Reqaddr1.GetOr(""),
+		AssignedTechnician: sr.Assignedtech.GetOr(""),
+		City:               sr.Reqcity.GetOr(""),
+		Created:            formatTime(sr.Creationdate),
+		HasDog:             toBool(sr.Dog),
+		HasSpanishSpeaker:  toBool(sr.Spanish),
+		ID:                 sr.Globalid.MustGet().String(),
+		//Location:           NewResponseLocation(sr.Location()),
+		Priority:           sr.Priority.GetOr(""),
+		Status:             sr.Status.GetOr(""),
+		Source:             sr.Source.GetOr(""),
+		Target:             sr.Reqtarget.GetOr(""),
+		Zip:                sr.Reqzip.GetOr(""),
 	}
 }
-func NewResponseServiceRequests(requests []platform.ServiceRequest) []ResponseServiceRequest {
+func NewResponseServiceRequests(requests *models.FieldseekerServicerequestSlice) []ResponseServiceRequest {
 	results := make([]ResponseServiceRequest, 0)
-	for _, i := range requests {
+	for _, i := range *requests {
 		results = append(results, NewResponseServiceRequest(i))
 	}
 	return results
@@ -362,18 +361,16 @@ func (rtd ResponseTrapData) Render(w http.ResponseWriter, r *http.Request) error
 }
 func NewResponseTrapDatum(td *models.FieldseekerTraplocation) ResponseTrapData {
 	return ResponseTrapData{
-		/*
-		Created:     td.Created.Format("2006-01-02T15:04:05.000Z"),
-		Description: td.Description,
-		ID:          td.ID.String(),
-		Location:    NewResponseLocation(td.Location),
-		Name:        td.Name,
-		*/
+		Created:     formatTime(td.Creationdate),
+		Description: td.Description.GetOr(""),
+		ID:          td.Globalid.MustGet().String(),
+		//Location:    NewResponseLocation(td.Location),
+		Name:        td.Name.GetOr(""),
 	}
 }
-func NewResponseTrapData(data *models.FieldseekerTraplocation) []ResponseTrapData {
+func NewResponseTrapData(data *models.FieldseekerTraplocationSlice) []ResponseTrapData {
 	results := make([]ResponseTrapData, 0)
-	for _, i := range data {
+	for _, i := range *data {
 		results = append(results, NewResponseTrapDatum(i))
 	}
 	return results
@@ -382,4 +379,26 @@ func NewResponseTrapData(data *models.FieldseekerTraplocation) []ResponseTrapDat
 func toResponseFieldseeker(csync platform.ClientSync) ResponseFieldseeker {
 	return ResponseFieldseeker{
 	}
+}
+
+func formatTime(t null.Val[time.Time]) string {
+	if t.IsNull() {
+		return ""
+	}
+	v := t.MustGet()
+	return v.Format("2006-01-02T15:04:05.000Z")
+}
+
+func toBool(t null.Val[int32]) *bool {
+	if t.IsNull() {
+		return nil
+	}
+	val := t.MustGet()
+	var b bool
+	if val == 0 {
+		b = false
+	} else {
+		b = true
+	}
+	return &b
 }
