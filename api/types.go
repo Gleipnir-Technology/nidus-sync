@@ -200,7 +200,7 @@ func NewResponseMosquitoInspection(i *models.FieldseekerMosquitoinspection) Resp
 		Comments:      i.Comments.GetOr(""),
 		Condition:     i.Sitecond.GetOr(""),
 		Created:       i.Creationdate.MustGet().Format("2006-01-02T15:04:05.000Z"),
-		ID:            i.Globalid.MustGet().String(),
+		ID:            i.Globalid.String(),
 		LocationName:  i.Locationname.GetOr(""),
 		SiteCondition: i.Sitecond.GetOr(""),
 	}
@@ -225,7 +225,7 @@ func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSour
 		Comments:                pl.Comments.GetOr(""),
 		Created:                 formatTime(pl.Creationdate),
 		Description:             pl.Description.GetOr(""),
-		ID:                      pl.Globalid.MustGet().String(),
+		ID:                      pl.Globalid.String(),
 		LastInspectionDate:      formatTime(pl.Lastinspectdate),
 		//Location:                NewResponseLocation(ms.Location),
 		Habitat:                 pl.Habitat.GetOr(""),
@@ -331,7 +331,7 @@ func NewResponseServiceRequest(sr *models.FieldseekerServicerequest) ResponseSer
 		Created:            formatTime(sr.Creationdate),
 		HasDog:             toBool(sr.Dog),
 		HasSpanishSpeaker:  toBool(sr.Spanish),
-		ID:                 sr.Globalid.MustGet().String(),
+		ID:                 sr.Globalid.String(),
 		//Location:           NewResponseLocation(sr.Location()),
 		Priority:           sr.Priority.GetOr(""),
 		Status:             sr.Status.GetOr(""),
@@ -363,7 +363,7 @@ func NewResponseTrapDatum(td *models.FieldseekerTraplocation) ResponseTrapData {
 	return ResponseTrapData{
 		Created:     formatTime(td.Creationdate),
 		Description: td.Description.GetOr(""),
-		ID:          td.Globalid.MustGet().String(),
+		ID:          td.Globalid.String(),
 		//Location:    NewResponseLocation(td.Location),
 		Name:        td.Name.GetOr(""),
 	}
