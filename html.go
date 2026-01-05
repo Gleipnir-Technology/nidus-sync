@@ -766,7 +766,7 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID uuid.
 	location_ids := make([]uuid.UUID, 0)
 	var args []bob.Expression
 	for _, location := range locations {
-		location_ids = append(location_ids, location.TrapLocationGlobalid.MustGet())
+		location_ids = append(location_ids, location.TrapLocationGlobalid)
 		args = append(args, psql.Arg(location.TrapLocationGlobalid))
 	}
 	/*
@@ -944,7 +944,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 			last_treat_date = &l
 		}
 		results = append(results, BreedingSourceSummary{
-			ID:            r.Globalid.MustGet(),
+			ID:            r.Globalid,
 			LastInspected: last_inspected,
 			LastTreated:   last_treat_date,
 			Type:          r.Habitat.GetOr("none"),

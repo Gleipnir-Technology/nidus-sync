@@ -15,13 +15,13 @@ import (
 
 type BreedingSourceDetail struct {
 	// Basic Information
-	OrganizationID int32  `json:"organizationId"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	LocationNumber int64  `json:"locationNumber"`
-	ObjectID       int64  `json:"objectId"`
+	OrganizationID int32     `json:"organizationId"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	LocationNumber int64     `json:"locationNumber"`
+	ObjectID       int64     `json:"objectId"`
 	GlobalID       uuid.UUID `json:"globalId"`
-	ExternalID     string `json:"externalId"`
+	ExternalID     string    `json:"externalId"`
 
 	// Status Information
 	Active           bool   `json:"active"`
@@ -45,35 +45,35 @@ type BreedingSourceDetail struct {
 	AccessDescription string    `json:"accessDescription"`
 
 	// Inspection Data
-	LarvaeInspectInterval       int16     `json:"larvaeInspectInterval"`
+	LarvaeInspectInterval       int16      `json:"larvaeInspectInterval"`
 	LastInspectionDate          *time.Time `json:"lastInspectionDate"`
-	LastInspectionActivity      string    `json:"lastInspectionActivity"`
-	LastInspectionActionTaken   string    `json:"lastInspectionActionTaken"`
-	LastInspectionAverageLarvae float64   `json:"lastInspectionAverageLarvae"`
-	LastInspectionAveragePupae  float64   `json:"lastInspectionAveragePupae"`
-	LastInspectionBreeding      string    `json:"lastInspectionBreeding"`
-	LastInspectionConditions    string    `json:"lastInspectionConditions"`
-	LastInspectionFieldSpecies  string    `json:"lastInspectionFieldSpecies"`
-	LastInspectionLifeStages    string    `json:"lastInspectionLifeStages"`
+	LastInspectionActivity      string     `json:"lastInspectionActivity"`
+	LastInspectionActionTaken   string     `json:"lastInspectionActionTaken"`
+	LastInspectionAverageLarvae float64    `json:"lastInspectionAverageLarvae"`
+	LastInspectionAveragePupae  float64    `json:"lastInspectionAveragePupae"`
+	LastInspectionBreeding      string     `json:"lastInspectionBreeding"`
+	LastInspectionConditions    string     `json:"lastInspectionConditions"`
+	LastInspectionFieldSpecies  string     `json:"lastInspectionFieldSpecies"`
+	LastInspectionLifeStages    string     `json:"lastInspectionLifeStages"`
 
 	// Treatment Data
 	LastTreatmentDate         *time.Time `json:"lastTreatmentDate"`
-	LastTreatmentActivity     string    `json:"lastTreatmentActivity"`
-	LastTreatmentProduct      string    `json:"lastTreatmentProduct"`
-	LastTreatmentQuantity     float64   `json:"lastTreatmentQuantity"`
-	LastTreatmentQuantityUnit string    `json:"lastTreatmentQuantityUnit"`
+	LastTreatmentActivity     string     `json:"lastTreatmentActivity"`
+	LastTreatmentProduct      string     `json:"lastTreatmentProduct"`
+	LastTreatmentQuantity     float64    `json:"lastTreatmentQuantity"`
+	LastTreatmentQuantityUnit string     `json:"lastTreatmentQuantityUnit"`
 
 	// Assignment & Schedule
-	AssignedTechnician      string    `json:"assignedTechnician"`
+	AssignedTechnician      string     `json:"assignedTechnician"`
 	NextActionScheduledDate *time.Time `json:"nextActionScheduledDate"`
 
 	// Metadata
 	Created  *time.Time `json:"created"`
-	Creator  string    `json:"creator"`
+	Creator  string     `json:"creator"`
 	EditedAt *time.Time `json:"editedAt"`
-	Editor   string    `json:"editor"`
+	Editor   string     `json:"editor"`
 	//Updated  *time.Time `json:"updated"`
-	Comments string    `json:"comments"`
+	Comments string `json:"comments"`
 }
 
 type TrapNearby struct {
@@ -92,13 +92,13 @@ type TrapCount struct {
 
 type TrapData struct {
 	// Basic Identifiers
-	OrganizationID int32  `json:"organizationId"`
-	ObjectID       int64  `json:"objectId"`
+	OrganizationID int32     `json:"organizationId"`
+	ObjectID       int64     `json:"objectId"`
 	GlobalID       uuid.UUID `json:"globalId"`
-	LocationName   string `json:"locationName"`
+	LocationName   string    `json:"locationName"`
 	LocationID     uuid.UUID `json:"locationId"`
 	SRID           uuid.UUID `json:"srid"`
-	Field          int64  `json:"field"`
+	Field          int64     `json:"field"`
 
 	// Trap Information
 	TrapType         string `json:"trapType"`
@@ -124,14 +124,14 @@ type TrapData struct {
 	SiteCondition      string  `json:"siteCondition"`
 
 	// Status and Processing
-	Processed     bool      `json:"processed"`
-	RecordStatus  int16     `json:"recordStatus"`
-	Reviewed      bool      `json:"reviewed"`
-	ReviewedBy    string    `json:"reviewedBy"`
+	Processed     bool       `json:"processed"`
+	RecordStatus  int16      `json:"recordStatus"`
+	Reviewed      bool       `json:"reviewed"`
+	ReviewedBy    string     `json:"reviewedBy"`
 	ReviewedDate  *time.Time `json:"reviewedDate"`
-	GatewaySynced bool      `json:"gatewaySynced"`
-	LR            bool      `json:"laboratoryReported"`
-	Voltage       float64   `json:"voltage"`
+	GatewaySynced bool       `json:"gatewaySynced"`
+	LR            bool       `json:"laboratoryReported"`
+	Voltage       float64    `json:"voltage"`
 
 	// Location Data
 	GeometryX float64 `json:"geometryX"`
@@ -145,15 +145,15 @@ type TrapData struct {
 
 	// Metadata
 	Created        *time.Time `json:"created"`
-	Creator        string    `json:"creator"`
-	CreatedByUser  string    `json:"createdByUser"`
+	Creator        string     `json:"creator"`
+	CreatedByUser  string     `json:"createdByUser"`
 	CreatedDateAlt *time.Time `json:"createdDateAlt"`
 	Edited         *time.Time `json:"edited"`
-	Editor         string    `json:"editor"`
+	Editor         string     `json:"editor"`
 	LastEditedDate *time.Time `json:"lastEditedDate"`
-	LastEditedUser string    `json:"lastEditedUser"`
+	LastEditedUser string     `json:"lastEditedUser"`
 	//Updated        *time.Time `json:"updated"`
-	Comments       string    `json:"comments"`
+	Comments string `json:"comments"`
 }
 
 type Treatment struct {
@@ -168,7 +168,7 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.
 	results := make([]TrapNearby, 0)
 	count_by_trap_data_id := make(map[uuid.UUID]*sql.TrapCountByLocationIDRow)
 	for _, c := range counts {
-		count_by_trap_data_id[c.TrapdataGlobalid.MustGet()] = &c
+		count_by_trap_data_id[c.TrapdataGlobalid] = &c
 	}
 	counts_by_location_id := make(map[uuid.UUID][]*TrapCount)
 	for _, td := range trap_data {
@@ -193,14 +193,14 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.
 		counts_by_location_id[loc_id] = counts
 	}
 	for _, location := range locations {
-		counts, ok := counts_by_location_id[location.TrapLocationGlobalid.MustGet()]
+		counts, ok := counts_by_location_id[location.TrapLocationGlobalid]
 		if !ok {
 			return results, errors.New(fmt.Sprintf("Failed to find counts for %s", location.TrapLocationGlobalid))
 		}
 		trap := TrapNearby{
 			Counts:   counts,
 			Distance: location.Distance,
-			ID:       location.TrapLocationGlobalid.MustGet(),
+			ID:       location.TrapLocationGlobalid,
 		}
 		results = append(results, trap)
 	}
@@ -219,7 +219,7 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 			// Basic Identifiers
 			OrganizationID: r.OrganizationID,
 			ObjectID:       r.Objectid,
-			GlobalID:       r.Globalid.MustGet(),
+			GlobalID:       r.Globalid,
 			LocationName:   r.Locationname.GetOr(""),
 			LocationID:     r.LocID.GetOr(uuid.UUID{}),
 			SRID:           r.Srid.GetOr(uuid.UUID{}),
@@ -278,7 +278,7 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 			LastEditedDate: getTimeOrNull(r.LastEditedDate),
 			LastEditedUser: r.LastEditedUser.GetOr(""),
 			//Updated:        r.Updated,
-			Comments:       r.Comments.GetOr(""),
+			Comments: r.Comments.GetOr(""),
 		})
 	}
 	return results, nil
@@ -343,7 +343,7 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		Description:    source.Description.MustGet(),
 		LocationNumber: int64(source.Locationnumber.GetOr(0)),
 		ObjectID:       source.Objectid,
-		GlobalID:       source.Globalid.MustGet(),
+		GlobalID:       source.Globalid,
 		ExternalID:     source.Externalid.GetOr(""),
 
 		// Status Information
@@ -361,7 +361,7 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		Symbology:   source.Symbology.GetOr(""),
 
 		// Geographical Data
-		LatLng: lat_lng,
+		LatLng:            lat_lng,
 		Zone:              source.Zone.GetOr(""),
 		Zone2:             source.Zone2.GetOr(""),
 		Jurisdiction:      source.Jurisdiction.GetOr(""),
