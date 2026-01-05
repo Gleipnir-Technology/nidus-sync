@@ -429,6 +429,15 @@ var FieldseekerTrapdata = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fieldseekerTrapdatumIndexes{
 		TrapdataPkey: index{
@@ -521,11 +530,12 @@ type fieldseekerTrapdatumColumns struct {
 	Geospatial               column
 	Version                  column
 	OrganizationID           column
+	H3cell                   column
 }
 
 func (c fieldseekerTrapdatumColumns) AsSlice() []column {
 	return []column{
-		c.Objectid, c.Traptype, c.Trapactivitytype, c.Startdatetime, c.Enddatetime, c.Comments, c.Idbytech, c.Sortbytech, c.Processed, c.Sitecond, c.Locationname, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Trapcondition, c.Trapnights, c.Zone, c.Zone2, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Srid, c.Fieldtech, c.Gatewaysync, c.LocID, c.Voltage, c.Winddir, c.Windspeed, c.Avetemp, c.Raingauge, c.LR, c.Field, c.Vectorsurvtrapdataid, c.Vectorsurvtraplocationid, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Lure, c.Geometry, c.Geospatial, c.Version, c.OrganizationID,
+		c.Objectid, c.Traptype, c.Trapactivitytype, c.Startdatetime, c.Enddatetime, c.Comments, c.Idbytech, c.Sortbytech, c.Processed, c.Sitecond, c.Locationname, c.Recordstatus, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Trapcondition, c.Trapnights, c.Zone, c.Zone2, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Srid, c.Fieldtech, c.Gatewaysync, c.LocID, c.Voltage, c.Winddir, c.Windspeed, c.Avetemp, c.Raingauge, c.LR, c.Field, c.Vectorsurvtrapdataid, c.Vectorsurvtraplocationid, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Lure, c.Geometry, c.Geospatial, c.Version, c.OrganizationID, c.H3cell,
 	}
 }
 

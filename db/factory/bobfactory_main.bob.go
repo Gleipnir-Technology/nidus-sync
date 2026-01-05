@@ -585,6 +585,7 @@ func (f *Factory) FromExistingFieldseekerPointlocation(m *models.FieldseekerPoin
 	o.Geospatial = func() null.Val[string] { return m.Geospatial }
 	o.Version = func() int32 { return m.Version }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1238,6 +1239,7 @@ func (f *Factory) FromExistingFieldseekerServicerequest(m *models.FieldseekerSer
 	o.Geospatial = func() null.Val[string] { return m.Geospatial }
 	o.Version = func() int32 { return m.Version }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1484,6 +1486,7 @@ func (f *Factory) FromExistingFieldseekerTrapdatum(m *models.FieldseekerTrapdatu
 	o.Geospatial = func() null.Val[string] { return m.Geospatial }
 	o.Version = func() int32 { return m.Version }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
@@ -1632,6 +1635,7 @@ func (f *Factory) FromExistingFieldseekerTreatment(m *models.FieldseekerTreatmen
 	o.Geospatial = func() null.Val[string] { return m.Geospatial }
 	o.Version = func() int32 { return m.Version }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

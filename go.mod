@@ -25,7 +25,7 @@ require (
 	github.com/stephenafamo/bob v0.42.0
 	github.com/stephenafamo/scan v0.7.0
 	github.com/tidwall/geojson v1.4.5
-	github.com/uber/h3-go/v4 v4.3.0
+	github.com/uber/h3-go/v4 v4.4.0
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07
 	golang.org/x/crypto v0.42.0
 )

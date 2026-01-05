@@ -140,6 +140,7 @@ type FieldseekerTreatment struct {
 	Geospatial     null.Val[string]            `db:"geospatial" `
 	Version        int32                       `db:"version,pk" `
 	OrganizationID int32                       `db:"organization_id" `
+	H3cell         null.Val[string]            `db:"h3cell,generated" `
 
 	R fieldseekerTreatmentR `db:"-" `
 }
@@ -162,7 +163,7 @@ type fieldseekerTreatmentR struct {
 func buildFieldseekerTreatmentColumns(alias string) fieldseekerTreatmentColumns {
 	return fieldseekerTreatmentColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"objectid", "activity", "treatarea", "areaunit", "product", "qty", "qtyunit", "method", "equiptype", "comments", "avetemp", "windspeed", "winddir", "raingauge", "startdatetime", "enddatetime", "insp_id", "reviewed", "reviewedby", "revieweddate", "locationname", "zone", "warningoverride", "recordstatus", "zone2", "treatacres", "tirecount", "cbcount", "containercount", "globalid", "treatmentlength", "treatmenthours", "treatmentlengthunits", "linelocid", "pointlocid", "polygonlocid", "srid", "sdid", "barrierrouteid", "ulvrouteid", "fieldtech", "ptaid", "flowrate", "habitat", "treathectares", "invloc", "temp_sitecond", "sitecond", "totalcostprodcut", "creationdate", "creator", "editdate", "editor", "targetspecies", "geometry", "geospatial", "version", "organization_id",
+			"objectid", "activity", "treatarea", "areaunit", "product", "qty", "qtyunit", "method", "equiptype", "comments", "avetemp", "windspeed", "winddir", "raingauge", "startdatetime", "enddatetime", "insp_id", "reviewed", "reviewedby", "revieweddate", "locationname", "zone", "warningoverride", "recordstatus", "zone2", "treatacres", "tirecount", "cbcount", "containercount", "globalid", "treatmentlength", "treatmenthours", "treatmentlengthunits", "linelocid", "pointlocid", "polygonlocid", "srid", "sdid", "barrierrouteid", "ulvrouteid", "fieldtech", "ptaid", "flowrate", "habitat", "treathectares", "invloc", "temp_sitecond", "sitecond", "totalcostprodcut", "creationdate", "creator", "editdate", "editor", "targetspecies", "geometry", "geospatial", "version", "organization_id", "h3cell",
 		).WithParent("fieldseeker.treatment"),
 		tableAlias:           alias,
 		Objectid:             psql.Quote(alias, "objectid"),
@@ -223,6 +224,7 @@ func buildFieldseekerTreatmentColumns(alias string) fieldseekerTreatmentColumns 
 		Geospatial:           psql.Quote(alias, "geospatial"),
 		Version:              psql.Quote(alias, "version"),
 		OrganizationID:       psql.Quote(alias, "organization_id"),
+		H3cell:               psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -287,6 +289,7 @@ type fieldseekerTreatmentColumns struct {
 	Geospatial           psql.Expression
 	Version              psql.Expression
 	OrganizationID       psql.Expression
+	H3cell               psql.Expression
 }
 
 func (c fieldseekerTreatmentColumns) Alias() string {
@@ -1856,6 +1859,7 @@ type fieldseekerTreatmentWhere[Q psql.Filterable] struct {
 	Geospatial           psql.WhereNullMod[Q, string]
 	Version              psql.WhereMod[Q, int32]
 	OrganizationID       psql.WhereMod[Q, int32]
+	H3cell               psql.WhereNullMod[Q, string]
 }
 
 func (fieldseekerTreatmentWhere[Q]) AliasedAs(alias string) fieldseekerTreatmentWhere[Q] {
@@ -1922,6 +1926,7 @@ func buildFieldseekerTreatmentWhere[Q psql.Filterable](cols fieldseekerTreatment
 		Geospatial:           psql.WhereNull[Q, string](cols.Geospatial),
 		Version:              psql.Where[Q, int32](cols.Version),
 		OrganizationID:       psql.Where[Q, int32](cols.OrganizationID),
+		H3cell:               psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 

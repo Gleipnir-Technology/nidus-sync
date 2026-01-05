@@ -38,11 +38,11 @@ type BreedingSourceDetail struct {
 	Symbology   string `json:"symbology"`
 
 	// Geographical Data
-	LatLng            h3.LatLng `json:"latlng"`
-	Zone              string    `json:"zone"`
-	Zone2             string    `json:"zone2"`
-	Jurisdiction      string    `json:"jurisdiction"`
-	AccessDescription string    `json:"accessDescription"`
+	H3Cell            h3.Cell `json:"h3cell"`
+	Zone              string  `json:"zone"`
+	Zone2             string  `json:"zone2"`
+	Jurisdiction      string  `json:"jurisdiction"`
+	AccessDescription string  `json:"accessDescription"`
 
 	// Inspection Data
 	LarvaeInspectInterval       int16      `json:"larvaeInspectInterval"`
@@ -134,10 +134,9 @@ type TrapData struct {
 	Voltage       float64    `json:"voltage"`
 
 	// Location Data
-	GeometryX float64 `json:"geometryX"`
-	GeometryY float64 `json:"geometryY"`
-	Zone      string  `json:"zone"`
-	Zone2     string  `json:"zone2"`
+	H3Cell h3.Cell `json:"h3cell"`
+	Zone   string  `json:"zone"`
+	Zone2  string  `json:"zone2"`
 
 	// Vector Survey IDs
 	VectorSurveyTrapDataID     string `json:"vectorSurveyTrapDataId"`
@@ -210,9 +209,12 @@ func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.
 func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData, error) {
 	var results []TrapData
 	for _, r := range trap_data {
-		geometry, err := getPoint(r.Geometry)
+		if r.H3cell.IsNull() {
+			continue
+		}
+		cell, err := toH3Cell(r.H3cell.MustGet())
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to get geometry for trap data")
+			log.Error().Err(err).Msg("Failed to get location for trap data")
 			continue
 		}
 		results = append(results, TrapData{
@@ -259,10 +261,9 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 			Voltage:       r.Voltage.GetOr(0),
 
 			// Location Data
-			GeometryX: geometry.Lng,
-			GeometryY: geometry.Lat,
-			Zone:      r.Zone.GetOr(""),
-			Zone2:     r.Zone2.GetOr(""),
+			H3Cell: cell,
+			Zone:   r.Zone.GetOr(""),
+			Zone2:  r.Zone2.GetOr(""),
 
 			// Vector Survey IDs
 			VectorSurveyTrapDataID:     r.Vectorsurvtrapdataid.GetOr(""),
@@ -331,9 +332,13 @@ func fsIntToBool(val null.Val[int16]) bool {
 
 // toTemplateBreedingSource transforms the DB model into the display model
 func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *BreedingSourceDetail {
-	lat_lng, err := getPoint(source.Geometry)
+	if source.H3cell.IsNull() {
+		log.Error().Msg("h3 cell is null")
+		return nil
+	}
+	cell, err := toH3Cell(source.H3cell.MustGet())
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get point from point location")
+		log.Error().Err(err).Msg("Failed to get h3 cell from point location")
 		return nil
 	}
 	return &BreedingSourceDetail{
@@ -361,7 +366,7 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		Symbology:   source.Symbology.GetOr(""),
 
 		// Geographical Data
-		LatLng:            lat_lng,
+		H3Cell:            cell,
 		Zone:              source.Zone.GetOr(""),
 		Zone2:             source.Zone2.GetOr(""),
 		Jurisdiction:      source.Jurisdiction.GetOr(""),

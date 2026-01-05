@@ -825,6 +825,15 @@ var FieldseekerServicerequests = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fieldseekerServicerequestIndexes{
 		ServicerequestPkey: index{
@@ -961,11 +970,12 @@ type fieldseekerServicerequestColumns struct {
 	Geospatial            column
 	Version               column
 	OrganizationID        column
+	H3cell                column
 }
 
 func (c fieldseekerServicerequestColumns) AsSlice() []column {
 	return []column{
-		c.Objectid, c.Recdatetime, c.Source, c.Entrytech, c.Priority, c.Supervisor, c.Assignedtech, c.Status, c.Clranon, c.Clrfname, c.Clrphone1, c.Clrphone2, c.Clremail, c.Clrcompany, c.Clraddr1, c.Clraddr2, c.Clrcity, c.Clrstate, c.Clrzip, c.Clrother, c.Clrcontpref, c.Reqcompany, c.Reqaddr1, c.Reqaddr2, c.Reqcity, c.Reqstate, c.Reqzip, c.Reqcrossst, c.Reqsubdiv, c.Reqmapgrid, c.Reqpermission, c.Reqtarget, c.Reqdescr, c.Reqnotesfortech, c.Reqnotesforcust, c.Reqfldnotes, c.Reqprogramactions, c.Datetimeclosed, c.Techclosed, c.SRNumber, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Accepted, c.Accepteddate, c.Rejectedby, c.Rejecteddate, c.Rejectedreason, c.Duedate, c.Acceptedby, c.Comments, c.Estcompletedate, c.Nextaction, c.Recordstatus, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Firstresponsedate, c.Responsedaycount, c.Allowed, c.Xvalue, c.Yvalue, c.Validx, c.Validy, c.Externalid, c.Externalerror, c.Pointlocid, c.Notified, c.Notifieddate, c.Scheduled, c.Scheduleddate, c.Dog, c.SchedulePeriod, c.ScheduleNotes, c.Spanish, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Issuesreported, c.Jurisdiction, c.Notificationtimestamp, c.Zone, c.Zone2, c.Geometry, c.Geospatial, c.Version, c.OrganizationID,
+		c.Objectid, c.Recdatetime, c.Source, c.Entrytech, c.Priority, c.Supervisor, c.Assignedtech, c.Status, c.Clranon, c.Clrfname, c.Clrphone1, c.Clrphone2, c.Clremail, c.Clrcompany, c.Clraddr1, c.Clraddr2, c.Clrcity, c.Clrstate, c.Clrzip, c.Clrother, c.Clrcontpref, c.Reqcompany, c.Reqaddr1, c.Reqaddr2, c.Reqcity, c.Reqstate, c.Reqzip, c.Reqcrossst, c.Reqsubdiv, c.Reqmapgrid, c.Reqpermission, c.Reqtarget, c.Reqdescr, c.Reqnotesfortech, c.Reqnotesforcust, c.Reqfldnotes, c.Reqprogramactions, c.Datetimeclosed, c.Techclosed, c.SRNumber, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Accepted, c.Accepteddate, c.Rejectedby, c.Rejecteddate, c.Rejectedreason, c.Duedate, c.Acceptedby, c.Comments, c.Estcompletedate, c.Nextaction, c.Recordstatus, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Firstresponsedate, c.Responsedaycount, c.Allowed, c.Xvalue, c.Yvalue, c.Validx, c.Validy, c.Externalid, c.Externalerror, c.Pointlocid, c.Notified, c.Notifieddate, c.Scheduled, c.Scheduleddate, c.Dog, c.SchedulePeriod, c.ScheduleNotes, c.Spanish, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Issuesreported, c.Jurisdiction, c.Notificationtimestamp, c.Zone, c.Zone2, c.Geometry, c.Geospatial, c.Version, c.OrganizationID, c.H3cell,
 	}
 }
 

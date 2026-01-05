@@ -537,6 +537,15 @@ var FieldseekerTreatments = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fieldseekerTreatmentIndexes{
 		TreatmentPkey: index{
@@ -641,11 +650,12 @@ type fieldseekerTreatmentColumns struct {
 	Geospatial           column
 	Version              column
 	OrganizationID       column
+	H3cell               column
 }
 
 func (c fieldseekerTreatmentColumns) AsSlice() []column {
 	return []column{
-		c.Objectid, c.Activity, c.Treatarea, c.Areaunit, c.Product, c.Qty, c.Qtyunit, c.Method, c.Equiptype, c.Comments, c.Avetemp, c.Windspeed, c.Winddir, c.Raingauge, c.Startdatetime, c.Enddatetime, c.InspID, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Locationname, c.Zone, c.Warningoverride, c.Recordstatus, c.Zone2, c.Treatacres, c.Tirecount, c.Cbcount, c.Containercount, c.Globalid, c.Treatmentlength, c.Treatmenthours, c.Treatmentlengthunits, c.Linelocid, c.Pointlocid, c.Polygonlocid, c.Srid, c.Sdid, c.Barrierrouteid, c.Ulvrouteid, c.Fieldtech, c.Ptaid, c.Flowrate, c.Habitat, c.Treathectares, c.Invloc, c.TempSitecond, c.Sitecond, c.Totalcostprodcut, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Targetspecies, c.Geometry, c.Geospatial, c.Version, c.OrganizationID,
+		c.Objectid, c.Activity, c.Treatarea, c.Areaunit, c.Product, c.Qty, c.Qtyunit, c.Method, c.Equiptype, c.Comments, c.Avetemp, c.Windspeed, c.Winddir, c.Raingauge, c.Startdatetime, c.Enddatetime, c.InspID, c.Reviewed, c.Reviewedby, c.Revieweddate, c.Locationname, c.Zone, c.Warningoverride, c.Recordstatus, c.Zone2, c.Treatacres, c.Tirecount, c.Cbcount, c.Containercount, c.Globalid, c.Treatmentlength, c.Treatmenthours, c.Treatmentlengthunits, c.Linelocid, c.Pointlocid, c.Polygonlocid, c.Srid, c.Sdid, c.Barrierrouteid, c.Ulvrouteid, c.Fieldtech, c.Ptaid, c.Flowrate, c.Habitat, c.Treathectares, c.Invloc, c.TempSitecond, c.Sitecond, c.Totalcostprodcut, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Targetspecies, c.Geometry, c.Geospatial, c.Version, c.OrganizationID, c.H3cell,
 	}
 }
 

@@ -86,6 +86,7 @@ type FieldseekerTrapdatumTemplate struct {
 	Geospatial               func() null.Val[string]
 	Version                  func() int32
 	OrganizationID           func() int32
+	H3cell                   func() null.Val[string]
 
 	r fieldseekerTrapdatumR
 	f *Factory
@@ -468,6 +469,9 @@ func (o FieldseekerTrapdatumTemplate) Build() *models.FieldseekerTrapdatum {
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
 	}
+	if o.H3cell != nil {
+		m.H3cell = o.H3cell()
+	}
 
 	o.setModelRels(m)
 
@@ -665,6 +669,7 @@ func (m fieldseekerTrapdatumMods) RandomizeAllColumns(f *faker.Faker) Fieldseeke
 		FieldseekerTrapdatumMods.RandomGeospatial(f),
 		FieldseekerTrapdatumMods.RandomVersion(f),
 		FieldseekerTrapdatumMods.RandomOrganizationID(f),
+		FieldseekerTrapdatumMods.RandomH3cell(f),
 	}
 }
 
@@ -2992,6 +2997,59 @@ func (m fieldseekerTrapdatumMods) RandomOrganizationID(f *faker.Faker) Fieldseek
 	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
 		o.OrganizationID = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fieldseekerTrapdatumMods) H3cell(val null.Val[string]) FieldseekerTrapdatumMod {
+	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
+		o.H3cell = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fieldseekerTrapdatumMods) H3cellFunc(f func() null.Val[string]) FieldseekerTrapdatumMod {
+	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
+		o.H3cell = f
+	})
+}
+
+// Clear any values for the column
+func (m fieldseekerTrapdatumMods) UnsetH3cell() FieldseekerTrapdatumMod {
+	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
+		o.H3cell = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fieldseekerTrapdatumMods) RandomH3cell(f *faker.Faker) FieldseekerTrapdatumMod {
+	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fieldseekerTrapdatumMods) RandomH3cellNotNull(f *faker.Faker) FieldseekerTrapdatumMod {
+	return FieldseekerTrapdatumModFunc(func(_ context.Context, o *FieldseekerTrapdatumTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

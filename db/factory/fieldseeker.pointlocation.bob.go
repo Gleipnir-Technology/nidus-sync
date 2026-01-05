@@ -88,6 +88,7 @@ type FieldseekerPointlocationTemplate struct {
 	Geospatial              func() null.Val[string]
 	Version                 func() int32
 	OrganizationID          func() int32
+	H3cell                  func() null.Val[string]
 
 	r fieldseekerPointlocationR
 	f *Factory
@@ -484,6 +485,9 @@ func (o FieldseekerPointlocationTemplate) Build() *models.FieldseekerPointlocati
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
 	}
+	if o.H3cell != nil {
+		m.H3cell = o.H3cell()
+	}
 
 	o.setModelRels(m)
 
@@ -683,6 +687,7 @@ func (m fieldseekerPointlocationMods) RandomizeAllColumns(f *faker.Faker) Fields
 		FieldseekerPointlocationMods.RandomGeospatial(f),
 		FieldseekerPointlocationMods.RandomVersion(f),
 		FieldseekerPointlocationMods.RandomOrganizationID(f),
+		FieldseekerPointlocationMods.RandomH3cell(f),
 	}
 }
 
@@ -3116,6 +3121,59 @@ func (m fieldseekerPointlocationMods) RandomOrganizationID(f *faker.Faker) Field
 	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
 		o.OrganizationID = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fieldseekerPointlocationMods) H3cell(val null.Val[string]) FieldseekerPointlocationMod {
+	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
+		o.H3cell = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fieldseekerPointlocationMods) H3cellFunc(f func() null.Val[string]) FieldseekerPointlocationMod {
+	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
+		o.H3cell = f
+	})
+}
+
+// Clear any values for the column
+func (m fieldseekerPointlocationMods) UnsetH3cell() FieldseekerPointlocationMod {
+	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
+		o.H3cell = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fieldseekerPointlocationMods) RandomH3cell(f *faker.Faker) FieldseekerPointlocationMod {
+	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fieldseekerPointlocationMods) RandomH3cellNotNull(f *faker.Faker) FieldseekerPointlocationMod {
+	return FieldseekerPointlocationModFunc(func(_ context.Context, o *FieldseekerPointlocationTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

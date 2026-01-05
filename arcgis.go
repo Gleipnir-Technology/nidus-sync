@@ -1088,18 +1088,20 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 		log.Info().Int("resolution", i).Msg("Working summary layer")
 		cellToCount := make(map[h3.Cell]int, 0)
 		for _, p := range point_locations {
-			p, err := getPoint(p.Geometry)
+			if p.H3cell.IsNull() {
+				continue
+			}
+			cell, err := toH3Cell(p.H3cell.MustGet())
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get geometry point")
 				continue
 			}
-			cell, err := h3.LatLngToCell(p, i)
+			scaled, err := cell.Parent(i)
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to get cell")
+				log.Error().Err(err).Int("resolution", i).Msg("Failed to get cell's parent at resolution")
 				continue
 			}
-			//log.Info().Float64("X", p.GeometryX).Float64("Y", p.GeometryY).Str("cell", cell.String()).Msg("Converted lat/lng")
-			cellToCount[cell] = cellToCount[cell] + 1
+			cellToCount[scaled] = cellToCount[scaled] + 1
 		}
 		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
 		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
@@ -1620,5 +1622,3 @@ func exportFieldseekerLayer(ctx context.Context, org *models.Organization, fssyn
 	log.Info().Uint("inserts", stats.Inserts).Uint("updates", stats.Updates).Uint("no change", stats.Unchanged).Str("layer", layer.Name).Msg("Finished layer")
 	return stats, nil
 }
-
-

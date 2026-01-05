@@ -447,6 +447,15 @@ var FieldseekerPointlocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fieldseekerPointlocationIndexes{
 		PointlocationPkey: index{
@@ -541,11 +550,12 @@ type fieldseekerPointlocationColumns struct {
 	Geospatial              column
 	Version                 column
 	OrganizationID          column
+	H3cell                  column
 }
 
 func (c fieldseekerPointlocationColumns) AsSlice() []column {
 	return []column{
-		c.Objectid, c.Name, c.Zone, c.Habitat, c.Priority, c.Usetype, c.Active, c.Description, c.Accessdesc, c.Comments, c.Symbology, c.Externalid, c.Nextactiondatescheduled, c.Larvinspectinterval, c.Zone2, c.Locationnumber, c.Globalid, c.Stype, c.Lastinspectdate, c.Lastinspectbreeding, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectlstages, c.Lastinspectactiontaken, c.Lastinspectfieldspecies, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Lastinspectactivity, c.Lasttreatactivity, c.Lastinspectconditions, c.Waterorigin, c.X, c.Y, c.Assignedtech, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Jurisdiction, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Geometry, c.Geospatial, c.Version, c.OrganizationID,
+		c.Objectid, c.Name, c.Zone, c.Habitat, c.Priority, c.Usetype, c.Active, c.Description, c.Accessdesc, c.Comments, c.Symbology, c.Externalid, c.Nextactiondatescheduled, c.Larvinspectinterval, c.Zone2, c.Locationnumber, c.Globalid, c.Stype, c.Lastinspectdate, c.Lastinspectbreeding, c.Lastinspectavglarvae, c.Lastinspectavgpupae, c.Lastinspectlstages, c.Lastinspectactiontaken, c.Lastinspectfieldspecies, c.Lasttreatdate, c.Lasttreatproduct, c.Lasttreatqty, c.Lasttreatqtyunit, c.Lastinspectactivity, c.Lasttreatactivity, c.Lastinspectconditions, c.Waterorigin, c.X, c.Y, c.Assignedtech, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.Jurisdiction, c.DeactivateReason, c.Scalarpriority, c.Sourcestatus, c.Geometry, c.Geospatial, c.Version, c.OrganizationID, c.H3cell,
 	}
 }
 

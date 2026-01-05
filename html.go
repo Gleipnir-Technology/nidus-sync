@@ -493,15 +493,20 @@ func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id uu
 		return
 	}
 	treatment_models := modelTreatment(treatments)
+	latlng, err := s.H3Cell.LatLng()
+	if err != nil {
+		respondError(w, "Failed to get latlng", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentSource{
 		Inspections: inspections,
 		MapData: ComponentMap{
-			Center: s.LatLng,
+			Center: latlng,
 			//GeoJSON:
 			MapboxToken: MapboxToken,
 			Markers: []MapMarker{
 				MapMarker{
-					LatLng: s.LatLng,
+					LatLng: latlng,
 				},
 			},
 			Zoom: 13,

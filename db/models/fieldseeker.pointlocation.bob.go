@@ -120,6 +120,7 @@ type FieldseekerPointlocation struct {
 	Geospatial     null.Val[string]            `db:"geospatial" `
 	Version        int32                       `db:"version,pk" `
 	OrganizationID int32                       `db:"organization_id" `
+	H3cell         null.Val[string]            `db:"h3cell,generated" `
 
 	R fieldseekerPointlocationR `db:"-" `
 }
@@ -142,7 +143,7 @@ type fieldseekerPointlocationR struct {
 func buildFieldseekerPointlocationColumns(alias string) fieldseekerPointlocationColumns {
 	return fieldseekerPointlocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"objectid", "name", "zone", "habitat", "priority", "usetype", "active", "description", "accessdesc", "comments", "symbology", "externalid", "nextactiondatescheduled", "larvinspectinterval", "zone2", "locationnumber", "globalid", "stype", "lastinspectdate", "lastinspectbreeding", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectlstages", "lastinspectactiontaken", "lastinspectfieldspecies", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "lastinspectactivity", "lasttreatactivity", "lastinspectconditions", "waterorigin", "x", "y", "assignedtech", "creationdate", "creator", "editdate", "editor", "jurisdiction", "deactivate_reason", "scalarpriority", "sourcestatus", "geometry", "geospatial", "version", "organization_id",
+			"objectid", "name", "zone", "habitat", "priority", "usetype", "active", "description", "accessdesc", "comments", "symbology", "externalid", "nextactiondatescheduled", "larvinspectinterval", "zone2", "locationnumber", "globalid", "stype", "lastinspectdate", "lastinspectbreeding", "lastinspectavglarvae", "lastinspectavgpupae", "lastinspectlstages", "lastinspectactiontaken", "lastinspectfieldspecies", "lasttreatdate", "lasttreatproduct", "lasttreatqty", "lasttreatqtyunit", "lastinspectactivity", "lasttreatactivity", "lastinspectconditions", "waterorigin", "x", "y", "assignedtech", "creationdate", "creator", "editdate", "editor", "jurisdiction", "deactivate_reason", "scalarpriority", "sourcestatus", "geometry", "geospatial", "version", "organization_id", "h3cell",
 		).WithParent("fieldseeker.pointlocation"),
 		tableAlias:              alias,
 		Objectid:                psql.Quote(alias, "objectid"),
@@ -193,6 +194,7 @@ func buildFieldseekerPointlocationColumns(alias string) fieldseekerPointlocation
 		Geospatial:              psql.Quote(alias, "geospatial"),
 		Version:                 psql.Quote(alias, "version"),
 		OrganizationID:          psql.Quote(alias, "organization_id"),
+		H3cell:                  psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -247,6 +249,7 @@ type fieldseekerPointlocationColumns struct {
 	Geospatial              psql.Expression
 	Version                 psql.Expression
 	OrganizationID          psql.Expression
+	H3cell                  psql.Expression
 }
 
 func (c fieldseekerPointlocationColumns) Alias() string {
@@ -1606,6 +1609,7 @@ type fieldseekerPointlocationWhere[Q psql.Filterable] struct {
 	Geospatial              psql.WhereNullMod[Q, string]
 	Version                 psql.WhereMod[Q, int32]
 	OrganizationID          psql.WhereMod[Q, int32]
+	H3cell                  psql.WhereNullMod[Q, string]
 }
 
 func (fieldseekerPointlocationWhere[Q]) AliasedAs(alias string) fieldseekerPointlocationWhere[Q] {
@@ -1662,6 +1666,7 @@ func buildFieldseekerPointlocationWhere[Q psql.Filterable](cols fieldseekerPoint
 		Geospatial:              psql.WhereNull[Q, string](cols.Geospatial),
 		Version:                 psql.Where[Q, int32](cols.Version),
 		OrganizationID:          psql.Where[Q, int32](cols.OrganizationID),
+		H3cell:                  psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 

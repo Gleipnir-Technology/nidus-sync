@@ -22,6 +22,13 @@ func h3ToBoundsGeoJSON(c h3.Cell) (string, error) {
 }
 */
 
+func toH3Cell(s string) (h3.Cell, error) {
+	c := h3.CellFromString(s)
+	if !c.IsValid() {
+		return c, fmt.Errorf("Invalid cell definition '%s'", s)
+	}
+	return c, nil
+}
 func h3ToGeoJSON(indexes []h3.Cell) (interface{}, error) {
 	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
 	if err != nil {

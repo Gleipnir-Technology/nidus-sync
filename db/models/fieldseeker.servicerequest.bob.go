@@ -204,6 +204,7 @@ type FieldseekerServicerequest struct {
 	Geospatial     null.Val[string]            `db:"geospatial" `
 	Version        int32                       `db:"version,pk" `
 	OrganizationID int32                       `db:"organization_id" `
+	H3cell         null.Val[string]            `db:"h3cell,generated" `
 
 	R fieldseekerServicerequestR `db:"-" `
 }
@@ -226,7 +227,7 @@ type fieldseekerServicerequestR struct {
 func buildFieldseekerServicerequestColumns(alias string) fieldseekerServicerequestColumns {
 	return fieldseekerServicerequestColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"objectid", "recdatetime", "source", "entrytech", "priority", "supervisor", "assignedtech", "status", "clranon", "clrfname", "clrphone1", "clrphone2", "clremail", "clrcompany", "clraddr1", "clraddr2", "clrcity", "clrstate", "clrzip", "clrother", "clrcontpref", "reqcompany", "reqaddr1", "reqaddr2", "reqcity", "reqstate", "reqzip", "reqcrossst", "reqsubdiv", "reqmapgrid", "reqpermission", "reqtarget", "reqdescr", "reqnotesfortech", "reqnotesforcust", "reqfldnotes", "reqprogramactions", "datetimeclosed", "techclosed", "sr_number", "reviewed", "reviewedby", "revieweddate", "accepted", "accepteddate", "rejectedby", "rejecteddate", "rejectedreason", "duedate", "acceptedby", "comments", "estcompletedate", "nextaction", "recordstatus", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "firstresponsedate", "responsedaycount", "allowed", "xvalue", "yvalue", "validx", "validy", "externalid", "externalerror", "pointlocid", "notified", "notifieddate", "scheduled", "scheduleddate", "dog", "schedule_period", "schedule_notes", "spanish", "creationdate", "creator", "editdate", "editor", "issuesreported", "jurisdiction", "notificationtimestamp", "zone", "zone2", "geometry", "geospatial", "version", "organization_id",
+			"objectid", "recdatetime", "source", "entrytech", "priority", "supervisor", "assignedtech", "status", "clranon", "clrfname", "clrphone1", "clrphone2", "clremail", "clrcompany", "clraddr1", "clraddr2", "clrcity", "clrstate", "clrzip", "clrother", "clrcontpref", "reqcompany", "reqaddr1", "reqaddr2", "reqcity", "reqstate", "reqzip", "reqcrossst", "reqsubdiv", "reqmapgrid", "reqpermission", "reqtarget", "reqdescr", "reqnotesfortech", "reqnotesforcust", "reqfldnotes", "reqprogramactions", "datetimeclosed", "techclosed", "sr_number", "reviewed", "reviewedby", "revieweddate", "accepted", "accepteddate", "rejectedby", "rejecteddate", "rejectedreason", "duedate", "acceptedby", "comments", "estcompletedate", "nextaction", "recordstatus", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "firstresponsedate", "responsedaycount", "allowed", "xvalue", "yvalue", "validx", "validy", "externalid", "externalerror", "pointlocid", "notified", "notifieddate", "scheduled", "scheduleddate", "dog", "schedule_period", "schedule_notes", "spanish", "creationdate", "creator", "editdate", "editor", "issuesreported", "jurisdiction", "notificationtimestamp", "zone", "zone2", "geometry", "geospatial", "version", "organization_id", "h3cell",
 		).WithParent("fieldseeker.servicerequest"),
 		tableAlias:            alias,
 		Objectid:              psql.Quote(alias, "objectid"),
@@ -319,6 +320,7 @@ func buildFieldseekerServicerequestColumns(alias string) fieldseekerServicereque
 		Geospatial:            psql.Quote(alias, "geospatial"),
 		Version:               psql.Quote(alias, "version"),
 		OrganizationID:        psql.Quote(alias, "organization_id"),
+		H3cell:                psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -415,6 +417,7 @@ type fieldseekerServicerequestColumns struct {
 	Geospatial            psql.Expression
 	Version               psql.Expression
 	OrganizationID        psql.Expression
+	H3cell                psql.Expression
 }
 
 func (c fieldseekerServicerequestColumns) Alias() string {
@@ -2656,6 +2659,7 @@ type fieldseekerServicerequestWhere[Q psql.Filterable] struct {
 	Geospatial            psql.WhereNullMod[Q, string]
 	Version               psql.WhereMod[Q, int32]
 	OrganizationID        psql.WhereMod[Q, int32]
+	H3cell                psql.WhereNullMod[Q, string]
 }
 
 func (fieldseekerServicerequestWhere[Q]) AliasedAs(alias string) fieldseekerServicerequestWhere[Q] {
@@ -2754,6 +2758,7 @@ func buildFieldseekerServicerequestWhere[Q psql.Filterable](cols fieldseekerServ
 		Geospatial:            psql.WhereNull[Q, string](cols.Geospatial),
 		Version:               psql.Where[Q, int32](cols.Version),
 		OrganizationID:        psql.Where[Q, int32](cols.OrganizationID),
+		H3cell:                psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 

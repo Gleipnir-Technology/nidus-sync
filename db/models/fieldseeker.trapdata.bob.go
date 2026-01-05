@@ -116,6 +116,7 @@ type FieldseekerTrapdatum struct {
 	Geospatial     null.Val[string]            `db:"geospatial" `
 	Version        int32                       `db:"version,pk" `
 	OrganizationID int32                       `db:"organization_id" `
+	H3cell         null.Val[string]            `db:"h3cell,generated" `
 
 	R fieldseekerTrapdatumR `db:"-" `
 }
@@ -138,7 +139,7 @@ type fieldseekerTrapdatumR struct {
 func buildFieldseekerTrapdatumColumns(alias string) fieldseekerTrapdatumColumns {
 	return fieldseekerTrapdatumColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"objectid", "traptype", "trapactivitytype", "startdatetime", "enddatetime", "comments", "idbytech", "sortbytech", "processed", "sitecond", "locationname", "recordstatus", "reviewed", "reviewedby", "revieweddate", "trapcondition", "trapnights", "zone", "zone2", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "srid", "fieldtech", "gatewaysync", "loc_id", "voltage", "winddir", "windspeed", "avetemp", "raingauge", "lr", "field", "vectorsurvtrapdataid", "vectorsurvtraplocationid", "creationdate", "creator", "editdate", "editor", "lure", "geometry", "geospatial", "version", "organization_id",
+			"objectid", "traptype", "trapactivitytype", "startdatetime", "enddatetime", "comments", "idbytech", "sortbytech", "processed", "sitecond", "locationname", "recordstatus", "reviewed", "reviewedby", "revieweddate", "trapcondition", "trapnights", "zone", "zone2", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "srid", "fieldtech", "gatewaysync", "loc_id", "voltage", "winddir", "windspeed", "avetemp", "raingauge", "lr", "field", "vectorsurvtrapdataid", "vectorsurvtraplocationid", "creationdate", "creator", "editdate", "editor", "lure", "geometry", "geospatial", "version", "organization_id", "h3cell",
 		).WithParent("fieldseeker.trapdata"),
 		tableAlias:               alias,
 		Objectid:                 psql.Quote(alias, "objectid"),
@@ -187,6 +188,7 @@ func buildFieldseekerTrapdatumColumns(alias string) fieldseekerTrapdatumColumns 
 		Geospatial:               psql.Quote(alias, "geospatial"),
 		Version:                  psql.Quote(alias, "version"),
 		OrganizationID:           psql.Quote(alias, "organization_id"),
+		H3cell:                   psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -239,6 +241,7 @@ type fieldseekerTrapdatumColumns struct {
 	Geospatial               psql.Expression
 	Version                  psql.Expression
 	OrganizationID           psql.Expression
+	H3cell                   psql.Expression
 }
 
 func (c fieldseekerTrapdatumColumns) Alias() string {
@@ -1556,6 +1559,7 @@ type fieldseekerTrapdatumWhere[Q psql.Filterable] struct {
 	Geospatial               psql.WhereNullMod[Q, string]
 	Version                  psql.WhereMod[Q, int32]
 	OrganizationID           psql.WhereMod[Q, int32]
+	H3cell                   psql.WhereNullMod[Q, string]
 }
 
 func (fieldseekerTrapdatumWhere[Q]) AliasedAs(alias string) fieldseekerTrapdatumWhere[Q] {
@@ -1610,6 +1614,7 @@ func buildFieldseekerTrapdatumWhere[Q psql.Filterable](cols fieldseekerTrapdatum
 		Geospatial:               psql.WhereNull[Q, string](cols.Geospatial),
 		Version:                  psql.Where[Q, int32](cols.Version),
 		OrganizationID:           psql.Where[Q, int32](cols.OrganizationID),
+		H3cell:                   psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 

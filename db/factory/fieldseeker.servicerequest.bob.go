@@ -130,6 +130,7 @@ type FieldseekerServicerequestTemplate struct {
 	Geospatial            func() null.Val[string]
 	Version               func() int32
 	OrganizationID        func() int32
+	H3cell                func() null.Val[string]
 
 	r fieldseekerServicerequestR
 	f *Factory
@@ -820,6 +821,9 @@ func (o FieldseekerServicerequestTemplate) Build() *models.FieldseekerServicereq
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
 	}
+	if o.H3cell != nil {
+		m.H3cell = o.H3cell()
+	}
 
 	o.setModelRels(m)
 
@@ -1061,6 +1065,7 @@ func (m fieldseekerServicerequestMods) RandomizeAllColumns(f *faker.Faker) Field
 		FieldseekerServicerequestMods.RandomGeospatial(f),
 		FieldseekerServicerequestMods.RandomVersion(f),
 		FieldseekerServicerequestMods.RandomOrganizationID(f),
+		FieldseekerServicerequestMods.RandomH3cell(f),
 	}
 }
 
@@ -5720,6 +5725,59 @@ func (m fieldseekerServicerequestMods) RandomOrganizationID(f *faker.Faker) Fiel
 	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
 		o.OrganizationID = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fieldseekerServicerequestMods) H3cell(val null.Val[string]) FieldseekerServicerequestMod {
+	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
+		o.H3cell = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fieldseekerServicerequestMods) H3cellFunc(f func() null.Val[string]) FieldseekerServicerequestMod {
+	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
+		o.H3cell = f
+	})
+}
+
+// Clear any values for the column
+func (m fieldseekerServicerequestMods) UnsetH3cell() FieldseekerServicerequestMod {
+	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
+		o.H3cell = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fieldseekerServicerequestMods) RandomH3cell(f *faker.Faker) FieldseekerServicerequestMod {
+	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fieldseekerServicerequestMods) RandomH3cellNotNull(f *faker.Faker) FieldseekerServicerequestMod {
+	return FieldseekerServicerequestModFunc(func(_ context.Context, o *FieldseekerServicerequestTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
