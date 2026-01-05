@@ -362,6 +362,10 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		})
 	}
 	userContent, err := contentForUser(ctx, user)
+	if err != nil {
+		respondError(w, "Failed to get user context", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentDashboard{
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
