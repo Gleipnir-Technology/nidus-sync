@@ -137,22 +137,6 @@ func (e *ResponseErr) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type ResponseLocation struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-}
-
-func (rtd ResponseLocation) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func NewResponseLocation(l LatLong) ResponseLocation {
-	return ResponseLocation{
-		Latitude:  l.Latitude(),
-		Longitude: l.Longitude(),
-	}
-}
-
 type ResponseMosquitoInspection struct {
 	ActionTaken     string `json:"action_taken"`
 	Comments        string `json:"comments"`
