@@ -46,7 +46,7 @@ type UserTemplate struct {
 	ArcgisRole                func() null.Val[string]
 	DisplayName               func() string
 	Email                     func() null.Val[string]
-	OrganizationID            func() null.Val[int32]
+	OrganizationID            func() int32
 	Username                  func() string
 	PasswordHashType          func() enums.Hashtype
 	PasswordHash              func() string
@@ -186,7 +186,7 @@ func (t UserTemplate) setModelRels(o *models.User) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.User = append(rel.R.User, o)
-		o.OrganizationID = null.From(rel.ID) // h2
+		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}
 }
@@ -230,7 +230,7 @@ func (o UserTemplate) BuildSetter() *models.UserSetter {
 	}
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
-		m.OrganizationID = omitnull.FromNull(val)
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Username != nil {
 		val := o.Username()
@@ -325,6 +325,10 @@ func ensureCreatableUser(m *models.UserSetter) {
 	if !(m.DisplayName.IsValue()) {
 		val := random_string(nil, "200")
 		m.DisplayName = omit.From(val)
+	}
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
 	}
 	if !(m.Username.IsValue()) {
 		val := random_string(nil)
@@ -466,25 +470,6 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
-	isOrganizationDone, _ := userRelOrganizationCtx.Value(ctx)
-	if !isOrganizationDone && o.r.Organization != nil {
-		ctx = userRelOrganizationCtx.WithValue(ctx, true)
-		if o.r.Organization.o.alreadyPersisted {
-			m.R.Organization = o.r.Organization.o.Build()
-		} else {
-			var rel6 *models.Organization
-			rel6, err = o.r.Organization.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachOrganization(ctx, exec, rel6)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return err
 }
 
@@ -495,10 +480,29 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 	opt := o.BuildSetter()
 	ensureCreatableUser(opt)
 
+	if o.r.Organization == nil {
+		UserMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel6 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel6 = o.r.Organization.o.Build()
+	} else {
+		rel6, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel6.ID)
+
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Organization = rel6
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -973,14 +977,14 @@ func (m userMods) RandomEmailNotNull(f *faker.Faker) UserMod {
 }
 
 // Set the model columns to this value
-func (m userMods) OrganizationID(val null.Val[int32]) UserMod {
+func (m userMods) OrganizationID(val int32) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.OrganizationID = func() null.Val[int32] { return val }
+		o.OrganizationID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m userMods) OrganizationIDFunc(f func() null.Val[int32]) UserMod {
+func (m userMods) OrganizationIDFunc(f func() int32) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.OrganizationID = f
 	})
@@ -995,32 +999,10 @@ func (m userMods) UnsetOrganizationID() UserMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m userMods) RandomOrganizationID(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m userMods) RandomOrganizationIDNotNull(f *faker.Faker) UserMod {
-	return UserModFunc(func(_ context.Context, o *UserTemplate) {
-		o.OrganizationID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

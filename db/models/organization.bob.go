@@ -3348,7 +3348,7 @@ func (organization0 *Organization) AttachNoteImages(ctx context.Context, exec bo
 
 func insertOrganizationUser0(ctx context.Context, exec bob.Executor, users1 []*UserSetter, organization0 *Organization) (UserSlice, error) {
 	for i := range users1 {
-		users1[i].OrganizationID = omitnull.From(organization0.ID)
+		users1[i].OrganizationID = omit.From(organization0.ID)
 	}
 
 	ret, err := Users.Insert(bob.ToMods(users1...)).All(ctx, exec)
@@ -3361,7 +3361,7 @@ func insertOrganizationUser0(ctx context.Context, exec bob.Executor, users1 []*U
 
 func attachOrganizationUser0(ctx context.Context, exec bob.Executor, count int, users1 UserSlice, organization0 *Organization) (UserSlice, error) {
 	setter := &UserSetter{
-		OrganizationID: omitnull.From(organization0.ID),
+		OrganizationID: omit.From(organization0.ID),
 	}
 
 	err := users1.UpdateAll(ctx, exec, *setter)
@@ -6169,10 +6169,7 @@ func (os OrganizationSlice) LoadUser(ctx context.Context, exec bob.Executor, mod
 
 		for _, rel := range users {
 
-			if !rel.OrganizationID.IsValue() {
-				continue
-			}
-			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+			if !(o.ID == rel.OrganizationID) {
 				continue
 			}
 

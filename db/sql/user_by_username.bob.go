@@ -78,7 +78,7 @@ type UserByUsernameRow = struct {
 	ArcgisRole                null.Val[string]                  `db:"arcgis_role"`
 	DisplayName               string                            `db:"display_name"`
 	Email                     null.Val[string]                  `db:"email"`
-	OrganizationID            null.Val[int32]                   `db:"organization_id"`
+	OrganizationID            int32                             `db:"organization_id"`
 	Username                  string                            `db:"username"`
 	PasswordHashType          enums.Hashtype                    `db:"password_hash_type"`
 	PasswordHash              string                            `db:"password_hash"`

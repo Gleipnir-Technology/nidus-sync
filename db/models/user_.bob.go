@@ -35,7 +35,7 @@ type User struct {
 	ArcgisRole                null.Val[string]                  `db:"arcgis_role" `
 	DisplayName               string                            `db:"display_name" `
 	Email                     null.Val[string]                  `db:"email" `
-	OrganizationID            null.Val[int32]                   `db:"organization_id" `
+	OrganizationID            int32                             `db:"organization_id" `
 	Username                  string                            `db:"username" `
 	PasswordHashType          enums.Hashtype                    `db:"password_hash_type" `
 	PasswordHash              string                            `db:"password_hash" `
@@ -122,7 +122,7 @@ type UserSetter struct {
 	ArcgisRole                omitnull.Val[string]                  `db:"arcgis_role" `
 	DisplayName               omit.Val[string]                      `db:"display_name" `
 	Email                     omitnull.Val[string]                  `db:"email" `
-	OrganizationID            omitnull.Val[int32]                   `db:"organization_id" `
+	OrganizationID            omit.Val[int32]                       `db:"organization_id" `
 	Username                  omit.Val[string]                      `db:"username" `
 	PasswordHashType          omit.Val[enums.Hashtype]              `db:"password_hash_type" `
 	PasswordHash              omit.Val[string]                      `db:"password_hash" `
@@ -154,7 +154,7 @@ func (s UserSetter) SetColumns() []string {
 	if !s.Email.IsUnset() {
 		vals = append(vals, "email")
 	}
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if s.Username.IsValue() {
@@ -194,8 +194,8 @@ func (s UserSetter) Overwrite(t *User) {
 	if !s.Email.IsUnset() {
 		t.Email = s.Email.MustGetNull()
 	}
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if s.Username.IsValue() {
 		t.Username = s.Username.MustGet()
@@ -263,8 +263,8 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[8] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[8] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
@@ -354,7 +354,7 @@ func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -760,7 +760,7 @@ func (o *User) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organizations
 }
 
 func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1186,7 +1186,7 @@ func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor,
 
 func attachUserOrganization0(ctx context.Context, exec bob.Executor, count int, user0 *User, organization1 *Organization) (*User, error) {
 	setter := &UserSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := user0.Update(ctx, exec, setter)
@@ -1241,7 +1241,7 @@ type userWhere[Q psql.Filterable] struct {
 	ArcgisRole                psql.WhereNullMod[Q, string]
 	DisplayName               psql.WhereMod[Q, string]
 	Email                     psql.WhereNullMod[Q, string]
-	OrganizationID            psql.WhereNullMod[Q, int32]
+	OrganizationID            psql.WhereMod[Q, int32]
 	Username                  psql.WhereMod[Q, string]
 	PasswordHashType          psql.WhereMod[Q, enums.Hashtype]
 	PasswordHash              psql.WhereMod[Q, string]
@@ -1261,7 +1261,7 @@ func buildUserWhere[Q psql.Filterable](cols userColumns) userWhere[Q] {
 		ArcgisRole:                psql.WhereNull[Q, string](cols.ArcgisRole),
 		DisplayName:               psql.Where[Q, string](cols.DisplayName),
 		Email:                     psql.WhereNull[Q, string](cols.Email),
-		OrganizationID:            psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:            psql.Where[Q, int32](cols.OrganizationID),
 		Username:                  psql.Where[Q, string](cols.Username),
 		PasswordHashType:          psql.Where[Q, enums.Hashtype](cols.PasswordHashType),
 		PasswordHash:              psql.Where[Q, string](cols.PasswordHash),
@@ -1885,11 +1885,8 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

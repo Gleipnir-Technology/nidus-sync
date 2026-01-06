@@ -2523,7 +2523,7 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	o.ArcgisRole = func() null.Val[string] { return m.ArcgisRole }
 	o.DisplayName = func() string { return m.DisplayName }
 	o.Email = func() null.Val[string] { return m.Email }
-	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Username = func() string { return m.Username }
 	o.PasswordHashType = func() enums.Hashtype { return m.PasswordHashType }
 	o.PasswordHash = func() string { return m.PasswordHash }

@@ -133,9 +133,15 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	user, err := auth.GetAuthenticatedUser(r)
-	if err != nil && !errors.Is(err, &auth.NoCredentialsError{}) {
-		respondError(w, "Failed to get root", err, http.StatusInternalServerError)
-		return
+	if err != nil {
+		// No credentials or user not found: go to login
+		if errors.Is(err, &auth.NoCredentialsError{}) || errors.Is(err, &auth.NoUserError{}) {
+			http.Redirect(w, r, "/signin", http.StatusFound)
+			return
+		} else {
+			respondError(w, "Failed to get root", err, http.StatusInternalServerError)
+			return
+		}
 	}
 	if user == nil {
 		errorCode := r.URL.Query().Get("error")
@@ -297,7 +303,7 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := auth.SignupUser(username, name, password)
+	user, err := auth.SignupUser(r.Context(), username, name, password)
 	if err != nil {
 		respondError(w, "Failed to signup user", err, http.StatusInternalServerError)
 		return

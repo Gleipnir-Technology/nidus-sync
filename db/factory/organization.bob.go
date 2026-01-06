@@ -630,7 +630,7 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		for _, r := range t.r.User {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.OrganizationID = null.From(o.ID) // h2
+				rel.OrganizationID = o.ID // h2
 				rel.R.Organization = o
 			}
 			rel = append(rel, related...)

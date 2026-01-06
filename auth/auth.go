@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -122,22 +123,34 @@ func SigninUser(r *http.Request, username string, password string) (*models.User
 	return user, nil
 }
 
-func SignupUser(username string, name string, password string) (*models.User, error) {
+func SignupUser(ctx context.Context, username string, name string, password string) (*models.User, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot signup user: %w", err)
+		return nil, fmt.Errorf("Cannot signup user, failed to create hashed password: %w", err)
 	}
-	setter := models.UserSetter{
+	o_setter := models.OrganizationSetter{
+		Name:           omitnull.From(fmt.Sprintf("%s's organization", username)),
+		ArcgisID:       omitnull.From(""),
+		ArcgisName:     omitnull.From(""),
+		FieldseekerURL: omitnull.From(""),
+	}
+	o, err := models.Organizations.Insert(&o_setter).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create organization: %w", err)
+	}
+	log.Info().Int32("id", o.ID).Msg("Created organization")
+	u_setter := models.UserSetter{
 		DisplayName:      omit.From(name),
+		OrganizationID:   omit.From(o.ID),
 		PasswordHash:     omit.From(passwordHash),
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
 		Username:         omit.From(username),
 	}
-	u, err := models.Users.Insert(&setter).One(context.TODO(), db.PGInstance.BobDB)
+	u, err := models.Users.Insert(&u_setter).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
-	log.Info().Int("ID", int(u.ID)).Str("username", u.Username).Msg("Created user")
+	log.Info().Int32("id", u.ID).Str("username", u.Username).Msg("Created user")
 
 	return u, nil
 }
