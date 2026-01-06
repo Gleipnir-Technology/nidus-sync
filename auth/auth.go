@@ -15,6 +15,8 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -157,7 +159,11 @@ func SignupUser(ctx context.Context, username string, name string, password stri
 
 // Helper function to translate strings into solid error types for operating on
 func findUser(ctx context.Context, user_id int) (*models.User, error) {
-	user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
+	//user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
+	user, err := models.Users.Query(
+		models.Preload.User.Organization(),
+		sm.Where(models.Users.Columns.ID.EQ(psql.Arg(user_id))),
+	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}

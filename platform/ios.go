@@ -11,7 +11,15 @@ import (
 )
 
 func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync FieldseekerRecordsSync, err error) {
-	pl, err := u.R.Organization.Pointlocations().All(ctx, db.PGInstance.BobDB)
+	if u == nil {
+		return fsync, fmt.Errorf("Wha! Nil user!")
+	}
+	org := u.R.Organization
+	if org == nil {
+		return fsync, fmt.Errorf("Whoa nil org from user %d and org %d.", u.ID, u.OrganizationID)
+	}
+	db_connection := db.PGInstance.BobDB
+	pl, err := org.Pointlocations().All(ctx, db_connection)
 	if err != nil {
 		return fsync, fmt.Errorf("Failed to get point locations: %w", err)
 	}
