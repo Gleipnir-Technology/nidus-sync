@@ -32,12 +32,11 @@ var embeddedFiles embed.FS
 
 // Authenticated pages
 var (
-	cell             = newBuiltTemplate("cell", "authenticated")
-	dashboard        = newBuiltTemplate("dashboard", "authenticated")
-	dashboardLoading = newBuiltTemplate("dashboard-loading", "authenticated")
-	oauthPrompt      = newBuiltTemplate("oauth-prompt", "authenticated")
-	settings         = newBuiltTemplate("settings", "authenticated")
-	source           = newBuiltTemplate("source", "authenticated")
+	cell        = newBuiltTemplate("cell", "authenticated")
+	dashboard   = newBuiltTemplate("dashboard", "authenticated")
+	oauthPrompt = newBuiltTemplate("oauth-prompt", "authenticated")
+	settings    = newBuiltTemplate("settings", "authenticated")
+	source      = newBuiltTemplate("source", "authenticated")
 )
 
 // Unauthenticated pages
@@ -142,6 +141,7 @@ type ContentDashboard struct {
 	CountMosquitoSources int
 	CountServiceRequests int
 	Geo                  template.JS
+	IsSyncOngoing        bool
 	LastSync             *time.Time
 	MapData              ComponentMap
 	Org                  string
@@ -315,10 +315,6 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			htmlDashboardLoading(ctx, w, user)
-			return
-		}
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
 		return
 	}
@@ -332,6 +328,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	} else {
 		lastSync = &sync.Created
 	}
+	is_syncing := isSyncOngoing(org.ID)
 	inspectionCount, err := org.Mosquitoinspections().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
@@ -370,6 +367,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
+		IsSyncOngoing:        is_syncing,
 		LastSync:             lastSync,
 		MapData: ComponentMap{
 			MapboxToken: MapboxToken,
@@ -379,19 +377,6 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 		User:           userContent,
 	}
 	renderOrError(w, dashboard, data)
-}
-
-// A dashboard to show while we are still downloading information about their organization
-func htmlDashboardLoading(ctx context.Context, w http.ResponseWriter, user *models.User) {
-	userContent, err := contentForUser(ctx, user)
-	if err != nil {
-		respondError(w, "Failed to get user context", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContentDashboardLoading{
-		User: userContent,
-	}
-	renderOrError(w, dashboardLoading, data)
 }
 
 func htmlMock(t string, w http.ResponseWriter, code string) {

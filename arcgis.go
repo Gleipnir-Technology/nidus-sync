@@ -39,6 +39,8 @@ import (
 	"github.com/uber/h3-go/v4"
 )
 
+var syncStatusByOrg map[int32]bool
+
 // When the API responds that the token is now invalidated
 type InvalidatedTokenError struct{}
 
@@ -129,6 +131,10 @@ func generateCodeVerifier() string {
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
+func isSyncOngoing(org_id int32) bool {
+	return syncStatusByOrg[org_id]
+}
+
 // Find out what we can about this user
 func updateArcgisUserData(ctx context.Context, user *models.User, access_token string, access_token_expires time.Time, refresh_token string, refresh_token_expires time.Time) {
 	client := arcgis.NewArcGIS(
@@ -151,40 +157,13 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
 	}
-	var org *models.Organization
-	orgs, err := models.Organizations.Query(models.SelectWhere.Organizations.ArcgisName.EQ(portal.Name)).All(ctx, db.PGInstance.BobDB)
-	switch len(orgs) {
-	case 0:
-		setter := models.OrganizationSetter{
-			Name:       omitnull.From(portal.Name),
-			ArcgisID:   omitnull.From(portal.User.OrgID),
-			ArcgisName: omitnull.From(portal.Name),
-		}
-		org, err = models.Organizations.Insert(&setter).One(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to create new organization")
-			return
-		}
-		log.Info().Int("org_id", int(org.ID)).Msg("Created new organization")
-	case 1:
-		org = orgs[0]
-		log.Info().Msg("Organization already exists")
-	default:
-		log.Error().Msg("Got too many organizations, bailing")
-		return
-
-	}
+	org := user.R.Organization
+	err = org.Update(ctx, db.PGInstance.BobDB, &models.OrganizationSetter{
+		ArcgisID:   omitnull.From(portal.User.OrgID),
+		ArcgisName: omitnull.From(portal.Name),
+	})
 	if err != nil {
-		debug.LogErrorTypeInfo(err)
-		if errors.Is(err, pgx.ErrNoRows) {
-		} else {
-			log.Error().Err(err).Msg("Failed to query for existing org")
-			return
-		}
-	}
-	err = org.AttachUser(ctx, db.PGInstance.BobDB, user)
-	if err != nil {
-		log.Error().Err(err).Int("user_id", int(user.ID)).Int("org_id", int(org.ID)).Msg("Failed to attach user to organization")
+		log.Error().Err(err).Int32("id", user.R.Organization.ID).Msg("Failed to update organization's arcgis info")
 		return
 	}
 
@@ -292,6 +271,7 @@ func redirectURL() string {
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
 func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
+	syncStatusByOrg = make(map[int32]bool, 0)
 	for {
 		workerCtx, cancel := context.WithCancel(context.Background())
 		var wg sync.WaitGroup
@@ -448,6 +428,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 				return fmt.Errorf("Failed to get oauth for org: %w", err)
 			}
 			err = exportFieldseekerData(ctx, org, oauth)
+			syncStatusByOrg[org.ID] = false
 			if err != nil {
 				return fmt.Errorf("Failed to export Fieldseeker data: %w", err)
 			}
@@ -458,6 +439,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 }
 func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth *models.OauthToken) error {
 	log.Info().Msg("Update Fieldseeker data")
+	syncStatusByOrg[org.ID] = true
 	var err error
 	ar := arcgis.NewArcGIS(
 		arcgis.AuthenticatorOAuth{

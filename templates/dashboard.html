@@ -163,6 +163,10 @@ body {
 	font-size: 2rem;
 	font-weight: bold;
 }
+.syncing {
+	color: #28a745;
+	animation: fa-spin 2s linear infinite;
+}
 </style>
 {{end}}
 {{define "content"}}
@@ -174,10 +178,16 @@ body {
 			<p class="text-muted">Overview of mosquito control activities in your district</p>
 		</div>
 		<div class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end">
-			<p class="last-refreshed mb-0">
-			<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync | timeSince }}</span>
-				<button class="btn btn-sm btn-outline-primary ms-3">Refresh Data</button>
-			</p>
+			{{ if .IsSyncOngoing }}
+				<p class="last-refreshed mb-0">
+					<i class="fas fa-sync-alt me-2 syncing"></i>Syncing now...
+				</p>
+			{{ else }}
+				<p class="last-refreshed mb-0">
+				<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync | timeSince }}</span>
+					<button class="btn btn-sm btn-outline-primary ms-3">Refresh Data</button>
+				</p>
+			{{ end }}
 		</div>
 	</div>
 
