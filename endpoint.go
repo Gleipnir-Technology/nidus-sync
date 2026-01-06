@@ -247,9 +247,11 @@ func getVectorTiles(w http.ResponseWriter, r *http.Request, u *models.User) {
 	log.Info().Str("org_id", org_id).Str("tileset_id", tileset_id).Str("zoom", zoom).Str("x", x).Str("y", y).Str("format", format).Msg("Get vector tiles")
 
 }
+
+// Respond with an error that is visible to the user
 func respondError(w http.ResponseWriter, m string, e error, s int) {
-	log.Warn().Int("status", s).Err(e).Msg("Responding with an error")
-	http.Error(w, m, http.StatusBadRequest)
+	log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error")
+	http.Error(w, m, s)
 }
 
 func postSignin(w http.ResponseWriter, r *http.Request) {

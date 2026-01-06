@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
@@ -141,16 +142,15 @@ func SignupUser(username string, name string, password string) (*models.User, er
 	return u, nil
 }
 
-
 // Helper function to translate strings into solid error types for operating on
 func findUser(ctx context.Context, user_id int) (*models.User, error) {
 	user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
 	if err != nil {
-		if err.Error() == "No such user" {
+		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}
 		} else {
-			//LogErrorTypeInfo(err)
-			//log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
+			debug.LogErrorTypeInfo(err)
+			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
 			return nil, err
 		}
 	}

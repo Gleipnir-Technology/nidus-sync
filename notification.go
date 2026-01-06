@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -56,7 +57,7 @@ func notifyOauthInvalid(ctx context.Context, user *models.User) {
 			log.Info().Str("msg", msg).Int("user_id", int(user.ID)).Msg("Refusing to add another notification with the same type")
 			return
 		}
-		LogErrorTypeInfo(err)
+		debug.LogErrorTypeInfo(err)
 		log.Error().Err(err).Msg("Failed to insert new notification. This is a programmer bug.")
 		return
 	}

@@ -26,6 +26,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
@@ -174,7 +175,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 
 	}
 	if err != nil {
-		LogErrorTypeInfo(err)
+		debug.LogErrorTypeInfo(err)
 		if errors.Is(err, pgx.ErrNoRows) {
 		} else {
 			log.Error().Err(err).Msg("Failed to query for existing org")
@@ -310,7 +311,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 					if errors.Is(err, arcgis.InvalidatedRefreshTokenError) {
 						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
 					} else {
-						LogErrorTypeInfo(err)
+						debug.LogErrorTypeInfo(err)
 						log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
 					}
 				}
