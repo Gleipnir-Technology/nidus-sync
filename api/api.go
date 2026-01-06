@@ -93,7 +93,7 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 
 	response := ResponseClientIos{
-		Fieldseeker: toResponseFieldseeker(csync),
+		Fieldseeker: toResponseFieldseeker(csync.Fieldseeker),
 	}
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, errRender(err))
@@ -345,4 +345,3 @@ func parseTime(x string) (*time.Time, error) {
 	created := time.UnixMilli(created_epoch)
 	return &created, nil
 }
-

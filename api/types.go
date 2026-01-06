@@ -334,8 +334,12 @@ func NewResponseTrapData(data *models.FieldseekerTraplocationSlice) []ResponseTr
 	return results
 }
 
-func toResponseFieldseeker(csync platform.ClientSync) ResponseFieldseeker {
-	return ResponseFieldseeker{}
+func toResponseFieldseeker(sync platform.FieldseekerRecordsSync) ResponseFieldseeker {
+	return ResponseFieldseeker{
+		MosquitoSources: NewResponseMosquitoSources(sync.MosquitoSources),
+		ServiceRequests: NewResponseServiceRequests(sync.ServiceRequests),
+		TrapData:        NewResponseTrapData(sync.TrapData),
+	}
 }
 
 func formatTime(t null.Val[time.Time]) string {

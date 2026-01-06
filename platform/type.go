@@ -1,4 +1,5 @@
 package platform
+
 import (
 	"time"
 
@@ -7,15 +8,17 @@ import (
 
 type ClientSync struct {
 	Fieldseeker FieldseekerRecordsSync
-	Since time.Time
+	Since       time.Time
 }
 
 type FieldseekerRecordsSync struct {
-	MosquitoSources models.FieldseekerPointlocationSlice
+	MosquitoSources *[]*MosquitoSource
+	ServiceRequests *models.FieldseekerServicerequestSlice
+	TrapData        *models.FieldseekerTraplocationSlice
 }
 
 type MosquitoSource struct {
 	PointLocation *models.FieldseekerPointlocation
-	Inspections *models.FieldseekerMosquitoinspectionSlice
-	Treatments *models.FieldseekerTreatmentSlice
+	Inspections   *models.FieldseekerMosquitoinspectionSlice
+	Treatments    *models.FieldseekerTreatmentSlice
 }
