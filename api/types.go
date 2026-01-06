@@ -32,44 +32,34 @@ func NewBounds() Bounds {
 	}
 }
 
-type LatLong interface {
-	Latitude() float64
-	Longitude() float64
-}
-
+/* not sure if used
 type Location struct {
 	Latitude  float64
 	Longitude float64
 }
+*/
 
 type NoteImagePayload struct {
-	UUID    string    `json:"uuid"`
-	Cell    H3Cell    `json:"cell"`
-	Created time.Time `json:"created"`
-}
-
-type NoteAudio struct {
-	UUID                    string `db:"uuid"`
-	Breadcrumbs             []NoteAudioBreadcrumbPayload
-	Created                 time.Time  `db:"created"`
-	Creator                 int        `db:"creator"`
-	Deleted                 *time.Time `db:"deleted"`
-	Duration                int        `db:"duration"`
-	IsAudioNormalized       bool       `db:"is_audio_normalized"`
-	IsTranscodedeToOgg      bool       `db:"is_transcoded_to_ogg"`
-	Transcription           *string    `db:"transcription"`
-	TranscriptionUserEdited bool       `db:"transcription_user_edited"`
-	Version                 int        `db:"version"`
+	UUID      string     `json:"uuid"`
+	Cell      H3Cell     `json:"cell"`
+	Created   time.Time  `json:"created"`
+	CreatorID int        `db:"creator_id"`
+	Deleted   *time.Time `json:"deleted"`
+	DeletorID *int32     `json:"deletor_id"`
+	Version   int32      `json:"version"`
 }
 
 type NoteAudioPayload struct {
 	UUID                    string                       `json:"uuid"`
 	Breadcrumbs             []NoteAudioBreadcrumbPayload `json:"breadcrumbs"`
 	Created                 time.Time                    `json:"created"`
-	Duration                int                          `json:"duration"`
+	CreatorID               int                          `json:"creator_id"`
+	Deleted                 *time.Time                   `json:"deleted"`
+	DeletorID               *int32                       `json:"deletor_id"`
+	Duration                float32                      `json:"duration"`
 	Transcription           *string                      `json:"transcription"`
 	TranscriptionUserEdited bool                         `json:"transcriptionUserEdited"`
-	Version                 int                          `json:"version"`
+	Version                 int32                        `json:"version"`
 }
 
 type ResponseMosquitoSource struct {
@@ -97,14 +87,6 @@ type NoteAudioBreadcrumbPayload struct {
 	ManuallySelected bool      `json:"manuallySelected"`
 }
 
-type NidusNotePayload struct {
-	UUID      string    `json:"uuid"`
-	Timestamp time.Time `json:"timestamp"`
-	H3Cell    int64     `json:"h3cell"`
-	Images    []string  `json:"images"`
-	Text      string    `json:"text"`
-}
-
 type ResponseFieldseeker struct {
 	MosquitoSources []ResponseMosquitoSource `json:"sources"`
 	ServiceRequests []ResponseServiceRequest `json:"requests"`
@@ -114,6 +96,7 @@ type ResponseFieldseeker struct {
 // ResponseErr renderer type for handling all sorts of errors.
 type ResponseClientIos struct {
 	Fieldseeker ResponseFieldseeker `json:"fieldseeker"`
+	Since       time.Time           `json:"since"`
 }
 
 func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
@@ -163,9 +146,9 @@ func NewResponseMosquitoInspection(i *models.FieldseekerMosquitoinspection) Resp
 		SiteCondition: i.Sitecond.GetOr(""),
 	}
 }
-func NewResponseMosquitoInspections(inspections *models.FieldseekerMosquitoinspectionSlice) []ResponseMosquitoInspection {
+func NewResponseMosquitoInspections(inspections models.FieldseekerMosquitoinspectionSlice) []ResponseMosquitoInspection {
 	results := make([]ResponseMosquitoInspection, 0)
-	for _, i := range *inspections {
+	for _, i := range inspections {
 		results = append(results, NewResponseMosquitoInspection(i))
 	}
 	return results
@@ -175,7 +158,7 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSource {
+func NewResponseMosquitoSource(ms platform.MosquitoSource) ResponseMosquitoSource {
 	pl := ms.PointLocation
 	return ResponseMosquitoSource{
 		Active:      toBool16(pl.Active),
@@ -196,9 +179,9 @@ func NewResponseMosquitoSource(ms *platform.MosquitoSource) ResponseMosquitoSour
 		Zone:                    pl.Zone.GetOr(""),
 	}
 }
-func NewResponseMosquitoSources(sources *[]*platform.MosquitoSource) []ResponseMosquitoSource {
+func NewResponseMosquitoSources(sources []platform.MosquitoSource) []ResponseMosquitoSource {
 	results := make([]ResponseMosquitoSource, 0)
-	for _, i := range *sources {
+	for _, i := range sources {
 		results = append(results, NewResponseMosquitoSource(i))
 	}
 	return results
@@ -224,24 +207,22 @@ func (rtd ResponseMosquitoTreatment) Render(w http.ResponseWriter, r *http.Reque
 }
 func NewResponseMosquitoTreatment(i *models.FieldseekerTreatment) ResponseMosquitoTreatment {
 	return ResponseMosquitoTreatment{
-		/*
-			Comments:        i.Comments(),
-			Created:         i.Created().Format("2006-01-02T15:04:05.000Z"),
-			FieldTechnician: i.FieldTechnician(),
-			Habitat:         i.Habitat(),
-			ID:              i.ID(),
-			Product:         i.Product(),
-			Quantity:        i.Quantity(),
-			QuantityUnit:    i.QuantityUnit(),
-			SiteCondition:   i.SiteCondition(),
-			TreatAcres:      i.TreatAcres(),
-			TreatHectares:   i.TreatHectares(),
-		*/
+		Comments:        i.Comments.GetOr(""),
+		Created:         formatTime(i.Creationdate),
+		FieldTechnician: i.Fieldtech.GetOr(""),
+		Habitat:         i.Habitat.GetOr(""),
+		ID:              i.Globalid.String(),
+		Product:         i.Product.GetOr(""),
+		Quantity:        i.Qty.GetOr(0),
+		QuantityUnit:    i.Qtyunit.GetOr(""),
+		SiteCondition:   i.Sitecond.GetOr(""),
+		TreatAcres:      i.Treatacres.GetOr(0.0),
+		TreatHectares:   i.Treathectares.GetOr(0.0),
 	}
 }
-func NewResponseMosquitoTreatments(treatments *models.FieldseekerTreatmentSlice) []ResponseMosquitoTreatment {
+func NewResponseMosquitoTreatments(treatments models.FieldseekerTreatmentSlice) []ResponseMosquitoTreatment {
 	results := make([]ResponseMosquitoTreatment, 0)
-	for _, i := range *treatments {
+	for _, i := range treatments {
 		results = append(results, NewResponseMosquitoTreatment(i))
 	}
 	return results
@@ -298,9 +279,9 @@ func NewResponseServiceRequest(sr *models.FieldseekerServicerequest) ResponseSer
 		Zip:               sr.Reqzip.GetOr(""),
 	}
 }
-func NewResponseServiceRequests(requests *models.FieldseekerServicerequestSlice) []ResponseServiceRequest {
+func NewResponseServiceRequests(requests models.FieldseekerServicerequestSlice) []ResponseServiceRequest {
 	results := make([]ResponseServiceRequest, 0)
-	for _, i := range *requests {
+	for _, i := range requests {
 		results = append(results, NewResponseServiceRequest(i))
 	}
 	return results
@@ -326,9 +307,9 @@ func NewResponseTrapDatum(td *models.FieldseekerTraplocation) ResponseTrapData {
 		Name: td.Name.GetOr(""),
 	}
 }
-func NewResponseTrapData(data *models.FieldseekerTraplocationSlice) []ResponseTrapData {
+func NewResponseTrapData(data models.FieldseekerTraplocationSlice) []ResponseTrapData {
 	results := make([]ResponseTrapData, 0)
-	for _, i := range *data {
+	for _, i := range data {
 		results = append(results, NewResponseTrapDatum(i))
 	}
 	return results

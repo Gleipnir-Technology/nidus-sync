@@ -173,6 +173,7 @@ func findUser(ctx context.Context, user_id int) (*models.User, error) {
 			return nil, err
 		}
 	}
+	log.Info().Int32("user_id", user.ID).Int32("org_id", user.OrganizationID).Msg("Found user")
 	return user, err
 }
 

@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/label-studio"
 	"github.com/Gleipnir-Technology/nidus-sync/minio"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -127,7 +128,7 @@ func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucke
 	return nil
 }
 
-func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *db.NoteAudio) error {
+func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *models.NoteAudio) error {
 	audioRef := fmt.Sprintf("s3://%s/%s-normalized.m4a", bucket, note.UUID)
 	audioFile := fmt.Sprintf("%s/%s-normalized.m4a", userfile.UserFilesDirectory, note.UUID)
 	uploadPath := fmt.Sprintf("%s-normalized.m4a", note.UUID)
@@ -140,9 +141,9 @@ func createTask(client *labelstudio.Client, project *labelstudio.Project, minioC
 	}
 	var transcription string = ""
 	//if note.Transcription.IsValue() {
-		//transcription = note.Transcription.MustGet()
+	//transcription = note.Transcription.MustGet()
 	//}
-	transcription = note.Transcription
+	transcription = note.Transcription.GetOr("")
 	simpleTasks := []map[string]interface{}{
 		{
 			"data": map[string]string{
@@ -184,7 +185,7 @@ func findLabelStudioProject(client *labelstudio.Client, title string) (*labelstu
 	return nil, fmt.Errorf("No such project '%s'", title)
 }
 
-func findMatchingTask(client *labelstudio.Client, project *labelstudio.Project, customer string, note *db.NoteAudio) (*labelstudio.Task, error) {
+func findMatchingTask(client *labelstudio.Client, project *labelstudio.Project, customer string, note *models.NoteAudio) (*labelstudio.Task, error) {
 	/*meta := map[string]string{
 		"customer": customer,
 		"note_uuid": note.UUID,

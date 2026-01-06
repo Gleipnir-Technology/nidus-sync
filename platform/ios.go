@@ -57,7 +57,7 @@ func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync F
 		ts = append(ts, t)
 		treatments_by_location[locid] = ts
 	}
-	sources := make([]*MosquitoSource, 0)
+	sources := make([]MosquitoSource, 0)
 	for _, p := range pl {
 		inspections, ok := inspections_by_location[p.Globalid]
 		if !ok {
@@ -68,13 +68,13 @@ func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync F
 			treatments = make(models.FieldseekerTreatmentSlice, 0)
 		}
 		ms := MosquitoSource{
-			PointLocation: p,
-			Inspections:   &inspections,
-			Treatments:    &treatments,
+			PointLocation: *p,
+			Inspections:   inspections,
+			Treatments:    treatments,
 		}
-		sources = append(sources, &ms)
+		sources = append(sources, ms)
 	}
-	fsync.MosquitoSources = &sources
+	fsync.MosquitoSources = sources
 	return fsync, err
 }
 

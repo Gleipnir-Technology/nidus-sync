@@ -16,6 +16,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -41,7 +43,18 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	if err := db.NoteAudioCreate(context.Background(), noteUUID, db.NoteAudio{}, u.ID); err != nil {
+	setter := models.NoteAudioSetter{
+		Created:                 omit.From(payload.Created),
+		CreatorID:               omit.From(u.ID),
+		Deleted:                 omitnull.FromPtr(payload.Deleted),
+		DeletorID:               omitnull.FromPtr(payload.DeletorID),
+		Duration:                omit.From(payload.Duration),
+		Transcription:           omitnull.FromPtr(payload.Transcription),
+		TranscriptionUserEdited: omit.From(payload.TranscriptionUserEdited),
+		Version:                 omit.From(payload.Version),
+		UUID:                    omit.From(noteUUID),
+	}
+	if err := db.NoteAudioCreate(context.Background(), u.R.Organization, u.ID, setter); err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
@@ -92,38 +105,20 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 
+	var since_used time.Time
+	if since == nil {
+		since_used = time.Unix(0, 0)
+	} else {
+		since_used = *since
+	}
 	response := ResponseClientIos{
 		Fieldseeker: toResponseFieldseeker(csync.Fieldseeker),
+		Since:       since_used,
 	}
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
-}
-
-func apiClientIosNotePut(w http.ResponseWriter, r *http.Request, u *models.User) {
-	id := chi.URLParam(r, "uuid")
-	noteUUID, err := uuid.Parse(id)
-	if err != nil {
-		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
-		return
-	}
-	var payload NidusNotePayload
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
-		return
-	}
-	if err := json.Unmarshal(body, &payload); err != nil {
-		debugSaveRequest(body, err, "Note PUT JSON decode error")
-		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
-		return
-	}
-	if err := db.NoteUpdate(context.Background(), noteUUID, db.NidusNotePayload{}); err != nil {
-		render.Render(w, r, errRender(err))
-		return
-	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -145,7 +140,15 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
-	err = db.NoteImageCreate(context.Background(), noteUUID, db.NoteImage{}, u.ID)
+	setter := models.NoteImageSetter{
+		Created:   omit.From(payload.Created),
+		CreatorID: omit.From(u.ID),
+		Deleted:   omitnull.FromPtr(payload.Deleted),
+		DeletorID: omitnull.FromPtr(payload.DeletorID),
+		Version:   omit.From(payload.Version),
+		UUID:      omit.From(noteUUID),
+	}
+	err = db.NoteImageCreate(context.Background(), u.R.Organization, u.ID, setter)
 	if err != nil {
 		render.Render(w, r, errRender(err))
 		return
@@ -187,7 +190,7 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 
 	data := []render.Renderer{}
-	for _, s := range *sources {
+	for _, s := range sources {
 		data = append(data, NewResponseMosquitoSource(s))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
@@ -212,7 +215,7 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 
 	data := []render.Renderer{}
-	for _, td := range *trap_data {
+	for _, td := range trap_data {
 		data = append(data, NewResponseTrapDatum(td))
 	}
 	if err := render.RenderList(w, r, data); err != nil {
@@ -236,7 +239,7 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 
 	data := []render.Renderer{}
-	for _, sr := range *requests {
+	for _, sr := range requests {
 		data = append(data, NewResponseServiceRequest(sr))
 	}
 	if err := render.RenderList(w, r, data); err != nil {

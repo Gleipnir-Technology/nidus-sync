@@ -12,13 +12,13 @@ type ClientSync struct {
 }
 
 type FieldseekerRecordsSync struct {
-	MosquitoSources *[]*MosquitoSource
-	ServiceRequests *models.FieldseekerServicerequestSlice
-	TrapData        *models.FieldseekerTraplocationSlice
+	MosquitoSources []MosquitoSource
+	ServiceRequests models.FieldseekerServicerequestSlice
+	TrapData        models.FieldseekerTraplocationSlice
 }
 
 type MosquitoSource struct {
-	PointLocation *models.FieldseekerPointlocation
-	Inspections   *models.FieldseekerMosquitoinspectionSlice
-	Treatments    *models.FieldseekerTreatmentSlice
+	PointLocation models.FieldseekerPointlocation
+	Inspections   models.FieldseekerMosquitoinspectionSlice
+	Treatments    models.FieldseekerTreatmentSlice
 }
