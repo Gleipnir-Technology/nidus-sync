@@ -11,13 +11,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/report"
+	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/hostrouter"
@@ -51,7 +51,7 @@ func main() {
 	hr := hostrouter.New()
 
 	// Set up routing by hostname
-	sr := syncRouter()
+	sr := nidussync.Router()
 	hr.Map("", sr)                            // default
 	hr.Map("*", sr)                           // default
 	hr.Map(config.URLReport, report.Router()) // report.mosquitoes.online
@@ -59,6 +59,7 @@ func main() {
 	r.Mount("/", hr)
 
 	log.Info().Str("report url", config.URLReport).Str("sync url", config.URLSync).Msg("Serving at URLs")
+
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -109,71 +110,6 @@ func main() {
 
 	log.Info().Msg("Shutdown complete")
 }
-func syncRouter() chi.Router {
-	r := chi.NewRouter()
-	// Root is a special endpoint that is neither authenticated nor unauthenticated
-	r.Get("/", getRoot)
-
-	// Unauthenticated endpoints
-	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
-	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
-	r.Get("/favicon.ico", getFavicon)
-
-	r.Get("/mock", renderMock("mock-root"))
-	r.Get("/mock/admin", renderMock("admin"))
-	r.Get("/mock/admin/service-request", renderMock("admin-service-request"))
-	r.Get("/mock/data-entry", renderMock("data-entry"))
-	r.Get("/mock/data-entry/bad", renderMock("data-entry-bad"))
-	r.Get("/mock/data-entry/good", renderMock("data-entry-good"))
-	r.Get("/mock/dispatch", renderMock("dispatch"))
-	r.Get("/mock/dispatch-results", renderMock("dispatch-results"))
-	r.Get("/mock/report", renderMock("report"))
-	r.Get("/mock/report/{code}", renderMock("report-detail"))
-	r.Get("/mock/report/{code}/confirm", renderMock("report-confirmation"))
-	r.Get("/mock/report/{code}/contribute", renderMock("report-contribute"))
-	r.Get("/mock/report/{code}/evidence", renderMock("report-evidence"))
-	r.Get("/mock/report/{code}/schedule", renderMock("report-schedule"))
-	r.Get("/mock/report/{code}/update", renderMock("report-update"))
-	r.Get("/mock/service-request", renderMock("service-request"))
-	r.Get("/mock/service-request/{code}", renderMock("service-request-detail"))
-	r.Get("/mock/service-request-location", renderMock("service-request-location"))
-	r.Get("/mock/service-request-mosquito", renderMock("service-request-mosquito"))
-	r.Get("/mock/service-request-pool", renderMock("service-request-pool"))
-	r.Get("/mock/service-request-quick", renderMock("service-request-quick"))
-	r.Get("/mock/service-request-quick-confirmation", renderMock("service-request-quick-confirmation"))
-	r.Get("/mock/service-request-updates", renderMock("service-request-updates"))
-	r.Get("/mock/setting", renderMock("setting-mock"))
-	r.Get("/mock/setting/integration", renderMock("setting-integration"))
-	r.Get("/mock/setting/pesticide", renderMock("setting-pesticide"))
-	r.Get("/mock/setting/pesticide/add", renderMock("setting-pesticide-add"))
-	r.Get("/mock/setting/user", renderMock("setting-user"))
-	r.Get("/mock/setting/user/add", renderMock("setting-user-add"))
-
-	r.Get("/oauth/refresh", getOAuthRefresh)
-
-	r.Get("/qr-code/report/{code}", getQRCodeReport)
-	r.Get("/signin", getSignin)
-	r.Post("/signin", postSignin)
-	r.Get("/signup", getSignup)
-	r.Post("/signup", postSignup)
-	r.Get("/sms", getSMS)
-	r.Post("/sms", postSMS)
-	r.Get("/sms.php", getSMS)
-	r.Get("/sms/{org}", getSMS)
-	r.Post("/sms/{org}", postSMS)
-
-	// Authenticated endpoints
-	r.Route("/api", api.AddRoutes)
-	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
-	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
-	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
-	//r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
-
-	localFS := http.Dir("./static")
-	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
-	return r
-}
-
 func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {

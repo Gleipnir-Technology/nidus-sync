@@ -1,4 +1,4 @@
-package main
+package htmlpage
 
 import (
 	"embed"
@@ -12,9 +12,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 )
-
-//go:embed static
-var embeddedStaticFS embed.FS
 
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.

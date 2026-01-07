@@ -33,6 +33,9 @@ import (
 //go:embed template/*
 var embeddedFiles embed.FS
 
+//go:embed static/*
+var EmbeddedStaticFS embed.FS
+
 // Authenticated pages
 var (
 	cell        = buildTemplate("cell", "authenticated")

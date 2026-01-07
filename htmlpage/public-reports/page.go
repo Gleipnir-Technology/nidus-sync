@@ -10,6 +10,9 @@ import (
 //go:embed template/*
 var embeddedFiles embed.FS
 
+//go:embed static/*
+var EmbeddedStaticFS embed.FS
+
 type RootContext struct{}
 
 var (

@@ -11,6 +11,8 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getRoot)
+	localFS := http.Dir("./static")
+	htmlpage.FileServer(r, "/static", localFS, publicreports.EmbeddedStaticFS, "static")
 	return r
 }
 

@@ -1,224 +1,163 @@
 {{template "base.html" .}}
 
-{{define "title"}}Login{{end}}
+{{define "title"}}Dash{{end}}
 {{define "extraheader"}}
 <style>
-.entry-container {
-	max-width: 1000px;
-	margin: 0 auto;
+.service-card {
+	transition: transform 0.3s;
+	height: 100%;
 }
-.entry-box {
-	box-shadow: 0 0 15px rgba(0,0,0,0.1);
-	border-radius: 10px;
-	padding: 40px;
-	background-color: #fff;
-	margin-bottom: 30px;
+.service-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
-.entry-header {
-	margin-bottom: 25px;
-	text-align: center;
+.district-logo {
+	max-height: 80px;
+	width: auto;
 }
-.logo-area {
-	text-align: center;
-	margin-bottom: 30px;
+.quick-report-mobile {
+	background-color: #ff9800;
 }
-.logo-placeholder {
-	width: 120px;
-	height: 60px;
-	background-color: #e9ecef;
-	margin: 0 auto;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 6px;
-}
-.method-section {
-	margin-bottom: 40px;
-	padding: 25px;
-	border-radius: 10px;
-	background-color: #f8f9fa;
-}
-.method-title {
-	margin-bottom: 20px;
-	display: flex;
-	align-items: center;
-}
-.method-title i {
-	font-size: 1.5rem;
-	margin-right: 10px;
-}
-.sms-mockup {
-	max-width: 300px;
-	background-color: #dcf8c6;
-	border-radius: 15px;
-	padding: 15px;
-	position: relative;
-	margin: 20px auto;
-}
-.qr-code-placeholder {
-	width: 200px;
-	height: 200px;
-	background-color: #e9ecef;
-	margin: 20px auto;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border: 1px dashed #ced4da;
-}
-.email-mockup {
-	max-width: 550px;
-	background-color: white;
-	border: 1px solid #ddd;
-	border-radius: 10px;
-	padding: 20px;
-	margin: 20px auto;
-}
-.email-header {
-	border-bottom: 1px solid #eee;
-	padding-bottom: 10px;
-	margin-bottom: 15px;
-}
-.door-hanger {
-	max-width: 300px;
-	background-color: #fff;
-	border: 2px solid #dc3545;
-	border-radius: 10px;
-	padding: 15px;
-	position: relative;
-	margin: 20px auto;
-	text-align: center;
-}
-.door-hanger:before {
-	content: "";
-	position: absolute;
-	top: -25px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 40px;
-	height: 25px;
-	background-color: #fff;
-	border: 2px solid #dc3545;
-	border-bottom: none;
-	border-radius: 20px 20px 0 0;
+.quick-report-desktop {
+	background-color: #ffefd5;
+	border-left: 4px solid #ff9800;
 }
 </style>
 {{end}}
 {{define "content"}}
-<div class="container py-5">
-	<div class="entry-container">
-		<div class="entry-box">
-			<div class="entry-header">
-				<h1>Green Pool Reporting</h1>
-				<p class="text-muted">Entry Points Diagnostic Page</p>
+<!-- Header -->
+<header class="bg-light py-3">
+	<div class="container">
+		<div class="row align-items-center">
+			<div class="col-md-6">
+				<h1 class="district-name">District Name</h1>
 			</div>
-			
-			<div class="alert alert-info">
-				<i class="bi bi-info-circle me-2"></i>
-				This page demonstrates the various ways customers can access the Green Pool Reporting system.
-			</div>
-			
-			<!-- SMS Entry Point -->
-			<div class="method-section">
-				<div class="method-title">
-					<i class="bi bi-chat-dots-fill text-primary"></i>
-					<h3>Text Message Entry Point</h3>
-				</div>
-				
-				<p>Customers will receive the following text message with a link to begin the reporting process:</p>
-				
-				<div class="sms-mockup">
-			<strong>Vector Control:</strong> We noticed a potential green pool at your property. Please tap the link to report status or schedule inspection: <a href="/report-detail">/report-detail</a>
-				</div>
-				
-				<div class="mt-3">
-					<p><strong>SMS Details:</strong></p>
-					<ul>
-						<li>Sent via automated system after aerial detection</li>
-						<li>Contains unique tracking link for each property</li>
-						<li>Customers tap link to open mobile browser</li>
-					</ul>
-				</div>
-			</div>
-			
-			<!-- Door Hanger Entry Point -->
-			<div class="method-section">
-				<div class="method-title">
-					<i class="bi bi-qr-code text-success"></i>
-					<h3>Door Hanger QR Code Entry Point</h3>
-				</div>
-				
-				<p>Inspectors will leave door hangers with a QR code for properties where no one is home:</p>
-				
-				<div class="door-hanger">
-					<h5>IMPORTANT NOTICE</h5>
-					<p>We visited regarding a potential mosquito breeding site.</p>
-					
-		<img src="/qr-code/report/t78fd3" width="256" height="256"/>
-					
-					<p><strong>Scan this code</strong> with your phone camera to report your pool status or schedule an inspection.</p>
-		<p class="small text-muted">Or visit: /report-detail</p>
-				</div>
-				
-				<div class="mt-3">
-					<p><strong>Door Hanger Details:</strong></p>
-					<ul>
-						<li>Physical notices left on the door handle</li>
-						<li>QR code contains property-specific link</li>
-						<li>Fallback URL provided for manual entry</li>
-					</ul>
-				</div>
-			</div>
-			
-			<!-- Email Entry Point -->
-			<div class="method-section">
-				<div class="method-title">
-					<i class="bi bi-envelope-fill text-danger"></i>
-					<h3>Email Notification Entry Point</h3>
-				</div>
-				
-				<p>Property owners will receive this email as a follow-up to other communication attempts:</p>
-				
-				<div class="email-mockup">
-					<div class="email-header">
-						<strong>From:</strong> Green Pool Response Team &lt;noreply@vectorcontrol.county.gov&gt;<br>
-						<strong>To:</strong> Property Owner &lt;resident@example.com&gt;<br>
-						<strong>Subject:</strong> Action Required: Green Pool Detected at Your Property
-					</div>
-					
-					<div class="email-body">
-						<p>Dear Property Owner,</p>
-						
-						<p>Our recent surveillance has identified a potential unmaintained swimming pool at your property located at <strong>123 Main Street</strong>. Untreated pools can become mosquito breeding grounds and pose public health risks, including the spread of West Nile virus and other diseases.</p>
-						
-						<div class="text-center my-4">
-							<a href="/report/t78fd3" class="btn btn-primary">Report Pool Status or Schedule Inspection</a>
-						</div>
-						
-			<p>Please click the button above or visit <a href="/report-detail">/report-detail</a> to complete a brief questionnaire about your pool status. This will help us determine if an inspection is needed or if you've already addressed the issue.</p>
-						
-						<p>Thank you for helping keep our community safe and healthy.</p>
-						
-						<p>Sincerely,<br>
-						Vector Control Department<br>
-						County Health Services</p>
-					</div>
-				</div>
-				
-				<div class="mt-3">
-					<p><strong>Email Details:</strong></p>
-					<ul>
-						<li>Sent as follow-up or for property owners with registered email addresses</li>
-						<li>Contains clear call-to-action button and alternative text link</li>
-						<li>Explains reason for contact and next steps</li>
-					</ul>
-				</div>
-			</div>
-			
-			<div class="d-flex justify-content-between mt-4">
-				<a href="/" class="btn btn-outline-primary">Back to Dashboard</a>
-				<a href="/report-detail" class="btn btn-success">Test Reporting Flow</a>
+			<div class="col-md-6 text-md-end">
+				<img src="placeholder-logo.png" alt="District Logo" class="district-logo">
 			</div>
 		</div>
 	</div>
-</div>
+</header>
+
+<!-- Main Content -->
+<main>
+	<!-- Introduction Section -->
+	<section class="py-5 bg-primary text-white">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-lg-10">
+					<h2 class="text-center mb-4">Welcome to Our Mosquito Management Services</h2>
+					<p class="lead text-center">
+						We are dedicated to protecting public health and improving quality of life by reducing 
+						mosquito populations and the diseases they can carry. Our district provides comprehensive 
+						mosquito surveillance, control, and education services to our community.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- Quick Report for Mobile - Only visible on small screens -->
+	<section class="py-3 quick-report-mobile d-md-none">
+		<div class="container">
+			<div class="row">
+				<div class="col-12 text-center">
+					<h4 class="mb-2">On the go?</h4>
+					<a href="/mock/service-request-quick" class="btn btn-dark btn-lg">Make a Quick Report</a>
+					<p class="mb-0 mt-2"><small>Report mosquito issues in under 60 seconds</small></p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Services Section -->
+	<section class="py-5">
+		<div class="container">
+			<h3 class="text-center mb-4">How Can We Help You Today?</h3>
+			<div class="row g-4">
+				<!-- Service Option 1 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Follow-up or Check Status</h4>
+							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
+							<a href="/mock/service-request-updates" class="btn btn-primary mt-3">Get Updates</a>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Service Option 2 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-water" viewBox="0 0 16 16">
+									<path d="M.036 3.314a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 3.964a.5.5 0 0 1-.278-.65zm0 3a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 6.964a.5.5 0 0 1-.278-.65zm0 3a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 9.964a.5.5 0 0 1-.278-.65z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Report a Green Pool</h4>
+							<p class="card-text">Report stagnant water sources like abandoned pools that may breed mosquitoes.</p>
+							<a href="/mock/service-request-pool" class="btn btn-primary mt-3">Report Source</a>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Service Option 3 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-bug" viewBox="0 0 16 16">
+									<path d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A4.979 4.979 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A4.985 4.985 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623zM4 7v4a4 4 0 0 0 3.5 3.97V7H4zm4.5 0v7.97A4 4 0 0 0 12 11V7H8.5zM12 6a3.989 3.989 0 0 0-1.334-2.982A3.983 3.983 0 0 0 8 2a3.983 3.983 0 0 0-2.667 1.018A3.989 3.989 0 0 0 4 6h8z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Report Mosquito Nuisance</h4>
+							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
+							<a href="/mock/service-request-mosquito" class="btn btn-primary mt-3">Report Problem</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Quick Report for Desktop - Only visible on medium screens and up -->
+			<div class="row mt-4 d-none d-md-block">
+				<div class="col-12">
+					<div class="card quick-report-desktop">
+						<div class="card-body py-3">
+							<div class="row align-items-center">
+								<div class="col-md-8">
+									<h5 class="mb-1">Need to make a quick report?</h5>
+									<p class="mb-0">Use our streamlined form to report mosquito issues in under 60 seconds</p>
+								</div>
+								<div class="col-md-4 text-md-end mt-3 mt-md-0">
+									<a href="/mock/service-request-quick" class="btn btn-warning">Quick Report</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+				<p class="mb-0">&copy; 2025 Gleipnir Technology}</p>
+			</div>
+			<div class="col-md-6 text-md-end">
+				<p class="mb-0">Contact: (555) 123-4567 | info@mosquitodistrict.gov</p>
+			</div>
+		</div>
+	</div>
+</footer>
+
 {{end}}
