@@ -76,7 +76,7 @@ func NewBuiltTemplate(embeddedFiles embed.FS, subdir string, files ...string) *B
 			template: parseEmbedded(embeddedFiles, subdir, files),
 		}
 	}
-	TemplatesByFilename[files[0]] = result
+	TemplatesByFilename[path.Base(files[0])] = result
 	return &result
 }
 

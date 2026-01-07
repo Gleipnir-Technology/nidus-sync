@@ -239,7 +239,7 @@ func Mock(t string, w http.ResponseWriter, code string) {
 			SettingUserAdd:      "/mock/setting/user/add",
 		},
 	}
-	template, ok := htmlpage.TemplatesByFilename[t]
+	template, ok := htmlpage.TemplatesByFilename[t+".html"]
 	if !ok {
 		log.Error().Str("template", t).Msg("Failed to find template")
 		respondError(w, "Failed to render template", nil, http.StatusInternalServerError)
