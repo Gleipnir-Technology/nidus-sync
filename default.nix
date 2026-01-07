@@ -7,7 +7,7 @@ pkgs.buildGoModule rec {
         pname = "nidus-sync";
         src = ./.;
         subPackages = [];
-        version = "0.0.8";
+        version = "0.0.9";
         # Needs to be updated after every modification of go.mod/go.sum
         vendorHash = "sha256-5E5gQJh2cr/XwDg+XRQEdXW7mkObZMoyqQnfToVuZ10=";
 }
