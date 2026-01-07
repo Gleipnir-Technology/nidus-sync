@@ -943,12 +943,13 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 	return results, nil
 }
 
-func uuidShort(uuid string) string {
-	if len(uuid) < 7 {
-		return uuid // Return as is if too short
+func uuidShort(uuid uuid.UUID) string {
+	s := uuid.String()
+	if len(s) < 7 {
+		return s // Return as is if too short
 	}
 
-	return uuid[:3] + "..." + uuid[len(uuid)-4:]
+	return s[:3] + "..." + s[len(s)-4:]
 }
 
 func sourceByGlobalId(ctx context.Context, org *models.Organization, id uuid.UUID) (*BreedingSourceDetail, error) {
