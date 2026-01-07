@@ -72,8 +72,7 @@ type BreedingSourceDetail struct {
 	Creator  string     `json:"creator"`
 	EditedAt *time.Time `json:"editedAt"`
 	Editor   string     `json:"editor"`
-	//Updated  *time.Time `json:"updated"`
-	Comments string `json:"comments"`
+	Comments string     `json:"comments"`
 }
 
 type TrapNearby struct {
@@ -151,8 +150,7 @@ type TrapData struct {
 	Editor         string     `json:"editor"`
 	LastEditedDate *time.Time `json:"lastEditedDate"`
 	LastEditedUser string     `json:"lastEditedUser"`
-	//Updated        *time.Time `json:"updated"`
-	Comments string `json:"comments"`
+	Comments       string     `json:"comments"`
 }
 
 type Treatment struct {
@@ -278,8 +276,7 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 			Editor:         r.Editor.GetOr(""),
 			LastEditedDate: getTimeOrNull(r.LastEditedDate),
 			LastEditedUser: r.LastEditedUser.GetOr(""),
-			//Updated:        r.Updated,
-			Comments: r.Comments.GetOr(""),
+			Comments:       r.Comments.GetOr(""),
 		})
 	}
 	return results, nil
@@ -400,7 +397,6 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		Creator:  source.Creator.GetOr(""),
 		EditedAt: getTimeOrNull(source.Editdate),
 		Editor:   source.Editor.GetOr(""),
-		//Updated:  source.Updated,
 		Comments: source.Comments.GetOr(""),
 	}
 }

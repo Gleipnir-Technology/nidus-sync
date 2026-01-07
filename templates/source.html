@@ -70,10 +70,6 @@
 						<div class="source-id">Source ID: {{ .Source.GlobalID }}</div>
 						<table class="info-table">
 							<tr>
-								<td class="info-label">Location:</td>
-								<td>{{ .Source.LatLng|latLngDisplay }}</td>
-							</tr>
-							<tr>
 								<td class="info-label">Access:</td>
 								<td>{{ .Source.AccessDescription }}</td>
 							</tr>
@@ -216,10 +212,6 @@
 							<tr>
 								<td class="info-label">Next action date scheduled:</td>
 								<td>{{ .Source.NextActionScheduledDate|timeSince }}</td>
-							</tr>
-							<tr>
-								<td class="info-label">Updated:</td>
-								<td>{{ .Source.Updated|timeSince }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Treatment Cadence:</td>
