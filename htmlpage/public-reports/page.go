@@ -15,12 +15,14 @@ var EmbeddedStaticFS embed.FS
 
 type ContextNuisance struct{}
 type ContextPool struct{}
+type ContextQuick struct{}
 type ContextRoot struct{}
 type ContextStatus struct{}
 
 var (
 	Nuisance = buildTemplate("nuisance", "base")
 	Pool = buildTemplate("pool", "base")
+	Quick = buildTemplate("quick", "base")
 	Root = buildTemplate("root", "base")
 	Status = buildTemplate("status", "base")
 )

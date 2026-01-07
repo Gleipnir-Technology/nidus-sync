@@ -13,6 +13,7 @@ func Router() chi.Router {
 	r.Get("/", getRoot)
 	r.Get("/nuisance", getNuisance)
 	r.Get("/pool", getPool)
+	r.Get("/quick", getQuick)
 	r.Get("/status", getStatus)
 	localFS := http.Dir("./static")
 	htmlpage.FileServer(r, "/static", localFS, publicreports.EmbeddedStaticFS, "static")
@@ -39,6 +40,13 @@ func getPool(w http.ResponseWriter, r *http.Request) {
 		w,
 		publicreports.Pool,
 		publicreports.ContextPool{},
+	)
+}
+func getQuick(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		publicreports.Quick,
+		publicreports.ContextQuick{},
 	)
 }
 func getStatus(w http.ResponseWriter, r *http.Request) {
