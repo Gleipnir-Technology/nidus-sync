@@ -50,7 +50,7 @@ func handleSMSMessage(data *SMSWebhookData) error {
 	for _, media := range data.Payload.Media {
 		filePath, err := downloadMedia(media.URL)
 		if err != nil {
-			fmt.Errorf("Failed to download media from %s: %w", err)
+			fmt.Errorf("Failed to download media from %s: %w", filePath, err)
 			continue
 		}
 		fmt.Printf("Downloaded media to: %s\n", filePath)

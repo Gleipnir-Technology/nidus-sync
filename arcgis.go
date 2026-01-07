@@ -642,7 +642,7 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 			if errorResp.Error.Code == 498 && errorResp.Error.Description == "invalidated refresh_token" {
 				return nil, InvalidatedTokenError{}
 			}
-			return nil, fmt.Errorf("API response JSON error: %d: %w", resp.StatusCode, errorResp)
+			return nil, fmt.Errorf("API response JSON error: %d: %d %s", resp.StatusCode, errorResp.Error.Code, errorResp.Error.Description)
 		}
 		return nil, fmt.Errorf("API returned error status %d: %s", resp.StatusCode, bodyString)
 	}
@@ -931,8 +931,7 @@ func hasUpdates(row map[string]string, feature arcgis.Feature) bool {
 				continue
 			}
 		}
-		log.Info().Msg(fmt.Sprintf("key: %s\tvalue: %w (type %T)\trow: %s\n", key, value, value, rowdata))
-		log.Error().Msg("we've hit a point where we can't tell if we have an update or not, need a programmer to look at the above")
+		log.Error().Str("key", key).Str("rowdata", rowdata).Msg("we've hit a point where we can't tell if we have an update or not, need a programmer to look at the above")
 	}
 	return false
 }
