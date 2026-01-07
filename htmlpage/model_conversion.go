@@ -7,6 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -210,7 +211,7 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 		if r.H3cell.IsNull() {
 			continue
 		}
-		cell, err := toH3Cell(r.H3cell.MustGet())
+		cell, err := h3utils.ToCell(r.H3cell.MustGet())
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get location for trap data")
 			continue
@@ -333,7 +334,7 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		log.Error().Msg("h3 cell is null")
 		return nil
 	}
-	cell, err := toH3Cell(source.H3cell.MustGet())
+	cell, err := h3utils.ToCell(source.H3cell.MustGet())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get h3 cell from point location")
 		return nil

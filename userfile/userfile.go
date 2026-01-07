@@ -6,22 +6,21 @@ import (
 	"log"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/google/uuid"
 )
 
-var UserFilesDirectory string
-
 func AudioFileContentPathRaw(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.m4a", UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.m4a", config.UserFilesDirectory, audioUUID)
 }
 func AudioFileContentPathMp3(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.mp3", UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.mp3", config.UserFilesDirectory, audioUUID)
 }
 func AudioFileContentPathNormalized(audioUUID string) string {
-	return fmt.Sprintf("%s/%s-normalized.m4a", UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s-normalized.m4a", config.UserFilesDirectory, audioUUID)
 }
 func AudioFileContentPathOgg(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.ogg", UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.ogg", config.UserFilesDirectory, audioUUID)
 }
 func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
@@ -42,7 +41,7 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	return nil
 }
 func ImageFileContentPathRaw(uid string) string {
-	return fmt.Sprintf("%s/%s.raw", UserFilesDirectory, uid)
+	return fmt.Sprintf("%s/%s.raw", config.UserFilesDirectory, uid)
 }
 func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	filepath := ImageFileContentPathRaw(uid.String())

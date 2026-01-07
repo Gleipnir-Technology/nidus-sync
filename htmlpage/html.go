@@ -15,9 +15,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/background"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -29,8 +33,6 @@ import (
 
 //go:embed templates/*
 var embeddedFiles embed.FS
-
-var MapboxToken string
 
 // Authenticated pages
 var (
@@ -190,7 +192,7 @@ type ServiceRequestSummary struct {
 type User struct {
 	DisplayName   string
 	Initials      string
-	Notifications []Notification
+	Notifications []notification.Notification
 	Username      string
 }
 
@@ -228,7 +230,7 @@ func bigNumber(n int) string {
 }
 
 func contentForUser(ctx context.Context, user *models.User) (User, error) {
-	notifications, err := notificationsForUser(ctx, user)
+	notifications, err := notification.ForUser(ctx, user)
 	if err != nil {
 		return User{}, err
 	}
@@ -279,7 +281,7 @@ func Cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 		respondError(w, "Failed to get inspections by cell", err, http.StatusInternalServerError)
 		return
 	}
-	geojson, err := h3ToGeoJSON([]h3.Cell{h3.Cell(c)})
+	geojson, err := h3utils.H3ToGeoJSON([]h3.Cell{h3.Cell(c)})
 	if err != nil {
 		respondError(w, "Failed to get boundaries", err, http.StatusInternalServerError)
 		return
@@ -305,7 +307,7 @@ func Cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 				Lng: center.Lng,
 			},
 			GeoJSON:     geojson,
-			MapboxToken: MapboxToken,
+			MapboxToken: config.MapboxToken,
 			Zoom:        resolution + 5,
 		},
 		Treatments: treatments,
@@ -330,7 +332,7 @@ func Dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	} else {
 		lastSync = &sync.Created
 	}
-	is_syncing := isSyncOngoing(org.ID)
+	is_syncing := background.IsSyncOngoing(org.ID)
 	inspectionCount, err := org.Mosquitoinspections().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
@@ -372,7 +374,7 @@ func Dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		IsSyncOngoing:        is_syncing,
 		LastSync:             lastSync,
 		MapData: ComponentMap{
-			MapboxToken: MapboxToken,
+			MapboxToken: config.MapboxToken,
 		},
 		Org:            org.Name.MustGet(),
 		RecentRequests: requests,
@@ -490,7 +492,7 @@ func Source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.U
 		MapData: ComponentMap{
 			Center: latlng,
 			//GeoJSON:
-			MapboxToken: MapboxToken,
+			MapboxToken: config.MapboxToken,
 			Markers: []MapMarker{
 				MapMarker{
 					LatLng: latlng,

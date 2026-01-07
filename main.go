@@ -13,11 +13,11 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/background"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/report"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/hostrouter"
@@ -25,70 +25,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, URLReport, URLSync string
-
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
-	if ClientID == "" {
-		log.Error().Msg("You must specify a non-empty ARCGIS_CLIENT_ID")
-		os.Exit(1)
-	}
-	ClientSecret = os.Getenv("ARCGIS_CLIENT_SECRET")
-	if ClientSecret == "" {
-		log.Error().Msg("You must specify a non-empty ARCGIS_CLIENT_SECRET")
-		os.Exit(1)
-	}
-	URLReport = os.Getenv("URL_REPORT")
-	if URLReport == "" {
-		log.Error().Msg("You must specify a non-empty URL_REPORT")
-		os.Exit(1)
-	}
-	URLSync = os.Getenv("URL_SYNC")
-	if URLSync == "" {
-		log.Error().Msg("You must specify a non-empty URL_SYNC")
-		os.Exit(1)
-	}
-	bind := os.Getenv("BIND")
-	if bind == "" {
-		bind = ":9001"
-	}
-	Environment = os.Getenv("ENVIRONMENT")
-	if Environment == "" {
-		log.Error().Msg("You must specify a non-empty ENVIRONMENT")
-		os.Exit(1)
-	}
-	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
-		log.Error().Str("ENVIRONMENT", Environment).Msg("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
-		os.Exit(2)
-	}
-	htmlpage.MapboxToken = os.Getenv("MAPBOX_TOKEN")
-	if htmlpage.MapboxToken == "" {
-		log.Error().Msg("You must specify a non-empty MAPBOX_TOKEN")
-		os.Exit(1)
-	}
-	pg_dsn := os.Getenv("POSTGRES_DSN")
-	if pg_dsn == "" {
-		log.Error().Msg("You must specify a non-empty POSTGRES_DSN")
-		os.Exit(1)
-	}
-	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")
-	if FieldseekerSchemaDirectory == "" {
-		log.Error().Msg("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
-		os.Exit(1)
-	}
-	userfile.UserFilesDirectory = os.Getenv("USER_FILES_DIRECTORY")
-	if userfile.UserFilesDirectory == "" {
-		log.Error().Msg("You must specify a non-empty USER_FILES_DIRECTORY")
-		os.Exit(1)
-	}
-
-	log.Info().Msg("Starting...")
-	err := db.InitializeDatabase(context.TODO(), pg_dsn)
+	err := config.Parse()
 	if err != nil {
-		log.Error().Str("err", err.Error()).Msg("Failed to connect to database")
+		log.Error().Err(err).Msg("Failed to parse config")
+		os.Exit(1)
+	}
+	log.Info().Msg("Starting...")
+	err = db.InitializeDatabase(context.TODO(), config.PGDSN)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to connect to database")
 		os.Exit(2)
 	}
 
@@ -103,25 +52,25 @@ func main() {
 
 	// Set up routing by hostname
 	sr := syncRouter()
-	hr.Map("", sr)                     // default
-	hr.Map("*", sr)                    // default
-	hr.Map(URLReport, report.Router()) // report.mosquitoes.online
-	hr.Map(URLSync, sr)
+	hr.Map("", sr)                            // default
+	hr.Map("*", sr)                           // default
+	hr.Map(config.URLReport, report.Router()) // report.mosquitoes.online
+	hr.Map(config.URLSync, sr)
 	r.Mount("/", hr)
 
-	log.Info().Str("report url", URLReport).Str("sync url", URLSync).Msg("Serving at URLs")
+	log.Info().Str("report url", config.URLReport).Str("sync url", config.URLSync).Msg("Serving at URLs")
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	NewOAuthTokenChannel = make(chan struct{}, 10)
+	background.NewOAuthTokenChannel = make(chan struct{}, 10)
 
 	var waitGroup sync.WaitGroup
 
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		refreshFieldseekerData(ctx, NewOAuthTokenChannel)
+		background.RefreshFieldseekerData(ctx, background.NewOAuthTokenChannel)
 	}()
 
 	waitGroup.Add(1)
@@ -131,11 +80,11 @@ func main() {
 	}()
 
 	server := &http.Server{
-		Addr:    bind,
+		Addr:    config.Bind,
 		Handler: r,
 	}
 	go func() {
-		log.Info().Str("address", bind).Msg("Serving HTTP requests")
+		log.Info().Str("address", config.Bind).Msg("Serving HTTP requests")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
 		}
@@ -225,10 +174,6 @@ func syncRouter() chi.Router {
 	return r
 }
 
-func IsProductionEnvironment() bool {
-	return Environment == "PRODUCTION"
-}
-
 func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -279,8 +224,4 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 		}
 		return http.HandlerFunc(fn)
 	}
-}
-
-func urlSync(path string) string {
-	return fmt.Sprintf("https://%s%s", URLSync, path)
 }

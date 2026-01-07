@@ -1,4 +1,4 @@
-package htmlpage
+package h3utils
 
 import (
 	"fmt"
@@ -22,14 +22,14 @@ func h3ToBoundsGeoJSON(c h3.Cell) (string, error) {
 }
 */
 
-func toH3Cell(s string) (h3.Cell, error) {
+func ToCell(s string) (h3.Cell, error) {
 	c := h3.CellFromString(s)
 	if !c.IsValid() {
 		return c, fmt.Errorf("Invalid cell definition '%s'", s)
 	}
 	return c, nil
 }
-func h3ToGeoJSON(indexes []h3.Cell) (interface{}, error) {
+func H3ToGeoJSON(indexes []h3.Cell) (interface{}, error) {
 	featureCollection, err := geojson2h3.ToFeatureCollection(indexes)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get feature collection: %w", err)
@@ -82,7 +82,7 @@ func getCell(x, y float64, resolution int) (h3.Cell, error) {
 	return h3.LatLngToCell(latLng, resolution)
 }
 
-func cellToPostgisGeometry(c h3.Cell) (string, error) {
+func CellToPostgisGeometry(c h3.Cell) (string, error) {
 	boundary, err := h3.CellToBoundary(c)
 	if err != nil {
 		return "", fmt.Errorf("Failed to get cell boundary: %w", err)

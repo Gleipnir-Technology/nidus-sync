@@ -76,6 +76,7 @@ func doMigrations(connection_string string) error {
 }
 
 func InitializeDatabase(ctx context.Context, uri string) error {
+	log.Info().Str("dsn", uri).Msg("Connecting to database")
 	needs, err := needsMigrations(uri)
 	if err != nil {
 		return fmt.Errorf("Failed to determine if migrations are needed: %w", err)
@@ -119,7 +120,6 @@ func InitializeDatabase(ctx context.Context, uri string) error {
 }
 
 func needsMigrations(connection_string string) (*bool, error) {
-	log.Info().Str("dsn", connection_string).Msg("Connecting to database")
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open database connection: %w", err)

@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/background"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
@@ -19,7 +21,7 @@ import (
 )
 
 func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
-	authURL := buildArcGISAuthURL(ClientID)
+	authURL := config.BuildArcGISAuthURL(config.ClientID)
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
@@ -35,12 +37,12 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "You're not currently authenticated, which really shouldn't happen.", err, http.StatusUnauthorized)
 		return
 	}
-	err = handleOauthAccessCode(r.Context(), user, code)
+	err = background.HandleOauthAccessCode(r.Context(), user, code)
 	if err != nil {
 		respondError(w, "Failed to handle access code", err, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, urlSync("/"), http.StatusFound)
+	http.Redirect(w, r, config.MakeURLSync("/"), http.StatusFound)
 }
 
 func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -77,7 +79,7 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	if code == "" {
 		respondError(w, "There should always be a code", nil, http.StatusBadRequest)
 	}
-	content := urlSync("/report/" + code)
+	content := config.MakeURLSync("/report/" + code)
 	// Get optional size parameter (default to 256)
 	size := 256
 	if sizeStr := r.URL.Query().Get("size"); sizeStr != "" {
@@ -149,7 +151,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		htmlpage.Signin(w, errorCode)
 		return
 	} else {
-		has, err := hasFieldseekerConnection(r.Context(), user)
+		has, err := background.HasFieldseekerConnection(r.Context(), user)
 		if err != nil {
 			respondError(w, "Failed to check for ArcGIS connection", err, http.StatusInternalServerError)
 			return

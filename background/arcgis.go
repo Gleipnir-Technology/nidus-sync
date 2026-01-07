@@ -1,4 +1,4 @@
-package main
+package background
 
 import (
 	"bytes"
@@ -22,11 +22,14 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
+	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
@@ -63,39 +66,133 @@ type OAuthTokenResponse struct {
 	Username              string `json:"username"`
 }
 
-// Build the ArcGIS authorization URL with PKCE
-func buildArcGISAuthURL(clientID string) string {
-	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/authorize/"
+func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
+	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
 
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("redirect_uri", redirectURL())
-	params.Add("response_type", "code")
-	//params.Add("code_challenge", generateCodeChallenge(codeVerifier))
-	//params.Add("code_challenge_method", "S256")
+	//params.Add("code_verifier", "S256")
 
-	// See https://developers.arcgis.com/rest/users-groups-and-items/token/
-	// expiration is defined in minutes
-	var expiration int
-	if IsProductionEnvironment() {
-		// 2 weeks is the maximum allowed
-		expiration = 20160
-	} else {
-		expiration = 20
+	form := url.Values{
+		"grant_type":   []string{"authorization_code"},
+		"code":         []string{code},
+		"client_id":    []string{config.ClientID},
+		"redirect_uri": []string{config.RedirectURL()},
 	}
-	params.Add("expiration", strconv.Itoa(expiration))
 
-	return baseURL + "?" + params.Encode()
+	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return fmt.Errorf("Failed to create request: %w", err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	token, err := handleTokenRequest(ctx, req)
+	if err != nil {
+		return fmt.Errorf("Failed to exchange authorization code for token: %w", err)
+	}
+	accessExpires := futureUTCTimestamp(token.ExpiresIn)
+	refreshExpires := futureUTCTimestamp(token.RefreshTokenExpiresIn)
+	setter := models.OauthTokenSetter{
+		AccessToken:         omit.From(token.AccessToken),
+		AccessTokenExpires:  omit.From(accessExpires),
+		RefreshToken:        omit.From(token.RefreshToken),
+		RefreshTokenExpires: omit.From(refreshExpires),
+		Username:            omit.From(token.Username),
+	}
+	err = user.InsertUserOauthTokens(ctx, db.PGInstance.BobDB, &setter)
+	if err != nil {
+		return fmt.Errorf("Failed to save token to database: %w", err)
+	}
+	go updateArcgisUserData(context.Background(), user, token.AccessToken, accessExpires, token.RefreshToken, refreshExpires)
+	return nil
+}
+
+func HasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
+	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return false, err
+	}
+	return len(result) > 0, nil
+}
+
+func IsSyncOngoing(org_id int32) bool {
+	return syncStatusByOrg[org_id]
+}
+
+// This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
+func RefreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
+	syncStatusByOrg = make(map[int32]bool, 0)
+	for {
+		workerCtx, cancel := context.WithCancel(context.Background())
+		var wg sync.WaitGroup
+
+		oauths, err := models.OauthTokens.Query(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get oauths")
+			return
+		}
+		for _, oauth := range oauths {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := maintainOAuth(workerCtx, oauth)
+				if err != nil {
+					markTokenFailed(ctx, oauth)
+					if errors.Is(err, arcgis.InvalidatedRefreshTokenError) {
+						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
+					} else {
+						debug.LogErrorTypeInfo(err)
+						log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
+					}
+				}
+			}()
+		}
+
+		orgs, err := models.Organizations.Query().All(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get orgs")
+			return
+		}
+		for _, org := range orgs {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := periodicallyExportFieldseeker(workerCtx, org)
+				if err != nil {
+					if errors.Is(err, &NoOAuthForOrg{}) {
+						log.Info().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
+						return
+					}
+					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
+				}
+			}()
+		}
+
+		select {
+		case <-ctx.Done():
+			log.Info().Msg("Exiting refresh worker...")
+			cancel()
+			wg.Wait()
+			return
+		case <-newOauthCh:
+			log.Info().Msg("Updating oauth background work")
+			cancel()
+			wg.Wait()
+		}
+	}
+}
+
+type SyncStats struct {
+	Inserts   uint
+	Updates   uint
+	Unchanged uint
 }
 
 func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseeker.FieldSeeker, arcgis_id string) {
 	for _, layer := range fieldseekerClient.FeatureServerLayers() {
-		err := os.MkdirAll(filepath.Join(FieldseekerSchemaDirectory, arcgis_id), os.ModePerm)
+		err := os.MkdirAll(filepath.Join(config.FieldseekerSchemaDirectory, arcgis_id), os.ModePerm)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to create parent directory")
 			return
 		}
-		output, err := os.Create(fmt.Sprintf("%s/%s/%s.json", FieldseekerSchemaDirectory, arcgis_id, layer.Name))
+		output, err := os.Create(fmt.Sprintf("%s/%s/%s.json", config.FieldseekerSchemaDirectory, arcgis_id, layer.Name))
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to open output")
 			return
@@ -129,10 +226,6 @@ func generateCodeVerifier() string {
 	bytes := make([]byte, 64) // 64 bytes = 512 bits
 	rand.Read(bytes)
 	return base64.RawURLEncoding.EncodeToString(bytes)
-}
-
-func isSyncOngoing(org_id int32) bool {
-	return syncStatusByOrg[org_id]
 }
 
 // Find out what we can about this user
@@ -202,7 +295,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	client.Context = &arcgis_id
 	maybeCreateWebhook(ctx, fieldseekerClient)
 	downloadFieldseekerSchema(ctx, fieldseekerClient, arcgis_id)
-	clearNotificationsOauth(ctx, user)
+	notification.ClearOauth(ctx, user)
 	NewOAuthTokenChannel <- struct{}{}
 }
 
@@ -218,124 +311,6 @@ func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
 			log.Info().Str("name", hook.Name).Msg("Found webhook")
 		}
 	}
-}
-
-func handleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
-	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
-
-	//params.Add("code_verifier", "S256")
-
-	form := url.Values{
-		"grant_type":   []string{"authorization_code"},
-		"code":         []string{code},
-		"client_id":    []string{ClientID},
-		"redirect_uri": []string{redirectURL()},
-	}
-
-	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
-	if err != nil {
-		return fmt.Errorf("Failed to create request: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	token, err := handleTokenRequest(ctx, req)
-	if err != nil {
-		return fmt.Errorf("Failed to exchange authorization code for token: %w", err)
-	}
-	accessExpires := futureUTCTimestamp(token.ExpiresIn)
-	refreshExpires := futureUTCTimestamp(token.RefreshTokenExpiresIn)
-	setter := models.OauthTokenSetter{
-		AccessToken:         omit.From(token.AccessToken),
-		AccessTokenExpires:  omit.From(accessExpires),
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		Username:            omit.From(token.Username),
-	}
-	err = user.InsertUserOauthTokens(ctx, db.PGInstance.BobDB, &setter)
-	if err != nil {
-		return fmt.Errorf("Failed to save token to database: %w", err)
-	}
-	go updateArcgisUserData(context.Background(), user, token.AccessToken, accessExpires, token.RefreshToken, refreshExpires)
-	return nil
-}
-
-func hasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
-	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return false, err
-	}
-	return len(result) > 0, nil
-}
-func redirectURL() string {
-	return urlSync("/arcgis/oauth/callback")
-}
-
-// This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
-func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
-	syncStatusByOrg = make(map[int32]bool, 0)
-	for {
-		workerCtx, cancel := context.WithCancel(context.Background())
-		var wg sync.WaitGroup
-
-		oauths, err := models.OauthTokens.Query(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to get oauths")
-			return
-		}
-		for _, oauth := range oauths {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := maintainOAuth(workerCtx, oauth)
-				if err != nil {
-					markTokenFailed(ctx, oauth)
-					if errors.Is(err, arcgis.InvalidatedRefreshTokenError) {
-						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
-					} else {
-						debug.LogErrorTypeInfo(err)
-						log.Error().Err(err).Msg("Crashed oauth maintenance goroutine")
-					}
-				}
-			}()
-		}
-
-		orgs, err := models.Organizations.Query().All(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to get orgs")
-			return
-		}
-		for _, org := range orgs {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := periodicallyExportFieldseeker(workerCtx, org)
-				if err != nil {
-					if errors.Is(err, &NoOAuthForOrg{}) {
-						log.Info().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
-						return
-					}
-					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
-				}
-			}()
-		}
-
-		select {
-		case <-ctx.Done():
-			log.Info().Msg("Exiting refresh worker...")
-			cancel()
-			wg.Wait()
-			return
-		case <-newOauthCh:
-			log.Info().Msg("Updating oauth background work")
-			cancel()
-			wg.Wait()
-		}
-	}
-}
-
-type SyncStats struct {
-	Inserts   uint
-	Updates   uint
-	Unchanged uint
 }
 
 func downloadAllRecords(ctx context.Context, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature, org_id int32) (SyncStats, error) {
@@ -544,7 +519,7 @@ func markTokenFailed(ctx context.Context, oauth *models.OauthToken) {
 		log.Error().Str("err", err.Error()).Msg("Failed to get oauth user")
 		return
 	}
-	notifyOauthInvalid(ctx, user)
+	notification.NotifyOauthInvalid(ctx, user)
 	log.Info().Int("id", int(oauth.ID)).Msg("Marked oauth token invalid")
 }
 
@@ -554,7 +529,7 @@ func refreshAccessToken(ctx context.Context, oauth *models.OauthToken) error {
 
 	form := url.Values{
 		"grant_type":    []string{"refresh_token"},
-		"client_id":     []string{ClientID},
+		"client_id":     []string{config.ClientID},
 		"refresh_token": []string{oauth.RefreshToken},
 	}
 
@@ -587,8 +562,8 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 
 	form := url.Values{
 		"grant_type":    []string{"exchange_refresh_token"},
-		"client_id":     []string{ClientID},
-		"redirect_uri":  []string{redirectURL()},
+		"client_id":     []string{config.ClientID},
+		"redirect_uri":  []string{config.RedirectURL()},
 		"refresh_token": []string{oauth.RefreshToken},
 	}
 
@@ -1073,7 +1048,7 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 			if p.H3cell.IsNull() {
 				continue
 			}
-			cell, err := toH3Cell(p.H3cell.MustGet())
+			cell, err := h3utils.ToCell(p.H3cell.MustGet())
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get geometry point")
 				continue
@@ -1088,7 +1063,7 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
 		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
 		for cell, count := range cellToCount {
-			polygon, err := cellToPostgisGeometry(cell)
+			polygon, err := h3utils.CellToPostgisGeometry(cell)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get PostGIS geometry")
 				continue

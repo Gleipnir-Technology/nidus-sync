@@ -1,4 +1,4 @@
-package htmlpage
+package notification
 
 import (
 	"context"
@@ -27,7 +27,7 @@ type Notification struct {
 }
 
 // Clear all notifications for a given user with the given path
-func clearNotificationsOauth(ctx context.Context, user *models.User) {
+func ClearOauth(ctx context.Context, user *models.User) {
 	setter := models.NotificationSetter{
 		ResolvedAt: omitnull.From(time.Now()),
 	}
@@ -43,7 +43,7 @@ func clearNotificationsOauth(ctx context.Context, user *models.User) {
 	//).UpdateAll()
 }
 
-func notifyOauthInvalid(ctx context.Context, user *models.User) {
+func NotifyOauthInvalid(ctx context.Context, user *models.User) {
 	msg := "Oauth token invalidated"
 	notificationSetter := models.NotificationSetter{
 		Created: omit.From(time.Now()),
@@ -63,7 +63,7 @@ func notifyOauthInvalid(ctx context.Context, user *models.User) {
 	}
 }
 
-func notificationsForUser(ctx context.Context, u *models.User) ([]Notification, error) {
+func ForUser(ctx context.Context, u *models.User) ([]Notification, error) {
 	results := make([]Notification, 0)
 	notifications, err := u.UserNotifications(
 		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
