@@ -11,6 +11,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -53,7 +54,7 @@ func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
 		respondError(w, "Cannot convert provided cell to uint64", err, http.StatusBadRequest)
 		return
 	}
-	htmlCell(r.Context(), w, user, cell)
+	htmlpage.Cell(r.Context(), w, user, cell)
 }
 
 func getFavicon(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +69,7 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
 		return
 	}
-	htmlOauthPrompt(w, user)
+	htmlpage.OauthPrompt(w, user)
 }
 
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
@@ -145,7 +146,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		errorCode := r.URL.Query().Get("error")
-		htmlSignin(w, errorCode)
+		htmlpage.Signin(w, errorCode)
 		return
 	} else {
 		has, err := hasFieldseekerConnection(r.Context(), user)
@@ -154,10 +155,10 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if has {
-			htmlDashboard(r.Context(), w, user)
+			htmlpage.Dashboard(r.Context(), w, user)
 			return
 		} else {
-			htmlOauthPrompt(w, user)
+			htmlpage.OauthPrompt(w, user)
 			return
 		}
 	}
@@ -167,16 +168,16 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
-	htmlSettings(w, r, u)
+	htmlpage.Settings(w, r, u)
 }
 
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
-	htmlSignin(w, errorCode)
+	htmlpage.Signin(w, errorCode)
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
-	htmlSignup(w, r.URL.Path)
+	htmlpage.Signup(w, r.URL.Path)
 }
 
 func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -190,7 +191,7 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "globalid is not a UUID", nil, http.StatusBadRequest)
 		return
 	}
-	htmlSource(w, r, u, globalid)
+	htmlpage.Source(w, r, u, globalid)
 }
 
 func postSMS(w http.ResponseWriter, r *http.Request) {
@@ -324,6 +325,6 @@ func renderMock(templateName string) http.HandlerFunc {
 		if code == "" {
 			code = "abc-123"
 		}
-		htmlMock(templateName, w, code)
+		htmlpage.Mock(templateName, w, code)
 	}
 }

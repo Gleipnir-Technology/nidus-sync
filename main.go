@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/report"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -24,7 +25,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken, URLReport, URLSync string
+var ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, URLReport, URLSync string
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -63,8 +64,8 @@ func main() {
 		log.Error().Str("ENVIRONMENT", Environment).Msg("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
 		os.Exit(2)
 	}
-	MapboxToken = os.Getenv("MAPBOX_TOKEN")
-	if MapboxToken == "" {
+	htmlpage.MapboxToken = os.Getenv("MAPBOX_TOKEN")
+	if htmlpage.MapboxToken == "" {
 		log.Error().Msg("You must specify a non-empty MAPBOX_TOKEN")
 		os.Exit(1)
 	}

@@ -1,4 +1,4 @@
-package main
+package htmlpage
 
 import (
 	"bytes"
@@ -29,6 +29,8 @@ import (
 
 //go:embed templates/*
 var embeddedFiles embed.FS
+
+var MapboxToken string
 
 // Authenticated pages
 var (
@@ -251,7 +253,7 @@ func extractInitials(name string) string {
 	return initials.String()
 }
 
-func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
+func Cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
 	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
@@ -312,7 +314,7 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 	renderOrError(w, cell, &data)
 }
 
-func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
+func Dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
@@ -379,7 +381,7 @@ func htmlDashboard(ctx context.Context, w http.ResponseWriter, user *models.User
 	renderOrError(w, dashboard, data)
 }
 
-func htmlMock(t string, w http.ResponseWriter, code string) {
+func Mock(t string, w http.ResponseWriter, code string) {
 	data := ContentMock{
 		DistrictName: "Delta MVCD",
 		URLs: ContentMockURLs{
@@ -409,7 +411,7 @@ func htmlMock(t string, w http.ResponseWriter, code string) {
 	renderOrError(w, &template, data)
 }
 
-func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
+func OauthPrompt(w http.ResponseWriter, user *models.User) {
 	dp := user.DisplayName
 	data := ContentDashboard{
 		User: User{
@@ -421,7 +423,7 @@ func htmlOauthPrompt(w http.ResponseWriter, user *models.User) {
 	renderOrError(w, oauthPrompt, data)
 }
 
-func htmlSettings(w http.ResponseWriter, r *http.Request, user *models.User) {
+func Settings(w http.ResponseWriter, r *http.Request, user *models.User) {
 	userContent, err := contentForUser(r.Context(), user)
 	if err != nil {
 		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
@@ -433,19 +435,19 @@ func htmlSettings(w http.ResponseWriter, r *http.Request, user *models.User) {
 	renderOrError(w, settings, data)
 }
 
-func htmlSignin(w http.ResponseWriter, errorCode string) {
+func Signin(w http.ResponseWriter, errorCode string) {
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
 	}
 	renderOrError(w, signin, data)
 }
 
-func htmlSignup(w http.ResponseWriter, path string) {
+func Signup(w http.ResponseWriter, path string) {
 	data := ContentSignup{}
 	renderOrError(w, signup, data)
 }
 
-func htmlSource(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
+func Source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
 	org, err := user.Organization().One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
