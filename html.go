@@ -861,7 +861,7 @@ func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) 
 	geom_query := gisStatement(boundary)
 	rows, err := org.Treatments(
 		sm.Where(
-			psql.F("ST_Within", "geom", geom_query),
+			psql.F("ST_Within", "geospatial", geom_query),
 		),
 		sm.OrderBy("pointlocid"),
 		sm.OrderBy("enddatetime"),
@@ -881,7 +881,7 @@ func inspectionsByCell(ctx context.Context, org *models.Organization, c h3.Cell)
 	geom_query := gisStatement(boundary)
 	rows, err := org.Mosquitoinspections(
 		sm.Where(
-			psql.F("ST_Within", "geom", geom_query),
+			psql.F("ST_Within", "geospatial", geom_query),
 		),
 		sm.OrderBy("pointlocid"),
 		sm.OrderBy("enddatetime"),
@@ -915,7 +915,7 @@ func breedingSourcesByCell(ctx context.Context, org *models.Organization, c h3.C
 	geom_query := gisStatement(boundary)
 	rows, err := org.Pointlocations(
 		sm.Where(
-			psql.F("ST_Within", "geom", geom_query),
+			psql.F("ST_Within", "geospatial", geom_query),
 		),
 		sm.OrderBy("lasttreatdate"),
 	).All(ctx, db.PGInstance.BobDB)
