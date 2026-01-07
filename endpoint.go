@@ -39,7 +39,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to handle access code", err, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, BaseURL+"/", http.StatusFound)
+	http.Redirect(w, r, urlSync("/"), http.StatusFound)
 }
 
 func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -76,7 +76,7 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	if code == "" {
 		respondError(w, "There should always be a code", nil, http.StatusBadRequest)
 	}
-	content := BaseURL + "/report/" + code
+	content := urlSync("/report/" + code)
 	// Get optional size parameter (default to 256)
 	size := 256
 	if sizeStr := r.URL.Query().Get("size"); sizeStr != "" {

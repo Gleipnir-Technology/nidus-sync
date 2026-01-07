@@ -48,7 +48,7 @@ var (
 	dispatch                        = newBuiltTemplate("dispatch", "base")
 	dispatchResults                 = newBuiltTemplate("dispatch-results", "base")
 	mockRoot                        = newBuiltTemplate("mock-root", "base")
-	report                          = newBuiltTemplate("report", "base")
+	reportPage                      = newBuiltTemplate("report", "base")
 	reportConfirmation              = newBuiltTemplate("report-confirmation", "base")
 	reportContribute                = newBuiltTemplate("report-contribute", "base")
 	reportDetail                    = newBuiltTemplate("report-detail", "base")

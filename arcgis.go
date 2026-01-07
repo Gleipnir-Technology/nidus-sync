@@ -266,7 +266,7 @@ func hasFieldseekerConnection(ctx context.Context, user *models.User) (bool, err
 	return len(result) > 0, nil
 }
 func redirectURL() string {
-	return BaseURL + "/arcgis/oauth/callback"
+	return urlSync("/arcgis/oauth/callback")
 }
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.

@@ -15,14 +15,16 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/queue"
+	"github.com/Gleipnir-Technology/nidus-sync/report"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/hostrouter"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-var BaseURL, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken string
+var ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken, URLReport, URLSync string
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
@@ -38,9 +40,14 @@ func main() {
 		log.Error().Msg("You must specify a non-empty ARCGIS_CLIENT_SECRET")
 		os.Exit(1)
 	}
-	BaseURL = os.Getenv("BASE_URL")
-	if BaseURL == "" {
-		log.Error().Msg("You must specify a non-empty BASE_URL")
+	URLReport = os.Getenv("URL_REPORT")
+	if URLReport == "" {
+		log.Error().Msg("You must specify a non-empty URL_REPORT")
+		os.Exit(1)
+	}
+	URLSync = os.Getenv("URL_SYNC")
+	if URLSync == "" {
+		log.Error().Msg("You must specify a non-empty URL_SYNC")
 		os.Exit(1)
 	}
 	bind := os.Getenv("BIND")
@@ -86,9 +93,74 @@ func main() {
 
 	router_logger := log.With().Logger()
 	r := chi.NewRouter()
+
 	r.Use(LoggerMiddleware(&router_logger))
+	r.Use(middleware.RealIP)
 	r.Use(auth.NewSessionManager().LoadAndSave)
 
+	hr := hostrouter.New()
+
+	// Set up routing by hostname
+	sr := syncRouter()
+	hr.Map("", sr)                     // default
+	hr.Map("*", sr)                    // default
+	hr.Map(URLReport, report.Router()) // report.mosquitoes.online
+	hr.Map(URLSync, sr)
+	r.Mount("/", hr)
+
+	log.Info().Str("report url", URLReport).Str("sync url", URLSync).Msg("Serving at URLs")
+	// Start up background processes
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	NewOAuthTokenChannel = make(chan struct{}, 10)
+
+	var waitGroup sync.WaitGroup
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		refreshFieldseekerData(ctx, NewOAuthTokenChannel)
+	}()
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		queue.StartAudioWorker(ctx)
+	}()
+
+	server := &http.Server{
+		Addr:    bind,
+		Handler: r,
+	}
+	go func() {
+		log.Info().Str("address", bind).Msg("Serving HTTP requests")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
+		}
+	}()
+
+	// Wait for the interrupt signal to gracefully shut down
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	<-signalCh
+
+	log.Info().Msg("Received shutdown signal, shutting down...")
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Error().Str("err", err.Error()).Msg("HTTP server shutdown error")
+	}
+
+	cancel()
+
+	waitGroup.Wait()
+
+	log.Info().Msg("Shutdown complete")
+}
+func syncRouter() chi.Router {
+	r := chi.NewRouter()
 	// Root is a special endpoint that is neither authenticated nor unauthenticated
 	r.Get("/", getRoot)
 
@@ -145,59 +217,11 @@ func main() {
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
-	r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
+	//r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
 
 	localFS := http.Dir("./static")
 	FileServer(r, "/static", localFS, embeddedStaticFS, "static")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	NewOAuthTokenChannel = make(chan struct{}, 10)
-
-	var waitGroup sync.WaitGroup
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		refreshFieldseekerData(ctx, NewOAuthTokenChannel)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		queue.StartAudioWorker(ctx)
-	}()
-
-	server := &http.Server{
-		Addr:    bind,
-		Handler: r,
-	}
-	go func() {
-		log.Info().Str("address", bind).Msg("Serving HTTP requests")
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
-		}
-	}()
-
-	// Wait for the interrupt signal to gracefully shut down
-	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
-	<-signalCh
-
-	log.Info().Msg("Received shutdown signal, shutting down...")
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer shutdownCancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Error().Str("err", err.Error()).Msg("HTTP server shutdown error")
-	}
-
-	cancel()
-
-	waitGroup.Wait()
-
-	log.Info().Msg("Shutdown complete")
+	return r
 }
 
 func IsProductionEnvironment() bool {
@@ -254,4 +278,8 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+func urlSync(path string) string {
+	return fmt.Sprintf("https://%s%s", URLSync, path)
 }
