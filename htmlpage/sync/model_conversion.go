@@ -1,4 +1,4 @@
-package htmlpage
+package sync
 
 import (
 	"errors"

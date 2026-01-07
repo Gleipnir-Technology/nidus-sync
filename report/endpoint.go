@@ -1,9 +1,10 @@
 package report
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage/public-reports"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,5 +15,9 @@ func Router() chi.Router {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Herro.")
+	htmlpage.RenderOrError(
+		w,
+		publicreports.Root,
+		publicreports.RootContext{},
+	)
 }
