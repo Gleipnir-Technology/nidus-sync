@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	testutils "github.com/stephenafamo/bob/test/utils"
