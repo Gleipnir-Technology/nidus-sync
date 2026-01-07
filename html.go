@@ -274,7 +274,7 @@ func htmlCell(ctx context.Context, w http.ResponseWriter, user *models.User, c i
 	}
 	inspections, err := inspectionsByCell(ctx, org, h3.Cell(c))
 	if err != nil {
-		respondError(w, "Failed to get inspections", err, http.StatusInternalServerError)
+		respondError(w, "Failed to get inspections by cell", err, http.StatusInternalServerError)
 		return
 	}
 	geojson, err := h3ToGeoJSON([]h3.Cell{h3.Cell(c)})
