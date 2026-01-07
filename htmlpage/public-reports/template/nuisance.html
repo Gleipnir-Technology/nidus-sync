@@ -1,0 +1,541 @@
+{{template "base.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+<script>
+// Handle inspection type selection
+function selectInspectionType(type) {
+	// Remove selected class from both cards
+	document.getElementById('propertyInspection').classList.remove('selected');
+	document.getElementById('neighborhoodInspection').classList.remove('selected');
+	
+	// Add selected class to chosen card
+	if (type === 'property') {
+		document.getElementById('propertyInspection').classList.add('selected');
+		document.getElementById('inspectionTypeProperty').checked = true;
+		document.getElementById('schedulingSection').style.display = 'block';
+	} else {
+		document.getElementById('neighborhoodInspection').classList.add('selected');
+		document.getElementById('inspectionTypeNeighborhood').checked = true;
+		document.getElementById('schedulingSection').style.display = 'none';
+	}
+}
+
+// Check for source identification
+document.addEventListener('DOMContentLoaded', function() {
+	const sourceCheckboxes = [
+		document.getElementById('sourceStagnantWater'),
+		document.getElementById('sourceContainers'),
+		document.getElementById('sourceGutters')
+	];
+	
+	const sourceAlert = document.getElementById('sourceFoundAlert');
+	
+	sourceCheckboxes.forEach(checkbox => {
+		checkbox.addEventListener('change', function() {
+			// If any source is checked, show the alert
+			if (sourceCheckboxes.some(cb => cb.checked)) {
+				sourceAlert.style.display = 'block';
+			} else {
+				sourceAlert.style.display = 'none';
+			}
+		});
+	});
+});
+</script>
+<style>
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.form-section {
+	margin-bottom: 2.5rem;
+	padding-bottom: 2rem;
+	border-bottom: 1px solid #dee2e6;
+}
+.form-section:last-child {
+	border-bottom: none;
+	margin-bottom: 1rem;
+	padding-bottom: 0;
+}
+.section-heading {
+	margin-bottom: 1.5rem;
+	display: flex;
+	align-items: center;
+}
+.section-heading i {
+	margin-right: 10px;
+	font-size: 1.5rem;
+	color: #0d6efd;
+}
+.optional-label {
+	font-size: 0.875rem;
+	color: #6c757d;
+	font-weight: normal;
+	margin-left: 8px;
+}
+.submit-container {
+	background-color: #f8f9fa;
+	padding: 20px;
+	border-radius: 5px;
+	margin-top: 2rem;
+}
+.source-card {
+	height: 100%;
+	transition: transform 0.3s;
+}
+.source-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.source-icon {
+	font-size: 2rem;
+	margin-bottom: 1rem;
+	color: #0d6efd;
+}
+.time-of-day-btn {
+	width: 100%;
+	margin-bottom: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 15px 0;
+}
+.time-of-day-icon {
+	font-size: 1.5rem;
+	margin-bottom: 8px;
+}
+.time-label {
+	font-size: 0.9rem;
+}
+.severity-item {
+	text-align: center;
+	padding: 10px;
+}
+.severity-scale {
+	display: flex;
+	justify-content: space-between;
+	margin: 20px 0;
+}
+.btn-check:checked + .btn.time-of-day-btn {
+	background-color: #0d6efd;
+	color: white;
+}
+.inspection-type-card {
+	cursor: pointer;
+	border: 1px solid #dee2e6;
+	padding: 20px;
+	border-radius: 5px;
+	height: 100%;
+	transition: all 0.3s;
+}
+.inspection-type-card.selected {
+	border-color: #0d6efd;
+	background-color: rgba(13, 110, 253, 0.05);
+}
+.inspection-type-card:hover {
+	border-color: #0d6efd;
+}
+.card-highlight {
+	border-left: 4px solid #0d6efd;
+	background-color: #f8f9fa;
+}
+</style>
+{{end}}
+{{define "content"}}
+<!-- Header -->
+<header class="bg-light py-3">
+	<div class="container">
+		<div class="row align-items-center">
+			<div class="col-md-6">
+				<h1 class="district-name">[District Name]</h1>
+			</div>
+			<div class="col-md-6 text-md-end">
+				<img src="placeholder-logo.png" alt="District Logo" class="district-logo">
+			</div>
+		</div>
+	</div>
+</header>
+
+<!-- Main Content -->
+<main class="py-5">
+	<div class="container">
+		<!-- Page Title -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<h2>Report Mosquito Nuisance</h2>
+				<p class="lead">Help us identify mosquito activity in your area</p>
+			</div>
+		</div>
+
+		<!-- Info Alert -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="alert alert-info" role="alert">
+					<h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>About Mosquito Control</h5>
+					<p class="mb-0">While we don't spray for adult mosquitoes based on individual requests, your reports help us identify and eliminate breeding sources. Adult mosquito control is based on trap counts and disease testing. Your detailed information helps us prioritize our work and locate potential breeding sites.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Report Form -->
+		<form id="mosquitoNuisanceForm">
+			<!-- Mosquito Activity Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-bug"></i>
+					<h3>Mosquito Activity Information</h3>
+					<span class="optional-label">optional</span>
+				</div>
+				<p class="mb-4">The time when mosquitoes are active can help us identify the species and likely breeding sources.</p>
+
+				<!-- Time of Day -->
+				<div class="row mb-4">
+					<div class="col-12">
+						<label class="form-label">When do you typically notice mosquitoes? (Select all that apply)</label>
+						<div class="row">
+							<div class="col-6 col-md-3">
+								<input type="checkbox" class="btn-check" id="earlyMorning" autocomplete="off">
+								<label class="btn btn-outline-primary time-of-day-btn" for="earlyMorning">
+									<span class="time-of-day-icon"><i class="bi bi-sunrise"></i></span>
+									<span class="time-label">Early Morning</span>
+									<small class="text-muted">5am-8am</small>
+								</label>
+							</div>
+							<div class="col-6 col-md-3">
+								<input type="checkbox" class="btn-check" id="daytime" autocomplete="off">
+								<label class="btn btn-outline-primary time-of-day-btn" for="daytime">
+									<span class="time-of-day-icon"><i class="bi bi-sun"></i></span>
+									<span class="time-label">Daytime</span>
+									<small class="text-muted">8am-5pm</small>
+								</label>
+							</div>
+							<div class="col-6 col-md-3">
+								<input type="checkbox" class="btn-check" id="evening" autocomplete="off">
+								<label class="btn btn-outline-primary time-of-day-btn" for="evening">
+									<span class="time-of-day-icon"><i class="bi bi-sunset"></i></span>
+									<span class="time-label">Evening</span>
+									<small class="text-muted">5pm-9pm</small>
+								</label>
+							</div>
+							<div class="col-6 col-md-3">
+								<input type="checkbox" class="btn-check" id="night" autocomplete="off">
+								<label class="btn btn-outline-primary time-of-day-btn" for="night">
+									<span class="time-of-day-icon"><i class="bi bi-moon-stars"></i></span>
+									<span class="time-label">Night</span>
+									<small class="text-muted">9pm-5am</small>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Duration -->
+				<div class="row mb-4">
+					<div class="col-md-6">
+						<label for="duration" class="form-label">How long have you been experiencing this mosquito problem?</label>
+						<select class="form-select" id="duration">
+							<option value="just-noticed">Just noticed recently</option>
+							<option value="few-days">A few days</option>
+							<option value="1-2-weeks">1-2 weeks</option>
+							<option value="2-4-weeks">2-4 weeks</option>
+							<option value="1-3-months">1-3 months</option>
+							<option value="seasonal">All season (recurring issue)</option>
+						</select>
+					</div>
+					
+					<!-- Severity -->
+					<div class="col-md-6">
+						<label for="severityRange" class="form-label">How would you rate the severity of the mosquito problem?</label>
+						<input type="range" class="form-range" min="1" max="5" id="severityRange" oninput="document.getElementById('severityValue').innerText = this.value">
+						<div class="severity-scale">
+							<div class="severity-item">
+								<div>Minor</div>
+								<small>Occasional mosquito</small>
+							</div>
+							<div class="severity-item">
+								<div>Moderate</div>
+								<small>Regular presence</small>
+							</div>
+							<div class="severity-item">
+								<div>Severe</div>
+								<small>Many mosquitoes</small>
+							</div>
+						</div>
+						<div class="text-center">
+							Current selection: <span id="severityValue">3</span>/5
+						</div>
+					</div>
+				</div>
+
+				<!-- Location -->
+				<div class="row">
+					<div class="col-md-12">
+						<label for="activityLocation" class="form-label">Where on your property do you notice the most mosquito activity?</label>
+						<select class="form-select" id="activityLocation">
+							<option value="">Please select</option>
+							<option value="front-yard">Front yard</option>
+							<option value="backyard">Back yard</option>
+							<option value="patio">Patio/deck area</option>
+							<option value="garden">Garden</option>
+							<option value="pool-area">Pool area</option>
+							<option value="throughout">Throughout the property</option>
+							<option value="indoors">Indoors</option>
+							<option value="other">Other area</option>
+						</select>
+					</div>
+				</div>
+			</div>
+
+			<!-- Potential Sources Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-search"></i>
+					<h3>Potential Mosquito Sources</h3>
+					<span class="optional-label">optional</span>
+				</div>
+				<p class="mb-3">Have you noticed any of these common mosquito breeding sources in your area?</p>
+
+				<div class="card card-highlight mb-4">
+					<div class="card-body">
+						<h5 class="card-title">Did you know?</h5>
+						<p class="card-text">Mosquitoes can breed in as little as a bottle cap of water! Eliminating standing water is the most effective way to reduce mosquito populations.</p>
+					</div>
+				</div>
+
+				<div class="row g-4 mb-4">
+					<!-- Source 1 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-water"></i>
+								</div>
+								<h5 class="card-title">Stagnant Water</h5>
+								<p class="card-text">Green pools, ponds, fountains, or birdbaths that aren't maintained</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="sourceStagnantWater">
+									<label class="form-check-label" for="sourceStagnantWater">
+										I've noticed this
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Source 2 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-droplet"></i>
+								</div>
+								<h5 class="card-title">Containers</h5>
+								<p class="card-text">Buckets, planters, toys, tires, or any items that collect rainwater</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="sourceContainers">
+									<label class="form-check-label" for="sourceContainers">
+										I've noticed this
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Source 3 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-house"></i>
+								</div>
+								<h5 class="card-title">Roof & Gutters</h5>
+								<p class="card-text">Clogged gutters, flat roofs, or AC units that collect water</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="sourceGutters">
+									<label class="form-check-label" for="sourceGutters">
+										I've noticed this
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="alert alert-warning mb-4" id="sourceFoundAlert" style="display: none;">
+					<h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Potential Breeding Source Found!</h5>
+					<p>It looks like you may have identified a mosquito breeding source. If you'd like to report a specific source (like a green pool), please use our <a href="/report-green-pool" class="alert-link">Report a Green Pool</a> form for faster service.</p>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12">
+						<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
+						<textarea class="form-control" id="otherSources" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
+					</div>
+				</div>
+			</div>
+
+			<!-- Inspection Request Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-clipboard-check"></i>
+					<h3>Inspection Request</h3>
+				</div>
+				<p class="mb-4">Would you like our technicians to inspect for potential mosquito sources?</p>
+
+				<div class="row g-4 mb-4">
+					<div class="col-md-6">
+						<div class="inspection-type-card" onclick="selectInspectionType('property')" id="propertyInspection">
+							<h5><i class="bi bi-house-door me-2"></i>Property Inspection</h5>
+							<p>Request a technician to inspect your property for mosquito sources. We'll contact you to schedule a convenient time.</p>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="inspectionType" id="inspectionTypeProperty" value="property">
+								<label class="form-check-label" for="inspectionTypeProperty">
+									<strong>Schedule a property inspection</strong>
+								</label>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<div class="inspection-type-card" onclick="selectInspectionType('neighborhood')" id="neighborhoodInspection">
+							<h5><i class="bi bi-map me-2"></i>Neighborhood Inspection</h5>
+							<p>Request a general inspection of your neighborhood. We'll survey the area for potential mosquito breeding sources.</p>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="inspectionType" id="inspectionTypeNeighborhood" value="neighborhood">
+								<label class="form-check-label" for="inspectionTypeNeighborhood">
+									<strong>Request neighborhood inspection</strong>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Property Inspection Scheduling (hidden by default) -->
+				<div id="schedulingSection" style="display: none;">
+					<div class="card mb-4">
+						<div class="card-body">
+							<h5 class="card-title">Schedule Property Inspection</h5>
+							<p class="card-text">Please indicate your availability for a technician visit.</p>
+							
+							<div class="row mb-3">
+								<div class="col-md-6">
+									<label for="preferredDateRange" class="form-label">Preferred Date Range</label>
+									<select class="form-select" id="preferredDateRange">
+										<option value="">Select preferred dates</option>
+										<option value="next-week">Next week</option>
+										<option value="in-two-weeks">In two weeks</option>
+										<option value="any-time">Any time</option>
+									</select>
+								</div>
+								
+								<div class="col-md-6">
+									<label for="preferredTime" class="form-label">Preferred Time of Day</label>
+									<select class="form-select" id="preferredTime">
+										<option value="">Select preferred time</option>
+										<option value="morning">Morning (8am-12pm)</option>
+										<option value="afternoon">Afternoon (12pm-4pm)</option>
+										<option value="any-time">Any time</option>
+									</select>
+								</div>
+							</div>
+							
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="requestCall">
+								<label class="form-check-label" for="requestCall">
+									Please call me to schedule a specific appointment time
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Location & Contact Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-geo-alt"></i>
+					<h3>Location & Contact Information</h3>
+				</div>
+
+				<div class="row mb-4">
+					<div class="col-md-12">
+						<label for="address" class="form-label">Your Address</label>
+						<input type="text" class="form-control" id="address" placeholder="Enter your street address">
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						<label for="name" class="form-label">Your Name</label>
+						<input type="text" class="form-control" id="name">
+					</div>
+					<div class="col-md-6 mb-3">
+						<label for="phone" class="form-label">Phone Number</label>
+						<input type="tel" class="form-control" id="phone">
+					</div>
+					<div class="col-md-12 mb-3">
+						<label for="email" class="form-label">Email Address</label>
+						<input type="email" class="form-control" id="email">
+						<div class="form-text">We'll use this to send you a confirmation and follow-up information.</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Additional Information Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-card-text"></i>
+					<h3>Additional Information</h3>
+					<span class="optional-label">optional</span>
+				</div>
+				
+				<div class="row">
+					<div class="col-md-12">
+						<label for="additionalInfo" class="form-label">Is there anything else you'd like us to know?</label>
+						<textarea class="form-control" id="additionalInfo" rows="4" placeholder="Additional details about the mosquito issue..."></textarea>
+					</div>
+				</div>
+			</div>
+
+			<!-- Submit Section -->
+			<div class="submit-container">
+				<div class="row align-items-center">
+					<div class="col-md-8">
+						<p class="mb-0"><strong>Thank you for reporting this mosquito issue.</strong></p>
+						<p class="mb-0 small text-muted">After submission, you'll receive a confirmation with a report ID and further information.</p>
+					</div>
+					<div class="col-md-4 text-md-end mt-3 mt-md-0">
+						<button type="submit" class="btn btn-primary btn-lg">
+							Submit Report
+						</button>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<!-- Back Button -->
+		<div class="row mt-4">
+			<div class="col-12">
+				<a href="/" class="btn btn-outline-secondary">
+					<i class="bi bi-arrow-left"></i> Back to Home
+				</a>
+			</div>
+		</div>
+	</div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+				<p class="mb-0">&copy; 2023 [District Name] Mosquito Management District</p>
+			</div>
+			<div class="col-md-6 text-md-end">
+				<p class="mb-0">Contact: (555) 123-4567 | info@mosquitodistrict.gov</p>
+			</div>
+		</div>
+	</div>
+</footer>
+{{end}}

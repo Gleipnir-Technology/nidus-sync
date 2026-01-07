@@ -13,13 +13,19 @@ var embeddedFiles embed.FS
 //go:embed static/*
 var EmbeddedStaticFS embed.FS
 
-type RootContext struct{}
+type ContextNuisance struct{}
+type ContextPool struct{}
+type ContextRoot struct{}
+type ContextStatus struct{}
 
 var (
+	Nuisance = buildTemplate("nuisance", "base")
+	Pool = buildTemplate("pool", "base")
 	Root = buildTemplate("root", "base")
+	Status = buildTemplate("status", "base")
 )
 
-var components = [...]string{}
+var components = [...]string{"footer"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	subdir := "htmlpage/public-reports"
@@ -28,7 +34,7 @@ func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 		full_files = append(full_files, fmt.Sprintf("%s/template/%s.html", subdir, f))
 	}
 	for _, c := range components {
-		full_files = append(full_files, fmt.Sprintf("%s/template/components/%s.html", subdir, c))
+		full_files = append(full_files, fmt.Sprintf("%s/template/component/%s.html", subdir, c))
 	}
 	return htmlpage.NewBuiltTemplate(embeddedFiles, "htmlpage/public-reports/", full_files...)
 }

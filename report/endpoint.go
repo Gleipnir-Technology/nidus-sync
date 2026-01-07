@@ -11,6 +11,9 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getRoot)
+	r.Get("/nuisance", getNuisance)
+	r.Get("/pool", getPool)
+	r.Get("/status", getStatus)
 	localFS := http.Dir("./static")
 	htmlpage.FileServer(r, "/static", localFS, publicreports.EmbeddedStaticFS, "static")
 	return r
@@ -20,6 +23,28 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		publicreports.Root,
-		publicreports.RootContext{},
+		publicreports.ContextRoot{},
+	)
+}
+
+func getNuisance(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		publicreports.Nuisance,
+		publicreports.ContextNuisance{},
+	)
+}
+func getPool(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		publicreports.Pool,
+		publicreports.ContextPool{},
+	)
+}
+func getStatus(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		publicreports.Status,
+		publicreports.ContextStatus{},
 	)
 }
