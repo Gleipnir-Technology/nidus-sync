@@ -274,7 +274,11 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 	_, err := auth.SigninUser(r, username, password)
 	if err != nil {
 		if errors.Is(err, auth.InvalidCredentials{}) {
-			http.Redirect(w, r, "/?error=invalid-credentials", http.StatusFound)
+			http.Redirect(w, r, "/signin?error=invalid-credentials", http.StatusFound)
+			return
+		}
+		if errors.Is(err, auth.InvalidUsername{}) {
+			http.Redirect(w, r, "/signin?error=invalid-credentials", http.StatusFound)
 			return
 		}
 		respondError(w, "Failed to signin user", err, http.StatusInternalServerError)
