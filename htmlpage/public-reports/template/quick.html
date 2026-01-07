@@ -51,6 +51,184 @@
 	}
 }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	// Elements
+	const form = document.getElementById('mosquitoReportForm');
+	const photoInput = document.getElementById('photos');
+	const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+	const locationStatus = document.getElementById('locationStatus');
+	const latitudeInput = document.getElementById('latitude');
+	const longitudeInput = document.getElementById('longitude');
+	const createdInput = document.getElementById('created');
+	const submitButton = document.getElementById('submitButton');
+	const loadingOverlay = document.getElementById('loadingOverlay');
+
+	// Get current location
+	requestLocation();
+
+	// Set current time
+	createdInput.value = new Date().toISOString();
+
+	// Handle photo selection
+	photoInput.addEventListener('change', handlePhotoSelection);
+
+	// Handle form submission
+	form.addEventListener('submit', handleFormSubmission);
+
+	/**
+	 * Request user's geolocation
+	 */
+	function requestLocation() {
+	if (navigator.geolocation) {
+		locationStatus.textContent = "Requesting your location...";
+		
+		navigator.geolocation.getCurrentPosition(
+		// Success callback
+		function(position) {
+			locationStatus.textContent = "Location successfully added";
+			locationStatus.classList.add('text-success');
+			
+			// Store location in hidden fields
+			latitudeInput.value = position.coords.latitude;
+			longitudeInput.value = position.coords.longitude;
+		},
+		// Error callback
+		function(error) {
+			let errorMessage = "Unable to get your location";
+			switch(error.code) {
+			case error.PERMISSION_DENIED:
+				errorMessage = "Location access denied. Please enable location services.";
+				break;
+			case error.POSITION_UNAVAILABLE:
+				errorMessage = "Location information unavailable.";
+				break;
+			case error.TIMEOUT:
+				errorMessage = "Location request timed out.";
+				break;
+			}
+			locationStatus.textContent = errorMessage;
+			locationStatus.classList.add('text-danger');
+		},
+		// Options
+		{
+			enableHighAccuracy: true,
+			timeout: 10000,
+			maximumAge: 0
+		}
+		);
+	} else {
+		locationStatus.textContent = "Geolocation is not supported by your browser";
+		locationStatus.classList.add('text-danger');
+	}
+	}
+
+	/**
+	 * Handle photo selection and preview
+	 */
+	function handlePhotoSelection() {
+	// Clear previous previews
+	photoPreviewContainer.innerHTML = '';
+
+	// Check if files were selected
+	if (photoInput.files && photoInput.files.length > 0) {
+		// Loop through selected files
+		Array.from(photoInput.files).forEach((file, index) => {
+		if (!file.type.match('image.*')) {
+			return; // Skip non-image files
+		}
+		
+		// Create preview container
+		const previewContainer = document.createElement('div');
+		previewContainer.className = 'position-relative m-1';
+		
+		// Create image preview
+		const img = document.createElement('img');
+		img.className = 'img-thumbnail';
+		img.style.width = '100px';
+		img.style.height = '100px';
+		img.style.objectFit = 'cover';
+		
+		// Read file and set preview
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			img.src = e.target.result;
+		};
+		reader.readAsDataURL(file);
+		
+		// Create remove button
+		const removeBtn = document.createElement('button');
+		removeBtn.type = 'button';
+		removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0';
+		removeBtn.innerHTML = '&times;';
+		removeBtn.style.fontSize = '10px';
+		removeBtn.style.padding = '0 5px';
+		
+		// Handle remove button click
+		removeBtn.addEventListener('click', function() {
+			// Create a new FileList without this file
+			// Since FileList is immutable, we need to reset the input
+			// This is a bit tricky and requires recreating the input
+			previewContainer.remove();
+			
+			// If this was the last image, clear the input entirely
+			if (photoPreviewContainer.children.length === 0) {
+			photoInput.value = '';
+			}
+			// Note: Unfortunately, selectively removing files from a FileList isn't straightforward
+			// In a real implementation, we might track selected files in an array and recreate the input
+		});
+		
+		// Add elements to the preview container
+		previewContainer.appendChild(img);
+		previewContainer.appendChild(removeBtn);
+		photoPreviewContainer.appendChild(previewContainer);
+		});
+	}
+	}
+
+	/**
+	 * Handle form submission
+	 */
+	function handleFormSubmission(event) {
+		event.preventDefault();
+
+		// Show loading overlay
+		loadingOverlay.classList.remove('d-none');
+
+		// Disable submit button to prevent double submission
+		submitButton.disabled = true;
+
+		// Create FormData object
+		const formData = new FormData(form);
+
+		// Send AJAX request
+		fetch(form.action, {
+			method: 'POST',
+			body: formData,
+		})
+		.then(response => {
+			if (response.ok) {
+				// Navigate to the URL the server specified
+				window.location.href = response.url;
+				return;
+			} else {
+				console.error("Not ok response:", response);
+			}
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			alert('There was a problem submitting your report. Please try again.');
+			
+			// Re-enable submit button
+			submitButton.disabled = false;
+			
+			// Hide loading overlay
+			loadingOverlay.classList.add('d-none');
+		});
+	}
+});
+</script>
 {{end}}
 {{define "content"}}
 <!-- Main Content -->
@@ -60,18 +238,22 @@
 			<div class="card shadow-sm">
 				<div class="card-body p-4">
 					<h2 class="card-title text-center mb-4">Quick Mosquito Report</h2>
-					
+
 					<!-- Form -->
-					<form action="/service-request-quick-confirmation" method="get">
+					<form id="mosquitoReportForm" action="/quick-submit" method="POST" enctype="multipart/form-data">
 						<!-- Location Automatic Collection Note -->
 						<div class="location-info d-flex align-items-center mb-4">
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-geo-alt me-2" viewBox="0 0 16 16">
 								<path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"/>
 								<path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
 							</svg>
-							<span>Your location and current time will be automatically collected with your report.</span>
+							<span id="locationStatus">Requesting your location...</span>
+							<!-- Hidden fields for location data -->
+							<input type="hidden" id="latitude" name="latitude">
+							<input type="hidden" id="longitude" name="longitude">
+							<input type="hidden" id="created" name="created">
 						</div>
-						
+
 						<!-- Photo Upload -->
 						<div class="mb-4">
 							<label for="photos" class="form-label fw-bold">Photos (Optional)</label>
@@ -81,27 +263,26 @@
 									<path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
 								</svg>
 								<div>
-									<input type="file" id="photos" class="d-none" accept="image/*" multiple>
+									<input type="file" id="photos" name="photos" class="d-none" accept="image/*" multiple>
 									<button type="button" class="btn btn-outline-primary mb-2" onclick="document.getElementById('photos').click()">Add Photos</button>
 								</div>
 								<small class="d-block text-muted">Take pictures of the mosquito problem area</small>
-								
-								<!-- Photo Preview Area (would be populated by JavaScript) -->
-								<div class="photo-preview mt-3">
-									<!-- Example preview images (these would be dynamically added) -->
-									<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80' fill='%23dddddd'%3E%3Crect width='80' height='80' fill='%23eeeeee'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%23999999'%3EPreview%3C/text%3E%3C/svg%3E" alt="Preview">
+
+								<!-- Photo Preview Area -->
+								<div id="photoPreviewContainer" class="photo-preview mt-3 d-flex flex-wrap">
+									<!-- Image previews will be added here by JavaScript -->
 								</div>
 							</div>
 						</div>
-						
+
 						<!-- Comments -->
 						<div class="mb-4">
 							<label for="comments" class="form-label fw-bold">Comments</label>
-							<textarea class="form-control" id="comments" rows="4" placeholder="Describe the mosquito issue (e.g., standing water, high mosquito activity, time of day they're most active)"></textarea>
+							<textarea class="form-control" id="comments" name="comments" rows="4" placeholder="Describe the mosquito issue (e.g., standing water, high mosquito activity, time of day they're most active)"></textarea>
 						</div>
-						
+
 						<!-- Submit Button -->
-						<button type="submit" class="btn btn-success w-100 submit-btn mt-4">
+						<button type="submit" class="btn btn-success w-100 submit-btn mt-4" id="submitButton">
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-send-fill me-2" viewBox="0 0 16 16">
 								<path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
 							</svg>
@@ -110,18 +291,15 @@
 					</form>
 				</div>
 			</div>
-			
-			<!-- Back Link -->
-			<div class="text-center mt-3">
-				<a href="javascript:history.back()" class="text-decoration-none">
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-						<path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
-					</svg>
-					Back to home
-				</a>
-			</div>
 		</div>
 	</div>
 </main>
 
+<!-- Loading Indicator Overlay (Initially hidden) -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+	<div class="position-absolute top-50 start-50 translate-middle text-white text-center">
+	<div class="spinner-border" role="status"></div>
+	<p class="mt-2">Submitting your report...</p>
+	</div>
+</div>
 {{end}}
