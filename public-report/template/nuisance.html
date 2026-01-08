@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	</div>
 
 	<!-- Report Form -->
-	<form id="mosquitoNuisanceForm">
+	<form id="mosquitoNuisanceForm" action="/nuisance-submit" method="POST">
 		<!-- Mosquito Activity Section -->
 		<div class="form-section">
 			<div class="section-heading">
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					<label class="form-label">When do you typically notice mosquitoes? (Select all that apply)</label>
 					<div class="row">
 						<div class="col-6 col-md-3">
-							<input type="checkbox" class="btn-check" id="earlyMorning" autocomplete="off">
+							<input type="checkbox" class="btn-check" id="earlyMorning" name="tod-early" autocomplete="off">
 							<label class="btn btn-outline-primary time-of-day-btn" for="earlyMorning">
 								<span class="time-of-day-icon"><i class="bi bi-sunrise"></i></span>
 								<span class="time-label">Early Morning</span>
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							</label>
 						</div>
 						<div class="col-6 col-md-3">
-							<input type="checkbox" class="btn-check" id="daytime" autocomplete="off">
+							<input type="checkbox" class="btn-check" id="daytime" name="tod-day" autocomplete="off">
 							<label class="btn btn-outline-primary time-of-day-btn" for="daytime">
 								<span class="time-of-day-icon"><i class="bi bi-sun"></i></span>
 								<span class="time-label">Daytime</span>
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							</label>
 						</div>
 						<div class="col-6 col-md-3">
-							<input type="checkbox" class="btn-check" id="evening" autocomplete="off">
+							<input type="checkbox" class="btn-check" id="evening" name="tod-evening" autocomplete="off">
 							<label class="btn btn-outline-primary time-of-day-btn" for="evening">
 								<span class="time-of-day-icon"><i class="bi bi-sunset"></i></span>
 								<span class="time-label">Evening</span>
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							</label>
 						</div>
 						<div class="col-6 col-md-3">
-							<input type="checkbox" class="btn-check" id="night" autocomplete="off">
+							<input type="checkbox" class="btn-check" id="night" name="tod-night" autocomplete="off">
 							<label class="btn btn-outline-primary time-of-day-btn" for="night">
 								<span class="time-of-day-icon"><i class="bi bi-moon-stars"></i></span>
 								<span class="time-label">Night</span>
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="row mb-4">
 				<div class="col-md-6">
 					<label for="duration" class="form-label">How long have you been experiencing this mosquito problem?</label>
-					<select class="form-select" id="duration">
+					<select class="form-select" name="duration">
 						<option value="just-noticed">Just noticed recently</option>
 						<option value="few-days">A few days</option>
 						<option value="1-2-weeks">1-2 weeks</option>
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				<!-- Severity -->
 				<div class="col-md-6">
 					<label for="severityRange" class="form-label">How would you rate the severity of the mosquito problem?</label>
-					<input type="range" class="form-range" min="1" max="5" id="severityRange" oninput="document.getElementById('severityValue').innerText = this.value">
+					<input type="range" class="form-range" id="severityRange" min="1" max="5" name="severity" oninput="document.getElementById('severityValue').innerText = this.value">
 					<div class="severity-scale">
 						<div class="severity-item">
 							<div>Minor</div>
@@ -255,8 +255,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			<!-- Location -->
 			<div class="row">
 				<div class="col-md-12">
-					<label for="activityLocation" class="form-label">Where on your property do you notice the most mosquito activity?</label>
-					<select class="form-select" id="activityLocation">
+					<label for="location" class="form-label">Where on your property do you notice the most mosquito activity?</label>
+					<select class="form-select" name="location">
 						<option value="">Please select</option>
 						<option value="front-yard">Front yard</option>
 						<option value="backyard">Back yard</option>
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							<h5 class="card-title">Stagnant Water</h5>
 							<p class="card-text">Green pools, ponds, fountains, or birdbaths that aren't maintained</p>
 							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="sourceStagnantWater">
+								<input class="form-check-input" type="checkbox" name="source-stagnant" id="sourceStagnantWater">
 								<label class="form-check-label" for="sourceStagnantWater">
 									I've noticed this
 								</label>
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							<h5 class="card-title">Containers</h5>
 							<p class="card-text">Buckets, planters, toys, tires, or any items that collect rainwater</p>
 							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="sourceContainers">
+								<input class="form-check-input" type="checkbox" name="source-container" id="sourceContainers">
 								<label class="form-check-label" for="sourceContainers">
 									I've noticed this
 								</label>
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							<h5 class="card-title">Roof & Gutters</h5>
 							<p class="card-text">Clogged gutters, flat roofs, or AC units that collect water</p>
 							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="sourceGutters">
+								<input class="form-check-input" type="checkbox" name="source-roof" id="sourceGutters">
 								<label class="form-check-label" for="sourceGutters">
 									I've noticed this
 								</label>
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="row">
 				<div class="col-md-12">
 					<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
-					<textarea class="form-control" id="otherSources" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
+					<textarea class="form-control" id="otherSources" name="source-description" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
 				</div>
 			</div>
 		</div>
@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						<h5><i class="bi bi-house-door me-2"></i>Property Inspection</h5>
 						<p>Request a technician to inspect your property for mosquito sources. We'll contact you to schedule a convenient time.</p>
 						<div class="form-check">
-							<input class="form-check-input" type="radio" name="inspectionType" id="inspectionTypeProperty" value="property">
+							<input class="form-check-input" type="radio" name="inspection-type" id="inspectionTypeProperty" value="property">
 							<label class="form-check-label" for="inspectionTypeProperty">
 								<strong>Schedule a property inspection</strong>
 							</label>
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						<h5><i class="bi bi-map me-2"></i>Neighborhood Inspection</h5>
 						<p>Request a general inspection of your neighborhood. We'll survey the area for potential mosquito breeding sources.</p>
 						<div class="form-check">
-							<input class="form-check-input" type="radio" name="inspectionType" id="inspectionTypeNeighborhood" value="neighborhood">
+							<input class="form-check-input" type="radio" name="inspection-type" id="inspectionTypeNeighborhood" value="neighborhood">
 							<label class="form-check-label" for="inspectionTypeNeighborhood">
 								<strong>Request neighborhood inspection</strong>
 							</label>
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						<div class="row mb-3">
 							<div class="col-md-6">
 								<label for="preferredDateRange" class="form-label">Preferred Date Range</label>
-								<select class="form-select" id="preferredDateRange">
+								<select class="form-select" id="preferredDateRange" name="preferred-date-range">
 									<option value="">Select preferred dates</option>
 									<option value="next-week">Next week</option>
 									<option value="in-two-weeks">In two weeks</option>
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							
 							<div class="col-md-6">
 								<label for="preferredTime" class="form-label">Preferred Time of Day</label>
-								<select class="form-select" id="preferredTime">
+								<select class="form-select" id="preferredTime" name="preferred-time">
 									<option value="">Select preferred time</option>
 									<option value="morning">Morning (8am-12pm)</option>
 									<option value="afternoon">Afternoon (12pm-4pm)</option>
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						</div>
 						
 						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="requestCall">
+							<input class="form-check-input" type="checkbox" id="requestCall" name="request-call">
 							<label class="form-check-label" for="requestCall">
 								Please call me to schedule a specific appointment time
 							</label>
@@ -445,28 +445,27 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="row mb-4">
 				<div class="col-md-12">
 					<label for="address" class="form-label">Your Address</label>
-					<input type="text" class="form-control" id="address" placeholder="Enter your street address">
+					<input type="text" class="form-control" name="address" placeholder="Enter your street address">
 				</div>
 			</div>
 
 			<div class="row">
 				<div class="col-md-6 mb-3">
 					<label for="name" class="form-label">Your Name</label>
-					<input type="text" class="form-control" id="name">
+					<input type="text" class="form-control" name="name">
 				</div>
 				<div class="col-md-6 mb-3">
 					<label for="phone" class="form-label">Phone Number</label>
-					<input type="tel" class="form-control" id="phone">
+					<input type="tel" class="form-control" id="phone" name="phone">
 				</div>
 				<div class="col-md-12 mb-3">
 					<label for="email" class="form-label">Email Address</label>
-					<input type="email" class="form-control" id="email">
+					<input type="email" class="form-control" id="email" name="email">
 					<div class="form-text">We'll use this to send you a confirmation and follow-up information.</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Additional Information Section -->
 		<div class="form-section">
 			<div class="section-heading">
 				<i class="bi bi-card-text"></i>
@@ -477,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="row">
 				<div class="col-md-12">
 					<label for="additionalInfo" class="form-label">Is there anything else you'd like us to know?</label>
-					<textarea class="form-control" id="additionalInfo" rows="4" placeholder="Additional details about the mosquito issue..."></textarea>
+					<textarea class="form-control" id="additionalInfo" name="additional-info" rows="4" placeholder="Additional details about the mosquito issue..."></textarea>
 				</div>
 			</div>
 		</div>

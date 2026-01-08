@@ -477,3 +477,416 @@ func (e *Notificationtype) Scan(value any) error {
 
 	return nil
 }
+
+// Enum values for PublicreportNuisancedurationtype
+const (
+	PublicreportNuisancedurationtypeNone        PublicreportNuisancedurationtype = "none"
+	PublicreportNuisancedurationtypeJustNoticed PublicreportNuisancedurationtype = "just-noticed"
+	PublicreportNuisancedurationtypeFewDays     PublicreportNuisancedurationtype = "few-days"
+	PublicreportNuisancedurationtype12Weeks     PublicreportNuisancedurationtype = "1-2-weeks"
+	PublicreportNuisancedurationtype24Weeks     PublicreportNuisancedurationtype = "2-4-weeks"
+	PublicreportNuisancedurationtype13Months    PublicreportNuisancedurationtype = "1-3-months"
+	PublicreportNuisancedurationtypeSeasonal    PublicreportNuisancedurationtype = "seasonal"
+)
+
+func AllPublicreportNuisancedurationtype() []PublicreportNuisancedurationtype {
+	return []PublicreportNuisancedurationtype{
+		PublicreportNuisancedurationtypeNone,
+		PublicreportNuisancedurationtypeJustNoticed,
+		PublicreportNuisancedurationtypeFewDays,
+		PublicreportNuisancedurationtype12Weeks,
+		PublicreportNuisancedurationtype24Weeks,
+		PublicreportNuisancedurationtype13Months,
+		PublicreportNuisancedurationtypeSeasonal,
+	}
+}
+
+type PublicreportNuisancedurationtype string
+
+func (e PublicreportNuisancedurationtype) String() string {
+	return string(e)
+}
+
+func (e PublicreportNuisancedurationtype) Valid() bool {
+	switch e {
+	case PublicreportNuisancedurationtypeNone,
+		PublicreportNuisancedurationtypeJustNoticed,
+		PublicreportNuisancedurationtypeFewDays,
+		PublicreportNuisancedurationtype12Weeks,
+		PublicreportNuisancedurationtype24Weeks,
+		PublicreportNuisancedurationtype13Months,
+		PublicreportNuisancedurationtypeSeasonal:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportNuisancedurationtype) All() []PublicreportNuisancedurationtype {
+	return AllPublicreportNuisancedurationtype()
+}
+
+func (e PublicreportNuisancedurationtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancedurationtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportNuisancedurationtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancedurationtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportNuisancedurationtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportNuisancedurationtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportNuisancedurationtype(x)
+	case []byte:
+		*e = PublicreportNuisancedurationtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportNuisancedurationtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportNuisancedurationtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for PublicreportNuisanceinspectiontype
+const (
+	PublicreportNuisanceinspectiontypeNeighborhood PublicreportNuisanceinspectiontype = "neighborhood"
+	PublicreportNuisanceinspectiontypeProperty     PublicreportNuisanceinspectiontype = "property"
+)
+
+func AllPublicreportNuisanceinspectiontype() []PublicreportNuisanceinspectiontype {
+	return []PublicreportNuisanceinspectiontype{
+		PublicreportNuisanceinspectiontypeNeighborhood,
+		PublicreportNuisanceinspectiontypeProperty,
+	}
+}
+
+type PublicreportNuisanceinspectiontype string
+
+func (e PublicreportNuisanceinspectiontype) String() string {
+	return string(e)
+}
+
+func (e PublicreportNuisanceinspectiontype) Valid() bool {
+	switch e {
+	case PublicreportNuisanceinspectiontypeNeighborhood,
+		PublicreportNuisanceinspectiontypeProperty:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportNuisanceinspectiontype) All() []PublicreportNuisanceinspectiontype {
+	return AllPublicreportNuisanceinspectiontype()
+}
+
+func (e PublicreportNuisanceinspectiontype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisanceinspectiontype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportNuisanceinspectiontype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisanceinspectiontype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportNuisanceinspectiontype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportNuisanceinspectiontype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportNuisanceinspectiontype(x)
+	case []byte:
+		*e = PublicreportNuisanceinspectiontype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportNuisanceinspectiontype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportNuisanceinspectiontype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for PublicreportNuisancelocationtype
+const (
+	PublicreportNuisancelocationtypeNone       PublicreportNuisancelocationtype = "none"
+	PublicreportNuisancelocationtypeFrontYard  PublicreportNuisancelocationtype = "front-yard"
+	PublicreportNuisancelocationtypeBackyard   PublicreportNuisancelocationtype = "backyard"
+	PublicreportNuisancelocationtypePatio      PublicreportNuisancelocationtype = "patio"
+	PublicreportNuisancelocationtypeGarden     PublicreportNuisancelocationtype = "garden"
+	PublicreportNuisancelocationtypePoolArea   PublicreportNuisancelocationtype = "pool-area"
+	PublicreportNuisancelocationtypeThroughout PublicreportNuisancelocationtype = "throughout"
+	PublicreportNuisancelocationtypeIndoors    PublicreportNuisancelocationtype = "indoors"
+	PublicreportNuisancelocationtypeOther      PublicreportNuisancelocationtype = "other"
+)
+
+func AllPublicreportNuisancelocationtype() []PublicreportNuisancelocationtype {
+	return []PublicreportNuisancelocationtype{
+		PublicreportNuisancelocationtypeNone,
+		PublicreportNuisancelocationtypeFrontYard,
+		PublicreportNuisancelocationtypeBackyard,
+		PublicreportNuisancelocationtypePatio,
+		PublicreportNuisancelocationtypeGarden,
+		PublicreportNuisancelocationtypePoolArea,
+		PublicreportNuisancelocationtypeThroughout,
+		PublicreportNuisancelocationtypeIndoors,
+		PublicreportNuisancelocationtypeOther,
+	}
+}
+
+type PublicreportNuisancelocationtype string
+
+func (e PublicreportNuisancelocationtype) String() string {
+	return string(e)
+}
+
+func (e PublicreportNuisancelocationtype) Valid() bool {
+	switch e {
+	case PublicreportNuisancelocationtypeNone,
+		PublicreportNuisancelocationtypeFrontYard,
+		PublicreportNuisancelocationtypeBackyard,
+		PublicreportNuisancelocationtypePatio,
+		PublicreportNuisancelocationtypeGarden,
+		PublicreportNuisancelocationtypePoolArea,
+		PublicreportNuisancelocationtypeThroughout,
+		PublicreportNuisancelocationtypeIndoors,
+		PublicreportNuisancelocationtypeOther:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportNuisancelocationtype) All() []PublicreportNuisancelocationtype {
+	return AllPublicreportNuisancelocationtype()
+}
+
+func (e PublicreportNuisancelocationtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancelocationtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportNuisancelocationtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancelocationtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportNuisancelocationtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportNuisancelocationtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportNuisancelocationtype(x)
+	case []byte:
+		*e = PublicreportNuisancelocationtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportNuisancelocationtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportNuisancelocationtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for PublicreportNuisancepreferreddaterangetype
+const (
+	PublicreportNuisancepreferreddaterangetypeNone       PublicreportNuisancepreferreddaterangetype = "none"
+	PublicreportNuisancepreferreddaterangetypeAnyTime    PublicreportNuisancepreferreddaterangetype = "any-time"
+	PublicreportNuisancepreferreddaterangetypeInTwoWeeks PublicreportNuisancepreferreddaterangetype = "in-two-weeks"
+	PublicreportNuisancepreferreddaterangetypeNextWeek   PublicreportNuisancepreferreddaterangetype = "next-week"
+)
+
+func AllPublicreportNuisancepreferreddaterangetype() []PublicreportNuisancepreferreddaterangetype {
+	return []PublicreportNuisancepreferreddaterangetype{
+		PublicreportNuisancepreferreddaterangetypeNone,
+		PublicreportNuisancepreferreddaterangetypeAnyTime,
+		PublicreportNuisancepreferreddaterangetypeInTwoWeeks,
+		PublicreportNuisancepreferreddaterangetypeNextWeek,
+	}
+}
+
+type PublicreportNuisancepreferreddaterangetype string
+
+func (e PublicreportNuisancepreferreddaterangetype) String() string {
+	return string(e)
+}
+
+func (e PublicreportNuisancepreferreddaterangetype) Valid() bool {
+	switch e {
+	case PublicreportNuisancepreferreddaterangetypeNone,
+		PublicreportNuisancepreferreddaterangetypeAnyTime,
+		PublicreportNuisancepreferreddaterangetypeInTwoWeeks,
+		PublicreportNuisancepreferreddaterangetypeNextWeek:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportNuisancepreferreddaterangetype) All() []PublicreportNuisancepreferreddaterangetype {
+	return AllPublicreportNuisancepreferreddaterangetype()
+}
+
+func (e PublicreportNuisancepreferreddaterangetype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancepreferreddaterangetype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportNuisancepreferreddaterangetype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancepreferreddaterangetype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportNuisancepreferreddaterangetype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportNuisancepreferreddaterangetype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportNuisancepreferreddaterangetype(x)
+	case []byte:
+		*e = PublicreportNuisancepreferreddaterangetype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportNuisancepreferreddaterangetype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportNuisancepreferreddaterangetype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for PublicreportNuisancepreferredtimetype
+const (
+	PublicreportNuisancepreferredtimetypeNone      PublicreportNuisancepreferredtimetype = "none"
+	PublicreportNuisancepreferredtimetypeAfternoon PublicreportNuisancepreferredtimetype = "afternoon"
+	PublicreportNuisancepreferredtimetypeAnyTime   PublicreportNuisancepreferredtimetype = "any-time"
+	PublicreportNuisancepreferredtimetypeMorning   PublicreportNuisancepreferredtimetype = "morning"
+)
+
+func AllPublicreportNuisancepreferredtimetype() []PublicreportNuisancepreferredtimetype {
+	return []PublicreportNuisancepreferredtimetype{
+		PublicreportNuisancepreferredtimetypeNone,
+		PublicreportNuisancepreferredtimetypeAfternoon,
+		PublicreportNuisancepreferredtimetypeAnyTime,
+		PublicreportNuisancepreferredtimetypeMorning,
+	}
+}
+
+type PublicreportNuisancepreferredtimetype string
+
+func (e PublicreportNuisancepreferredtimetype) String() string {
+	return string(e)
+}
+
+func (e PublicreportNuisancepreferredtimetype) Valid() bool {
+	switch e {
+	case PublicreportNuisancepreferredtimetypeNone,
+		PublicreportNuisancepreferredtimetypeAfternoon,
+		PublicreportNuisancepreferredtimetypeAnyTime,
+		PublicreportNuisancepreferredtimetypeMorning:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportNuisancepreferredtimetype) All() []PublicreportNuisancepreferredtimetype {
+	return AllPublicreportNuisancepreferredtimetype()
+}
+
+func (e PublicreportNuisancepreferredtimetype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancepreferredtimetype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportNuisancepreferredtimetype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportNuisancepreferredtimetype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportNuisancepreferredtimetype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportNuisancepreferredtimetype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportNuisancepreferredtimetype(x)
+	case []byte:
+		*e = PublicreportNuisancepreferredtimetype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportNuisancepreferredtimetype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportNuisancepreferredtimetype value: %s", *e)
+	}
+
+	return nil
+}

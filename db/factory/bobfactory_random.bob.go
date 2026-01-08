@@ -87,6 +87,56 @@ func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notif
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_PublicreportNuisancedurationtype(f *faker.Faker, limits ...string) enums.PublicreportNuisancedurationtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportNuisancedurationtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_PublicreportNuisanceinspectiontype(f *faker.Faker, limits ...string) enums.PublicreportNuisanceinspectiontype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportNuisanceinspectiontype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_PublicreportNuisancelocationtype(f *faker.Faker, limits ...string) enums.PublicreportNuisancelocationtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportNuisancelocationtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_PublicreportNuisancepreferreddaterangetype(f *faker.Faker, limits ...string) enums.PublicreportNuisancepreferreddaterangetype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportNuisancepreferreddaterangetype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_PublicreportNuisancepreferredtimetype(f *faker.Faker, limits ...string) enums.PublicreportNuisancepreferredtimetype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportNuisancepreferredtimetype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_float32(f *faker.Faker, limits ...string) float32 {
 	if f == nil {
 		f = &defaultFaker

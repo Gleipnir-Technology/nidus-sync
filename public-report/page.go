@@ -14,6 +14,9 @@ var embeddedFiles embed.FS
 var EmbeddedStaticFS embed.FS
 
 type ContextNuisance struct{}
+type ContextNuisanceSubmitComplete struct {
+	ReportID string
+}
 type ContextPool struct{}
 type ContextQuick struct{}
 type ContextQuickSubmitComplete struct {
@@ -27,6 +30,7 @@ type ContextStatus struct{}
 
 var (
 	Nuisance                      = buildTemplate("nuisance", "base")
+	NuisanceSubmitComplete        = buildTemplate("nuisance-submit-complete", "base")
 	Pool                          = buildTemplate("pool", "base")
 	Quick                         = buildTemplate("quick", "base")
 	QuickSubmitComplete           = buildTemplate("quick-submit-complete", "base")

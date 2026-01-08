@@ -58,6 +58,7 @@ type Factory struct {
 	baseNotificationMods                      NotificationModSlice
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
+	basePublicreportNuisanceMods              PublicreportNuisanceModSlice
 	basePublicreportQuickMods                 PublicreportQuickModSlice
 	basePublicreportQuickPhotoMods            PublicreportQuickPhotoModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
@@ -2372,6 +2373,53 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	return o
 }
 
+func (f *Factory) NewPublicreportNuisance(mods ...PublicreportNuisanceMod) *PublicreportNuisanceTemplate {
+	return f.NewPublicreportNuisanceWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNuisanceWithContext(ctx context.Context, mods ...PublicreportNuisanceMod) *PublicreportNuisanceTemplate {
+	o := &PublicreportNuisanceTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNuisanceMods.Apply(ctx, o)
+	}
+
+	PublicreportNuisanceModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisance) *PublicreportNuisanceTemplate {
+	o := &PublicreportNuisanceTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.AdditionalInfo = func() string { return m.AdditionalInfo }
+	o.Created = func() time.Time { return m.Created }
+	o.Duration = func() enums.PublicreportNuisancedurationtype { return m.Duration }
+	o.Email = func() string { return m.Email }
+	o.InspectionType = func() enums.PublicreportNuisanceinspectiontype { return m.InspectionType }
+	o.Location = func() enums.PublicreportNuisancelocationtype { return m.Location }
+	o.PreferredDateRange = func() enums.PublicreportNuisancepreferreddaterangetype { return m.PreferredDateRange }
+	o.PreferredTime = func() enums.PublicreportNuisancepreferredtimetype { return m.PreferredTime }
+	o.RequestCall = func() bool { return m.RequestCall }
+	o.Severity = func() int16 { return m.Severity }
+	o.SourceContainer = func() bool { return m.SourceContainer }
+	o.SourceDescription = func() string { return m.SourceDescription }
+	o.SourceRoof = func() bool { return m.SourceRoof }
+	o.SourceStagnant = func() bool { return m.SourceStagnant }
+	o.TimeOfDayDay = func() bool { return m.TimeOfDayDay }
+	o.TimeOfDayEarly = func() bool { return m.TimeOfDayEarly }
+	o.TimeOfDayEvening = func() bool { return m.TimeOfDayEvening }
+	o.TimeOfDayNight = func() bool { return m.TimeOfDayNight }
+	o.PublicID = func() string { return m.PublicID }
+	o.ReporterAddress = func() string { return m.ReporterAddress }
+	o.ReporterEmail = func() string { return m.ReporterEmail }
+	o.ReporterName = func() string { return m.ReporterName }
+	o.ReporterPhone = func() string { return m.ReporterPhone }
+
+	return o
+}
+
 func (f *Factory) NewPublicreportQuick(mods ...PublicreportQuickMod) *PublicreportQuickTemplate {
 	return f.NewPublicreportQuickWithContext(context.Background(), mods...)
 }
@@ -2951,6 +2999,14 @@ func (f *Factory) ClearBaseOrganizationMods() {
 
 func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNuisanceMods() {
+	f.basePublicreportNuisanceMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNuisanceMod(mods ...PublicreportNuisanceMod) {
+	f.basePublicreportNuisanceMods = append(f.basePublicreportNuisanceMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportQuickMods() {

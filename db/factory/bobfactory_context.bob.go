@@ -208,6 +208,9 @@ var (
 	organizationRelNoteImagesCtx              = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")
 	organizationRelUserCtx                    = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
+	// Relationship Contexts for publicreport.nuisance
+	publicreportNuisanceWithParentsCascadingCtx = newContextual[bool]("publicreportNuisanceWithParentsCascading")
+
 	// Relationship Contexts for publicreport.quick
 	publicreportQuickWithParentsCascadingCtx = newContextual[bool]("publicreportQuickWithParentsCascading")
 	publicreportQuickRelQuickPhotosCtx       = newContextual[bool]("publicreport.quick.publicreport.quick_photo.publicreport.quick_photo.quick_photo_quick_id_fkey")
