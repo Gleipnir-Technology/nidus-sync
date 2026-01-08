@@ -4,6 +4,7 @@ aliases:
     up_singular: "User"
     down_plural: "users"
     down_singular: "user"
+no_tests: true
 psql:
   schemas:
     - "public"
