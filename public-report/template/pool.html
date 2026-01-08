@@ -2,6 +2,7 @@
 
 {{define "title"}}Green Pool{{end}}
 {{define "extraheader"}}
+{{template "location-geocode-header" .}}
 {{template "photo-upload-header"}}
 <style>
 		.district-logo {
@@ -99,8 +100,7 @@
 				
 				<div class="row mb-3">
 					<div class="col-md-12">
-						<label for="address" class="form-label">Address or Description of Location</label>
-						<input type="text" class="form-control" id="address" placeholder="123 Main St, City, State or nearby landmark description">
+						{{template "location-geocode"}}
 					</div>
 				</div>
 				

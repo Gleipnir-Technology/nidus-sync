@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -70,7 +71,9 @@ func getPool(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		Pool,
-		ContextPool{},
+		ContextPool{
+			MapboxToken: config.MapboxToken,
+		},
 	)
 }
 func getQuick(w http.ResponseWriter, r *http.Request) {

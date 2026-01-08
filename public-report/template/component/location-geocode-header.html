@@ -1,0 +1,108 @@
+{{define "location-geocode-header"}}
+<style>
+.suggestions-container {
+	position: absolute;
+	width: 100%;
+	max-height: 300px;
+	overflow-y: auto;
+	z-index: 1000;
+}
+.suggestion-item {
+	cursor: pointer;
+	padding: 8px 12px;
+}
+.suggestion-item:hover {
+	background-color: #f8f9fa;
+}
+</style>
+<script>
+// Replace with your actual Mapbox access token
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+
+// Display suggestions in the dropdown
+function displaySuggestions(suggestions) {
+	const suggestionsContainer = document.getElementById('suggestions');
+	// Clear previous suggestions
+	suggestionsContainer.innerHTML = '';
+	
+	if (suggestions.length === 0) {
+		suggestionsContainer.classList.add('d-none');
+		return;
+	}
+	
+	// Create and append suggestion items
+	suggestions.forEach(suggestion => {
+		const item = document.createElement('div');
+		item.className = 'suggestion-item list-group-item';
+		item.textContent = suggestion.properties.name || suggestion.properties.full_address;
+		
+		// Handle click on a suggestion
+		item.addEventListener('click', function() {
+			addressInput.value = suggestion.properties.name || suggestion.properties.full_address;
+			suggestionsContainer.classList.add('d-none');
+			
+			// Display the selected location details
+			locationDetails.textContent = JSON.stringify(suggestion, null, 2);
+		});
+		
+		suggestionsContainer.appendChild(item);
+	});
+	
+	// Show the suggestions container
+	suggestionsContainer.classList.remove('d-none');
+}
+
+// Fetch suggestions from Mapbox API
+async function fetchGeocodingSuggestions(query) {
+	try {
+		const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}`;
+		
+		const response = await fetch(url);
+		const data = await response.json();
+		
+		displaySuggestions(data.features || []);
+	} catch (error) {
+		console.error('Error fetching geocoding suggestions:', error);
+	}
+}
+
+function onAddressInput() {
+	const suggestionsContainer = document.getElementById('suggestions');
+
+	let debounceTimer;
+	const query = this.value.trim();
+	
+	// Clear previous timer
+	clearTimeout(debounceTimer);
+	
+	// Clear suggestions if input is less than 3 characters
+	if (query.length < 3) {
+		suggestionsContainer.classList.add('d-none');
+		suggestionsContainer.innerHTML = '';
+		return;
+	}
+	
+	// Debounce API calls (wait 300ms after typing stops)
+	debounceTimer = setTimeout(() => {
+		fetchGeocodingSuggestions(query);
+	}, 300);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	const addressInput = document.getElementById('addressInput');
+	const suggestionsContainer = document.getElementById('suggestions');
+	const locationDetails = document.getElementById('locationDetails');
+
+
+	// Listen for input changes
+	addressInput.addEventListener('input', onAddressInput);
+
+	// Close suggestions when clicking outside
+	document.addEventListener('click', function(event) {
+		if (!addressInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+			suggestionsContainer.classList.add('d-none');
+		}
+	});
+});
+</script>
+{{end}}
