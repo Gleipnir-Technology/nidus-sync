@@ -12,7 +12,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage/public-reports"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -35,45 +34,45 @@ func Router() chi.Router {
 	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)
 	r.Get("/status", getStatus)
 	localFS := http.Dir("./static")
-	htmlpage.FileServer(r, "/static", localFS, publicreports.EmbeddedStaticFS, "static")
+	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 	return r
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		publicreports.Root,
-		publicreports.ContextRoot{},
+		Root,
+		ContextRoot{},
 	)
 }
 
 func getNuisance(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		publicreports.Nuisance,
-		publicreports.ContextNuisance{},
+		Nuisance,
+		ContextNuisance{},
 	)
 }
 func getPool(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		publicreports.Pool,
-		publicreports.ContextPool{},
+		Pool,
+		ContextPool{},
 	)
 }
 func getQuick(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		publicreports.Quick,
-		publicreports.ContextQuick{},
+		Quick,
+		ContextQuick{},
 	)
 }
 func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	htmlpage.RenderOrError(
 		w,
-		publicreports.QuickSubmitComplete,
-		publicreports.ContextQuickSubmitComplete{
+		QuickSubmitComplete,
+		ContextQuickSubmitComplete{
 			ReportID: report,
 		},
 	)
@@ -82,8 +81,8 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	htmlpage.RenderOrError(
 		w,
-		publicreports.RegisterNotificationsComplete,
-		publicreports.ContextRegisterNotificationsComplete{
+		RegisterNotificationsComplete,
+		ContextRegisterNotificationsComplete{
 			ReportID: report,
 		},
 	)
@@ -91,8 +90,8 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		publicreports.Status,
-		publicreports.ContextStatus{},
+		Status,
+		ContextStatus{},
 	)
 }
 func postQuick(w http.ResponseWriter, r *http.Request) {
