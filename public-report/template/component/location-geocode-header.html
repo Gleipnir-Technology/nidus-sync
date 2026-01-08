@@ -71,6 +71,7 @@ function displaySuggestions(suggestions) {
 			
 			// Display the selected location details
 			displaySelectedLocation(suggestion);
+			setMapMarker(suggestion.geometry.coordinates);
 		});
 		
 		suggestionsContainer.appendChild(item);

@@ -2,11 +2,42 @@
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
 <script>
+var map = null;
+var markers = [];
+function setMapMarker(coords) {
+	console.log("Setting map marker", coords);
+	map.jumpTo({
+		center: coords,
+		zoom: 14,
+	});
+	markers.forEach((marker) => marker.remove());
+	addMarker(coords);
+}
+function addMarker(coords) {
+	const marker = new mapboxgl.Marker({
+		color: "#FF0000",
+		draggable: true
+	}).setLngLat(coords).addTo(map);
+	marker.on('dragend', onMapMarkerDragEnd(marker));
+	markers.push(marker);
+}
+function onMapMarkerDragEnd(marker) {
+	return function() {
+		const lngLat = marker.getLngLat();
+		displaySelectedCoordinates(lngLat);
+	}
+}
+function displaySelectedCoordinates(lngLat) {
+	const gpsDisplay = document.getElementById("gps-display");
+	gpsDisplay.classList.remove('d-none');
+	longitude.textContent = lngLat.lng;
+	latitude.textContent = lngLat.lat;
+}
 function onLoadMap() {
 	const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 	console.log("Setting up the map...");
 	mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-	const map = new mapboxgl.Map({
+	map = new mapboxgl.Map({
 		container: "map",
 		center: {
 			lat: 36.2,
@@ -42,14 +73,10 @@ function updateMapWithLocation(map) {
 					},
 					zoom: 14,
 				});
-				const marker = new mapboxgl.Marker({
-					color: "#FF0000",
-					draggable: true
-				}).setLngLat({
-					lat: position.coords.latitude,
-					lng: position.coords.longitude,
-				}).addTo(map);
-
+				addMarker([
+					position.coords.longitude,
+					position.coords.latitude,
+				]);
 			},
 			// on error
 			function(error) {
