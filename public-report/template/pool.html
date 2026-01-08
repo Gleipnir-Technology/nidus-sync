@@ -3,54 +3,55 @@
 {{define "title"}}Green Pool{{end}}
 {{define "extraheader"}}
 {{template "location-geocode-header" .}}
+{{template "map-header" .}}
 {{template "photo-upload-header"}}
 <style>
-		.district-logo {
-			max-height: 80px;
-			width: auto;
-		}
-		.map-container {
-			height: 300px;
-			background-color: #e9ecef;
-			border-radius: 5px;
-			border: 1px solid #dee2e6;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			margin-top: 10px;
-		}
-		.form-section {
-			margin-bottom: 2.5rem;
-			padding-bottom: 2rem;
-			border-bottom: 1px solid #dee2e6;
-		}
-		.form-section:last-child {
-			border-bottom: none;
-			margin-bottom: 1rem;
-			padding-bottom: 0;
-		}
-		.section-heading {
-			margin-bottom: 1.5rem;
-			display: flex;
-			align-items: center;
-		}
-		.section-heading i {
-			margin-right: 10px;
-			font-size: 1.5rem;
-			color: #0d6efd;
-		}
-		.optional-label {
-			font-size: 0.875rem;
-			color: #6c757d;
-			font-weight: normal;
-			margin-left: 8px;
-		}
-		.submit-container {
-			background-color: #f8f9fa;
-			padding: 20px;
-			border-radius: 5px;
-			margin-top: 2rem;
-		}
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.map-container {
+	height: 500px;
+	background-color: #e9ecef;
+	border-radius: 5px;
+	border: 1px solid #dee2e6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 10px;
+}
+.form-section {
+	margin-bottom: 2.5rem;
+	padding-bottom: 2rem;
+	border-bottom: 1px solid #dee2e6;
+}
+.form-section:last-child {
+	border-bottom: none;
+	margin-bottom: 1rem;
+	padding-bottom: 0;
+}
+.section-heading {
+	margin-bottom: 1.5rem;
+	display: flex;
+	align-items: center;
+}
+.section-heading i {
+	margin-right: 10px;
+	font-size: 1.5rem;
+	color: #0d6efd;
+}
+.optional-label {
+	font-size: 0.875rem;
+	color: #6c757d;
+	font-weight: normal;
+	margin-left: 8px;
+}
+.submit-container {
+	background-color: #f8f9fa;
+	padding: 20px;
+	border-radius: 5px;
+	margin-top: 2rem;
+}
 </style>
 {{end}}
 {{define "content"}}
@@ -106,11 +107,7 @@
 				
 				<p class="small text-muted mb-2">You can also click on the map to mark the location precisely</p>
 				<div class="map-container">
-					<div class="text-center">
-						<i class="bi bi-map fs-1 text-secondary"></i>
-						<p class="mb-0">Interactive Map</p>
-						<p class="text-muted small">Click to set the location of the mosquito source</p>
-					</div>
+					<div id="map"></div>
 				</div>
 			</div>
 

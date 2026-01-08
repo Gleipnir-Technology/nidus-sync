@@ -36,9 +36,6 @@
 }
 </style>
 <script>
-// Replace with your actual Mapbox access token
-const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
-
 // Display suggestions in the dropdown
 function displaySuggestions(suggestions) {
 	const suggestionsContainer = document.getElementById('suggestions');
@@ -85,6 +82,9 @@ function displaySuggestions(suggestions) {
 
 // Fetch suggestions from Mapbox API
 async function fetchGeocodingSuggestions(query) {
+	// Replace with your actual Mapbox access token
+	const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+
 	try {
 		const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(query)}&access_token=${MAPBOX_ACCESS_TOKEN}`;
 		

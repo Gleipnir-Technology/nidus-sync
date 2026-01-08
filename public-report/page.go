@@ -41,7 +41,7 @@ var (
 	Status                        = buildTemplate("status", "base")
 )
 
-var components = [...]string{"footer", "location-geocode", "location-geocode-header", "photo-upload", "photo-upload-header"}
+var components = [...]string{"footer", "location-geocode", "location-geocode-header", "map", "map-header", "photo-upload", "photo-upload-header"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	subdir := "public-report"
