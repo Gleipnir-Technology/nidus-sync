@@ -12,7 +12,6 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -38,12 +37,14 @@ func (mods PublicreportQuickModSlice) Apply(ctx context.Context, n *Publicreport
 // PublicreportQuickTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportQuickTemplate struct {
-	ID       func() int32
-	Created  func() time.Time
-	Comments func() string
-	Location func() null.Val[string]
-	H3cell   func() null.Val[string]
-	UUID     func() uuid.UUID
+	ID            func() int32
+	Created       func() time.Time
+	Comments      func() string
+	Location      func() null.Val[string]
+	H3cell        func() null.Val[string]
+	PublicID      func() string
+	ReporterEmail func() string
+	ReporterPhone func() string
 
 	r publicreportQuickR
 	f *Factory
@@ -109,9 +110,17 @@ func (o PublicreportQuickTemplate) BuildSetter() *models.PublicreportQuickSetter
 		val := o.H3cell()
 		m.H3cell = omitnull.FromNull(val)
 	}
-	if o.UUID != nil {
-		val := o.UUID()
-		m.UUID = omit.From(val)
+	if o.PublicID != nil {
+		val := o.PublicID()
+		m.PublicID = omit.From(val)
+	}
+	if o.ReporterEmail != nil {
+		val := o.ReporterEmail()
+		m.ReporterEmail = omit.From(val)
+	}
+	if o.ReporterPhone != nil {
+		val := o.ReporterPhone()
+		m.ReporterPhone = omit.From(val)
 	}
 
 	return m
@@ -150,8 +159,14 @@ func (o PublicreportQuickTemplate) Build() *models.PublicreportQuick {
 	if o.H3cell != nil {
 		m.H3cell = o.H3cell()
 	}
-	if o.UUID != nil {
-		m.UUID = o.UUID()
+	if o.PublicID != nil {
+		m.PublicID = o.PublicID()
+	}
+	if o.ReporterEmail != nil {
+		m.ReporterEmail = o.ReporterEmail()
+	}
+	if o.ReporterPhone != nil {
+		m.ReporterPhone = o.ReporterPhone()
 	}
 
 	o.setModelRels(m)
@@ -181,9 +196,17 @@ func ensureCreatablePublicreportQuick(m *models.PublicreportQuickSetter) {
 		val := random_string(nil)
 		m.Comments = omit.From(val)
 	}
-	if !(m.UUID.IsValue()) {
-		val := random_uuid_UUID(nil)
-		m.UUID = omit.From(val)
+	if !(m.PublicID.IsValue()) {
+		val := random_string(nil)
+		m.PublicID = omit.From(val)
+	}
+	if !(m.ReporterEmail.IsValue()) {
+		val := random_string(nil)
+		m.ReporterEmail = omit.From(val)
+	}
+	if !(m.ReporterPhone.IsValue()) {
+		val := random_string(nil)
+		m.ReporterPhone = omit.From(val)
 	}
 }
 
@@ -310,7 +333,9 @@ func (m publicreportQuickMods) RandomizeAllColumns(f *faker.Faker) PublicreportQ
 		PublicreportQuickMods.RandomComments(f),
 		PublicreportQuickMods.RandomLocation(f),
 		PublicreportQuickMods.RandomH3cell(f),
-		PublicreportQuickMods.RandomUUID(f),
+		PublicreportQuickMods.RandomPublicID(f),
+		PublicreportQuickMods.RandomReporterEmail(f),
+		PublicreportQuickMods.RandomReporterPhone(f),
 	}
 }
 
@@ -514,32 +539,94 @@ func (m publicreportQuickMods) RandomH3cellNotNull(f *faker.Faker) PublicreportQ
 }
 
 // Set the model columns to this value
-func (m publicreportQuickMods) UUID(val uuid.UUID) PublicreportQuickMod {
+func (m publicreportQuickMods) PublicID(val string) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
-		o.UUID = func() uuid.UUID { return val }
+		o.PublicID = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportQuickMods) UUIDFunc(f func() uuid.UUID) PublicreportQuickMod {
+func (m publicreportQuickMods) PublicIDFunc(f func() string) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
-		o.UUID = f
+		o.PublicID = f
 	})
 }
 
 // Clear any values for the column
-func (m publicreportQuickMods) UnsetUUID() PublicreportQuickMod {
+func (m publicreportQuickMods) UnsetPublicID() PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
-		o.UUID = nil
+		o.PublicID = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m publicreportQuickMods) RandomUUID(f *faker.Faker) PublicreportQuickMod {
+func (m publicreportQuickMods) RandomPublicID(f *faker.Faker) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
-		o.UUID = func() uuid.UUID {
-			return random_uuid_UUID(f)
+		o.PublicID = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportQuickMods) ReporterEmail(val string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterEmail = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportQuickMods) ReporterEmailFunc(f func() string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterEmail = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportQuickMods) UnsetReporterEmail() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterEmail = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportQuickMods) RandomReporterEmail(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterEmail = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportQuickMods) ReporterPhone(val string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterPhone = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportQuickMods) ReporterPhoneFunc(f func() string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterPhone = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportQuickMods) UnsetReporterPhone() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterPhone = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportQuickMods) RandomReporterPhone(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.ReporterPhone = func() string {
+			return random_string(f)
 		}
 	})
 }

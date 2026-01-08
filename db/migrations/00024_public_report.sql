@@ -6,7 +6,9 @@ CREATE TABLE publicreport.quick (
 	comments TEXT NOT NULL,
 	location GEOGRAPHY,
 	h3cell h3index,
-	uuid UUID NOT NULL
+	public_id TEXT NOT NULL UNIQUE,
+	reporter_email TEXT NOT NULL,
+	reporter_phone TEXT NOT NULL
 );
 
 CREATE TABLE publicreport.quick_photo (

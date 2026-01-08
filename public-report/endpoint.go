@@ -20,8 +20,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob/dialect/psql"
-	//"github.com/stephenafamo/bob/dialect/psql/dialect"
-	//"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 )
 
@@ -33,6 +31,8 @@ func Router() chi.Router {
 	r.Get("/quick", getQuick)
 	r.Post("/quick-submit", postQuick)
 	r.Get("/quick-submit-complete", getQuickSubmitComplete)
+	r.Post("/register-notifications", postRegisterNotifications)
+	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)
 	r.Get("/status", getStatus)
 	localFS := http.Dir("./static")
 	htmlpage.FileServer(r, "/static", localFS, publicreports.EmbeddedStaticFS, "static")
@@ -78,6 +78,16 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
+func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
+	report := r.URL.Query().Get("report")
+	htmlpage.RenderOrError(
+		w,
+		publicreports.RegisterNotificationsComplete,
+		publicreports.ContextRegisterNotificationsComplete{
+			ReportID: report,
+		},
+	)
+}
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
@@ -88,13 +98,11 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 func postQuick(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse form")
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
 	lat := r.FormValue("latitude")
 	lng := r.FormValue("longitude")
-	created := r.FormValue("created")
 	comments := r.FormValue("comments")
 	//photos := r.FormValue("photos")
 
@@ -108,9 +116,9 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to create parse longitude", err, http.StatusBadRequest)
 		return
 	}
-	u, err := uuid.NewUUID()
+	u, err := GenerateReportID()
 	if err != nil {
-		respondError(w, "Failed to create quick report uuid", err, http.StatusInternalServerError)
+		respondError(w, "Failed to create quick report public ID", err, http.StatusInternalServerError)
 		return
 	}
 	c, err := h3utils.GetCell(longitude, latitude, 15)
@@ -118,8 +126,10 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		Created:  omit.From(time.Now()),
 		Comments: omit.From(comments),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
-		H3cell: omitnull.From(c.String()),
-		UUID:   omit.From(u),
+		H3cell:        omitnull.From(c.String()),
+		PublicID:      omit.From(u),
+		ReporterEmail: omit.From(""),
+		ReporterPhone: omit.From(""),
 	}
 	quick, err := models.PublicreportQuicks.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {
@@ -135,7 +145,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to insert publicreport", err, http.StatusInternalServerError)
 		return
 	}
-	log.Info().Float64("latitude", latitude).Float64("longitude", longitude).Str("created", created).Msg("Got upload")
+	log.Info().Float64("latitude", latitude).Float64("longitude", longitude).Msg("Got upload")
 	photoSetters := make([]*models.PublicreportQuickPhotoSetter, 0)
 	for _, fheaders := range r.MultipartForm.File {
 		for _, headers := range fheaders {
@@ -179,12 +189,48 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	}
-	/*err = quick.InsertQuickPhotos(r.Context(), db.PGInstance.BobDB, photoSetters...)
+	err = quick.InsertQuickPhotos(r.Context(), db.PGInstance.BobDB, photoSetters...)
 	if err != nil {
 		respondError(w, "Failed to create photo records", err, http.StatusInternalServerError)
 		return
-	}*/
-	http.Redirect(w, r, "/quick-submit-complete?report=123", http.StatusFound)
+	}
+	http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", u), http.StatusFound)
+}
+
+func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
+		return
+	}
+	consent := r.PostFormValue("consent")
+	email := r.PostFormValue("email")
+	phone := r.PostFormValue("phone")
+	report_id := r.PostFormValue("report_id")
+	if consent != "on" {
+		respondError(w, "You must consent", nil, http.StatusBadRequest)
+		return
+	}
+	result, err := psql.Update(
+		um.Table("publicreport.quick"),
+		um.SetCol("reporter_email").ToArg(email),
+		um.SetCol("reporter_phone").ToArg(phone),
+		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
+	).Exec(r.Context(), db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to update report", err, http.StatusInternalServerError)
+		return
+	}
+	rowcount, err := result.RowsAffected()
+	if err != nil {
+		respondError(w, "Failed to get rows affected", err, http.StatusInternalServerError)
+		return
+	}
+	if rowcount == 0 {
+		http.Redirect(w, r, fmt.Sprintf("/error?code=no-rows-affected&report=%s", report_id), http.StatusFound)
+	} else {
+		http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
+	}
 }
 
 // Respond with an error that is visible to the user

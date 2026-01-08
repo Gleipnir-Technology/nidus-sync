@@ -12,7 +12,6 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/google/uuid"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -27,12 +26,14 @@ import (
 
 // PublicreportQuick is an object representing the database table.
 type PublicreportQuick struct {
-	ID       int32            `db:"id,pk" `
-	Created  time.Time        `db:"created" `
-	Comments string           `db:"comments" `
-	Location null.Val[string] `db:"location" `
-	H3cell   null.Val[string] `db:"h3cell" `
-	UUID     uuid.UUID        `db:"uuid" `
+	ID            int32            `db:"id,pk" `
+	Created       time.Time        `db:"created" `
+	Comments      string           `db:"comments" `
+	Location      null.Val[string] `db:"location" `
+	H3cell        null.Val[string] `db:"h3cell" `
+	PublicID      string           `db:"public_id" `
+	ReporterEmail string           `db:"reporter_email" `
+	ReporterPhone string           `db:"reporter_phone" `
 
 	R publicreportQuickR `db:"-" `
 }
@@ -55,27 +56,31 @@ type publicreportQuickR struct {
 func buildPublicreportQuickColumns(alias string) publicreportQuickColumns {
 	return publicreportQuickColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "created", "comments", "location", "h3cell", "uuid",
+			"id", "created", "comments", "location", "h3cell", "public_id", "reporter_email", "reporter_phone",
 		).WithParent("publicreport.quick"),
-		tableAlias: alias,
-		ID:         psql.Quote(alias, "id"),
-		Created:    psql.Quote(alias, "created"),
-		Comments:   psql.Quote(alias, "comments"),
-		Location:   psql.Quote(alias, "location"),
-		H3cell:     psql.Quote(alias, "h3cell"),
-		UUID:       psql.Quote(alias, "uuid"),
+		tableAlias:    alias,
+		ID:            psql.Quote(alias, "id"),
+		Created:       psql.Quote(alias, "created"),
+		Comments:      psql.Quote(alias, "comments"),
+		Location:      psql.Quote(alias, "location"),
+		H3cell:        psql.Quote(alias, "h3cell"),
+		PublicID:      psql.Quote(alias, "public_id"),
+		ReporterEmail: psql.Quote(alias, "reporter_email"),
+		ReporterPhone: psql.Quote(alias, "reporter_phone"),
 	}
 }
 
 type publicreportQuickColumns struct {
 	expr.ColumnsExpr
-	tableAlias string
-	ID         psql.Expression
-	Created    psql.Expression
-	Comments   psql.Expression
-	Location   psql.Expression
-	H3cell     psql.Expression
-	UUID       psql.Expression
+	tableAlias    string
+	ID            psql.Expression
+	Created       psql.Expression
+	Comments      psql.Expression
+	Location      psql.Expression
+	H3cell        psql.Expression
+	PublicID      psql.Expression
+	ReporterEmail psql.Expression
+	ReporterPhone psql.Expression
 }
 
 func (c publicreportQuickColumns) Alias() string {
@@ -90,16 +95,18 @@ func (publicreportQuickColumns) AliasedAs(alias string) publicreportQuickColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportQuickSetter struct {
-	ID       omit.Val[int32]      `db:"id,pk" `
-	Created  omit.Val[time.Time]  `db:"created" `
-	Comments omit.Val[string]     `db:"comments" `
-	Location omitnull.Val[string] `db:"location" `
-	H3cell   omitnull.Val[string] `db:"h3cell" `
-	UUID     omit.Val[uuid.UUID]  `db:"uuid" `
+	ID            omit.Val[int32]      `db:"id,pk" `
+	Created       omit.Val[time.Time]  `db:"created" `
+	Comments      omit.Val[string]     `db:"comments" `
+	Location      omitnull.Val[string] `db:"location" `
+	H3cell        omitnull.Val[string] `db:"h3cell" `
+	PublicID      omit.Val[string]     `db:"public_id" `
+	ReporterEmail omit.Val[string]     `db:"reporter_email" `
+	ReporterPhone omit.Val[string]     `db:"reporter_phone" `
 }
 
 func (s PublicreportQuickSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 8)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -115,8 +122,14 @@ func (s PublicreportQuickSetter) SetColumns() []string {
 	if !s.H3cell.IsUnset() {
 		vals = append(vals, "h3cell")
 	}
-	if s.UUID.IsValue() {
-		vals = append(vals, "uuid")
+	if s.PublicID.IsValue() {
+		vals = append(vals, "public_id")
+	}
+	if s.ReporterEmail.IsValue() {
+		vals = append(vals, "reporter_email")
+	}
+	if s.ReporterPhone.IsValue() {
+		vals = append(vals, "reporter_phone")
 	}
 	return vals
 }
@@ -137,8 +150,14 @@ func (s PublicreportQuickSetter) Overwrite(t *PublicreportQuick) {
 	if !s.H3cell.IsUnset() {
 		t.H3cell = s.H3cell.MustGetNull()
 	}
-	if s.UUID.IsValue() {
-		t.UUID = s.UUID.MustGet()
+	if s.PublicID.IsValue() {
+		t.PublicID = s.PublicID.MustGet()
+	}
+	if s.ReporterEmail.IsValue() {
+		t.ReporterEmail = s.ReporterEmail.MustGet()
+	}
+	if s.ReporterPhone.IsValue() {
+		t.ReporterPhone = s.ReporterPhone.MustGet()
 	}
 }
 
@@ -148,7 +167,7 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 8)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -179,10 +198,22 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.UUID.IsValue() {
-			vals[5] = psql.Arg(s.UUID.MustGet())
+		if s.PublicID.IsValue() {
+			vals[5] = psql.Arg(s.PublicID.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
+		}
+
+		if s.ReporterEmail.IsValue() {
+			vals[6] = psql.Arg(s.ReporterEmail.MustGet())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
+		if s.ReporterPhone.IsValue() {
+			vals[7] = psql.Arg(s.ReporterPhone.MustGet())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -194,7 +225,7 @@ func (s PublicreportQuickSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 8)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -231,10 +262,24 @@ func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if s.UUID.IsValue() {
+	if s.PublicID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "uuid")...),
-			psql.Arg(s.UUID),
+			psql.Quote(append(prefix, "public_id")...),
+			psql.Arg(s.PublicID),
+		}})
+	}
+
+	if s.ReporterEmail.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "reporter_email")...),
+			psql.Arg(s.ReporterEmail),
+		}})
+	}
+
+	if s.ReporterPhone.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "reporter_phone")...),
+			psql.Arg(s.ReporterPhone),
 		}})
 	}
 
@@ -557,12 +602,14 @@ func (publicreportQuick0 *PublicreportQuick) AttachQuickPhotos(ctx context.Conte
 }
 
 type publicreportQuickWhere[Q psql.Filterable] struct {
-	ID       psql.WhereMod[Q, int32]
-	Created  psql.WhereMod[Q, time.Time]
-	Comments psql.WhereMod[Q, string]
-	Location psql.WhereNullMod[Q, string]
-	H3cell   psql.WhereNullMod[Q, string]
-	UUID     psql.WhereMod[Q, uuid.UUID]
+	ID            psql.WhereMod[Q, int32]
+	Created       psql.WhereMod[Q, time.Time]
+	Comments      psql.WhereMod[Q, string]
+	Location      psql.WhereNullMod[Q, string]
+	H3cell        psql.WhereNullMod[Q, string]
+	PublicID      psql.WhereMod[Q, string]
+	ReporterEmail psql.WhereMod[Q, string]
+	ReporterPhone psql.WhereMod[Q, string]
 }
 
 func (publicreportQuickWhere[Q]) AliasedAs(alias string) publicreportQuickWhere[Q] {
@@ -571,12 +618,14 @@ func (publicreportQuickWhere[Q]) AliasedAs(alias string) publicreportQuickWhere[
 
 func buildPublicreportQuickWhere[Q psql.Filterable](cols publicreportQuickColumns) publicreportQuickWhere[Q] {
 	return publicreportQuickWhere[Q]{
-		ID:       psql.Where[Q, int32](cols.ID),
-		Created:  psql.Where[Q, time.Time](cols.Created),
-		Comments: psql.Where[Q, string](cols.Comments),
-		Location: psql.WhereNull[Q, string](cols.Location),
-		H3cell:   psql.WhereNull[Q, string](cols.H3cell),
-		UUID:     psql.Where[Q, uuid.UUID](cols.UUID),
+		ID:            psql.Where[Q, int32](cols.ID),
+		Created:       psql.Where[Q, time.Time](cols.Created),
+		Comments:      psql.Where[Q, string](cols.Comments),
+		Location:      psql.WhereNull[Q, string](cols.Location),
+		H3cell:        psql.WhereNull[Q, string](cols.H3cell),
+		PublicID:      psql.Where[Q, string](cols.PublicID),
+		ReporterEmail: psql.Where[Q, string](cols.ReporterEmail),
+		ReporterPhone: psql.Where[Q, string](cols.ReporterPhone),
 	}
 }
 

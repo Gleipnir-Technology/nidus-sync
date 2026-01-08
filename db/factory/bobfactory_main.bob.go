@@ -2396,7 +2396,9 @@ func (f *Factory) FromExistingPublicreportQuick(m *models.PublicreportQuick) *Pu
 	o.Comments = func() string { return m.Comments }
 	o.Location = func() null.Val[string] { return m.Location }
 	o.H3cell = func() null.Val[string] { return m.H3cell }
-	o.UUID = func() uuid.UUID { return m.UUID }
+	o.PublicID = func() string { return m.PublicID }
+	o.ReporterEmail = func() string { return m.ReporterEmail }
+	o.ReporterPhone = func() string { return m.ReporterPhone }
 
 	ctx := context.Background()
 	if len(m.R.QuickPhotos) > 0 {

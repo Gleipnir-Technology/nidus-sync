@@ -60,15 +60,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	const locationStatus = document.getElementById('locationStatus');
 	const latitudeInput = document.getElementById('latitude');
 	const longitudeInput = document.getElementById('longitude');
-	const createdInput = document.getElementById('created');
 	const submitButton = document.getElementById('submitButton');
 	const loadingOverlay = document.getElementById('loadingOverlay');
 
 	// Get current location
 	requestLocation();
-
-	// Set current time
-	createdInput.value = new Date().toISOString();
 
 	// Handle photo selection
 	photoInput.addEventListener('change', handlePhotoSelection);
@@ -251,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
 							<!-- Hidden fields for location data -->
 							<input type="hidden" id="latitude" name="latitude">
 							<input type="hidden" id="longitude" name="longitude">
-							<input type="hidden" id="created" name="created">
 						</div>
 
 						<!-- Photo Upload -->

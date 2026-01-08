@@ -19,16 +19,20 @@ type ContextQuick struct{}
 type ContextQuickSubmitComplete struct {
 	ReportID string
 }
+type ContextRegisterNotificationsComplete struct {
+	ReportID string
+}
 type ContextRoot struct{}
 type ContextStatus struct{}
 
 var (
-	Nuisance            = buildTemplate("nuisance", "base")
-	Pool                = buildTemplate("pool", "base")
-	Quick               = buildTemplate("quick", "base")
-	QuickSubmitComplete = buildTemplate("quick-submit-complete", "base")
-	Root                = buildTemplate("root", "base")
-	Status              = buildTemplate("status", "base")
+	Nuisance                      = buildTemplate("nuisance", "base")
+	Pool                          = buildTemplate("pool", "base")
+	Quick                         = buildTemplate("quick", "base")
+	QuickSubmitComplete           = buildTemplate("quick-submit-complete", "base")
+	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
+	Root                          = buildTemplate("root", "base")
+	Status                        = buildTemplate("status", "base")
 )
 
 var components = [...]string{"footer"}

@@ -10,8 +10,17 @@ var PublicreportQuickErrors = &publicreportQuickErrors{
 		columns: []string{"id"},
 		s:       "quick_pkey",
 	},
+
+	ErrUniqueQuickPublicIdKey: &UniqueConstraintError{
+		schema:  "publicreport",
+		table:   "quick",
+		columns: []string{"public_id"},
+		s:       "quick_public_id_key",
+	},
 }
 
 type publicreportQuickErrors struct {
 	ErrUniqueQuickPkey *UniqueConstraintError
+
+	ErrUniqueQuickPublicIdKey *UniqueConstraintError
 }

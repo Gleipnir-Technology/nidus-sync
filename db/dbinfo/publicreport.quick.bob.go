@@ -60,9 +60,27 @@ var PublicreportQuicks = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		UUID: column{
-			Name:      "uuid",
-			DBType:    "uuid",
+		PublicID: column{
+			Name:      "public_id",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReporterEmail: column{
+			Name:      "reporter_email",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReporterPhone: column{
+			Name:      "reporter_phone",
+			DBType:    "text",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -88,6 +106,23 @@ var PublicreportQuicks = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		QuickPublicIDKey: index{
+			Type: "btree",
+			Name: "quick_public_id_key",
+			Columns: []indexColumn{
+				{
+					Name:         "public_id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "quick_pkey",
@@ -95,31 +130,42 @@ var PublicreportQuicks = Table[
 		Comment: "",
 	},
 
+	Uniques: publicreportQuickUniques{
+		QuickPublicIDKey: constraint{
+			Name:    "quick_public_id_key",
+			Columns: []string{"public_id"},
+			Comment: "",
+		},
+	},
+
 	Comment: "",
 }
 
 type publicreportQuickColumns struct {
-	ID       column
-	Created  column
-	Comments column
-	Location column
-	H3cell   column
-	UUID     column
+	ID            column
+	Created       column
+	Comments      column
+	Location      column
+	H3cell        column
+	PublicID      column
+	ReporterEmail column
+	ReporterPhone column
 }
 
 func (c publicreportQuickColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.UUID,
+		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.PublicID, c.ReporterEmail, c.ReporterPhone,
 	}
 }
 
 type publicreportQuickIndexes struct {
-	QuickPkey index
+	QuickPkey        index
+	QuickPublicIDKey index
 }
 
 func (i publicreportQuickIndexes) AsSlice() []index {
 	return []index{
-		i.QuickPkey,
+		i.QuickPkey, i.QuickPublicIDKey,
 	}
 }
 
@@ -129,10 +175,14 @@ func (f publicreportQuickForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type publicreportQuickUniques struct{}
+type publicreportQuickUniques struct {
+	QuickPublicIDKey constraint
+}
 
 func (u publicreportQuickUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.QuickPublicIDKey,
+	}
 }
 
 type publicreportQuickChecks struct{}
