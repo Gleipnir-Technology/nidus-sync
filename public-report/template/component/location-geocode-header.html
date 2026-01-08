@@ -1,15 +1,35 @@
 {{define "location-geocode-header"}}
 <style>
+.detail-label {
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	color: #6c757d;
+	margin-bottom: 2px;
+	font-weight: 600;
+}
+.detail-value {
+	font-weight: 500;
+}
+.main-address {
+	font-weight: 500;
+}
+.place-info {
+	font-size: 0.85rem;
+	color: #6c757d;
+	margin-top: 2px;
+}
 .suggestions-container {
 	position: absolute;
 	width: 100%;
 	max-height: 300px;
 	overflow-y: auto;
 	z-index: 1000;
+	box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .suggestion-item {
 	cursor: pointer;
-	padding: 8px 12px;
+	padding: 10px 12px;
+	border-bottom: 1px solid #f0f0f0;
 }
 .suggestion-item:hover {
 	background-color: #f8f9fa;
@@ -34,15 +54,26 @@ function displaySuggestions(suggestions) {
 	suggestions.forEach(suggestion => {
 		const item = document.createElement('div');
 		item.className = 'suggestion-item list-group-item';
-		item.textContent = suggestion.properties.name || suggestion.properties.full_address;
-		
+
+		// Create structure for the main address and place info
+		const mainAddressDiv = document.createElement('div');
+		mainAddressDiv.className = 'main-address';
+		mainAddressDiv.textContent = suggestion.properties.name || suggestion.properties.full_address;
+
+		item.appendChild(mainAddressDiv);
+		if (suggestion.properties.place_formatted) {
+			const placeInfoDiv = document.createElement('div');
+			placeInfoDiv.className = 'place-info';
+			placeInfoDiv.textContent = suggestion.properties.place_formatted || '';
+			item.appendChild(placeInfoDiv);
+		}
 		// Handle click on a suggestion
 		item.addEventListener('click', function() {
 			addressInput.value = suggestion.properties.name || suggestion.properties.full_address;
 			suggestionsContainer.classList.add('d-none');
 			
 			// Display the selected location details
-			locationDetails.textContent = JSON.stringify(suggestion, null, 2);
+			displaySelectedLocation(suggestion);
 		});
 		
 		suggestionsContainer.appendChild(item);
@@ -66,6 +97,41 @@ async function fetchGeocodingSuggestions(query) {
 	}
 }
 
+function displaySelectedLocation(suggestion) {
+	const locationDisplayContainer = document.getElementById('locationDisplayContainer');
+
+	// Show location display container
+	locationDisplayContainer.classList.remove('d-none');
+	
+	// Extract context data from properties
+	const props = suggestion.properties;
+	const context = props.context || {};
+	
+	// Populate structured fields
+	// Street Address - combine address, street, housenumber if available
+	let addressStr = '';
+	if (context.address) addressStr += context.address.address_number;
+	if (context.street) {
+		 if (addressStr) addressStr += ' ';
+		 addressStr += context.street.name;
+	}
+	if (addressStr === '') {
+		 addressStr = props.name || props.full_address || '-';
+	}
+	streetAddress.textContent = addressStr;
+	
+	// Post Code
+	postCode.textContent = context.postcode.name || '-';
+	
+	// District (could be district, locality, or place)
+	district.textContent = context.district.name || context.place.name || context.locality.name || '-';
+	
+	// Region (state, province, etc.)
+	region.textContent = context.region.name || '-';
+	
+	// Country
+	country.textContent = context.country.name || '-';
+}
 function onAddressInput() {
 	const suggestionsContainer = document.getElementById('suggestions');
 
