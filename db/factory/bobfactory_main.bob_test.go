@@ -944,6 +944,54 @@ func TestCreateOrganization(t *testing.T) {
 	}
 }
 
+func TestCreatePublicreportQuick(t *testing.T) {
+	if testDB == nil {
+		t.Skip("skipping test, no DSN provided")
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	t.Cleanup(cancel)
+
+	tx, err := testDB.Begin(ctx)
+	if err != nil {
+		t.Fatalf("Error starting transaction: %v", err)
+	}
+
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			t.Fatalf("Error rolling back transaction: %v", err)
+		}
+	}()
+
+	if _, err := New().NewPublicreportQuickWithContext(ctx).Create(ctx, tx); err != nil {
+		t.Fatalf("Error creating PublicreportQuick: %v", err)
+	}
+}
+
+func TestCreatePublicreportQuickPhoto(t *testing.T) {
+	if testDB == nil {
+		t.Skip("skipping test, no DSN provided")
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	t.Cleanup(cancel)
+
+	tx, err := testDB.Begin(ctx)
+	if err != nil {
+		t.Fatalf("Error starting transaction: %v", err)
+	}
+
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil {
+			t.Fatalf("Error rolling back transaction: %v", err)
+		}
+	}()
+
+	if _, err := New().NewPublicreportQuickPhotoWithContext(ctx).Create(ctx, tx); err != nil {
+		t.Fatalf("Error creating PublicreportQuickPhoto: %v", err)
+	}
+}
+
 func TestCreateSession(t *testing.T) {
 	if testDB == nil {
 		t.Skip("skipping test, no DSN provided")

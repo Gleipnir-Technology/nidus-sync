@@ -212,13 +212,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				// Navigate to the URL the server specified
 				window.location.href = response.url;
 				return;
-			} else {
-				console.error("Not ok response:", response);
 			}
+			console.error("not ok server response", response);
+			throw new Error("Server error " + response.status);
 		})
 		.catch(error => {
 			console.error('Error:', error);
-			alert('There was a problem submitting your report. Please try again.');
+			alert('There was a problem submitting your report. Please try again. If this happens a few times, please let us know.');
 			
 			// Re-enable submit button
 			submitButton.disabled = false;

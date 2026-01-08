@@ -70,6 +70,8 @@ type joins[Q dialect.Joinable] struct {
 	Notifications                      joinSet[notificationJoins[Q]]
 	OauthTokens                        joinSet[oauthTokenJoins[Q]]
 	Organizations                      joinSet[organizationJoins[Q]]
+	PublicreportQuicks                 joinSet[publicreportQuickJoins[Q]]
+	PublicreportQuickPhotos            joinSet[publicreportQuickPhotoJoins[Q]]
 	Users                              joinSet[userJoins[Q]]
 }
 
@@ -121,6 +123,8 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Notifications:                      buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
 		OauthTokens:                        buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		PublicreportQuicks:                 buildJoinSet[publicreportQuickJoins[Q]](PublicreportQuicks.Columns, buildPublicreportQuickJoins),
+		PublicreportQuickPhotos:            buildJoinSet[publicreportQuickPhotoJoins[Q]](PublicreportQuickPhotos.Columns, buildPublicreportQuickPhotoJoins),
 		Users:                              buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}
 }

@@ -141,6 +141,12 @@ var _ bob.HookableType = &OauthToken{}
 // Make sure the type Organization runs hooks after queries
 var _ bob.HookableType = &Organization{}
 
+// Make sure the type PublicreportQuick runs hooks after queries
+var _ bob.HookableType = &PublicreportQuick{}
+
+// Make sure the type PublicreportQuickPhoto runs hooks after queries
+var _ bob.HookableType = &PublicreportQuickPhoto{}
+
 // Make sure the type RasterColumn runs hooks after queries
 var _ bob.HookableType = &RasterColumn{}
 

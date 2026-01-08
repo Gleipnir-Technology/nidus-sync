@@ -58,6 +58,8 @@ type Factory struct {
 	baseNotificationMods                      NotificationModSlice
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
+	basePublicreportQuickMods                 PublicreportQuickModSlice
+	basePublicreportQuickPhotoMods            PublicreportQuickPhotoModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
 	baseRasterOverviewMods                    RasterOverviewModSlice
 	baseSessionMods                           SessionModSlice
@@ -2370,6 +2372,73 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	return o
 }
 
+func (f *Factory) NewPublicreportQuick(mods ...PublicreportQuickMod) *PublicreportQuickTemplate {
+	return f.NewPublicreportQuickWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportQuickWithContext(ctx context.Context, mods ...PublicreportQuickMod) *PublicreportQuickTemplate {
+	o := &PublicreportQuickTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportQuickMods.Apply(ctx, o)
+	}
+
+	PublicreportQuickModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportQuick(m *models.PublicreportQuick) *PublicreportQuickTemplate {
+	o := &PublicreportQuickTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.Created = func() time.Time { return m.Created }
+	o.Comments = func() string { return m.Comments }
+	o.Location = func() null.Val[string] { return m.Location }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
+	o.UUID = func() uuid.UUID { return m.UUID }
+
+	ctx := context.Background()
+	if len(m.R.QuickPhotos) > 0 {
+		PublicreportQuickMods.AddExistingQuickPhotos(m.R.QuickPhotos...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportQuickPhoto(mods ...PublicreportQuickPhotoMod) *PublicreportQuickPhotoTemplate {
+	return f.NewPublicreportQuickPhotoWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportQuickPhotoWithContext(ctx context.Context, mods ...PublicreportQuickPhotoMod) *PublicreportQuickPhotoTemplate {
+	o := &PublicreportQuickPhotoTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportQuickPhotoMods.Apply(ctx, o)
+	}
+
+	PublicreportQuickPhotoModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportQuickPhoto(m *models.PublicreportQuickPhoto) *PublicreportQuickPhotoTemplate {
+	o := &PublicreportQuickPhotoTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.Size = func() int64 { return m.Size }
+	o.Filename = func() string { return m.Filename }
+	o.QuickID = func() int32 { return m.QuickID }
+	o.UUID = func() uuid.UUID { return m.UUID }
+
+	ctx := context.Background()
+	if m.R.Quick != nil {
+		PublicreportQuickPhotoMods.WithExistingQuick(m.R.Quick).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewRasterColumn(mods ...RasterColumnMod) *RasterColumnTemplate {
 	return f.NewRasterColumnWithContext(context.Background(), mods...)
 }
@@ -2880,6 +2949,22 @@ func (f *Factory) ClearBaseOrganizationMods() {
 
 func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportQuickMods() {
+	f.basePublicreportQuickMods = nil
+}
+
+func (f *Factory) AddBasePublicreportQuickMod(mods ...PublicreportQuickMod) {
+	f.basePublicreportQuickMods = append(f.basePublicreportQuickMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportQuickPhotoMods() {
+	f.basePublicreportQuickPhotoMods = nil
+}
+
+func (f *Factory) AddBasePublicreportQuickPhotoMod(mods ...PublicreportQuickPhotoMod) {
+	f.basePublicreportQuickPhotoMods = append(f.basePublicreportQuickPhotoMods, mods...)
 }
 
 func (f *Factory) ClearBaseRasterColumnMods() {

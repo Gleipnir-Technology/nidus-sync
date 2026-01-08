@@ -42,7 +42,7 @@ func (bt *BuiltTemplate) executeTemplate(w io.Writer, data any) error {
 			w.Write([]byte("Failed to read from disk: "))
 			return errors.New("Template parsing failed")
 		}
-		log.Debug().Str("name", templ.Name()).Msg("Parsed template")
+		//log.Debug().Str("name", templ.Name()).Msg("Parsed template")
 		return templ.ExecuteTemplate(w, name, data)
 	} else {
 		name := path.Base(bt.files[0])
@@ -137,7 +137,7 @@ func parseEmbedded(embeddedFiles embed.FS, subdir string, files []string) *templ
 func parseFromDisk(files []string) (*template.Template, error) {
 	funcMap := makeFuncMap()
 	name := path.Base(files[0])
-	log.Debug().Str("name", name).Strs("files", files).Msg("parsing from disk")
+	//log.Debug().Str("name", name).Strs("files", files).Msg("parsing from disk")
 	templ, err := template.New(name).Funcs(funcMap).ParseFiles(files...)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse %s: %w", files, err)

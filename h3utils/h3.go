@@ -77,7 +77,7 @@ func scaleCell(cell h3.Cell, resolution int) (h3.Cell, error) {
 	return scaled, nil
 }
 
-func getCell(x, y float64, resolution int) (h3.Cell, error) {
+func GetCell(x, y float64, resolution int) (h3.Cell, error) {
 	latLng := h3.NewLatLng(y, x)
 	return h3.LatLngToCell(latLng, resolution)
 }

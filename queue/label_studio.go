@@ -130,7 +130,7 @@ func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucke
 
 func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *models.NoteAudio) error {
 	audioRef := fmt.Sprintf("s3://%s/%s-normalized.m4a", bucket, note.UUID)
-	audioFile := fmt.Sprintf("%s/%s-normalized.m4a", config.UserFilesDirectory, note.UUID)
+	audioFile := fmt.Sprintf("%s/%s-normalized.m4a", config.FilesDirectoryUser, note.UUID)
 	uploadPath := fmt.Sprintf("%s-normalized.m4a", note.UUID)
 
 	if !minioClient.ObjectExists(bucket, uploadPath) {

@@ -11,16 +11,16 @@ import (
 )
 
 func AudioFileContentPathRaw(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.m4a", config.UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.m4a", config.FilesDirectoryUser, audioUUID)
 }
 func AudioFileContentPathMp3(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.mp3", config.UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.mp3", config.FilesDirectoryUser, audioUUID)
 }
 func AudioFileContentPathNormalized(audioUUID string) string {
-	return fmt.Sprintf("%s/%s-normalized.m4a", config.UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s-normalized.m4a", config.FilesDirectoryUser, audioUUID)
 }
 func AudioFileContentPathOgg(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.ogg", config.UserFilesDirectory, audioUUID)
+	return fmt.Sprintf("%s/%s.ogg", config.FilesDirectoryUser, audioUUID)
 }
 func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
@@ -41,7 +41,7 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	return nil
 }
 func ImageFileContentPathRaw(uid string) string {
-	return fmt.Sprintf("%s/%s.raw", config.UserFilesDirectory, uid)
+	return fmt.Sprintf("%s/%s.raw", config.FilesDirectoryUser, uid)
 }
 func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	filepath := ImageFileContentPathRaw(uid.String())
@@ -59,4 +59,25 @@ func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 		return fmt.Errorf("Unable to save file %s: %w", filepath, err)
 	}
 	return nil
+}
+func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
+	// Create file in configured directory
+	filepath := PublicImageFileContentPathRaw(uid.String())
+	dst, err := os.Create(filepath)
+	if err != nil {
+		log.Printf("Failed to create public image file at %s: %v\n", filepath, err)
+		return fmt.Errorf("Failed to create public image file at %s: %v", filepath, err)
+	}
+	defer dst.Close()
+
+	// Copy rest of request body to file
+	_, err = io.Copy(dst, body)
+	if err != nil {
+		return fmt.Errorf("Unable to save file to create audio file at %s: %v", filepath, err)
+	}
+	log.Printf("Saved audio content to %s\n", filepath)
+	return nil
+}
+func PublicImageFileContentPathRaw(uid string) string {
+	return fmt.Sprintf("%s/%s.raw", config.FilesDirectoryPublic, uid)
 }

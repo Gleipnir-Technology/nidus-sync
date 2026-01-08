@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-var Bind, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken, PGDSN, URLReport, URLSync, UserFilesDirectory string
+var Bind, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken, PGDSN, URLReport, URLSync, FilesDirectoryPublic, FilesDirectoryUser string
 
 // Build the ArcGIS authorization URL with PKCE
 func BuildArcGISAuthURL(clientID string) string {
@@ -82,9 +82,13 @@ func Parse() error {
 	if FieldseekerSchemaDirectory == "" {
 		return fmt.Errorf("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
 	}
-	UserFilesDirectory = os.Getenv("USER_FILES_DIRECTORY")
-	if UserFilesDirectory == "" {
-		return fmt.Errorf("You must specify a non-empty USER_FILES_DIRECTORY")
+	FilesDirectoryPublic = os.Getenv("FILES_DIRECTORY_PUBLIC")
+	if FilesDirectoryPublic == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_PUBLIC")
+	}
+	FilesDirectoryUser = os.Getenv("FILES_DIRECTORY_USER")
+	if FilesDirectoryUser == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_USER")
 	}
 	return nil
 }
