@@ -2,80 +2,7 @@
 
 {{define "title"}}Green Pool{{end}}
 {{define "extraheader"}}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-	const photoUpload = document.getElementById('photoUpload');
-	const imagePreview = document.getElementById('imagePreview');
-	const dropArea = document.getElementById('dropArea');
-	
-	// Handle file selection
-	photoUpload.addEventListener('change', handleFileSelect);
-	
-	// Handle drag and drop
-	dropArea.addEventListener('dragover', function(e) {
-		e.preventDefault();
-		dropArea.style.backgroundColor = '#e9ecef';
-	});
-	
-	dropArea.addEventListener('dragleave', function() {
-		dropArea.style.backgroundColor = '#f8f9fa';
-	});
-	
-	dropArea.addEventListener('drop', function(e) {
-		e.preventDefault();
-		dropArea.style.backgroundColor = '#f8f9fa';
-		
-		if (e.dataTransfer.files.length) {
-			handleFiles(e.dataTransfer.files);
-		}
-	});
-	
-	function handleFileSelect(e) {
-		const files = e.target.files;
-		handleFiles(files);
-	}
-	
-	function handleFiles(files) {
-		const maxFiles = 5;
-		const currentFiles = imagePreview.querySelectorAll('.preview-item').length;
-		
-		for (let i = 0; i < files.length && currentFiles + i < maxFiles; i++) {
-			const file = files[i];
-			
-			if (!file.type.match('image.*')) {
-				continue;
-			}
-			
-			const reader = new FileReader();
-			
-			reader.onload = (function(theFile) {
-				return function(e) {
-					const previewItem = document.createElement('div');
-					previewItem.className = 'preview-item';
-					
-					const img = document.createElement('img');
-					img.src = e.target.result;
-					
-					const removeBtn = document.createElement('div');
-					removeBtn.className = 'preview-remove';
-					removeBtn.innerHTML = 'x';
-					removeBtn.addEventListener('click', function() {
-						imagePreview.removeChild(previewItem);
-					});
-					
-					previewItem.appendChild(img);
-					previewItem.appendChild(removeBtn);
-					imagePreview.appendChild(previewItem);
-				};
-			})(file);
-			
-			reader.readAsDataURL(file);
-		}
-		
-		photoUpload.value = '';
-	}
-});
-</script>
+{{template "photo-upload-header"}}
 <style>
 		.district-logo {
 			max-height: 80px;
@@ -90,51 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			align-items: center;
 			justify-content: center;
 			margin-top: 10px;
-		}
-		.file-upload-container {
-			border: 2px dashed #dee2e6;
-			border-radius: 5px;
-			padding: 20px;
-			text-align: center;
-			background-color: #f8f9fa;
-			transition: background-color 0.3s;
-		}
-		.file-upload-container:hover {
-			background-color: #e9ecef;
-			cursor: pointer;
-		}
-		.image-preview {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 10px;
-			margin-top: 15px;
-		}
-		.preview-item {
-			width: 100px;
-			height: 100px;
-			border-radius: 5px;
-			overflow: hidden;
-			position: relative;
-		}
-		.preview-item img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-		.preview-remove {
-			position: absolute;
-			top: 5px;
-			right: 5px;
-			background-color: rgba(0,0,0,0.5);
-			color: white;
-			border-radius: 50%;
-			width: 20px;
-			height: 20px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 10px;
-			cursor: pointer;
 		}
 		.form-section {
 			margin-bottom: 2.5rem;
@@ -203,23 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				</div>
 				<p class="mb-3">Photos help us identify the severity of the issue and may contain location data that can help us find the source.</p>
 				
-				<div class="file-upload-container" id="dropArea">
-					<input type="file" id="photoUpload" multiple accept="image/*" class="d-none">
-					<div class="mb-2">
-						<i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
-					</div>
-					<p class="mb-1"><strong>Drag and drop photos here</strong></p>
-					<p class="mb-1">- or -</p>
-					<button type="button" class="btn btn-primary mt-2" onclick="document.getElementById('photoUpload').click()">
-						Select Photos
-					</button>
-					<p class="small text-muted mt-2 mb-0">You can upload multiple photos (maximum 5)</p>
-				</div>
-				
-				<!-- Image Preview Area -->
-				<div class="image-preview" id="imagePreview">
-					<!-- Preview items will be added here dynamically -->
-				</div>
+				{{template "photo-upload"}}
 			</div>
 
 			<!-- Location Section -->

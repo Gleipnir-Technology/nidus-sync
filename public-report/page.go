@@ -39,7 +39,7 @@ var (
 	Status                        = buildTemplate("status", "base")
 )
 
-var components = [...]string{"footer"}
+var components = [...]string{"footer", "photo-upload", "photo-upload-header"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	subdir := "public-report"

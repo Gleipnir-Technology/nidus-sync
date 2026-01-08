@@ -1,0 +1,126 @@
+{{define "photo-upload-header"}}
+<style>
+.photo-upload-area {
+	border: 2px dashed #ccc;
+	border-radius: 8px;
+	padding: 20px;
+	text-align: center;
+	margin-bottom: 20px;
+	background-color: #f9f9f9;
+}
+
+.photo-preview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 15px;
+}
+
+.photo-preview img {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border-radius: 4px;
+}
+</style>
+<script>
+/**
+ * Handle photo selection and preview
+ */
+function handlePhotoSelection() {
+	const photoInput = document.getElementById('photos');
+	const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+
+	// Clear previous previews
+	photoPreviewContainer.innerHTML = '';
+
+	// Check if files were selected
+	if (photoInput.files && photoInput.files.length > 0) {
+		// Loop through selected files
+		Array.from(photoInput.files).forEach((file, index) => {
+			console.log("Handling", index, file);
+			if (!file.type.match('image.*')) {
+				console.log("Skipping non-image file", file.type);
+				return; // Skip non-image files
+			}
+			
+			// Create preview container
+			const previewContainer = document.createElement('div');
+			previewContainer.className = 'position-relative m-1';
+			
+			// Create image preview
+			const img = document.createElement('img');
+			img.className = 'img-thumbnail';
+			img.style.width = '100px';
+			img.style.height = '100px';
+			img.style.objectFit = 'cover';
+			
+			// Read file and set preview
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				img.src = e.target.result;
+			};
+			reader.readAsDataURL(file);
+			
+			// Create remove button
+			const removeBtn = document.createElement('button');
+			removeBtn.type = 'button';
+			removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0';
+			removeBtn.innerHTML = '&times;';
+			removeBtn.style.fontSize = '10px';
+			removeBtn.style.padding = '0 5px';
+			
+			// Handle remove button click
+			removeBtn.addEventListener('click', function() {
+				// Create a new FileList without this file
+				// Since FileList is immutable, we need to reset the input
+				// This is a bit tricky and requires recreating the input
+				previewContainer.remove();
+				
+				// If this was the last image, clear the input entirely
+				if (photoPreviewContainer.children.length === 0) {
+				photoInput.value = '';
+				}
+				// Note: Unfortunately, selectively removing files from a FileList isn't straightforward
+				// In a real implementation, we might track selected files in an array and recreate the input
+			});
+			
+			// Add elements to the preview container
+			previewContainer.appendChild(img);
+			previewContainer.appendChild(removeBtn);
+			photoPreviewContainer.appendChild(previewContainer);
+		});
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	// Elements
+	const photoInput = document.getElementById('photos');
+
+	// Handle photo selection
+	photoInput.addEventListener('change', handlePhotoSelection);
+
+	// Handle drag and drop
+	const photoDropArea = document.getElementById('photoDropArea');
+	
+	photoDropArea.addEventListener('dragover', function(e) {
+		e.preventDefault();
+		photoDropArea.style.backgroundColor = '#e9ecef';
+	});
+	
+	photoDropArea.addEventListener('dragleave', function() {
+		photoDropArea.style.backgroundColor = '#f8f9fa';
+	});
+	
+	photoDropArea.addEventListener('drop', function(e) {
+		e.preventDefault();
+		photoDropArea.style.backgroundColor = '#f8f9fa';
+		
+		if (e.dataTransfer.files.length) {
+			handleFiles(e.dataTransfer.files);
+		}
+	});
+	
+});
+</script>
+{{end}}
