@@ -11,6 +11,16 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/um"
 )
 
+type ContextRegisterNotificationsComplete struct {
+	ReportID string
+}
+type ContextRoot struct{}
+
+var (
+	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
+	Root                          = buildTemplate("root", "base")
+)
+
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,

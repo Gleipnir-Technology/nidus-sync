@@ -82,7 +82,7 @@ var (
 var components = [...]string{"header", "map"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
-	subdir := "htmlpage/sync"
+	subdir := "sync"
 	full_files := make([]string, 0)
 	for _, f := range files {
 		full_files = append(full_files, fmt.Sprintf("%s/template/%s.html", subdir, f))
@@ -90,7 +90,7 @@ func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	for _, c := range components {
 		full_files = append(full_files, fmt.Sprintf("%s/template/components/%s.html", subdir, c))
 	}
-	return htmlpage.NewBuiltTemplate(embeddedFiles, "htmlpage/sync/", full_files...)
+	return htmlpage.NewBuiltTemplate(embeddedFiles, "sync/", full_files...)
 }
 
 func Cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {

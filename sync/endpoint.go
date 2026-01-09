@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage/sync"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -82,8 +81,8 @@ func Router() chi.Router {
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	//r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
 
-	localFS := http.Dir("./static")
-	htmlpage.FileServer(r, "/static", localFS, sync.EmbeddedStaticFS, "static")
+	localFS := http.Dir("./sync/static")
+	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 	return r
 }
 
@@ -123,7 +122,7 @@ func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
 		respondError(w, "Cannot convert provided cell to uint64", err, http.StatusBadRequest)
 		return
 	}
-	sync.Cell(r.Context(), w, user, cell)
+	Cell(r.Context(), w, user, cell)
 }
 
 func getFavicon(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +137,7 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
 		return
 	}
-	sync.OauthPrompt(w, user)
+	OauthPrompt(w, user)
 }
 
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
@@ -215,7 +214,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		errorCode := r.URL.Query().Get("error")
-		sync.Signin(w, errorCode)
+		Signin(w, errorCode)
 		return
 	} else {
 		has, err := background.HasFieldseekerConnection(r.Context(), user)
@@ -224,10 +223,10 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if has {
-			sync.Dashboard(r.Context(), w, user)
+			Dashboard(r.Context(), w, user)
 			return
 		} else {
-			sync.OauthPrompt(w, user)
+			OauthPrompt(w, user)
 			return
 		}
 	}
@@ -237,16 +236,16 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
-	sync.Settings(w, r, u)
+	Settings(w, r, u)
 }
 
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
-	sync.Signin(w, errorCode)
+	Signin(w, errorCode)
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
-	sync.Signup(w, r.URL.Path)
+	Signup(w, r.URL.Path)
 }
 
 func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -260,7 +259,7 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "globalid is not a UUID", nil, http.StatusBadRequest)
 		return
 	}
-	sync.Source(w, r, u, globalid)
+	Source(w, r, u, globalid)
 }
 
 func postSMS(w http.ResponseWriter, r *http.Request) {
@@ -322,12 +321,6 @@ func getVectorTiles(w http.ResponseWriter, r *http.Request, u *models.User) {
 
 	log.Info().Str("org_id", org_id).Str("tileset_id", tileset_id).Str("zoom", zoom).Str("x", x).Str("y", y).Str("format", format).Msg("Get vector tiles")
 
-}
-
-// Respond with an error that is visible to the user
-func respondError(w http.ResponseWriter, m string, e error, s int) {
-	log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error")
-	http.Error(w, m, s)
 }
 
 func postSignin(w http.ResponseWriter, r *http.Request) {
@@ -394,6 +387,6 @@ func renderMock(templateName string) http.HandlerFunc {
 		if code == "" {
 			code = "abc-123"
 		}
-		sync.Mock(templateName, w, code)
+		Mock(templateName, w, code)
 	}
 }
