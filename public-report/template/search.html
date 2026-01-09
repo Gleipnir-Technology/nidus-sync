@@ -1,0 +1,190 @@
+{{template "base.html" .}}
+
+{{define "title"}}Status{{end}}
+{{define "extraheader"}}
+<style>
+
+		.map-container {
+			height: 400px;
+			border-radius: 5px;
+			margin-bottom: 20px;
+		}
+		.clickable-row {
+			cursor: pointer;
+			transition: background-color 0.15s ease-in-out;
+		}
+		.clickable-row:hover {
+			background-color: rgba(13, 110, 253, 0.1);
+		}
+		.report-type-badge {
+			font-size: 0.85rem;
+		}
+		.search-box {
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+			border-radius: 8px;
+		}
+		@media (max-width: 768px) {
+			.map-container {
+				height: 300px;
+			}
+		}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+});
+</script>
+{{end}}
+{{define "content"}}
+<div class="container my-4">
+	<!-- Search Box -->
+	<div class="card search-box mb-4">
+		<div class="card-body">
+			<form class="row g-3 align-items-center">
+				<div class="col-md-9">
+					<label for="addressSearch" class="visually-hidden">Search by address</label>
+					<div class="input-group">
+						<span class="input-group-text"><i class="fas fa-search"></i></span>
+						<input type="text" class="form-control form-control-lg" id="addressSearch" 
+							placeholder="Enter an address, neighborhood, or zip code">
+					</div>
+				</div>
+				<div class="col-md-3">
+					<button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
+				</div>
+				<div class="col-12">
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="checkbox" id="mosquitoNuisance" checked>
+						<label class="form-check-label" for="mosquitoNuisance">Mosquito Nuisance</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="checkbox" id="greenPool" checked>
+						<label class="form-check-label" for="greenPool">Green Pool</label>
+					</div>
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="checkbox" id="quickReport" checked>
+						<label class="form-check-label" for="quickReport">Quick Report</label>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+	
+	<!-- Map Section -->
+	<div class="card mb-4">
+		<div class="card-header bg-info text-white">
+			<h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Reports Map</h5>
+		</div>
+		<div class="card-body p-0">
+			<div class="map-container">
+				<!-- Replace with actual map embed code -->
+				<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12000!2d-122.4194!3d37.7749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDQ2JzI5LjYiTiAxMjLCsDI1JzEwLjAiVw!5e0!3m2!1sen!2sus!4v1627309456789!5m2!1sen!2sus" 
+					width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Results Section -->
+	<div class="card">
+		<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+			<h5 class="mb-0"><i class="fas fa-list me-2"></i>Reports Near You</h5>
+			<span class="badge bg-light text-dark">15 Reports Found</span>
+		</div>
+		<div class="card-body p-0">
+			<div class="table-responsive">
+				<table class="table table-hover mb-0">
+					<thead class="table-light">
+						<tr>
+							<th scope="col">Report ID</th>
+							<th scope="col">Reported</th>
+							<th scope="col">Type</th>
+							<th scope="col">Address</th>
+							<th scope="col">Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Sample data rows - these would be generated dynamically -->
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12345'">
+							<td><strong>#12345</strong></td>
+							<td>2 days ago</td>
+							<td><span class="badge bg-danger report-type-badge">Mosquito Nuisance</span></td>
+							<td>456 Elm Street, Anytown, USA</td>
+							<td><span class="badge bg-warning text-dark">Scheduled</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12346'">
+							<td><strong>#12346</strong></td>
+							<td>3 days ago</td>
+							<td><span class="badge bg-success report-type-badge">Green Pool</span></td>
+							<td>789 Oak Avenue, Anytown, USA</td>
+							<td><span class="badge bg-success">Treated</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12347'">
+							<td><strong>#12347</strong></td>
+							<td>1 week ago</td>
+							<td><span class="badge bg-primary report-type-badge">Mosquito Nuisance</span></td>
+							<td>123 Pine Road, Anytown, USA</td>
+							<td><span class="badge bg-info">Visited</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12348'">
+							<td><strong>#12348</strong></td>
+							<td>1 day ago</td>
+							<td><span class="badge bg-secondary report-type-badge">Quick Report</span></td>
+							<td>567 Maple Lane, Anytown, USA</td>
+							<td><span class="badge bg-secondary">In Review</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12349'">
+							<td><strong>#12349</strong></td>
+							<td>2 weeks ago</td>
+							<td><span class="badge bg-success report-type-badge">Green Pool</span></td>
+							<td>890 Cedar Court, Anytown, USA</td>
+							<td><span class="badge bg-success">Treated</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12350'">
+							<td><strong>#12350</strong></td>
+							<td>5 days ago</td>
+							<td><span class="badge bg-danger report-type-badge">Mosquito Nuisance</span></td>
+							<td>234 Birch Blvd, Anytown, USA</td>
+							<td><span class="badge bg-warning text-dark">Scheduled</span></td>
+						</tr>
+						<tr class="clickable-row" onclick="window.location='report-status.html?id=12351'">
+							<td><strong>#12351</strong></td>
+							<td>3 hours ago</td>
+							<td><span class="badge bg-secondary report-type-badge">Quick Report</span></td>
+							<td>678 Spruce Street, Anytown, USA</td>
+							<td><span class="badge bg-secondary">In Review</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="card-footer">
+			<nav aria-label="Page navigation">
+				<ul class="pagination justify-content-center mb-0">
+					<li class="page-item disabled">
+						<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+					</li>
+					<li class="page-item active"><a class="page-link" href="#">1</a></li>
+					<li class="page-item"><a class="page-link" href="#">2</a></li>
+					<li class="page-item"><a class="page-link" href="#">3</a></li>
+					<li class="page-item">
+						<a class="page-link" href="#">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+	
+	<!-- Create Report Button (Fixed at bottom on mobile) -->
+	<div class="d-md-none position-fixed bottom-0 start-0 end-0 p-3" style="z-index: 1030;">
+		<button class="btn btn-primary btn-lg w-100" data-bs-toggle="modal" data-bs-target="#reportModal">
+			<i class="fas fa-plus-circle me-2"></i>Create New Report
+		</button>
+	</div>
+	
+	<!-- Desktop Create Report Button -->
+	<div class="d-none d-md-block text-center mt-4">
+		<button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#reportModal">
+			<i class="fas fa-plus-circle me-2"></i>Create New Report
+		</button>
+	</div>
+</div>
+{{end}}

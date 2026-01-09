@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								<div class="mb-3">
 									<label for="report" class="form-label">Report ID</label>
 									<input type="text" class="form-control" id="report" name="report" placeholder="Enter your report ID" value="{{.ReportID}}" required>
-									<div class="form-text">Example: MMD-2023-12345</div>
+									<div class="form-text">Example: ABCD-1234-5678</div>
 									{{ if ne .Error "" }}
 									<div class="alert alert-warning" role="alert">
 										{{ .Error }}
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								This option will guide you through selecting your location to find relevant information about mosquito activity near you.
 							</p>
 							<div class="d-grid gap-2 mt-auto">
-								<a href="/service-request-location" class="btn btn-primary">Search by Location</a>
+								<a href="/search" class="btn btn-primary">Search by Location</a>
 							</div>
 						</div>
 					</div>
