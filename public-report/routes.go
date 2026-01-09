@@ -22,6 +22,7 @@ func Router() chi.Router {
 	r.Post("/register-notifications", postRegisterNotifications)
 	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)
 	r.Get("/status", getStatus)
+	r.Get("/status/{report_id}", getStatusByID)
 	localFS := http.Dir("./static")
 	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 	return r

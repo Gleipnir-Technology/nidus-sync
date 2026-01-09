@@ -26,7 +26,7 @@
 						<p class="lead">Thank you for helping us control mosquito populations in your area!</p>
 						<div class="alert alert-info py-3">
 							<strong>Your Report ID:</strong> 
-							<span class="fs-4 fw-bold">{{.ReportID}}</span>
+							<span class="fs-4 fw-bold">{{.ReportID|publicReportID}}</span>
 						</div>
 						<p class="text-muted">Please save this ID for your reference.</p>
 					</div>
@@ -42,7 +42,7 @@
 							Check Your Report Status
 						</h4>
 						<p>You can check the status of your report at any time using your Report ID.</p>
-						<a href="/check-report-status" class="btn btn-outline-primary">
+						<a href="/status/{{.ReportID}}" class="btn btn-outline-primary">
 							Check Status
 						</a>
 					</div>

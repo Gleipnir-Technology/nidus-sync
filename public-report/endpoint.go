@@ -29,13 +29,6 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
-func getStatus(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
-		w,
-		Status,
-		ContextStatus{},
-	)
-}
 func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {

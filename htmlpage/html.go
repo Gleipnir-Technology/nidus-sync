@@ -112,6 +112,7 @@ func makeFuncMap() template.FuncMap {
 		"bigNumber":          bigNumber,
 		"GISStatement":       gisStatement,
 		"latLngDisplay":      latLngDisplay,
+		"publicReportID":     publicReportID,
 		"timeAsRelativeDate": timeAsRelativeDate,
 		"timeDelta":          timeDelta,
 		"timeElapsed":        timeElapsed,
@@ -143,6 +144,13 @@ func parseFromDisk(files []string) (*template.Template, error) {
 		return nil, fmt.Errorf("Failed to parse %s: %w", files, err)
 	}
 	return templ, nil
+}
+
+func publicReportID(s string) string {
+	if len(s) != 12 {
+		return s
+	}
+	return s[0:4] + "-" + s[4:8] + "-" + s[8:12]
 }
 
 func timeAsRelativeDate(d time.Time) string {

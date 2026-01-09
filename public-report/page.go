@@ -17,12 +17,10 @@ type ContextRegisterNotificationsComplete struct {
 	ReportID string
 }
 type ContextRoot struct{}
-type ContextStatus struct{}
 
 var (
 	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
 	Root                          = buildTemplate("root", "base")
-	Status                        = buildTemplate("status", "base")
 )
 
 var components = [...]string{"footer", "location-geocode", "location-geocode-header", "photo-upload", "photo-upload-header"}
