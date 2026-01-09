@@ -3,7 +3,6 @@ package publicreport
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -40,10 +39,6 @@ func extractPhotoUploads(r *http.Request) (uploads []PhotoUpload, err error) {
 				return uploads, fmt.Errorf("Failed to read file: %v", err)
 			}
 			file.Seek(0, 0)
-			contentBuf := bytes.NewBuffer(nil)
-			if _, err := io.Copy(contentBuf, file); err != nil {
-				return uploads, fmt.Errorf("Failed to save file: %v", err)
-			}
 			log.Info().Int64("size", fileSize).Str("filename", headers.Filename).Str("content-type", contentType).Msg("Got an uploaded file")
 			u, err := uuid.NewUUID()
 			if err != nil {
