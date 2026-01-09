@@ -59,6 +59,8 @@ type Factory struct {
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
 	basePublicreportNuisanceMods              PublicreportNuisanceModSlice
+	basePublicreportPoolMods                  PublicreportPoolModSlice
+	basePublicreportPoolPhotoMods             PublicreportPoolPhotoModSlice
 	basePublicreportQuickMods                 PublicreportQuickModSlice
 	basePublicreportQuickPhotoMods            PublicreportQuickPhotoModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
@@ -2420,6 +2422,96 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	return o
 }
 
+func (f *Factory) NewPublicreportPool(mods ...PublicreportPoolMod) *PublicreportPoolTemplate {
+	return f.NewPublicreportPoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportPoolWithContext(ctx context.Context, mods ...PublicreportPoolMod) *PublicreportPoolTemplate {
+	o := &PublicreportPoolTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportPoolMods.Apply(ctx, o)
+	}
+
+	PublicreportPoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *PublicreportPoolTemplate {
+	o := &PublicreportPoolTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.AccessComments = func() string { return m.AccessComments }
+	o.AccessGate = func() bool { return m.AccessGate }
+	o.AccessFence = func() bool { return m.AccessFence }
+	o.AccessLocked = func() bool { return m.AccessLocked }
+	o.AccessDog = func() bool { return m.AccessDog }
+	o.AccessOther = func() bool { return m.AccessOther }
+	o.Address = func() string { return m.Address }
+	o.AddressCountry = func() string { return m.AddressCountry }
+	o.AddressPostCode = func() string { return m.AddressPostCode }
+	o.AddressPlace = func() string { return m.AddressPlace }
+	o.AddressStreet = func() string { return m.AddressStreet }
+	o.AddressRegion = func() string { return m.AddressRegion }
+	o.Comments = func() string { return m.Comments }
+	o.Created = func() time.Time { return m.Created }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
+	o.HasAdult = func() bool { return m.HasAdult }
+	o.HasLarvae = func() bool { return m.HasLarvae }
+	o.HasPupae = func() bool { return m.HasPupae }
+	o.Location = func() null.Val[string] { return m.Location }
+	o.MapZoom = func() float64 { return m.MapZoom }
+	o.OwnerEmail = func() string { return m.OwnerEmail }
+	o.OwnerName = func() string { return m.OwnerName }
+	o.OwnerPhone = func() string { return m.OwnerPhone }
+	o.PublicID = func() string { return m.PublicID }
+	o.ReporterEmail = func() string { return m.ReporterEmail }
+	o.ReporterName = func() string { return m.ReporterName }
+	o.ReporterPhone = func() string { return m.ReporterPhone }
+	o.Subscribe = func() bool { return m.Subscribe }
+
+	ctx := context.Background()
+	if len(m.R.PoolPhotos) > 0 {
+		PublicreportPoolMods.AddExistingPoolPhotos(m.R.PoolPhotos...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportPoolPhoto(mods ...PublicreportPoolPhotoMod) *PublicreportPoolPhotoTemplate {
+	return f.NewPublicreportPoolPhotoWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportPoolPhotoWithContext(ctx context.Context, mods ...PublicreportPoolPhotoMod) *PublicreportPoolPhotoTemplate {
+	o := &PublicreportPoolPhotoTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportPoolPhotoMods.Apply(ctx, o)
+	}
+
+	PublicreportPoolPhotoModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportPoolPhoto(m *models.PublicreportPoolPhoto) *PublicreportPoolPhotoTemplate {
+	o := &PublicreportPoolPhotoTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.Size = func() int64 { return m.Size }
+	o.Filename = func() string { return m.Filename }
+	o.PoolID = func() int32 { return m.PoolID }
+	o.UUID = func() uuid.UUID { return m.UUID }
+
+	ctx := context.Background()
+	if m.R.Pool != nil {
+		PublicreportPoolPhotoMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewPublicreportQuick(mods ...PublicreportQuickMod) *PublicreportQuickTemplate {
 	return f.NewPublicreportQuickWithContext(context.Background(), mods...)
 }
@@ -3007,6 +3099,22 @@ func (f *Factory) ClearBasePublicreportNuisanceMods() {
 
 func (f *Factory) AddBasePublicreportNuisanceMod(mods ...PublicreportNuisanceMod) {
 	f.basePublicreportNuisanceMods = append(f.basePublicreportNuisanceMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportPoolMods() {
+	f.basePublicreportPoolMods = nil
+}
+
+func (f *Factory) AddBasePublicreportPoolMod(mods ...PublicreportPoolMod) {
+	f.basePublicreportPoolMods = append(f.basePublicreportPoolMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportPoolPhotoMods() {
+	f.basePublicreportPoolPhotoMods = nil
+}
+
+func (f *Factory) AddBasePublicreportPoolPhotoMod(mods ...PublicreportPoolPhotoMod) {
+	f.basePublicreportPoolPhotoMods = append(f.basePublicreportPoolPhotoMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportQuickMods() {

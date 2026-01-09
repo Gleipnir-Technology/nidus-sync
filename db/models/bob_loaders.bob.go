@@ -55,6 +55,8 @@ type preloaders struct {
 	Notification                      notificationPreloader
 	OauthToken                        oauthTokenPreloader
 	Organization                      organizationPreloader
+	PublicreportPool                  publicreportPoolPreloader
+	PublicreportPoolPhoto             publicreportPoolPhotoPreloader
 	PublicreportQuick                 publicreportQuickPreloader
 	PublicreportQuickPhoto            publicreportQuickPhotoPreloader
 	User                              userPreloader
@@ -100,6 +102,8 @@ func getPreloaders() preloaders {
 		Notification:                      buildNotificationPreloader(),
 		OauthToken:                        buildOauthTokenPreloader(),
 		Organization:                      buildOrganizationPreloader(),
+		PublicreportPool:                  buildPublicreportPoolPreloader(),
+		PublicreportPoolPhoto:             buildPublicreportPoolPhotoPreloader(),
 		PublicreportQuick:                 buildPublicreportQuickPreloader(),
 		PublicreportQuickPhoto:            buildPublicreportQuickPhotoPreloader(),
 		User:                              buildUserPreloader(),
@@ -151,6 +155,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                      notificationThenLoader[Q]
 	OauthToken                        oauthTokenThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
+	PublicreportPool                  publicreportPoolThenLoader[Q]
+	PublicreportPoolPhoto             publicreportPoolPhotoThenLoader[Q]
 	PublicreportQuick                 publicreportQuickThenLoader[Q]
 	PublicreportQuickPhoto            publicreportQuickPhotoThenLoader[Q]
 	User                              userThenLoader[Q]
@@ -196,6 +202,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                      buildNotificationThenLoader[Q](),
 		OauthToken:                        buildOauthTokenThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
+		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),
+		PublicreportPoolPhoto:             buildPublicreportPoolPhotoThenLoader[Q](),
 		PublicreportQuick:                 buildPublicreportQuickThenLoader[Q](),
 		PublicreportQuickPhoto:            buildPublicreportQuickPhotoThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),

@@ -101,3 +101,44 @@ func CellToPostgisGeometry(c h3.Cell) (string, error) {
 
 	return fmt.Sprintf("POLYGON((%s))", sb.String()), nil
 }
+
+// Convert from an accuracy in meters of GPS coordinates to the H3 Resolution that has at least
+// the same area. In other words, for a GPS coordinate accuracy of 2m you have pi*(2m)^2 or ~12.5m^2
+// of area which corresponds to resolution 13 (average area of 43.87^2) vs resolution 14 (average area 6.26m^2)
+// See https://h3geo.org/docs/core-library/restable
+func MeterAccuracyToH3Resolution(accuracy_in_meters float64) int {
+	area := accuracy_in_meters * accuracy_in_meters * 3.1415
+	if area < 0.895 {
+		return 15
+	} else if area < 6.267 {
+		return 14
+	} else if area < 43.87 {
+		return 13
+	} else if area < 307.092 {
+		return 12
+	} else if area < 2149.643 {
+		return 11
+	} else if area < 15_047.502 {
+		return 10
+	} else if area < 105_332.513 {
+		return 9
+	} else if area < 737_327.598 {
+		return 8
+	} else if area < 5_161_293.360 {
+		return 7
+	} else if area < 36_129_062.164 {
+		return 6
+	} else if area < 252_903_858.182 {
+		return 5
+	} else if area < 1_770_347_654.491 {
+		return 4
+	} else if area < 12_393_434_655.088 {
+		return 3
+	} else if area < 86_801_780_398.997 {
+		return 2
+	} else if area < 609_788_441_794.134 {
+		return 1
+	} else {
+		return 0
+	}
+}

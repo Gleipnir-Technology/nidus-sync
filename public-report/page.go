@@ -17,13 +17,6 @@ type ContextNuisance struct{}
 type ContextNuisanceSubmitComplete struct {
 	ReportID string
 }
-type ContextPool struct{
-	MapboxToken string
-}
-type ContextQuick struct{}
-type ContextQuickSubmitComplete struct {
-	ReportID string
-}
 type ContextRegisterNotificationsComplete struct {
 	ReportID string
 }
@@ -33,15 +26,12 @@ type ContextStatus struct{}
 var (
 	Nuisance                      = buildTemplate("nuisance", "base")
 	NuisanceSubmitComplete        = buildTemplate("nuisance-submit-complete", "base")
-	Pool                          = buildTemplate("pool", "base")
-	Quick                         = buildTemplate("quick", "base")
-	QuickSubmitComplete           = buildTemplate("quick-submit-complete", "base")
 	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
 	Root                          = buildTemplate("root", "base")
 	Status                        = buildTemplate("status", "base")
 )
 
-var components = [...]string{"footer", "location-geocode", "location-geocode-header", "map", "map-header", "photo-upload", "photo-upload-header"}
+var components = [...]string{"footer", "location-geocode", "location-geocode-header", "photo-upload", "photo-upload-header"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	subdir := "public-report"

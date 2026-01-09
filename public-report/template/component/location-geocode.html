@@ -1,9 +1,18 @@
 {{define "location-geocode"}}
+<!-- Hidden fields for location data -->
+<input type="hidden" id="address-country" name="address-country"/>
+<input type="hidden" id="address-postcode" name="address-postcode"/>
+<input type="hidden" id="address-place" name="address-place"/>
+<input type="hidden" id="address-region" name="address-region"/>
+<input type="hidden" id="address-street" name="address-street"/>
+<input type="hidden" id="latitude" name="latitude"/>
+<input type="hidden" id="longitude" name="longitude"/>
+<input type="hidden" id="latlng-accuracy-type" name="latlng-accuracy-type"/>
+<input type="hidden" id="latlng-accuracy-value" name="latlng-accuracy-value"/>
 <div class="col-md-6">
-	<h2 class="mb-4">Address Search</h2>
 	<div class="mb-3 position-relative">
 		<label for="addressInput" class="form-label">Enter address</label>
-		<input type="text" class="form-control" id="addressInput" 
+		<input type="text" class="form-control" id="address" name="address" 
 			   placeholder="Start typing an address (min 3 characters)">
 		<div id="suggestions" class="suggestions-container list-group d-none"></div>
 	</div>

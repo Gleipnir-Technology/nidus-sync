@@ -890,3 +890,88 @@ func (e *PublicreportNuisancepreferredtimetype) Scan(value any) error {
 
 	return nil
 }
+
+// Enum values for PublicreportPoolsourceduration
+const (
+	PublicreportPoolsourcedurationNone            PublicreportPoolsourceduration = "none"
+	PublicreportPoolsourcedurationLessThanWeek    PublicreportPoolsourceduration = "less-than-week"
+	PublicreportPoolsourceduration12Weeks         PublicreportPoolsourceduration = "1-2-weeks"
+	PublicreportPoolsourceduration24Weeks         PublicreportPoolsourceduration = "2-4-weeks"
+	PublicreportPoolsourceduration13Months        PublicreportPoolsourceduration = "1-3-months"
+	PublicreportPoolsourcedurationMoreThan3Months PublicreportPoolsourceduration = "more-than-3-months"
+)
+
+func AllPublicreportPoolsourceduration() []PublicreportPoolsourceduration {
+	return []PublicreportPoolsourceduration{
+		PublicreportPoolsourcedurationNone,
+		PublicreportPoolsourcedurationLessThanWeek,
+		PublicreportPoolsourceduration12Weeks,
+		PublicreportPoolsourceduration24Weeks,
+		PublicreportPoolsourceduration13Months,
+		PublicreportPoolsourcedurationMoreThan3Months,
+	}
+}
+
+type PublicreportPoolsourceduration string
+
+func (e PublicreportPoolsourceduration) String() string {
+	return string(e)
+}
+
+func (e PublicreportPoolsourceduration) Valid() bool {
+	switch e {
+	case PublicreportPoolsourcedurationNone,
+		PublicreportPoolsourcedurationLessThanWeek,
+		PublicreportPoolsourceduration12Weeks,
+		PublicreportPoolsourceduration24Weeks,
+		PublicreportPoolsourceduration13Months,
+		PublicreportPoolsourcedurationMoreThan3Months:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportPoolsourceduration) All() []PublicreportPoolsourceduration {
+	return AllPublicreportPoolsourceduration()
+}
+
+func (e PublicreportPoolsourceduration) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportPoolsourceduration) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportPoolsourceduration) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportPoolsourceduration) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportPoolsourceduration) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportPoolsourceduration) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportPoolsourceduration(x)
+	case []byte:
+		*e = PublicreportPoolsourceduration(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportPoolsourceduration")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportPoolsourceduration value: %s", *e)
+	}
+
+	return nil
+}

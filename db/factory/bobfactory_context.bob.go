@@ -211,6 +211,14 @@ var (
 	// Relationship Contexts for publicreport.nuisance
 	publicreportNuisanceWithParentsCascadingCtx = newContextual[bool]("publicreportNuisanceWithParentsCascading")
 
+	// Relationship Contexts for publicreport.pool
+	publicreportPoolWithParentsCascadingCtx = newContextual[bool]("publicreportPoolWithParentsCascading")
+	publicreportPoolRelPoolPhotosCtx        = newContextual[bool]("publicreport.pool.publicreport.pool_photo.publicreport.pool_photo.pool_photo_pool_id_fkey")
+
+	// Relationship Contexts for publicreport.pool_photo
+	publicreportPoolPhotoWithParentsCascadingCtx = newContextual[bool]("publicreportPoolPhotoWithParentsCascading")
+	publicreportPoolPhotoRelPoolCtx              = newContextual[bool]("publicreport.pool.publicreport.pool_photo.publicreport.pool_photo.pool_photo_pool_id_fkey")
+
 	// Relationship Contexts for publicreport.quick
 	publicreportQuickWithParentsCascadingCtx = newContextual[bool]("publicreportQuickWithParentsCascading")
 	publicreportQuickRelQuickPhotosCtx       = newContextual[bool]("publicreport.quick.publicreport.quick_photo.publicreport.quick_photo.quick_photo_quick_id_fkey")

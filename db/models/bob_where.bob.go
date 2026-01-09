@@ -59,6 +59,8 @@ func Where[Q psql.Filterable]() struct {
 	OauthTokens                        oauthTokenWhere[Q]
 	Organizations                      organizationWhere[Q]
 	PublicreportNuisances              publicreportNuisanceWhere[Q]
+	PublicreportPools                  publicreportPoolWhere[Q]
+	PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
 	PublicreportQuicks                 publicreportQuickWhere[Q]
 	PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
@@ -110,6 +112,8 @@ func Where[Q psql.Filterable]() struct {
 		OauthTokens                        oauthTokenWhere[Q]
 		Organizations                      organizationWhere[Q]
 		PublicreportNuisances              publicreportNuisanceWhere[Q]
+		PublicreportPools                  publicreportPoolWhere[Q]
+		PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
 		PublicreportQuicks                 publicreportQuickWhere[Q]
 		PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
@@ -160,6 +164,8 @@ func Where[Q psql.Filterable]() struct {
 		OauthTokens:                        buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
 		PublicreportNuisances:              buildPublicreportNuisanceWhere[Q](PublicreportNuisances.Columns),
+		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),
+		PublicreportPoolPhotos:             buildPublicreportPoolPhotoWhere[Q](PublicreportPoolPhotos.Columns),
 		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),
 		PublicreportQuickPhotos:            buildPublicreportQuickPhotoWhere[Q](PublicreportQuickPhotos.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),

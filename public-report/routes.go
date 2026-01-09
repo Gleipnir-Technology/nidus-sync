@@ -1,0 +1,28 @@
+package publicreport
+
+import (
+	"net/http"
+
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/go-chi/chi/v5"
+)
+
+func Router() chi.Router {
+	r := chi.NewRouter()
+	r.Get("/", getRoot)
+	r.Get("/nuisance", getNuisance)
+	r.Post("/nuisance-submit", postNuisance)
+	r.Get("/nuisance-submit-complete", getNuisanceSubmitComplete)
+	r.Get("/pool", getPool)
+	r.Post("/pool-submit", postPool)
+	r.Get("/pool-submit-complete", getPoolSubmitComplete)
+	r.Get("/quick", getQuick)
+	r.Post("/quick-submit", postQuick)
+	r.Get("/quick-submit-complete", getQuickSubmitComplete)
+	r.Post("/register-notifications", postRegisterNotifications)
+	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)
+	r.Get("/status", getStatus)
+	localFS := http.Dir("./static")
+	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
+	return r
+}
