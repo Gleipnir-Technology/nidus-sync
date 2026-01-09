@@ -13,10 +13,6 @@ var embeddedFiles embed.FS
 //go:embed static/*
 var EmbeddedStaticFS embed.FS
 
-type ContextNuisance struct{}
-type ContextNuisanceSubmitComplete struct {
-	ReportID string
-}
 type ContextRegisterNotificationsComplete struct {
 	ReportID string
 }
@@ -24,8 +20,6 @@ type ContextRoot struct{}
 type ContextStatus struct{}
 
 var (
-	Nuisance                      = buildTemplate("nuisance", "base")
-	NuisanceSubmitComplete        = buildTemplate("nuisance-submit-complete", "base")
 	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
 	Root                          = buildTemplate("root", "base")
 	Status                        = buildTemplate("status", "base")
