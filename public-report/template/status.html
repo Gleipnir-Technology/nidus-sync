@@ -35,6 +35,43 @@
 	}
 }
 </style>
+<script>
+function formatReportID(inputElement) {
+	// Save current cursor position
+	const cursorPos = inputElement.selectionStart;
+	
+	// Get current value and remove existing hyphens
+	let value = inputElement.value.replace(/-/g, '');
+	
+	// Calculate how many hyphens were before the cursor
+	const beforeCursor = inputElement.value.substring(0, cursorPos);
+	const hyphensBefore = (beforeCursor.match(/-/g) || []).length;
+	
+	// Format the value with hyphens at positions 4 and 8
+	if (value.length > 8) {
+	  value = value.substring(0, 4) + '-' + value.substring(4, 8) + '-' + value.substring(8);
+	} else if (value.length > 4) {
+	  value = value.substring(0, 4) + '-' + value.substring(4);
+	}
+	
+	// Update input field value
+	inputElement.value = value;
+	
+	// Calculate new cursor position
+	const newHyphensBefore = (value.substring(0, cursorPos - hyphensBefore + 
+	                        Math.min(hyphensBefore, 2)).match(/-/g) || []).length;
+	const newPosition = cursorPos - hyphensBefore + newHyphensBefore;
+	
+	// Restore cursor position
+	inputElement.setSelectionRange(newPosition, newPosition);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	document.getElementById('report').addEventListener('input', function() {
+   		formatReportID(this);
+	});
+});
+</script>
 {{end}}
 {{define "content"}}
 <main>
@@ -72,14 +109,19 @@
 								If you have a report ID from a previous request, enter it below to view the details and current status.
 							</p>
 							
-							<form>
+							<form action="/status" method="GET">
 								<div class="mb-3">
-									<label for="reportId" class="form-label">Report ID</label>
-									<input type="text" class="form-control" id="reportId" name="reportId" placeholder="Enter your report ID" required>
+									<label for="report" class="form-label">Report ID</label>
+									<input type="text" class="form-control" id="report" name="report" placeholder="Enter your report ID" value="{{.ReportID}}" required>
 									<div class="form-text">Example: MMD-2023-12345</div>
+									{{ if ne .Error "" }}
+									<div class="alert alert-warning" role="alert">
+										{{ .Error }}
+									</div>
+									{{ end }}
 								</div>
 								<div class="d-grid gap-2">
-									<a href="/service-request/abc-123" type="submit" class="btn btn-primary">View Report Details</a>
+									<button type="submit" class="btn btn-success w-100 submit-btn">View Report Details</button>
 								</div>
 							</form>
 						</div>
