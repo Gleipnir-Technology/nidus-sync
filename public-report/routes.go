@@ -24,7 +24,7 @@ func Router() chi.Router {
 	r.Get("/search", getSearch)
 	r.Get("/status", getStatus)
 	r.Get("/status/{report_id}", getStatusByID)
-	localFS := http.Dir("./static")
+	localFS := http.Dir("./public-report/static")
 	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 	return r
 }

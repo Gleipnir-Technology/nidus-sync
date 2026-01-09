@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -33,16 +34,11 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 		// Determine the actual file path
 		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix)
 
-		// Try to open from local filesystem first for development
-		localFile, localErr := root.Open(requestedPath)
-
+		var err error
 		var fileToServe http.File
 
-		if localErr == nil {
-			// File found in local filesystem
-			fileToServe = localFile
-		} else {
-			// If not found locall, try embedded filesystem
+		if config.IsProductionEnvironment() {
+			// For production use the embedded filesystem
 			embeddedFilePath := filepath.Join(embeddedPath, requestedPath)
 			embeddedFile, err := embeddedFS.Open(embeddedFilePath)
 
@@ -54,6 +50,13 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 			// Wrap the embedded file to implement http.File interface
 			fileToServe = &embeddedFileWrapper{embeddedFile}
 
+		} else {
+			// Try to open from local filesystem for development
+			fileToServe, err = root.Open(requestedPath)
+			if err != nil {
+				respondError(w, "Failed to open file", err, http.StatusNotFound)
+				return
+			}
 		}
 
 		// Create a custom ResponseWriter that allows us to modify headers
