@@ -71,53 +71,77 @@ function getUniqueFeatures(features, comparatorProperty) {
 function renderListings(features) {
 	console.log("render listings", features);
 	
-	const filterEl = document.getElementById('feature-filter');
-	const listingEl = document.getElementById('feature-listing');
+	//const listingEl = document.getElementById('feature-listing');
+	const reportTableBodyEl = document.getElementById('report-table-body');
 	const empty = document.createElement('p');
-        // Clear any existing listings
-        listingEl.innerHTML = '';
-        if (features.length) {
-            for (const feature of features) {
-                const itemLink = document.createElement('a');
-                const label = `${feature.properties.name} (${feature.properties.abbrev})`;
-                itemLink.href = feature.properties.wikipedia;
-                itemLink.target = '_blank';
-                itemLink.textContent = label;
-                itemLink.addEventListener('mouseover', () => {
-                    // Highlight corresponding feature on the map
-                    popup
-                        .setLngLat(feature.geometry.coordinates)
-                        .setText(label)
-                        .addTo(map);
-                });
-                listingEl.appendChild(itemLink);
-            }
+	// Clear any existing listings
+	//listingEl.innerHTML = '';
+	reportTableBodyEl.innerHTML = '';
+	if (features.length) {
+		for (const feature of features) {
+			/*
+			const itemLink = document.createElement('a');
+			const label = `${feature.properties.name} (${feature.properties.abbrev})`;
+			itemLink.href = feature.properties.wikipedia;
+			itemLink.target = '_blank';
+			itemLink.textContent = label;
+			itemLink.addEventListener('mouseover', () => {
+				// Highlight corresponding feature on the map
+				popup
+					.setLngLat(feature.geometry.coordinates)
+					.setText(label)
+					.addTo(map);
+			});
+			listingEl.appendChild(itemLink);
+			*/
 
-            // Show the filter input
-            filterEl.parentNode.style.display = 'block';
-        } else if (features.length === 0 && filterEl.value !== '') {
-            empty.textContent = 'No results found';
-            listingEl.appendChild(empty);
-        } else {
-            empty.textContent = 'Drag the map to populate results';
-            listingEl.appendChild(empty);
+			const tableRow = document.createElement("tr");
 
-            // Hide the filter input
-            filterEl.parentNode.style.display = 'none';
+			const reportIdCol = document.createElement("td");
+			reportIdCol.textContent = feature.properties.abbrev;
+			tableRow.appendChild(reportIdCol);
 
-            // remove features filter
-            map.setFilter('airport', ['has', 'abbrev']);
-        }
+			const ageCol = document.createElement("td");
+			ageCol.textContent = "forever ago";
+			tableRow.appendChild(ageCol);
+
+			const typeCol = document.createElement("td");
+			typeCol.textContent = "mosquitoes";
+			tableRow.appendChild(typeCol);
+
+			const addressCol = document.createElement("td");
+			addressCol.textContent = feature.properties.name;
+			tableRow.appendChild(addressCol);
+
+			const statusCol = document.createElement("td");
+			statusCol.textContent = feature.properties.type;
+			tableRow.appendChild(statusCol);
+
+			reportTableBodyEl.appendChild(tableRow);
+		}
+	} else if (features.length === 0 ) {
+		empty.textContent = 'No results found';
+		reportTableBodyEl.appendChild(empty);
+	} else {
+		//empty.textContent = 'Drag the map to populate results';
+		//listingEl.appendChild(empty);
+
+		// Hide the filter input
+		//filterEl.parentNode.style.display = 'none';
+
+		// remove features filter
+		//map.setFilter('airport', ['has', 'abbrev']);
+	}
 }
 document.addEventListener('DOMContentLoaded', function() {
-	const filterEl = document.getElementById('feature-filter');
-	const listingEl = document.getElementById('feature-listing');
+	//const filterEl = document.getElementById('feature-filter');
+	//const listingEl = document.getElementById('feature-listing');
 	mapLoad(MAPBOX_ACCESS_TOKEN).then((map) => {
 		map.addSource('airports', {
 			'type': 'vector',
 			'url': 'mapbox://mapbox.04w69w5j',
 		});
-	        map.addLayer({
+		map.addLayer({
 			'id': 'airport',
 			'source': 'airports',
 			'source-layer': 'ne_10m_airports',
@@ -129,11 +153,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				'circle-stroke-color': '#ffffff'
 			}
 		});
-	        map.on('movestart', () => {
+		map.on('movestart', () => {
 			// reset features filter as the map starts moving
 			map.setFilter('airport', ['has', 'abbrev']);
 		});
-	        map.on('moveend', () => {
+		map.on('moveend', () => {
 			const features = map.queryRenderedFeatures({ layers: ['airport'] });
 
 			if (features) {
@@ -142,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				renderListings(uniqueFeatures);
 
 				// Clear the input container
-				filterEl.value = '';
+				//filterEl.value = '';
 
 				// Store the current features in sn `airports` variable to
 				// later use for filtering on `keyup`.
@@ -162,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			)
 			.addTo(map);
 		});
-	        map.on('mouseleave', 'airport', () => {
+		map.on('mouseleave', 'airport', () => {
 			map.getCanvas().style.cursor = '';
 			popup.remove();
 		});
@@ -229,12 +253,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="map-container" id="map-container">
 				<div id="map"></div>
 			</div>
-			<div class="map-overlay">
-				<fieldset>
-					<input id="feature-filter" type="text" placeholder="Filter results by name">
-				</fieldset>
-				<div id="feature-listing" class="listing"></div>
-			</div>
 		</div>
 	</div>
 	
@@ -256,8 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							<th scope="col">Status</th>
 						</tr>
 					</thead>
-					<tbody>
-						<!-- Sample data rows - these would be generated dynamically -->
+					<tbody id="report-table-body">
 						<tr class="clickable-row" onclick="window.location='report-status.html?id=12345'">
 							<td><strong>#12345</strong></td>
 							<td>2 days ago</td>
