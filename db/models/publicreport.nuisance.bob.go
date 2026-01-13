@@ -9,7 +9,9 @@ import (
 	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -27,7 +29,7 @@ type PublicreportNuisance struct {
 	Duration           enums.PublicreportNuisancedurationtype           `db:"duration" `
 	Email              string                                           `db:"email" `
 	InspectionType     enums.PublicreportNuisanceinspectiontype         `db:"inspection_type" `
-	Location           enums.PublicreportNuisancelocationtype           `db:"location" `
+	SourceLocation     enums.PublicreportNuisancelocationtype           `db:"source_location" `
 	PreferredDateRange enums.PublicreportNuisancepreferreddaterangetype `db:"preferred_date_range" `
 	PreferredTime      enums.PublicreportNuisancepreferredtimetype      `db:"preferred_time" `
 	RequestCall        bool                                             `db:"request_call" `
@@ -45,6 +47,9 @@ type PublicreportNuisance struct {
 	ReporterEmail      string                                           `db:"reporter_email" `
 	ReporterName       string                                           `db:"reporter_name" `
 	ReporterPhone      string                                           `db:"reporter_phone" `
+	Address            string                                           `db:"address" `
+	Location           null.Val[string]                                 `db:"location" `
+	Status             enums.PublicreportReportstatustype               `db:"status" `
 }
 
 // PublicreportNuisanceSlice is an alias for a slice of pointers to PublicreportNuisance.
@@ -60,7 +65,7 @@ type PublicreportNuisancesQuery = *psql.ViewQuery[*PublicreportNuisance, Publicr
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "email", "inspection_type", "location", "preferred_date_range", "preferred_time", "request_call", "severity", "source_container", "source_description", "source_roof", "source_stagnant", "time_of_day_day", "time_of_day_early", "time_of_day_evening", "time_of_day_night", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone",
+			"id", "additional_info", "created", "duration", "email", "inspection_type", "source_location", "preferred_date_range", "preferred_time", "request_call", "severity", "source_container", "source_description", "source_roof", "source_stagnant", "time_of_day_day", "time_of_day_early", "time_of_day_evening", "time_of_day_night", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:         alias,
 		ID:                 psql.Quote(alias, "id"),
@@ -69,7 +74,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		Duration:           psql.Quote(alias, "duration"),
 		Email:              psql.Quote(alias, "email"),
 		InspectionType:     psql.Quote(alias, "inspection_type"),
-		Location:           psql.Quote(alias, "location"),
+		SourceLocation:     psql.Quote(alias, "source_location"),
 		PreferredDateRange: psql.Quote(alias, "preferred_date_range"),
 		PreferredTime:      psql.Quote(alias, "preferred_time"),
 		RequestCall:        psql.Quote(alias, "request_call"),
@@ -87,6 +92,9 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		ReporterEmail:      psql.Quote(alias, "reporter_email"),
 		ReporterName:       psql.Quote(alias, "reporter_name"),
 		ReporterPhone:      psql.Quote(alias, "reporter_phone"),
+		Address:            psql.Quote(alias, "address"),
+		Location:           psql.Quote(alias, "location"),
+		Status:             psql.Quote(alias, "status"),
 	}
 }
 
@@ -99,7 +107,7 @@ type publicreportNuisanceColumns struct {
 	Duration           psql.Expression
 	Email              psql.Expression
 	InspectionType     psql.Expression
-	Location           psql.Expression
+	SourceLocation     psql.Expression
 	PreferredDateRange psql.Expression
 	PreferredTime      psql.Expression
 	RequestCall        psql.Expression
@@ -117,6 +125,9 @@ type publicreportNuisanceColumns struct {
 	ReporterEmail      psql.Expression
 	ReporterName       psql.Expression
 	ReporterPhone      psql.Expression
+	Address            psql.Expression
+	Location           psql.Expression
+	Status             psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -137,7 +148,7 @@ type PublicreportNuisanceSetter struct {
 	Duration           omit.Val[enums.PublicreportNuisancedurationtype]           `db:"duration" `
 	Email              omit.Val[string]                                           `db:"email" `
 	InspectionType     omit.Val[enums.PublicreportNuisanceinspectiontype]         `db:"inspection_type" `
-	Location           omit.Val[enums.PublicreportNuisancelocationtype]           `db:"location" `
+	SourceLocation     omit.Val[enums.PublicreportNuisancelocationtype]           `db:"source_location" `
 	PreferredDateRange omit.Val[enums.PublicreportNuisancepreferreddaterangetype] `db:"preferred_date_range" `
 	PreferredTime      omit.Val[enums.PublicreportNuisancepreferredtimetype]      `db:"preferred_time" `
 	RequestCall        omit.Val[bool]                                             `db:"request_call" `
@@ -155,10 +166,13 @@ type PublicreportNuisanceSetter struct {
 	ReporterEmail      omit.Val[string]                                           `db:"reporter_email" `
 	ReporterName       omit.Val[string]                                           `db:"reporter_name" `
 	ReporterPhone      omit.Val[string]                                           `db:"reporter_phone" `
+	Address            omit.Val[string]                                           `db:"address" `
+	Location           omitnull.Val[string]                                       `db:"location" `
+	Status             omit.Val[enums.PublicreportReportstatustype]               `db:"status" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 24)
+	vals := make([]string, 0, 27)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -177,8 +191,8 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.InspectionType.IsValue() {
 		vals = append(vals, "inspection_type")
 	}
-	if s.Location.IsValue() {
-		vals = append(vals, "location")
+	if s.SourceLocation.IsValue() {
+		vals = append(vals, "source_location")
 	}
 	if s.PreferredDateRange.IsValue() {
 		vals = append(vals, "preferred_date_range")
@@ -231,6 +245,15 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.ReporterPhone.IsValue() {
 		vals = append(vals, "reporter_phone")
 	}
+	if s.Address.IsValue() {
+		vals = append(vals, "address")
+	}
+	if !s.Location.IsUnset() {
+		vals = append(vals, "location")
+	}
+	if s.Status.IsValue() {
+		vals = append(vals, "status")
+	}
 	return vals
 }
 
@@ -253,8 +276,8 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.InspectionType.IsValue() {
 		t.InspectionType = s.InspectionType.MustGet()
 	}
-	if s.Location.IsValue() {
-		t.Location = s.Location.MustGet()
+	if s.SourceLocation.IsValue() {
+		t.SourceLocation = s.SourceLocation.MustGet()
 	}
 	if s.PreferredDateRange.IsValue() {
 		t.PreferredDateRange = s.PreferredDateRange.MustGet()
@@ -307,6 +330,15 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.ReporterPhone.IsValue() {
 		t.ReporterPhone = s.ReporterPhone.MustGet()
 	}
+	if s.Address.IsValue() {
+		t.Address = s.Address.MustGet()
+	}
+	if !s.Location.IsUnset() {
+		t.Location = s.Location.MustGetNull()
+	}
+	if s.Status.IsValue() {
+		t.Status = s.Status.MustGet()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -315,7 +347,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 24)
+		vals := make([]bob.Expression, 27)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -352,8 +384,8 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.Location.IsValue() {
-			vals[6] = psql.Arg(s.Location.MustGet())
+		if s.SourceLocation.IsValue() {
+			vals[6] = psql.Arg(s.SourceLocation.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -460,6 +492,24 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
+		if s.Address.IsValue() {
+			vals[24] = psql.Arg(s.Address.MustGet())
+		} else {
+			vals[24] = psql.Raw("DEFAULT")
+		}
+
+		if !s.Location.IsUnset() {
+			vals[25] = psql.Arg(s.Location.MustGetNull())
+		} else {
+			vals[25] = psql.Raw("DEFAULT")
+		}
+
+		if s.Status.IsValue() {
+			vals[26] = psql.Arg(s.Status.MustGet())
+		} else {
+			vals[26] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -469,7 +519,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 24)
+	exprs := make([]bob.Expression, 0, 27)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -513,10 +563,10 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.Location.IsValue() {
+	if s.SourceLocation.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "location")...),
-			psql.Arg(s.Location),
+			psql.Quote(append(prefix, "source_location")...),
+			psql.Arg(s.SourceLocation),
 		}})
 	}
 
@@ -636,6 +686,27 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_phone")...),
 			psql.Arg(s.ReporterPhone),
+		}})
+	}
+
+	if s.Address.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address")...),
+			psql.Arg(s.Address),
+		}})
+	}
+
+	if !s.Location.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
+		}})
+	}
+
+	if s.Status.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "status")...),
+			psql.Arg(s.Status),
 		}})
 	}
 
@@ -871,7 +942,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	Duration           psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
 	Email              psql.WhereMod[Q, string]
 	InspectionType     psql.WhereMod[Q, enums.PublicreportNuisanceinspectiontype]
-	Location           psql.WhereMod[Q, enums.PublicreportNuisancelocationtype]
+	SourceLocation     psql.WhereMod[Q, enums.PublicreportNuisancelocationtype]
 	PreferredDateRange psql.WhereMod[Q, enums.PublicreportNuisancepreferreddaterangetype]
 	PreferredTime      psql.WhereMod[Q, enums.PublicreportNuisancepreferredtimetype]
 	RequestCall        psql.WhereMod[Q, bool]
@@ -889,6 +960,9 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ReporterEmail      psql.WhereMod[Q, string]
 	ReporterName       psql.WhereMod[Q, string]
 	ReporterPhone      psql.WhereMod[Q, string]
+	Address            psql.WhereMod[Q, string]
+	Location           psql.WhereNullMod[Q, string]
+	Status             psql.WhereMod[Q, enums.PublicreportReportstatustype]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -903,7 +977,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		Duration:           psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
 		Email:              psql.Where[Q, string](cols.Email),
 		InspectionType:     psql.Where[Q, enums.PublicreportNuisanceinspectiontype](cols.InspectionType),
-		Location:           psql.Where[Q, enums.PublicreportNuisancelocationtype](cols.Location),
+		SourceLocation:     psql.Where[Q, enums.PublicreportNuisancelocationtype](cols.SourceLocation),
 		PreferredDateRange: psql.Where[Q, enums.PublicreportNuisancepreferreddaterangetype](cols.PreferredDateRange),
 		PreferredTime:      psql.Where[Q, enums.PublicreportNuisancepreferredtimetype](cols.PreferredTime),
 		RequestCall:        psql.Where[Q, bool](cols.RequestCall),
@@ -921,5 +995,8 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		ReporterEmail:      psql.Where[Q, string](cols.ReporterEmail),
 		ReporterName:       psql.Where[Q, string](cols.ReporterName),
 		ReporterPhone:      psql.Where[Q, string](cols.ReporterPhone),
+		Address:            psql.Where[Q, string](cols.Address),
+		Location:           psql.WhereNull[Q, string](cols.Location),
+		Status:             psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 	}
 }

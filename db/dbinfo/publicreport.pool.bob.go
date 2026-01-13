@@ -276,6 +276,15 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Status: column{
+			Name:      "status",
+			DBType:    "publicreport.reportstatustype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportPoolIndexes{
 		PoolPkey: index{
@@ -360,11 +369,12 @@ type publicreportPoolColumns struct {
 	ReporterName    column
 	ReporterPhone   column
 	Subscribe       column
+	Status          column
 }
 
 func (c publicreportPoolColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Subscribe,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Subscribe, c.Status,
 	}
 }
 

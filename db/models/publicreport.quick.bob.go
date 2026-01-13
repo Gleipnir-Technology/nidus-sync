@@ -9,6 +9,7 @@ import (
 	"io"
 	"time"
 
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -26,14 +27,16 @@ import (
 
 // PublicreportQuick is an object representing the database table.
 type PublicreportQuick struct {
-	ID            int32            `db:"id,pk" `
-	Created       time.Time        `db:"created" `
-	Comments      string           `db:"comments" `
-	Location      null.Val[string] `db:"location" `
-	H3cell        null.Val[string] `db:"h3cell" `
-	PublicID      string           `db:"public_id" `
-	ReporterEmail string           `db:"reporter_email" `
-	ReporterPhone string           `db:"reporter_phone" `
+	ID            int32                              `db:"id,pk" `
+	Created       time.Time                          `db:"created" `
+	Comments      string                             `db:"comments" `
+	Location      null.Val[string]                   `db:"location" `
+	H3cell        null.Val[string]                   `db:"h3cell" `
+	PublicID      string                             `db:"public_id" `
+	ReporterEmail string                             `db:"reporter_email" `
+	ReporterPhone string                             `db:"reporter_phone" `
+	Address       string                             `db:"address" `
+	Status        enums.PublicreportReportstatustype `db:"status" `
 
 	R publicreportQuickR `db:"-" `
 }
@@ -56,7 +59,7 @@ type publicreportQuickR struct {
 func buildPublicreportQuickColumns(alias string) publicreportQuickColumns {
 	return publicreportQuickColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "created", "comments", "location", "h3cell", "public_id", "reporter_email", "reporter_phone",
+			"id", "created", "comments", "location", "h3cell", "public_id", "reporter_email", "reporter_phone", "address", "status",
 		).WithParent("publicreport.quick"),
 		tableAlias:    alias,
 		ID:            psql.Quote(alias, "id"),
@@ -67,6 +70,8 @@ func buildPublicreportQuickColumns(alias string) publicreportQuickColumns {
 		PublicID:      psql.Quote(alias, "public_id"),
 		ReporterEmail: psql.Quote(alias, "reporter_email"),
 		ReporterPhone: psql.Quote(alias, "reporter_phone"),
+		Address:       psql.Quote(alias, "address"),
+		Status:        psql.Quote(alias, "status"),
 	}
 }
 
@@ -81,6 +86,8 @@ type publicreportQuickColumns struct {
 	PublicID      psql.Expression
 	ReporterEmail psql.Expression
 	ReporterPhone psql.Expression
+	Address       psql.Expression
+	Status        psql.Expression
 }
 
 func (c publicreportQuickColumns) Alias() string {
@@ -95,18 +102,20 @@ func (publicreportQuickColumns) AliasedAs(alias string) publicreportQuickColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportQuickSetter struct {
-	ID            omit.Val[int32]      `db:"id,pk" `
-	Created       omit.Val[time.Time]  `db:"created" `
-	Comments      omit.Val[string]     `db:"comments" `
-	Location      omitnull.Val[string] `db:"location" `
-	H3cell        omitnull.Val[string] `db:"h3cell" `
-	PublicID      omit.Val[string]     `db:"public_id" `
-	ReporterEmail omit.Val[string]     `db:"reporter_email" `
-	ReporterPhone omit.Val[string]     `db:"reporter_phone" `
+	ID            omit.Val[int32]                              `db:"id,pk" `
+	Created       omit.Val[time.Time]                          `db:"created" `
+	Comments      omit.Val[string]                             `db:"comments" `
+	Location      omitnull.Val[string]                         `db:"location" `
+	H3cell        omitnull.Val[string]                         `db:"h3cell" `
+	PublicID      omit.Val[string]                             `db:"public_id" `
+	ReporterEmail omit.Val[string]                             `db:"reporter_email" `
+	ReporterPhone omit.Val[string]                             `db:"reporter_phone" `
+	Address       omit.Val[string]                             `db:"address" `
+	Status        omit.Val[enums.PublicreportReportstatustype] `db:"status" `
 }
 
 func (s PublicreportQuickSetter) SetColumns() []string {
-	vals := make([]string, 0, 8)
+	vals := make([]string, 0, 10)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -130,6 +139,12 @@ func (s PublicreportQuickSetter) SetColumns() []string {
 	}
 	if s.ReporterPhone.IsValue() {
 		vals = append(vals, "reporter_phone")
+	}
+	if s.Address.IsValue() {
+		vals = append(vals, "address")
+	}
+	if s.Status.IsValue() {
+		vals = append(vals, "status")
 	}
 	return vals
 }
@@ -159,6 +174,12 @@ func (s PublicreportQuickSetter) Overwrite(t *PublicreportQuick) {
 	if s.ReporterPhone.IsValue() {
 		t.ReporterPhone = s.ReporterPhone.MustGet()
 	}
+	if s.Address.IsValue() {
+		t.Address = s.Address.MustGet()
+	}
+	if s.Status.IsValue() {
+		t.Status = s.Status.MustGet()
+	}
 }
 
 func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
@@ -167,7 +188,7 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 8)
+		vals := make([]bob.Expression, 10)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -216,6 +237,18 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
+		if s.Address.IsValue() {
+			vals[8] = psql.Arg(s.Address.MustGet())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
+		}
+
+		if s.Status.IsValue() {
+			vals[9] = psql.Arg(s.Status.MustGet())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -225,7 +258,7 @@ func (s PublicreportQuickSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 8)
+	exprs := make([]bob.Expression, 0, 10)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -280,6 +313,20 @@ func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_phone")...),
 			psql.Arg(s.ReporterPhone),
+		}})
+	}
+
+	if s.Address.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address")...),
+			psql.Arg(s.Address),
+		}})
+	}
+
+	if s.Status.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "status")...),
+			psql.Arg(s.Status),
 		}})
 	}
 
@@ -610,6 +657,8 @@ type publicreportQuickWhere[Q psql.Filterable] struct {
 	PublicID      psql.WhereMod[Q, string]
 	ReporterEmail psql.WhereMod[Q, string]
 	ReporterPhone psql.WhereMod[Q, string]
+	Address       psql.WhereMod[Q, string]
+	Status        psql.WhereMod[Q, enums.PublicreportReportstatustype]
 }
 
 func (publicreportQuickWhere[Q]) AliasedAs(alias string) publicreportQuickWhere[Q] {
@@ -626,6 +675,8 @@ func buildPublicreportQuickWhere[Q psql.Filterable](cols publicreportQuickColumn
 		PublicID:      psql.Where[Q, string](cols.PublicID),
 		ReporterEmail: psql.Where[Q, string](cols.ReporterEmail),
 		ReporterPhone: psql.Where[Q, string](cols.ReporterPhone),
+		Address:       psql.Where[Q, string](cols.Address),
+		Status:        psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 	}
 }
 

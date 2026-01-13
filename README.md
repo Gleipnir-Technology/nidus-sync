@@ -31,6 +31,14 @@ You'll need a number of environment variables for configuring things;
 > BASE_URL=https://sync.nidus.cloud ARCGIS_CLIENT_ID=foo ARCGIS_CLIENT_SECRET=bar POSTGRES_DSN='postgresql://?host=/var/run/postgresql&dbname=nidus-sync' ./nidus-sync
 ```
 
+### Districts
+
+There's a table containing district information in the database, `public.district`. It was created with:
+
+```
+shp2pgsql -s 4326 -c -D -I CA_districts.shp public.district | psql -d nidus-sync
+```
+
 ## Hacking
 
 ### air

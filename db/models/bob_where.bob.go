@@ -17,6 +17,7 @@ var (
 )
 
 func Where[Q psql.Filterable]() struct {
+	Districts                          districtWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -63,6 +64,7 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
 	PublicreportQuicks                 publicreportQuickWhere[Q]
 	PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
+	PublicreportReportLocations        publicreportReportLocationWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
 	Sessions                           sessionWhere[Q]
@@ -70,6 +72,7 @@ func Where[Q psql.Filterable]() struct {
 	Users                              userWhere[Q]
 } {
 	return struct {
+		Districts                          districtWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -116,12 +119,14 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
 		PublicreportQuicks                 publicreportQuickWhere[Q]
 		PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
+		PublicreportReportLocations        publicreportReportLocationWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
 		Sessions                           sessionWhere[Q]
 		SpatialRefSys                      spatialRefSyWhere[Q]
 		Users                              userWhere[Q]
 	}{
+		Districts:                          buildDistrictWhere[Q](Districts.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),
@@ -168,6 +173,7 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportPoolPhotos:             buildPublicreportPoolPhotoWhere[Q](PublicreportPoolPhotos.Columns),
 		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),
 		PublicreportQuickPhotos:            buildPublicreportQuickPhotoWhere[Q](PublicreportQuickPhotos.Columns),
+		PublicreportReportLocations:        buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Sessions:                           buildSessionWhere[Q](Sessions.Columns),

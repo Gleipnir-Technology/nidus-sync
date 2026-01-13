@@ -69,8 +69,8 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Location: column{
-			Name:      "location",
+		SourceLocation: column{
+			Name:      "source_location",
 			DBType:    "publicreport.nuisancelocationtype",
 			Default:   "",
 			Comment:   "",
@@ -231,6 +231,33 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Address: column{
+			Name:      "address",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Location: column{
+			Name:      "location",
+			DBType:    "geography",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Status: column{
+			Name:      "status",
+			DBType:    "publicreport.reportstatustype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -292,7 +319,7 @@ type publicreportNuisanceColumns struct {
 	Duration           column
 	Email              column
 	InspectionType     column
-	Location           column
+	SourceLocation     column
 	PreferredDateRange column
 	PreferredTime      column
 	RequestCall        column
@@ -310,11 +337,14 @@ type publicreportNuisanceColumns struct {
 	ReporterEmail      column
 	ReporterName       column
 	ReporterPhone      column
+	Address            column
+	Location           column
+	Status             column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.Email, c.InspectionType, c.Location, c.PreferredDateRange, c.PreferredTime, c.RequestCall, c.Severity, c.SourceContainer, c.SourceDescription, c.SourceRoof, c.SourceStagnant, c.TimeOfDayDay, c.TimeOfDayEarly, c.TimeOfDayEvening, c.TimeOfDayNight, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.Email, c.InspectionType, c.SourceLocation, c.PreferredDateRange, c.PreferredTime, c.RequestCall, c.Severity, c.SourceContainer, c.SourceDescription, c.SourceRoof, c.SourceStagnant, c.TimeOfDayDay, c.TimeOfDayEarly, c.TimeOfDayEvening, c.TimeOfDayNight, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status,
 	}
 }
 

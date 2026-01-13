@@ -975,3 +975,82 @@ func (e *PublicreportPoolsourceduration) Scan(value any) error {
 
 	return nil
 }
+
+// Enum values for PublicreportReportstatustype
+const (
+	PublicreportReportstatustypeReported  PublicreportReportstatustype = "reported"
+	PublicreportReportstatustypeReviewed  PublicreportReportstatustype = "reviewed"
+	PublicreportReportstatustypeScheduled PublicreportReportstatustype = "scheduled"
+	PublicreportReportstatustypeTreated   PublicreportReportstatustype = "treated"
+)
+
+func AllPublicreportReportstatustype() []PublicreportReportstatustype {
+	return []PublicreportReportstatustype{
+		PublicreportReportstatustypeReported,
+		PublicreportReportstatustypeReviewed,
+		PublicreportReportstatustypeScheduled,
+		PublicreportReportstatustypeTreated,
+	}
+}
+
+type PublicreportReportstatustype string
+
+func (e PublicreportReportstatustype) String() string {
+	return string(e)
+}
+
+func (e PublicreportReportstatustype) Valid() bool {
+	switch e {
+	case PublicreportReportstatustypeReported,
+		PublicreportReportstatustypeReviewed,
+		PublicreportReportstatustypeScheduled,
+		PublicreportReportstatustypeTreated:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportReportstatustype) All() []PublicreportReportstatustype {
+	return AllPublicreportReportstatustype()
+}
+
+func (e PublicreportReportstatustype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReportstatustype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportReportstatustype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReportstatustype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportReportstatustype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportReportstatustype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportReportstatustype(x)
+	case []byte:
+		*e = PublicreportReportstatustype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportReportstatustype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportReportstatustype value: %s", *e)
+	}
+
+	return nil
+}

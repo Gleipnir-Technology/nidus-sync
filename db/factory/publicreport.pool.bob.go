@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -66,6 +67,7 @@ type PublicreportPoolTemplate struct {
 	ReporterName    func() string
 	ReporterPhone   func() string
 	Subscribe       func() bool
+	Status          func() enums.PublicreportReportstatustype
 
 	r publicreportPoolR
 	f *Factory
@@ -227,6 +229,10 @@ func (o PublicreportPoolTemplate) BuildSetter() *models.PublicreportPoolSetter {
 		val := o.Subscribe()
 		m.Subscribe = omit.From(val)
 	}
+	if o.Status != nil {
+		val := o.Status()
+		m.Status = omit.From(val)
+	}
 
 	return m
 }
@@ -335,6 +341,9 @@ func (o PublicreportPoolTemplate) Build() *models.PublicreportPool {
 	}
 	if o.Subscribe != nil {
 		m.Subscribe = o.Subscribe()
+	}
+	if o.Status != nil {
+		m.Status = o.Status()
 	}
 
 	o.setModelRels(m)
@@ -459,6 +468,10 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 	if !(m.Subscribe.IsValue()) {
 		val := random_bool(nil)
 		m.Subscribe = omit.From(val)
+	}
+	if !(m.Status.IsValue()) {
+		val := random_enums_PublicreportReportstatustype(nil)
+		m.Status = omit.From(val)
 	}
 }
 
@@ -609,6 +622,7 @@ func (m publicreportPoolMods) RandomizeAllColumns(f *faker.Faker) PublicreportPo
 		PublicreportPoolMods.RandomReporterName(f),
 		PublicreportPoolMods.RandomReporterPhone(f),
 		PublicreportPoolMods.RandomSubscribe(f),
+		PublicreportPoolMods.RandomStatus(f),
 	}
 }
 
@@ -1551,6 +1565,37 @@ func (m publicreportPoolMods) RandomSubscribe(f *faker.Faker) PublicreportPoolMo
 	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
 		o.Subscribe = func() bool {
 			return random_bool(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportPoolMods) Status(val enums.PublicreportReportstatustype) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) StatusFunc(f func() enums.PublicreportReportstatustype) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.Status = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetStatus() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.Status = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportPoolMods) RandomStatus(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype {
+			return random_enums_PublicreportReportstatustype(f)
 		}
 	})
 }

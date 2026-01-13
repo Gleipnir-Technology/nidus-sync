@@ -87,6 +87,24 @@ var PublicreportQuicks = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Address: column{
+			Name:      "address",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Status: column{
+			Name:      "status",
+			DBType:    "publicreport.reportstatustype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportQuickIndexes{
 		QuickPkey: index{
@@ -150,11 +168,13 @@ type publicreportQuickColumns struct {
 	PublicID      column
 	ReporterEmail column
 	ReporterPhone column
+	Address       column
+	Status        column
 }
 
 func (c publicreportQuickColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.PublicID, c.ReporterEmail, c.ReporterPhone,
+		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.PublicID, c.ReporterEmail, c.ReporterPhone, c.Address, c.Status,
 	}
 }
 

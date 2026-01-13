@@ -9,6 +9,7 @@ import (
 	"io"
 	"time"
 
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -26,35 +27,36 @@ import (
 
 // PublicreportPool is an object representing the database table.
 type PublicreportPool struct {
-	ID              int32            `db:"id,pk" `
-	AccessComments  string           `db:"access_comments" `
-	AccessGate      bool             `db:"access_gate" `
-	AccessFence     bool             `db:"access_fence" `
-	AccessLocked    bool             `db:"access_locked" `
-	AccessDog       bool             `db:"access_dog" `
-	AccessOther     bool             `db:"access_other" `
-	Address         string           `db:"address" `
-	AddressCountry  string           `db:"address_country" `
-	AddressPostCode string           `db:"address_post_code" `
-	AddressPlace    string           `db:"address_place" `
-	AddressStreet   string           `db:"address_street" `
-	AddressRegion   string           `db:"address_region" `
-	Comments        string           `db:"comments" `
-	Created         time.Time        `db:"created" `
-	H3cell          null.Val[string] `db:"h3cell" `
-	HasAdult        bool             `db:"has_adult" `
-	HasLarvae       bool             `db:"has_larvae" `
-	HasPupae        bool             `db:"has_pupae" `
-	Location        null.Val[string] `db:"location" `
-	MapZoom         float64          `db:"map_zoom" `
-	OwnerEmail      string           `db:"owner_email" `
-	OwnerName       string           `db:"owner_name" `
-	OwnerPhone      string           `db:"owner_phone" `
-	PublicID        string           `db:"public_id" `
-	ReporterEmail   string           `db:"reporter_email" `
-	ReporterName    string           `db:"reporter_name" `
-	ReporterPhone   string           `db:"reporter_phone" `
-	Subscribe       bool             `db:"subscribe" `
+	ID              int32                              `db:"id,pk" `
+	AccessComments  string                             `db:"access_comments" `
+	AccessGate      bool                               `db:"access_gate" `
+	AccessFence     bool                               `db:"access_fence" `
+	AccessLocked    bool                               `db:"access_locked" `
+	AccessDog       bool                               `db:"access_dog" `
+	AccessOther     bool                               `db:"access_other" `
+	Address         string                             `db:"address" `
+	AddressCountry  string                             `db:"address_country" `
+	AddressPostCode string                             `db:"address_post_code" `
+	AddressPlace    string                             `db:"address_place" `
+	AddressStreet   string                             `db:"address_street" `
+	AddressRegion   string                             `db:"address_region" `
+	Comments        string                             `db:"comments" `
+	Created         time.Time                          `db:"created" `
+	H3cell          null.Val[string]                   `db:"h3cell" `
+	HasAdult        bool                               `db:"has_adult" `
+	HasLarvae       bool                               `db:"has_larvae" `
+	HasPupae        bool                               `db:"has_pupae" `
+	Location        null.Val[string]                   `db:"location" `
+	MapZoom         float64                            `db:"map_zoom" `
+	OwnerEmail      string                             `db:"owner_email" `
+	OwnerName       string                             `db:"owner_name" `
+	OwnerPhone      string                             `db:"owner_phone" `
+	PublicID        string                             `db:"public_id" `
+	ReporterEmail   string                             `db:"reporter_email" `
+	ReporterName    string                             `db:"reporter_name" `
+	ReporterPhone   string                             `db:"reporter_phone" `
+	Subscribe       bool                               `db:"subscribe" `
+	Status          enums.PublicreportReportstatustype `db:"status" `
 
 	R publicreportPoolR `db:"-" `
 }
@@ -77,7 +79,7 @@ type publicreportPoolR struct {
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "subscribe",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "subscribe", "status",
 		).WithParent("publicreport.pool"),
 		tableAlias:      alias,
 		ID:              psql.Quote(alias, "id"),
@@ -109,6 +111,7 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		ReporterName:    psql.Quote(alias, "reporter_name"),
 		ReporterPhone:   psql.Quote(alias, "reporter_phone"),
 		Subscribe:       psql.Quote(alias, "subscribe"),
+		Status:          psql.Quote(alias, "status"),
 	}
 }
 
@@ -144,6 +147,7 @@ type publicreportPoolColumns struct {
 	ReporterName    psql.Expression
 	ReporterPhone   psql.Expression
 	Subscribe       psql.Expression
+	Status          psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -158,39 +162,40 @@ func (publicreportPoolColumns) AliasedAs(alias string) publicreportPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportPoolSetter struct {
-	ID              omit.Val[int32]      `db:"id,pk" `
-	AccessComments  omit.Val[string]     `db:"access_comments" `
-	AccessGate      omit.Val[bool]       `db:"access_gate" `
-	AccessFence     omit.Val[bool]       `db:"access_fence" `
-	AccessLocked    omit.Val[bool]       `db:"access_locked" `
-	AccessDog       omit.Val[bool]       `db:"access_dog" `
-	AccessOther     omit.Val[bool]       `db:"access_other" `
-	Address         omit.Val[string]     `db:"address" `
-	AddressCountry  omit.Val[string]     `db:"address_country" `
-	AddressPostCode omit.Val[string]     `db:"address_post_code" `
-	AddressPlace    omit.Val[string]     `db:"address_place" `
-	AddressStreet   omit.Val[string]     `db:"address_street" `
-	AddressRegion   omit.Val[string]     `db:"address_region" `
-	Comments        omit.Val[string]     `db:"comments" `
-	Created         omit.Val[time.Time]  `db:"created" `
-	H3cell          omitnull.Val[string] `db:"h3cell" `
-	HasAdult        omit.Val[bool]       `db:"has_adult" `
-	HasLarvae       omit.Val[bool]       `db:"has_larvae" `
-	HasPupae        omit.Val[bool]       `db:"has_pupae" `
-	Location        omitnull.Val[string] `db:"location" `
-	MapZoom         omit.Val[float64]    `db:"map_zoom" `
-	OwnerEmail      omit.Val[string]     `db:"owner_email" `
-	OwnerName       omit.Val[string]     `db:"owner_name" `
-	OwnerPhone      omit.Val[string]     `db:"owner_phone" `
-	PublicID        omit.Val[string]     `db:"public_id" `
-	ReporterEmail   omit.Val[string]     `db:"reporter_email" `
-	ReporterName    omit.Val[string]     `db:"reporter_name" `
-	ReporterPhone   omit.Val[string]     `db:"reporter_phone" `
-	Subscribe       omit.Val[bool]       `db:"subscribe" `
+	ID              omit.Val[int32]                              `db:"id,pk" `
+	AccessComments  omit.Val[string]                             `db:"access_comments" `
+	AccessGate      omit.Val[bool]                               `db:"access_gate" `
+	AccessFence     omit.Val[bool]                               `db:"access_fence" `
+	AccessLocked    omit.Val[bool]                               `db:"access_locked" `
+	AccessDog       omit.Val[bool]                               `db:"access_dog" `
+	AccessOther     omit.Val[bool]                               `db:"access_other" `
+	Address         omit.Val[string]                             `db:"address" `
+	AddressCountry  omit.Val[string]                             `db:"address_country" `
+	AddressPostCode omit.Val[string]                             `db:"address_post_code" `
+	AddressPlace    omit.Val[string]                             `db:"address_place" `
+	AddressStreet   omit.Val[string]                             `db:"address_street" `
+	AddressRegion   omit.Val[string]                             `db:"address_region" `
+	Comments        omit.Val[string]                             `db:"comments" `
+	Created         omit.Val[time.Time]                          `db:"created" `
+	H3cell          omitnull.Val[string]                         `db:"h3cell" `
+	HasAdult        omit.Val[bool]                               `db:"has_adult" `
+	HasLarvae       omit.Val[bool]                               `db:"has_larvae" `
+	HasPupae        omit.Val[bool]                               `db:"has_pupae" `
+	Location        omitnull.Val[string]                         `db:"location" `
+	MapZoom         omit.Val[float64]                            `db:"map_zoom" `
+	OwnerEmail      omit.Val[string]                             `db:"owner_email" `
+	OwnerName       omit.Val[string]                             `db:"owner_name" `
+	OwnerPhone      omit.Val[string]                             `db:"owner_phone" `
+	PublicID        omit.Val[string]                             `db:"public_id" `
+	ReporterEmail   omit.Val[string]                             `db:"reporter_email" `
+	ReporterName    omit.Val[string]                             `db:"reporter_name" `
+	ReporterPhone   omit.Val[string]                             `db:"reporter_phone" `
+	Subscribe       omit.Val[bool]                               `db:"subscribe" `
+	Status          omit.Val[enums.PublicreportReportstatustype] `db:"status" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 29)
+	vals := make([]string, 0, 30)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -277,6 +282,9 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	}
 	if s.Subscribe.IsValue() {
 		vals = append(vals, "subscribe")
+	}
+	if s.Status.IsValue() {
+		vals = append(vals, "status")
 	}
 	return vals
 }
@@ -369,6 +377,9 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.Subscribe.IsValue() {
 		t.Subscribe = s.Subscribe.MustGet()
 	}
+	if s.Status.IsValue() {
+		t.Status = s.Status.MustGet()
+	}
 }
 
 func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -377,7 +388,7 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 29)
+		vals := make([]bob.Expression, 30)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -552,6 +563,12 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
+		if s.Status.IsValue() {
+			vals[29] = psql.Arg(s.Status.MustGet())
+		} else {
+			vals[29] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -561,7 +578,7 @@ func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 29)
+	exprs := make([]bob.Expression, 0, 30)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -763,6 +780,13 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "subscribe")...),
 			psql.Arg(s.Subscribe),
+		}})
+	}
+
+	if s.Status.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "status")...),
+			psql.Arg(s.Status),
 		}})
 	}
 
@@ -1114,6 +1138,7 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	ReporterName    psql.WhereMod[Q, string]
 	ReporterPhone   psql.WhereMod[Q, string]
 	Subscribe       psql.WhereMod[Q, bool]
+	Status          psql.WhereMod[Q, enums.PublicreportReportstatustype]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1151,6 +1176,7 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		ReporterName:    psql.Where[Q, string](cols.ReporterName),
 		ReporterPhone:   psql.Where[Q, string](cols.ReporterPhone),
 		Subscribe:       psql.Where[Q, bool](cols.Subscribe),
+		Status:          psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 	}
 }
 

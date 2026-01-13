@@ -21,6 +21,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/rs/zerolog v1.34.0
+	github.com/shopspring/decimal v1.4.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/stephenafamo/bob v0.42.0
 	github.com/stephenafamo/scan v0.7.0

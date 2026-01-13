@@ -13,10 +13,12 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/bob/types"
 )
 
 type Factory struct {
+	baseDistrictMods                          DistrictModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
 	baseFieldseekerFieldscoutinglogMods       FieldseekerFieldscoutinglogModSlice
 	baseFieldseekerHabitatrelateMods          FieldseekerHabitatrelateModSlice
@@ -63,6 +65,7 @@ type Factory struct {
 	basePublicreportPoolPhotoMods             PublicreportPoolPhotoModSlice
 	basePublicreportQuickMods                 PublicreportQuickModSlice
 	basePublicreportQuickPhotoMods            PublicreportQuickPhotoModSlice
+	basePublicreportReportLocationMods        PublicreportReportLocationModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
 	baseRasterOverviewMods                    RasterOverviewModSlice
 	baseSessionMods                           SessionModSlice
@@ -72,6 +75,51 @@ type Factory struct {
 
 func New() *Factory {
 	return &Factory{}
+}
+
+func (f *Factory) NewDistrict(mods ...DistrictMod) *DistrictTemplate {
+	return f.NewDistrictWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewDistrictWithContext(ctx context.Context, mods ...DistrictMod) *DistrictTemplate {
+	o := &DistrictTemplate{f: f}
+
+	if f != nil {
+		f.baseDistrictMods.Apply(ctx, o)
+	}
+
+	DistrictModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingDistrict(m *models.District) *DistrictTemplate {
+	o := &DistrictTemplate{f: f, alreadyPersisted: true}
+
+	o.Gid = func() int32 { return m.Gid }
+	o.ID = func() null.Val[decimal.Decimal] { return m.ID }
+	o.Website = func() null.Val[string] { return m.Website }
+	o.Contact = func() null.Val[string] { return m.Contact }
+	o.Address = func() null.Val[string] { return m.Address }
+	o.Regionid = func() null.Val[decimal.Decimal] { return m.Regionid }
+	o.PostalCod = func() null.Val[decimal.Decimal] { return m.PostalCod }
+	o.Phone1 = func() null.Val[string] { return m.Phone1 }
+	o.Fax1 = func() null.Val[string] { return m.Fax1 }
+	o.Agency = func() null.Val[string] { return m.Agency }
+	o.Code1 = func() null.Val[string] { return m.Code1 }
+	o.City1 = func() null.Val[string] { return m.City1 }
+	o.ShapeLeng = func() null.Val[decimal.Decimal] { return m.ShapeLeng }
+	o.Address2 = func() null.Val[string] { return m.Address2 }
+	o.GeneralMG = func() null.Val[string] { return m.GeneralMG }
+	o.City2 = func() null.Val[string] { return m.City2 }
+	o.PostalC1 = func() null.Val[decimal.Decimal] { return m.PostalC1 }
+	o.Fax2 = func() null.Val[string] { return m.Fax2 }
+	o.Phone2 = func() null.Val[string] { return m.Phone2 }
+	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
+	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
+	o.Geom = func() null.Val[string] { return m.Geom }
+
+	return o
 }
 
 func (f *Factory) NewFieldseekerContainerrelate(mods ...FieldseekerContainerrelateMod) *FieldseekerContainerrelateTemplate {
@@ -2400,7 +2448,7 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.Duration = func() enums.PublicreportNuisancedurationtype { return m.Duration }
 	o.Email = func() string { return m.Email }
 	o.InspectionType = func() enums.PublicreportNuisanceinspectiontype { return m.InspectionType }
-	o.Location = func() enums.PublicreportNuisancelocationtype { return m.Location }
+	o.SourceLocation = func() enums.PublicreportNuisancelocationtype { return m.SourceLocation }
 	o.PreferredDateRange = func() enums.PublicreportNuisancepreferreddaterangetype { return m.PreferredDateRange }
 	o.PreferredTime = func() enums.PublicreportNuisancepreferredtimetype { return m.PreferredTime }
 	o.RequestCall = func() bool { return m.RequestCall }
@@ -2418,6 +2466,9 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.ReporterEmail = func() string { return m.ReporterEmail }
 	o.ReporterName = func() string { return m.ReporterName }
 	o.ReporterPhone = func() string { return m.ReporterPhone }
+	o.Address = func() string { return m.Address }
+	o.Location = func() null.Val[string] { return m.Location }
+	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 
 	return o
 }
@@ -2470,6 +2521,7 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.ReporterName = func() string { return m.ReporterName }
 	o.ReporterPhone = func() string { return m.ReporterPhone }
 	o.Subscribe = func() bool { return m.Subscribe }
+	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 
 	ctx := context.Background()
 	if len(m.R.PoolPhotos) > 0 {
@@ -2539,6 +2591,8 @@ func (f *Factory) FromExistingPublicreportQuick(m *models.PublicreportQuick) *Pu
 	o.PublicID = func() string { return m.PublicID }
 	o.ReporterEmail = func() string { return m.ReporterEmail }
 	o.ReporterPhone = func() string { return m.ReporterPhone }
+	o.Address = func() string { return m.Address }
+	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 
 	ctx := context.Background()
 	if len(m.R.QuickPhotos) > 0 {
@@ -2577,6 +2631,36 @@ func (f *Factory) FromExistingPublicreportQuickPhoto(m *models.PublicreportQuick
 	if m.R.Quick != nil {
 		PublicreportQuickPhotoMods.WithExistingQuick(m.R.Quick).Apply(ctx, o)
 	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportReportLocation(mods ...PublicreportReportLocationMod) *PublicreportReportLocationTemplate {
+	return f.NewPublicreportReportLocationWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportReportLocationWithContext(ctx context.Context, mods ...PublicreportReportLocationMod) *PublicreportReportLocationTemplate {
+	o := &PublicreportReportLocationTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportReportLocationMods.Apply(ctx, o)
+	}
+
+	PublicreportReportLocationModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportReportLocation(m *models.PublicreportReportLocation) *PublicreportReportLocationTemplate {
+	o := &PublicreportReportLocationTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() null.Val[int64] { return m.ID }
+	o.TableName = func() null.Val[string] { return m.TableName }
+	o.Address = func() null.Val[string] { return m.Address }
+	o.Created = func() null.Val[time.Time] { return m.Created }
+	o.Location = func() null.Val[string] { return m.Location }
+	o.PublicID = func() null.Val[string] { return m.PublicID }
+	o.Status = func() null.Val[enums.PublicreportReportstatustype] { return m.Status }
 
 	return o
 }
@@ -2763,6 +2847,14 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	}
 
 	return o
+}
+
+func (f *Factory) ClearBaseDistrictMods() {
+	f.baseDistrictMods = nil
+}
+
+func (f *Factory) AddBaseDistrictMod(mods ...DistrictMod) {
+	f.baseDistrictMods = append(f.baseDistrictMods, mods...)
 }
 
 func (f *Factory) ClearBaseFieldseekerContainerrelateMods() {
@@ -3131,6 +3223,14 @@ func (f *Factory) ClearBasePublicreportQuickPhotoMods() {
 
 func (f *Factory) AddBasePublicreportQuickPhotoMod(mods ...PublicreportQuickPhotoMod) {
 	f.basePublicreportQuickPhotoMods = append(f.basePublicreportQuickPhotoMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportReportLocationMods() {
+	f.basePublicreportReportLocationMods = nil
+}
+
+func (f *Factory) AddBasePublicreportReportLocationMod(mods ...PublicreportReportLocationMod) {
+	f.basePublicreportReportLocationMods = append(f.basePublicreportReportLocationMods, mods...)
 }
 
 func (f *Factory) ClearBaseRasterColumnMods() {

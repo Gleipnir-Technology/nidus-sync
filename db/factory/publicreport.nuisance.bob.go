@@ -10,7 +10,9 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -42,7 +44,7 @@ type PublicreportNuisanceTemplate struct {
 	Duration           func() enums.PublicreportNuisancedurationtype
 	Email              func() string
 	InspectionType     func() enums.PublicreportNuisanceinspectiontype
-	Location           func() enums.PublicreportNuisancelocationtype
+	SourceLocation     func() enums.PublicreportNuisancelocationtype
 	PreferredDateRange func() enums.PublicreportNuisancepreferreddaterangetype
 	PreferredTime      func() enums.PublicreportNuisancepreferredtimetype
 	RequestCall        func() bool
@@ -60,6 +62,9 @@ type PublicreportNuisanceTemplate struct {
 	ReporterEmail      func() string
 	ReporterName       func() string
 	ReporterPhone      func() string
+	Address            func() string
+	Location           func() null.Val[string]
+	Status             func() enums.PublicreportReportstatustype
 
 	f *Factory
 
@@ -106,9 +111,9 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.InspectionType()
 		m.InspectionType = omit.From(val)
 	}
-	if o.Location != nil {
-		val := o.Location()
-		m.Location = omit.From(val)
+	if o.SourceLocation != nil {
+		val := o.SourceLocation()
+		m.SourceLocation = omit.From(val)
 	}
 	if o.PreferredDateRange != nil {
 		val := o.PreferredDateRange()
@@ -178,6 +183,18 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.ReporterPhone()
 		m.ReporterPhone = omit.From(val)
 	}
+	if o.Address != nil {
+		val := o.Address()
+		m.Address = omit.From(val)
+	}
+	if o.Location != nil {
+		val := o.Location()
+		m.Location = omitnull.FromNull(val)
+	}
+	if o.Status != nil {
+		val := o.Status()
+		m.Status = omit.From(val)
+	}
 
 	return m
 }
@@ -218,8 +235,8 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	if o.InspectionType != nil {
 		m.InspectionType = o.InspectionType()
 	}
-	if o.Location != nil {
-		m.Location = o.Location()
+	if o.SourceLocation != nil {
+		m.SourceLocation = o.SourceLocation()
 	}
 	if o.PreferredDateRange != nil {
 		m.PreferredDateRange = o.PreferredDateRange()
@@ -272,6 +289,15 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	if o.ReporterPhone != nil {
 		m.ReporterPhone = o.ReporterPhone()
 	}
+	if o.Address != nil {
+		m.Address = o.Address()
+	}
+	if o.Location != nil {
+		m.Location = o.Location()
+	}
+	if o.Status != nil {
+		m.Status = o.Status()
+	}
 
 	o.setModelRels(m)
 
@@ -312,9 +338,9 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 		val := random_enums_PublicreportNuisanceinspectiontype(nil)
 		m.InspectionType = omit.From(val)
 	}
-	if !(m.Location.IsValue()) {
+	if !(m.SourceLocation.IsValue()) {
 		val := random_enums_PublicreportNuisancelocationtype(nil)
-		m.Location = omit.From(val)
+		m.SourceLocation = omit.From(val)
 	}
 	if !(m.PreferredDateRange.IsValue()) {
 		val := random_enums_PublicreportNuisancepreferreddaterangetype(nil)
@@ -383,6 +409,14 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 	if !(m.ReporterPhone.IsValue()) {
 		val := random_string(nil)
 		m.ReporterPhone = omit.From(val)
+	}
+	if !(m.Address.IsValue()) {
+		val := random_string(nil)
+		m.Address = omit.From(val)
+	}
+	if !(m.Status.IsValue()) {
+		val := random_enums_PublicreportReportstatustype(nil)
+		m.Status = omit.From(val)
 	}
 }
 
@@ -490,7 +524,7 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomDuration(f),
 		PublicreportNuisanceMods.RandomEmail(f),
 		PublicreportNuisanceMods.RandomInspectionType(f),
-		PublicreportNuisanceMods.RandomLocation(f),
+		PublicreportNuisanceMods.RandomSourceLocation(f),
 		PublicreportNuisanceMods.RandomPreferredDateRange(f),
 		PublicreportNuisanceMods.RandomPreferredTime(f),
 		PublicreportNuisanceMods.RandomRequestCall(f),
@@ -508,6 +542,9 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomReporterEmail(f),
 		PublicreportNuisanceMods.RandomReporterName(f),
 		PublicreportNuisanceMods.RandomReporterPhone(f),
+		PublicreportNuisanceMods.RandomAddress(f),
+		PublicreportNuisanceMods.RandomLocation(f),
+		PublicreportNuisanceMods.RandomStatus(f),
 	}
 }
 
@@ -698,31 +735,31 @@ func (m publicreportNuisanceMods) RandomInspectionType(f *faker.Faker) Publicrep
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) Location(val enums.PublicreportNuisancelocationtype) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) SourceLocation(val enums.PublicreportNuisancelocationtype) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Location = func() enums.PublicreportNuisancelocationtype { return val }
+		o.SourceLocation = func() enums.PublicreportNuisancelocationtype { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportNuisanceMods) LocationFunc(f func() enums.PublicreportNuisancelocationtype) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) SourceLocationFunc(f func() enums.PublicreportNuisancelocationtype) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Location = f
+		o.SourceLocation = f
 	})
 }
 
 // Clear any values for the column
-func (m publicreportNuisanceMods) UnsetLocation() PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) UnsetSourceLocation() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Location = nil
+		o.SourceLocation = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomLocation(f *faker.Faker) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) RandomSourceLocation(f *faker.Faker) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Location = func() enums.PublicreportNuisancelocationtype {
+		o.SourceLocation = func() enums.PublicreportNuisancelocationtype {
 			return random_enums_PublicreportNuisancelocationtype(f)
 		}
 	})
@@ -1251,6 +1288,121 @@ func (m publicreportNuisanceMods) RandomReporterPhone(f *faker.Faker) Publicrepo
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.ReporterPhone = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportNuisanceMods) Address(val string) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Address = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) AddressFunc(f func() string) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Address = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetAddress() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Address = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportNuisanceMods) RandomAddress(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Address = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportNuisanceMods) Location(val null.Val[string]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Location = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) LocationFunc(f func() null.Val[string]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Location = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetLocation() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Location = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportNuisanceMods) RandomLocation(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Location = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomLocationNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Location = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportNuisanceMods) Status(val enums.PublicreportReportstatustype) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) StatusFunc(f func() enums.PublicreportReportstatustype) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Status = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetStatus() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Status = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportNuisanceMods) RandomStatus(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype {
+			return random_enums_PublicreportReportstatustype(f)
 		}
 	})
 }

@@ -8,6 +8,9 @@ import "context"
 type contextKey string
 
 var (
+	// Relationship Contexts for district
+	districtWithParentsCascadingCtx = newContextual[bool]("districtWithParentsCascading")
+
 	// Relationship Contexts for fieldseeker.containerrelate
 	fieldseekerContainerrelateWithParentsCascadingCtx = newContextual[bool]("fieldseekerContainerrelateWithParentsCascading")
 	fieldseekerContainerrelateRelOrganizationCtx      = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")
@@ -226,6 +229,9 @@ var (
 	// Relationship Contexts for publicreport.quick_photo
 	publicreportQuickPhotoWithParentsCascadingCtx = newContextual[bool]("publicreportQuickPhotoWithParentsCascading")
 	publicreportQuickPhotoRelQuickCtx             = newContextual[bool]("publicreport.quick.publicreport.quick_photo.publicreport.quick_photo.quick_photo_quick_id_fkey")
+
+	// Relationship Contexts for publicreport.report_location
+	publicreportReportLocationWithParentsCascadingCtx = newContextual[bool]("publicreportReportLocationWithParentsCascading")
 
 	// Relationship Contexts for raster_columns
 	rasterColumnWithParentsCascadingCtx = newContextual[bool]("rasterColumnWithParentsCascading")

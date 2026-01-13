@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
@@ -45,6 +46,8 @@ type PublicreportQuickTemplate struct {
 	PublicID      func() string
 	ReporterEmail func() string
 	ReporterPhone func() string
+	Address       func() string
+	Status        func() enums.PublicreportReportstatustype
 
 	r publicreportQuickR
 	f *Factory
@@ -122,6 +125,14 @@ func (o PublicreportQuickTemplate) BuildSetter() *models.PublicreportQuickSetter
 		val := o.ReporterPhone()
 		m.ReporterPhone = omit.From(val)
 	}
+	if o.Address != nil {
+		val := o.Address()
+		m.Address = omit.From(val)
+	}
+	if o.Status != nil {
+		val := o.Status()
+		m.Status = omit.From(val)
+	}
 
 	return m
 }
@@ -168,6 +179,12 @@ func (o PublicreportQuickTemplate) Build() *models.PublicreportQuick {
 	if o.ReporterPhone != nil {
 		m.ReporterPhone = o.ReporterPhone()
 	}
+	if o.Address != nil {
+		m.Address = o.Address()
+	}
+	if o.Status != nil {
+		m.Status = o.Status()
+	}
 
 	o.setModelRels(m)
 
@@ -207,6 +224,14 @@ func ensureCreatablePublicreportQuick(m *models.PublicreportQuickSetter) {
 	if !(m.ReporterPhone.IsValue()) {
 		val := random_string(nil)
 		m.ReporterPhone = omit.From(val)
+	}
+	if !(m.Address.IsValue()) {
+		val := random_string(nil)
+		m.Address = omit.From(val)
+	}
+	if !(m.Status.IsValue()) {
+		val := random_enums_PublicreportReportstatustype(nil)
+		m.Status = omit.From(val)
 	}
 }
 
@@ -336,6 +361,8 @@ func (m publicreportQuickMods) RandomizeAllColumns(f *faker.Faker) PublicreportQ
 		PublicreportQuickMods.RandomPublicID(f),
 		PublicreportQuickMods.RandomReporterEmail(f),
 		PublicreportQuickMods.RandomReporterPhone(f),
+		PublicreportQuickMods.RandomAddress(f),
+		PublicreportQuickMods.RandomStatus(f),
 	}
 }
 
@@ -627,6 +654,68 @@ func (m publicreportQuickMods) RandomReporterPhone(f *faker.Faker) PublicreportQ
 	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
 		o.ReporterPhone = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportQuickMods) Address(val string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Address = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportQuickMods) AddressFunc(f func() string) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Address = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportQuickMods) UnsetAddress() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Address = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportQuickMods) RandomAddress(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Address = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportQuickMods) Status(val enums.PublicreportReportstatustype) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportQuickMods) StatusFunc(f func() enums.PublicreportReportstatustype) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Status = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportQuickMods) UnsetStatus() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Status = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportQuickMods) RandomStatus(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.Status = func() enums.PublicreportReportstatustype {
+			return random_enums_PublicreportReportstatustype(f)
 		}
 	})
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
 	"github.com/lib/pq"
+	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/bob/types"
 )
 
@@ -35,6 +36,37 @@ func random_bool(f *faker.Faker, limits ...string) bool {
 	}
 
 	return f.Bool()
+}
+
+func random_decimal_Decimal(f *faker.Faker, limits ...string) decimal.Decimal {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var precision int64 = 7
+	var scale int64 = 3
+
+	if len(limits) > 0 {
+		precision, _ = strconv.ParseInt(limits[0], 10, 32)
+	}
+
+	if len(limits) > 1 {
+		scale, _ = strconv.ParseInt(limits[1], 10, 32)
+	}
+
+	baseVal := f.Float32(10, -1, 1)
+	for baseVal == -1 || baseVal == 0 || baseVal == 1 {
+		baseVal = f.Float32(10, -1, 1)
+	}
+
+	precisionDecimal, _ := decimal.NewFromInt(10).PowInt32(int32(precision))
+	val := decimal.
+		NewFromFloat32(baseVal).
+		Mul(precisionDecimal).
+		Shift(int32(-1 * scale)).
+		RoundDown(int32(scale))
+
+	return val
 }
 
 func random_enums_Arcgislicensetype(f *faker.Faker, limits ...string) enums.Arcgislicensetype {
@@ -133,6 +165,16 @@ func random_enums_PublicreportNuisancepreferredtimetype(f *faker.Faker, limits .
 	}
 
 	var e enums.PublicreportNuisancepreferredtimetype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_PublicreportReportstatustype(f *faker.Faker, limits ...string) enums.PublicreportReportstatustype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportReportstatustype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }
