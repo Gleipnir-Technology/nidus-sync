@@ -29,9 +29,9 @@ import (
 
 // FieldseekerContainerrelate is an object representing the database table.
 type FieldseekerContainerrelate struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -141,8 +141,8 @@ func (fieldseekerContainerrelateColumns) AliasedAs(alias string) fieldseekerCont
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerContainerrelateSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
@@ -534,25 +534,25 @@ func (s FieldseekerContainerrelateSetter) Expressions(prefix ...string) []bob.Ex
 
 // FindFieldseekerContainerrelate retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerContainerrelate(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerContainerrelate, error) {
+func FindFieldseekerContainerrelate(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerContainerrelate, error) {
 	if len(cols) == 0 {
 		return FieldseekerContainerrelates.Query(
-			sm.Where(FieldseekerContainerrelates.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerContainerrelates.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerContainerrelates.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerContainerrelates.Query(
-		sm.Where(FieldseekerContainerrelates.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerContainerrelates.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerContainerrelates.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerContainerrelates.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerContainerrelateExists checks the presence of a single record by primary key
-func FieldseekerContainerrelateExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerContainerrelateExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerContainerrelates.Query(
-		sm.Where(FieldseekerContainerrelates.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerContainerrelates.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerContainerrelates.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -578,13 +578,13 @@ func (o *FieldseekerContainerrelate) AfterQueryHook(ctx context.Context, exec bo
 // primaryKeyVals returns the primary key values of the FieldseekerContainerrelate
 func (o *FieldseekerContainerrelate) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerContainerrelate) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.containerrelate", "objectid"), psql.Quote("fieldseeker.containerrelate", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.containerrelate", "globalid"), psql.Quote("fieldseeker.containerrelate", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -611,7 +611,7 @@ func (o *FieldseekerContainerrelate) Delete(ctx context.Context, exec bob.Execut
 // Reload refreshes the FieldseekerContainerrelate using the executor
 func (o *FieldseekerContainerrelate) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerContainerrelates.Query(
-		sm.Where(FieldseekerContainerrelates.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerContainerrelates.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerContainerrelates.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -646,7 +646,7 @@ func (o FieldseekerContainerrelateSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.containerrelate", "objectid"), psql.Quote("fieldseeker.containerrelate", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.containerrelate", "globalid"), psql.Quote("fieldseeker.containerrelate", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -661,7 +661,7 @@ func (o FieldseekerContainerrelateSlice) pkIN() dialect.Expression {
 func (o FieldseekerContainerrelateSlice) copyMatchingRows(from ...*FieldseekerContainerrelate) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

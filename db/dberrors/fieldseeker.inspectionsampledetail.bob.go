@@ -7,7 +7,7 @@ var FieldseekerInspectionsampledetailErrors = &fieldseekerInspectionsampledetail
 	ErrUniqueInspectionsampledetailPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "inspectionsampledetail",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "inspectionsampledetail_pkey",
 	},
 }

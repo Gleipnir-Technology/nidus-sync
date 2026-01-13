@@ -29,7 +29,7 @@ import (
 
 // FieldseekerServicerequest is an object representing the database table.
 type FieldseekerServicerequest struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is RECDATETIME
 	Recdatetime null.Val[time.Time] `db:"recdatetime" `
 	// Original attribute from ArcGIS API is SOURCE
@@ -137,7 +137,7 @@ type FieldseekerServicerequest struct {
 	// Original attribute from ArcGIS API is RECORDSTATUS
 	Recordstatus null.Val[int16] `db:"recordstatus" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -432,7 +432,7 @@ func (fieldseekerServicerequestColumns) AliasedAs(alias string) fieldseekerServi
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerServicerequestSetter struct {
-	Objectid              omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid              omit.Val[int64]                       `db:"objectid" `
 	Recdatetime           omitnull.Val[time.Time]               `db:"recdatetime" `
 	Source                omitnull.Val[string]                  `db:"source" `
 	Entrytech             omitnull.Val[string]                  `db:"entrytech" `
@@ -486,7 +486,7 @@ type FieldseekerServicerequestSetter struct {
 	Estcompletedate       omitnull.Val[time.Time]               `db:"estcompletedate" `
 	Nextaction            omitnull.Val[string]                  `db:"nextaction" `
 	Recordstatus          omitnull.Val[int16]                   `db:"recordstatus" `
-	Globalid              omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid              omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser           omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate           omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser        omitnull.Val[string]                  `db:"last_edited_user" `
@@ -2265,25 +2265,25 @@ func (s FieldseekerServicerequestSetter) Expressions(prefix ...string) []bob.Exp
 
 // FindFieldseekerServicerequest retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerServicerequest(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerServicerequest, error) {
+func FindFieldseekerServicerequest(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerServicerequest, error) {
 	if len(cols) == 0 {
 		return FieldseekerServicerequests.Query(
-			sm.Where(FieldseekerServicerequests.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerServicerequests.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerServicerequests.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerServicerequests.Query(
-		sm.Where(FieldseekerServicerequests.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerServicerequests.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerServicerequests.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerServicerequests.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerServicerequestExists checks the presence of a single record by primary key
-func FieldseekerServicerequestExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerServicerequestExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerServicerequests.Query(
-		sm.Where(FieldseekerServicerequests.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerServicerequests.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerServicerequests.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -2309,13 +2309,13 @@ func (o *FieldseekerServicerequest) AfterQueryHook(ctx context.Context, exec bob
 // primaryKeyVals returns the primary key values of the FieldseekerServicerequest
 func (o *FieldseekerServicerequest) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerServicerequest) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.servicerequest", "objectid"), psql.Quote("fieldseeker.servicerequest", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.servicerequest", "globalid"), psql.Quote("fieldseeker.servicerequest", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -2342,7 +2342,7 @@ func (o *FieldseekerServicerequest) Delete(ctx context.Context, exec bob.Executo
 // Reload refreshes the FieldseekerServicerequest using the executor
 func (o *FieldseekerServicerequest) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerServicerequests.Query(
-		sm.Where(FieldseekerServicerequests.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerServicerequests.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerServicerequests.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -2377,7 +2377,7 @@ func (o FieldseekerServicerequestSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.servicerequest", "objectid"), psql.Quote("fieldseeker.servicerequest", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.servicerequest", "globalid"), psql.Quote("fieldseeker.servicerequest", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -2392,7 +2392,7 @@ func (o FieldseekerServicerequestSlice) pkIN() dialect.Expression {
 func (o FieldseekerServicerequestSlice) copyMatchingRows(from ...*FieldseekerServicerequest) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

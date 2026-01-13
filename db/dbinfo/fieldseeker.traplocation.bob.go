@@ -18,7 +18,7 @@ var FieldseekerTraplocations = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.traplocation_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -328,7 +328,7 @@ var FieldseekerTraplocations = Table[
 			Name: "traplocation_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -348,7 +348,7 @@ var FieldseekerTraplocations = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "traplocation_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerTraplocationForeignKeys{

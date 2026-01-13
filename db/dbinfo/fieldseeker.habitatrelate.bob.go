@@ -18,7 +18,7 @@ var FieldseekerHabitatrelates = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.habitatrelate_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -166,7 +166,7 @@ var FieldseekerHabitatrelates = Table[
 			Name: "habitatrelate_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -186,7 +186,7 @@ var FieldseekerHabitatrelates = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "habitatrelate_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerHabitatrelateForeignKeys{

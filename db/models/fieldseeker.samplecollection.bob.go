@@ -29,7 +29,7 @@ import (
 
 // FieldseekerSamplecollection is an object representing the database table.
 type FieldseekerSamplecollection struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is LOC_ID
 	LocID null.Val[uuid.UUID] `db:"loc_id" `
 	// Original attribute from ArcGIS API is STARTDATETIME
@@ -91,7 +91,7 @@ type FieldseekerSamplecollection struct {
 	// Original attribute from ArcGIS API is ZONE2
 	Zone2 null.Val[string] `db:"zone2" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -269,7 +269,7 @@ func (fieldseekerSamplecollectionColumns) AliasedAs(alias string) fieldseekerSam
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerSamplecollectionSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
 	LocID          omitnull.Val[uuid.UUID]               `db:"loc_id" `
 	Startdatetime  omitnull.Val[time.Time]               `db:"startdatetime" `
 	Enddatetime    omitnull.Val[time.Time]               `db:"enddatetime" `
@@ -300,7 +300,7 @@ type FieldseekerSamplecollectionSetter struct {
 	Zone           omitnull.Val[string]                  `db:"zone" `
 	Recordstatus   omitnull.Val[int16]                   `db:"recordstatus" `
 	Zone2          omitnull.Val[string]                  `db:"zone2" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
@@ -1302,25 +1302,25 @@ func (s FieldseekerSamplecollectionSetter) Expressions(prefix ...string) []bob.E
 
 // FindFieldseekerSamplecollection retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerSamplecollection(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerSamplecollection, error) {
+func FindFieldseekerSamplecollection(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerSamplecollection, error) {
 	if len(cols) == 0 {
 		return FieldseekerSamplecollections.Query(
-			sm.Where(FieldseekerSamplecollections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerSamplecollections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerSamplecollections.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerSamplecollections.Query(
-		sm.Where(FieldseekerSamplecollections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerSamplecollections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerSamplecollections.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerSamplecollections.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerSamplecollectionExists checks the presence of a single record by primary key
-func FieldseekerSamplecollectionExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerSamplecollectionExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerSamplecollections.Query(
-		sm.Where(FieldseekerSamplecollections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerSamplecollections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerSamplecollections.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -1346,13 +1346,13 @@ func (o *FieldseekerSamplecollection) AfterQueryHook(ctx context.Context, exec b
 // primaryKeyVals returns the primary key values of the FieldseekerSamplecollection
 func (o *FieldseekerSamplecollection) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerSamplecollection) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.samplecollection", "objectid"), psql.Quote("fieldseeker.samplecollection", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.samplecollection", "globalid"), psql.Quote("fieldseeker.samplecollection", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1379,7 +1379,7 @@ func (o *FieldseekerSamplecollection) Delete(ctx context.Context, exec bob.Execu
 // Reload refreshes the FieldseekerSamplecollection using the executor
 func (o *FieldseekerSamplecollection) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerSamplecollections.Query(
-		sm.Where(FieldseekerSamplecollections.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerSamplecollections.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerSamplecollections.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1414,7 +1414,7 @@ func (o FieldseekerSamplecollectionSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.samplecollection", "objectid"), psql.Quote("fieldseeker.samplecollection", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.samplecollection", "globalid"), psql.Quote("fieldseeker.samplecollection", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1429,7 +1429,7 @@ func (o FieldseekerSamplecollectionSlice) pkIN() dialect.Expression {
 func (o FieldseekerSamplecollectionSlice) copyMatchingRows(from ...*FieldseekerSamplecollection) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

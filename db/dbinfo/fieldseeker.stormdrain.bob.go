@@ -18,7 +18,7 @@ var FieldseekerStormdrains = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.stormdrain_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -229,7 +229,7 @@ var FieldseekerStormdrains = Table[
 			Name: "stormdrain_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -249,7 +249,7 @@ var FieldseekerStormdrains = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "stormdrain_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerStormdrainForeignKeys{

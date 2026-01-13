@@ -7,7 +7,7 @@ var FieldseekerStormdrainErrors = &fieldseekerStormdrainErrors{
 	ErrUniqueStormdrainPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "stormdrain",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "stormdrain_pkey",
 	},
 }

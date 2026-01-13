@@ -648,6 +648,10 @@ func (o FieldseekerQamosquitoinspectionTemplate) BuildMany(number int) models.Fi
 }
 
 func ensureCreatableFieldseekerQamosquitoinspection(m *models.FieldseekerQamosquitoinspectionSetter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

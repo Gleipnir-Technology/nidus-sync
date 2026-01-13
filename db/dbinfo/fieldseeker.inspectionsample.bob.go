@@ -18,7 +18,7 @@ var FieldseekerInspectionsamples = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.inspectionsample_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -184,7 +184,7 @@ var FieldseekerInspectionsamples = Table[
 			Name: "inspectionsample_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -204,7 +204,7 @@ var FieldseekerInspectionsamples = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "inspectionsample_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerInspectionsampleForeignKeys{

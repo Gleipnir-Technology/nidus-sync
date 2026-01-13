@@ -492,6 +492,10 @@ func (o FieldseekerTrapdatumTemplate) BuildMany(number int) models.FieldseekerTr
 }
 
 func ensureCreatableFieldseekerTrapdatum(m *models.FieldseekerTrapdatumSetter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

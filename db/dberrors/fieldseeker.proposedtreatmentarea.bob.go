@@ -7,7 +7,7 @@ var FieldseekerProposedtreatmentareaErrors = &fieldseekerProposedtreatmentareaEr
 	ErrUniqueProposedtreatmentareaPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "proposedtreatmentarea",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "proposedtreatmentarea_pkey",
 	},
 }

@@ -7,7 +7,7 @@ var FieldseekerContainerrelateErrors = &fieldseekerContainerrelateErrors{
 	ErrUniqueContainerrelatePkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "containerrelate",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "containerrelate_pkey",
 	},
 }

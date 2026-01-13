@@ -7,7 +7,7 @@ var FieldseekerTraplocationErrors = &fieldseekerTraplocationErrors{
 	ErrUniqueTraplocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "traplocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "traplocation_pkey",
 	},
 }

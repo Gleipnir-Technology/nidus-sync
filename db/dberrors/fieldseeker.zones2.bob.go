@@ -7,7 +7,7 @@ var FieldseekerZones2Errors = &fieldseekerZones2Errors{
 	ErrUniqueZones2Pkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "zones2",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "zones2_pkey",
 	},
 }

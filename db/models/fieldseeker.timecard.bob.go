@@ -29,7 +29,7 @@ import (
 
 // FieldseekerTimecard is an object representing the database table.
 type FieldseekerTimecard struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is ACTIVITY
 	Activity null.Val[string] `db:"activity" `
 	// Original attribute from ArcGIS API is STARTDATETIME
@@ -49,7 +49,7 @@ type FieldseekerTimecard struct {
 	// Original attribute from ArcGIS API is ZONE2
 	Zone2 null.Val[string] `db:"zone2" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -197,7 +197,7 @@ func (fieldseekerTimecardColumns) AliasedAs(alias string) fieldseekerTimecardCol
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerTimecardSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
 	Activity       omitnull.Val[string]                  `db:"activity" `
 	Startdatetime  omitnull.Val[time.Time]               `db:"startdatetime" `
 	Enddatetime    omitnull.Val[time.Time]               `db:"enddatetime" `
@@ -207,7 +207,7 @@ type FieldseekerTimecardSetter struct {
 	Locationname   omitnull.Val[string]                  `db:"locationname" `
 	Zone           omitnull.Val[string]                  `db:"zone" `
 	Zone2          omitnull.Val[string]                  `db:"zone2" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
@@ -870,25 +870,25 @@ func (s FieldseekerTimecardSetter) Expressions(prefix ...string) []bob.Expressio
 
 // FindFieldseekerTimecard retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerTimecard(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerTimecard, error) {
+func FindFieldseekerTimecard(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerTimecard, error) {
 	if len(cols) == 0 {
 		return FieldseekerTimecards.Query(
-			sm.Where(FieldseekerTimecards.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerTimecards.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerTimecards.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerTimecards.Query(
-		sm.Where(FieldseekerTimecards.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTimecards.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTimecards.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerTimecards.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerTimecardExists checks the presence of a single record by primary key
-func FieldseekerTimecardExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerTimecardExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerTimecards.Query(
-		sm.Where(FieldseekerTimecards.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTimecards.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTimecards.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -914,13 +914,13 @@ func (o *FieldseekerTimecard) AfterQueryHook(ctx context.Context, exec bob.Execu
 // primaryKeyVals returns the primary key values of the FieldseekerTimecard
 func (o *FieldseekerTimecard) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerTimecard) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.timecard", "objectid"), psql.Quote("fieldseeker.timecard", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.timecard", "globalid"), psql.Quote("fieldseeker.timecard", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -947,7 +947,7 @@ func (o *FieldseekerTimecard) Delete(ctx context.Context, exec bob.Executor) err
 // Reload refreshes the FieldseekerTimecard using the executor
 func (o *FieldseekerTimecard) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerTimecards.Query(
-		sm.Where(FieldseekerTimecards.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerTimecards.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerTimecards.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -982,7 +982,7 @@ func (o FieldseekerTimecardSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.timecard", "objectid"), psql.Quote("fieldseeker.timecard", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.timecard", "globalid"), psql.Quote("fieldseeker.timecard", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -997,7 +997,7 @@ func (o FieldseekerTimecardSlice) pkIN() dialect.Expression {
 func (o FieldseekerTimecardSlice) copyMatchingRows(from ...*FieldseekerTimecard) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

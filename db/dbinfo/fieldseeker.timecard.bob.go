@@ -18,7 +18,7 @@ var FieldseekerTimecards = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.timecard_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -310,7 +310,7 @@ var FieldseekerTimecards = Table[
 			Name: "timecard_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -330,7 +330,7 @@ var FieldseekerTimecards = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "timecard_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerTimecardForeignKeys{

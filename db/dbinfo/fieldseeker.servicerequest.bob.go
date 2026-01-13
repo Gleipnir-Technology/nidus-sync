@@ -18,7 +18,7 @@ var FieldseekerServicerequests = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.servicerequest_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -841,7 +841,7 @@ var FieldseekerServicerequests = Table[
 			Name: "servicerequest_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -861,7 +861,7 @@ var FieldseekerServicerequests = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "servicerequest_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerServicerequestForeignKeys{

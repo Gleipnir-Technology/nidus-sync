@@ -7,7 +7,7 @@ var FieldseekerRodentlocationErrors = &fieldseekerRodentlocationErrors{
 	ErrUniqueRodentlocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "rodentlocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "rodentlocation_pkey",
 	},
 }

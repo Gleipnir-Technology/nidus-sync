@@ -536,6 +536,10 @@ func (o FieldseekerLinelocationTemplate) BuildMany(number int) models.Fieldseeke
 }
 
 func ensureCreatableFieldseekerLinelocation(m *models.FieldseekerLinelocationSetter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

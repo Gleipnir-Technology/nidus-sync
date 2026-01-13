@@ -29,7 +29,7 @@ import (
 
 // FieldseekerStormdrain is an object representing the database table.
 type FieldseekerStormdrain struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is NextTreatmentDate
 	Nexttreatmentdate null.Val[time.Time] `db:"nexttreatmentdate" `
 	// Original attribute from ArcGIS API is LastTreatDate
@@ -39,7 +39,7 @@ type FieldseekerStormdrain struct {
 	// Original attribute from ArcGIS API is Symbology
 	Symbology null.Val[string] `db:"symbology" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -161,12 +161,12 @@ func (fieldseekerStormdrainColumns) AliasedAs(alias string) fieldseekerStormdrai
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerStormdrainSetter struct {
-	Objectid          omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid          omit.Val[int64]                       `db:"objectid" `
 	Nexttreatmentdate omitnull.Val[time.Time]               `db:"nexttreatmentdate" `
 	Lasttreatdate     omitnull.Val[time.Time]               `db:"lasttreatdate" `
 	Lastaction        omitnull.Val[string]                  `db:"lastaction" `
 	Symbology         omitnull.Val[string]                  `db:"symbology" `
-	Globalid          omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid          omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser       omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate       omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser    omitnull.Val[string]                  `db:"last_edited_user" `
@@ -654,25 +654,25 @@ func (s FieldseekerStormdrainSetter) Expressions(prefix ...string) []bob.Express
 
 // FindFieldseekerStormdrain retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerStormdrain(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerStormdrain, error) {
+func FindFieldseekerStormdrain(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerStormdrain, error) {
 	if len(cols) == 0 {
 		return FieldseekerStormdrains.Query(
-			sm.Where(FieldseekerStormdrains.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerStormdrains.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerStormdrains.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerStormdrains.Query(
-		sm.Where(FieldseekerStormdrains.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerStormdrains.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerStormdrains.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerStormdrains.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerStormdrainExists checks the presence of a single record by primary key
-func FieldseekerStormdrainExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerStormdrainExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerStormdrains.Query(
-		sm.Where(FieldseekerStormdrains.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerStormdrains.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerStormdrains.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -698,13 +698,13 @@ func (o *FieldseekerStormdrain) AfterQueryHook(ctx context.Context, exec bob.Exe
 // primaryKeyVals returns the primary key values of the FieldseekerStormdrain
 func (o *FieldseekerStormdrain) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerStormdrain) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.stormdrain", "objectid"), psql.Quote("fieldseeker.stormdrain", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.stormdrain", "globalid"), psql.Quote("fieldseeker.stormdrain", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -731,7 +731,7 @@ func (o *FieldseekerStormdrain) Delete(ctx context.Context, exec bob.Executor) e
 // Reload refreshes the FieldseekerStormdrain using the executor
 func (o *FieldseekerStormdrain) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerStormdrains.Query(
-		sm.Where(FieldseekerStormdrains.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerStormdrains.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerStormdrains.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -766,7 +766,7 @@ func (o FieldseekerStormdrainSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.stormdrain", "objectid"), psql.Quote("fieldseeker.stormdrain", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.stormdrain", "globalid"), psql.Quote("fieldseeker.stormdrain", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -781,7 +781,7 @@ func (o FieldseekerStormdrainSlice) pkIN() dialect.Expression {
 func (o FieldseekerStormdrainSlice) copyMatchingRows(from ...*FieldseekerStormdrain) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

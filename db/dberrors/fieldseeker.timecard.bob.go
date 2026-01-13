@@ -7,7 +7,7 @@ var FieldseekerTimecardErrors = &fieldseekerTimecardErrors{
 	ErrUniqueTimecardPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "timecard",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "timecard_pkey",
 	},
 }

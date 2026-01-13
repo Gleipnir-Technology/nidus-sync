@@ -7,7 +7,7 @@ var FieldseekerSamplelocationErrors = &fieldseekerSamplelocationErrors{
 	ErrUniqueSamplelocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "samplelocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "samplelocation_pkey",
 	},
 }

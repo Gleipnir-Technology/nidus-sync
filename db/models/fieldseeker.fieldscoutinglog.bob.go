@@ -29,11 +29,11 @@ import (
 
 // FieldseekerFieldscoutinglog is an object representing the database table.
 type FieldseekerFieldscoutinglog struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is STATUS
 	Status null.Val[int16] `db:"status" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -129,9 +129,9 @@ func (fieldseekerFieldscoutinglogColumns) AliasedAs(alias string) fieldseekerFie
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerFieldscoutinglogSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
 	Status         omitnull.Val[int16]                   `db:"status" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
@@ -462,25 +462,25 @@ func (s FieldseekerFieldscoutinglogSetter) Expressions(prefix ...string) []bob.E
 
 // FindFieldseekerFieldscoutinglog retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerFieldscoutinglog(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerFieldscoutinglog, error) {
+func FindFieldseekerFieldscoutinglog(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerFieldscoutinglog, error) {
 	if len(cols) == 0 {
 		return FieldseekerFieldscoutinglogs.Query(
-			sm.Where(FieldseekerFieldscoutinglogs.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerFieldscoutinglogs.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerFieldscoutinglogs.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerFieldscoutinglogs.Query(
-		sm.Where(FieldseekerFieldscoutinglogs.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerFieldscoutinglogs.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerFieldscoutinglogs.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerFieldscoutinglogs.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerFieldscoutinglogExists checks the presence of a single record by primary key
-func FieldseekerFieldscoutinglogExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerFieldscoutinglogExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerFieldscoutinglogs.Query(
-		sm.Where(FieldseekerFieldscoutinglogs.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerFieldscoutinglogs.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerFieldscoutinglogs.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -506,13 +506,13 @@ func (o *FieldseekerFieldscoutinglog) AfterQueryHook(ctx context.Context, exec b
 // primaryKeyVals returns the primary key values of the FieldseekerFieldscoutinglog
 func (o *FieldseekerFieldscoutinglog) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerFieldscoutinglog) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.fieldscoutinglog", "objectid"), psql.Quote("fieldseeker.fieldscoutinglog", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.fieldscoutinglog", "globalid"), psql.Quote("fieldseeker.fieldscoutinglog", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -539,7 +539,7 @@ func (o *FieldseekerFieldscoutinglog) Delete(ctx context.Context, exec bob.Execu
 // Reload refreshes the FieldseekerFieldscoutinglog using the executor
 func (o *FieldseekerFieldscoutinglog) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerFieldscoutinglogs.Query(
-		sm.Where(FieldseekerFieldscoutinglogs.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerFieldscoutinglogs.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerFieldscoutinglogs.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -574,7 +574,7 @@ func (o FieldseekerFieldscoutinglogSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.fieldscoutinglog", "objectid"), psql.Quote("fieldseeker.fieldscoutinglog", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.fieldscoutinglog", "globalid"), psql.Quote("fieldseeker.fieldscoutinglog", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -589,7 +589,7 @@ func (o FieldseekerFieldscoutinglogSlice) pkIN() dialect.Expression {
 func (o FieldseekerFieldscoutinglogSlice) copyMatchingRows(from ...*FieldseekerFieldscoutinglog) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

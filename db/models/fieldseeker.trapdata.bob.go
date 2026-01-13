@@ -29,7 +29,7 @@ import (
 
 // FieldseekerTrapdatum is an object representing the database table.
 type FieldseekerTrapdatum struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is TRAPTYPE
 	Traptype null.Val[string] `db:"traptype" `
 	// Original attribute from ArcGIS API is TRAPACTIVITYTYPE
@@ -67,7 +67,7 @@ type FieldseekerTrapdatum struct {
 	// Original attribute from ArcGIS API is ZONE2
 	Zone2 null.Val[string] `db:"zone2" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -256,7 +256,7 @@ func (fieldseekerTrapdatumColumns) AliasedAs(alias string) fieldseekerTrapdatumC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerTrapdatumSetter struct {
-	Objectid                 omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid                 omit.Val[int64]                       `db:"objectid" `
 	Traptype                 omitnull.Val[string]                  `db:"traptype" `
 	Trapactivitytype         omitnull.Val[string]                  `db:"trapactivitytype" `
 	Startdatetime            omitnull.Val[time.Time]               `db:"startdatetime" `
@@ -275,7 +275,7 @@ type FieldseekerTrapdatumSetter struct {
 	Trapnights               omitnull.Val[int16]                   `db:"trapnights" `
 	Zone                     omitnull.Val[string]                  `db:"zone" `
 	Zone2                    omitnull.Val[string]                  `db:"zone2" `
-	Globalid                 omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid                 omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser              omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate              omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser           omitnull.Val[string]                  `db:"last_edited_user" `
@@ -1209,25 +1209,25 @@ func (s FieldseekerTrapdatumSetter) Expressions(prefix ...string) []bob.Expressi
 
 // FindFieldseekerTrapdatum retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerTrapdatum(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerTrapdatum, error) {
+func FindFieldseekerTrapdatum(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerTrapdatum, error) {
 	if len(cols) == 0 {
 		return FieldseekerTrapdata.Query(
-			sm.Where(FieldseekerTrapdata.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerTrapdata.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerTrapdata.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerTrapdata.Query(
-		sm.Where(FieldseekerTrapdata.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTrapdata.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTrapdata.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerTrapdata.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerTrapdatumExists checks the presence of a single record by primary key
-func FieldseekerTrapdatumExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerTrapdatumExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerTrapdata.Query(
-		sm.Where(FieldseekerTrapdata.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTrapdata.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTrapdata.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -1253,13 +1253,13 @@ func (o *FieldseekerTrapdatum) AfterQueryHook(ctx context.Context, exec bob.Exec
 // primaryKeyVals returns the primary key values of the FieldseekerTrapdatum
 func (o *FieldseekerTrapdatum) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerTrapdatum) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.trapdata", "objectid"), psql.Quote("fieldseeker.trapdata", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.trapdata", "globalid"), psql.Quote("fieldseeker.trapdata", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1286,7 +1286,7 @@ func (o *FieldseekerTrapdatum) Delete(ctx context.Context, exec bob.Executor) er
 // Reload refreshes the FieldseekerTrapdatum using the executor
 func (o *FieldseekerTrapdatum) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerTrapdata.Query(
-		sm.Where(FieldseekerTrapdata.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerTrapdata.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerTrapdata.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1321,7 +1321,7 @@ func (o FieldseekerTrapdatumSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.trapdata", "objectid"), psql.Quote("fieldseeker.trapdata", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.trapdata", "globalid"), psql.Quote("fieldseeker.trapdata", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1336,7 +1336,7 @@ func (o FieldseekerTrapdatumSlice) pkIN() dialect.Expression {
 func (o FieldseekerTrapdatumSlice) copyMatchingRows(from ...*FieldseekerTrapdatum) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

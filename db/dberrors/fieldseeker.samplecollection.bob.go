@@ -7,7 +7,7 @@ var FieldseekerSamplecollectionErrors = &fieldseekerSamplecollectionErrors{
 	ErrUniqueSamplecollectionPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "samplecollection",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "samplecollection_pkey",
 	},
 }

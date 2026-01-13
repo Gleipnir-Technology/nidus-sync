@@ -29,7 +29,7 @@ import (
 
 // FieldseekerLocationtracking is an object representing the database table.
 type FieldseekerLocationtracking struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is Accuracy
 	Accuracy null.Val[float64] `db:"accuracy" `
 	// Original attribute from ArcGIS API is created_user
@@ -41,7 +41,7 @@ type FieldseekerLocationtracking struct {
 	// Original attribute from ArcGIS API is last_edited_date
 	LastEditedDate null.Val[time.Time] `db:"last_edited_date" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is FIELDTECH
 	Fieldtech null.Val[string] `db:"fieldtech" `
 	// Original attribute from ArcGIS API is CreationDate
@@ -133,13 +133,13 @@ func (fieldseekerLocationtrackingColumns) AliasedAs(alias string) fieldseekerLoc
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerLocationtrackingSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
 	Accuracy       omitnull.Val[float64]                 `db:"accuracy" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
 	LastEditedDate omitnull.Val[time.Time]               `db:"last_edited_date" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	Fieldtech      omitnull.Val[string]                  `db:"fieldtech" `
 	Creationdate   omitnull.Val[time.Time]               `db:"creationdate" `
 	Creator        omitnull.Val[string]                  `db:"creator" `
@@ -486,25 +486,25 @@ func (s FieldseekerLocationtrackingSetter) Expressions(prefix ...string) []bob.E
 
 // FindFieldseekerLocationtracking retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerLocationtracking(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerLocationtracking, error) {
+func FindFieldseekerLocationtracking(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerLocationtracking, error) {
 	if len(cols) == 0 {
 		return FieldseekerLocationtrackings.Query(
-			sm.Where(FieldseekerLocationtrackings.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerLocationtrackings.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerLocationtrackings.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerLocationtrackings.Query(
-		sm.Where(FieldseekerLocationtrackings.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerLocationtrackings.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerLocationtrackings.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerLocationtrackings.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerLocationtrackingExists checks the presence of a single record by primary key
-func FieldseekerLocationtrackingExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerLocationtrackingExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerLocationtrackings.Query(
-		sm.Where(FieldseekerLocationtrackings.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerLocationtrackings.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerLocationtrackings.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -530,13 +530,13 @@ func (o *FieldseekerLocationtracking) AfterQueryHook(ctx context.Context, exec b
 // primaryKeyVals returns the primary key values of the FieldseekerLocationtracking
 func (o *FieldseekerLocationtracking) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerLocationtracking) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.locationtracking", "objectid"), psql.Quote("fieldseeker.locationtracking", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.locationtracking", "globalid"), psql.Quote("fieldseeker.locationtracking", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -563,7 +563,7 @@ func (o *FieldseekerLocationtracking) Delete(ctx context.Context, exec bob.Execu
 // Reload refreshes the FieldseekerLocationtracking using the executor
 func (o *FieldseekerLocationtracking) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerLocationtrackings.Query(
-		sm.Where(FieldseekerLocationtrackings.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerLocationtrackings.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerLocationtrackings.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -598,7 +598,7 @@ func (o FieldseekerLocationtrackingSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.locationtracking", "objectid"), psql.Quote("fieldseeker.locationtracking", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.locationtracking", "globalid"), psql.Quote("fieldseeker.locationtracking", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -613,7 +613,7 @@ func (o FieldseekerLocationtrackingSlice) pkIN() dialect.Expression {
 func (o FieldseekerLocationtrackingSlice) copyMatchingRows(from ...*FieldseekerLocationtracking) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

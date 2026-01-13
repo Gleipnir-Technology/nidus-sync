@@ -7,7 +7,7 @@ var FieldseekerMosquitoinspectionErrors = &fieldseekerMosquitoinspectionErrors{
 	ErrUniqueMosquitoinspectionPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "mosquitoinspection",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "mosquitoinspection_pkey",
 	},
 }

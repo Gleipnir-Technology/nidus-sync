@@ -29,7 +29,7 @@ import (
 
 // FieldseekerPointlocation is an object representing the database table.
 type FieldseekerPointlocation struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is NAME
 	Name null.Val[string] `db:"name" `
 	// Original attribute from ArcGIS API is ZONE
@@ -61,7 +61,7 @@ type FieldseekerPointlocation struct {
 	// Original attribute from ArcGIS API is LOCATIONNUMBER
 	Locationnumber null.Val[int32] `db:"locationnumber" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is STYPE
 	Stype null.Val[string] `db:"stype" `
 	// Original attribute from ArcGIS API is LASTINSPECTDATE
@@ -264,7 +264,7 @@ func (fieldseekerPointlocationColumns) AliasedAs(alias string) fieldseekerPointl
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerPointlocationSetter struct {
-	Objectid                omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid                omit.Val[int64]                       `db:"objectid" `
 	Name                    omitnull.Val[string]                  `db:"name" `
 	Zone                    omitnull.Val[string]                  `db:"zone" `
 	Habitat                 omitnull.Val[string]                  `db:"habitat" `
@@ -280,7 +280,7 @@ type FieldseekerPointlocationSetter struct {
 	Larvinspectinterval     omitnull.Val[int16]                   `db:"larvinspectinterval" `
 	Zone2                   omitnull.Val[string]                  `db:"zone2" `
 	Locationnumber          omitnull.Val[int32]                   `db:"locationnumber" `
-	Globalid                omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid                omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	Stype                   omitnull.Val[string]                  `db:"stype" `
 	Lastinspectdate         omitnull.Val[time.Time]               `db:"lastinspectdate" `
 	Lastinspectbreeding     omitnull.Val[string]                  `db:"lastinspectbreeding" `
@@ -1257,25 +1257,25 @@ func (s FieldseekerPointlocationSetter) Expressions(prefix ...string) []bob.Expr
 
 // FindFieldseekerPointlocation retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerPointlocation(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerPointlocation, error) {
+func FindFieldseekerPointlocation(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerPointlocation, error) {
 	if len(cols) == 0 {
 		return FieldseekerPointlocations.Query(
-			sm.Where(FieldseekerPointlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerPointlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerPointlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerPointlocations.Query(
-		sm.Where(FieldseekerPointlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerPointlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerPointlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerPointlocations.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerPointlocationExists checks the presence of a single record by primary key
-func FieldseekerPointlocationExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerPointlocationExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerPointlocations.Query(
-		sm.Where(FieldseekerPointlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerPointlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerPointlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -1301,13 +1301,13 @@ func (o *FieldseekerPointlocation) AfterQueryHook(ctx context.Context, exec bob.
 // primaryKeyVals returns the primary key values of the FieldseekerPointlocation
 func (o *FieldseekerPointlocation) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerPointlocation) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.pointlocation", "objectid"), psql.Quote("fieldseeker.pointlocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.pointlocation", "globalid"), psql.Quote("fieldseeker.pointlocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1334,7 +1334,7 @@ func (o *FieldseekerPointlocation) Delete(ctx context.Context, exec bob.Executor
 // Reload refreshes the FieldseekerPointlocation using the executor
 func (o *FieldseekerPointlocation) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerPointlocations.Query(
-		sm.Where(FieldseekerPointlocations.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerPointlocations.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerPointlocations.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1369,7 +1369,7 @@ func (o FieldseekerPointlocationSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.pointlocation", "objectid"), psql.Quote("fieldseeker.pointlocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.pointlocation", "globalid"), psql.Quote("fieldseeker.pointlocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1384,7 +1384,7 @@ func (o FieldseekerPointlocationSlice) pkIN() dialect.Expression {
 func (o FieldseekerPointlocationSlice) copyMatchingRows(from ...*FieldseekerPointlocation) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

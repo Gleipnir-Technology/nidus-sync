@@ -7,7 +7,7 @@ var FieldseekerSpeciesabundanceErrors = &fieldseekerSpeciesabundanceErrors{
 	ErrUniqueSpeciesabundancePkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "speciesabundance",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "speciesabundance_pkey",
 	},
 }

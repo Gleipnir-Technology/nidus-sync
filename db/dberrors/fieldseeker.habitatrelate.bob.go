@@ -7,7 +7,7 @@ var FieldseekerHabitatrelateErrors = &fieldseekerHabitatrelateErrors{
 	ErrUniqueHabitatrelatePkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "habitatrelate",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "habitatrelate_pkey",
 	},
 }

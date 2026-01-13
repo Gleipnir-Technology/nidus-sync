@@ -29,7 +29,7 @@ import (
 
 // FieldseekerTraplocation is an object representing the database table.
 type FieldseekerTraplocation struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is NAME
 	Name null.Val[string] `db:"name" `
 	// Original attribute from ArcGIS API is ZONE
@@ -57,7 +57,7 @@ type FieldseekerTraplocation struct {
 	// Original attribute from ArcGIS API is LOCATIONNUMBER
 	Locationnumber null.Val[int32] `db:"locationnumber" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -205,7 +205,7 @@ func (fieldseekerTraplocationColumns) AliasedAs(alias string) fieldseekerTraploc
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerTraplocationSetter struct {
-	Objectid                omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid                omit.Val[int64]                       `db:"objectid" `
 	Name                    omitnull.Val[string]                  `db:"name" `
 	Zone                    omitnull.Val[string]                  `db:"zone" `
 	Habitat                 omitnull.Val[string]                  `db:"habitat" `
@@ -219,7 +219,7 @@ type FieldseekerTraplocationSetter struct {
 	Nextactiondatescheduled omitnull.Val[time.Time]               `db:"nextactiondatescheduled" `
 	Zone2                   omitnull.Val[string]                  `db:"zone2" `
 	Locationnumber          omitnull.Val[int32]                   `db:"locationnumber" `
-	Globalid                omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid                omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser             omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate             omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser          omitnull.Val[string]                  `db:"last_edited_user" `
@@ -918,25 +918,25 @@ func (s FieldseekerTraplocationSetter) Expressions(prefix ...string) []bob.Expre
 
 // FindFieldseekerTraplocation retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerTraplocation(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerTraplocation, error) {
+func FindFieldseekerTraplocation(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerTraplocation, error) {
 	if len(cols) == 0 {
 		return FieldseekerTraplocations.Query(
-			sm.Where(FieldseekerTraplocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerTraplocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerTraplocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerTraplocations.Query(
-		sm.Where(FieldseekerTraplocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTraplocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTraplocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerTraplocations.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerTraplocationExists checks the presence of a single record by primary key
-func FieldseekerTraplocationExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerTraplocationExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerTraplocations.Query(
-		sm.Where(FieldseekerTraplocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTraplocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTraplocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -962,13 +962,13 @@ func (o *FieldseekerTraplocation) AfterQueryHook(ctx context.Context, exec bob.E
 // primaryKeyVals returns the primary key values of the FieldseekerTraplocation
 func (o *FieldseekerTraplocation) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerTraplocation) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.traplocation", "objectid"), psql.Quote("fieldseeker.traplocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.traplocation", "globalid"), psql.Quote("fieldseeker.traplocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -995,7 +995,7 @@ func (o *FieldseekerTraplocation) Delete(ctx context.Context, exec bob.Executor)
 // Reload refreshes the FieldseekerTraplocation using the executor
 func (o *FieldseekerTraplocation) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerTraplocations.Query(
-		sm.Where(FieldseekerTraplocations.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerTraplocations.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerTraplocations.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1030,7 +1030,7 @@ func (o FieldseekerTraplocationSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.traplocation", "objectid"), psql.Quote("fieldseeker.traplocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.traplocation", "globalid"), psql.Quote("fieldseeker.traplocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1045,7 +1045,7 @@ func (o FieldseekerTraplocationSlice) pkIN() dialect.Expression {
 func (o FieldseekerTraplocationSlice) copyMatchingRows(from ...*FieldseekerTraplocation) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

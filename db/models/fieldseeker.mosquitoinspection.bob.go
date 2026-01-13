@@ -29,7 +29,7 @@ import (
 
 // FieldseekerMosquitoinspection is an object representing the database table.
 type FieldseekerMosquitoinspection struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is NUMDIPS
 	Numdips null.Val[int16] `db:"numdips" `
 	// Original attribute from ArcGIS API is ACTIVITY
@@ -95,7 +95,7 @@ type FieldseekerMosquitoinspection struct {
 	// Original attribute from ArcGIS API is FIELDSPECIES
 	Fieldspecies null.Val[string] `db:"fieldspecies" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -313,7 +313,7 @@ func (fieldseekerMosquitoinspectionColumns) AliasedAs(alias string) fieldseekerM
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerMosquitoinspectionSetter struct {
-	Objectid               omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid               omit.Val[int64]                       `db:"objectid" `
 	Numdips                omitnull.Val[int16]                   `db:"numdips" `
 	Activity               omitnull.Val[string]                  `db:"activity" `
 	Breeding               omitnull.Val[string]                  `db:"breeding" `
@@ -346,7 +346,7 @@ type FieldseekerMosquitoinspectionSetter struct {
 	Cbcount                omitnull.Val[int16]                   `db:"cbcount" `
 	Containercount         omitnull.Val[int16]                   `db:"containercount" `
 	Fieldspecies           omitnull.Val[string]                  `db:"fieldspecies" `
-	Globalid               omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid               omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser            omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate            omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser         omitnull.Val[string]                  `db:"last_edited_user" `
@@ -1566,25 +1566,25 @@ func (s FieldseekerMosquitoinspectionSetter) Expressions(prefix ...string) []bob
 
 // FindFieldseekerMosquitoinspection retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerMosquitoinspection(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerMosquitoinspection, error) {
+func FindFieldseekerMosquitoinspection(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerMosquitoinspection, error) {
 	if len(cols) == 0 {
 		return FieldseekerMosquitoinspections.Query(
-			sm.Where(FieldseekerMosquitoinspections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerMosquitoinspections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerMosquitoinspections.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerMosquitoinspections.Query(
-		sm.Where(FieldseekerMosquitoinspections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerMosquitoinspections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerMosquitoinspections.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerMosquitoinspections.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerMosquitoinspectionExists checks the presence of a single record by primary key
-func FieldseekerMosquitoinspectionExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerMosquitoinspectionExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerMosquitoinspections.Query(
-		sm.Where(FieldseekerMosquitoinspections.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerMosquitoinspections.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerMosquitoinspections.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -1610,13 +1610,13 @@ func (o *FieldseekerMosquitoinspection) AfterQueryHook(ctx context.Context, exec
 // primaryKeyVals returns the primary key values of the FieldseekerMosquitoinspection
 func (o *FieldseekerMosquitoinspection) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerMosquitoinspection) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.mosquitoinspection", "objectid"), psql.Quote("fieldseeker.mosquitoinspection", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.mosquitoinspection", "globalid"), psql.Quote("fieldseeker.mosquitoinspection", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1643,7 +1643,7 @@ func (o *FieldseekerMosquitoinspection) Delete(ctx context.Context, exec bob.Exe
 // Reload refreshes the FieldseekerMosquitoinspection using the executor
 func (o *FieldseekerMosquitoinspection) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerMosquitoinspections.Query(
-		sm.Where(FieldseekerMosquitoinspections.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerMosquitoinspections.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerMosquitoinspections.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1678,7 +1678,7 @@ func (o FieldseekerMosquitoinspectionSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.mosquitoinspection", "objectid"), psql.Quote("fieldseeker.mosquitoinspection", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.mosquitoinspection", "globalid"), psql.Quote("fieldseeker.mosquitoinspection", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1693,7 +1693,7 @@ func (o FieldseekerMosquitoinspectionSlice) pkIN() dialect.Expression {
 func (o FieldseekerMosquitoinspectionSlice) copyMatchingRows(from ...*FieldseekerMosquitoinspection) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

@@ -18,7 +18,7 @@ var FieldseekerContainerrelates = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.containerrelate_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -184,7 +184,7 @@ var FieldseekerContainerrelates = Table[
 			Name: "containerrelate_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -204,7 +204,7 @@ var FieldseekerContainerrelates = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "containerrelate_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerContainerrelateForeignKeys{

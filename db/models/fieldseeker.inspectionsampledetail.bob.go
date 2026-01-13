@@ -29,7 +29,7 @@ import (
 
 // FieldseekerInspectionsampledetail is an object representing the database table.
 type FieldseekerInspectionsampledetail struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is INSPSAMPLE_ID
 	InspsampleID null.Val[uuid.UUID] `db:"inspsample_id" `
 	// Original attribute from ArcGIS API is FIELDSPECIES
@@ -59,7 +59,7 @@ type FieldseekerInspectionsampledetail struct {
 	// Original attribute from ArcGIS API is COMMENTS
 	Comments null.Val[string] `db:"comments" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -185,7 +185,7 @@ func (fieldseekerInspectionsampledetailColumns) AliasedAs(alias string) fieldsee
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerInspectionsampledetailSetter struct {
-	Objectid       omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid       omit.Val[int64]                       `db:"objectid" `
 	InspsampleID   omitnull.Val[uuid.UUID]               `db:"inspsample_id" `
 	Fieldspecies   omitnull.Val[string]                  `db:"fieldspecies" `
 	Flarvcount     omitnull.Val[int16]                   `db:"flarvcount" `
@@ -200,7 +200,7 @@ type FieldseekerInspectionsampledetailSetter struct {
 	Leggcount      omitnull.Val[int16]                   `db:"leggcount" `
 	Ldomstage      omitnull.Val[string]                  `db:"ldomstage" `
 	Comments       omitnull.Val[string]                  `db:"comments" `
-	Globalid       omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid       omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser    omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate    omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser omitnull.Val[string]                  `db:"last_edited_user" `
@@ -798,25 +798,25 @@ func (s FieldseekerInspectionsampledetailSetter) Expressions(prefix ...string) [
 
 // FindFieldseekerInspectionsampledetail retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerInspectionsampledetail(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerInspectionsampledetail, error) {
+func FindFieldseekerInspectionsampledetail(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerInspectionsampledetail, error) {
 	if len(cols) == 0 {
 		return FieldseekerInspectionsampledetails.Query(
-			sm.Where(FieldseekerInspectionsampledetails.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerInspectionsampledetails.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerInspectionsampledetails.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerInspectionsampledetails.Query(
-		sm.Where(FieldseekerInspectionsampledetails.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerInspectionsampledetails.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerInspectionsampledetails.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerInspectionsampledetails.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerInspectionsampledetailExists checks the presence of a single record by primary key
-func FieldseekerInspectionsampledetailExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerInspectionsampledetailExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerInspectionsampledetails.Query(
-		sm.Where(FieldseekerInspectionsampledetails.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerInspectionsampledetails.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerInspectionsampledetails.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -842,13 +842,13 @@ func (o *FieldseekerInspectionsampledetail) AfterQueryHook(ctx context.Context, 
 // primaryKeyVals returns the primary key values of the FieldseekerInspectionsampledetail
 func (o *FieldseekerInspectionsampledetail) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerInspectionsampledetail) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.inspectionsampledetail", "objectid"), psql.Quote("fieldseeker.inspectionsampledetail", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.inspectionsampledetail", "globalid"), psql.Quote("fieldseeker.inspectionsampledetail", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -875,7 +875,7 @@ func (o *FieldseekerInspectionsampledetail) Delete(ctx context.Context, exec bob
 // Reload refreshes the FieldseekerInspectionsampledetail using the executor
 func (o *FieldseekerInspectionsampledetail) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerInspectionsampledetails.Query(
-		sm.Where(FieldseekerInspectionsampledetails.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerInspectionsampledetails.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerInspectionsampledetails.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -910,7 +910,7 @@ func (o FieldseekerInspectionsampledetailSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.inspectionsampledetail", "objectid"), psql.Quote("fieldseeker.inspectionsampledetail", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.inspectionsampledetail", "globalid"), psql.Quote("fieldseeker.inspectionsampledetail", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -925,7 +925,7 @@ func (o FieldseekerInspectionsampledetailSlice) pkIN() dialect.Expression {
 func (o FieldseekerInspectionsampledetailSlice) copyMatchingRows(from ...*FieldseekerInspectionsampledetail) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

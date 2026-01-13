@@ -256,6 +256,10 @@ func (o FieldseekerZones2Template) BuildMany(number int) models.FieldseekerZones
 }
 
 func ensureCreatableFieldseekerZones2(m *models.FieldseekerZones2Setter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

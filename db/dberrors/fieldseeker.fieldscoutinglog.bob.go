@@ -7,7 +7,7 @@ var FieldseekerFieldscoutinglogErrors = &fieldseekerFieldscoutinglogErrors{
 	ErrUniqueFieldscoutinglogPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "fieldscoutinglog",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "fieldscoutinglog_pkey",
 	},
 }

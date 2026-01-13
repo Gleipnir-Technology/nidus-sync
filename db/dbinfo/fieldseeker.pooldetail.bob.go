@@ -18,7 +18,7 @@ var FieldseekerPooldetails = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.pooldetail_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -184,7 +184,7 @@ var FieldseekerPooldetails = Table[
 			Name: "pooldetail_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -204,7 +204,7 @@ var FieldseekerPooldetails = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "pooldetail_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerPooldetailForeignKeys{

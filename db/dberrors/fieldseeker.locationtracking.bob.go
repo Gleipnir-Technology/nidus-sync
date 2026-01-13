@@ -7,7 +7,7 @@ var FieldseekerLocationtrackingErrors = &fieldseekerLocationtrackingErrors{
 	ErrUniqueLocationtrackingPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "locationtracking",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "locationtracking_pkey",
 	},
 }

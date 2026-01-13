@@ -7,7 +7,7 @@ var FieldseekerServicerequestErrors = &fieldseekerServicerequestErrors{
 	ErrUniqueServicerequestPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "servicerequest",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "servicerequest_pkey",
 	},
 }

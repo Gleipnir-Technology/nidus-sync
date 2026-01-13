@@ -29,7 +29,7 @@ import (
 
 // FieldseekerPool is an object representing the database table.
 type FieldseekerPool struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is TRAPDATA_ID
 	TrapdataID null.Val[uuid.UUID] `db:"trapdata_id" `
 	// Original attribute from ArcGIS API is DATESENT
@@ -55,7 +55,7 @@ type FieldseekerPool struct {
 	// Original attribute from ArcGIS API is DISEASEPOS
 	Diseasepos null.Val[string] `db:"diseasepos" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -197,7 +197,7 @@ func (fieldseekerPoolColumns) AliasedAs(alias string) fieldseekerPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerPoolSetter struct {
-	Objectid               omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid               omit.Val[int64]                       `db:"objectid" `
 	TrapdataID             omitnull.Val[uuid.UUID]               `db:"trapdata_id" `
 	Datesent               omitnull.Val[time.Time]               `db:"datesent" `
 	Survtech               omitnull.Val[string]                  `db:"survtech" `
@@ -210,7 +210,7 @@ type FieldseekerPoolSetter struct {
 	Testmethod             omitnull.Val[string]                  `db:"testmethod" `
 	Diseasetested          omitnull.Val[string]                  `db:"diseasetested" `
 	Diseasepos             omitnull.Val[string]                  `db:"diseasepos" `
-	Globalid               omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid               omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser            omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate            omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser         omitnull.Val[string]                  `db:"last_edited_user" `
@@ -870,25 +870,25 @@ func (s FieldseekerPoolSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindFieldseekerPool retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerPool(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerPool, error) {
+func FindFieldseekerPool(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerPool, error) {
 	if len(cols) == 0 {
 		return FieldseekerPools.Query(
-			sm.Where(FieldseekerPools.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerPools.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerPools.Query(
-		sm.Where(FieldseekerPools.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerPools.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerPools.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerPoolExists checks the presence of a single record by primary key
-func FieldseekerPoolExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerPoolExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerPools.Query(
-		sm.Where(FieldseekerPools.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerPools.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -914,13 +914,13 @@ func (o *FieldseekerPool) AfterQueryHook(ctx context.Context, exec bob.Executor,
 // primaryKeyVals returns the primary key values of the FieldseekerPool
 func (o *FieldseekerPool) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerPool) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.pool", "objectid"), psql.Quote("fieldseeker.pool", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.pool", "globalid"), psql.Quote("fieldseeker.pool", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -947,7 +947,7 @@ func (o *FieldseekerPool) Delete(ctx context.Context, exec bob.Executor) error {
 // Reload refreshes the FieldseekerPool using the executor
 func (o *FieldseekerPool) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerPools.Query(
-		sm.Where(FieldseekerPools.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerPools.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerPools.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -982,7 +982,7 @@ func (o FieldseekerPoolSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.pool", "objectid"), psql.Quote("fieldseeker.pool", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.pool", "globalid"), psql.Quote("fieldseeker.pool", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -997,7 +997,7 @@ func (o FieldseekerPoolSlice) pkIN() dialect.Expression {
 func (o FieldseekerPoolSlice) copyMatchingRows(from ...*FieldseekerPool) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

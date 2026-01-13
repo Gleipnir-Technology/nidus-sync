@@ -18,7 +18,7 @@ var FieldseekerZones2s = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.zones2_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -175,7 +175,7 @@ var FieldseekerZones2s = Table[
 			Name: "zones2_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -195,7 +195,7 @@ var FieldseekerZones2s = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "zones2_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerZones2ForeignKeys{

@@ -29,7 +29,7 @@ import (
 
 // FieldseekerTreatment is an object representing the database table.
 type FieldseekerTreatment struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is ACTIVITY
 	Activity null.Val[string] `db:"activity" `
 	// Original attribute from ArcGIS API is TREATAREA
@@ -87,7 +87,7 @@ type FieldseekerTreatment struct {
 	// Original attribute from ArcGIS API is CONTAINERCOUNT
 	Containercount null.Val[int16] `db:"containercount" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is TREATMENTLENGTH
 	Treatmentlength null.Val[float64] `db:"treatmentlength" `
 	// Original attribute from ArcGIS API is TREATMENTHOURS
@@ -304,7 +304,7 @@ func (fieldseekerTreatmentColumns) AliasedAs(alias string) fieldseekerTreatmentC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerTreatmentSetter struct {
-	Objectid             omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid             omit.Val[int64]                       `db:"objectid" `
 	Activity             omitnull.Val[string]                  `db:"activity" `
 	Treatarea            omitnull.Val[float64]                 `db:"treatarea" `
 	Areaunit             omitnull.Val[string]                  `db:"areaunit" `
@@ -333,7 +333,7 @@ type FieldseekerTreatmentSetter struct {
 	Tirecount            omitnull.Val[int16]                   `db:"tirecount" `
 	Cbcount              omitnull.Val[int16]                   `db:"cbcount" `
 	Containercount       omitnull.Val[int16]                   `db:"containercount" `
-	Globalid             omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid             omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	Treatmentlength      omitnull.Val[float64]                 `db:"treatmentlength" `
 	Treatmenthours       omitnull.Val[float64]                 `db:"treatmenthours" `
 	Treatmentlengthunits omitnull.Val[string]                  `db:"treatmentlengthunits" `
@@ -1497,25 +1497,25 @@ func (s FieldseekerTreatmentSetter) Expressions(prefix ...string) []bob.Expressi
 
 // FindFieldseekerTreatment retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerTreatment(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerTreatment, error) {
+func FindFieldseekerTreatment(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerTreatment, error) {
 	if len(cols) == 0 {
 		return FieldseekerTreatments.Query(
-			sm.Where(FieldseekerTreatments.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerTreatments.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerTreatments.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerTreatments.Query(
-		sm.Where(FieldseekerTreatments.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTreatments.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTreatments.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerTreatments.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerTreatmentExists checks the presence of a single record by primary key
-func FieldseekerTreatmentExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerTreatmentExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerTreatments.Query(
-		sm.Where(FieldseekerTreatments.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerTreatments.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerTreatments.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -1541,13 +1541,13 @@ func (o *FieldseekerTreatment) AfterQueryHook(ctx context.Context, exec bob.Exec
 // primaryKeyVals returns the primary key values of the FieldseekerTreatment
 func (o *FieldseekerTreatment) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerTreatment) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.treatment", "objectid"), psql.Quote("fieldseeker.treatment", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.treatment", "globalid"), psql.Quote("fieldseeker.treatment", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1574,7 +1574,7 @@ func (o *FieldseekerTreatment) Delete(ctx context.Context, exec bob.Executor) er
 // Reload refreshes the FieldseekerTreatment using the executor
 func (o *FieldseekerTreatment) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerTreatments.Query(
-		sm.Where(FieldseekerTreatments.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerTreatments.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerTreatments.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1609,7 +1609,7 @@ func (o FieldseekerTreatmentSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.treatment", "objectid"), psql.Quote("fieldseeker.treatment", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.treatment", "globalid"), psql.Quote("fieldseeker.treatment", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1624,7 +1624,7 @@ func (o FieldseekerTreatmentSlice) pkIN() dialect.Expression {
 func (o FieldseekerTreatmentSlice) copyMatchingRows(from ...*FieldseekerTreatment) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

@@ -18,7 +18,7 @@ var FieldseekerSpeciesabundances = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.speciesabundance_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -319,7 +319,7 @@ var FieldseekerSpeciesabundances = Table[
 			Name: "speciesabundance_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -339,7 +339,7 @@ var FieldseekerSpeciesabundances = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "speciesabundance_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerSpeciesabundanceForeignKeys{

@@ -18,7 +18,7 @@ var FieldseekerProposedtreatmentareas = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.proposedtreatmentarea_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -355,7 +355,7 @@ var FieldseekerProposedtreatmentareas = Table[
 			Name: "proposedtreatmentarea_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -375,7 +375,7 @@ var FieldseekerProposedtreatmentareas = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "proposedtreatmentarea_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerProposedtreatmentareaForeignKeys{

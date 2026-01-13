@@ -18,7 +18,7 @@ var FieldseekerFieldscoutinglogs = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.fieldscoutinglog_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -157,7 +157,7 @@ var FieldseekerFieldscoutinglogs = Table[
 			Name: "fieldscoutinglog_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -177,7 +177,7 @@ var FieldseekerFieldscoutinglogs = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "fieldscoutinglog_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerFieldscoutinglogForeignKeys{

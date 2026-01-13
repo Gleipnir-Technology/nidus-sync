@@ -7,7 +7,7 @@ var FieldseekerLinelocationErrors = &fieldseekerLinelocationErrors{
 	ErrUniqueLinelocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "linelocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "linelocation_pkey",
 	},
 }

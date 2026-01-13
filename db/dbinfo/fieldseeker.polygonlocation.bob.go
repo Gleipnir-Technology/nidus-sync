@@ -18,7 +18,7 @@ var FieldseekerPolygonlocations = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.polygonlocation_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -436,7 +436,7 @@ var FieldseekerPolygonlocations = Table[
 			Name: "polygonlocation_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -456,7 +456,7 @@ var FieldseekerPolygonlocations = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "polygonlocation_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerPolygonlocationForeignKeys{

@@ -18,7 +18,7 @@ var FieldseekerSamplelocations = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.samplelocation_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -274,7 +274,7 @@ var FieldseekerSamplelocations = Table[
 			Name: "samplelocation_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -294,7 +294,7 @@ var FieldseekerSamplelocations = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "samplelocation_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerSamplelocationForeignKeys{

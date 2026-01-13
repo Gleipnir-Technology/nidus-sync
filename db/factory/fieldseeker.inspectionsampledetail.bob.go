@@ -352,6 +352,10 @@ func (o FieldseekerInspectionsampledetailTemplate) BuildMany(number int) models.
 }
 
 func ensureCreatableFieldseekerInspectionsampledetail(m *models.FieldseekerInspectionsampledetailSetter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

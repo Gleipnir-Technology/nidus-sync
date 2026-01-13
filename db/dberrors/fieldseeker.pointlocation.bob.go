@@ -7,7 +7,7 @@ var FieldseekerPointlocationErrors = &fieldseekerPointlocationErrors{
 	ErrUniquePointlocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "pointlocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "pointlocation_pkey",
 	},
 }

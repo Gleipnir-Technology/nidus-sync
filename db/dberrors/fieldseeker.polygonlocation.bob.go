@@ -7,7 +7,7 @@ var FieldseekerPolygonlocationErrors = &fieldseekerPolygonlocationErrors{
 	ErrUniquePolygonlocationPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "polygonlocation",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "polygonlocation_pkey",
 	},
 }

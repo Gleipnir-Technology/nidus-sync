@@ -29,7 +29,7 @@ import (
 
 // FieldseekerRodentlocation is an object representing the database table.
 type FieldseekerRodentlocation struct {
-	Objectid int64 `db:"objectid,pk" `
+	Objectid int64 `db:"objectid" `
 	// Original attribute from ArcGIS API is LOCATIONNAME
 	Locationname null.Val[string] `db:"locationname" `
 	// Original attribute from ArcGIS API is ZONE
@@ -69,7 +69,7 @@ type FieldseekerRodentlocation struct {
 	// Original attribute from ArcGIS API is LASTINSPECTRODENTEVIDENCE
 	Lastinspectrodentevidence null.Val[string] `db:"lastinspectrodentevidence" `
 	// Original attribute from ArcGIS API is GlobalID
-	Globalid uuid.UUID `db:"globalid" `
+	Globalid uuid.UUID `db:"globalid,pk" `
 	// Original attribute from ArcGIS API is created_user
 	CreatedUser null.Val[string] `db:"created_user" `
 	// Original attribute from ArcGIS API is created_date
@@ -205,7 +205,7 @@ func (fieldseekerRodentlocationColumns) AliasedAs(alias string) fieldseekerRoden
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FieldseekerRodentlocationSetter struct {
-	Objectid                  omit.Val[int64]                       `db:"objectid,pk" `
+	Objectid                  omit.Val[int64]                       `db:"objectid" `
 	Locationname              omitnull.Val[string]                  `db:"locationname" `
 	Zone                      omitnull.Val[string]                  `db:"zone" `
 	Zone2                     omitnull.Val[string]                  `db:"zone2" `
@@ -225,7 +225,7 @@ type FieldseekerRodentlocationSetter struct {
 	Lastinspectaction         omitnull.Val[string]                  `db:"lastinspectaction" `
 	Lastinspectconditions     omitnull.Val[string]                  `db:"lastinspectconditions" `
 	Lastinspectrodentevidence omitnull.Val[string]                  `db:"lastinspectrodentevidence" `
-	Globalid                  omit.Val[uuid.UUID]                   `db:"globalid" `
+	Globalid                  omit.Val[uuid.UUID]                   `db:"globalid,pk" `
 	CreatedUser               omitnull.Val[string]                  `db:"created_user" `
 	CreatedDate               omitnull.Val[time.Time]               `db:"created_date" `
 	LastEditedUser            omitnull.Val[string]                  `db:"last_edited_user" `
@@ -918,25 +918,25 @@ func (s FieldseekerRodentlocationSetter) Expressions(prefix ...string) []bob.Exp
 
 // FindFieldseekerRodentlocation retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFieldseekerRodentlocation(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32, cols ...string) (*FieldseekerRodentlocation, error) {
+func FindFieldseekerRodentlocation(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32, cols ...string) (*FieldseekerRodentlocation, error) {
 	if len(cols) == 0 {
 		return FieldseekerRodentlocations.Query(
-			sm.Where(FieldseekerRodentlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+			sm.Where(FieldseekerRodentlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 			sm.Where(FieldseekerRodentlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FieldseekerRodentlocations.Query(
-		sm.Where(FieldseekerRodentlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerRodentlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerRodentlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FieldseekerRodentlocations.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FieldseekerRodentlocationExists checks the presence of a single record by primary key
-func FieldseekerRodentlocationExists(ctx context.Context, exec bob.Executor, ObjectidPK int64, VersionPK int32) (bool, error) {
+func FieldseekerRodentlocationExists(ctx context.Context, exec bob.Executor, GlobalidPK uuid.UUID, VersionPK int32) (bool, error) {
 	return FieldseekerRodentlocations.Query(
-		sm.Where(FieldseekerRodentlocations.Columns.Objectid.EQ(psql.Arg(ObjectidPK))),
+		sm.Where(FieldseekerRodentlocations.Columns.Globalid.EQ(psql.Arg(GlobalidPK))),
 		sm.Where(FieldseekerRodentlocations.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
@@ -962,13 +962,13 @@ func (o *FieldseekerRodentlocation) AfterQueryHook(ctx context.Context, exec bob
 // primaryKeyVals returns the primary key values of the FieldseekerRodentlocation
 func (o *FieldseekerRodentlocation) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.Objectid,
+		o.Globalid,
 		o.Version,
 	)
 }
 
 func (o *FieldseekerRodentlocation) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fieldseeker.rodentlocation", "objectid"), psql.Quote("fieldseeker.rodentlocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.rodentlocation", "globalid"), psql.Quote("fieldseeker.rodentlocation", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -995,7 +995,7 @@ func (o *FieldseekerRodentlocation) Delete(ctx context.Context, exec bob.Executo
 // Reload refreshes the FieldseekerRodentlocation using the executor
 func (o *FieldseekerRodentlocation) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FieldseekerRodentlocations.Query(
-		sm.Where(FieldseekerRodentlocations.Columns.Objectid.EQ(psql.Arg(o.Objectid))),
+		sm.Where(FieldseekerRodentlocations.Columns.Globalid.EQ(psql.Arg(o.Globalid))),
 		sm.Where(FieldseekerRodentlocations.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
@@ -1030,7 +1030,7 @@ func (o FieldseekerRodentlocationSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fieldseeker.rodentlocation", "objectid"), psql.Quote("fieldseeker.rodentlocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("fieldseeker.rodentlocation", "globalid"), psql.Quote("fieldseeker.rodentlocation", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1045,7 +1045,7 @@ func (o FieldseekerRodentlocationSlice) pkIN() dialect.Expression {
 func (o FieldseekerRodentlocationSlice) copyMatchingRows(from ...*FieldseekerRodentlocation) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Objectid != old.Objectid {
+			if new.Globalid != old.Globalid {
 				continue
 			}
 			if new.Version != old.Version {

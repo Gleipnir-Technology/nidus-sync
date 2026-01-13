@@ -18,7 +18,7 @@ var FieldseekerPointlocations = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.pointlocation_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -463,7 +463,7 @@ var FieldseekerPointlocations = Table[
 			Name: "pointlocation_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -483,7 +483,7 @@ var FieldseekerPointlocations = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "pointlocation_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerPointlocationForeignKeys{

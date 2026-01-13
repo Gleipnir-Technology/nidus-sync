@@ -264,6 +264,10 @@ func (o FieldseekerPooldetailTemplate) BuildMany(number int) models.FieldseekerP
 }
 
 func ensureCreatableFieldseekerPooldetail(m *models.FieldseekerPooldetailSetter) {
+	if !(m.Objectid.IsValue()) {
+		val := random_int64(nil)
+		m.Objectid = omit.From(val)
+	}
 	if !(m.Globalid.IsValue()) {
 		val := random_uuid_UUID(nil)
 		m.Globalid = omit.From(val)

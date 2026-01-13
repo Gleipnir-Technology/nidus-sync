@@ -18,7 +18,7 @@ var FieldseekerQamosquitoinspections = Table[
 		Objectid: column{
 			Name:      "objectid",
 			DBType:    "bigint",
-			Default:   "nextval('fieldseeker.qamosquitoinspection_objectid_seq'::regclass)",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -616,7 +616,7 @@ var FieldseekerQamosquitoinspections = Table[
 			Name: "qamosquitoinspection_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "objectid",
+					Name:         "globalid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -636,7 +636,7 @@ var FieldseekerQamosquitoinspections = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "qamosquitoinspection_pkey",
-		Columns: []string{"objectid", "version"},
+		Columns: []string{"globalid", "version"},
 		Comment: "",
 	},
 	ForeignKeys: fieldseekerQamosquitoinspectionForeignKeys{

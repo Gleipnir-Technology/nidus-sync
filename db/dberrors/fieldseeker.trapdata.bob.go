@@ -7,7 +7,7 @@ var FieldseekerTrapdatumErrors = &fieldseekerTrapdatumErrors{
 	ErrUniqueTrapdataPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "trapdata",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "trapdata_pkey",
 	},
 }

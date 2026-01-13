@@ -7,7 +7,7 @@ var FieldseekerPoolErrors = &fieldseekerPoolErrors{
 	ErrUniquePoolPkey: &UniqueConstraintError{
 		schema:  "fieldseeker",
 		table:   "pool",
-		columns: []string{"objectid", "version"},
+		columns: []string{"globalid", "version"},
 		s:       "pool_pkey",
 	},
 }
