@@ -68,8 +68,8 @@ function getUniqueFeatures(features, comparatorProperty) {
 	}
 	return uniqueFeatures;
 }
-function renderListings(features) {
-	console.log("render listings", features);
+function renderReports(features) {
+	console.log("render reports", features);
 	
 	//const listingEl = document.getElementById('feature-listing');
 	const reportTableBodyEl = document.getElementById('report-table-body');
@@ -98,23 +98,23 @@ function renderListings(features) {
 			const tableRow = document.createElement("tr");
 
 			const reportIdCol = document.createElement("td");
-			reportIdCol.textContent = feature.properties.abbrev;
+			reportIdCol.textContent = feature.properties.public_id;
 			tableRow.appendChild(reportIdCol);
 
 			const ageCol = document.createElement("td");
-			ageCol.textContent = "forever ago";
+			ageCol.textContent = feature.properties.created;
 			tableRow.appendChild(ageCol);
 
 			const typeCol = document.createElement("td");
-			typeCol.textContent = "mosquitoes";
+			typeCol.textContent = feature.properties.table_name;
 			tableRow.appendChild(typeCol);
 
 			const addressCol = document.createElement("td");
-			addressCol.textContent = feature.properties.name;
+			addressCol.textContent = feature.properties.address;
 			tableRow.appendChild(addressCol);
 
 			const statusCol = document.createElement("td");
-			statusCol.textContent = feature.properties.type;
+			statusCol.textContent = feature.properties.status;
 			tableRow.appendChild(statusCol);
 
 			reportTableBodyEl.appendChild(tableRow);
@@ -137,14 +137,21 @@ document.addEventListener('DOMContentLoaded', function() {
 	//const filterEl = document.getElementById('feature-filter');
 	//const listingEl = document.getElementById('feature-listing');
 	mapLoad(MAPBOX_ACCESS_TOKEN).then((map) => {
-		map.addSource('airports', {
+		//map.addSource('airports', {
+		map.addSource('tegola-mosquito', {
 			'type': 'vector',
-			'url': 'mapbox://mapbox.04w69w5j',
+			//'url': 'mapbox://mapbox.04w69w5j',
+			'tiles': [
+				'https://dev-tegola.nidus.cloud/maps/mosquito/{z}/{x}/{y}'
+			]
 		});
 		map.addLayer({
-			'id': 'airport',
-			'source': 'airports',
-			'source-layer': 'ne_10m_airports',
+			//'id': 'airport',
+			//'source': 'airports',
+			//'source-layer': 'ne_10m_airports',
+			'id': 'mosquito',
+			'source': 'tegola-mosquito',
+			'source-layer': 'report_location',
 			'type': 'circle',
 			'paint': {
 				'circle-color': '#4264fb',
@@ -155,25 +162,26 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 		map.on('movestart', () => {
 			// reset features filter as the map starts moving
-			map.setFilter('airport', ['has', 'abbrev']);
+			//map.setFilter('airport', ['has', 'abbrev']);
 		});
 		map.on('moveend', () => {
-			const features = map.queryRenderedFeatures({ layers: ['airport'] });
+			const features = map.queryRenderedFeatures({target: {layerId: 'mosquito'}});
+			//const features = map.querySourceFeatures('tegola-mosquito', {});
 
 			if (features) {
-				const uniqueFeatures = getUniqueFeatures(features, 'iata_code');
+				const uniqueFeatures = getUniqueFeatures(features, 'public_id');
 				// Populate features for the listing overlay.
-				renderListings(uniqueFeatures);
+				renderReports(uniqueFeatures);
 
 				// Clear the input container
 				//filterEl.value = '';
 
 				// Store the current features in sn `airports` variable to
 				// later use for filtering on `keyup`.
-				airports = uniqueFeatures;
+				//airports = uniqueFeatures;
 			}
 		});
-		map.on('mousemove', 'airport', (e) => {
+		map.on('mousemove', 'report_location', (e) => {
 			// Change the cursor style as a UI indicator.
 			map.getCanvas().style.cursor = 'pointer';
 
@@ -186,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			)
 			.addTo(map);
 		});
-		map.on('mouseleave', 'airport', () => {
+		map.on('mouseleave', 'report_location', () => {
 			map.getCanvas().style.cursor = '';
 			popup.remove();
 		});
