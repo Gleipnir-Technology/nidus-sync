@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
@@ -74,11 +75,11 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	location_str := postFormValueOrNone(r, "location")
-	var location enums.PublicreportNuisancelocationtype
-	err = location.Scan(location_str)
+	source_location_str := postFormValueOrNone(r, "source-location")
+	var source_location enums.PublicreportNuisancelocationtype
+	err = source_location.Scan(source_location_str)
 	if err != nil {
-		respondError(w, fmt.Sprintf("Failed to interpret 'location' of '%s'", location_str), err, http.StatusBadRequest)
+		respondError(w, fmt.Sprintf("Failed to interpret 'source-location' of '%s'", source_location_str), err, http.StatusBadRequest)
 		return
 	}
 	preferred_date_range_str := postFormValueOrNone(r, "preferred-date-range")
@@ -123,7 +124,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		Duration:           omit.From(duration),
 		Email:              omit.From(email),
 		InspectionType:     omit.From(inspection_type),
-		Location:           omit.From(location),
+		Location:           omitnull.FromPtr[string](nil),
 		PreferredDateRange: omit.From(preferred_date_range),
 		PreferredTime:      omit.From(preferred_time),
 		PublicID:           omit.From(public_id),
@@ -132,6 +133,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		SourceContainer:    omit.From(source_container),
 		SourceDescription:  omit.From(source_description),
 		SourceRoof:         omit.From(source_roof),
+		SourceLocation:     omit.From(source_location),
 		SourceStagnant:     omit.From(source_stagnant),
 		TimeOfDayDay:       omit.From(tod_day),
 		TimeOfDayEarly:     omit.From(tod_early),
