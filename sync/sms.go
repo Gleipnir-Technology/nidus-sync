@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -147,4 +149,53 @@ func sanitizeFilename(name string) string {
 		result = strings.ReplaceAll(result, c, "_")
 	}
 	return result
+}
+func postSMS(w http.ResponseWriter, r *http.Request) {
+	// Log all request headers
+	for name, values := range r.Header {
+		for _, value := range values {
+			log.Info().Str("name", name).Str("value", value).Msg("header")
+		}
+	}
+
+	// Read the request body
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		//return nil, fmt.Errorf("failed to read request body: %w", err)
+		respondError(w, "Failed to read request body", err, http.StatusInternalServerError)
+		return
+	}
+	log.Info().Str("body", string(bodyBytes)).Msg("body")
+	// Close the original body
+	defer r.Body.Close()
+
+	// Parse JSON into webhook struct
+	var body SMSWebhookBody
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		respondError(w, "Failed to parse JSON", err, http.StatusBadRequest)
+		return
+	}
+
+	if err := handleSMSMessage(&body.Data); err != nil {
+		log.Error().Err(err).Msg("Failed to handle SMS Message")
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
+func getSMS(w http.ResponseWriter, r *http.Request) {
+	org := chi.URLParam(r, "org")
+
+	to := r.URL.Query().Get("error")
+	from := r.URL.Query().Get("error")
+	message := r.URL.Query().Get("error")
+	files := r.URL.Query().Get("error")
+	id := r.URL.Query().Get("error")
+	date := r.URL.Query().Get("error")
+
+	log.Info().Str("org", org).Str("to", to).Str("from", from).Str("message", message).Str("files", files).Str("id", id).Str("date", date).Msg("Got SMS Message")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-type", "text/plain")
+	// Signifies to Voip.ms that the callback worked.
+	fmt.Fprintf(w, "ok")
 }

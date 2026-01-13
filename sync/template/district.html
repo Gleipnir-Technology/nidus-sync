@@ -1,0 +1,174 @@
+{{template "authenticated.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script>
+function onLoad() {
+	console.log("Setting up the map...");
+	mapboxgl.accessToken = {{ .MapData.MapboxToken }};
+	const map = new mapboxgl.Map({
+		container: 'map', // container ID
+		style: 'mapbox://styles/mapbox/standard', // style URL
+		center: [-119.3, 36.327], // starting position [lng, lat]
+		//center: [7.01, 50.74],
+		zoom: 9 // starting zoom
+	});
+	map.on("load", function() {
+		console.log("Map post-load...");
+		map.addSource('tegola-bonn', {
+			'type': 'vector',
+			'tiles': [
+				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
+				'https://tegola.nidus.cloud/maps/bonn/{z}/{x}/{y}'
+			]
+			//'minzoom': 6,
+			//'maxzoom': 14
+		});
+		map.addSource('tegola-nidus', {
+			'type': 'vector',
+			'tiles': [
+				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
+				'https://tegola.nidus.cloud/maps/nidus/{z}/{x}/{y}?organization_id=1'
+			]
+			//'minzoom': 6,
+			//'maxzoom': 14
+		});
+		map.addLayer({
+			'id': 'bonn', // Layer ID
+			'type': 'fill',
+			'source': 'tegola-bonn', // ID of the tile source created above
+			'source-layer': 'lakes',
+			'paint': {
+				'fill-opacity': 0.1,
+				'fill-color': 'rgb(100, 50, 20)'
+			}
+			//slot: 'middle' // middle slot in Mapbox Standard style
+		});
+		map.addLayer({
+			'id': 'nidus', // Layer ID
+			'type': 'fill',
+			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
+			'source': 'tegola-nidus', // ID of the tile source created above
+			'source-layer': 'h3_aggregation',
+			'paint': {
+				'fill-opacity': 0.3,
+				'fill-color': 'rgb(250, 100, 100)'
+			}
+			//slot: 'middle' // middle slot in Mapbox Standard style
+		});
+		map.addInteraction("nidus-click-interaction", {
+			type: 'click',
+			target: { layerId: 'nidus' },
+			handler: (e) => {
+				const coordinates = e.feature.geometry.coordinates.slice();
+				const properties = e.feature.properties;
+				//console.log("Coordinates", coordinates[0]);
+				//console.log("Properties", properties.cell, properties.count_);
+				/*new mapboxgl.Popup()
+					.setLngLat(coordinates[0][0])
+					.setHTML("Cell: " + properties.cell)
+					.addTo(map);*/
+				window.location.href = '/cell/' + properties.cell;
+			}
+		});
+		map.addInteraction('nidus-mouseenter-interaction', {
+			type: 'mouseenter',
+			target: { layerId: 'nidus' },
+			handler: () => {
+				map.getCanvas().style.cursor = 'pointer';
+			}
+		});
+		map.addInteraction('nidus-mouseleave-interaction', {
+			type: 'mouseleave',
+			target: { layerId: 'nidus' },
+			handler: () => {
+				map.getCanvas().style.cursor = '';
+			}
+		});
+
+		console.log("Map post-load done.");
+	});
+	
+	map.addControl(new mapboxgl.NavigationControl());
+	console.log("Map init done.");
+}
+window.addEventListener("load", onLoad);
+</script>
+<style>
+body {
+	background-color: #f8f9fa;
+}
+.dashboard-container {
+	padding: 20px 0;
+}
+.stats-card {
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+	transition: transform 0.2s;
+	height: 100%;
+}
+.stats-card:hover {
+	transform: translateY(-5px);
+}
+.map-container {
+	background-color: #e9ecef;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+	height: 500px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 20px;
+}
+#map {
+	height: 500px;
+	width:100%;
+	margin-bottom: 10px;
+}
+#map img {
+	max-width: none;
+	min-width: 0px;
+	height: auto;
+}
+.section-title {
+	margin: 30px 0 20px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #dee2e6;
+}
+.last-refreshed {
+	color: #6c757d;
+}
+.logo-placeholder {
+	width: 100px;
+	height: 40px;
+	background-color: #e9ecef;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+}
+.metric-icon {
+	font-size: 2rem;
+	margin-bottom: 10px;
+	display: inline-block;
+	width: 50px;
+	height: 50px;
+	line-height: 50px;
+	text-align: center;
+	border-radius: 50%;
+}
+.metric-value {
+	font-size: 2rem;
+	font-weight: bold;
+}
+.syncing {
+	color: #28a745;
+	animation: fa-spin 2s linear infinite;
+}
+</style>
+{{end}}
+{{define "content"}}
+<p>District page placeholder</p>
+{{end}}
