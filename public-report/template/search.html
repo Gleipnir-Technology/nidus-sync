@@ -51,10 +51,8 @@
 <script>
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 var markers = [];
-// Because features come from tiled vector data,
-// feature geometries may be split
-// or duplicated across tile boundaries.
-// As a result, features may appear
+// Because features come from tiled vector data, feature geometries may be split
+// or duplicated across tile boundaries. As a result, features may appear
 // multiple times in query results.
 function getUniqueFeatures(features, comparatorProperty) {
 	const uniqueIds = new Set();
@@ -68,10 +66,10 @@ function getUniqueFeatures(features, comparatorProperty) {
 	}
 	return uniqueFeatures;
 }
+
 function renderReports(features) {
 	console.log("render reports", features);
 	
-	//const listingEl = document.getElementById('feature-listing');
 	const reportTableBodyEl = document.getElementById('report-table-body');
 	const empty = document.createElement('p');
 	// Clear any existing listings
@@ -123,32 +121,19 @@ function renderReports(features) {
 		empty.textContent = 'No results found';
 		reportTableBodyEl.appendChild(empty);
 	} else {
-		//empty.textContent = 'Drag the map to populate results';
-		//listingEl.appendChild(empty);
-
-		// Hide the filter input
-		//filterEl.parentNode.style.display = 'none';
-
-		// remove features filter
-		//map.setFilter('airport', ['has', 'abbrev']);
 	}
 }
 document.addEventListener('DOMContentLoaded', function() {
-	//const filterEl = document.getElementById('feature-filter');
-	//const listingEl = document.getElementById('feature-listing');
 	mapLoad(MAPBOX_ACCESS_TOKEN).then((map) => {
-		//map.addSource('airports', {
+		function updateReportTable() {
+		}
 		map.addSource('tegola-mosquito', {
 			'type': 'vector',
-			//'url': 'mapbox://mapbox.04w69w5j',
 			'tiles': [
 				'https://dev-tegola.nidus.cloud/maps/mosquito/{z}/{x}/{y}'
 			]
 		});
 		map.addLayer({
-			//'id': 'airport',
-			//'source': 'airports',
-			//'source-layer': 'ne_10m_airports',
 			'id': 'mosquito',
 			'source': 'tegola-mosquito',
 			'source-layer': 'report_location',
@@ -160,43 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
 				'circle-stroke-color': '#ffffff'
 			}
 		});
-		map.on('movestart', () => {
-			// reset features filter as the map starts moving
-			//map.setFilter('airport', ['has', 'abbrev']);
-		});
-		map.on('moveend', () => {
+		map.on('render', () => {
 			const features = map.queryRenderedFeatures({target: {layerId: 'mosquito'}});
-			//const features = map.querySourceFeatures('tegola-mosquito', {});
 
 			if (features) {
 				const uniqueFeatures = getUniqueFeatures(features, 'public_id');
 				// Populate features for the listing overlay.
 				renderReports(uniqueFeatures);
-
-				// Clear the input container
-				//filterEl.value = '';
-
-				// Store the current features in sn `airports` variable to
-				// later use for filtering on `keyup`.
-				//airports = uniqueFeatures;
 			}
 		});
 		map.on('mousemove', 'report_location', (e) => {
-			// Change the cursor style as a UI indicator.
-			map.getCanvas().style.cursor = 'pointer';
-
-			// Populate the popup and set its coordinates based on the feature.
-			const feature = e.features[0];
-			popup
-			.setLngLat(feature.geometry.coordinates)
-			.setText(
-				`${feature.properties.name} (${feature.properties.abbrev})`
-			)
-			.addTo(map);
 		});
 		map.on('mouseleave', 'report_location', () => {
-			map.getCanvas().style.cursor = '';
-			popup.remove();
 		});
 		getGeolocation({
 			enableHighAccuracy: true,
@@ -208,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					lng: position.coords.longitude,
 					lat: position.coords.latitude,
 				},
-				zoom: 8,
+				zoom: 12,
 			});
 		}).catch(error => {
 			console.error("Failed to get position", error);
