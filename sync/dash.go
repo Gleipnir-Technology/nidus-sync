@@ -29,7 +29,12 @@ var (
 	sourceT    = buildTemplate("source", "authenticated")
 )
 
+type Config struct {
+	URLTegola string
+}
+
 type ContextDashboard struct {
+	Config               Config
 	CountInspections     int
 	CountMosquitoSources int
 	CountServiceRequests int
@@ -233,6 +238,9 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		return
 	}
 	data := ContextDashboard{
+		Config: Config{
+			URLTegola: config.URLTegola,
+		},
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),

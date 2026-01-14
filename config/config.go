@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-var Bind, ClientID, ClientSecret, Environment, FieldseekerSchemaDirectory, MapboxToken, PGDSN, URLReport, URLSync, FilesDirectoryPublic, FilesDirectoryUser string
+var Bind, ClientID, ClientSecret, Environment, FilesDirectoryPublic, FilesDirectoryUser, FieldseekerSchemaDirectory, MapboxToken, PGDSN, URLReport, URLSync, URLTegola string
 
 // Build the ArcGIS authorization URL with PKCE
 func BuildArcGISAuthURL(clientID string) string {
@@ -58,6 +58,10 @@ func Parse() error {
 	URLSync = os.Getenv("URL_SYNC")
 	if URLSync == "" {
 		return fmt.Errorf("You must specify a non-empty URL_SYNC")
+	}
+	URLTegola = os.Getenv("URL_TEGOLA")
+	if URLTegola == "" {
+		return fmt.Errorf("You must specify a non-empty URL_TEGOLA")
 	}
 	Bind = os.Getenv("BIND")
 	if Bind == "" {

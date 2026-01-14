@@ -20,8 +20,7 @@ function onLoad() {
 		map.addSource('tegola-bonn', {
 			'type': 'vector',
 			'tiles': [
-				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
-				'https://tegola.nidus.cloud/maps/bonn/{z}/{x}/{y}'
+				'https://{{.Config.URLTegola}}/maps/bonn/{z}/{x}/{y}'
 			]
 			//'minzoom': 6,
 			//'maxzoom': 14
@@ -29,8 +28,7 @@ function onLoad() {
 		map.addSource('tegola-nidus', {
 			'type': 'vector',
 			'tiles': [
-				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
-				'https://tegola.nidus.cloud/maps/nidus/{z}/{x}/{y}?organization_id=1'
+				'https://{{.Config.URLTegola}}/maps/nidus/{z}/{x}/{y}?organization_id={{.User.OrganizationID}}'
 			]
 			//'minzoom': 6,
 			//'maxzoom': 14
