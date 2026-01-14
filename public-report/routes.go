@@ -1,8 +1,6 @@
 package publicreport
 
 import (
-	"net/http"
-
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
 )
@@ -24,7 +22,6 @@ func Router() chi.Router {
 	r.Get("/search", getSearch)
 	r.Get("/status", getStatus)
 	r.Get("/status/{report_id}", getStatusByID)
-	localFS := http.Dir("./public-report/static")
-	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
+	htmlpage.AddStaticRoute(r, "/static")
 	return r
 }

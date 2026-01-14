@@ -1,8 +1,6 @@
 package sync
 
 import (
-	"net/http"
-
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
@@ -68,9 +66,7 @@ func Router() chi.Router {
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
-	//r.Method("GET", "/vector-tiles/{org_id}/{tileset_id}/{zoom}/{x}/{y}.{format}", auth.NewEnsureAuth(getVectorTiles))
 
-	localFS := http.Dir("./sync/static")
-	htmlpage.FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
+	htmlpage.AddStaticRoute(r, "/static")
 	return r
 }
