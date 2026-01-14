@@ -202,7 +202,7 @@ body {
 					</div>
 					<h5 class="card-title">Last Data Refresh</h5>
 					<p class="metric-value">{{ .LastSync | timeSince }}</p>
-					<p class="card-text text-muted">Last sync: 12:45 PM</p>
+					<!-- <p class="card-text text-muted">Last sync: 12:45 PM</p> -->
 				</div>
 			</div>
 		</div>
@@ -215,12 +215,16 @@ body {
 						<i class="fas fa-ticket-alt"></i>
 					</div>
 					<h5 class="card-title">Service Requests</h5>
-					<p class="metric-value">{{ .CountServiceRequests | bigNumber }}</p>
-					<p class="card-text text-muted">
+					{{ if .IsSyncOngoing }}
+						<p class="metric-value">{{ .CountServiceRequests | bigNumber }}...?</p>
+					{{ else }}
+						<p class="metric-value">{{ .CountServiceRequests | bigNumber }}</p>
+					{{ end }}
+					<!--<p class="card-text text-muted">
 						<span class="text-success">
 							<i class="fas fa-arrow-up"></i> 12%
 						</span> since last week
-					</p>
+					</p>-->
 				</div>
 			</div>
 		</div>
@@ -233,12 +237,16 @@ body {
 						<i class="fas fa-bug"></i>
 					</div>
 					<h5 class="card-title">Mosquito Sources</h5>
-					<p class="metric-value">{{ .CountMosquitoSources | bigNumber }}</p>
-					<p class="card-text text-muted">
+					{{ if .IsSyncOngoing }}
+						<p class="metric-value">{{ .CountMosquitoSources | bigNumber }}..?</p>
+					{{ else }}
+						<p class="metric-value">{{ .CountMosquitoSources | bigNumber }}</p>
+					{{ end }}
+					<!-- <p class="card-text text-muted">
 						<span class="text-danger">
 							<i class="fas fa-arrow-up"></i> 8%
 						</span> since last month
-					</p>
+					</p> -->
 				</div>
 			</div>
 		</div>
@@ -251,12 +259,16 @@ body {
 						<i class="fas fa-clipboard-check"></i>
 					</div>
 					<h5 class="card-title">Inspections</h5>
-					<p class="metric-value">{{ .CountInspections | bigNumber }}</p>
-					<p class="card-text text-muted">
+					{{ if .IsSyncOngoing }}
+						<p class="metric-value">{{ .CountInspections | bigNumber }}...?</p>
+					{{ else }}
+						<p class="metric-value">{{ .CountInspections | bigNumber }}</p>
+					{{ end }}
+					<!-- <p class="card-text text-muted">
 						<span class="text-success">
 							<i class="fas fa-arrow-up"></i> 15%
 						</span> since last week
-					</p>
+					</p> -->
 				</div>
 			</div>
 		</div>
