@@ -26,28 +26,11 @@
 			text-align: center;
 			margin-bottom: 30px;
 		}
-		.logo-placeholder {
-			width: 120px;
-			height: 60px;
-			background-color: #e9ecef;
-			margin: 0 auto;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			border-radius: 6px;
-		}
 </style>
 {{end}}
 {{define "content"}}
 <div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
 	<div class="register-container">
-		<!-- Logo Area -->
-		<div class="logo-area">
-			<div class="logo-placeholder">
-				<span class="text-muted">Your Logo</span>
-			</div>
-		</div>
-		
 		<div class="row register-box g-0">
 			<!-- Left side: Registration Form -->
 			<div class="col-md-6 register-form-section">
@@ -90,8 +73,9 @@
 			<!-- Right side: Account Information -->
 			<div class="col-md-6 register-info-section">
 				<div>
-					<h2>Account Information</h2>
-					<p class="lead mb-4">What you need to know</p>
+					<div class="logo-area">
+						<img src="/static/img/nidus-logo-256-transparent.png"></img>
+					</div>
 					
 					<div class="mb-4">
 						<h5>Who should register?</h5>

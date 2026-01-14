@@ -67,12 +67,6 @@ func getDistrict(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(w, districtT, &context)
 }
 
-func getFavicon(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "image/x-icon")
-
-	http.ServeFile(w, r, "static/favicon.ico")
-}
-
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	user, err := auth.GetAuthenticatedUser(r)
 	if err != nil {

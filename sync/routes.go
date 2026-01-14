@@ -16,7 +16,6 @@ func Router() chi.Router {
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/district", getDistrict)
-	r.Get("/favicon.ico", getFavicon)
 
 	r.Get("/mock", renderMock("mock-root"))
 	r.Get("/mock/admin", renderMock("admin"))
