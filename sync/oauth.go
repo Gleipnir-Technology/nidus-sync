@@ -15,6 +15,10 @@ var (
 	oauthPromptT = buildTemplate("oauth-prompt", "authenticated")
 )
 
+type ContextOauthPrompt struct {
+	User User
+}
+
 func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
 	authURL := config.BuildArcGISAuthURL(config.ClientID)
 	http.Redirect(w, r, authURL, http.StatusFound)
@@ -46,17 +50,17 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
 		return
 	}
-	oauthPrompt(w, user)
+	oauthPrompt(w, r, user)
 }
 
-func oauthPrompt(w http.ResponseWriter, user *models.User) {
-	dp := user.DisplayName
-	data := ContentDashboard{
-		User: User{
-			DisplayName: dp,
-			Initials:    extractInitials(dp),
-			Username:    user.Username,
-		},
+func oauthPrompt(w http.ResponseWriter, r *http.Request, user *models.User) {
+	userContent, err := contentForUser(r.Context(), user)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContextOauthPrompt{
+		User: userContent,
 	}
 	htmlpage.RenderOrError(w, oauthPromptT, data)
 }

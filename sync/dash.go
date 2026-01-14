@@ -3,6 +3,7 @@ package sync
 import (
 	"context"
 	"errors"
+	"html/template"
 	"net/http"
 	"time"
 
@@ -27,6 +28,19 @@ var (
 	settingsT  = buildTemplate("settings", "authenticated")
 	sourceT    = buildTemplate("source", "authenticated")
 )
+
+type ContextDashboard struct {
+	CountInspections     int
+	CountMosquitoSources int
+	CountServiceRequests int
+	Geo                  template.JS
+	IsSyncOngoing        bool
+	LastSync             *time.Time
+	MapData              ComponentMap
+	Org                  string
+	RecentRequests       []ServiceRequestSummary
+	User                 User
+}
 
 type ContextDistrict struct {
 	MapboxToken string
@@ -85,7 +99,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 			dashboard(r.Context(), w, user)
 			return
 		} else {
-			oauthPrompt(w, user)
+			oauthPrompt(w, r, user)
 			return
 		}
 	}
@@ -224,7 +238,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		respondError(w, "Failed to get user context", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContentDashboard{
+	data := ContextDashboard{
 		CountInspections:     int(inspectionCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),

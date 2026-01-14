@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"html/template"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/notification"
@@ -64,19 +63,6 @@ type ContentReportDetail struct {
 }
 type ContentReportDiagnostic struct {
 }
-type ContentDashboard struct {
-	CountInspections     int
-	CountMosquitoSources int
-	CountServiceRequests int
-	Geo                  template.JS
-	IsSyncOngoing        bool
-	LastSync             *time.Time
-	MapData              ComponentMap
-	Org                  string
-	RecentRequests       []ServiceRequestSummary
-	User                 User
-}
-
 type ContentDashboardLoading struct {
 	User User
 }
@@ -114,8 +100,9 @@ type ServiceRequestSummary struct {
 	Status   string
 }
 type User struct {
-	DisplayName   string
-	Initials      string
-	Notifications []notification.Notification
-	Username      string
+	DisplayName    string
+	Initials       string
+	Notifications  []notification.Notification
+	OrganizationID int
+	Username       string
 }
