@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
@@ -79,6 +80,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		PublicID:      omit.From(u),
 		ReporterEmail: omit.From(""),
 		ReporterPhone: omit.From(""),
+		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	quick, err := models.PublicreportQuicks.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {

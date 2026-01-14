@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/aarondl/opt/omit"
@@ -117,6 +118,7 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 		ReporterEmail: omit.From(reporter_email),
 		ReporterName:  omit.From(reporter_name),
 		ReporterPhone: omit.From(reporter_phone),
+		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 		Subscribe:     omit.From(subscribe),
 	}
 	pool, err := models.PublicreportPools.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)

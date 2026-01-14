@@ -135,6 +135,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		SourceRoof:         omit.From(source_roof),
 		SourceLocation:     omit.From(source_location),
 		SourceStagnant:     omit.From(source_stagnant),
+		Status:             omit.From(enums.PublicreportReportstatustypeReported),
 		TimeOfDayDay:       omit.From(tod_day),
 		TimeOfDayEarly:     omit.From(tod_early),
 		TimeOfDayEvening:   omit.From(tod_evening),
