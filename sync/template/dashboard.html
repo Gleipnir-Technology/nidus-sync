@@ -17,14 +17,6 @@ function onLoad() {
 	});
 	map.on("load", function() {
 		console.log("Map post-load...");
-		map.addSource('tegola-bonn', {
-			'type': 'vector',
-			'tiles': [
-				'https://{{.Config.URLTegola}}/maps/bonn/{z}/{x}/{y}'
-			]
-			//'minzoom': 6,
-			//'maxzoom': 14
-		});
 		map.addSource('tegola-nidus', {
 			'type': 'vector',
 			'tiles': [
@@ -32,17 +24,6 @@ function onLoad() {
 			]
 			//'minzoom': 6,
 			//'maxzoom': 14
-		});
-		map.addLayer({
-			'id': 'bonn', // Layer ID
-			'type': 'fill',
-			'source': 'tegola-bonn', // ID of the tile source created above
-			'source-layer': 'lakes',
-			'paint': {
-				'fill-opacity': 0.1,
-				'fill-color': 'rgb(100, 50, 20)'
-			}
-			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
 		map.addLayer({
 			'id': 'nidus', // Layer ID
