@@ -9,12 +9,37 @@
 <script src="/static/js/map.js"></script>
 <script>
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+function setDistrictColors(map) {
+	const features = map.querySourceFeatures('tegola-mosquito', {sourceLayer: 'district'});
+	console.log("features", features);
+	const regionIds = [...new Set(features.map(f => f.properties.regionid))];
+	map.setPaintProperty('districts', 'fill-opacity', 0.4);
+	if (regionIds.length > 0) {
+		// Generate color mapping
+		const colorScale = {};
+		regionIds.forEach((id, index) => {
+			// Generate a color (this is a simple example - consider using a proper color library)
+			colorScale[id] = `hsl(${index * (360 / regionIds.length)}, 70%, 50%)`;
+		});
+		const matchExpression = ['match', ['get', 'regionid']];
+		regionIds.forEach(id => {
+			matchExpression.push(id, colorScale[id]);
+		});
+		matchExpression.push('#cccccc'); // Default color
+		console.log("using district coloring", matchExpression);
+		map.setPaintProperty('districts', 'fill-color', matchExpression);
+	} else {
+		map.setPaintProperty('districts', 'fill-color', 'rgb(250, 100, 100)');
+		console.log("using fallback district coloring");
+	}
+}
 function onLoad() {
 	console.log("Setting up the map...");
 	mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 	const map = new mapboxgl.Map({
 		container: 'map', // container ID
 		style: 'mapbox://styles/mapbox/standard', // style URL
+		//style: 'mapbox://styles/eliribble/cmke4af8i004401suh3cahegw',
 		center: [-119.3, 36.327], // starting position [lng, lat]
 		//center: [7.01, 50.74],
 		zoom: 9 // starting zoom
@@ -28,14 +53,10 @@ function onLoad() {
 			]
 		});
 		map.addLayer({
-			'id': 'mosquito',
+			'id': 'districts',
 			'source': 'tegola-mosquito', // ID of the tile source created above
 			'source-layer': 'district',
 			'type': 'fill',
-			'paint': {
-				'fill-opacity': 0.3,
-				'fill-color': 'rgb(250, 100, 100)'
-			}
 		});
 		map.addInteraction("nidus-click-interaction", {
 			type: 'click',
@@ -66,7 +87,12 @@ function onLoad() {
 				map.getCanvas().style.cursor = '';
 			}
 		});
-
+		map.on('sourcedata', (e) => {
+			console.log("source loaded", e);
+			if (e.sourceId == 'tegola-mosquito' && e.isSourceLoaded) {
+				setDistrictColors(map)
+			}
+		});
 		console.log("Map post-load done.");
 	});
 	
