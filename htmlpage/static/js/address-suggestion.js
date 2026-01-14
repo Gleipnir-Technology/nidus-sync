@@ -197,30 +197,3 @@ class AddressInput extends HTMLElement {
 }
 
 customElements.define('address-input', AddressInput);
-
-function setLocationInputs(suggestion) {
-	let address = document.getElementById('address');
-	let country = document.getElementById('address-country');
-	let latitude = document.getElementById('latitude');
-	let longitude = document.getElementById('longitude');
-	let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
-	let postcode = document.getElementById('address-postcode');
-	let place = document.getElementById('address-place');
-	let region = document.getElementById('address-region');
-	let street = document.getElementById('address-street');
-
-	// Extract context data from properties
-	const props = suggestion.properties;
-	const context = props.context || {};
-	
-	// Populate structured fields
-	address.value = props.full_address;
-	country.value = context.country.name;
-	latitude.value = props.coordinates.latitude;
-	longitude.value = props.coordinates.longitude;
-	latlngAccuracyType.value = props.coordinates.accuracy;
-	postcode.value = context.postcode.name;
-	place.value = context.place.name;
-	region.value = context.region.name;
-	street.value = context.country.name;
-}

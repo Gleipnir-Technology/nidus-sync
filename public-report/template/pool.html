@@ -8,7 +8,7 @@
 <script src="/static/js/address-suggestion.js"></script>
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
-<script src="/static/js/map.js"></script>
+<script src="/static/js/map-locator.js"></script>
 {{template "photo-upload-header"}}
 <style>
 .district-logo {
@@ -24,26 +24,6 @@
 	border-bottom: none;
 	margin-bottom: 1rem;
 	padding-bottom: 0;
-}
-.map-container {
-	background-color: #e9ecef;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-	height: 500px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-top: 20px;
-}
-#map {
-	height: 500px;
-	width:100%;
-	margin-bottom: 10px;
-}
-#map img {
-	max-width: none;
-	min-width: 0px;
-	height: auto;
 }
 .photo-upload-area {
 	border: 2px dashed #ccc;
@@ -158,12 +138,6 @@ function handlePhotoSelection() {
 	}
 }
 
-function onMapMarkerDragEnd(marker) {
-	const lngLat = marker.getLngLat();
-	//displaySelectedCoordinates(lngLat);
-	geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat);
-}
-
 function setLocationInputs(location) {
        let country = document.getElementById('address-country');
        let latitude = document.getElementById('latitude');
@@ -216,20 +190,21 @@ document.addEventListener('DOMContentLoaded', function() {
 			handleFiles(e.dataTransfer.files);
 		}
 	});
-	mapLoad(MAPBOX_ACCESS_TOKEN).then(() => {
+	const mapLocator = document.querySelector("map-locator");
+	mapLocator.addEventListener("load", (event) => {
 		getGeolocation({
 			enableHighAccuracy: true,
 			timeout: 10000,
 			maximumAge: 0
 		}).then(position => {
-			mapJumpTo({
+			mapLocator.jumpTo({
 				center: {
 					lng: position.coords.longitude,
 					lat: position.coords.latitude,
 				},
 				zoom: 14,
 			});
-			mapAddMarker([
+			mapLocator.setMarker([
 				position.coords.longitude,
 				position.coords.latitude,
 			]);
@@ -241,18 +216,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log("location error", error);
 		})
 	})
+	mapLocator.addEventListener("markerdragend", 
 	let mapZoom = document.getElementById('map-zoom');
-	map.on("zoomend", function(e) {
+	mapLocator.addEventListener("zoomend", function(e) {
 		mapZoom.value = e.target.getZoom();
 	});
-	const mapContainer = document.getElementById("map-container");
-	mapContainer.addEventListener("markerdragend", (e) => {
-		onMapMarkerDragEnd(e.detail.marker);
+	mapLocator.addEventListener("markerdragend", (e) => {
+		const lngLat = marker.getLngLat();
+		//displaySelectedCoordinates(lngLat);
+		geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat);
 	});
 
 	const addressDisplay = document.querySelector("address-display");
 	const addressInput = document.querySelector("address-input");
-	const mapComponent = document.querySelector("map-component");
 	addressInput.addEventListener("address-selected", (event) => {
 		const l = event.detail.location;
 		console.log("Address selected", l);
@@ -346,9 +322,7 @@ function displaySelectedCoordinates(lngLat) {
 				</div>
 				
 				<p class="small text-muted mb-2">You can also click on the map to mark the location precisely</p>
-				<div id="map-container" class="map-container">
-					<div id="map"></div>
-				</div>
+				<map-locator api-key="{{ .MapboxToken }}"></map-locator>
 				<input type="hidden" id="map-zoom" name="map-zoom"/>
 			</div>
 
