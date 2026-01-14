@@ -1,13 +1,17 @@
-{{template "authenticated.html" .}}
+{{template "base.html" .}}
 
 {{define "title"}}Dash{{end}}
 {{define "extraheader"}}
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script src="/static/js/geocode.js"></script>
+<script src="/static/js/location.js"></script>
+<script src="/static/js/map.js"></script>
 <script>
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 function onLoad() {
 	console.log("Setting up the map...");
-	mapboxgl.accessToken = {{ .MapData.MapboxToken }};
+	mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 	const map = new mapboxgl.Map({
 		container: 'map', // container ID
 		style: 'mapbox://styles/mapbox/standard', // style URL
@@ -17,60 +21,35 @@ function onLoad() {
 	});
 	map.on("load", function() {
 		console.log("Map post-load...");
-		map.addSource('tegola-bonn', {
+		map.addSource('tegola-mosquito', {
 			'type': 'vector',
 			'tiles': [
-				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
-				'https://tegola.nidus.cloud/maps/bonn/{z}/{x}/{y}'
+				'https://dev-tegola.nidus.cloud/maps/mosquito/{z}/{x}/{y}'
 			]
-			//'minzoom': 6,
-			//'maxzoom': 14
-		});
-		map.addSource('tegola-nidus', {
-			'type': 'vector',
-			'tiles': [
-				//'https://tiles.mapillary.com/maps/vtp/mly1_public/2/{z}/{x}/{y}?access_token=MLY|4142433049200173|72206abe5035850d6743b23a49c41333'
-				'https://tegola.nidus.cloud/maps/nidus/{z}/{x}/{y}?organization_id=1'
-			]
-			//'minzoom': 6,
-			//'maxzoom': 14
 		});
 		map.addLayer({
-			'id': 'bonn', // Layer ID
+			'id': 'mosquito',
+			'source': 'tegola-mosquito', // ID of the tile source created above
+			'source-layer': 'district',
 			'type': 'fill',
-			'source': 'tegola-bonn', // ID of the tile source created above
-			'source-layer': 'lakes',
-			'paint': {
-				'fill-opacity': 0.1,
-				'fill-color': 'rgb(100, 50, 20)'
-			}
-			//slot: 'middle' // middle slot in Mapbox Standard style
-		});
-		map.addLayer({
-			'id': 'nidus', // Layer ID
-			'type': 'fill',
-			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-			'source': 'tegola-nidus', // ID of the tile source created above
-			'source-layer': 'h3_aggregation',
 			'paint': {
 				'fill-opacity': 0.3,
 				'fill-color': 'rgb(250, 100, 100)'
 			}
-			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
 		map.addInteraction("nidus-click-interaction", {
 			type: 'click',
-			target: { layerId: 'nidus' },
+			target: { layerId: 'mosquito' },
 			handler: (e) => {
 				const coordinates = e.feature.geometry.coordinates.slice();
 				const properties = e.feature.properties;
-				//console.log("Coordinates", coordinates[0]);
-				//console.log("Properties", properties.cell, properties.count_);
+				console.log("Coordinates", coordinates[0]);
+				console.log("Properties", properties);
 				/*new mapboxgl.Popup()
 					.setLngLat(coordinates[0][0])
 					.setHTML("Cell: " + properties.cell)
 					.addTo(map);*/
-				window.location.href = '/cell/' + properties.cell;
+				//window.location.href = '/cell/' + properties.cell;
 			}
 		});
 		map.addInteraction('nidus-mouseenter-interaction', {
@@ -94,7 +73,7 @@ function onLoad() {
 	map.addControl(new mapboxgl.NavigationControl());
 	console.log("Map init done.");
 }
-window.addEventListener("load", onLoad);
+document.addEventListener("DOMContentLoaded", onLoad);
 </script>
 <style>
 body {
@@ -170,5 +149,11 @@ body {
 </style>
 {{end}}
 {{define "content"}}
-<p>District page placeholder</p>
+<div class="container my-4">
+	<div class="card-body p-0">
+		<div class="map-container" id="map-container">
+			<div id="map"></div>
+		</div>
+	</div>
+</div>
 {{end}}
