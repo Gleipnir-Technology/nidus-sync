@@ -1075,6 +1075,10 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
 		))
 		//log.Info().Str("sql", insertQueryToString(psql.Insert(to_insert...))).Msg("Updating...")
+		if len(to_insert) == 0 {
+			log.Info().Int("resolution", i).Msg("No updates to perform")
+			continue
+		}
 		_, err := psql.Insert(to_insert...).Exec(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			log.Error().Err(err).Msg("Faild to add h3 aggregation")
