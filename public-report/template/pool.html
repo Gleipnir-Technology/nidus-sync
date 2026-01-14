@@ -2,9 +2,10 @@
 
 {{define "title"}}Green Pool{{end}}
 {{define "extraheader"}}
-{{template "location-geocode-header" .}}
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script src="/static/js/address-display.js"></script>
+<script src="/static/js/address-suggestion.js"></script>
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map.js"></script>
@@ -163,6 +164,31 @@ function onMapMarkerDragEnd(marker) {
 	geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat);
 }
 
+function setLocationInputs(location) {
+       let country = document.getElementById('address-country');
+       let latitude = document.getElementById('latitude');
+       let longitude = document.getElementById('longitude');
+       let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+       let postcode = document.getElementById('address-postcode');
+       let place = document.getElementById('address-place');
+       let region = document.getElementById('address-region');
+       let street = document.getElementById('address-street');
+
+       // Extract context data from properties
+       const props = location.properties;
+       const context = props.context || {};
+
+       // Populate structured fields
+       country.value = context.country.name;
+       latitude.value = props.coordinates.latitude;
+       longitude.value = props.coordinates.longitude;
+       latlngAccuracyType.value = props.coordinates.accuracy;
+       postcode.value = context.postcode.name;
+       place.value = context.place.name;
+       region.value = context.region.name;
+       street.value = context.country.name;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
 	const photoInput = document.getElementById('photos');
@@ -224,9 +250,21 @@ document.addEventListener('DOMContentLoaded', function() {
 		onMapMarkerDragEnd(e.detail.marker);
 	});
 
-	const suggestionsContainer = document.getElementById('suggestions');
-	suggestionsContainer.addEventListener("locationselected", (e) => {
-		mapSetMarker(e.detail.coordinates);
+	const addressDisplay = document.querySelector("address-display");
+	const addressInput = document.querySelector("address-input");
+	const mapComponent = document.querySelector("map-component");
+	addressInput.addEventListener("address-selected", (event) => {
+		const l = event.detail.location;
+		console.log("Address selected", l);
+		// Center map on selected address
+		mapSetMarker(l.geometry.coordinates);
+		mapJumpTo({
+			center: l.geometry.coordinates,
+			zoom: 14,
+		});
+
+		addressDisplay.show(l);
+		setLocationInputs(l);
 	});
 });
 function displaySelectedCoordinates(lngLat) {
@@ -284,18 +322,26 @@ function displaySelectedCoordinates(lngLat) {
 				<p class="mb-3">Please provide the location of the potential mosquito breeding source. We may be able to extract this information from your photos if they contain location data.</p>
 				
 				<div class="row mb-3">
-					<div class="col-md-12">
-						{{template "location-geocode"}}
+					<!-- Hidden fields for location data -->
+					<input type="hidden" id="address-country" name="address-country"/>
+					<input type="hidden" id="address-postcode" name="address-postcode"/>
+					<input type="hidden" id="address-place" name="address-place"/>
+					<input type="hidden" id="address-region" name="address-region"/>
+					<input type="hidden" id="address-street" name="address-street"/>
+					<input type="hidden" id="latitude" name="latitude"/>
+					<input type="hidden" id="longitude" name="longitude"/>
+					<input type="hidden" id="latlng-accuracy-type" name="latlng-accuracy-type"/>
+					<input type="hidden" id="latlng-accuracy-value" name="latlng-accuracy-value"/>
+					<div class="col-md-6">
+						<div class="mb-3 position-relative">
+							<address-input
+									placeholder="Start typing an address (min 3 characters)"
+									api-key="{{ .MapboxToken }}">
+							</address-input>
+						</div>
 					</div>
-					<div class="col-md-12 d-none" id="gps-display">
-						<div class="location-detail">
-							<div class="detail-label">Longitude</div>
-							<div id="longitude" class="detail-value">-</div>
-						</div>
-						<div class="location-detail">
-							<div class="detail-label">Latitude</div>
-							<div id="latitude" class="detail-value">-</div>
-						</div>
+					<div class="col-md-6">
+						<address-display></address-display>
 					</div>
 				</div>
 				

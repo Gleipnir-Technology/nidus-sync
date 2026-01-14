@@ -4,6 +4,8 @@
 {{define "extraheader"}}
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+<script src="/static/js/address-display.js"></script>
+<script src="/static/js/address-suggestion.js"></script>
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map.js"></script>
@@ -11,7 +13,7 @@
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 function setDistrictColors(map) {
 	const features = map.querySourceFeatures('tegola-mosquito', {sourceLayer: 'district'});
-	console.log("features", features);
+	//console.log("features", features);
 	const regionIds = [...new Set(features.map(f => f.properties.regionid))];
 	map.setPaintProperty('districts', 'fill-opacity', 0.4);
 	if (regionIds.length > 0) {
@@ -26,11 +28,11 @@ function setDistrictColors(map) {
 			matchExpression.push(id, colorScale[id]);
 		});
 		matchExpression.push('#cccccc'); // Default color
-		console.log("using district coloring", matchExpression);
+		//console.log("using district coloring", matchExpression);
 		map.setPaintProperty('districts', 'fill-color', matchExpression);
 	} else {
 		map.setPaintProperty('districts', 'fill-color', 'rgb(250, 100, 100)');
-		console.log("using fallback district coloring");
+		//console.log("using fallback district coloring");
 	}
 }
 function onLoad() {
@@ -88,7 +90,6 @@ function onLoad() {
 			}
 		});
 		map.on('sourcedata', (e) => {
-			console.log("source loaded", e);
 			if (e.sourceId == 'tegola-mosquito' && e.isSourceLoaded) {
 				setDistrictColors(map)
 			}
@@ -98,6 +99,26 @@ function onLoad() {
 	
 	map.addControl(new mapboxgl.NavigationControl());
 	console.log("Map init done.");
+
+	/*const address = document.getElementById('address');
+	const suggestionsContainer = document.getElementById('suggestions');
+	addressSuggestionEnable(address, suggestionsContainer);*/
+	const addressDisplay = document.querySelector("address-display");
+	const addressInput = document.querySelector("address-input");
+	const mapComponent = document.querySelector("map-component");
+	addressInput.addEventListener("address-selected", (event) => {
+		const l = event.detail.location;
+		// Center map on selected address
+
+		//mapComponent.jumpTo(coordinates);
+
+		// Add marker for selected address
+		/*mapComponent.addMarker(coordinates, {
+			title: event.detail.address
+		});*/
+
+		addressDisplay.show(l);
+	});
 }
 document.addEventListener("DOMContentLoaded", onLoad);
 </script>
@@ -177,9 +198,22 @@ body {
 {{define "content"}}
 <div class="container my-4">
 	<div class="card-body p-0">
+		<div class="mb-3 position-relative">
+			<address-input
+					placeholder="Start typing an address (min 3 characters)"
+					api-key="{{ .MapboxToken }}">
+			</address-input>
+		</div>
+		<div class="mt-3">
+		</div>
+	</div>
+	<div class="card-body p-0">
 		<div class="map-container" id="map-container">
 			<div id="map"></div>
 		</div>
+	</div>
+	<div class="card-body p-0">
+		<address-display></address-display>
 	</div>
 </div>
 {{end}}

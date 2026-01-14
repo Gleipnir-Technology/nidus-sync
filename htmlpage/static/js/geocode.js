@@ -8,6 +8,4 @@ async function geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat) {
 		return;
 	}
 	const match = data.features[0];
-	displaySelectedLocation(match);
-	setLocationInputs(match);
 }
