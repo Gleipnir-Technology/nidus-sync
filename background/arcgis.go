@@ -1039,6 +1039,10 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 		log.Error().Err(err).Msg("Failed to get organization")
 		return
 	}
+	if len(point_locations) == 0 {
+		log.Info().Int("org_id", int(org.ID)).Msg("No updates to perform")
+		return
+	}
 	log.Info().Int("count", len(point_locations)).Msg("Summarizing point locations")
 
 	for i := range 16 {
@@ -1075,10 +1079,6 @@ func updateSummaryTables(ctx context.Context, org *models.Organization) {
 			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
 		))
 		//log.Info().Str("sql", insertQueryToString(psql.Insert(to_insert...))).Msg("Updating...")
-		if len(to_insert) == 0 {
-			log.Info().Int("resolution", i).Msg("No updates to perform")
-			continue
-		}
 		_, err := psql.Insert(to_insert...).Exec(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			log.Error().Err(err).Msg("Faild to add h3 aggregation")
