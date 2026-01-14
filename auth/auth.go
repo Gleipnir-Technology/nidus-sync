@@ -131,7 +131,7 @@ func SignupUser(ctx context.Context, username string, name string, password stri
 		return nil, fmt.Errorf("Cannot signup user, failed to create hashed password: %w", err)
 	}
 	o_setter := models.OrganizationSetter{
-		Name:           omitnull.From(fmt.Sprintf("%s's organization", username)),
+		Name:           omit.From(fmt.Sprintf("%s's organization", username)),
 		ArcgisID:       omitnull.From(""),
 		ArcgisName:     omitnull.From(""),
 		FieldseekerURL: omitnull.From(""),

@@ -94,6 +94,10 @@ type Link struct {
 	Href  string
 	Title string
 }
+type Organization struct {
+	ID int
+	Name string
+}
 type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string
@@ -103,6 +107,6 @@ type User struct {
 	DisplayName    string
 	Initials       string
 	Notifications  []notification.Notification
-	OrganizationID int
+	Organization   Organization
 	Username       string
 }

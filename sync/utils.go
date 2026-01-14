@@ -95,10 +95,15 @@ func contentForUser(ctx context.Context, user *models.User) (User, error) {
 	if err != nil {
 		return User{}, err
 	}
+	org := user.R.Organization
 	return User{
 		DisplayName:   user.DisplayName,
 		Initials:      extractInitials(user.DisplayName),
 		Notifications: notifications,
+		Organization:  Organization {
+			ID: int(org.ID),
+			Name: org.Name,
+		},
 		Username:      user.Username,
 	}, nil
 

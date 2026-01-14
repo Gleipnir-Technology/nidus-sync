@@ -26,7 +26,7 @@ import (
 // Organization is an object representing the database table.
 type Organization struct {
 	ID             int32            `db:"id,pk" `
-	Name           null.Val[string] `db:"name" `
+	Name           string           `db:"name" `
 	ArcgisID       null.Val[string] `db:"arcgis_id" `
 	ArcgisName     null.Val[string] `db:"arcgis_name" `
 	FieldseekerURL null.Val[string] `db:"fieldseeker_url" `
@@ -117,7 +117,7 @@ func (organizationColumns) AliasedAs(alias string) organizationColumns {
 // Generated columns are not included
 type OrganizationSetter struct {
 	ID             omit.Val[int32]      `db:"id,pk" `
-	Name           omitnull.Val[string] `db:"name" `
+	Name           omit.Val[string]     `db:"name" `
 	ArcgisID       omitnull.Val[string] `db:"arcgis_id" `
 	ArcgisName     omitnull.Val[string] `db:"arcgis_name" `
 	FieldseekerURL omitnull.Val[string] `db:"fieldseeker_url" `
@@ -128,7 +128,7 @@ func (s OrganizationSetter) SetColumns() []string {
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
-	if !s.Name.IsUnset() {
+	if s.Name.IsValue() {
 		vals = append(vals, "name")
 	}
 	if !s.ArcgisID.IsUnset() {
@@ -147,8 +147,8 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
 	}
-	if !s.Name.IsUnset() {
-		t.Name = s.Name.MustGetNull()
+	if s.Name.IsValue() {
+		t.Name = s.Name.MustGet()
 	}
 	if !s.ArcgisID.IsUnset() {
 		t.ArcgisID = s.ArcgisID.MustGetNull()
@@ -174,8 +174,8 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Name.IsUnset() {
-			vals[1] = psql.Arg(s.Name.MustGetNull())
+		if s.Name.IsValue() {
+			vals[1] = psql.Arg(s.Name.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
@@ -216,7 +216,7 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Name.IsUnset() {
+	if s.Name.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "name")...),
 			psql.Arg(s.Name),
@@ -3416,7 +3416,7 @@ func (organization0 *Organization) AttachUser(ctx context.Context, exec bob.Exec
 
 type organizationWhere[Q psql.Filterable] struct {
 	ID             psql.WhereMod[Q, int32]
-	Name           psql.WhereNullMod[Q, string]
+	Name           psql.WhereMod[Q, string]
 	ArcgisID       psql.WhereNullMod[Q, string]
 	ArcgisName     psql.WhereNullMod[Q, string]
 	FieldseekerURL psql.WhereNullMod[Q, string]
@@ -3429,7 +3429,7 @@ func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
 func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organizationWhere[Q] {
 	return organizationWhere[Q]{
 		ID:             psql.Where[Q, int32](cols.ID),
-		Name:           psql.WhereNull[Q, string](cols.Name),
+		Name:           psql.Where[Q, string](cols.Name),
 		ArcgisID:       psql.WhereNull[Q, string](cols.ArcgisID),
 		ArcgisName:     psql.WhereNull[Q, string](cols.ArcgisName),
 		FieldseekerURL: psql.WhereNull[Q, string](cols.FieldseekerURL),

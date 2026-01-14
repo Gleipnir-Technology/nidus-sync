@@ -37,7 +37,7 @@ func (mods OrganizationModSlice) Apply(ctx context.Context, n *OrganizationTempl
 // all columns are optional and should be set by mods
 type OrganizationTemplate struct {
 	ID             func() int32
-	Name           func() null.Val[string]
+	Name           func() string
 	ArcgisID       func() null.Val[string]
 	ArcgisName     func() null.Val[string]
 	FieldseekerURL func() null.Val[string]
@@ -650,7 +650,7 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 	}
 	if o.Name != nil {
 		val := o.Name()
-		m.Name = omitnull.FromNull(val)
+		m.Name = omit.From(val)
 	}
 	if o.ArcgisID != nil {
 		val := o.ArcgisID()
@@ -721,6 +721,10 @@ func (o OrganizationTemplate) BuildMany(number int) models.OrganizationSlice {
 }
 
 func ensureCreatableOrganization(m *models.OrganizationSetter) {
+	if !(m.Name.IsValue()) {
+		val := random_string(nil)
+		m.Name = omit.From(val)
+	}
 }
 
 // insertOptRels creates and inserts any optional the relationships on *models.Organization
@@ -1501,14 +1505,14 @@ func (m organizationMods) RandomID(f *faker.Faker) OrganizationMod {
 }
 
 // Set the model columns to this value
-func (m organizationMods) Name(val null.Val[string]) OrganizationMod {
+func (m organizationMods) Name(val string) OrganizationMod {
 	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.Name = func() null.Val[string] { return val }
+		o.Name = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m organizationMods) NameFunc(f func() null.Val[string]) OrganizationMod {
+func (m organizationMods) NameFunc(f func() string) OrganizationMod {
 	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
 		o.Name = f
 	})
@@ -1523,32 +1527,10 @@ func (m organizationMods) UnsetName() OrganizationMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m organizationMods) RandomName(f *faker.Faker) OrganizationMod {
 	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.Name = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m organizationMods) RandomNameNotNull(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.Name = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.Name = func() string {
+			return random_string(f)
 		}
 	})
 }

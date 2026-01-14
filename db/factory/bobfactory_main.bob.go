@@ -118,6 +118,7 @@ func (f *Factory) FromExistingDistrict(m *models.District) *DistrictTemplate {
 	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
 	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
 	o.Geom = func() null.Val[string] { return m.Geom }
+	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
 
 	return o
 }
@@ -2317,7 +2318,7 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o := &OrganizationTemplate{f: f, alreadyPersisted: true}
 
 	o.ID = func() int32 { return m.ID }
-	o.Name = func() null.Val[string] { return m.Name }
+	o.Name = func() string { return m.Name }
 	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
 	o.ArcgisName = func() null.Val[string] { return m.ArcgisName }
 	o.FieldseekerURL = func() null.Val[string] { return m.FieldseekerURL }

@@ -27,9 +27,9 @@ var Organizations = Table[
 		Name: column{
 			Name:      "name",
 			DBType:    "text",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
