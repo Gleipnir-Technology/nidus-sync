@@ -38,4 +38,5 @@ BEGIN;
 	DELETE FROM fieldseeker.treatmentarea WHERE organization_id = :org_id;
 	DELETE FROM fieldseeker.zones WHERE organization_id = :org_id;
 	DELETE FROM fieldseeker.zones2 WHERE organization_id = :org_id;
+	DELETE FROM organization WHERE id = :org_id;
 COMMIT;
