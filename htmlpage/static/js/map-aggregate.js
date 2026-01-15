@@ -132,9 +132,39 @@ class MapAggregate extends HTMLElement {
 					'fill-color': '#0dcaf0'
 				}
 			});
-			map.addInteraction("tegola-click-interaction", {
+			map.addInteraction("tegola-click-mosquito-source", {
 				type: "click",
 				target: { layerId: "mosquito_source" },
+				handler: (e) => {
+					const coordinates = e.feature.geometry.coordinates.slice();
+					const properties = e.feature.properties;
+					this.dispatchEvent(new CustomEvent("cell-click", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							cell: properties.cell
+						}
+					}));
+				}
+			});
+			map.addInteraction("tegola-click-service-request", {
+				type: "click",
+				target: { layerId: "service_request" },
+				handler: (e) => {
+					const coordinates = e.feature.geometry.coordinates.slice();
+					const properties = e.feature.properties;
+					this.dispatchEvent(new CustomEvent("cell-click", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							cell: properties.cell
+						}
+					}));
+				}
+			});
+			map.addInteraction("tegola-click-trap", {
+				type: "click",
+				target: { layerId: "trap" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
