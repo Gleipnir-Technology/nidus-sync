@@ -92,6 +92,7 @@ type FieldseekerTraplocation struct {
 	Geospatial     null.Val[string]            `db:"geospatial" `
 	Version        int32                       `db:"version,pk" `
 	OrganizationID int32                       `db:"organization_id" `
+	H3cell         null.Val[string]            `db:"h3cell,generated" `
 
 	R fieldseekerTraplocationR `db:"-" `
 }
@@ -114,7 +115,7 @@ type fieldseekerTraplocationR struct {
 func buildFieldseekerTraplocationColumns(alias string) fieldseekerTraplocationColumns {
 	return fieldseekerTraplocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"objectid", "name", "zone", "habitat", "priority", "usetype", "active", "description", "accessdesc", "comments", "externalid", "nextactiondatescheduled", "zone2", "locationnumber", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "gatewaysync", "route", "set_dow", "route_order", "vectorsurvsiteid", "creationdate", "creator", "editdate", "editor", "h3r7", "h3r8", "geometry", "geospatial", "version", "organization_id",
+			"objectid", "name", "zone", "habitat", "priority", "usetype", "active", "description", "accessdesc", "comments", "externalid", "nextactiondatescheduled", "zone2", "locationnumber", "globalid", "created_user", "created_date", "last_edited_user", "last_edited_date", "gatewaysync", "route", "set_dow", "route_order", "vectorsurvsiteid", "creationdate", "creator", "editdate", "editor", "h3r7", "h3r8", "geometry", "geospatial", "version", "organization_id", "h3cell",
 		).WithParent("fieldseeker.traplocation"),
 		tableAlias:              alias,
 		Objectid:                psql.Quote(alias, "objectid"),
@@ -151,6 +152,7 @@ func buildFieldseekerTraplocationColumns(alias string) fieldseekerTraplocationCo
 		Geospatial:              psql.Quote(alias, "geospatial"),
 		Version:                 psql.Quote(alias, "version"),
 		OrganizationID:          psql.Quote(alias, "organization_id"),
+		H3cell:                  psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -191,6 +193,7 @@ type fieldseekerTraplocationColumns struct {
 	Geospatial              psql.Expression
 	Version                 psql.Expression
 	OrganizationID          psql.Expression
+	H3cell                  psql.Expression
 }
 
 func (c fieldseekerTraplocationColumns) Alias() string {
@@ -1256,6 +1259,7 @@ type fieldseekerTraplocationWhere[Q psql.Filterable] struct {
 	Geospatial              psql.WhereNullMod[Q, string]
 	Version                 psql.WhereMod[Q, int32]
 	OrganizationID          psql.WhereMod[Q, int32]
+	H3cell                  psql.WhereNullMod[Q, string]
 }
 
 func (fieldseekerTraplocationWhere[Q]) AliasedAs(alias string) fieldseekerTraplocationWhere[Q] {
@@ -1298,6 +1302,7 @@ func buildFieldseekerTraplocationWhere[Q psql.Filterable](cols fieldseekerTraplo
 		Geospatial:              psql.WhereNull[Q, string](cols.Geospatial),
 		Version:                 psql.Where[Q, int32](cols.Version),
 		OrganizationID:          psql.Where[Q, int32](cols.OrganizationID),
+		H3cell:                  psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 

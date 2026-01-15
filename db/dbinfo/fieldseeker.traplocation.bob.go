@@ -321,6 +321,15 @@ var FieldseekerTraplocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fieldseekerTraplocationIndexes{
 		TraplocationPkey: index{
@@ -401,11 +410,12 @@ type fieldseekerTraplocationColumns struct {
 	Geospatial              column
 	Version                 column
 	OrganizationID          column
+	H3cell                  column
 }
 
 func (c fieldseekerTraplocationColumns) AsSlice() []column {
 	return []column{
-		c.Objectid, c.Name, c.Zone, c.Habitat, c.Priority, c.Usetype, c.Active, c.Description, c.Accessdesc, c.Comments, c.Externalid, c.Nextactiondatescheduled, c.Zone2, c.Locationnumber, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Gatewaysync, c.Route, c.SetDow, c.RouteOrder, c.Vectorsurvsiteid, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.H3R7, c.H3R8, c.Geometry, c.Geospatial, c.Version, c.OrganizationID,
+		c.Objectid, c.Name, c.Zone, c.Habitat, c.Priority, c.Usetype, c.Active, c.Description, c.Accessdesc, c.Comments, c.Externalid, c.Nextactiondatescheduled, c.Zone2, c.Locationnumber, c.Globalid, c.CreatedUser, c.CreatedDate, c.LastEditedUser, c.LastEditedDate, c.Gatewaysync, c.Route, c.SetDow, c.RouteOrder, c.Vectorsurvsiteid, c.Creationdate, c.Creator, c.Editdate, c.Editor, c.H3R7, c.H3R8, c.Geometry, c.Geospatial, c.Version, c.OrganizationID, c.H3cell,
 	}
 }
 

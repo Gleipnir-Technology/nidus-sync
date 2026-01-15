@@ -197,12 +197,14 @@ func (e *Audiodatatype) Scan(value any) error {
 const (
 	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"
 	H3aggregationtypeServicerequest H3aggregationtype = "ServiceRequest"
+	H3aggregationtypeTrap           H3aggregationtype = "Trap"
 )
 
 func AllH3aggregationtype() []H3aggregationtype {
 	return []H3aggregationtype{
 		H3aggregationtypeMosquitosource,
 		H3aggregationtypeServicerequest,
+		H3aggregationtypeTrap,
 	}
 }
 
@@ -215,7 +217,8 @@ func (e H3aggregationtype) String() string {
 func (e H3aggregationtype) Valid() bool {
 	switch e {
 	case H3aggregationtypeMosquitosource,
-		H3aggregationtypeServicerequest:
+		H3aggregationtypeServicerequest,
+		H3aggregationtypeTrap:
 		return true
 	default:
 		return false

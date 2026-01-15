@@ -1680,6 +1680,7 @@ func (f *Factory) FromExistingFieldseekerTraplocation(m *models.FieldseekerTrapl
 	o.Geospatial = func() null.Val[string] { return m.Geospatial }
 	o.Version = func() int32 { return m.Version }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

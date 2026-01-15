@@ -2,91 +2,9 @@
 
 {{define "title"}}Dash{{end}}
 {{define "extraheader"}}
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
-<script>
-function onLoad() {
-	console.log("Setting up the map...");
-	mapboxgl.accessToken = {{ .MapData.MapboxToken }};
-	const map = new mapboxgl.Map({
-		container: 'map', // container ID
-		style: 'mapbox://styles/mapbox/standard', // style URL
-		center: [-119.3, 36.327], // starting position [lng, lat]
-		//center: [7.01, 50.74],
-		zoom: 9 // starting zoom
-	});
-	map.on("load", function() {
-		console.log("Map post-load...");
-		map.addSource('tegola-nidus', {
-			'type': 'vector',
-			'tiles': [
-				'https://{{.Config.URLTegola}}/maps/nidus/{z}/{x}/{y}?organization_id={{.User.Organization.ID}}'
-			]
-			//'minzoom': 6,
-			//'maxzoom': 14
-		});
-		map.addLayer({
-			'id': 'mosquito_source', // Layer ID
-			'type': 'fill',
-			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-			'source': 'tegola-nidus', // ID of the tile source created above
-			'source-layer': 'mosquito_source',
-			'paint': {
-				'fill-opacity': 0.4,
-				'fill-color': '#dc3545'
-			}
-			//slot: 'middle' // middle slot in Mapbox Standard style
-		});
-		map.addLayer({
-			'id': 'service_request', // Layer ID
-			'type': 'fill',
-			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-			'source': 'tegola-nidus', // ID of the tile source created above
-			'source-layer': 'service_request',
-			'paint': {
-				'fill-opacity': 0.4,
-				'fill-color': '#ffc107'
-			}
-			//slot: 'middle' // middle slot in Mapbox Standard style
-		});
-		map.addInteraction("nidus-click-interaction", {
-			type: 'click',
-			target: { layerId: 'nidus' },
-			handler: (e) => {
-				const coordinates = e.feature.geometry.coordinates.slice();
-				const properties = e.feature.properties;
-				//console.log("Coordinates", coordinates[0]);
-				//console.log("Properties", properties.cell, properties.count_);
-				/*new mapboxgl.Popup()
-					.setLngLat(coordinates[0][0])
-					.setHTML("Cell: " + properties.cell)
-					.addTo(map);*/
-				window.location.href = '/cell/' + properties.cell;
-			}
-		});
-		map.addInteraction('nidus-mouseenter-interaction', {
-			type: 'mouseenter',
-			target: { layerId: 'nidus' },
-			handler: () => {
-				map.getCanvas().style.cursor = 'pointer';
-			}
-		});
-		map.addInteraction('nidus-mouseleave-interaction', {
-			type: 'mouseleave',
-			target: { layerId: 'nidus' },
-			handler: () => {
-				map.getCanvas().style.cursor = '';
-			}
-		});
-
-		console.log("Map post-load done.");
-	});
-	
-	map.addControl(new mapboxgl.NavigationControl());
-	console.log("Map init done.");
-}
-window.addEventListener("load", onLoad);
-</script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet" />
+<script src="/static/js/map-aggregate.js"></script>
 <style>
 body {
 	background-color: #f8f9fa;
@@ -102,26 +20,6 @@ body {
 }
 .stats-card:hover {
 	transform: translateY(-5px);
-}
-.map-container {
-	background-color: #e9ecef;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-	height: 500px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-top: 20px;
-}
-#map {
-	height: 500px;
-	width:100%;
-	margin-bottom: 10px;
-}
-#map img {
-	max-width: none;
-	min-width: 0px;
-	height: auto;
 }
 .section-title {
 	margin: 30px 0 20px;
@@ -269,9 +167,14 @@ body {
 	<h3 class="section-title">Mosquito Activity Heatmap</h3>
 	<div class="row">
 		<div class="col-12">
-			<div class="map-container" id="mosquito-heatmap">
-				<div id='map'></div>
-			</div>
+			<map-aggregate
+					api-key="{{ .MapData.MapboxToken }}"
+					latitude="36.3"
+					longitude="-119.2"
+					organization-id="{{.User.Organization.ID}}"
+					tegola="{{.Config.URLTegola}}"
+					zoom="9"
+					/>
 		</div>
 	</div>
 

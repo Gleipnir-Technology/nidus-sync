@@ -20,6 +20,7 @@ import (
 func updateSummaryTables(ctx context.Context, org *models.Organization) {
 	updateSummaryMosquitoSource(ctx, org)
 	updateSummaryServiceRequest(ctx, org)
+	updateSummaryTrap(ctx, org)
 }
 
 func aggregateAtResolution(ctx context.Context, resolution int, org_id int32, type_ enums.H3aggregationtype, cells []h3.Cell) error {
@@ -70,7 +71,6 @@ func aggregateAtResolution(ctx context.Context, resolution int, org_id int32, ty
 }
 
 func updateSummaryMosquitoSource(ctx context.Context, org *models.Organization) {
-	log.Info().Int("org_id", int(org.ID)).Msg("Getting point locations")
 	point_locations, err := org.Pointlocations().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get all point locations")
@@ -80,7 +80,6 @@ func updateSummaryMosquitoSource(ctx context.Context, org *models.Organization) 
 		log.Info().Int("org_id", int(org.ID)).Msg("No updates to perform")
 		return
 	}
-	log.Info().Int("count", len(point_locations)).Msg("Summarizing point locations")
 
 	cells := make([]h3.Cell, 0)
 	for _, p := range point_locations {
@@ -104,7 +103,6 @@ func updateSummaryMosquitoSource(ctx context.Context, org *models.Organization) 
 }
 
 func updateSummaryServiceRequest(ctx context.Context, org *models.Organization) {
-	log.Info().Int("org_id", int(org.ID)).Msg("Getting service requests")
 	service_requests, err := org.Servicerequests().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get all service requests")
@@ -114,7 +112,6 @@ func updateSummaryServiceRequest(ctx context.Context, org *models.Organization) 
 		log.Info().Int("org_id", int(org.ID)).Msg("No updates to perform")
 		return
 	}
-	log.Info().Int("count", len(service_requests)).Msg("Summarizing point locations")
 
 	cells := make([]h3.Cell, 0)
 	for _, p := range service_requests {
@@ -132,6 +129,37 @@ func updateSummaryServiceRequest(ctx context.Context, org *models.Organization) 
 		err = aggregateAtResolution(ctx, i, org.ID, enums.H3aggregationtypeServicerequest, cells)
 		if err != nil {
 			log.Error().Err(err).Int("resolution", i).Msg("Failed to aggregate service request")
+		}
+	}
+}
+
+func updateSummaryTrap(ctx context.Context, org *models.Organization) {
+	traps, err := org.Traplocations().All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get all trap locations")
+		return
+	}
+	if len(traps) == 0 {
+		log.Info().Int("org_id", int(org.ID)).Msg("No updates to perform")
+		return
+	}
+
+	cells := make([]h3.Cell, 0)
+	for _, t := range traps {
+		if t.H3cell.IsNull() {
+			continue
+		}
+		cell, err := h3utils.ToCell(t.H3cell.MustGet())
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get geometry point")
+			continue
+		}
+		cells = append(cells, cell)
+	}
+	for i := range 16 {
+		err = aggregateAtResolution(ctx, i, org.ID, enums.H3aggregationtypeTrap, cells)
+		if err != nil {
+			log.Error().Err(err).Int("resolution", i).Msg("Failed to aggregate trap")
 		}
 	}
 }
