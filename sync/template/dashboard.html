@@ -249,11 +249,11 @@ body {
 					<div class="metric-icon bg-success bg-opacity-10 text-success">
 						<i class="fas fa-clipboard-check"></i>
 					</div>
-					<h5 class="card-title">Inspections</h5>
+					<h5 class="card-title">Traps</h5>
 					{{ if .IsSyncOngoing }}
-						<p class="metric-value">{{ .CountInspections | bigNumber }}...?</p>
+						<p class="metric-value">{{ .CountTraps | bigNumber }}...?</p>
 					{{ else }}
-						<p class="metric-value">{{ .CountInspections | bigNumber }}</p>
+						<p class="metric-value">{{ .CountTraps | bigNumber }}</p>
 					{{ end }}
 					<!-- <p class="card-text text-muted">
 						<span class="text-success">

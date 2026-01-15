@@ -35,7 +35,7 @@ type Config struct {
 
 type ContextDashboard struct {
 	Config               Config
-	CountInspections     int
+	CountTraps           int
 	CountMosquitoSources int
 	CountServiceRequests int
 	Geo                  template.JS
@@ -202,9 +202,9 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		lastSync = &sync.Created
 	}
 	is_syncing := background.IsSyncOngoing(org.ID)
-	inspectionCount, err := org.Mosquitoinspections().Count(ctx, db.PGInstance.BobDB)
+	trapCount, err := org.Traplocations().Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		respondError(w, "Failed to get inspection count", err, http.StatusInternalServerError)
+		respondError(w, "Failed to get trap count", err, http.StatusInternalServerError)
 		return
 	}
 	sourceCount, err := org.Pointlocations().Count(ctx, db.PGInstance.BobDB)
@@ -240,7 +240,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		Config: Config{
 			URLTegola: config.URLTegola,
 		},
-		CountInspections:     int(inspectionCount),
+		CountTraps:           int(trapCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
 		IsSyncOngoing:        is_syncing,
