@@ -62,6 +62,10 @@ type NoteAudioPayload struct {
 	Version                 int32                        `json:"version"`
 }
 
+type ResponseDistrict struct {
+	Agency string `json:"agency"`
+}
+
 type ResponseMosquitoSource struct {
 	Access                  string                       `json:"access"`
 	Active                  *bool                        `json:"active"`
@@ -152,6 +156,10 @@ func NewResponseMosquitoInspections(inspections models.FieldseekerMosquitoinspec
 		results = append(results, NewResponseMosquitoInspection(i))
 	}
 	return results
+}
+
+func (rd ResponseDistrict) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request) error {

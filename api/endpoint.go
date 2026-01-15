@@ -20,6 +20,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentPost))
 
 	// Unauthenticated endpoints
+	r.Get("/district", apiGetDistrict)
 	r.Get("/webhook/fieldseeker", webhookFieldseeker)
 	r.Post("/webhook/fieldseeker", webhookFieldseeker)
 }

@@ -35,6 +35,18 @@ function setDistrictColors(map) {
 		//console.log("using fallback district coloring");
 	}
 }
+
+async function fetchDistrict(lng, lat) {
+	try {
+		const url = `/api/district?lat=${lat}&lng=${lng}`
+		const response = await fetch(url);
+		const data = await response.json();
+		console.log("district", data);
+	} catch (error) {
+		console.error('Error fetching geocoding suggestions:', error);
+	}
+}
+
 function onLoad() {
 	console.log("Setting up the map...");
 	mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
@@ -118,6 +130,7 @@ function onLoad() {
 		});*/
 
 		addressDisplay.show(l);
+		fetchDistrict(l.geometry.coordinates[0], l.geometry.coordinates[1]);
 	});
 }
 document.addEventListener("DOMContentLoaded", onLoad);
