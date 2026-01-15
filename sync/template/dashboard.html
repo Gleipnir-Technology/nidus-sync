@@ -57,6 +57,15 @@ body {
 	animation: fa-spin 2s linear infinite;
 }
 </style>
+<script>
+function onLoad() {
+	const map = document.querySelector("map-aggregate");
+	map.addEventListener("cell-click", (event) => {
+		window.location.href = '/cell/' + event.detail.cell;
+	});
+}
+window.addEventListener("load", onLoad);
+</script>
 {{end}}
 {{define "content"}}
 <div class="container dashboard-container">

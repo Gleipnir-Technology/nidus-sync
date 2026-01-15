@@ -78,7 +78,7 @@ class MapAggregate extends HTMLElement {
 			style: 'mapbox://styles/mapbox/streets-v12', // style URL
 			zoom: zoom,
 		});
-		map.on("load", function() {
+		map.on("load", () => {
 			map.addSource('tegola', {
 				'type': 'vector',
 				'tiles': [
@@ -132,31 +132,22 @@ class MapAggregate extends HTMLElement {
 					'fill-color': '#0dcaf0'
 				}
 			});
-			map.addInteraction("nidus-click-interaction", {
-				type: 'click',
-				target: { layerId: 'nidus' },
+			var self = this;
+			map.addInteraction("tegola-click-interaction", {
+				type: "click",
+				target: { layerId: "mosquito_source" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
-					//console.log("Coordinates", coordinates[0]);
-					//console.log("Properties", properties.cell, properties.count_);
-					/*new mapboxgl.Popup()
-						.setLngLat(coordinates[0][0])
-						.setHTML("Cell: " + properties.cell)
-						.addTo(map);*/
-					window.location.href = '/cell/' + properties.cell;
+					self.dispatchEvent(new CustomEvent("cell-click", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							cell: properties.cell
+						}
+					}));
 				}
 			});
-
-			/*
-			this.dispatchEvent(new CustomEvent('load') {
-				bubbles: true,
-				composed: true, // Allows event to cross shadow DOM boundary
-				detail: {
-					map: this
-				}
-			});
-			*/
 		});
 	}
 
