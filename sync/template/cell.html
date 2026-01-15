@@ -160,6 +160,36 @@
 
 		<!-- Right Column -->
 		<div class="col-md-6">
+			<h2 class="section-header">Traps</h2>
+			{{ if gt (len .Traps) 0}}
+				<div class="card mb-4">
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-striped table-hover">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Active</th>
+										<th>Comments</th>
+									</tr>
+								</thead>
+								<tbody>
+									{{ range .Traps }}
+									<tr>
+										<td><a href="/trap/{{.GlobalID}}">{{.GlobalID|uuidShort}}</a></td>
+										<td>{{.Active}}</td>
+										<td>{{.Comments}}</td>
+									</tr>
+									{{ end }}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			{{ else }}
+				<p>No traps</p>
+			{{ end }}
+
 			<!-- Treatments Section -->
 			<h2 class="section-header">Treatment History</h2>
 			<div class="card mb-4">

@@ -100,11 +100,11 @@ func contentForUser(ctx context.Context, user *models.User) (User, error) {
 		DisplayName:   user.DisplayName,
 		Initials:      extractInitials(user.DisplayName),
 		Notifications: notifications,
-		Organization:  Organization {
-			ID: int(org.ID),
+		Organization: Organization{
+			ID:   int(org.ID),
 			Name: org.Name,
 		},
-		Username:      user.Username,
+		Username: user.Username,
 	}, nil
 
 }
@@ -181,7 +181,7 @@ func trapsBySource(ctx context.Context, org *models.Organization, sourceID uuid.
 		return nil, fmt.Errorf("Failed to query trap counts: %w", err)
 	}
 
-	traps, err := toTemplateTraps(locations, trap_data, counts)
+	traps, err := toTemplateTrapsNearby(locations, trap_data, counts)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to convert trap data: %w", err)
 	}
@@ -201,6 +201,24 @@ func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID 
 	}
 	//log.Info().Int("row count", len(rows)).Msg("Getting treatments")
 	return toTemplateTreatment(rows)
+}
+
+func trapsByCell(ctx context.Context, org *models.Organization, c h3.Cell) (results []Trap, err error) {
+	boundary, err := c.Boundary()
+	if err != nil {
+		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
+	}
+	geom_query := gisStatement(boundary)
+	rows, err := org.Traplocations(
+		sm.Where(
+			psql.F("ST_Within", "geospatial", geom_query),
+		),
+		sm.OrderBy("objectid"),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return results, fmt.Errorf("Failed to query rows: %w", err)
+	}
+	return toTemplateTrap(rows)
 }
 
 func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Treatment, error) {

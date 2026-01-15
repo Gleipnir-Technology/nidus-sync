@@ -33,6 +33,15 @@ type Config struct {
 	URLTegola string
 }
 
+type ContextCell struct {
+	BreedingSources []BreedingSourceSummary
+	CellBoundary    h3.CellBoundary
+	Inspections     []Inspection
+	MapData         ComponentMap
+	Traps           []Trap
+	Treatments      []Treatment
+	User            User
+}
 type ContextDashboard struct {
 	Config               Config
 	CountTraps           int
@@ -161,12 +170,18 @@ func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 		respondError(w, "Failed to get sources", err, http.StatusInternalServerError)
 		return
 	}
+	traps, err := trapsByCell(ctx, org, h3.Cell(c))
+	if err != nil {
+		respondError(w, "Failed to get traps", err, http.StatusInternalServerError)
+		return
+	}
+
 	treatments, err := treatmentsByCell(ctx, org, h3.Cell(c))
 	if err != nil {
 		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContentCell{
+	data := ContextCell{
 		BreedingSources: sources,
 		CellBoundary:    boundary,
 		Inspections:     inspections,
@@ -179,6 +194,7 @@ func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 			MapboxToken: config.MapboxToken,
 			Zoom:        resolution + 5,
 		},
+		Traps:      traps,
 		Treatments: treatments,
 		User:       userContent,
 	}

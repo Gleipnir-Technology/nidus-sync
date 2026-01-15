@@ -28,14 +28,6 @@ type ComponentMap struct {
 type ContentAuthenticatedPlaceholder struct {
 	User User
 }
-type ContentCell struct {
-	BreedingSources []BreedingSourceSummary
-	CellBoundary    h3.CellBoundary
-	Inspections     []Inspection
-	MapData         ComponentMap
-	Treatments      []Treatment
-	User            User
-}
 type ContentMockURLs struct {
 	Dispatch            string
 	DispatchResults     string
@@ -95,7 +87,7 @@ type Link struct {
 	Title string
 }
 type Organization struct {
-	ID int
+	ID   int
 	Name string
 }
 type ServiceRequestSummary struct {
@@ -104,9 +96,9 @@ type ServiceRequestSummary struct {
 	Status   string
 }
 type User struct {
-	DisplayName    string
-	Initials       string
-	Notifications  []notification.Notification
-	Organization   Organization
-	Username       string
+	DisplayName   string
+	Initials      string
+	Notifications []notification.Notification
+	Organization  Organization
+	Username      string
 }

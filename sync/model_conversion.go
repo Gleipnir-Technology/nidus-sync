@@ -154,6 +154,13 @@ type TrapData struct {
 	Comments       string     `json:"comments"`
 }
 
+type Trap struct {
+	Active      bool
+	Comments    string
+	Description string
+	GlobalID    uuid.UUID
+}
+
 type Treatment struct {
 	CadenceDelta time.Duration
 	Date         *time.Time
@@ -162,7 +169,18 @@ type Treatment struct {
 	Product      string
 }
 
-func toTemplateTraps(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.TrapDataByLocationIDRecentRow, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
+func toTemplateTrap(traps models.FieldseekerTraplocationSlice) (results []Trap, err error) {
+	for _, t := range traps {
+		results = append(results, Trap{
+			Active:      toBool16Or(t.Active, false),
+			Comments:    t.Comments.GetOr(""),
+			Description: t.Description.GetOr(""),
+			GlobalID:    t.Globalid,
+		})
+	}
+	return results, err
+}
+func toTemplateTrapsNearby(locations []sql.TrapLocationBySourceIDRow, trap_data []sql.TrapDataByLocationIDRecentRow, counts []sql.TrapCountByLocationIDRow) ([]TrapNearby, error) {
 	results := make([]TrapNearby, 0)
 	count_by_trap_data_id := make(map[uuid.UUID]*sql.TrapCountByLocationIDRow)
 	for _, c := range counts {
@@ -408,4 +426,18 @@ func getTimeOrNull(v null.Val[time.Time]) *time.Time {
 	}
 	val := v.MustGet()
 	return &val
+}
+
+func toBool16Or(t null.Val[int16], def bool) bool {
+	if t.IsNull() {
+		return def
+	}
+	val := t.MustGet()
+	var b bool
+	if val == 0 {
+		b = false
+	} else {
+		b = true
+	}
+	return b
 }

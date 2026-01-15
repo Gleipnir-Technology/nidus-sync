@@ -132,14 +132,13 @@ class MapAggregate extends HTMLElement {
 					'fill-color': '#0dcaf0'
 				}
 			});
-			var self = this;
 			map.addInteraction("tegola-click-interaction", {
 				type: "click",
 				target: { layerId: "mosquito_source" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
-					self.dispatchEvent(new CustomEvent("cell-click", {
+					this.dispatchEvent(new CustomEvent("cell-click", {
 						bubbles: true,
 						composed: true, // Allows event to cross shadow DOM boundary
 						detail: {
