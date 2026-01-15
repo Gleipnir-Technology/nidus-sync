@@ -63,7 +63,10 @@ type NoteAudioPayload struct {
 }
 
 type ResponseDistrict struct {
-	Agency string `json:"agency"`
+	Agency  string `json:"agency"`
+	Manager string `json:"manager"`
+	Phone   string `json:"phone"`
+	Website string `json:"website"`
 }
 
 type ResponseMosquitoSource struct {

@@ -40,8 +40,23 @@ async function fetchDistrict(lng, lat) {
 	try {
 		const url = `/api/district?lat=${lat}&lng=${lng}`
 		const response = await fetch(url);
+		var agencyEl = document.querySelector("#district-agency");
+		var managerEl = document.querySelector("#district-manager");
+		var phoneEl = document.querySelector("#district-phone");
+		var websiteEl = document.querySelector("#district-website");
+		if (response.status == 404) {
+			agencyEl.innerHTML = "no matching district";
+			managerEl.innerHTML = "-";
+			phoneEl.innerHTML = "-";
+			websiteEl.innerHTML = "-";
+			return
+		}
 		const data = await response.json();
 		console.log("district", data);
+		agencyEl.innerHTML = data.agency;
+		managerEl.innerHTML = data.manager;
+		phoneEl.innerHTML = data.phone;
+		websiteEl.innerHTML = data.website;
 	} catch (error) {
 		console.error('Error fetching geocoding suggestions:', error);
 	}
@@ -117,17 +132,20 @@ function onLoad() {
 	addressSuggestionEnable(address, suggestionsContainer);*/
 	const addressDisplay = document.querySelector("address-display");
 	const addressInput = document.querySelector("address-input");
-	const mapComponent = document.querySelector("map-component");
 	addressInput.addEventListener("address-selected", (event) => {
 		const l = event.detail.location;
 		// Center map on selected address
 
-		//mapComponent.jumpTo(coordinates);
+		map.jumpTo({
+			center: l.geometry.coordinates,
+			zoom: 14,
+		});
 
 		// Add marker for selected address
-		/*mapComponent.addMarker(coordinates, {
-			title: event.detail.address
-		});*/
+		const marker = new mapboxgl.Marker({
+			color: "#FF0000",
+			draggable: false
+		}).setLngLat(l.geometry.coordinates).addTo(map);
 
 		addressDisplay.show(l);
 		fetchDistrict(l.geometry.coordinates[0], l.geometry.coordinates[1]);
@@ -138,6 +156,13 @@ document.addEventListener("DOMContentLoaded", onLoad);
 <style>
 body {
 	background-color: #f8f9fa;
+}
+.detail-label {
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	color: #6c757d;
+	margin-bottom: 2px;
+	font-weight: 600;
 }
 .dashboard-container {
 	padding: 20px 0;
@@ -225,8 +250,35 @@ body {
 			<div id="map"></div>
 		</div>
 	</div>
-	<div class="card-body p-0">
-		<address-display></address-display>
+	<div class="row">
+		<div class="col-6">
+			<div class="card-body p-0">
+				<address-display></address-display>
+			</div>
+		</div>
+		<div class="col-6">
+			<div class="district-display" class="mt-4 ">
+				<h5 class="mb-3">District Details</h5>
+				<div class="location-card p-3 mb-3">
+					<div class="district-detail">
+						<div class="detail-label">Agency</div>
+						<div class="detail-value" id="district-agency">-</div>
+					</div>
+					<div class="district-detail">
+						<div class="detail-label">Manager</div>
+						<div class="agency detail-value" id="district-manager">-</div>
+					</div>
+					<div class="district-detail">
+						<div class="detail-label">Phone</div>
+						<div class="agency detail-value" id="district-phone">-</div>
+					</div>
+					<div class="district-detail">
+						<div class="detail-label">Website</div>
+						<div class="agency detail-value" id="district-website">-</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 {{end}}

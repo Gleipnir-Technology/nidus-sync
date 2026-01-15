@@ -103,8 +103,15 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, errRender(fmt.Errorf("Failed to get district: %w", err)))
 		return
 	}
+	if district == nil {
+		http.NotFound(w, r)
+		return
+	}
 	d := ResponseDistrict{
-		Agency: district.Agency.GetOr(""),
+		Agency:  district.Agency.GetOr(""),
+		Manager: district.GeneralMG.GetOr(""),
+		Phone:   district.Phone1.GetOr(""),
+		Website: district.Website.GetOr(""),
 	}
 	if err := render.Render(w, r, d); err != nil {
 		render.Render(w, r, errRender(err))
