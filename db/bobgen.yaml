@@ -1,4 +1,9 @@
 aliases:
+  arcgis.user_:
+    up_plural: "ArcgisUsers"
+    up_singular: "ArcgisUser"
+    down_plural: "arcgisusers"
+    down_singular: "arcgisuser"
   user_:
     up_plural: "Users"
     up_singular: "User"
@@ -7,9 +12,11 @@ aliases:
 no_tests: true
 psql:
   schemas:
+    - "arcgis"
     - "public"
     - "publicreport"
     - "fieldseeker"
+  shared_schema: "public"
   queries:
     - ./sql
   uuid_pkg: google

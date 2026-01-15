@@ -34,6 +34,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dm"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 )
@@ -101,11 +102,15 @@ func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 }
 
 func HasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
-	result, err := sql.OauthTokenByUserId(user.ID).All(ctx, db.PGInstance.BobDB)
+	result, err := models.OauthTokens.Query(
+		sm.Where(
+			models.OauthTokens.Columns.UserID.EQ(psql.Arg(user.ID)),
+		),
+	).Exists(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return false, err
 	}
-	return len(result) > 0, nil
+	return result, nil
 }
 
 func IsSyncOngoing(org_id int32) bool {
@@ -234,12 +239,12 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 			RefreshTokenExpires: refresh_token_expires,
 		},
 	)
-	portal, err := client.PortalsSelf()
+
+	portal, err := updatePortalData(ctx, client, user.ID)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get ArcGIS user data")
+		log.Error().Err(err).Msg("Failed to get portal data")
 		return
 	}
-	log.Info().Str("Username", portal.User.Username).Str("user_id", portal.User.ID).Str("org_id", portal.User.OrgID).Str("org_name", portal.Name).Str("license_type_id", portal.User.UserLicenseTypeID).Msg("Got portals data")
 
 	_, err = models.OauthTokens.Update(
 		//um.SetCol(string(models.OauthTokens.Columns.ArcgisID)).ToArg(portal.User.ID),
@@ -324,6 +329,72 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	downloadFieldseekerSchema(ctx, fieldseekerClient, arcgis_id)
 	notification.ClearOauth(ctx, user)
 	NewOAuthTokenChannel <- struct{}{}
+}
+
+func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32) (*arcgis.PortalsResponse, error) {
+	p, err := client.PortalsSelf()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get ArcGIS user data: %w", err)
+	}
+
+	tx, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	_, err = models.ArcgisUserPrivileges.Delete(
+		dm.Where(
+			models.ArcgisUserPrivileges.Columns.UserID.EQ(psql.Arg(p.User.ID)),
+		),
+	).Exec(ctx, tx)
+
+	if err != nil {
+		tx.Rollback(ctx)
+		return nil, fmt.Errorf("Failed to delete previous user privilege data: %w", err)
+	}
+
+	_, err = models.ArcgisUsers.Delete(
+		dm.Where(
+			models.ArcgisUsers.Columns.ID.EQ(psql.Arg(p.User.ID)),
+		),
+	).Exec(ctx, tx)
+
+	if err != nil {
+		tx.Rollback(ctx)
+		return nil, fmt.Errorf("Failed to delete previous user data: %w", err)
+	}
+
+	setter := models.ArcgisUserSetter{
+		Access:            omit.From(p.Access),
+		Created:           omit.From(time.Unix(p.User.Created, 0)),
+		Email:             omit.From(p.User.Email),
+		FullName:          omit.From(p.User.FullName),
+		ID:                omit.From(p.User.ID),
+		Level:             omit.From(p.User.Level),
+		OrgID:             omit.From(p.User.OrgID),
+		PublicUserID:      omit.From(user_id),
+		Region:            omit.From(p.Region),
+		Role:              omit.From(p.User.Role),
+		RoleID:            omit.From(p.User.RoleId),
+		Username:          omit.From(p.User.Username),
+		UserLicenseTypeID: omit.From(p.User.UserLicenseTypeID),
+		UserType:          omit.From(p.User.UserType),
+	}
+	_, err = models.ArcgisUsers.Insert(&setter).One(ctx, tx)
+	if err != nil {
+		tx.Rollback(ctx)
+		return nil, fmt.Errorf("Failed to add arcgis user data: %w", err)
+	}
+	for _, priv := range p.User.Privileges {
+		s := models.ArcgisUserPrivilegeSetter{
+			Privilege: omit.From(priv),
+			UserID:    omit.From(p.User.ID),
+		}
+		_, err := models.ArcgisUserPrivileges.Insert(&s).One(ctx, tx)
+		if err != nil {
+			tx.Rollback(ctx)
+			return nil, fmt.Errorf("Failed to add arcgis user privilege data: %w", err)
+		}
+	}
+	err = tx.Commit(ctx)
+	log.Info().Str("username", p.User.Username).Str("user_id", p.User.ID).Str("org_id", p.User.OrgID).Str("org_name", p.Name).Str("license_type_id", p.User.UserLicenseTypeID).Msg("Updated portals data")
+	return p, nil
 }
 
 func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
