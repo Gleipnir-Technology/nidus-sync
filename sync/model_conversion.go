@@ -76,10 +76,13 @@ type BreedingSourceDetail struct {
 	Comments string     `json:"comments"`
 }
 
-type TrapNearby struct {
-	Counts   []*TrapCount
-	Distance string
-	ID       uuid.UUID
+type Trap struct {
+	Active      bool
+	Comments    string
+	Collections []TrapData
+	Description string
+	GlobalID    uuid.UUID
+	H3Cell      h3.Cell
 }
 
 type TrapCount struct {
@@ -152,9 +155,18 @@ type TrapData struct {
 	LastEditedDate *time.Time `json:"lastEditedDate"`
 	LastEditedUser string     `json:"lastEditedUser"`
 	Comments       string     `json:"comments"`
+
+	// Stuff I actually use
+	Count TrapCount
 }
 
-type Trap struct {
+type TrapNearby struct {
+	Counts   []*TrapCount
+	Distance string
+	ID       uuid.UUID
+}
+
+type TrapSummary struct {
 	Active      bool
 	Comments    string
 	Description string
@@ -169,9 +181,57 @@ type Treatment struct {
 	Product      string
 }
 
-func toTemplateTrap(traps models.FieldseekerTraplocationSlice) (results []Trap, err error) {
+func toTemplateTrap(trap *models.FieldseekerTraplocation, trap_data []sql.TrapDataByLocationIDRecentRow, count_slice []sql.TrapCountByLocationIDRow) (result Trap, err error) {
+	log.Debug().Str("globalid", trap.Globalid.String()).Msg("Working on trap")
+	cell, err := h3utils.ToCell(trap.H3cell.MustGet())
+	if err != nil {
+		return result, fmt.Errorf("Failed to convert h3 cell: %w", err)
+	}
+
+	count_by_trapdata_id := make(map[uuid.UUID]TrapCount, 0)
+	for _, count := range count_slice {
+		count_by_trapdata_id[count.TrapdataGlobalid] = TrapCount{
+			Ended:   count.TrapdataEnddate.MustGet(),
+			Females: int(count.TotalFemales),
+			Males:   int(count.TotalMales),
+			Total:   int(count.Total),
+		}
+	}
+
+	data_by_id := make(map[uuid.UUID]TrapData, 0)
+	for _, dt := range trap_data {
+		if dt.LocID != trap.Globalid {
+			return result, fmt.Errorf("Bad query")
+		}
+		log.Debug().Str("trapdata", dt.Globalid.String()).Msg("Aggregating trapdata")
+		count, ok := count_by_trapdata_id[dt.Globalid]
+		if !ok {
+			count = TrapCount{}
+		}
+		data_by_id[dt.Globalid] = TrapData{
+			Count:       count,
+			EndDateTime: &dt.Enddatetime,
+			GlobalID:    dt.Globalid,
+		}
+	}
+	data := make([]TrapData, 0)
+	for _, v := range data_by_id {
+		data = append(data, v)
+	}
+
+	return Trap{
+		Active:      toBool16Or(trap.Active, false),
+		Comments:    trap.Comments.GetOr(""),
+		Collections: data,
+		Description: trap.Description.GetOr(""),
+		GlobalID:    trap.Globalid,
+		H3Cell:      cell,
+	}, nil
+}
+
+func toTemplateTrapSummary(traps models.FieldseekerTraplocationSlice) (results []TrapSummary, err error) {
 	for _, t := range traps {
-		results = append(results, Trap{
+		results = append(results, TrapSummary{
 			Active:      toBool16Or(t.Active, false),
 			Comments:    t.Comments.GetOr(""),
 			Description: t.Description.GetOr(""),

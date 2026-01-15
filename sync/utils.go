@@ -203,7 +203,28 @@ func treatmentsBySource(ctx context.Context, org *models.Organization, sourceID 
 	return toTemplateTreatment(rows)
 }
 
-func trapsByCell(ctx context.Context, org *models.Organization, c h3.Cell) (results []Trap, err error) {
+func trapByGlobalId(ctx context.Context, org *models.Organization, id uuid.UUID) (result Trap, err error) {
+	row, err := org.Traplocations(
+		sm.Where(models.FieldseekerTraplocations.Columns.Globalid.EQ(psql.Arg(id))),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get trap location: %w", err)
+	}
+
+	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query trap data: %w", err)
+	}
+
+	counts, err := sql.TrapCountByLocationID(org.ID, []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query trap counts: %w", err)
+	}
+
+	return toTemplateTrap(row, trap_data, counts)
+}
+
+func trapsByCell(ctx context.Context, org *models.Organization, c h3.Cell) (results []TrapSummary, err error) {
 	boundary, err := c.Boundary()
 	if err != nil {
 		return results, fmt.Errorf("Failed to get cell boundary: %w", err)
@@ -218,7 +239,7 @@ func trapsByCell(ctx context.Context, org *models.Organization, c h3.Cell) (resu
 	if err != nil {
 		return results, fmt.Errorf("Failed to query rows: %w", err)
 	}
-	return toTemplateTrap(rows)
+	return toTemplateTrapSummary(rows)
 }
 
 func treatmentsByCell(ctx context.Context, org *models.Organization, c h3.Cell) ([]Treatment, error) {

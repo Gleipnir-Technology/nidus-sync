@@ -66,6 +66,7 @@ func Router() chi.Router {
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
+	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
 
 	htmlpage.AddStaticRoute(r, "/static")
 	return r

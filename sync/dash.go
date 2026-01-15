@@ -27,18 +27,34 @@ var (
 	districtT  = buildTemplate("district", "base")
 	settingsT  = buildTemplate("settings", "authenticated")
 	sourceT    = buildTemplate("source", "authenticated")
+	trapT      = buildTemplate("trap", "authenticated")
 )
 
 type Config struct {
 	URLTegola string
 }
 
+type ContentSource struct {
+	Inspections []Inspection
+	MapData     ComponentMap
+	Source      *BreedingSourceDetail
+	Traps       []TrapNearby
+	Treatments  []Treatment
+	//TreatmentCadence TreatmentCadence
+	TreatmentModels []TreatmentModel
+	User            User
+}
+type ContentTrap struct {
+	MapData ComponentMap
+	Trap    Trap
+	User    User
+}
 type ContextCell struct {
 	BreedingSources []BreedingSourceSummary
 	CellBoundary    h3.CellBoundary
 	Inspections     []Inspection
 	MapData         ComponentMap
-	Traps           []Trap
+	Traps           []TrapSummary
 	Treatments      []Treatment
 	User            User
 }
@@ -131,6 +147,20 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	source(w, r, u, globalid)
+}
+
+func getTrap(w http.ResponseWriter, r *http.Request, u *models.User) {
+	globalid_s := chi.URLParam(r, "globalid")
+	if globalid_s == "" {
+		respondError(w, "No globalid provided", nil, http.StatusBadRequest)
+		return
+	}
+	globalid, err := uuid.Parse(globalid_s)
+	if err != nil {
+		respondError(w, "globalid is not a UUID", nil, http.StatusBadRequest)
+		return
+	}
+	trap(w, r, u, globalid)
 }
 
 func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64) {
@@ -341,4 +371,44 @@ func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.U
 	}
 
 	htmlpage.RenderOrError(w, sourceT, data)
+}
+
+func trap(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
+	org, err := user.Organization().One(r.Context(), db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to get org", err, http.StatusInternalServerError)
+		return
+	}
+	userContent, err := contentForUser(r.Context(), user)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	t, err := trapByGlobalId(r.Context(), org, id)
+	if err != nil {
+		respondError(w, "Failed to get trap", err, http.StatusInternalServerError)
+		return
+	}
+	latlng, err := t.H3Cell.LatLng()
+	if err != nil {
+		respondError(w, "Failed to get latlng", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentTrap{
+		MapData: ComponentMap{
+			Center: latlng,
+			//GeoJSON:
+			MapboxToken: config.MapboxToken,
+			Markers: []MapMarker{
+				MapMarker{
+					LatLng: latlng,
+				},
+			},
+			Zoom: 13,
+		},
+		Trap: t,
+		User: userContent,
+	}
+
+	htmlpage.RenderOrError(w, trapT, data)
 }

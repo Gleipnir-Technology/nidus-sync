@@ -65,16 +65,6 @@ type ContentSignin struct {
 	InvalidCredentials bool
 }
 type ContentSignup struct{}
-type ContentSource struct {
-	Inspections []Inspection
-	MapData     ComponentMap
-	Source      *BreedingSourceDetail
-	Traps       []TrapNearby
-	Treatments  []Treatment
-	//TreatmentCadence TreatmentCadence
-	TreatmentModels []TreatmentModel
-	User            User
-}
 type Inspection struct {
 	Action     string
 	Date       *time.Time

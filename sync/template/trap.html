@@ -1,0 +1,131 @@
+{{template "authenticated.html" .}}
+
+{{define "title"}}Dash{{end}}
+{{define "extraheader"}}
+{{template "map" .MapData}}
+<style>
+.info-table {
+	width: 100%;
+}
+
+.info-table td {
+	padding: 5px 0;
+}
+
+.info-label {
+	font-weight: 600;
+	vertical-align: top;
+}
+.map-container {
+	background-color: #e9ecef;
+	height: 500px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	margin-bottom: 20px;
+}
+
+.section-header {
+	margin-top: 30px;
+	margin-bottom: 15px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #dee2e6;
+}
+
+.source-info {
+	background-color: #f8f9fa;
+	padding: 15px;
+	border-radius: 4px;
+	margin-bottom: 20px;
+}
+
+.time-delta-positive {
+	color: #dc3545; /* red for late */
+}
+
+.time-delta-negative {
+	color: #28a745; /* green for early */
+}
+
+.time-delta-neutral {
+	color: #6c757d; /* gray for on time */
+}
+</style>
+{{end}}
+{{define "content"}}
+<div class="container mt-4 mb-5">
+	<!-- Trap Header Section -->
+	<div class="row mb-2">
+		<div class="col-12">
+			<h1>Trap Detail</h1>
+		</div>
+	</div>
+
+	<div class="row mb-2">
+		<div class="col-12">
+			<div class="source-info">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="source-id">Trap ID: {{ .Trap.GlobalID }}</div>
+						<table class="info-table">
+							<tr>
+								<td class="info-label">Active:</td>
+								<td>{{ .Trap.Active }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Comments:</td>
+								<td>{{ .Trap.Comments }}</td>
+							</tr>
+							<tr>
+								<td class="info-label">Description:</td>
+								<td>{{ .Trap.Description }}</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Map Section -->
+	<div class="row">
+		<div class="col-12">
+			<div class="map-container">
+				<div id="map"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row mb-2">
+		<div class="col-12">
+			<h2 class="section-header">Trap Collections</h2>
+			<div class="table-responsive">
+				<table class="table table-striped table-hover">
+					<thead>
+						<tr>
+							<th>Collection Date</th>
+							<th>Collection ID</th>
+							<th>Females</th>
+							<th>Male</th>
+							<th>Total</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- Trap 1 with multiple collections -->
+						{{ range .Trap.Collections }}
+							<tr>
+								<td>{{ .EndDateTime|timeSince }}</td>
+								<td>{{ .GlobalID }}</td>
+								<td>{{ .Count.Females }}</td>
+								<td>{{ .Count.Males }}</td>
+								<td>{{ .Count.Total }}</td>
+							</tr>
+						{{ end }}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{{end}}
