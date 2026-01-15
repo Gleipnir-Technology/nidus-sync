@@ -24,24 +24,18 @@ import (
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
-	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/dialect"
-	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/bob/dialect/psql/um"
-	"github.com/uber/h3-go/v4"
 )
 
 var syncStatusByOrg map[int32]bool
@@ -468,6 +462,11 @@ func logPermissions(ctx context.Context, org *models.Organization, oauth *models
 		log.Error().Err(err).Msg("Failed to create fieldseeker client in log permissions")
 		return
 	}
+	_, err = fssync.AdminInfo()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get admin info log permissions")
+		return
+	}
 	permissions, err := fssync.PermissionList()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to query permissions in log permissions")
@@ -477,6 +476,7 @@ func logPermissions(ctx context.Context, org *models.Organization, oauth *models
 		log.Info().Str("p", p.Principal).Msg("Permission!")
 	}
 }
+
 func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 	for {
 		// Refresh from the database
@@ -1040,64 +1040,6 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 		return fmt.Errorf("Failed to update row into %s: %w", table, err)
 	}
 	return nil
-}
-
-func updateSummaryTables(ctx context.Context, org *models.Organization) {
-	/*org, err := models.FindOrganization(ctx, PGInstance.BobDB, org_id)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get organization")
-	}*/
-	log.Info().Int("org_id", int(org.ID)).Msg("Getting point locations")
-	point_locations, err := org.Pointlocations().All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get organization")
-		return
-	}
-	if len(point_locations) == 0 {
-		log.Info().Int("org_id", int(org.ID)).Msg("No updates to perform")
-		return
-	}
-	log.Info().Int("count", len(point_locations)).Msg("Summarizing point locations")
-
-	for i := range 16 {
-		log.Info().Int("resolution", i).Msg("Working summary layer")
-		cellToCount := make(map[h3.Cell]int, 0)
-		for _, p := range point_locations {
-			if p.H3cell.IsNull() {
-				continue
-			}
-			cell, err := h3utils.ToCell(p.H3cell.MustGet())
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to get geometry point")
-				continue
-			}
-			scaled, err := cell.Parent(i)
-			if err != nil {
-				log.Error().Err(err).Int("resolution", i).Msg("Failed to get cell's parent at resolution")
-				continue
-			}
-			cellToCount[scaled] = cellToCount[scaled] + 1
-		}
-		var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
-		to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
-		for cell, count := range cellToCount {
-			polygon, err := h3utils.CellToPostgisGeometry(cell)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to get PostGIS geometry")
-				continue
-			}
-			// log.Info().Str("polygon", polygon).Msg("Going to insert")
-			to_insert = append(to_insert, im.Values(psql.Arg(cell.String(), i, count, enums.H3aggregationtypeServicerequest, org.ID), psql.F("st_geomfromtext", psql.S(polygon), 4326)))
-		}
-		to_insert = append(to_insert, im.OnConflict("cell, organization_id, type_").DoUpdate(
-			im.SetCol("count_").To(psql.Raw("EXCLUDED.count_")),
-		))
-		//log.Info().Str("sql", insertQueryToString(psql.Insert(to_insert...))).Msg("Updating...")
-		_, err := psql.Insert(to_insert...).Exec(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			log.Error().Err(err).Msg("Faild to add h3 aggregation")
-		}
-	}
 }
 
 func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[SyncStats], org *models.Organization, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature) (SyncStats, error) {

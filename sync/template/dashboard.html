@@ -26,14 +26,26 @@ function onLoad() {
 			//'maxzoom': 14
 		});
 		map.addLayer({
-			'id': 'nidus', // Layer ID
+			'id': 'mosquito_source', // Layer ID
 			'type': 'fill',
 			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
 			'source': 'tegola-nidus', // ID of the tile source created above
-			'source-layer': 'h3_aggregation',
+			'source-layer': 'mosquito_source',
 			'paint': {
 				'fill-opacity': 0.3,
 				'fill-color': 'rgb(250, 100, 100)'
+			}
+			//slot: 'middle' // middle slot in Mapbox Standard style
+		});
+		map.addLayer({
+			'id': 'service_request', // Layer ID
+			'type': 'fill',
+			'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
+			'source': 'tegola-nidus', // ID of the tile source created above
+			'source-layer': 'service_request',
+			'paint': {
+				'fill-opacity': 0.3,
+				'fill-color': 'rgb(100, 100, 250)'
 			}
 			//slot: 'middle' // middle slot in Mapbox Standard style
 		});
