@@ -52,6 +52,7 @@ func Router() chi.Router {
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)
+	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
 	r.Get("/sms", getSMS)

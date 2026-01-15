@@ -125,6 +125,12 @@ func SigninUser(r *http.Request, username string, password string) (*models.User
 	return user, nil
 }
 
+func SignoutUser(r *http.Request, user *models.User) {
+	sessionManager.Put(r.Context(), "user_id", "")
+	sessionManager.Put(r.Context(), "username", "")
+	log.Info().Str("username", user.Username).Int32("user_id", user.ID).Msg("Ended user session")
+}
+
 func SignupUser(ctx context.Context, username string, name string, password string) (*models.User, error) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {

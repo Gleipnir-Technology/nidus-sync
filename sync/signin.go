@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/rs/zerolog/log"
 )
@@ -18,6 +19,11 @@ var (
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
 	signin(w, errorCode)
+}
+
+func getSignout(w http.ResponseWriter, r *http.Request, user *models.User) {
+	auth.SignoutUser(r, user)
+	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
