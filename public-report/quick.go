@@ -54,7 +54,6 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 	lat := r.FormValue("latitude")
 	lng := r.FormValue("longitude")
 	comments := r.FormValue("comments")
-	//photos := r.FormValue("photos")
 
 	latitude, err := strconv.ParseFloat(lat, 64)
 	if err != nil {
@@ -73,6 +72,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 	}
 	c, err := h3utils.GetCell(longitude, latitude, 15)
 	setter := models.PublicreportQuickSetter{
+		Address:  omit.From(""),
 		Created:  omit.From(time.Now()),
 		Comments: omit.From(comments),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
