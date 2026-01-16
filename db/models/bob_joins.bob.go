@@ -73,10 +73,12 @@ type joins[Q dialect.Joinable] struct {
 	Notifications                      joinSet[notificationJoins[Q]]
 	OauthTokens                        joinSet[oauthTokenJoins[Q]]
 	Organizations                      joinSet[organizationJoins[Q]]
+	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
+	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
 	PublicreportPools                  joinSet[publicreportPoolJoins[Q]]
-	PublicreportPoolPhotos             joinSet[publicreportPoolPhotoJoins[Q]]
+	PublicreportPoolImages             joinSet[publicreportPoolImageJoins[Q]]
 	PublicreportQuicks                 joinSet[publicreportQuickJoins[Q]]
-	PublicreportQuickPhotos            joinSet[publicreportQuickPhotoJoins[Q]]
+	PublicreportQuickImages            joinSet[publicreportQuickImageJoins[Q]]
 	Users                              joinSet[userJoins[Q]]
 }
 
@@ -131,10 +133,12 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Notifications:                      buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
 		OauthTokens:                        buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
+		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
 		PublicreportPools:                  buildJoinSet[publicreportPoolJoins[Q]](PublicreportPools.Columns, buildPublicreportPoolJoins),
-		PublicreportPoolPhotos:             buildJoinSet[publicreportPoolPhotoJoins[Q]](PublicreportPoolPhotos.Columns, buildPublicreportPoolPhotoJoins),
+		PublicreportPoolImages:             buildJoinSet[publicreportPoolImageJoins[Q]](PublicreportPoolImages.Columns, buildPublicreportPoolImageJoins),
 		PublicreportQuicks:                 buildJoinSet[publicreportQuickJoins[Q]](PublicreportQuicks.Columns, buildPublicreportQuickJoins),
-		PublicreportQuickPhotos:            buildJoinSet[publicreportQuickPhotoJoins[Q]](PublicreportQuickPhotos.Columns, buildPublicreportQuickPhotoJoins),
+		PublicreportQuickImages:            buildJoinSet[publicreportQuickImageJoins[Q]](PublicreportQuickImages.Columns, buildPublicreportQuickImageJoins),
 		Users:                              buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}
 }

@@ -222,24 +222,36 @@ var (
 	organizationRelImportDistrictGidDistrictCtx = newContextual[bool]("import.district.organization.organization.organization_import_district_gid_fkey")
 	organizationRelUserCtx                      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
+	// Relationship Contexts for publicreport.image
+	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
+	publicreportImageRelImageExifsCtx        = newContextual[bool]("publicreport.image.publicreport.image_exif.publicreport.image_exif.image_exif_image_id_fkey")
+	publicreportImageRelPoolsCtx             = newContextual[bool]("publicreport.image.publicreport.pool.publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey")
+	publicreportImageRelQuicksCtx            = newContextual[bool]("publicreport.image.publicreport.quick.publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey")
+
+	// Relationship Contexts for publicreport.image_exif
+	publicreportImageExifWithParentsCascadingCtx = newContextual[bool]("publicreportImageExifWithParentsCascading")
+	publicreportImageExifRelImageCtx             = newContextual[bool]("publicreport.image.publicreport.image_exif.publicreport.image_exif.image_exif_image_id_fkey")
+
 	// Relationship Contexts for publicreport.nuisance
 	publicreportNuisanceWithParentsCascadingCtx = newContextual[bool]("publicreportNuisanceWithParentsCascading")
 
 	// Relationship Contexts for publicreport.pool
 	publicreportPoolWithParentsCascadingCtx = newContextual[bool]("publicreportPoolWithParentsCascading")
-	publicreportPoolRelPoolPhotosCtx        = newContextual[bool]("publicreport.pool.publicreport.pool_photo.publicreport.pool_photo.pool_photo_pool_id_fkey")
+	publicreportPoolRelImagesCtx            = newContextual[bool]("publicreport.image.publicreport.pool.publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey")
 
-	// Relationship Contexts for publicreport.pool_photo
-	publicreportPoolPhotoWithParentsCascadingCtx = newContextual[bool]("publicreportPoolPhotoWithParentsCascading")
-	publicreportPoolPhotoRelPoolCtx              = newContextual[bool]("publicreport.pool.publicreport.pool_photo.publicreport.pool_photo.pool_photo_pool_id_fkey")
+	// Relationship Contexts for publicreport.pool_image
+	publicreportPoolImageWithParentsCascadingCtx = newContextual[bool]("publicreportPoolImageWithParentsCascading")
+	publicreportPoolImageRelImageCtx             = newContextual[bool]("publicreport.image.publicreport.pool_image.publicreport.pool_image.pool_image_image_id_fkey")
+	publicreportPoolImageRelPoolCtx              = newContextual[bool]("publicreport.pool.publicreport.pool_image.publicreport.pool_image.pool_image_pool_id_fkey")
 
 	// Relationship Contexts for publicreport.quick
 	publicreportQuickWithParentsCascadingCtx = newContextual[bool]("publicreportQuickWithParentsCascading")
-	publicreportQuickRelQuickPhotosCtx       = newContextual[bool]("publicreport.quick.publicreport.quick_photo.publicreport.quick_photo.quick_photo_quick_id_fkey")
+	publicreportQuickRelImagesCtx            = newContextual[bool]("publicreport.image.publicreport.quick.publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey")
 
-	// Relationship Contexts for publicreport.quick_photo
-	publicreportQuickPhotoWithParentsCascadingCtx = newContextual[bool]("publicreportQuickPhotoWithParentsCascading")
-	publicreportQuickPhotoRelQuickCtx             = newContextual[bool]("publicreport.quick.publicreport.quick_photo.publicreport.quick_photo.quick_photo_quick_id_fkey")
+	// Relationship Contexts for publicreport.quick_image
+	publicreportQuickImageWithParentsCascadingCtx = newContextual[bool]("publicreportQuickImageWithParentsCascading")
+	publicreportQuickImageRelImageCtx             = newContextual[bool]("publicreport.image.publicreport.quick_image.publicreport.quick_image.quick_image_image_id_fkey")
+	publicreportQuickImageRelQuickCtx             = newContextual[bool]("publicreport.quick.publicreport.quick_image.publicreport.quick_image.quick_image_quick_id_fkey")
 
 	// Relationship Contexts for publicreport.report_location
 	publicreportReportLocationWithParentsCascadingCtx = newContextual[bool]("publicreportReportLocationWithParentsCascading")

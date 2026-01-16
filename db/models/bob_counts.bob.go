@@ -25,6 +25,7 @@ type preloadCounts struct {
 	NoteAudio         noteAudioCountPreloader
 	NoteImage         noteImageCountPreloader
 	Organization      organizationCountPreloader
+	PublicreportImage publicreportImageCountPreloader
 	PublicreportPool  publicreportPoolCountPreloader
 	PublicreportQuick publicreportQuickCountPreloader
 	User              userCountPreloader
@@ -36,6 +37,7 @@ func getPreloadCount() preloadCounts {
 		NoteAudio:         buildNoteAudioCountPreloader(),
 		NoteImage:         buildNoteImageCountPreloader(),
 		Organization:      buildOrganizationCountPreloader(),
+		PublicreportImage: buildPublicreportImageCountPreloader(),
 		PublicreportPool:  buildPublicreportPoolCountPreloader(),
 		PublicreportQuick: buildPublicreportQuickCountPreloader(),
 		User:              buildUserCountPreloader(),
@@ -47,6 +49,7 @@ type thenLoadCounts[Q orm.Loadable] struct {
 	NoteAudio         noteAudioCountThenLoader[Q]
 	NoteImage         noteImageCountThenLoader[Q]
 	Organization      organizationCountThenLoader[Q]
+	PublicreportImage publicreportImageCountThenLoader[Q]
 	PublicreportPool  publicreportPoolCountThenLoader[Q]
 	PublicreportQuick publicreportQuickCountThenLoader[Q]
 	User              userCountThenLoader[Q]
@@ -58,6 +61,7 @@ func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 		NoteAudio:         buildNoteAudioCountThenLoader[Q](),
 		NoteImage:         buildNoteImageCountThenLoader[Q](),
 		Organization:      buildOrganizationCountThenLoader[Q](),
+		PublicreportImage: buildPublicreportImageCountThenLoader[Q](),
 		PublicreportPool:  buildPublicreportPoolCountThenLoader[Q](),
 		PublicreportQuick: buildPublicreportQuickCountThenLoader[Q](),
 		User:              buildUserCountThenLoader[Q](),

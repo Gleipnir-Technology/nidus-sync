@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 )
@@ -90,6 +91,14 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+	tx, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		respondError(w, "Failed to create transaction", err, http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback(ctx)
+
 	setter := models.PublicreportPoolSetter{
 		AccessComments:  omit.From(access_comments),
 		AccessGate:      omit.From(access_gate),
@@ -121,7 +130,7 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 		Subscribe:     omit.From(subscribe),
 	}
-	pool, err := models.PublicreportPools.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)
+	pool, err := models.PublicreportPools.Insert(&setter).One(ctx, tx)
 	if err != nil {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
@@ -138,30 +147,31 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 			um.SetCol("h3cell").ToArg(geospatial.Cell),
 			um.SetCol("location").To(geospatial.GeometryQuery),
 			um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
-		).Exec(r.Context(), db.PGInstance.BobDB)
+		).Exec(ctx, tx)
 		if err != nil {
 			respondError(w, "Failed to insert publicreport.pool", err, http.StatusInternalServerError)
 			return
 		}
 	}
 	log.Info().Int32("id", pool.ID).Str("public_id", pool.PublicID).Msg("Created pool report")
-	photoSetters := make([]*models.PublicreportPoolPhotoSetter, 0)
-	uploads, err := extractPhotoUploads(r)
+	uploads, err := extractImageUploads(r)
 	if err != nil {
-		respondError(w, "Failed to extract photo uploads", err, http.StatusInternalServerError)
+		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	for _, u := range uploads {
-		photoSetters = append(photoSetters, &models.PublicreportPoolPhotoSetter{
-			Filename: omit.From(u.Filename),
-			Size:     omit.From(u.Size),
-			UUID:     omit.From(u.UUID),
+	images, err := saveImageUploads(r.Context(), tx, uploads)
+	setters := make([]*models.PublicreportPoolImageSetter, 0)
+	for _, image := range images {
+		setters = append(setters, &models.PublicreportPoolImageSetter{
+			ImageID: omit.From(int32(image.ID)),
+			PoolID:  omit.From(int32(pool.ID)),
 		})
 	}
-	err = pool.InsertPoolPhotos(r.Context(), db.PGInstance.BobDB, photoSetters...)
+	_, err = models.PublicreportPoolImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
 	if err != nil {
-		respondError(w, "Failed to create photo records", err, http.StatusInternalServerError)
+		respondError(w, "Failed to save upload relationships", err, http.StatusInternalServerError)
 		return
 	}
+	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/pool-submit-complete?report=%s", public_id), http.StatusFound)
 }

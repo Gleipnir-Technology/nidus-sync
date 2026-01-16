@@ -58,10 +58,12 @@ type preloaders struct {
 	Notification                      notificationPreloader
 	OauthToken                        oauthTokenPreloader
 	Organization                      organizationPreloader
+	PublicreportImage                 publicreportImagePreloader
+	PublicreportImageExif             publicreportImageExifPreloader
 	PublicreportPool                  publicreportPoolPreloader
-	PublicreportPoolPhoto             publicreportPoolPhotoPreloader
+	PublicreportPoolImage             publicreportPoolImagePreloader
 	PublicreportQuick                 publicreportQuickPreloader
-	PublicreportQuickPhoto            publicreportQuickPhotoPreloader
+	PublicreportQuickImage            publicreportQuickImagePreloader
 	User                              userPreloader
 }
 
@@ -108,10 +110,12 @@ func getPreloaders() preloaders {
 		Notification:                      buildNotificationPreloader(),
 		OauthToken:                        buildOauthTokenPreloader(),
 		Organization:                      buildOrganizationPreloader(),
+		PublicreportImage:                 buildPublicreportImagePreloader(),
+		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
 		PublicreportPool:                  buildPublicreportPoolPreloader(),
-		PublicreportPoolPhoto:             buildPublicreportPoolPhotoPreloader(),
+		PublicreportPoolImage:             buildPublicreportPoolImagePreloader(),
 		PublicreportQuick:                 buildPublicreportQuickPreloader(),
-		PublicreportQuickPhoto:            buildPublicreportQuickPhotoPreloader(),
+		PublicreportQuickImage:            buildPublicreportQuickImagePreloader(),
 		User:                              buildUserPreloader(),
 	}
 }
@@ -164,10 +168,12 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                      notificationThenLoader[Q]
 	OauthToken                        oauthTokenThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
+	PublicreportImage                 publicreportImageThenLoader[Q]
+	PublicreportImageExif             publicreportImageExifThenLoader[Q]
 	PublicreportPool                  publicreportPoolThenLoader[Q]
-	PublicreportPoolPhoto             publicreportPoolPhotoThenLoader[Q]
+	PublicreportPoolImage             publicreportPoolImageThenLoader[Q]
 	PublicreportQuick                 publicreportQuickThenLoader[Q]
-	PublicreportQuickPhoto            publicreportQuickPhotoThenLoader[Q]
+	PublicreportQuickImage            publicreportQuickImageThenLoader[Q]
 	User                              userThenLoader[Q]
 }
 
@@ -214,10 +220,12 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                      buildNotificationThenLoader[Q](),
 		OauthToken:                        buildOauthTokenThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
+		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
+		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
 		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),
-		PublicreportPoolPhoto:             buildPublicreportPoolPhotoThenLoader[Q](),
+		PublicreportPoolImage:             buildPublicreportPoolImageThenLoader[Q](),
 		PublicreportQuick:                 buildPublicreportQuickThenLoader[Q](),
-		PublicreportQuickPhoto:            buildPublicreportQuickPhotoThenLoader[Q](),
+		PublicreportQuickImage:            buildPublicreportQuickImageThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}
 }

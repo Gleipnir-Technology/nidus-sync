@@ -14,6 +14,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 )
@@ -70,6 +71,14 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to create quick report public ID", err, http.StatusInternalServerError)
 		return
 	}
+	ctx := r.Context()
+	tx, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		respondError(w, "Failed to create transaction", err, http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback(ctx)
+
 	c, err := h3utils.GetCell(longitude, latitude, 15)
 	setter := models.PublicreportQuickSetter{
 		Address:  omit.From(""),
@@ -82,7 +91,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		ReporterPhone: omit.From(""),
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
-	quick, err := models.PublicreportQuicks.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)
+	quick, err := models.PublicreportQuicks.Insert(&setter).One(ctx, tx)
 	if err != nil {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
@@ -91,29 +100,37 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		um.Table("publicreport.quick"),
 		um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", longitude, latitude)),
 		um.Where(psql.Quote("id").EQ(psql.Arg(quick.ID))),
-	).Exec(r.Context(), db.PGInstance.BobDB)
+	).Exec(ctx, tx)
 	if err != nil {
 		respondError(w, "Failed to insert publicreport", err, http.StatusInternalServerError)
 		return
 	}
 	log.Info().Float64("latitude", latitude).Float64("longitude", longitude).Msg("Got upload")
-	photoSetters := make([]*models.PublicreportQuickPhotoSetter, 0)
-	uploads, err := extractPhotoUploads(r)
+	uploads, err := extractImageUploads(r)
+	log.Info().Int("len", len(uploads)).Msg("extracted uploads")
 	if err != nil {
-		respondError(w, "Failed to extract photo uploads", err, http.StatusInternalServerError)
+		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	for _, u := range uploads {
-		photoSetters = append(photoSetters, &models.PublicreportQuickPhotoSetter{
-			Filename: omit.From(u.Filename),
-			Size:     omit.From(u.Size),
-			UUID:     omit.From(u.UUID),
+	images, err := saveImageUploads(ctx, tx, uploads)
+	if err != nil {
+		respondError(w, "Failed to save image uploads", err, http.StatusInternalServerError)
+		return
+	}
+	log.Info().Int("len", len(images)).Msg("saved uploads")
+	setters := make([]*models.PublicreportQuickImageSetter, 0)
+	for _, image := range images {
+		setters = append(setters, &models.PublicreportQuickImageSetter{
+			ImageID: omit.From(int32(image.ID)),
+			QuickID: omit.From(int32(quick.ID)),
 		})
 	}
-	err = quick.InsertQuickPhotos(r.Context(), db.PGInstance.BobDB, photoSetters...)
+	_, err = models.PublicreportQuickImages.Insert(bob.ToMods(setters...)).Exec(ctx, tx)
 	if err != nil {
-		respondError(w, "Failed to create photo records", err, http.StatusInternalServerError)
+		respondError(w, "Failed to save reference to images", err, http.StatusInternalServerError)
 		return
 	}
+	log.Info().Int("len", len(images)).Msg("saved uploads")
+	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", u), http.StatusFound)
 }

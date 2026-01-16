@@ -56,12 +56,12 @@ type PublicreportQuickTemplate struct {
 }
 
 type publicreportQuickR struct {
-	QuickPhotos []*publicreportQuickRQuickPhotosR
+	Images []*publicreportQuickRImagesR
 }
 
-type publicreportQuickRQuickPhotosR struct {
+type publicreportQuickRImagesR struct {
 	number int
-	o      *PublicreportQuickPhotoTemplate
+	o      *PublicreportImageTemplate
 }
 
 // Apply mods to the PublicreportQuickTemplate
@@ -74,17 +74,16 @@ func (o *PublicreportQuickTemplate) Apply(ctx context.Context, mods ...Publicrep
 // setModelRels creates and sets the relationships on *models.PublicreportQuick
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportQuickTemplate) setModelRels(o *models.PublicreportQuick) {
-	if t.r.QuickPhotos != nil {
-		rel := models.PublicreportQuickPhotoSlice{}
-		for _, r := range t.r.QuickPhotos {
+	if t.r.Images != nil {
+		rel := models.PublicreportImageSlice{}
+		for _, r := range t.r.Images {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.QuickID = o.ID // h2
-				rel.R.Quick = o
+				rel.R.Quicks = append(rel.R.Quicks, o)
 			}
 			rel = append(rel, related...)
 		}
-		o.R.QuickPhotos = rel
+		o.R.Images = rel
 	}
 }
 
@@ -241,19 +240,19 @@ func ensureCreatablePublicreportQuick(m *models.PublicreportQuickSetter) {
 func (o *PublicreportQuickTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportQuick) error {
 	var err error
 
-	isQuickPhotosDone, _ := publicreportQuickRelQuickPhotosCtx.Value(ctx)
-	if !isQuickPhotosDone && o.r.QuickPhotos != nil {
-		ctx = publicreportQuickRelQuickPhotosCtx.WithValue(ctx, true)
-		for _, r := range o.r.QuickPhotos {
+	isImagesDone, _ := publicreportQuickRelImagesCtx.Value(ctx)
+	if !isImagesDone && o.r.Images != nil {
+		ctx = publicreportQuickRelImagesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Images {
 			if r.o.alreadyPersisted {
-				m.R.QuickPhotos = append(m.R.QuickPhotos, r.o.Build())
+				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
 				rel0, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuickPhotos(ctx, exec, rel0...)
+				err = m.AttachImages(ctx, exec, rel0...)
 				if err != nil {
 					return err
 				}
@@ -729,50 +728,50 @@ func (m publicreportQuickMods) WithParentsCascading() PublicreportQuickMod {
 	})
 }
 
-func (m publicreportQuickMods) WithQuickPhotos(number int, related *PublicreportQuickPhotoTemplate) PublicreportQuickMod {
+func (m publicreportQuickMods) WithImages(number int, related *PublicreportImageTemplate) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
-		o.r.QuickPhotos = []*publicreportQuickRQuickPhotosR{{
+		o.r.Images = []*publicreportQuickRImagesR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m publicreportQuickMods) WithNewQuickPhotos(number int, mods ...PublicreportQuickPhotoMod) PublicreportQuickMod {
+func (m publicreportQuickMods) WithNewImages(number int, mods ...PublicreportImageMod) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
-		related := o.f.NewPublicreportQuickPhotoWithContext(ctx, mods...)
-		m.WithQuickPhotos(number, related).Apply(ctx, o)
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.WithImages(number, related).Apply(ctx, o)
 	})
 }
 
-func (m publicreportQuickMods) AddQuickPhotos(number int, related *PublicreportQuickPhotoTemplate) PublicreportQuickMod {
+func (m publicreportQuickMods) AddImages(number int, related *PublicreportImageTemplate) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
-		o.r.QuickPhotos = append(o.r.QuickPhotos, &publicreportQuickRQuickPhotosR{
+		o.r.Images = append(o.r.Images, &publicreportQuickRImagesR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m publicreportQuickMods) AddNewQuickPhotos(number int, mods ...PublicreportQuickPhotoMod) PublicreportQuickMod {
+func (m publicreportQuickMods) AddNewImages(number int, mods ...PublicreportImageMod) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
-		related := o.f.NewPublicreportQuickPhotoWithContext(ctx, mods...)
-		m.AddQuickPhotos(number, related).Apply(ctx, o)
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.AddImages(number, related).Apply(ctx, o)
 	})
 }
 
-func (m publicreportQuickMods) AddExistingQuickPhotos(existingModels ...*models.PublicreportQuickPhoto) PublicreportQuickMod {
+func (m publicreportQuickMods) AddExistingImages(existingModels ...*models.PublicreportImage) PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
 		for _, em := range existingModels {
-			o.r.QuickPhotos = append(o.r.QuickPhotos, &publicreportQuickRQuickPhotosR{
-				o: o.f.FromExistingPublicreportQuickPhoto(em),
+			o.r.Images = append(o.r.Images, &publicreportQuickRImagesR{
+				o: o.f.FromExistingPublicreportImage(em),
 			})
 		}
 	})
 }
 
-func (m publicreportQuickMods) WithoutQuickPhotos() PublicreportQuickMod {
+func (m publicreportQuickMods) WithoutImages() PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
-		o.r.QuickPhotos = nil
+		o.r.Images = nil
 	})
 }

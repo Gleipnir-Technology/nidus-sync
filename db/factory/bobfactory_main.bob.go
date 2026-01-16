@@ -62,11 +62,13 @@ type Factory struct {
 	baseNotificationMods                      NotificationModSlice
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
+	basePublicreportImageMods                 PublicreportImageModSlice
+	basePublicreportImageExifMods             PublicreportImageExifModSlice
 	basePublicreportNuisanceMods              PublicreportNuisanceModSlice
 	basePublicreportPoolMods                  PublicreportPoolModSlice
-	basePublicreportPoolPhotoMods             PublicreportPoolPhotoModSlice
+	basePublicreportPoolImageMods             PublicreportPoolImageModSlice
 	basePublicreportQuickMods                 PublicreportQuickModSlice
-	basePublicreportQuickPhotoMods            PublicreportQuickPhotoModSlice
+	basePublicreportQuickImageMods            PublicreportQuickImageModSlice
 	basePublicreportReportLocationMods        PublicreportReportLocationModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
 	baseRasterOverviewMods                    RasterOverviewModSlice
@@ -2512,6 +2514,79 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	return o
 }
 
+func (f *Factory) NewPublicreportImage(mods ...PublicreportImageMod) *PublicreportImageTemplate {
+	return f.NewPublicreportImageWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportImageWithContext(ctx context.Context, mods ...PublicreportImageMod) *PublicreportImageTemplate {
+	o := &PublicreportImageTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportImageMods.Apply(ctx, o)
+	}
+
+	PublicreportImageModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportImage(m *models.PublicreportImage) *PublicreportImageTemplate {
+	o := &PublicreportImageTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.ContentType = func() string { return m.ContentType }
+	o.Created = func() time.Time { return m.Created }
+	o.ResolutionX = func() int32 { return m.ResolutionX }
+	o.ResolutionY = func() int32 { return m.ResolutionY }
+	o.StorageUUID = func() uuid.UUID { return m.StorageUUID }
+	o.StorageSize = func() int64 { return m.StorageSize }
+	o.UploadedFilename = func() string { return m.UploadedFilename }
+
+	ctx := context.Background()
+	if len(m.R.ImageExifs) > 0 {
+		PublicreportImageMods.AddExistingImageExifs(m.R.ImageExifs...).Apply(ctx, o)
+	}
+	if len(m.R.Pools) > 0 {
+		PublicreportImageMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
+	}
+	if len(m.R.Quicks) > 0 {
+		PublicreportImageMods.AddExistingQuicks(m.R.Quicks...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportImageExif(mods ...PublicreportImageExifMod) *PublicreportImageExifTemplate {
+	return f.NewPublicreportImageExifWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportImageExifWithContext(ctx context.Context, mods ...PublicreportImageExifMod) *PublicreportImageExifTemplate {
+	o := &PublicreportImageExifTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportImageExifMods.Apply(ctx, o)
+	}
+
+	PublicreportImageExifModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportImageExif(m *models.PublicreportImageExif) *PublicreportImageExifTemplate {
+	o := &PublicreportImageExifTemplate{f: f, alreadyPersisted: true}
+
+	o.ImageID = func() int32 { return m.ImageID }
+	o.Name = func() string { return m.Name }
+	o.Value = func() string { return m.Value }
+
+	ctx := context.Background()
+	if m.R.Image != nil {
+		PublicreportImageExifMods.WithExistingImage(m.R.Image).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewPublicreportNuisance(mods ...PublicreportNuisanceMod) *PublicreportNuisanceTemplate {
 	return f.NewPublicreportNuisanceWithContext(context.Background(), mods...)
 }
@@ -2613,41 +2688,41 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 
 	ctx := context.Background()
-	if len(m.R.PoolPhotos) > 0 {
-		PublicreportPoolMods.AddExistingPoolPhotos(m.R.PoolPhotos...).Apply(ctx, o)
+	if len(m.R.Images) > 0 {
+		PublicreportPoolMods.AddExistingImages(m.R.Images...).Apply(ctx, o)
 	}
 
 	return o
 }
 
-func (f *Factory) NewPublicreportPoolPhoto(mods ...PublicreportPoolPhotoMod) *PublicreportPoolPhotoTemplate {
-	return f.NewPublicreportPoolPhotoWithContext(context.Background(), mods...)
+func (f *Factory) NewPublicreportPoolImage(mods ...PublicreportPoolImageMod) *PublicreportPoolImageTemplate {
+	return f.NewPublicreportPoolImageWithContext(context.Background(), mods...)
 }
 
-func (f *Factory) NewPublicreportPoolPhotoWithContext(ctx context.Context, mods ...PublicreportPoolPhotoMod) *PublicreportPoolPhotoTemplate {
-	o := &PublicreportPoolPhotoTemplate{f: f}
+func (f *Factory) NewPublicreportPoolImageWithContext(ctx context.Context, mods ...PublicreportPoolImageMod) *PublicreportPoolImageTemplate {
+	o := &PublicreportPoolImageTemplate{f: f}
 
 	if f != nil {
-		f.basePublicreportPoolPhotoMods.Apply(ctx, o)
+		f.basePublicreportPoolImageMods.Apply(ctx, o)
 	}
 
-	PublicreportPoolPhotoModSlice(mods).Apply(ctx, o)
+	PublicreportPoolImageModSlice(mods).Apply(ctx, o)
 
 	return o
 }
 
-func (f *Factory) FromExistingPublicreportPoolPhoto(m *models.PublicreportPoolPhoto) *PublicreportPoolPhotoTemplate {
-	o := &PublicreportPoolPhotoTemplate{f: f, alreadyPersisted: true}
+func (f *Factory) FromExistingPublicreportPoolImage(m *models.PublicreportPoolImage) *PublicreportPoolImageTemplate {
+	o := &PublicreportPoolImageTemplate{f: f, alreadyPersisted: true}
 
-	o.ID = func() int32 { return m.ID }
-	o.Size = func() int64 { return m.Size }
-	o.Filename = func() string { return m.Filename }
+	o.ImageID = func() int32 { return m.ImageID }
 	o.PoolID = func() int32 { return m.PoolID }
-	o.UUID = func() uuid.UUID { return m.UUID }
 
 	ctx := context.Background()
+	if m.R.Image != nil {
+		PublicreportPoolImageMods.WithExistingImage(m.R.Image).Apply(ctx, o)
+	}
 	if m.R.Pool != nil {
-		PublicreportPoolPhotoMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
+		PublicreportPoolImageMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
 	}
 
 	return o
@@ -2684,41 +2759,41 @@ func (f *Factory) FromExistingPublicreportQuick(m *models.PublicreportQuick) *Pu
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 
 	ctx := context.Background()
-	if len(m.R.QuickPhotos) > 0 {
-		PublicreportQuickMods.AddExistingQuickPhotos(m.R.QuickPhotos...).Apply(ctx, o)
+	if len(m.R.Images) > 0 {
+		PublicreportQuickMods.AddExistingImages(m.R.Images...).Apply(ctx, o)
 	}
 
 	return o
 }
 
-func (f *Factory) NewPublicreportQuickPhoto(mods ...PublicreportQuickPhotoMod) *PublicreportQuickPhotoTemplate {
-	return f.NewPublicreportQuickPhotoWithContext(context.Background(), mods...)
+func (f *Factory) NewPublicreportQuickImage(mods ...PublicreportQuickImageMod) *PublicreportQuickImageTemplate {
+	return f.NewPublicreportQuickImageWithContext(context.Background(), mods...)
 }
 
-func (f *Factory) NewPublicreportQuickPhotoWithContext(ctx context.Context, mods ...PublicreportQuickPhotoMod) *PublicreportQuickPhotoTemplate {
-	o := &PublicreportQuickPhotoTemplate{f: f}
+func (f *Factory) NewPublicreportQuickImageWithContext(ctx context.Context, mods ...PublicreportQuickImageMod) *PublicreportQuickImageTemplate {
+	o := &PublicreportQuickImageTemplate{f: f}
 
 	if f != nil {
-		f.basePublicreportQuickPhotoMods.Apply(ctx, o)
+		f.basePublicreportQuickImageMods.Apply(ctx, o)
 	}
 
-	PublicreportQuickPhotoModSlice(mods).Apply(ctx, o)
+	PublicreportQuickImageModSlice(mods).Apply(ctx, o)
 
 	return o
 }
 
-func (f *Factory) FromExistingPublicreportQuickPhoto(m *models.PublicreportQuickPhoto) *PublicreportQuickPhotoTemplate {
-	o := &PublicreportQuickPhotoTemplate{f: f, alreadyPersisted: true}
+func (f *Factory) FromExistingPublicreportQuickImage(m *models.PublicreportQuickImage) *PublicreportQuickImageTemplate {
+	o := &PublicreportQuickImageTemplate{f: f, alreadyPersisted: true}
 
-	o.ID = func() int32 { return m.ID }
-	o.Size = func() int64 { return m.Size }
-	o.Filename = func() string { return m.Filename }
+	o.ImageID = func() int32 { return m.ImageID }
 	o.QuickID = func() int32 { return m.QuickID }
-	o.UUID = func() uuid.UUID { return m.UUID }
 
 	ctx := context.Background()
+	if m.R.Image != nil {
+		PublicreportQuickImageMods.WithExistingImage(m.R.Image).Apply(ctx, o)
+	}
 	if m.R.Quick != nil {
-		PublicreportQuickPhotoMods.WithExistingQuick(m.R.Quick).Apply(ctx, o)
+		PublicreportQuickImageMods.WithExistingQuick(m.R.Quick).Apply(ctx, o)
 	}
 
 	return o
@@ -3293,6 +3368,22 @@ func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
 }
 
+func (f *Factory) ClearBasePublicreportImageMods() {
+	f.basePublicreportImageMods = nil
+}
+
+func (f *Factory) AddBasePublicreportImageMod(mods ...PublicreportImageMod) {
+	f.basePublicreportImageMods = append(f.basePublicreportImageMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportImageExifMods() {
+	f.basePublicreportImageExifMods = nil
+}
+
+func (f *Factory) AddBasePublicreportImageExifMod(mods ...PublicreportImageExifMod) {
+	f.basePublicreportImageExifMods = append(f.basePublicreportImageExifMods, mods...)
+}
+
 func (f *Factory) ClearBasePublicreportNuisanceMods() {
 	f.basePublicreportNuisanceMods = nil
 }
@@ -3309,12 +3400,12 @@ func (f *Factory) AddBasePublicreportPoolMod(mods ...PublicreportPoolMod) {
 	f.basePublicreportPoolMods = append(f.basePublicreportPoolMods, mods...)
 }
 
-func (f *Factory) ClearBasePublicreportPoolPhotoMods() {
-	f.basePublicreportPoolPhotoMods = nil
+func (f *Factory) ClearBasePublicreportPoolImageMods() {
+	f.basePublicreportPoolImageMods = nil
 }
 
-func (f *Factory) AddBasePublicreportPoolPhotoMod(mods ...PublicreportPoolPhotoMod) {
-	f.basePublicreportPoolPhotoMods = append(f.basePublicreportPoolPhotoMods, mods...)
+func (f *Factory) AddBasePublicreportPoolImageMod(mods ...PublicreportPoolImageMod) {
+	f.basePublicreportPoolImageMods = append(f.basePublicreportPoolImageMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportQuickMods() {
@@ -3325,12 +3416,12 @@ func (f *Factory) AddBasePublicreportQuickMod(mods ...PublicreportQuickMod) {
 	f.basePublicreportQuickMods = append(f.basePublicreportQuickMods, mods...)
 }
 
-func (f *Factory) ClearBasePublicreportQuickPhotoMods() {
-	f.basePublicreportQuickPhotoMods = nil
+func (f *Factory) ClearBasePublicreportQuickImageMods() {
+	f.basePublicreportQuickImageMods = nil
 }
 
-func (f *Factory) AddBasePublicreportQuickPhotoMod(mods ...PublicreportQuickPhotoMod) {
-	f.basePublicreportQuickPhotoMods = append(f.basePublicreportQuickPhotoMods, mods...)
+func (f *Factory) AddBasePublicreportQuickImageMod(mods ...PublicreportQuickImageMod) {
+	f.basePublicreportQuickImageMods = append(f.basePublicreportQuickImageMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportReportLocationMods() {

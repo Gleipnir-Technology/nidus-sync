@@ -3,11 +3,11 @@ package userfile
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 func AudioFileContentPathRaw(audioUUID string) string {
@@ -27,7 +27,7 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	filepath := AudioFileContentPathRaw(audioUUID.String())
 	dst, err := os.Create(filepath)
 	if err != nil {
-		log.Printf("Failed to create audio file at %s: %v\n", filepath, err)
+		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create audio file")
 		return fmt.Errorf("Failed to create audio file at %s: %v", filepath, err)
 	}
 	defer dst.Close()
@@ -37,7 +37,7 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("Unable to save file to create audio file at %s: %v", filepath, err)
 	}
-	log.Printf("Saved audio content to %s\n", filepath)
+	log.Info().Str("filepath", filepath).Msg("Save audio file content")
 	return nil
 }
 func ImageFileContentPathRaw(uid string) string {
@@ -65,7 +65,7 @@ func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	filepath := PublicImageFileContentPathRaw(uid.String())
 	dst, err := os.Create(filepath)
 	if err != nil {
-		log.Printf("Failed to create public image file at %s: %v\n", filepath, err)
+		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create public image file")
 		return fmt.Errorf("Failed to create public image file at %s: %v", filepath, err)
 	}
 	defer dst.Close()
@@ -75,7 +75,7 @@ func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("Unable to save file to create audio file at %s: %v", filepath, err)
 	}
-	log.Printf("Saved audio content to %s\n", filepath)
+	log.Info().Str("filepath", filepath).Msg("Saved public report image file content")
 	return nil
 }
 func PublicImageFileContentPathRaw(uid string) string {

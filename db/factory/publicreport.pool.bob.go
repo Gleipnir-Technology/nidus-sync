@@ -76,12 +76,12 @@ type PublicreportPoolTemplate struct {
 }
 
 type publicreportPoolR struct {
-	PoolPhotos []*publicreportPoolRPoolPhotosR
+	Images []*publicreportPoolRImagesR
 }
 
-type publicreportPoolRPoolPhotosR struct {
+type publicreportPoolRImagesR struct {
 	number int
-	o      *PublicreportPoolPhotoTemplate
+	o      *PublicreportImageTemplate
 }
 
 // Apply mods to the PublicreportPoolTemplate
@@ -94,17 +94,16 @@ func (o *PublicreportPoolTemplate) Apply(ctx context.Context, mods ...Publicrepo
 // setModelRels creates and sets the relationships on *models.PublicreportPool
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportPoolTemplate) setModelRels(o *models.PublicreportPool) {
-	if t.r.PoolPhotos != nil {
-		rel := models.PublicreportPoolPhotoSlice{}
-		for _, r := range t.r.PoolPhotos {
+	if t.r.Images != nil {
+		rel := models.PublicreportImageSlice{}
+		for _, r := range t.r.Images {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.PoolID = o.ID // h2
-				rel.R.Pool = o
+				rel.R.Pools = append(rel.R.Pools, o)
 			}
 			rel = append(rel, related...)
 		}
-		o.R.PoolPhotos = rel
+		o.R.Images = rel
 	}
 }
 
@@ -481,19 +480,19 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 func (o *PublicreportPoolTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportPool) error {
 	var err error
 
-	isPoolPhotosDone, _ := publicreportPoolRelPoolPhotosCtx.Value(ctx)
-	if !isPoolPhotosDone && o.r.PoolPhotos != nil {
-		ctx = publicreportPoolRelPoolPhotosCtx.WithValue(ctx, true)
-		for _, r := range o.r.PoolPhotos {
+	isImagesDone, _ := publicreportPoolRelImagesCtx.Value(ctx)
+	if !isImagesDone && o.r.Images != nil {
+		ctx = publicreportPoolRelImagesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Images {
 			if r.o.alreadyPersisted {
-				m.R.PoolPhotos = append(m.R.PoolPhotos, r.o.Build())
+				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
 				rel0, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPoolPhotos(ctx, exec, rel0...)
+				err = m.AttachImages(ctx, exec, rel0...)
 				if err != nil {
 					return err
 				}
@@ -1609,50 +1608,50 @@ func (m publicreportPoolMods) WithParentsCascading() PublicreportPoolMod {
 	})
 }
 
-func (m publicreportPoolMods) WithPoolPhotos(number int, related *PublicreportPoolPhotoTemplate) PublicreportPoolMod {
+func (m publicreportPoolMods) WithImages(number int, related *PublicreportImageTemplate) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
-		o.r.PoolPhotos = []*publicreportPoolRPoolPhotosR{{
+		o.r.Images = []*publicreportPoolRImagesR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m publicreportPoolMods) WithNewPoolPhotos(number int, mods ...PublicreportPoolPhotoMod) PublicreportPoolMod {
+func (m publicreportPoolMods) WithNewImages(number int, mods ...PublicreportImageMod) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
-		related := o.f.NewPublicreportPoolPhotoWithContext(ctx, mods...)
-		m.WithPoolPhotos(number, related).Apply(ctx, o)
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.WithImages(number, related).Apply(ctx, o)
 	})
 }
 
-func (m publicreportPoolMods) AddPoolPhotos(number int, related *PublicreportPoolPhotoTemplate) PublicreportPoolMod {
+func (m publicreportPoolMods) AddImages(number int, related *PublicreportImageTemplate) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
-		o.r.PoolPhotos = append(o.r.PoolPhotos, &publicreportPoolRPoolPhotosR{
+		o.r.Images = append(o.r.Images, &publicreportPoolRImagesR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m publicreportPoolMods) AddNewPoolPhotos(number int, mods ...PublicreportPoolPhotoMod) PublicreportPoolMod {
+func (m publicreportPoolMods) AddNewImages(number int, mods ...PublicreportImageMod) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
-		related := o.f.NewPublicreportPoolPhotoWithContext(ctx, mods...)
-		m.AddPoolPhotos(number, related).Apply(ctx, o)
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.AddImages(number, related).Apply(ctx, o)
 	})
 }
 
-func (m publicreportPoolMods) AddExistingPoolPhotos(existingModels ...*models.PublicreportPoolPhoto) PublicreportPoolMod {
+func (m publicreportPoolMods) AddExistingImages(existingModels ...*models.PublicreportImage) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
 		for _, em := range existingModels {
-			o.r.PoolPhotos = append(o.r.PoolPhotos, &publicreportPoolRPoolPhotosR{
-				o: o.f.FromExistingPublicreportPoolPhoto(em),
+			o.r.Images = append(o.r.Images, &publicreportPoolRImagesR{
+				o: o.f.FromExistingPublicreportImage(em),
 			})
 		}
 	})
 }
 
-func (m publicreportPoolMods) WithoutPoolPhotos() PublicreportPoolMod {
+func (m publicreportPoolMods) WithoutImages() PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
-		o.r.PoolPhotos = nil
+		o.r.Images = nil
 	})
 }

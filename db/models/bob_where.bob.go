@@ -61,11 +61,13 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                      notificationWhere[Q]
 	OauthTokens                        oauthTokenWhere[Q]
 	Organizations                      organizationWhere[Q]
+	PublicreportImages                 publicreportImageWhere[Q]
+	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNuisances              publicreportNuisanceWhere[Q]
 	PublicreportPools                  publicreportPoolWhere[Q]
-	PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
+	PublicreportPoolImages             publicreportPoolImageWhere[Q]
 	PublicreportQuicks                 publicreportQuickWhere[Q]
-	PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
+	PublicreportQuickImages            publicreportQuickImageWhere[Q]
 	PublicreportReportLocations        publicreportReportLocationWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
@@ -118,11 +120,13 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                      notificationWhere[Q]
 		OauthTokens                        oauthTokenWhere[Q]
 		Organizations                      organizationWhere[Q]
+		PublicreportImages                 publicreportImageWhere[Q]
+		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNuisances              publicreportNuisanceWhere[Q]
 		PublicreportPools                  publicreportPoolWhere[Q]
-		PublicreportPoolPhotos             publicreportPoolPhotoWhere[Q]
+		PublicreportPoolImages             publicreportPoolImageWhere[Q]
 		PublicreportQuicks                 publicreportQuickWhere[Q]
-		PublicreportQuickPhotos            publicreportQuickPhotoWhere[Q]
+		PublicreportQuickImages            publicreportQuickImageWhere[Q]
 		PublicreportReportLocations        publicreportReportLocationWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
@@ -174,11 +178,13 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                      buildNotificationWhere[Q](Notifications.Columns),
 		OauthTokens:                        buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
+		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
+		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNuisances:              buildPublicreportNuisanceWhere[Q](PublicreportNuisances.Columns),
 		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),
-		PublicreportPoolPhotos:             buildPublicreportPoolPhotoWhere[Q](PublicreportPoolPhotos.Columns),
+		PublicreportPoolImages:             buildPublicreportPoolImageWhere[Q](PublicreportPoolImages.Columns),
 		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),
-		PublicreportQuickPhotos:            buildPublicreportQuickPhotoWhere[Q](PublicreportQuickPhotos.Columns),
+		PublicreportQuickImages:            buildPublicreportQuickImageWhere[Q](PublicreportQuickImages.Columns),
 		PublicreportReportLocations:        buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),

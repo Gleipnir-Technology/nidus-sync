@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -23,6 +24,7 @@ import (
 	"github.com/stephenafamo/bob/mods"
 	"github.com/stephenafamo/bob/orm"
 	"github.com/stephenafamo/bob/types/pgtypes"
+	"github.com/stephenafamo/scan"
 )
 
 // PublicreportPool is an object representing the database table.
@@ -75,7 +77,7 @@ type PublicreportPoolsQuery = *psql.ViewQuery[*PublicreportPool, PublicreportPoo
 
 // publicreportPoolR is where relationships are stored.
 type publicreportPoolR struct {
-	PoolPhotos PublicreportPoolPhotoSlice // publicreport.pool_photo.pool_photo_pool_id_fkey
+	Images PublicreportImageSlice // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
 }
 
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
@@ -1018,14 +1020,16 @@ func (o PublicreportPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor)
 	return nil
 }
 
-// PoolPhotos starts a query for related objects on publicreport.pool_photo
-func (o *PublicreportPool) PoolPhotos(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolPhotosQuery {
-	return PublicreportPoolPhotos.Query(append(mods,
-		sm.Where(PublicreportPoolPhotos.Columns.PoolID.EQ(psql.Arg(o.ID))),
+// Images starts a query for related objects on publicreport.image
+func (o *PublicreportPool) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportPoolImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportPoolImages.Columns.ImageID)),
+		sm.Where(PublicreportPoolImages.Columns.PoolID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportPoolSlice) PoolPhotos(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolPhotosQuery {
+func (os PublicreportPoolSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1037,74 +1041,74 @@ func (os PublicreportPoolSlice) PoolPhotos(mods ...bob.Mod[*dialect.SelectQuery]
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportPoolPhotos.Query(append(mods,
-		sm.Where(psql.Group(PublicreportPoolPhotos.Columns.PoolID).OP("IN", PKArgExpr)),
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportPoolImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportPoolImages.Columns.ImageID),
+		),
+		sm.Where(psql.Group(PublicreportPoolImages.Columns.PoolID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-func insertPublicreportPoolPoolPhotos0(ctx context.Context, exec bob.Executor, publicreportPoolPhotos1 []*PublicreportPoolPhotoSetter, publicreportPool0 *PublicreportPool) (PublicreportPoolPhotoSlice, error) {
-	for i := range publicreportPoolPhotos1 {
-		publicreportPoolPhotos1[i].PoolID = omit.From(publicreportPool0.ID)
+func attachPublicreportPoolImages0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, publicreportImages2 PublicreportImageSlice) (PublicreportPoolImageSlice, error) {
+	setters := make([]*PublicreportPoolImageSetter, count)
+	for i := range count {
+		setters[i] = &PublicreportPoolImageSetter{
+			PoolID:  omit.From(publicreportPool0.ID),
+			ImageID: omit.From(publicreportImages2[i].ID),
+		}
 	}
 
-	ret, err := PublicreportPoolPhotos.Insert(bob.ToMods(publicreportPoolPhotos1...)).All(ctx, exec)
+	publicreportPoolImages1, err := PublicreportPoolImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportPoolPoolPhotos0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportPoolImages0: %w", err)
 	}
 
-	return ret, nil
+	return publicreportPoolImages1, nil
 }
 
-func attachPublicreportPoolPoolPhotos0(ctx context.Context, exec bob.Executor, count int, publicreportPoolPhotos1 PublicreportPoolPhotoSlice, publicreportPool0 *PublicreportPool) (PublicreportPoolPhotoSlice, error) {
-	setter := &PublicreportPoolPhotoSetter{
-		PoolID: omit.From(publicreportPool0.ID),
-	}
-
-	err := publicreportPoolPhotos1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportPoolPoolPhotos0: %w", err)
-	}
-
-	return publicreportPoolPhotos1, nil
-}
-
-func (publicreportPool0 *PublicreportPool) InsertPoolPhotos(ctx context.Context, exec bob.Executor, related ...*PublicreportPoolPhotoSetter) error {
+func (publicreportPool0 *PublicreportPool) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportPoolPhotos1, err := insertPublicreportPoolPoolPhotos0(ctx, exec, related, publicreportPool0)
+	inserted, err := PublicreportImages.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	publicreportImages2 := PublicreportImageSlice(inserted)
+
+	_, err = attachPublicreportPoolImages0(ctx, exec, len(related), publicreportPool0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.PoolPhotos = append(publicreportPool0.R.PoolPhotos, publicreportPoolPhotos1...)
+	publicreportPool0.R.Images = append(publicreportPool0.R.Images, publicreportImages2...)
 
-	for _, rel := range publicreportPoolPhotos1 {
-		rel.R.Pool = publicreportPool0
+	for _, rel := range publicreportImages2 {
+		rel.R.Pools = append(rel.R.Pools, publicreportPool0)
 	}
 	return nil
 }
 
-func (publicreportPool0 *PublicreportPool) AttachPoolPhotos(ctx context.Context, exec bob.Executor, related ...*PublicreportPoolPhoto) error {
+func (publicreportPool0 *PublicreportPool) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportPoolPhotos1 := PublicreportPoolPhotoSlice(related)
+	publicreportImages2 := PublicreportImageSlice(related)
 
-	_, err = attachPublicreportPoolPoolPhotos0(ctx, exec, len(related), publicreportPoolPhotos1, publicreportPool0)
+	_, err = attachPublicreportPoolImages0(ctx, exec, len(related), publicreportPool0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.PoolPhotos = append(publicreportPool0.R.PoolPhotos, publicreportPoolPhotos1...)
+	publicreportPool0.R.Images = append(publicreportPool0.R.Images, publicreportImages2...)
 
 	for _, rel := range related {
-		rel.R.Pool = publicreportPool0
+		rel.R.Pools = append(rel.R.Pools, publicreportPool0)
 	}
 
 	return nil
@@ -1188,17 +1192,17 @@ func (o *PublicreportPool) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "PoolPhotos":
-		rels, ok := retrieved.(PublicreportPoolPhotoSlice)
+	case "Images":
+		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
 			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.PoolPhotos = rels
+		o.R.Images = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Pool = o
+				rel.R.Pools = PublicreportPoolSlice{o}
 			}
 		}
 		return nil
@@ -1214,79 +1218,99 @@ func buildPublicreportPoolPreloader() publicreportPoolPreloader {
 }
 
 type publicreportPoolThenLoader[Q orm.Loadable] struct {
-	PoolPhotos func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoader[Q] {
-	type PoolPhotosLoadInterface interface {
-		LoadPoolPhotos(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ImagesLoadInterface interface {
+		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportPoolThenLoader[Q]{
-		PoolPhotos: thenLoadBuilder[Q](
-			"PoolPhotos",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolPhotosLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPoolPhotos(ctx, exec, mods...)
+		Images: thenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadImages(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadPoolPhotos loads the publicreportPool's PoolPhotos into the .R struct
-func (o *PublicreportPool) LoadPoolPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportPool's Images into the .R struct
+func (o *PublicreportPool) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.PoolPhotos = nil
+	o.R.Images = nil
 
-	related, err := o.PoolPhotos(mods...).All(ctx, exec)
+	related, err := o.Images(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, rel := range related {
-		rel.R.Pool = o
+		rel.R.Pools = PublicreportPoolSlice{o}
 	}
 
-	o.R.PoolPhotos = related
+	o.R.Images = related
 	return nil
 }
 
-// LoadPoolPhotos loads the publicreportPool's PoolPhotos into the .R struct
-func (os PublicreportPoolSlice) LoadPoolPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportPool's Images into the .R struct
+func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportPoolPhotos, err := os.PoolPhotos(mods...).All(ctx, exec)
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(PublicreportImages.Columns))
+	}
+
+	q := os.Images(append(
+		mods,
+		sm.Columns(PublicreportPoolImages.Columns.PoolID.As("related_publicreport.pool.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_publicreport.pool.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	publicreportImages, err := bob.Allx[bob.SliceTransformer[*PublicreportImage, PublicreportImageSlice]](ctx, exec, q, mapper)
 	if err != nil {
 		return err
 	}
 
 	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.PoolPhotos = nil
+		o.R.Images = nil
 	}
 
 	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportPoolPhotos {
-
-			if !(o.ID == rel.PoolID) {
+		for i, rel := range publicreportImages {
+			if !(o.ID == IDSlice[i]) {
 				continue
 			}
 
-			rel.R.Pool = o
+			rel.R.Pools = append(rel.R.Pools, o)
 
-			o.R.PoolPhotos = append(o.R.PoolPhotos, rel)
+			o.R.Images = append(o.R.Images, rel)
 		}
 	}
 
@@ -1295,7 +1319,7 @@ func (os PublicreportPoolSlice) LoadPoolPhotos(ctx context.Context, exec bob.Exe
 
 // publicreportPoolC is where relationship counts are stored.
 type publicreportPoolC struct {
-	PoolPhotos *int64
+	Images *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1305,20 +1329,20 @@ func (o *PublicreportPool) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
-	case "PoolPhotos":
-		o.C.PoolPhotos = &count
+	case "Images":
+		o.C.Images = &count
 	}
 	return nil
 }
 
 type publicreportPoolCountPreloader struct {
-	PoolPhotos func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Images func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildPublicreportPoolCountPreloader() publicreportPoolCountPreloader {
 	return publicreportPoolCountPreloader{
-		PoolPhotos: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*PublicreportPool]("PoolPhotos", func(parent string) bob.Expression {
+		Images: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*PublicreportPool]("Images", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = PublicreportPools.Alias()
@@ -1327,8 +1351,11 @@ func buildPublicreportPoolCountPreloader() publicreportPoolCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(PublicreportPoolPhotos.Name()),
-					sm.Where(psql.Quote(PublicreportPoolPhotos.Alias(), "pool_id").EQ(psql.Quote(parent, "id"))),
+					sm.From(PublicreportPoolImages.Name()),
+					sm.Where(psql.Quote(PublicreportPoolImages.Alias(), "pool_id").EQ(psql.Quote(parent, "id"))),
+					sm.InnerJoin(PublicreportImages.Name()).On(
+						psql.Quote(PublicreportImages.Alias(), "id").EQ(psql.Quote(PublicreportPoolImages.Alias(), "image_id")),
+					),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -1338,47 +1365,47 @@ func buildPublicreportPoolCountPreloader() publicreportPoolCountPreloader {
 }
 
 type publicreportPoolCountThenLoader[Q orm.Loadable] struct {
-	PoolPhotos func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportPoolCountThenLoader[Q orm.Loadable]() publicreportPoolCountThenLoader[Q] {
-	type PoolPhotosCountInterface interface {
-		LoadCountPoolPhotos(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ImagesCountInterface interface {
+		LoadCountImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportPoolCountThenLoader[Q]{
-		PoolPhotos: countThenLoadBuilder[Q](
-			"PoolPhotos",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolPhotosCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPoolPhotos(ctx, exec, mods...)
+		Images: countThenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountImages(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadCountPoolPhotos loads the count of PoolPhotos into the C struct
-func (o *PublicreportPool) LoadCountPoolPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountImages loads the count of Images into the C struct
+func (o *PublicreportPool) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.PoolPhotos(mods...).Count(ctx, exec)
+	count, err := o.Images(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.PoolPhotos = &count
+	o.C.Images = &count
 	return nil
 }
 
-// LoadCountPoolPhotos loads the count of PoolPhotos for a slice
-func (os PublicreportPoolSlice) LoadCountPoolPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountImages loads the count of Images for a slice
+func (os PublicreportPoolSlice) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountPoolPhotos(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountImages(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -1387,8 +1414,8 @@ func (os PublicreportPoolSlice) LoadCountPoolPhotos(ctx context.Context, exec bo
 }
 
 type publicreportPoolJoins[Q dialect.Joinable] struct {
-	typ        string
-	PoolPhotos modAs[Q, publicreportPoolPhotoColumns]
+	typ    string
+	Images modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[Q] {
@@ -1398,14 +1425,22 @@ func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[
 func buildPublicreportPoolJoins[Q dialect.Joinable](cols publicreportPoolColumns, typ string) publicreportPoolJoins[Q] {
 	return publicreportPoolJoins[Q]{
 		typ: typ,
-		PoolPhotos: modAs[Q, publicreportPoolPhotoColumns]{
-			c: PublicreportPoolPhotos.Columns,
-			f: func(to publicreportPoolPhotoColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
+		Images: modAs[Q, publicreportImageColumns]{
+			c: PublicreportImages.Columns,
+			f: func(to publicreportImageColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportPoolPhotos.Name().As(to.Alias())).On(
+					to := PublicreportPoolImages.Columns.AliasedAs(PublicreportPoolImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportPoolImages.Name().As(to.Alias())).On(
 						to.PoolID.EQ(cols.ID),
+					))
+				}
+				{
+					cols := PublicreportPoolImages.Columns.AliasedAs(PublicreportPoolImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.ImageID),
 					))
 				}
 

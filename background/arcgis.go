@@ -338,6 +338,10 @@ func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32)
 	}
 
 	tx, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create transaction: %w", err)
+	}
+
 	_, err = models.ArcgisUserPrivileges.Delete(
 		dm.Where(
 			models.ArcgisUserPrivileges.Columns.UserID.EQ(psql.Arg(p.User.ID)),

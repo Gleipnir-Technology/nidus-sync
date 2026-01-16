@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -23,6 +24,7 @@ import (
 	"github.com/stephenafamo/bob/mods"
 	"github.com/stephenafamo/bob/orm"
 	"github.com/stephenafamo/bob/types/pgtypes"
+	"github.com/stephenafamo/scan"
 )
 
 // PublicreportQuick is an object representing the database table.
@@ -55,7 +57,7 @@ type PublicreportQuicksQuery = *psql.ViewQuery[*PublicreportQuick, PublicreportQ
 
 // publicreportQuickR is where relationships are stored.
 type publicreportQuickR struct {
-	QuickPhotos PublicreportQuickPhotoSlice // publicreport.quick_photo.quick_photo_quick_id_fkey
+	Images PublicreportImageSlice // publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey
 }
 
 func buildPublicreportQuickColumns(alias string) publicreportQuickColumns {
@@ -558,14 +560,16 @@ func (o PublicreportQuickSlice) ReloadAll(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// QuickPhotos starts a query for related objects on publicreport.quick_photo
-func (o *PublicreportQuick) QuickPhotos(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuickPhotosQuery {
-	return PublicreportQuickPhotos.Query(append(mods,
-		sm.Where(PublicreportQuickPhotos.Columns.QuickID.EQ(psql.Arg(o.ID))),
+// Images starts a query for related objects on publicreport.image
+func (o *PublicreportQuick) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportQuickImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportQuickImages.Columns.ImageID)),
+		sm.Where(PublicreportQuickImages.Columns.QuickID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportQuickSlice) QuickPhotos(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuickPhotosQuery {
+func (os PublicreportQuickSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -577,74 +581,74 @@ func (os PublicreportQuickSlice) QuickPhotos(mods ...bob.Mod[*dialect.SelectQuer
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportQuickPhotos.Query(append(mods,
-		sm.Where(psql.Group(PublicreportQuickPhotos.Columns.QuickID).OP("IN", PKArgExpr)),
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportQuickImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportQuickImages.Columns.ImageID),
+		),
+		sm.Where(psql.Group(PublicreportQuickImages.Columns.QuickID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-func insertPublicreportQuickQuickPhotos0(ctx context.Context, exec bob.Executor, publicreportQuickPhotos1 []*PublicreportQuickPhotoSetter, publicreportQuick0 *PublicreportQuick) (PublicreportQuickPhotoSlice, error) {
-	for i := range publicreportQuickPhotos1 {
-		publicreportQuickPhotos1[i].QuickID = omit.From(publicreportQuick0.ID)
+func attachPublicreportQuickImages0(ctx context.Context, exec bob.Executor, count int, publicreportQuick0 *PublicreportQuick, publicreportImages2 PublicreportImageSlice) (PublicreportQuickImageSlice, error) {
+	setters := make([]*PublicreportQuickImageSetter, count)
+	for i := range count {
+		setters[i] = &PublicreportQuickImageSetter{
+			QuickID: omit.From(publicreportQuick0.ID),
+			ImageID: omit.From(publicreportImages2[i].ID),
+		}
 	}
 
-	ret, err := PublicreportQuickPhotos.Insert(bob.ToMods(publicreportQuickPhotos1...)).All(ctx, exec)
+	publicreportQuickImages1, err := PublicreportQuickImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportQuickQuickPhotos0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportQuickImages0: %w", err)
 	}
 
-	return ret, nil
+	return publicreportQuickImages1, nil
 }
 
-func attachPublicreportQuickQuickPhotos0(ctx context.Context, exec bob.Executor, count int, publicreportQuickPhotos1 PublicreportQuickPhotoSlice, publicreportQuick0 *PublicreportQuick) (PublicreportQuickPhotoSlice, error) {
-	setter := &PublicreportQuickPhotoSetter{
-		QuickID: omit.From(publicreportQuick0.ID),
-	}
-
-	err := publicreportQuickPhotos1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportQuickQuickPhotos0: %w", err)
-	}
-
-	return publicreportQuickPhotos1, nil
-}
-
-func (publicreportQuick0 *PublicreportQuick) InsertQuickPhotos(ctx context.Context, exec bob.Executor, related ...*PublicreportQuickPhotoSetter) error {
+func (publicreportQuick0 *PublicreportQuick) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportQuickPhotos1, err := insertPublicreportQuickQuickPhotos0(ctx, exec, related, publicreportQuick0)
+	inserted, err := PublicreportImages.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	publicreportImages2 := PublicreportImageSlice(inserted)
+
+	_, err = attachPublicreportQuickImages0(ctx, exec, len(related), publicreportQuick0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportQuick0.R.QuickPhotos = append(publicreportQuick0.R.QuickPhotos, publicreportQuickPhotos1...)
+	publicreportQuick0.R.Images = append(publicreportQuick0.R.Images, publicreportImages2...)
 
-	for _, rel := range publicreportQuickPhotos1 {
-		rel.R.Quick = publicreportQuick0
+	for _, rel := range publicreportImages2 {
+		rel.R.Quicks = append(rel.R.Quicks, publicreportQuick0)
 	}
 	return nil
 }
 
-func (publicreportQuick0 *PublicreportQuick) AttachQuickPhotos(ctx context.Context, exec bob.Executor, related ...*PublicreportQuickPhoto) error {
+func (publicreportQuick0 *PublicreportQuick) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportQuickPhotos1 := PublicreportQuickPhotoSlice(related)
+	publicreportImages2 := PublicreportImageSlice(related)
 
-	_, err = attachPublicreportQuickQuickPhotos0(ctx, exec, len(related), publicreportQuickPhotos1, publicreportQuick0)
+	_, err = attachPublicreportQuickImages0(ctx, exec, len(related), publicreportQuick0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportQuick0.R.QuickPhotos = append(publicreportQuick0.R.QuickPhotos, publicreportQuickPhotos1...)
+	publicreportQuick0.R.Images = append(publicreportQuick0.R.Images, publicreportImages2...)
 
 	for _, rel := range related {
-		rel.R.Quick = publicreportQuick0
+		rel.R.Quicks = append(rel.R.Quicks, publicreportQuick0)
 	}
 
 	return nil
@@ -688,17 +692,17 @@ func (o *PublicreportQuick) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "QuickPhotos":
-		rels, ok := retrieved.(PublicreportQuickPhotoSlice)
+	case "Images":
+		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
 			return fmt.Errorf("publicreportQuick cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.QuickPhotos = rels
+		o.R.Images = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Quick = o
+				rel.R.Quicks = PublicreportQuickSlice{o}
 			}
 		}
 		return nil
@@ -714,79 +718,99 @@ func buildPublicreportQuickPreloader() publicreportQuickPreloader {
 }
 
 type publicreportQuickThenLoader[Q orm.Loadable] struct {
-	QuickPhotos func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportQuickThenLoader[Q orm.Loadable]() publicreportQuickThenLoader[Q] {
-	type QuickPhotosLoadInterface interface {
-		LoadQuickPhotos(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ImagesLoadInterface interface {
+		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportQuickThenLoader[Q]{
-		QuickPhotos: thenLoadBuilder[Q](
-			"QuickPhotos",
-			func(ctx context.Context, exec bob.Executor, retrieved QuickPhotosLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadQuickPhotos(ctx, exec, mods...)
+		Images: thenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadImages(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadQuickPhotos loads the publicreportQuick's QuickPhotos into the .R struct
-func (o *PublicreportQuick) LoadQuickPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportQuick's Images into the .R struct
+func (o *PublicreportQuick) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.QuickPhotos = nil
+	o.R.Images = nil
 
-	related, err := o.QuickPhotos(mods...).All(ctx, exec)
+	related, err := o.Images(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, rel := range related {
-		rel.R.Quick = o
+		rel.R.Quicks = PublicreportQuickSlice{o}
 	}
 
-	o.R.QuickPhotos = related
+	o.R.Images = related
 	return nil
 }
 
-// LoadQuickPhotos loads the publicreportQuick's QuickPhotos into the .R struct
-func (os PublicreportQuickSlice) LoadQuickPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportQuick's Images into the .R struct
+func (os PublicreportQuickSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportQuickPhotos, err := os.QuickPhotos(mods...).All(ctx, exec)
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(PublicreportImages.Columns))
+	}
+
+	q := os.Images(append(
+		mods,
+		sm.Columns(PublicreportQuickImages.Columns.QuickID.As("related_publicreport.quick.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_publicreport.quick.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	publicreportImages, err := bob.Allx[bob.SliceTransformer[*PublicreportImage, PublicreportImageSlice]](ctx, exec, q, mapper)
 	if err != nil {
 		return err
 	}
 
 	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.QuickPhotos = nil
+		o.R.Images = nil
 	}
 
 	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportQuickPhotos {
-
-			if !(o.ID == rel.QuickID) {
+		for i, rel := range publicreportImages {
+			if !(o.ID == IDSlice[i]) {
 				continue
 			}
 
-			rel.R.Quick = o
+			rel.R.Quicks = append(rel.R.Quicks, o)
 
-			o.R.QuickPhotos = append(o.R.QuickPhotos, rel)
+			o.R.Images = append(o.R.Images, rel)
 		}
 	}
 
@@ -795,7 +819,7 @@ func (os PublicreportQuickSlice) LoadQuickPhotos(ctx context.Context, exec bob.E
 
 // publicreportQuickC is where relationship counts are stored.
 type publicreportQuickC struct {
-	QuickPhotos *int64
+	Images *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -805,20 +829,20 @@ func (o *PublicreportQuick) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
-	case "QuickPhotos":
-		o.C.QuickPhotos = &count
+	case "Images":
+		o.C.Images = &count
 	}
 	return nil
 }
 
 type publicreportQuickCountPreloader struct {
-	QuickPhotos func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Images func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildPublicreportQuickCountPreloader() publicreportQuickCountPreloader {
 	return publicreportQuickCountPreloader{
-		QuickPhotos: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*PublicreportQuick]("QuickPhotos", func(parent string) bob.Expression {
+		Images: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*PublicreportQuick]("Images", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = PublicreportQuicks.Alias()
@@ -827,8 +851,11 @@ func buildPublicreportQuickCountPreloader() publicreportQuickCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(PublicreportQuickPhotos.Name()),
-					sm.Where(psql.Quote(PublicreportQuickPhotos.Alias(), "quick_id").EQ(psql.Quote(parent, "id"))),
+					sm.From(PublicreportQuickImages.Name()),
+					sm.Where(psql.Quote(PublicreportQuickImages.Alias(), "quick_id").EQ(psql.Quote(parent, "id"))),
+					sm.InnerJoin(PublicreportImages.Name()).On(
+						psql.Quote(PublicreportImages.Alias(), "id").EQ(psql.Quote(PublicreportQuickImages.Alias(), "image_id")),
+					),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -838,47 +865,47 @@ func buildPublicreportQuickCountPreloader() publicreportQuickCountPreloader {
 }
 
 type publicreportQuickCountThenLoader[Q orm.Loadable] struct {
-	QuickPhotos func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportQuickCountThenLoader[Q orm.Loadable]() publicreportQuickCountThenLoader[Q] {
-	type QuickPhotosCountInterface interface {
-		LoadCountQuickPhotos(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ImagesCountInterface interface {
+		LoadCountImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportQuickCountThenLoader[Q]{
-		QuickPhotos: countThenLoadBuilder[Q](
-			"QuickPhotos",
-			func(ctx context.Context, exec bob.Executor, retrieved QuickPhotosCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountQuickPhotos(ctx, exec, mods...)
+		Images: countThenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountImages(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadCountQuickPhotos loads the count of QuickPhotos into the C struct
-func (o *PublicreportQuick) LoadCountQuickPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountImages loads the count of Images into the C struct
+func (o *PublicreportQuick) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.QuickPhotos(mods...).Count(ctx, exec)
+	count, err := o.Images(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.QuickPhotos = &count
+	o.C.Images = &count
 	return nil
 }
 
-// LoadCountQuickPhotos loads the count of QuickPhotos for a slice
-func (os PublicreportQuickSlice) LoadCountQuickPhotos(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountImages loads the count of Images for a slice
+func (os PublicreportQuickSlice) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountQuickPhotos(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountImages(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -887,8 +914,8 @@ func (os PublicreportQuickSlice) LoadCountQuickPhotos(ctx context.Context, exec 
 }
 
 type publicreportQuickJoins[Q dialect.Joinable] struct {
-	typ         string
-	QuickPhotos modAs[Q, publicreportQuickPhotoColumns]
+	typ    string
+	Images modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportQuickJoins[Q]) aliasedAs(alias string) publicreportQuickJoins[Q] {
@@ -898,14 +925,22 @@ func (j publicreportQuickJoins[Q]) aliasedAs(alias string) publicreportQuickJoin
 func buildPublicreportQuickJoins[Q dialect.Joinable](cols publicreportQuickColumns, typ string) publicreportQuickJoins[Q] {
 	return publicreportQuickJoins[Q]{
 		typ: typ,
-		QuickPhotos: modAs[Q, publicreportQuickPhotoColumns]{
-			c: PublicreportQuickPhotos.Columns,
-			f: func(to publicreportQuickPhotoColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
+		Images: modAs[Q, publicreportImageColumns]{
+			c: PublicreportImages.Columns,
+			f: func(to publicreportImageColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportQuickPhotos.Name().As(to.Alias())).On(
+					to := PublicreportQuickImages.Columns.AliasedAs(PublicreportQuickImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportQuickImages.Name().As(to.Alias())).On(
 						to.QuickID.EQ(cols.ID),
+					))
+				}
+				{
+					cols := PublicreportQuickImages.Columns.AliasedAs(PublicreportQuickImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.ImageID),
 					))
 				}
 
