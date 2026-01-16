@@ -10,8 +10,26 @@ var OrganizationErrors = &organizationErrors{
 		columns: []string{"id"},
 		s:       "organization_pkey",
 	},
+
+	ErrUniqueOrganizationImportDistrictGidKey: &UniqueConstraintError{
+		schema:  "",
+		table:   "organization",
+		columns: []string{"import_district_gid"},
+		s:       "organization_import_district_gid_key",
+	},
+
+	ErrUniqueOrganizationWebsiteKey: &UniqueConstraintError{
+		schema:  "",
+		table:   "organization",
+		columns: []string{"website"},
+		s:       "organization_website_key",
+	},
 }
 
 type organizationErrors struct {
 	ErrUniqueOrganizationPkey *UniqueConstraintError
+
+	ErrUniqueOrganizationImportDistrictGidKey *UniqueConstraintError
+
+	ErrUniqueOrganizationWebsiteKey *UniqueConstraintError
 }

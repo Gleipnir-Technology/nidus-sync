@@ -48,6 +48,7 @@ type preloaders struct {
 	FieldseekerZones2                 fieldseekerZones2Preloader
 	FieldseekerSync                   fieldseekerSyncPreloader
 	H3Aggregation                     h3AggregationPreloader
+	ImportDistrict                    importDistrictPreloader
 	NoteAudio                         noteAudioPreloader
 	NoteAudioBreadcrumb               noteAudioBreadcrumbPreloader
 	NoteAudioDatum                    noteAudioDatumPreloader
@@ -97,6 +98,7 @@ func getPreloaders() preloaders {
 		FieldseekerZones2:                 buildFieldseekerZones2Preloader(),
 		FieldseekerSync:                   buildFieldseekerSyncPreloader(),
 		H3Aggregation:                     buildH3AggregationPreloader(),
+		ImportDistrict:                    buildImportDistrictPreloader(),
 		NoteAudio:                         buildNoteAudioPreloader(),
 		NoteAudioBreadcrumb:               buildNoteAudioBreadcrumbPreloader(),
 		NoteAudioDatum:                    buildNoteAudioDatumPreloader(),
@@ -152,6 +154,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	FieldseekerZones2                 fieldseekerZones2ThenLoader[Q]
 	FieldseekerSync                   fieldseekerSyncThenLoader[Q]
 	H3Aggregation                     h3AggregationThenLoader[Q]
+	ImportDistrict                    importDistrictThenLoader[Q]
 	NoteAudio                         noteAudioThenLoader[Q]
 	NoteAudioBreadcrumb               noteAudioBreadcrumbThenLoader[Q]
 	NoteAudioDatum                    noteAudioDatumThenLoader[Q]
@@ -201,6 +204,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FieldseekerZones2:                 buildFieldseekerZones2ThenLoader[Q](),
 		FieldseekerSync:                   buildFieldseekerSyncThenLoader[Q](),
 		H3Aggregation:                     buildH3AggregationThenLoader[Q](),
+		ImportDistrict:                    buildImportDistrictThenLoader[Q](),
 		NoteAudio:                         buildNoteAudioThenLoader[Q](),
 		NoteAudioBreadcrumb:               buildNoteAudioBreadcrumbThenLoader[Q](),
 		NoteAudioDatum:                    buildNoteAudioDatumThenLoader[Q](),

@@ -13,6 +13,7 @@ no_tests: true
 psql:
   schemas:
     - "arcgis"
+    - "import"
     - "public"
     - "publicreport"
     - "fieldseeker"

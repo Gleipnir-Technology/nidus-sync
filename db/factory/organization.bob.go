@@ -36,11 +36,13 @@ func (mods OrganizationModSlice) Apply(ctx context.Context, n *OrganizationTempl
 // OrganizationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type OrganizationTemplate struct {
-	ID             func() int32
-	Name           func() string
-	ArcgisID       func() null.Val[string]
-	ArcgisName     func() null.Val[string]
-	FieldseekerURL func() null.Val[string]
+	ID                func() int32
+	Name              func() string
+	ArcgisID          func() null.Val[string]
+	ArcgisName        func() null.Val[string]
+	FieldseekerURL    func() null.Val[string]
+	ImportDistrictGid func() null.Val[int32]
+	Website           func() null.Val[string]
 
 	r organizationR
 	f *Factory
@@ -49,38 +51,39 @@ type OrganizationTemplate struct {
 }
 
 type organizationR struct {
-	Containerrelates        []*organizationRContainerrelatesR
-	Fieldscoutinglogs       []*organizationRFieldscoutinglogsR
-	Habitatrelates          []*organizationRHabitatrelatesR
-	Inspectionsamples       []*organizationRInspectionsamplesR
-	Inspectionsampledetails []*organizationRInspectionsampledetailsR
-	Linelocations           []*organizationRLinelocationsR
-	Locationtrackings       []*organizationRLocationtrackingsR
-	Mosquitoinspections     []*organizationRMosquitoinspectionsR
-	Pointlocations          []*organizationRPointlocationsR
-	Polygonlocations        []*organizationRPolygonlocationsR
-	Pools                   []*organizationRPoolsR
-	Pooldetails             []*organizationRPooldetailsR
-	Proposedtreatmentareas  []*organizationRProposedtreatmentareasR
-	Qamosquitoinspections   []*organizationRQamosquitoinspectionsR
-	Rodentlocations         []*organizationRRodentlocationsR
-	Samplecollections       []*organizationRSamplecollectionsR
-	Samplelocations         []*organizationRSamplelocationsR
-	Servicerequests         []*organizationRServicerequestsR
-	Speciesabundances       []*organizationRSpeciesabundancesR
-	Stormdrains             []*organizationRStormdrainsR
-	Timecards               []*organizationRTimecardsR
-	Trapdata                []*organizationRTrapdataR
-	Traplocations           []*organizationRTraplocationsR
-	Treatments              []*organizationRTreatmentsR
-	Treatmentareas          []*organizationRTreatmentareasR
-	Zones                   []*organizationRZonesR
-	Zones2s                 []*organizationRZones2sR
-	FieldseekerSyncs        []*organizationRFieldseekerSyncsR
-	H3Aggregations          []*organizationRH3AggregationsR
-	NoteAudios              []*organizationRNoteAudiosR
-	NoteImages              []*organizationRNoteImagesR
-	User                    []*organizationRUserR
+	Containerrelates          []*organizationRContainerrelatesR
+	Fieldscoutinglogs         []*organizationRFieldscoutinglogsR
+	Habitatrelates            []*organizationRHabitatrelatesR
+	Inspectionsamples         []*organizationRInspectionsamplesR
+	Inspectionsampledetails   []*organizationRInspectionsampledetailsR
+	Linelocations             []*organizationRLinelocationsR
+	Locationtrackings         []*organizationRLocationtrackingsR
+	Mosquitoinspections       []*organizationRMosquitoinspectionsR
+	Pointlocations            []*organizationRPointlocationsR
+	Polygonlocations          []*organizationRPolygonlocationsR
+	Pools                     []*organizationRPoolsR
+	Pooldetails               []*organizationRPooldetailsR
+	Proposedtreatmentareas    []*organizationRProposedtreatmentareasR
+	Qamosquitoinspections     []*organizationRQamosquitoinspectionsR
+	Rodentlocations           []*organizationRRodentlocationsR
+	Samplecollections         []*organizationRSamplecollectionsR
+	Samplelocations           []*organizationRSamplelocationsR
+	Servicerequests           []*organizationRServicerequestsR
+	Speciesabundances         []*organizationRSpeciesabundancesR
+	Stormdrains               []*organizationRStormdrainsR
+	Timecards                 []*organizationRTimecardsR
+	Trapdata                  []*organizationRTrapdataR
+	Traplocations             []*organizationRTraplocationsR
+	Treatments                []*organizationRTreatmentsR
+	Treatmentareas            []*organizationRTreatmentareasR
+	Zones                     []*organizationRZonesR
+	Zones2s                   []*organizationRZones2sR
+	FieldseekerSyncs          []*organizationRFieldseekerSyncsR
+	H3Aggregations            []*organizationRH3AggregationsR
+	NoteAudios                []*organizationRNoteAudiosR
+	NoteImages                []*organizationRNoteImagesR
+	ImportDistrictGidDistrict *organizationRImportDistrictGidDistrictR
+	User                      []*organizationRUserR
 }
 
 type organizationRContainerrelatesR struct {
@@ -206,6 +209,9 @@ type organizationRNoteAudiosR struct {
 type organizationRNoteImagesR struct {
 	number int
 	o      *NoteImageTemplate
+}
+type organizationRImportDistrictGidDistrictR struct {
+	o *ImportDistrictTemplate
 }
 type organizationRUserR struct {
 	number int
@@ -625,6 +631,13 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.NoteImages = rel
 	}
 
+	if t.r.ImportDistrictGidDistrict != nil {
+		rel := t.r.ImportDistrictGidDistrict.o.Build()
+		rel.R.ImportDistrictGidOrganization = o
+		o.ImportDistrictGid = null.From(rel.Gid) // h2
+		o.R.ImportDistrictGidDistrict = rel
+	}
+
 	if t.r.User != nil {
 		rel := models.UserSlice{}
 		for _, r := range t.r.User {
@@ -664,6 +677,14 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.FieldseekerURL()
 		m.FieldseekerURL = omitnull.FromNull(val)
 	}
+	if o.ImportDistrictGid != nil {
+		val := o.ImportDistrictGid()
+		m.ImportDistrictGid = omitnull.FromNull(val)
+	}
+	if o.Website != nil {
+		val := o.Website()
+		m.Website = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -700,6 +721,12 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.FieldseekerURL != nil {
 		m.FieldseekerURL = o.FieldseekerURL()
+	}
+	if o.ImportDistrictGid != nil {
+		m.ImportDistrictGid = o.ImportDistrictGid()
+	}
+	if o.Website != nil {
+		m.Website = o.Website()
 	}
 
 	o.setModelRels(m)
@@ -1353,6 +1380,25 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isImportDistrictGidDistrictDone, _ := organizationRelImportDistrictGidDistrictCtx.Value(ctx)
+	if !isImportDistrictGidDistrictDone && o.r.ImportDistrictGidDistrict != nil {
+		ctx = organizationRelImportDistrictGidDistrictCtx.WithValue(ctx, true)
+		if o.r.ImportDistrictGidDistrict.o.alreadyPersisted {
+			m.R.ImportDistrictGidDistrict = o.r.ImportDistrictGidDistrict.o.Build()
+		} else {
+			var rel31 *models.ImportDistrict
+			rel31, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel31)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	isUserDone, _ := organizationRelUserCtx.Value(ctx)
 	if !isUserDone && o.r.User != nil {
 		ctx = organizationRelUserCtx.WithValue(ctx, true)
@@ -1360,12 +1406,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel31...)
+				err = m.AttachUser(ctx, exec, rel32...)
 				if err != nil {
 					return err
 				}
@@ -1470,6 +1516,8 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomArcgisID(f),
 		OrganizationMods.RandomArcgisName(f),
 		OrganizationMods.RandomFieldseekerURL(f),
+		OrganizationMods.RandomImportDistrictGid(f),
+		OrganizationMods.RandomWebsite(f),
 	}
 }
 
@@ -1694,12 +1742,153 @@ func (m organizationMods) RandomFieldseekerURLNotNull(f *faker.Faker) Organizati
 	})
 }
 
+// Set the model columns to this value
+func (m organizationMods) ImportDistrictGid(val null.Val[int32]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ImportDistrictGid = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ImportDistrictGidFunc(f func() null.Val[int32]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ImportDistrictGid = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetImportDistrictGid() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ImportDistrictGid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomImportDistrictGid(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ImportDistrictGid = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomImportDistrictGidNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ImportDistrictGid = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) Website(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Website = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) WebsiteFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Website = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetWebsite() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Website = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomWebsite(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Website = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomWebsiteNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Website = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m organizationMods) WithParentsCascading() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		if isDone, _ := organizationWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = organizationWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewImportDistrictWithContext(ctx, ImportDistrictMods.WithParentsCascading())
+			m.WithImportDistrictGidDistrict(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m organizationMods) WithImportDistrictGidDistrict(rel *ImportDistrictTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ImportDistrictGidDistrict = &organizationRImportDistrictGidDistrictR{
+			o: rel,
+		}
+	})
+}
+
+func (m organizationMods) WithNewImportDistrictGidDistrict(mods ...ImportDistrictMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewImportDistrictWithContext(ctx, mods...)
+
+		m.WithImportDistrictGidDistrict(related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) WithExistingImportDistrictGidDistrict(em *models.ImportDistrict) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ImportDistrictGidDistrict = &organizationRImportDistrictGidDistrictR{
+			o: o.f.FromExistingImportDistrict(em),
+		}
+	})
+}
+
+func (m organizationMods) WithoutImportDistrictGidDistrict() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ImportDistrictGidDistrict = nil
 	})
 }
 

@@ -3,15 +3,15 @@
 
 package dberrors
 
-var DistrictErrors = &districtErrors{
+var ImportDistrictErrors = &importDistrictErrors{
 	ErrUniqueDistrictPkey: &UniqueConstraintError{
-		schema:  "",
+		schema:  "import",
 		table:   "district",
 		columns: []string{"gid"},
 		s:       "district_pkey",
 	},
 }
 
-type districtErrors struct {
+type importDistrictErrors struct {
 	ErrUniqueDistrictPkey *UniqueConstraintError
 }

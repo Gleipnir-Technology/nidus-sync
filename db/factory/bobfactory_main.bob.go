@@ -20,7 +20,6 @@ import (
 type Factory struct {
 	baseArcgisUserMods                        ArcgisUserModSlice
 	baseArcgisUserPrivilegeMods               ArcgisUserPrivilegeModSlice
-	baseDistrictMods                          DistrictModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
 	baseFieldseekerFieldscoutinglogMods       FieldseekerFieldscoutinglogModSlice
 	baseFieldseekerHabitatrelateMods          FieldseekerHabitatrelateModSlice
@@ -53,6 +52,7 @@ type Factory struct {
 	baseGeometryColumnMods                    GeometryColumnModSlice
 	baseGooseDBVersionMods                    GooseDBVersionModSlice
 	baseH3AggregationMods                     H3AggregationModSlice
+	baseImportDistrictMods                    ImportDistrictModSlice
 	baseNoteAudioMods                         NoteAudioModSlice
 	baseNoteAudioBreadcrumbMods               NoteAudioBreadcrumbModSlice
 	baseNoteAudioDatumMods                    NoteAudioDatumModSlice
@@ -150,52 +150,6 @@ func (f *Factory) FromExistingArcgisUserPrivilege(m *models.ArcgisUserPrivilege)
 	if m.R.UserUser != nil {
 		ArcgisUserPrivilegeMods.WithExistingUserUser(m.R.UserUser).Apply(ctx, o)
 	}
-
-	return o
-}
-
-func (f *Factory) NewDistrict(mods ...DistrictMod) *DistrictTemplate {
-	return f.NewDistrictWithContext(context.Background(), mods...)
-}
-
-func (f *Factory) NewDistrictWithContext(ctx context.Context, mods ...DistrictMod) *DistrictTemplate {
-	o := &DistrictTemplate{f: f}
-
-	if f != nil {
-		f.baseDistrictMods.Apply(ctx, o)
-	}
-
-	DistrictModSlice(mods).Apply(ctx, o)
-
-	return o
-}
-
-func (f *Factory) FromExistingDistrict(m *models.District) *DistrictTemplate {
-	o := &DistrictTemplate{f: f, alreadyPersisted: true}
-
-	o.Gid = func() int32 { return m.Gid }
-	o.ID = func() null.Val[decimal.Decimal] { return m.ID }
-	o.Website = func() null.Val[string] { return m.Website }
-	o.Contact = func() null.Val[string] { return m.Contact }
-	o.Address = func() null.Val[string] { return m.Address }
-	o.Regionid = func() null.Val[decimal.Decimal] { return m.Regionid }
-	o.PostalCod = func() null.Val[decimal.Decimal] { return m.PostalCod }
-	o.Phone1 = func() null.Val[string] { return m.Phone1 }
-	o.Fax1 = func() null.Val[string] { return m.Fax1 }
-	o.Agency = func() null.Val[string] { return m.Agency }
-	o.Code1 = func() null.Val[string] { return m.Code1 }
-	o.City1 = func() null.Val[string] { return m.City1 }
-	o.ShapeLeng = func() null.Val[decimal.Decimal] { return m.ShapeLeng }
-	o.Address2 = func() null.Val[string] { return m.Address2 }
-	o.GeneralMG = func() null.Val[string] { return m.GeneralMG }
-	o.City2 = func() null.Val[string] { return m.City2 }
-	o.PostalC1 = func() null.Val[decimal.Decimal] { return m.PostalC1 }
-	o.Fax2 = func() null.Val[string] { return m.Fax2 }
-	o.Phone2 = func() null.Val[string] { return m.Phone2 }
-	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
-	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
-	o.Geom = func() null.Val[string] { return m.Geom }
-	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
 
 	return o
 }
@@ -2074,6 +2028,57 @@ func (f *Factory) FromExistingH3Aggregation(m *models.H3Aggregation) *H3Aggregat
 	return o
 }
 
+func (f *Factory) NewImportDistrict(mods ...ImportDistrictMod) *ImportDistrictTemplate {
+	return f.NewImportDistrictWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewImportDistrictWithContext(ctx context.Context, mods ...ImportDistrictMod) *ImportDistrictTemplate {
+	o := &ImportDistrictTemplate{f: f}
+
+	if f != nil {
+		f.baseImportDistrictMods.Apply(ctx, o)
+	}
+
+	ImportDistrictModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingImportDistrict(m *models.ImportDistrict) *ImportDistrictTemplate {
+	o := &ImportDistrictTemplate{f: f, alreadyPersisted: true}
+
+	o.Gid = func() int32 { return m.Gid }
+	o.ID = func() null.Val[decimal.Decimal] { return m.ID }
+	o.Website = func() null.Val[string] { return m.Website }
+	o.Contact = func() null.Val[string] { return m.Contact }
+	o.Address = func() null.Val[string] { return m.Address }
+	o.Regionid = func() null.Val[decimal.Decimal] { return m.Regionid }
+	o.PostalCod = func() null.Val[decimal.Decimal] { return m.PostalCod }
+	o.Phone1 = func() null.Val[string] { return m.Phone1 }
+	o.Fax1 = func() null.Val[string] { return m.Fax1 }
+	o.Agency = func() null.Val[string] { return m.Agency }
+	o.Code1 = func() null.Val[string] { return m.Code1 }
+	o.City1 = func() null.Val[string] { return m.City1 }
+	o.ShapeLeng = func() null.Val[decimal.Decimal] { return m.ShapeLeng }
+	o.Address2 = func() null.Val[string] { return m.Address2 }
+	o.GeneralMG = func() null.Val[string] { return m.GeneralMG }
+	o.City2 = func() null.Val[string] { return m.City2 }
+	o.PostalC1 = func() null.Val[decimal.Decimal] { return m.PostalC1 }
+	o.Fax2 = func() null.Val[string] { return m.Fax2 }
+	o.Phone2 = func() null.Val[string] { return m.Phone2 }
+	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
+	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
+	o.Geom = func() null.Val[string] { return m.Geom }
+	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
+
+	ctx := context.Background()
+	if m.R.ImportDistrictGidOrganization != nil {
+		ImportDistrictMods.WithExistingImportDistrictGidOrganization(m.R.ImportDistrictGidOrganization).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewNoteAudio(mods ...NoteAudioMod) *NoteAudioTemplate {
 	return f.NewNoteAudioWithContext(context.Background(), mods...)
 }
@@ -2400,6 +2405,8 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.ArcgisID = func() null.Val[string] { return m.ArcgisID }
 	o.ArcgisName = func() null.Val[string] { return m.ArcgisName }
 	o.FieldseekerURL = func() null.Val[string] { return m.FieldseekerURL }
+	o.ImportDistrictGid = func() null.Val[int32] { return m.ImportDistrictGid }
+	o.Website = func() null.Val[string] { return m.Website }
 
 	ctx := context.Background()
 	if len(m.R.Containerrelates) > 0 {
@@ -2494,6 +2501,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.NoteImages) > 0 {
 		OrganizationMods.AddExistingNoteImages(m.R.NoteImages...).Apply(ctx, o)
+	}
+	if m.R.ImportDistrictGidDistrict != nil {
+		OrganizationMods.WithExistingImportDistrictGidDistrict(m.R.ImportDistrictGidDistrict).Apply(ctx, o)
 	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
@@ -2947,14 +2957,6 @@ func (f *Factory) AddBaseArcgisUserPrivilegeMod(mods ...ArcgisUserPrivilegeMod) 
 	f.baseArcgisUserPrivilegeMods = append(f.baseArcgisUserPrivilegeMods, mods...)
 }
 
-func (f *Factory) ClearBaseDistrictMods() {
-	f.baseDistrictMods = nil
-}
-
-func (f *Factory) AddBaseDistrictMod(mods ...DistrictMod) {
-	f.baseDistrictMods = append(f.baseDistrictMods, mods...)
-}
-
 func (f *Factory) ClearBaseFieldseekerContainerrelateMods() {
 	f.baseFieldseekerContainerrelateMods = nil
 }
@@ -3209,6 +3211,14 @@ func (f *Factory) ClearBaseH3AggregationMods() {
 
 func (f *Factory) AddBaseH3AggregationMod(mods ...H3AggregationMod) {
 	f.baseH3AggregationMods = append(f.baseH3AggregationMods, mods...)
+}
+
+func (f *Factory) ClearBaseImportDistrictMods() {
+	f.baseImportDistrictMods = nil
+}
+
+func (f *Factory) AddBaseImportDistrictMod(mods ...ImportDistrictMod) {
+	f.baseImportDistrictMods = append(f.baseImportDistrictMods, mods...)
 }
 
 func (f *Factory) ClearBaseNoteAudioMods() {

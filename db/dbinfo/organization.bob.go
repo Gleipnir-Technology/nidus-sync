@@ -60,6 +60,24 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ImportDistrictGid: column{
+			Name:      "import_district_gid",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Website: column{
+			Name:      "website",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -79,50 +97,120 @@ var Organizations = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		OrganizationImportDistrictGidKey: index{
+			Type: "btree",
+			Name: "organization_import_district_gid_key",
+			Columns: []indexColumn{
+				{
+					Name:         "import_district_gid",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		OrganizationWebsiteKey: index{
+			Type: "btree",
+			Name: "organization_website_key",
+			Columns: []indexColumn{
+				{
+					Name:         "website",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "organization_pkey",
 		Columns: []string{"id"},
 		Comment: "",
 	},
+	ForeignKeys: organizationForeignKeys{
+		OrganizationOrganizationImportDistrictGidFkey: foreignKey{
+			constraint: constraint{
+				Name:    "organization.organization_import_district_gid_fkey",
+				Columns: []string{"import_district_gid"},
+				Comment: "",
+			},
+			ForeignTable:   "import.district",
+			ForeignColumns: []string{"gid"},
+		},
+	},
+	Uniques: organizationUniques{
+		OrganizationImportDistrictGidKey: constraint{
+			Name:    "organization_import_district_gid_key",
+			Columns: []string{"import_district_gid"},
+			Comment: "",
+		},
+		OrganizationWebsiteKey: constraint{
+			Name:    "organization_website_key",
+			Columns: []string{"website"},
+			Comment: "",
+		},
+	},
 
 	Comment: "",
 }
 
 type organizationColumns struct {
-	ID             column
-	Name           column
-	ArcgisID       column
-	ArcgisName     column
-	FieldseekerURL column
+	ID                column
+	Name              column
+	ArcgisID          column
+	ArcgisName        column
+	FieldseekerURL    column
+	ImportDistrictGid column
+	Website           column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website,
 	}
 }
 
 type organizationIndexes struct {
-	OrganizationPkey index
+	OrganizationPkey                 index
+	OrganizationImportDistrictGidKey index
+	OrganizationWebsiteKey           index
 }
 
 func (i organizationIndexes) AsSlice() []index {
 	return []index{
-		i.OrganizationPkey,
+		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationWebsiteKey,
 	}
 }
 
-type organizationForeignKeys struct{}
-
-func (f organizationForeignKeys) AsSlice() []foreignKey {
-	return []foreignKey{}
+type organizationForeignKeys struct {
+	OrganizationOrganizationImportDistrictGidFkey foreignKey
 }
 
-type organizationUniques struct{}
+func (f organizationForeignKeys) AsSlice() []foreignKey {
+	return []foreignKey{
+		f.OrganizationOrganizationImportDistrictGidFkey,
+	}
+}
+
+type organizationUniques struct {
+	OrganizationImportDistrictGidKey constraint
+	OrganizationWebsiteKey           constraint
+}
 
 func (u organizationUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.OrganizationImportDistrictGidKey, u.OrganizationWebsiteKey,
+	}
 }
 
 type organizationChecks struct{}

@@ -11,8 +11,8 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
-func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.District, error) {
-	rows, err := models.Districts.Query(
+func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.ImportDistrict, error) {
+	rows, err := models.ImportDistricts.Query(
 		sm.Where(
 			psql.F("ST_Contains", psql.Raw("geom_4326"), psql.F("ST_SetSRID", psql.F("ST_MakePoint", psql.Arg(lng), psql.Arg(lat)), psql.Arg(4326))),
 		),

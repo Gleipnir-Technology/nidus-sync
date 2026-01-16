@@ -5,6 +5,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/aarondl/opt/null"
@@ -18,10 +19,13 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 	"github.com/stephenafamo/bob/expr"
+	"github.com/stephenafamo/bob/mods"
+	"github.com/stephenafamo/bob/orm"
+	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
-// District is an object representing the database table.
-type District struct {
+// ImportDistrict is an object representing the database table.
+type ImportDistrict struct {
 	Gid       int32                     `db:"gid,pk" `
 	ID        null.Val[decimal.Decimal] `db:"id" `
 	Website   null.Val[string]          `db:"website" `
@@ -45,23 +49,30 @@ type District struct {
 	ShapeArea null.Val[decimal.Decimal] `db:"shape_area" `
 	Geom      null.Val[string]          `db:"geom" `
 	Geom4326  null.Val[string]          `db:"geom_4326,generated" `
+
+	R importDistrictR `db:"-" `
 }
 
-// DistrictSlice is an alias for a slice of pointers to District.
-// This should almost always be used instead of []*District.
-type DistrictSlice []*District
+// ImportDistrictSlice is an alias for a slice of pointers to ImportDistrict.
+// This should almost always be used instead of []*ImportDistrict.
+type ImportDistrictSlice []*ImportDistrict
 
-// Districts contains methods to work with the district table
-var Districts = psql.NewTablex[*District, DistrictSlice, *DistrictSetter]("", "district", buildDistrictColumns("district"))
+// ImportDistricts contains methods to work with the district table
+var ImportDistricts = psql.NewTablex[*ImportDistrict, ImportDistrictSlice, *ImportDistrictSetter]("import", "district", buildImportDistrictColumns("import.district"))
 
-// DistrictsQuery is a query on the district table
-type DistrictsQuery = *psql.ViewQuery[*District, DistrictSlice]
+// ImportDistrictsQuery is a query on the district table
+type ImportDistrictsQuery = *psql.ViewQuery[*ImportDistrict, ImportDistrictSlice]
 
-func buildDistrictColumns(alias string) districtColumns {
-	return districtColumns{
+// importDistrictR is where relationships are stored.
+type importDistrictR struct {
+	ImportDistrictGidOrganization *Organization // organization.organization_import_district_gid_fkey
+}
+
+func buildImportDistrictColumns(alias string) importDistrictColumns {
+	return importDistrictColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
 			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326",
-		).WithParent("district"),
+		).WithParent("import.district"),
 		tableAlias: alias,
 		Gid:        psql.Quote(alias, "gid"),
 		ID:         psql.Quote(alias, "id"),
@@ -89,7 +100,7 @@ func buildDistrictColumns(alias string) districtColumns {
 	}
 }
 
-type districtColumns struct {
+type importDistrictColumns struct {
 	expr.ColumnsExpr
 	tableAlias string
 	Gid        psql.Expression
@@ -117,18 +128,18 @@ type districtColumns struct {
 	Geom4326   psql.Expression
 }
 
-func (c districtColumns) Alias() string {
+func (c importDistrictColumns) Alias() string {
 	return c.tableAlias
 }
 
-func (districtColumns) AliasedAs(alias string) districtColumns {
-	return buildDistrictColumns(alias)
+func (importDistrictColumns) AliasedAs(alias string) importDistrictColumns {
+	return buildImportDistrictColumns(alias)
 }
 
-// DistrictSetter is used for insert/upsert/update operations
+// ImportDistrictSetter is used for insert/upsert/update operations
 // All values are optional, and do not have to be set
 // Generated columns are not included
-type DistrictSetter struct {
+type ImportDistrictSetter struct {
 	Gid       omit.Val[int32]               `db:"gid,pk" `
 	ID        omitnull.Val[decimal.Decimal] `db:"id" `
 	Website   omitnull.Val[string]          `db:"website" `
@@ -153,7 +164,7 @@ type DistrictSetter struct {
 	Geom      omitnull.Val[string]          `db:"geom" `
 }
 
-func (s DistrictSetter) SetColumns() []string {
+func (s ImportDistrictSetter) SetColumns() []string {
 	vals := make([]string, 0, 22)
 	if s.Gid.IsValue() {
 		vals = append(vals, "gid")
@@ -224,7 +235,7 @@ func (s DistrictSetter) SetColumns() []string {
 	return vals
 }
 
-func (s DistrictSetter) Overwrite(t *District) {
+func (s ImportDistrictSetter) Overwrite(t *ImportDistrict) {
 	if s.Gid.IsValue() {
 		t.Gid = s.Gid.MustGet()
 	}
@@ -293,9 +304,9 @@ func (s DistrictSetter) Overwrite(t *District) {
 	}
 }
 
-func (s *DistrictSetter) Apply(q *dialect.InsertQuery) {
+func (s *ImportDistrictSetter) Apply(q *dialect.InsertQuery) {
 	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-		return Districts.BeforeInsertHooks.RunHooks(ctx, exec, s)
+		return ImportDistricts.BeforeInsertHooks.RunHooks(ctx, exec, s)
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
@@ -436,11 +447,11 @@ func (s *DistrictSetter) Apply(q *dialect.InsertQuery) {
 	}))
 }
 
-func (s DistrictSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (s ImportDistrictSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return um.Set(s.Expressions()...)
 }
 
-func (s DistrictSetter) Expressions(prefix ...string) []bob.Expression {
+func (s ImportDistrictSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 22)
 
 	if s.Gid.IsValue() {
@@ -600,113 +611,114 @@ func (s DistrictSetter) Expressions(prefix ...string) []bob.Expression {
 	return exprs
 }
 
-// FindDistrict retrieves a single record by primary key
+// FindImportDistrict retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindDistrict(ctx context.Context, exec bob.Executor, GidPK int32, cols ...string) (*District, error) {
+func FindImportDistrict(ctx context.Context, exec bob.Executor, GidPK int32, cols ...string) (*ImportDistrict, error) {
 	if len(cols) == 0 {
-		return Districts.Query(
-			sm.Where(Districts.Columns.Gid.EQ(psql.Arg(GidPK))),
+		return ImportDistricts.Query(
+			sm.Where(ImportDistricts.Columns.Gid.EQ(psql.Arg(GidPK))),
 		).One(ctx, exec)
 	}
 
-	return Districts.Query(
-		sm.Where(Districts.Columns.Gid.EQ(psql.Arg(GidPK))),
-		sm.Columns(Districts.Columns.Only(cols...)),
+	return ImportDistricts.Query(
+		sm.Where(ImportDistricts.Columns.Gid.EQ(psql.Arg(GidPK))),
+		sm.Columns(ImportDistricts.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
-// DistrictExists checks the presence of a single record by primary key
-func DistrictExists(ctx context.Context, exec bob.Executor, GidPK int32) (bool, error) {
-	return Districts.Query(
-		sm.Where(Districts.Columns.Gid.EQ(psql.Arg(GidPK))),
+// ImportDistrictExists checks the presence of a single record by primary key
+func ImportDistrictExists(ctx context.Context, exec bob.Executor, GidPK int32) (bool, error) {
+	return ImportDistricts.Query(
+		sm.Where(ImportDistricts.Columns.Gid.EQ(psql.Arg(GidPK))),
 	).Exists(ctx, exec)
 }
 
-// AfterQueryHook is called after District is retrieved from the database
-func (o *District) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after ImportDistrict is retrieved from the database
+func (o *ImportDistrict) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = Districts.AfterSelectHooks.RunHooks(ctx, exec, DistrictSlice{o})
+		ctx, err = ImportDistricts.AfterSelectHooks.RunHooks(ctx, exec, ImportDistrictSlice{o})
 	case bob.QueryTypeInsert:
-		ctx, err = Districts.AfterInsertHooks.RunHooks(ctx, exec, DistrictSlice{o})
+		ctx, err = ImportDistricts.AfterInsertHooks.RunHooks(ctx, exec, ImportDistrictSlice{o})
 	case bob.QueryTypeUpdate:
-		ctx, err = Districts.AfterUpdateHooks.RunHooks(ctx, exec, DistrictSlice{o})
+		ctx, err = ImportDistricts.AfterUpdateHooks.RunHooks(ctx, exec, ImportDistrictSlice{o})
 	case bob.QueryTypeDelete:
-		ctx, err = Districts.AfterDeleteHooks.RunHooks(ctx, exec, DistrictSlice{o})
+		ctx, err = ImportDistricts.AfterDeleteHooks.RunHooks(ctx, exec, ImportDistrictSlice{o})
 	}
 
 	return err
 }
 
-// primaryKeyVals returns the primary key values of the District
-func (o *District) primaryKeyVals() bob.Expression {
+// primaryKeyVals returns the primary key values of the ImportDistrict
+func (o *ImportDistrict) primaryKeyVals() bob.Expression {
 	return psql.Arg(o.Gid)
 }
 
-func (o *District) pkEQ() dialect.Expression {
-	return psql.Quote("district", "gid").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+func (o *ImportDistrict) pkEQ() dialect.Expression {
+	return psql.Quote("import.district", "gid").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
 
-// Update uses an executor to update the District
-func (o *District) Update(ctx context.Context, exec bob.Executor, s *DistrictSetter) error {
-	v, err := Districts.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
+// Update uses an executor to update the ImportDistrict
+func (o *ImportDistrict) Update(ctx context.Context, exec bob.Executor, s *ImportDistrictSetter) error {
+	v, err := ImportDistricts.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
+	o.R = v.R
 	*o = *v
 
 	return nil
 }
 
-// Delete deletes a single District record with an executor
-func (o *District) Delete(ctx context.Context, exec bob.Executor) error {
-	_, err := Districts.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
+// Delete deletes a single ImportDistrict record with an executor
+func (o *ImportDistrict) Delete(ctx context.Context, exec bob.Executor) error {
+	_, err := ImportDistricts.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
 	return err
 }
 
-// Reload refreshes the District using the executor
-func (o *District) Reload(ctx context.Context, exec bob.Executor) error {
-	o2, err := Districts.Query(
-		sm.Where(Districts.Columns.Gid.EQ(psql.Arg(o.Gid))),
+// Reload refreshes the ImportDistrict using the executor
+func (o *ImportDistrict) Reload(ctx context.Context, exec bob.Executor) error {
+	o2, err := ImportDistricts.Query(
+		sm.Where(ImportDistricts.Columns.Gid.EQ(psql.Arg(o.Gid))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
 	}
-
+	o2.R = o.R
 	*o = *o2
 
 	return nil
 }
 
-// AfterQueryHook is called after DistrictSlice is retrieved from the database
-func (o DistrictSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after ImportDistrictSlice is retrieved from the database
+func (o ImportDistrictSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = Districts.AfterSelectHooks.RunHooks(ctx, exec, o)
+		ctx, err = ImportDistricts.AfterSelectHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeInsert:
-		ctx, err = Districts.AfterInsertHooks.RunHooks(ctx, exec, o)
+		ctx, err = ImportDistricts.AfterInsertHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeUpdate:
-		ctx, err = Districts.AfterUpdateHooks.RunHooks(ctx, exec, o)
+		ctx, err = ImportDistricts.AfterUpdateHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeDelete:
-		ctx, err = Districts.AfterDeleteHooks.RunHooks(ctx, exec, o)
+		ctx, err = ImportDistricts.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
 }
 
-func (o DistrictSlice) pkIN() dialect.Expression {
+func (o ImportDistrictSlice) pkIN() dialect.Expression {
 	if len(o) == 0 {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Quote("district", "gid").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("import.district", "gid").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -718,13 +730,13 @@ func (o DistrictSlice) pkIN() dialect.Expression {
 // copyMatchingRows finds models in the given slice that have the same primary key
 // then it first copies the existing relationships from the old model to the new model
 // and then replaces the old model in the slice with the new model
-func (o DistrictSlice) copyMatchingRows(from ...*District) {
+func (o ImportDistrictSlice) copyMatchingRows(from ...*ImportDistrict) {
 	for i, old := range o {
 		for _, new := range from {
 			if new.Gid != old.Gid {
 				continue
 			}
-
+			new.R = old.R
 			o[i] = new
 			break
 		}
@@ -732,25 +744,25 @@ func (o DistrictSlice) copyMatchingRows(from ...*District) {
 }
 
 // UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
-func (o DistrictSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (o ImportDistrictSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return Districts.BeforeUpdateHooks.RunHooks(ctx, exec, o)
+			return ImportDistricts.BeforeUpdateHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *District:
+			case *ImportDistrict:
 				o.copyMatchingRows(retrieved)
-			case []*District:
+			case []*ImportDistrict:
 				o.copyMatchingRows(retrieved...)
-			case DistrictSlice:
+			case ImportDistrictSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a District or a slice of District
+				// If the retrieved value is not a ImportDistrict or a slice of ImportDistrict
 				// then run the AfterUpdateHooks on the slice
-				_, err = Districts.AfterUpdateHooks.RunHooks(ctx, exec, o)
+				_, err = ImportDistricts.AfterUpdateHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -761,25 +773,25 @@ func (o DistrictSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 // DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
-func (o DistrictSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
+func (o ImportDistrictSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return Districts.BeforeDeleteHooks.RunHooks(ctx, exec, o)
+			return ImportDistricts.BeforeDeleteHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *District:
+			case *ImportDistrict:
 				o.copyMatchingRows(retrieved)
-			case []*District:
+			case []*ImportDistrict:
 				o.copyMatchingRows(retrieved...)
-			case DistrictSlice:
+			case ImportDistrictSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a District or a slice of District
+				// If the retrieved value is not a ImportDistrict or a slice of ImportDistrict
 				// then run the AfterDeleteHooks on the slice
-				_, err = Districts.AfterDeleteHooks.RunHooks(ctx, exec, o)
+				_, err = ImportDistricts.AfterDeleteHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -789,30 +801,30 @@ func (o DistrictSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	})
 }
 
-func (o DistrictSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals DistrictSetter) error {
+func (o ImportDistrictSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals ImportDistrictSetter) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := Districts.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
+	_, err := ImportDistricts.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
 	return err
 }
 
-func (o DistrictSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
+func (o ImportDistrictSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := Districts.Delete(o.DeleteMod()).Exec(ctx, exec)
+	_, err := ImportDistricts.Delete(o.DeleteMod()).Exec(ctx, exec)
 	return err
 }
 
-func (o DistrictSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
+func (o ImportDistrictSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	o2, err := Districts.Query(sm.Where(o.pkIN())).All(ctx, exec)
+	o2, err := ImportDistricts.Query(sm.Where(o.pkIN())).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -822,7 +834,85 @@ func (o DistrictSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
-type districtWhere[Q psql.Filterable] struct {
+// ImportDistrictGidOrganization starts a query for related objects on organization
+func (o *ImportDistrict) ImportDistrictGidOrganization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ImportDistrictGid.EQ(psql.Arg(o.Gid))),
+	)...)
+}
+
+func (os ImportDistrictSlice) ImportDistrictGidOrganization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkGid := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkGid = append(pkGid, o.Gid)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkGid), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ImportDistrictGid).OP("IN", PKArgExpr)),
+	)...)
+}
+
+func insertImportDistrictImportDistrictGidOrganization0(ctx context.Context, exec bob.Executor, organization1 *OrganizationSetter, importDistrict0 *ImportDistrict) (*Organization, error) {
+	organization1.ImportDistrictGid = omitnull.From(importDistrict0.Gid)
+
+	ret, err := Organizations.Insert(organization1).One(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertImportDistrictImportDistrictGidOrganization0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachImportDistrictImportDistrictGidOrganization0(ctx context.Context, exec bob.Executor, count int, organization1 *Organization, importDistrict0 *ImportDistrict) (*Organization, error) {
+	setter := &OrganizationSetter{
+		ImportDistrictGid: omitnull.From(importDistrict0.Gid),
+	}
+
+	err := organization1.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachImportDistrictImportDistrictGidOrganization0: %w", err)
+	}
+
+	return organization1, nil
+}
+
+func (importDistrict0 *ImportDistrict) InsertImportDistrictGidOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := insertImportDistrictImportDistrictGidOrganization0(ctx, exec, related, importDistrict0)
+	if err != nil {
+		return err
+	}
+
+	importDistrict0.R.ImportDistrictGidOrganization = organization1
+
+	organization1.R.ImportDistrictGidDistrict = importDistrict0
+
+	return nil
+}
+
+func (importDistrict0 *ImportDistrict) AttachImportDistrictGidOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachImportDistrictImportDistrictGidOrganization0(ctx, exec, 1, organization1, importDistrict0)
+	if err != nil {
+		return err
+	}
+
+	importDistrict0.R.ImportDistrictGidOrganization = organization1
+
+	organization1.R.ImportDistrictGidDistrict = importDistrict0
+
+	return nil
+}
+
+type importDistrictWhere[Q psql.Filterable] struct {
 	Gid       psql.WhereMod[Q, int32]
 	ID        psql.WhereNullMod[Q, decimal.Decimal]
 	Website   psql.WhereNullMod[Q, string]
@@ -848,12 +938,12 @@ type districtWhere[Q psql.Filterable] struct {
 	Geom4326  psql.WhereNullMod[Q, string]
 }
 
-func (districtWhere[Q]) AliasedAs(alias string) districtWhere[Q] {
-	return buildDistrictWhere[Q](buildDistrictColumns(alias))
+func (importDistrictWhere[Q]) AliasedAs(alias string) importDistrictWhere[Q] {
+	return buildImportDistrictWhere[Q](buildImportDistrictColumns(alias))
 }
 
-func buildDistrictWhere[Q psql.Filterable](cols districtColumns) districtWhere[Q] {
-	return districtWhere[Q]{
+func buildImportDistrictWhere[Q psql.Filterable](cols importDistrictColumns) importDistrictWhere[Q] {
+	return importDistrictWhere[Q]{
 		Gid:       psql.Where[Q, int32](cols.Gid),
 		ID:        psql.WhereNull[Q, decimal.Decimal](cols.ID),
 		Website:   psql.WhereNull[Q, string](cols.Website),
@@ -877,5 +967,153 @@ func buildDistrictWhere[Q psql.Filterable](cols districtColumns) districtWhere[Q
 		ShapeArea: psql.WhereNull[Q, decimal.Decimal](cols.ShapeArea),
 		Geom:      psql.WhereNull[Q, string](cols.Geom),
 		Geom4326:  psql.WhereNull[Q, string](cols.Geom4326),
+	}
+}
+
+func (o *ImportDistrict) Preload(name string, retrieved any) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "ImportDistrictGidOrganization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("importDistrict cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ImportDistrictGidOrganization = rel
+
+		if rel != nil {
+			rel.R.ImportDistrictGidDistrict = o
+		}
+		return nil
+	default:
+		return fmt.Errorf("importDistrict has no relationship %q", name)
+	}
+}
+
+type importDistrictPreloader struct {
+	ImportDistrictGidOrganization func(...psql.PreloadOption) psql.Preloader
+}
+
+func buildImportDistrictPreloader() importDistrictPreloader {
+	return importDistrictPreloader{
+		ImportDistrictGidOrganization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "ImportDistrictGidOrganization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        ImportDistricts,
+						To:          Organizations,
+						FromColumns: []string{"gid"},
+						ToColumns:   []string{"import_district_gid"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
+	}
+}
+
+type importDistrictThenLoader[Q orm.Loadable] struct {
+	ImportDistrictGidOrganization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildImportDistrictThenLoader[Q orm.Loadable]() importDistrictThenLoader[Q] {
+	type ImportDistrictGidOrganizationLoadInterface interface {
+		LoadImportDistrictGidOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return importDistrictThenLoader[Q]{
+		ImportDistrictGidOrganization: thenLoadBuilder[Q](
+			"ImportDistrictGidOrganization",
+			func(ctx context.Context, exec bob.Executor, retrieved ImportDistrictGidOrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadImportDistrictGidOrganization(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadImportDistrictGidOrganization loads the importDistrict's ImportDistrictGidOrganization into the .R struct
+func (o *ImportDistrict) LoadImportDistrictGidOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ImportDistrictGidOrganization = nil
+
+	related, err := o.ImportDistrictGidOrganization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.ImportDistrictGidDistrict = o
+
+	o.R.ImportDistrictGidOrganization = related
+	return nil
+}
+
+// LoadImportDistrictGidOrganization loads the importDistrict's ImportDistrictGidOrganization into the .R struct
+func (os ImportDistrictSlice) LoadImportDistrictGidOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.ImportDistrictGidOrganization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+
+			if !rel.ImportDistrictGid.IsValue() {
+				continue
+			}
+			if !(rel.ImportDistrictGid.IsValue() && o.Gid == rel.ImportDistrictGid.MustGet()) {
+				continue
+			}
+
+			rel.R.ImportDistrictGidDistrict = o
+
+			o.R.ImportDistrictGidOrganization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+type importDistrictJoins[Q dialect.Joinable] struct {
+	typ                           string
+	ImportDistrictGidOrganization modAs[Q, organizationColumns]
+}
+
+func (j importDistrictJoins[Q]) aliasedAs(alias string) importDistrictJoins[Q] {
+	return buildImportDistrictJoins[Q](buildImportDistrictColumns(alias), j.typ)
+}
+
+func buildImportDistrictJoins[Q dialect.Joinable](cols importDistrictColumns, typ string) importDistrictJoins[Q] {
+	return importDistrictJoins[Q]{
+		typ: typ,
+		ImportDistrictGidOrganization: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ImportDistrictGid.EQ(cols.Gid),
+					))
+				}
+
+				return mods
+			},
+		},
 	}
 }

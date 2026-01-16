@@ -19,7 +19,6 @@ var (
 func Where[Q psql.Filterable]() struct {
 	ArcgisUsers                        arcgisuserWhere[Q]
 	ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
-	Districts                          districtWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -52,6 +51,7 @@ func Where[Q psql.Filterable]() struct {
 	GeometryColumns                    geometryColumnWhere[Q]
 	GooseDBVersions                    gooseDBVersionWhere[Q]
 	H3Aggregations                     h3AggregationWhere[Q]
+	ImportDistricts                    importDistrictWhere[Q]
 	NoteAudios                         noteAudioWhere[Q]
 	NoteAudioBreadcrumbs               noteAudioBreadcrumbWhere[Q]
 	NoteAudioData                      noteAudioDatumWhere[Q]
@@ -76,7 +76,6 @@ func Where[Q psql.Filterable]() struct {
 	return struct {
 		ArcgisUsers                        arcgisuserWhere[Q]
 		ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
-		Districts                          districtWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -109,6 +108,7 @@ func Where[Q psql.Filterable]() struct {
 		GeometryColumns                    geometryColumnWhere[Q]
 		GooseDBVersions                    gooseDBVersionWhere[Q]
 		H3Aggregations                     h3AggregationWhere[Q]
+		ImportDistricts                    importDistrictWhere[Q]
 		NoteAudios                         noteAudioWhere[Q]
 		NoteAudioBreadcrumbs               noteAudioBreadcrumbWhere[Q]
 		NoteAudioData                      noteAudioDatumWhere[Q]
@@ -132,7 +132,6 @@ func Where[Q psql.Filterable]() struct {
 	}{
 		ArcgisUsers:                        buildArcgisUserWhere[Q](ArcgisUsers.Columns),
 		ArcgisUserPrivileges:               buildArcgisUserPrivilegeWhere[Q](ArcgisUserPrivileges.Columns),
-		Districts:                          buildDistrictWhere[Q](Districts.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),
@@ -165,6 +164,7 @@ func Where[Q psql.Filterable]() struct {
 		GeometryColumns:                    buildGeometryColumnWhere[Q](GeometryColumns.Columns),
 		GooseDBVersions:                    buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),
 		H3Aggregations:                     buildH3AggregationWhere[Q](H3Aggregations.Columns),
+		ImportDistricts:                    buildImportDistrictWhere[Q](ImportDistricts.Columns),
 		NoteAudios:                         buildNoteAudioWhere[Q](NoteAudios.Columns),
 		NoteAudioBreadcrumbs:               buildNoteAudioBreadcrumbWhere[Q](NoteAudioBreadcrumbs.Columns),
 		NoteAudioData:                      buildNoteAudioDatumWhere[Q](NoteAudioData.Columns),

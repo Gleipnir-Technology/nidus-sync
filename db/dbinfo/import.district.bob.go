@@ -5,20 +5,20 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var Districts = Table[
-	districtColumns,
-	districtIndexes,
-	districtForeignKeys,
-	districtUniques,
-	districtChecks,
+var ImportDistricts = Table[
+	importDistrictColumns,
+	importDistrictIndexes,
+	importDistrictForeignKeys,
+	importDistrictUniques,
+	importDistrictChecks,
 ]{
-	Schema: "",
+	Schema: "import",
 	Name:   "district",
-	Columns: districtColumns{
+	Columns: importDistrictColumns{
 		Gid: column{
 			Name:      "gid",
 			DBType:    "integer",
-			Default:   "nextval('district_gid_seq'::regclass)",
+			Default:   "nextval('import.district_gid_seq'::regclass)",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -223,7 +223,7 @@ var Districts = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: districtIndexes{
+	Indexes: importDistrictIndexes{
 		DistrictPkey: index{
 			Type: "btree",
 			Name: "district_pkey",
@@ -268,7 +268,7 @@ var Districts = Table[
 	Comment: "",
 }
 
-type districtColumns struct {
+type importDistrictColumns struct {
 	Gid       column
 	ID        column
 	Website   column
@@ -294,37 +294,37 @@ type districtColumns struct {
 	Geom4326  column
 }
 
-func (c districtColumns) AsSlice() []column {
+func (c importDistrictColumns) AsSlice() []column {
 	return []column{
 		c.Gid, c.ID, c.Website, c.Contact, c.Address, c.Regionid, c.PostalCod, c.Phone1, c.Fax1, c.Agency, c.Code1, c.City1, c.ShapeLeng, c.Address2, c.GeneralMG, c.City2, c.PostalC1, c.Fax2, c.Phone2, c.ShapeLe1, c.ShapeArea, c.Geom, c.Geom4326,
 	}
 }
 
-type districtIndexes struct {
+type importDistrictIndexes struct {
 	DistrictPkey    index
 	DistrictGeomIdx index
 }
 
-func (i districtIndexes) AsSlice() []index {
+func (i importDistrictIndexes) AsSlice() []index {
 	return []index{
 		i.DistrictPkey, i.DistrictGeomIdx,
 	}
 }
 
-type districtForeignKeys struct{}
+type importDistrictForeignKeys struct{}
 
-func (f districtForeignKeys) AsSlice() []foreignKey {
+func (f importDistrictForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type districtUniques struct{}
+type importDistrictUniques struct{}
 
-func (u districtUniques) AsSlice() []constraint {
+func (u importDistrictUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type districtChecks struct{}
+type importDistrictChecks struct{}
 
-func (c districtChecks) AsSlice() []check {
+func (c importDistrictChecks) AsSlice() []check {
 	return []check{}
 }

@@ -63,6 +63,7 @@ type joins[Q dialect.Joinable] struct {
 	FieldseekerZones2s                 joinSet[fieldseekerZones2Joins[Q]]
 	FieldseekerSyncs                   joinSet[fieldseekerSyncJoins[Q]]
 	H3Aggregations                     joinSet[h3AggregationJoins[Q]]
+	ImportDistricts                    joinSet[importDistrictJoins[Q]]
 	NoteAudios                         joinSet[noteAudioJoins[Q]]
 	NoteAudioBreadcrumbs               joinSet[noteAudioBreadcrumbJoins[Q]]
 	NoteAudioData                      joinSet[noteAudioDatumJoins[Q]]
@@ -120,6 +121,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FieldseekerZones2s:                 buildJoinSet[fieldseekerZones2Joins[Q]](FieldseekerZones2s.Columns, buildFieldseekerZones2Joins),
 		FieldseekerSyncs:                   buildJoinSet[fieldseekerSyncJoins[Q]](FieldseekerSyncs.Columns, buildFieldseekerSyncJoins),
 		H3Aggregations:                     buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
+		ImportDistricts:                    buildJoinSet[importDistrictJoins[Q]](ImportDistricts.Columns, buildImportDistrictJoins),
 		NoteAudios:                         buildJoinSet[noteAudioJoins[Q]](NoteAudios.Columns, buildNoteAudioJoins),
 		NoteAudioBreadcrumbs:               buildJoinSet[noteAudioBreadcrumbJoins[Q]](NoteAudioBreadcrumbs.Columns, buildNoteAudioBreadcrumbJoins),
 		NoteAudioData:                      buildJoinSet[noteAudioDatumJoins[Q]](NoteAudioData.Columns, buildNoteAudioDatumJoins),
