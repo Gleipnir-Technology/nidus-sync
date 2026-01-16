@@ -59,7 +59,7 @@
 						</h4>
 						<p>Provide your contact information to receive updates about your report.</p>
 						
-						<form id="notificationForm" action="/register-notifications" method="post" class="needs-validation" novalidate>
+						<form id="notificationForm" action="/register-notifications" method="post" class="needs-validation">
 							<input type="hidden" name="report_id" value="{{.ReportID}}">
 							
 							<div class="mb-3">
@@ -87,8 +87,8 @@
 								</div>
 							</div>
 							
-							<div class="form-check mb-3">
-								<input class="form-check-input" type="checkbox" id="consent" name="consent" required>
+							<div class="form-check mb-3 form-check">
+								<input class="form-check-input" type="checkbox" name="consent" required>
 								<label class="form-check-label" for="consent">
 									I consent to receiving updates about this report
 								</label>
