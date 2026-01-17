@@ -7,7 +7,26 @@ import (
 	"strconv"
 )
 
-var Bind, ClientID, ClientSecret, Environment, FilesDirectoryPublic, FilesDirectoryUser, FieldseekerSchemaDirectory, MapboxToken, PGDSN, URLReport, URLSync, URLTegola string
+var (
+	Bind string
+	ClientID string
+	ClientSecret string
+	Environment string
+	FilesDirectoryPublic string
+	FilesDirectoryUser string
+	FieldseekerSchemaDirectory string
+	ForwardEmailAPIToken string
+	ForwardEmailReportPassword string
+	ForwardEmailReportUsername string
+	MapboxToken string
+	PGDSN string
+	URLReport string
+	URLSync string
+	URLTegola string
+	VoipMSPassword string
+	VoipMSNumber string
+	VoipMSUsername string
+)
 
 // Build the ArcGIS authorization URL with PKCE
 func BuildArcGISAuthURL(clientID string) string {
@@ -43,6 +62,10 @@ func MakeURLSync(path string) string {
 }
 
 func Parse() error {
+	Bind = os.Getenv("BIND")
+	if Bind == "" {
+		Bind = ":9001"
+	}
 	ClientID = os.Getenv("ARCGIS_CLIENT_ID")
 	if ClientID == "" {
 		return fmt.Errorf("You must specify a non-empty ARCGIS_CLIENT_ID")
@@ -50,6 +73,45 @@ func Parse() error {
 	ClientSecret = os.Getenv("ARCGIS_CLIENT_SECRET")
 	if ClientSecret == "" {
 		return fmt.Errorf("You must specify a non-empty ARCGIS_CLIENT_SECRET")
+	}
+	Environment = os.Getenv("ENVIRONMENT")
+	if Environment == "" {
+		return fmt.Errorf("You must specify a non-empty ENVIRONMENT")
+	}
+	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
+		return fmt.Errorf("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
+	}
+	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")
+	if FieldseekerSchemaDirectory == "" {
+		return fmt.Errorf("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
+	}
+	FilesDirectoryPublic = os.Getenv("FILES_DIRECTORY_PUBLIC")
+	if FilesDirectoryPublic == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_PUBLIC")
+	}
+	FilesDirectoryUser = os.Getenv("FILES_DIRECTORY_USER")
+	if FilesDirectoryUser == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_USER")
+	}
+	ForwardEmailAPIToken = os.Getenv("FORWARDEMAIL_API_TOKEN")
+	if ForwardEmailAPIToken == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_API_TOKEN")
+	}
+	ForwardEmailReportUsername = os.Getenv("FORWARDEMAIL_REPORT_USERNAME")
+	if ForwardEmailReportUsername == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_USERNAME")
+	}
+	ForwardEmailReportPassword = os.Getenv("FORWARDEMAIL_REPORT_PASSWORD")
+	if ForwardEmailReportPassword == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_PASSWORD")
+	}
+	MapboxToken = os.Getenv("MAPBOX_TOKEN")
+	if MapboxToken == "" {
+		return fmt.Errorf("You must specify a non-empty MAPBOX_TOKEN")
+	}
+	PGDSN = os.Getenv("POSTGRES_DSN")
+	if PGDSN == "" {
+		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
 	}
 	URLReport = os.Getenv("URL_REPORT")
 	if URLReport == "" {
@@ -63,36 +125,17 @@ func Parse() error {
 	if URLTegola == "" {
 		return fmt.Errorf("You must specify a non-empty URL_TEGOLA")
 	}
-	Bind = os.Getenv("BIND")
-	if Bind == "" {
-		Bind = ":9001"
+	VoipMSNumber = os.Getenv("VOIPMS_NUMBER")
+	if VoipMSNumber == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_NUMBER")
 	}
-	Environment = os.Getenv("ENVIRONMENT")
-	if Environment == "" {
-		return fmt.Errorf("You must specify a non-empty ENVIRONMENT")
+	VoipMSPassword = os.Getenv("VOIPMS_PASSWORD")
+	if VoipMSPassword == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_PASSWORD")
 	}
-	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
-		return fmt.Errorf("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
-	}
-	MapboxToken = os.Getenv("MAPBOX_TOKEN")
-	if MapboxToken == "" {
-		return fmt.Errorf("You must specify a non-empty MAPBOX_TOKEN")
-	}
-	PGDSN = os.Getenv("POSTGRES_DSN")
-	if PGDSN == "" {
-		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
-	}
-	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")
-	if FieldseekerSchemaDirectory == "" {
-		return fmt.Errorf("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
-	}
-	FilesDirectoryPublic = os.Getenv("FILES_DIRECTORY_PUBLIC")
-	if FilesDirectoryPublic == "" {
-		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_PUBLIC")
-	}
-	FilesDirectoryUser = os.Getenv("FILES_DIRECTORY_USER")
-	if FilesDirectoryUser == "" {
-		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_USER")
+	VoipMSUsername = os.Getenv("VOIPMS_USERNAME")
+	if VoipMSUsername == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_USERNAME")
 	}
 	return nil
 }

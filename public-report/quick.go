@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/comms"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -42,6 +43,16 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		w,
 		QuickSubmitComplete,
 		ContextQuickSubmitComplete{
+			ReportID: report,
+		},
+	)
+}
+func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
+	report := r.URL.Query().Get("report")
+	htmlpage.RenderOrError(
+		w,
+		RegisterNotificationsComplete,
+		ContextRegisterNotificationsComplete{
 			ReportID: report,
 		},
 	)
@@ -134,3 +145,57 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", u), http.StatusFound)
 }
+func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
+		return
+	}
+	consent := r.PostFormValue("consent")
+	email := r.PostFormValue("email")
+	phone := r.PostFormValue("phone")
+	report_id := r.PostFormValue("report_id")
+	if consent != "on" {
+		respondError(w, "You must consent", nil, http.StatusBadRequest)
+		return
+	}
+	if email == "" && phone == "" {
+		http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", report_id), http.StatusFound)
+		return
+	}
+	result, err := psql.Update(
+		um.Table("publicreport.quick"),
+		um.SetCol("reporter_email").ToArg(email),
+		um.SetCol("reporter_phone").ToArg(phone),
+		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
+	).Exec(r.Context(), db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to update report", err, http.StatusInternalServerError)
+		return
+	}
+	rowcount, err := result.RowsAffected()
+	if err != nil {
+		respondError(w, "Failed to get rows affected", err, http.StatusInternalServerError)
+		return
+	}
+	if email != "" {
+		comms.SendEmail(comms.EmailRequest{
+			From: "website@mosquitoes.online",
+			To: email,
+			Subject: "test email",
+			Text: "This is just testing that I can send email",
+		})
+	}
+	if phone != "" {
+		err := comms.SendSMS(phone, "testing 1 2 3")
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to send SMS")
+		}
+	}
+	if rowcount == 0 {
+		http.Redirect(w, r, fmt.Sprintf("/error?code=no-rows-affected&report=%s", report_id), http.StatusFound)
+	} else {
+		http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
+	}
+}
+
