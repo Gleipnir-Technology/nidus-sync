@@ -8,24 +8,25 @@ import (
 )
 
 var (
-	Bind string
-	ClientID string
-	ClientSecret string
-	Environment string
-	FilesDirectoryPublic string
-	FilesDirectoryUser string
+	Bind                       string
+	ClientID                   string
+	ClientSecret               string
+	Environment                string
+	FilesDirectoryPublic       string
+	FilesDirectoryUser         string
 	FieldseekerSchemaDirectory string
-	ForwardEmailAPIToken string
+	ForwardEmailAPIToken       string
+	ForwardEmailReportAddress  string
 	ForwardEmailReportPassword string
 	ForwardEmailReportUsername string
-	MapboxToken string
-	PGDSN string
-	URLReport string
-	URLSync string
-	URLTegola string
-	VoipMSPassword string
-	VoipMSNumber string
-	VoipMSUsername string
+	MapboxToken                string
+	PGDSN                      string
+	URLReport                  string
+	URLSync                    string
+	URLTegola                  string
+	VoipMSPassword             string
+	VoipMSNumber               string
+	VoipMSUsername             string
 )
 
 // Build the ArcGIS authorization URL with PKCE
@@ -92,6 +93,10 @@ func Parse() error {
 	FilesDirectoryUser = os.Getenv("FILES_DIRECTORY_USER")
 	if FilesDirectoryUser == "" {
 		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_USER")
+	}
+	ForwardEmailReportAddress = os.Getenv("FORWARDEMAIL_REPORT_ADDRESS")
+	if ForwardEmailReportAddress == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_ADDRESS")
 	}
 	ForwardEmailAPIToken = os.Getenv("FORWARDEMAIL_API_TOKEN")
 	if ForwardEmailAPIToken == "" {

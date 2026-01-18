@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/comms"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -129,19 +130,21 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Info().Int("len", len(images)).Msg("saved uploads")
-	setters := make([]*models.PublicreportQuickImageSetter, 0)
-	for _, image := range images {
-		setters = append(setters, &models.PublicreportQuickImageSetter{
-			ImageID: omit.From(int32(image.ID)),
-			QuickID: omit.From(int32(quick.ID)),
-		})
+	if len(images) > 0 {
+		setters := make([]*models.PublicreportQuickImageSetter, 0)
+		for _, image := range images {
+			setters = append(setters, &models.PublicreportQuickImageSetter{
+				ImageID: omit.From(int32(image.ID)),
+				QuickID: omit.From(int32(quick.ID)),
+			})
+		}
+		_, err = models.PublicreportQuickImages.Insert(bob.ToMods(setters...)).Exec(ctx, tx)
+		if err != nil {
+			respondError(w, "Failed to save reference to images", err, http.StatusInternalServerError)
+			return
+		}
+		log.Info().Int("len", len(images)).Msg("saved uploads")
 	}
-	_, err = models.PublicreportQuickImages.Insert(bob.ToMods(setters...)).Exec(ctx, tx)
-	if err != nil {
-		respondError(w, "Failed to save reference to images", err, http.StatusInternalServerError)
-		return
-	}
-	log.Info().Int("len", len(images)).Msg("saved uploads")
 	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", u), http.StatusFound)
 }
@@ -180,10 +183,10 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 	if email != "" {
 		comms.SendEmail(comms.EmailRequest{
-			From: "website@mosquitoes.online",
-			To: email,
+			From:    config.ForwardEmailReportAddress,
+			To:      email,
 			Subject: "test email",
-			Text: "This is just testing that I can send email",
+			Text:    "This is just testing that I can send email",
 		})
 	}
 	if phone != "" {
@@ -198,4 +201,3 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
 	}
 }
-
