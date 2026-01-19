@@ -187,8 +187,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if phone != "" {
-		//err := comms.SendSMS(phone, "testing 1 2 3")
-		err := comms.SendMMS(phone, "Check out my Nidus logo", "https://dev-sync.nidus.cloud/static/img/nidus-logo-no-lettering-64.png")
+		err := comms.SendSMS(phone, "testing 1 2 3")
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to send SMS")
 		}

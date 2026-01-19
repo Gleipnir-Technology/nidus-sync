@@ -106,10 +106,10 @@ type emailResponse struct {
 
 func contentEmailSubscriptionConfirmation(report_id string) contentEmailReportConfirmation {
 	return contentEmailReportConfirmation{
-		URLLogo:              "https://dev-sync.nidus.cloud/static/img/nidus-logo-no-lettering-64.png",
-		URLReportStatus:      fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s", report_id),
-		URLReportUnsubscribe: fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s/unsubscribe", report_id),
-		URLViewInBrowser:     fmt.Sprintf("https://dev-sync.nidus.cloud/email/report/%s/subscription-confirmation", report_id),
+		URLLogo:              fmt.Sprintf("https://%s/static/img/nidus-logo-no-lettering-64.png", config.URLReport),
+		URLReportStatus:      fmt.Sprintf("https://%s/status/%s", config.URLReport, report_id),
+		URLReportUnsubscribe: fmt.Sprintf("https://%s/report/%s/unsubscribe", config.URLReport, report_id),
+		URLViewInBrowser:     fmt.Sprintf("https://%s/email/report/%s/subscription-confirmation", config.URLReport, report_id),
 	}
 }
 
