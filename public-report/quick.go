@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/comms"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -182,12 +181,10 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if email != "" {
-		comms.SendEmail(comms.EmailRequest{
-			From:    config.ForwardEmailReportAddress,
-			To:      email,
-			Subject: "test email",
-			Text:    "This is just testing that I can send email",
-		})
+		err := comms.SendEmailReportConfirmation(email, report_id)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to send email")
+		}
 	}
 	if phone != "" {
 		//err := comms.SendSMS(phone, "testing 1 2 3")
