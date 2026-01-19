@@ -1,6 +1,7 @@
 package publicreport
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
@@ -23,6 +24,11 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		Root,
 		ContextRoot{},
 	)
+}
+
+func getRobots(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "User-agent: *\n")
+	fmt.Fprint(w, "Allow: /\n")
 }
 
 // Respond with an error that is visible to the user

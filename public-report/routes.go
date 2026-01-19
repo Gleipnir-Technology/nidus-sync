@@ -8,6 +8,7 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getRoot)
+	r.Get("/robots.txt", getRobots)
 	r.Get("/email/report/{report_id}/subscription-confirmation", getEmailReportSubscriptionConfirmation)
 	r.Get("/nuisance", getNuisance)
 	r.Post("/nuisance-submit", postNuisance)
