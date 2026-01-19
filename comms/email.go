@@ -13,6 +13,7 @@ import (
 )
 
 func SendEmailReportConfirmation(to string, report_id string) error {
+	report_id_str := publicReportID(report_id)
 	content := contentEmailReportConfirmation{
 		URLLogo:              "https://dev-sync.nidus.cloud/static/img/nidus-logo-no-lettering-64.png",
 		URLReportStatus:      fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s", report_id),
@@ -26,7 +27,7 @@ func SendEmailReportConfirmation(to string, report_id string) error {
 	resp, err := sendEmail(emailRequest{
 		From:    config.ForwardEmailReportAddress,
 		HTML:    html,
-		Subject: fmt.Sprintf("Mosquito Report Submission - %s", report_id),
+		Subject: fmt.Sprintf("Mosquito Report Submission - %s", report_id_str),
 		Text:    text,
 		To:      to,
 	})
@@ -101,6 +102,13 @@ type emailResponse struct {
 	UpdatedAt      string            `json:"updated_at"`
 	Link           string            `json:"link"`
 	Message        string            `json:"message"`
+}
+
+func publicReportID(s string) string {
+	if len(s) != 12 {
+		return s
+	}
+	return s[0:4] + "-" + s[4:8] + "-" + s[8:12]
 }
 
 func sendEmail(email emailRequest) (response emailResponse, err error) {
