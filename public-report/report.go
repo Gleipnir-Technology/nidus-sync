@@ -4,14 +4,18 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"net/http"
 	"strings"
+
+	"github.com/Gleipnir-Technology/nidus-sync/comms"
+	"github.com/go-chi/chi/v5"
 )
 
 // GenerateReportID creates a 12-character random string using only unambiguous
 // capital letters and numbers
 func GenerateReportID() (string, error) {
-	// Define character set (no O, I, Z to avoid confusion)
-	const charset = "ABCDEFGHJKLMNPQRSTUVWXY0123456789"
+	// Define character set (no O/0, I/l/1, 2/Z to avoid confusion)
+	const charset = "ABCDEFGHJKLMNPQRSTUVWXY3456789"
 	const length = 12
 
 	var builder strings.Builder
@@ -30,4 +34,9 @@ func GenerateReportID() (string, error) {
 	}
 
 	return builder.String(), nil
+}
+
+func getEmailReportSubscriptionConfirmation(w http.ResponseWriter, r *http.Request) {
+	report_id := chi.URLParam(r, "report_id")
+	comms.RenderEmailReportConfirmation(w, report_id)
 }

@@ -85,7 +85,7 @@ func RenderOrError(w http.ResponseWriter, template *BuiltTemplate, context inter
 	err := template.executeTemplate(buf, context)
 	if err != nil {
 		log.Error().Err(err).Strs("files", template.files).Msg("Failed to render template")
-		respondError(w, "Failed to render template", err, http.StatusInternalServerError)
+		RespondError(w, "Failed to render template", err, http.StatusInternalServerError)
 		return
 	}
 	buf.WriteTo(w)

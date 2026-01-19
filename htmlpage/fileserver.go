@@ -54,7 +54,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 			// Try to open from local filesystem for development
 			fileToServe, err = root.Open(requestedPath)
 			if err != nil {
-				respondError(w, "Failed to open file", err, http.StatusNotFound)
+				RespondError(w, "Failed to open file", err, http.StatusNotFound)
 				return
 			}
 		}

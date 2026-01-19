@@ -9,17 +9,17 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/rs/zerolog/log"
 )
 
+func RenderEmailReportConfirmation(w http.ResponseWriter, report_id string) {
+	content := contentEmailSubscriptionConfirmation(report_id)
+	renderOrError(w, reportConfirmationT, content)
+}
 func SendEmailReportConfirmation(to string, report_id string) error {
 	report_id_str := publicReportID(report_id)
-	content := contentEmailReportConfirmation{
-		URLLogo:              "https://dev-sync.nidus.cloud/static/img/nidus-logo-no-lettering-64.png",
-		URLReportStatus:      fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s", report_id),
-		URLReportUnsubscribe: fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s/unsubscribe", report_id),
-		URLViewInBrowser:     fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s/subscribe-confirmation", report_id),
-	}
+	content := contentEmailSubscriptionConfirmation(report_id)
 	text, html, err := renderEmailTemplates(reportConfirmationT, content)
 	if err != nil {
 		return fmt.Errorf("Failed to render template %s: %w", reportConfirmationT.name, err)
@@ -104,11 +104,31 @@ type emailResponse struct {
 	Message        string            `json:"message"`
 }
 
+func contentEmailSubscriptionConfirmation(report_id string) contentEmailReportConfirmation {
+	return contentEmailReportConfirmation{
+		URLLogo:              "https://dev-sync.nidus.cloud/static/img/nidus-logo-no-lettering-64.png",
+		URLReportStatus:      fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s", report_id),
+		URLReportUnsubscribe: fmt.Sprintf("https://dev-sync.nidus.cloud/report/%s/unsubscribe", report_id),
+		URLViewInBrowser:     fmt.Sprintf("https://dev-sync.nidus.cloud/email/report/%s/subscription-confirmation", report_id),
+	}
+}
+
 func publicReportID(s string) string {
 	if len(s) != 12 {
 		return s
 	}
 	return s[0:4] + "-" + s[4:8] + "-" + s[8:12]
+}
+
+func renderOrError(w http.ResponseWriter, template *builtTemplate, context interface{}) {
+	buf := &bytes.Buffer{}
+	err := template.executeTemplateHTML(buf, context)
+	if err != nil {
+		log.Error().Err(err).Str("name", template.name).Msg("Failed to render template")
+		htmlpage.RespondError(w, "Failed to render template", err, http.StatusInternalServerError)
+		return
+	}
+	buf.WriteTo(w)
 }
 
 func sendEmail(email emailRequest) (response emailResponse, err error) {
