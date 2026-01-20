@@ -17,6 +17,26 @@ var (
 	arcgisUserPrivilegeWithParentsCascadingCtx = newContextual[bool]("arcgisUserPrivilegeWithParentsCascading")
 	arcgisUserPrivilegeRelUserUserCtx          = newContextual[bool]("arcgis.user_.arcgis.user_privilege.arcgis.user_privilege.user_privilege_user_id_fkey")
 
+	// Relationship Contexts for comms.email
+	commsEmailWithParentsCascadingCtx    = newContextual[bool]("commsEmailWithParentsCascading")
+	commsEmailRelDestinationEmailLogsCtx = newContextual[bool]("comms.email.comms.email_log.comms.email_log.email_log_destination_fkey")
+
+	// Relationship Contexts for comms.email_log
+	commsEmailLogWithParentsCascadingCtx = newContextual[bool]("commsEmailLogWithParentsCascading")
+	commsEmailLogRelDestinationEmailCtx  = newContextual[bool]("comms.email.comms.email_log.comms.email_log.email_log_destination_fkey")
+	commsEmailLogRelSourcePhoneCtx       = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
+
+	// Relationship Contexts for comms.phone
+	commsPhoneWithParentsCascadingCtx  = newContextual[bool]("commsPhoneWithParentsCascading")
+	commsPhoneRelSourceEmailLogsCtx    = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
+	commsPhoneRelDestinationSMSLogsCtx = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_destination_fkey")
+	commsPhoneRelSourceSMSLogsCtx      = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_source_fkey")
+
+	// Relationship Contexts for comms.sms_log
+	commsSMSLogWithParentsCascadingCtx = newContextual[bool]("commsSMSLogWithParentsCascading")
+	commsSMSLogRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_destination_fkey")
+	commsSMSLogRelSourcePhoneCtx       = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_source_fkey")
+
 	// Relationship Contexts for fieldseeker.containerrelate
 	fieldseekerContainerrelateWithParentsCascadingCtx = newContextual[bool]("fieldseekerContainerrelateWithParentsCascading")
 	fieldseekerContainerrelateRelOrganizationCtx      = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")

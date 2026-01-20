@@ -34,6 +34,10 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 type joins[Q dialect.Joinable] struct {
 	ArcgisUsers                        joinSet[arcgisuserJoins[Q]]
 	ArcgisUserPrivileges               joinSet[arcgisUserPrivilegeJoins[Q]]
+	CommsEmails                        joinSet[commsEmailJoins[Q]]
+	CommsEmailLogs                     joinSet[commsEmailLogJoins[Q]]
+	CommsPhones                        joinSet[commsPhoneJoins[Q]]
+	CommsSMSLogs                       joinSet[commsSMSLogJoins[Q]]
 	FieldseekerContainerrelates        joinSet[fieldseekerContainerrelateJoins[Q]]
 	FieldseekerFieldscoutinglogs       joinSet[fieldseekerFieldscoutinglogJoins[Q]]
 	FieldseekerHabitatrelates          joinSet[fieldseekerHabitatrelateJoins[Q]]
@@ -94,6 +98,10 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
 		ArcgisUsers:                        buildJoinSet[arcgisuserJoins[Q]](ArcgisUsers.Columns, buildArcgisUserJoins),
 		ArcgisUserPrivileges:               buildJoinSet[arcgisUserPrivilegeJoins[Q]](ArcgisUserPrivileges.Columns, buildArcgisUserPrivilegeJoins),
+		CommsEmails:                        buildJoinSet[commsEmailJoins[Q]](CommsEmails.Columns, buildCommsEmailJoins),
+		CommsEmailLogs:                     buildJoinSet[commsEmailLogJoins[Q]](CommsEmailLogs.Columns, buildCommsEmailLogJoins),
+		CommsPhones:                        buildJoinSet[commsPhoneJoins[Q]](CommsPhones.Columns, buildCommsPhoneJoins),
+		CommsSMSLogs:                       buildJoinSet[commsSMSLogJoins[Q]](CommsSMSLogs.Columns, buildCommsSMSLogJoins),
 		FieldseekerContainerrelates:        buildJoinSet[fieldseekerContainerrelateJoins[Q]](FieldseekerContainerrelates.Columns, buildFieldseekerContainerrelateJoins),
 		FieldseekerFieldscoutinglogs:       buildJoinSet[fieldseekerFieldscoutinglogJoins[Q]](FieldseekerFieldscoutinglogs.Columns, buildFieldseekerFieldscoutinglogJoins),
 		FieldseekerHabitatrelates:          buildJoinSet[fieldseekerHabitatrelateJoins[Q]](FieldseekerHabitatrelates.Columns, buildFieldseekerHabitatrelateJoins),

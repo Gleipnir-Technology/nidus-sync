@@ -8,6 +8,7 @@ import (
 func Router() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", getRoot)
+	r.Get("/privacy", getPrivacy)
 	r.Get("/robots.txt", getRobots)
 	r.Get("/email/report/{report_id}/subscription-confirmation", getEmailReportSubscriptionConfirmation)
 	r.Get("/nuisance", getNuisance)
@@ -24,6 +25,7 @@ func Router() chi.Router {
 	r.Get("/search", getSearch)
 	r.Get("/status", getStatus)
 	r.Get("/status/{report_id}", getStatusByID)
+	r.Get("/terms-of-service", getTerms)
 	htmlpage.AddStaticRoute(r, "/static")
 	return r
 }

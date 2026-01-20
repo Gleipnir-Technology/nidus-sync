@@ -131,15 +131,15 @@ func renderOrError(w http.ResponseWriter, template *builtTemplate, context inter
 	buf.WriteTo(w)
 }
 
-func sendEmail(email emailRequest) (response emailResponse, err error) {
-	url := "https://api.forwardemail.net/v1/emails"
+var FORWARDEMAIL_API = "https://api.forwardemail.net/v1/emails"
 
+func sendEmail(email emailRequest) (response emailResponse, err error) {
 	payload, err := json.Marshal(email)
 	if err != nil {
 		return response, fmt.Errorf("Failed to marshal email request: %w", err)
 	}
 
-	req, _ := http.NewRequest("POST", url, bytes.NewReader(payload))
+	req, _ := http.NewRequest("POST", FORWARDEMAIL_API, bytes.NewReader(payload))
 	req.SetBasicAuth(config.ForwardEmailAPIToken, "")
 	req.Header.Add("Content-Type", "application/json")
 

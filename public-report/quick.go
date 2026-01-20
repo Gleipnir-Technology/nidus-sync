@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -26,14 +27,15 @@ type ContextQuickSubmitComplete struct {
 }
 
 var (
-	Quick               = buildTemplate("quick", "base")
-	QuickSubmitComplete = buildTemplate("quick-submit-complete", "base")
+	quickT                         = buildTemplate("quick", "base")
+	quickSubmitCompleteT           = buildTemplate("quick-submit-complete", "base")
+	registerNotificationsCompleteT = buildTemplate("register-notifications-complete", "base")
 )
 
 func getQuick(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		Quick,
+		quickT,
 		ContextQuick{},
 	)
 }
@@ -41,7 +43,7 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	htmlpage.RenderOrError(
 		w,
-		QuickSubmitComplete,
+		quickSubmitCompleteT,
 		ContextQuickSubmitComplete{
 			ReportID: report,
 		},
@@ -51,7 +53,7 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	htmlpage.RenderOrError(
 		w,
-		RegisterNotificationsComplete,
+		registerNotificationsCompleteT,
 		ContextRegisterNotificationsComplete{
 			ReportID: report,
 		},
@@ -181,16 +183,18 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if email != "" {
-		err := comms.SendEmailReportConfirmation(email, report_id)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to send email")
-		}
+		queue.EnqueueJobEmail(queue.JobEmail{
+			Destination: email,
+			Source:      config.ForwardEmailReportAddress,
+			Type:        enums.CommsEmailmessagetypeReportSubscriptionConfirmation,
+		})
 	}
 	if phone != "" {
-		err := comms.SendSMS(phone, "testing 1 2 3")
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to send SMS")
-		}
+		queue.EnqueueJobSMS(queue.JobSMS{
+			Destination: phone,
+			Source:      config.VoipMSNumber,
+			Type:        enums.CommsSmsmessagetypeReportSubscriptionConfirmation,
+		})
 	}
 	if rowcount == 0 {
 		http.Redirect(w, r, fmt.Sprintf("/error?code=no-rows-affected&report=%s", report_id), http.StatusFound)

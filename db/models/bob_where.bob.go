@@ -19,6 +19,10 @@ var (
 func Where[Q psql.Filterable]() struct {
 	ArcgisUsers                        arcgisuserWhere[Q]
 	ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
+	CommsEmails                        commsEmailWhere[Q]
+	CommsEmailLogs                     commsEmailLogWhere[Q]
+	CommsPhones                        commsPhoneWhere[Q]
+	CommsSMSLogs                       commsSMSLogWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -78,6 +82,10 @@ func Where[Q psql.Filterable]() struct {
 	return struct {
 		ArcgisUsers                        arcgisuserWhere[Q]
 		ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
+		CommsEmails                        commsEmailWhere[Q]
+		CommsEmailLogs                     commsEmailLogWhere[Q]
+		CommsPhones                        commsPhoneWhere[Q]
+		CommsSMSLogs                       commsSMSLogWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -136,6 +144,10 @@ func Where[Q psql.Filterable]() struct {
 	}{
 		ArcgisUsers:                        buildArcgisUserWhere[Q](ArcgisUsers.Columns),
 		ArcgisUserPrivileges:               buildArcgisUserPrivilegeWhere[Q](ArcgisUserPrivileges.Columns),
+		CommsEmails:                        buildCommsEmailWhere[Q](CommsEmails.Columns),
+		CommsEmailLogs:                     buildCommsEmailLogWhere[Q](CommsEmailLogs.Columns),
+		CommsPhones:                        buildCommsPhoneWhere[Q](CommsPhones.Columns),
+		CommsSMSLogs:                       buildCommsSMSLogWhere[Q](CommsSMSLogs.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),

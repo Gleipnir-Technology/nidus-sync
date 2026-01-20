@@ -193,6 +193,158 @@ func (e *Audiodatatype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for CommsEmailmessagetype
+const (
+	CommsEmailmessagetypeReportSubscriptionConfirmation CommsEmailmessagetype = "report-subscription-confirmation"
+	CommsEmailmessagetypeReportStatusScheduled          CommsEmailmessagetype = "report-status-scheduled"
+	CommsEmailmessagetypeReportStatusComplete           CommsEmailmessagetype = "report-status-complete"
+)
+
+func AllCommsEmailmessagetype() []CommsEmailmessagetype {
+	return []CommsEmailmessagetype{
+		CommsEmailmessagetypeReportSubscriptionConfirmation,
+		CommsEmailmessagetypeReportStatusScheduled,
+		CommsEmailmessagetypeReportStatusComplete,
+	}
+}
+
+type CommsEmailmessagetype string
+
+func (e CommsEmailmessagetype) String() string {
+	return string(e)
+}
+
+func (e CommsEmailmessagetype) Valid() bool {
+	switch e {
+	case CommsEmailmessagetypeReportSubscriptionConfirmation,
+		CommsEmailmessagetypeReportStatusScheduled,
+		CommsEmailmessagetypeReportStatusComplete:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e CommsEmailmessagetype) All() []CommsEmailmessagetype {
+	return AllCommsEmailmessagetype()
+}
+
+func (e CommsEmailmessagetype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsEmailmessagetype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e CommsEmailmessagetype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsEmailmessagetype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e CommsEmailmessagetype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *CommsEmailmessagetype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = CommsEmailmessagetype(x)
+	case []byte:
+		*e = CommsEmailmessagetype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into CommsEmailmessagetype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid CommsEmailmessagetype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for CommsSmsmessagetype
+const (
+	CommsSmsmessagetypeReportSubscriptionConfirmation CommsSmsmessagetype = "report-subscription-confirmation"
+	CommsSmsmessagetypeReportStatusScheduled          CommsSmsmessagetype = "report-status-scheduled"
+	CommsSmsmessagetypeReportStatusComplete           CommsSmsmessagetype = "report-status-complete"
+)
+
+func AllCommsSmsmessagetype() []CommsSmsmessagetype {
+	return []CommsSmsmessagetype{
+		CommsSmsmessagetypeReportSubscriptionConfirmation,
+		CommsSmsmessagetypeReportStatusScheduled,
+		CommsSmsmessagetypeReportStatusComplete,
+	}
+}
+
+type CommsSmsmessagetype string
+
+func (e CommsSmsmessagetype) String() string {
+	return string(e)
+}
+
+func (e CommsSmsmessagetype) Valid() bool {
+	switch e {
+	case CommsSmsmessagetypeReportSubscriptionConfirmation,
+		CommsSmsmessagetypeReportStatusScheduled,
+		CommsSmsmessagetypeReportStatusComplete:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e CommsSmsmessagetype) All() []CommsSmsmessagetype {
+	return AllCommsSmsmessagetype()
+}
+
+func (e CommsSmsmessagetype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsSmsmessagetype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e CommsSmsmessagetype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsSmsmessagetype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e CommsSmsmessagetype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *CommsSmsmessagetype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = CommsSmsmessagetype(x)
+	case []byte:
+		*e = CommsSmsmessagetype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into CommsSmsmessagetype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid CommsSmsmessagetype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for H3aggregationtype
 const (
 	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"

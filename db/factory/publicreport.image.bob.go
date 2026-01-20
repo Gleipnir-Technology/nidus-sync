@@ -9,7 +9,9 @@ import (
 	"time"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
@@ -39,6 +41,7 @@ type PublicreportImageTemplate struct {
 	ID               func() int32
 	ContentType      func() string
 	Created          func() time.Time
+	Location         func() null.Val[string]
 	ResolutionX      func() int32
 	ResolutionY      func() int32
 	StorageUUID      func() uuid.UUID
@@ -135,6 +138,10 @@ func (o PublicreportImageTemplate) BuildSetter() *models.PublicreportImageSetter
 		val := o.Created()
 		m.Created = omit.From(val)
 	}
+	if o.Location != nil {
+		val := o.Location()
+		m.Location = omitnull.FromNull(val)
+	}
 	if o.ResolutionX != nil {
 		val := o.ResolutionX()
 		m.ResolutionX = omit.From(val)
@@ -185,6 +192,9 @@ func (o PublicreportImageTemplate) Build() *models.PublicreportImage {
 	}
 	if o.Created != nil {
 		m.Created = o.Created()
+	}
+	if o.Location != nil {
+		m.Location = o.Location()
 	}
 	if o.ResolutionX != nil {
 		m.ResolutionX = o.ResolutionX()
@@ -412,6 +422,7 @@ func (m publicreportImageMods) RandomizeAllColumns(f *faker.Faker) PublicreportI
 		PublicreportImageMods.RandomID(f),
 		PublicreportImageMods.RandomContentType(f),
 		PublicreportImageMods.RandomCreated(f),
+		PublicreportImageMods.RandomLocation(f),
 		PublicreportImageMods.RandomResolutionX(f),
 		PublicreportImageMods.RandomResolutionY(f),
 		PublicreportImageMods.RandomStorageUUID(f),
@@ -509,6 +520,59 @@ func (m publicreportImageMods) RandomCreated(f *faker.Faker) PublicreportImageMo
 	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
 		o.Created = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportImageMods) Location(val null.Val[string]) PublicreportImageMod {
+	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
+		o.Location = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportImageMods) LocationFunc(f func() null.Val[string]) PublicreportImageMod {
+	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
+		o.Location = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportImageMods) UnsetLocation() PublicreportImageMod {
+	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
+		o.Location = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportImageMods) RandomLocation(f *faker.Faker) PublicreportImageMod {
+	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
+		o.Location = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportImageMods) RandomLocationNotNull(f *faker.Faker) PublicreportImageMod {
+	return PublicreportImageModFunc(func(_ context.Context, o *PublicreportImageTemplate) {
+		o.Location = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

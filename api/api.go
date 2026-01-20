@@ -74,7 +74,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
 	}
 
-	queue.EnqueueAudioJob(queue.AudioJob{AudioUUID: audioUUID})
+	queue.EnqueueAudioJob(queue.JobAudio{AudioUUID: audioUUID})
 	w.WriteHeader(http.StatusOK)
 }
 

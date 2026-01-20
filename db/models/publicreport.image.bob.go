@@ -10,7 +10,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
@@ -27,14 +29,15 @@ import (
 
 // PublicreportImage is an object representing the database table.
 type PublicreportImage struct {
-	ID               int32     `db:"id,pk" `
-	ContentType      string    `db:"content_type" `
-	Created          time.Time `db:"created" `
-	ResolutionX      int32     `db:"resolution_x" `
-	ResolutionY      int32     `db:"resolution_y" `
-	StorageUUID      uuid.UUID `db:"storage_uuid" `
-	StorageSize      int64     `db:"storage_size" `
-	UploadedFilename string    `db:"uploaded_filename" `
+	ID               int32            `db:"id,pk" `
+	ContentType      string           `db:"content_type" `
+	Created          time.Time        `db:"created" `
+	Location         null.Val[string] `db:"location" `
+	ResolutionX      int32            `db:"resolution_x" `
+	ResolutionY      int32            `db:"resolution_y" `
+	StorageUUID      uuid.UUID        `db:"storage_uuid" `
+	StorageSize      int64            `db:"storage_size" `
+	UploadedFilename string           `db:"uploaded_filename" `
 
 	R publicreportImageR `db:"-" `
 
@@ -61,12 +64,13 @@ type publicreportImageR struct {
 func buildPublicreportImageColumns(alias string) publicreportImageColumns {
 	return publicreportImageColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "content_type", "created", "resolution_x", "resolution_y", "storage_uuid", "storage_size", "uploaded_filename",
+			"id", "content_type", "created", "location", "resolution_x", "resolution_y", "storage_uuid", "storage_size", "uploaded_filename",
 		).WithParent("publicreport.image"),
 		tableAlias:       alias,
 		ID:               psql.Quote(alias, "id"),
 		ContentType:      psql.Quote(alias, "content_type"),
 		Created:          psql.Quote(alias, "created"),
+		Location:         psql.Quote(alias, "location"),
 		ResolutionX:      psql.Quote(alias, "resolution_x"),
 		ResolutionY:      psql.Quote(alias, "resolution_y"),
 		StorageUUID:      psql.Quote(alias, "storage_uuid"),
@@ -81,6 +85,7 @@ type publicreportImageColumns struct {
 	ID               psql.Expression
 	ContentType      psql.Expression
 	Created          psql.Expression
+	Location         psql.Expression
 	ResolutionX      psql.Expression
 	ResolutionY      psql.Expression
 	StorageUUID      psql.Expression
@@ -100,18 +105,19 @@ func (publicreportImageColumns) AliasedAs(alias string) publicreportImageColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportImageSetter struct {
-	ID               omit.Val[int32]     `db:"id,pk" `
-	ContentType      omit.Val[string]    `db:"content_type" `
-	Created          omit.Val[time.Time] `db:"created" `
-	ResolutionX      omit.Val[int32]     `db:"resolution_x" `
-	ResolutionY      omit.Val[int32]     `db:"resolution_y" `
-	StorageUUID      omit.Val[uuid.UUID] `db:"storage_uuid" `
-	StorageSize      omit.Val[int64]     `db:"storage_size" `
-	UploadedFilename omit.Val[string]    `db:"uploaded_filename" `
+	ID               omit.Val[int32]      `db:"id,pk" `
+	ContentType      omit.Val[string]     `db:"content_type" `
+	Created          omit.Val[time.Time]  `db:"created" `
+	Location         omitnull.Val[string] `db:"location" `
+	ResolutionX      omit.Val[int32]      `db:"resolution_x" `
+	ResolutionY      omit.Val[int32]      `db:"resolution_y" `
+	StorageUUID      omit.Val[uuid.UUID]  `db:"storage_uuid" `
+	StorageSize      omit.Val[int64]      `db:"storage_size" `
+	UploadedFilename omit.Val[string]     `db:"uploaded_filename" `
 }
 
 func (s PublicreportImageSetter) SetColumns() []string {
-	vals := make([]string, 0, 8)
+	vals := make([]string, 0, 9)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -120,6 +126,9 @@ func (s PublicreportImageSetter) SetColumns() []string {
 	}
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
+	}
+	if !s.Location.IsUnset() {
+		vals = append(vals, "location")
 	}
 	if s.ResolutionX.IsValue() {
 		vals = append(vals, "resolution_x")
@@ -149,6 +158,9 @@ func (s PublicreportImageSetter) Overwrite(t *PublicreportImage) {
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
 	}
+	if !s.Location.IsUnset() {
+		t.Location = s.Location.MustGetNull()
+	}
 	if s.ResolutionX.IsValue() {
 		t.ResolutionX = s.ResolutionX.MustGet()
 	}
@@ -172,7 +184,7 @@ func (s *PublicreportImageSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 8)
+		vals := make([]bob.Expression, 9)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -191,34 +203,40 @@ func (s *PublicreportImageSetter) Apply(q *dialect.InsertQuery) {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.ResolutionX.IsValue() {
-			vals[3] = psql.Arg(s.ResolutionX.MustGet())
+		if !s.Location.IsUnset() {
+			vals[3] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.ResolutionY.IsValue() {
-			vals[4] = psql.Arg(s.ResolutionY.MustGet())
+		if s.ResolutionX.IsValue() {
+			vals[4] = psql.Arg(s.ResolutionX.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.StorageUUID.IsValue() {
-			vals[5] = psql.Arg(s.StorageUUID.MustGet())
+		if s.ResolutionY.IsValue() {
+			vals[5] = psql.Arg(s.ResolutionY.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.StorageSize.IsValue() {
-			vals[6] = psql.Arg(s.StorageSize.MustGet())
+		if s.StorageUUID.IsValue() {
+			vals[6] = psql.Arg(s.StorageUUID.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.UploadedFilename.IsValue() {
-			vals[7] = psql.Arg(s.UploadedFilename.MustGet())
+		if s.StorageSize.IsValue() {
+			vals[7] = psql.Arg(s.StorageSize.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
+		}
+
+		if s.UploadedFilename.IsValue() {
+			vals[8] = psql.Arg(s.UploadedFilename.MustGet())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -230,7 +248,7 @@ func (s PublicreportImageSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportImageSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 8)
+	exprs := make([]bob.Expression, 0, 9)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -250,6 +268,13 @@ func (s PublicreportImageSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "created")...),
 			psql.Arg(s.Created),
+		}})
+	}
+
+	if !s.Location.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -798,6 +823,7 @@ type publicreportImageWhere[Q psql.Filterable] struct {
 	ID               psql.WhereMod[Q, int32]
 	ContentType      psql.WhereMod[Q, string]
 	Created          psql.WhereMod[Q, time.Time]
+	Location         psql.WhereNullMod[Q, string]
 	ResolutionX      psql.WhereMod[Q, int32]
 	ResolutionY      psql.WhereMod[Q, int32]
 	StorageUUID      psql.WhereMod[Q, uuid.UUID]
@@ -814,6 +840,7 @@ func buildPublicreportImageWhere[Q psql.Filterable](cols publicreportImageColumn
 		ID:               psql.Where[Q, int32](cols.ID),
 		ContentType:      psql.Where[Q, string](cols.ContentType),
 		Created:          psql.Where[Q, time.Time](cols.Created),
+		Location:         psql.WhereNull[Q, string](cols.Location),
 		ResolutionX:      psql.Where[Q, int32](cols.ResolutionX),
 		ResolutionY:      psql.Where[Q, int32](cols.ResolutionY),
 		StorageUUID:      psql.Where[Q, uuid.UUID](cols.StorageUUID),

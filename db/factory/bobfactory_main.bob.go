@@ -20,6 +20,10 @@ import (
 type Factory struct {
 	baseArcgisUserMods                        ArcgisUserModSlice
 	baseArcgisUserPrivilegeMods               ArcgisUserPrivilegeModSlice
+	baseCommsEmailMods                        CommsEmailModSlice
+	baseCommsEmailLogMods                     CommsEmailLogModSlice
+	baseCommsPhoneMods                        CommsPhoneModSlice
+	baseCommsSMSLogMods                       CommsSMSLogModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
 	baseFieldseekerFieldscoutinglogMods       FieldseekerFieldscoutinglogModSlice
 	baseFieldseekerHabitatrelateMods          FieldseekerHabitatrelateModSlice
@@ -151,6 +155,143 @@ func (f *Factory) FromExistingArcgisUserPrivilege(m *models.ArcgisUserPrivilege)
 	ctx := context.Background()
 	if m.R.UserUser != nil {
 		ArcgisUserPrivilegeMods.WithExistingUserUser(m.R.UserUser).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewCommsEmail(mods ...CommsEmailMod) *CommsEmailTemplate {
+	return f.NewCommsEmailWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewCommsEmailWithContext(ctx context.Context, mods ...CommsEmailMod) *CommsEmailTemplate {
+	o := &CommsEmailTemplate{f: f}
+
+	if f != nil {
+		f.baseCommsEmailMods.Apply(ctx, o)
+	}
+
+	CommsEmailModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingCommsEmail(m *models.CommsEmail) *CommsEmailTemplate {
+	o := &CommsEmailTemplate{f: f, alreadyPersisted: true}
+
+	o.Address = func() string { return m.Address }
+	o.Confirmed = func() bool { return m.Confirmed }
+	o.IsSubscribed = func() bool { return m.IsSubscribed }
+
+	ctx := context.Background()
+	if len(m.R.DestinationEmailLogs) > 0 {
+		CommsEmailMods.AddExistingDestinationEmailLogs(m.R.DestinationEmailLogs...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewCommsEmailLog(mods ...CommsEmailLogMod) *CommsEmailLogTemplate {
+	return f.NewCommsEmailLogWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewCommsEmailLogWithContext(ctx context.Context, mods ...CommsEmailLogMod) *CommsEmailLogTemplate {
+	o := &CommsEmailLogTemplate{f: f}
+
+	if f != nil {
+		f.baseCommsEmailLogMods.Apply(ctx, o)
+	}
+
+	CommsEmailLogModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingCommsEmailLog(m *models.CommsEmailLog) *CommsEmailLogTemplate {
+	o := &CommsEmailLogTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Destination = func() string { return m.Destination }
+	o.Source = func() string { return m.Source }
+	o.Type = func() enums.CommsEmailmessagetype { return m.Type }
+
+	ctx := context.Background()
+	if m.R.DestinationEmail != nil {
+		CommsEmailLogMods.WithExistingDestinationEmail(m.R.DestinationEmail).Apply(ctx, o)
+	}
+	if m.R.SourcePhone != nil {
+		CommsEmailLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewCommsPhone(mods ...CommsPhoneMod) *CommsPhoneTemplate {
+	return f.NewCommsPhoneWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewCommsPhoneWithContext(ctx context.Context, mods ...CommsPhoneMod) *CommsPhoneTemplate {
+	o := &CommsPhoneTemplate{f: f}
+
+	if f != nil {
+		f.baseCommsPhoneMods.Apply(ctx, o)
+	}
+
+	CommsPhoneModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTemplate {
+	o := &CommsPhoneTemplate{f: f, alreadyPersisted: true}
+
+	o.E164 = func() string { return m.E164 }
+	o.IsSubscribed = func() bool { return m.IsSubscribed }
+
+	ctx := context.Background()
+	if len(m.R.SourceEmailLogs) > 0 {
+		CommsPhoneMods.AddExistingSourceEmailLogs(m.R.SourceEmailLogs...).Apply(ctx, o)
+	}
+	if len(m.R.DestinationSMSLogs) > 0 {
+		CommsPhoneMods.AddExistingDestinationSMSLogs(m.R.DestinationSMSLogs...).Apply(ctx, o)
+	}
+	if len(m.R.SourceSMSLogs) > 0 {
+		CommsPhoneMods.AddExistingSourceSMSLogs(m.R.SourceSMSLogs...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewCommsSMSLog(mods ...CommsSMSLogMod) *CommsSMSLogTemplate {
+	return f.NewCommsSMSLogWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewCommsSMSLogWithContext(ctx context.Context, mods ...CommsSMSLogMod) *CommsSMSLogTemplate {
+	o := &CommsSMSLogTemplate{f: f}
+
+	if f != nil {
+		f.baseCommsSMSLogMods.Apply(ctx, o)
+	}
+
+	CommsSMSLogModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingCommsSMSLog(m *models.CommsSMSLog) *CommsSMSLogTemplate {
+	o := &CommsSMSLogTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Destination = func() string { return m.Destination }
+	o.Source = func() string { return m.Source }
+	o.Type = func() enums.CommsSmsmessagetype { return m.Type }
+
+	ctx := context.Background()
+	if m.R.DestinationPhone != nil {
+		CommsSMSLogMods.WithExistingDestinationPhone(m.R.DestinationPhone).Apply(ctx, o)
+	}
+	if m.R.SourcePhone != nil {
+		CommsSMSLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
 	}
 
 	return o
@@ -2536,6 +2677,7 @@ func (f *Factory) FromExistingPublicreportImage(m *models.PublicreportImage) *Pu
 	o.ID = func() int32 { return m.ID }
 	o.ContentType = func() string { return m.ContentType }
 	o.Created = func() time.Time { return m.Created }
+	o.Location = func() null.Val[string] { return m.Location }
 	o.ResolutionX = func() int32 { return m.ResolutionX }
 	o.ResolutionY = func() int32 { return m.ResolutionY }
 	o.StorageUUID = func() uuid.UUID { return m.StorageUUID }
@@ -3030,6 +3172,38 @@ func (f *Factory) ClearBaseArcgisUserPrivilegeMods() {
 
 func (f *Factory) AddBaseArcgisUserPrivilegeMod(mods ...ArcgisUserPrivilegeMod) {
 	f.baseArcgisUserPrivilegeMods = append(f.baseArcgisUserPrivilegeMods, mods...)
+}
+
+func (f *Factory) ClearBaseCommsEmailMods() {
+	f.baseCommsEmailMods = nil
+}
+
+func (f *Factory) AddBaseCommsEmailMod(mods ...CommsEmailMod) {
+	f.baseCommsEmailMods = append(f.baseCommsEmailMods, mods...)
+}
+
+func (f *Factory) ClearBaseCommsEmailLogMods() {
+	f.baseCommsEmailLogMods = nil
+}
+
+func (f *Factory) AddBaseCommsEmailLogMod(mods ...CommsEmailLogMod) {
+	f.baseCommsEmailLogMods = append(f.baseCommsEmailLogMods, mods...)
+}
+
+func (f *Factory) ClearBaseCommsPhoneMods() {
+	f.baseCommsPhoneMods = nil
+}
+
+func (f *Factory) AddBaseCommsPhoneMod(mods ...CommsPhoneMod) {
+	f.baseCommsPhoneMods = append(f.baseCommsPhoneMods, mods...)
+}
+
+func (f *Factory) ClearBaseCommsSMSLogMods() {
+	f.baseCommsSMSLogMods = nil
+}
+
+func (f *Factory) AddBaseCommsSMSLogMod(mods ...CommsSMSLogMod) {
+	f.baseCommsSMSLogMods = append(f.baseCommsSMSLogMods, mods...)
 }
 
 func (f *Factory) ClearBaseFieldseekerContainerrelateMods() {

@@ -19,6 +19,10 @@ var Preload = getPreloaders()
 type preloaders struct {
 	ArcgisUser                        arcgisuserPreloader
 	ArcgisUserPrivilege               arcgisUserPrivilegePreloader
+	CommsEmail                        commsEmailPreloader
+	CommsEmailLog                     commsEmailLogPreloader
+	CommsPhone                        commsPhonePreloader
+	CommsSMSLog                       commsSMSLogPreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogPreloader
 	FieldseekerHabitatrelate          fieldseekerHabitatrelatePreloader
@@ -71,6 +75,10 @@ func getPreloaders() preloaders {
 	return preloaders{
 		ArcgisUser:                        buildArcgisUserPreloader(),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegePreloader(),
+		CommsEmail:                        buildCommsEmailPreloader(),
+		CommsEmailLog:                     buildCommsEmailLogPreloader(),
+		CommsPhone:                        buildCommsPhonePreloader(),
+		CommsSMSLog:                       buildCommsSMSLogPreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogPreloader(),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelatePreloader(),
@@ -129,6 +137,10 @@ var (
 type thenLoaders[Q orm.Loadable] struct {
 	ArcgisUser                        arcgisuserThenLoader[Q]
 	ArcgisUserPrivilege               arcgisUserPrivilegeThenLoader[Q]
+	CommsEmail                        commsEmailThenLoader[Q]
+	CommsEmailLog                     commsEmailLogThenLoader[Q]
+	CommsPhone                        commsPhoneThenLoader[Q]
+	CommsSMSLog                       commsSMSLogThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogThenLoader[Q]
 	FieldseekerHabitatrelate          fieldseekerHabitatrelateThenLoader[Q]
@@ -181,6 +193,10 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
 		ArcgisUser:                        buildArcgisUserThenLoader[Q](),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegeThenLoader[Q](),
+		CommsEmail:                        buildCommsEmailThenLoader[Q](),
+		CommsEmailLog:                     buildCommsEmailLogThenLoader[Q](),
+		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
+		CommsSMSLog:                       buildCommsSMSLogThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogThenLoader[Q](),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelateThenLoader[Q](),

@@ -65,6 +65,9 @@ func main() {
 	defer cancel()
 
 	background.NewOAuthTokenChannel = make(chan struct{}, 10)
+	queue.ChannelJobAudio = make(chan queue.JobAudio, 100) // Buffered channel to prevent blocking
+	queue.ChannelJobEmail = make(chan queue.JobEmail, 100) // Buffered channel to prevent blocking
+	queue.ChannelJobSMS = make(chan queue.JobSMS, 100)     // Buffered channel to prevent blocking
 
 	var waitGroup sync.WaitGroup
 
@@ -77,9 +80,20 @@ func main() {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		queue.StartAudioWorker(ctx)
+		background.StartWorkerAudio(ctx, queue.ChannelJobAudio)
 	}()
 
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		background.StartWorkerEmail(ctx, queue.ChannelJobEmail)
+	}()
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		background.StartWorkerSMS(ctx, queue.ChannelJobSMS)
+	}()
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,

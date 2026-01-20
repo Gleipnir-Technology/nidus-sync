@@ -14,14 +14,22 @@ type ContextRegisterNotificationsComplete struct {
 type ContextRoot struct{}
 
 var (
-	RegisterNotificationsComplete = buildTemplate("register-notifications-complete", "base")
-	Root                          = buildTemplate("root", "base")
+	PrivacyT = buildTemplate("privacy", "base")
+	RootT    = buildTemplate("root", "base")
+	TermsT   = buildTemplate("terms", "base")
 )
 
+func getPrivacy(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		PrivacyT,
+		ContextRoot{},
+	)
+}
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
-		Root,
+		RootT,
 		ContextRoot{},
 	)
 }
@@ -29,6 +37,13 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 func getRobots(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "User-agent: *\n")
 	fmt.Fprint(w, "Allow: /\n")
+}
+func getTerms(w http.ResponseWriter, r *http.Request) {
+	htmlpage.RenderOrError(
+		w,
+		TermsT,
+		ContextRoot{},
+	)
 }
 
 // Respond with an error that is visible to the user

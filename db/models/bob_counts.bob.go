@@ -22,6 +22,8 @@ var (
 
 type preloadCounts struct {
 	ArcgisUser        arcgisuserCountPreloader
+	CommsEmail        commsEmailCountPreloader
+	CommsPhone        commsPhoneCountPreloader
 	NoteAudio         noteAudioCountPreloader
 	NoteImage         noteImageCountPreloader
 	Organization      organizationCountPreloader
@@ -34,6 +36,8 @@ type preloadCounts struct {
 func getPreloadCount() preloadCounts {
 	return preloadCounts{
 		ArcgisUser:        buildArcgisUserCountPreloader(),
+		CommsEmail:        buildCommsEmailCountPreloader(),
+		CommsPhone:        buildCommsPhoneCountPreloader(),
 		NoteAudio:         buildNoteAudioCountPreloader(),
 		NoteImage:         buildNoteImageCountPreloader(),
 		Organization:      buildOrganizationCountPreloader(),
@@ -46,6 +50,8 @@ func getPreloadCount() preloadCounts {
 
 type thenLoadCounts[Q orm.Loadable] struct {
 	ArcgisUser        arcgisuserCountThenLoader[Q]
+	CommsEmail        commsEmailCountThenLoader[Q]
+	CommsPhone        commsPhoneCountThenLoader[Q]
 	NoteAudio         noteAudioCountThenLoader[Q]
 	NoteImage         noteImageCountThenLoader[Q]
 	Organization      organizationCountThenLoader[Q]
@@ -58,6 +64,8 @@ type thenLoadCounts[Q orm.Loadable] struct {
 func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 	return thenLoadCounts[Q]{
 		ArcgisUser:        buildArcgisUserCountThenLoader[Q](),
+		CommsEmail:        buildCommsEmailCountThenLoader[Q](),
+		CommsPhone:        buildCommsPhoneCountThenLoader[Q](),
 		NoteAudio:         buildNoteAudioCountThenLoader[Q](),
 		NoteImage:         buildNoteImageCountThenLoader[Q](),
 		Organization:      buildOrganizationCountThenLoader[Q](),
