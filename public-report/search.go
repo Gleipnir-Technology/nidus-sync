@@ -7,8 +7,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 )
 
-type ContextSearch struct {
+type ContentSearch struct {
 	MapboxToken string
+	URLTegola   string
 }
 
 var (
@@ -19,8 +20,9 @@ func getSearch(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		Search,
-		ContextSearch{
+		ContentSearch{
 			MapboxToken: config.MapboxToken,
+			URLTegola:   config.URLTegola,
 		},
 	)
 }

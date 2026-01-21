@@ -1,7 +1,7 @@
 var map = null;
-// A map that can be used to locate a single point by setting its location explicitly
-// or by allowing the user to move a marker.
-class MapLocator extends HTMLElement {
+// A map that shows multiple single point locations.
+// Points have additional detail popups.
+class MapMultipoint extends HTMLElement {
 	constructor() {
 		super();
 
@@ -11,6 +11,7 @@ class MapLocator extends HTMLElement {
 		// Initial render
 		this.render();
 
+		this._map = null;
 		// markers shown on the map. Should be none or 1, generally.
 		this._markers = null;
 	}
@@ -37,10 +38,6 @@ class MapLocator extends HTMLElement {
 		// Only handle if map exists and values actually changed
 		if (!this._map || oldValue === newValue) return;
 		
-		if (name === 'api-key') {
-			this._apiKey = newValue;
-		}
-		
 		if (name === 'latitude' || name === 'longitude') {
 			if (this.hasAttribute('latitude') && this.hasAttribute('longitude')) {
 				const lat = Number(this.getAttribute('latitude'));
@@ -55,14 +52,17 @@ class MapLocator extends HTMLElement {
 	}
 	
 	_initializeMap() {
-		console.log("Setting up the map...");
+		const apiKey = this.getAttribute("api-key");
 		const lat = Number(this.getAttribute('latitude') || 36.2);
 		const lng = Number(this.getAttribute('longitude') || -119.2);
+		const organization_id = Number(this.getAttribute("organization-id") || 0);
+		const tegola = this.getAttribute("tegola")
 		const zoom = Number(this.getAttribute('zoom') || 15);
 
-		mapboxgl.accessToken = this._apiKey;
-		map = new mapboxgl.Map({
-			container: "map",
+		mapboxgl.accessToken = apiKey;
+		const mapElement = this.shadowRoot.querySelector("#map");
+		this._map = new mapboxgl.Map({
+			container: mapElement,
 			center: {
 				lat: lat,
 				lng: lng,
@@ -70,16 +70,16 @@ class MapLocator extends HTMLElement {
 			style: 'mapbox://styles/mapbox/streets-v12', // style URL
 			zoom: zoom,
 		});
-		map.addControl(new mapboxgl.GeolocateControl({
+		this._map.addControl(new mapboxgl.GeolocateControl({
 			positionOptions: {
 				enableHighAccuracy: true
 			},
 			trackUserLocation: true,
 			showUserHeading: true
 		}));
-		map.addControl(new mapboxgl.NavigationControl());
-		map.on("load", function() {
-			this.dispatchEvent(new CustomEvent('load') {
+		this._map.addControl(new mapboxgl.NavigationControl());
+		this._map.on("load", () => {
+			this.dispatchEvent(new CustomEvent('load'), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
 				detail: {
@@ -177,8 +177,20 @@ class MapLocator extends HTMLElement {
 		`;
 	}
 
+	addLayer(a) {
+		return this._map.addLayer(a);
+	}
+	addSource(a, b) {
+		return this._map.addSource(a, b);
+	}
 	jumpTo(args) {
-		this._map.jumpTo(args);
+		return this._map.jumpTo(args);
+	}
+	on(a, b) {
+		return this._map.on(a, b);
+	}
+	queryRenderedFeatures(a) {
+		return this._map.queryRenderedFeatures(a);
 	}
 
 	setMarker(coords) {
@@ -205,4 +217,4 @@ class MapLocator extends HTMLElement {
 	}
 }
 
-customElements.define('map-locator', MapLocator);
+customElements.define('map-multipoint', MapMultipoint);

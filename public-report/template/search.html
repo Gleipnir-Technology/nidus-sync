@@ -6,7 +6,7 @@
 <link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
-<script src="/static/js/map.js"></script>
+<script src="/static/js/map-multipoint.js"></script>
 <style>
 .clickable-row {
 	cursor: pointer;
@@ -123,14 +123,13 @@ function renderReports(features) {
 	} else {
 	}
 }
-document.addEventListener('DOMContentLoaded', function() {
-	mapLoad(MAPBOX_ACCESS_TOKEN).then((map) => {
-		function updateReportTable() {
-		}
+function onLoad() {
+	const map = document.querySelector("map-multipoint");
+	map.addEventListener("load", (event) => {
 		map.addSource('tegola-mosquito', {
 			'type': 'vector',
 			'tiles': [
-				'https://dev-tegola.nidus.cloud/maps/mosquito/{z}/{x}/{y}'
+				'https://{{.URLTegola}}/maps/mosquito/{z}/{x}/{y}'
 			]
 		});
 		map.addLayer({
@@ -154,27 +153,25 @@ document.addEventListener('DOMContentLoaded', function() {
 				renderReports(uniqueFeatures);
 			}
 		});
-		map.on('mousemove', 'report_location', (e) => {
-		});
-		map.on('mouseleave', 'report_location', () => {
-		});
 		getGeolocation({
 			enableHighAccuracy: true,
 			timeout: 10000,
 			maximumAge: 0
 		}).then(position => {
-			mapJumpTo({
+			map.jumpTo({
 				center: {
 					lng: position.coords.longitude,
 					lat: position.coords.latitude,
 				},
-				zoom: 12,
+				zoom: 14,
 			});
 		}).catch(error => {
-			console.error("Failed to get position", error);
-		});
+			console.log("location error", error);
+		})
 	});
-});
+}
+
+document.addEventListener('DOMContentLoaded', onLoad);
 </script>
 {{end}}
 {{define "content"}}
@@ -218,9 +215,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			<h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Reports Map</h5>
 		</div>
 		<div class="card-body p-0">
-			<div class="map-container" id="map-container">
-				<div id="map"></div>
-			</div>
+			<map-multipoint 
+					api-key="{{ .MapboxToken }}"
+					latitude="36.3"
+					longitude="-119.2"
+					tegola="{{.URLTegola}}"
+					zoom="9"
+					/></map-multipoint>
 		</div>
 	</div>
 	
