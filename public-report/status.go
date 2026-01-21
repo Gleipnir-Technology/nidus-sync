@@ -1,38 +1,54 @@
 package publicreport
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/sm"
+	"github.com/stephenafamo/scan"
 	/*
-			"strconv"
-			"time"
+		"strconv"
 
-		"github.com/Gleipnir-Technology/nidus-sync/db/models"
-			"github.com/Gleipnir-Technology/nidus-sync/db"
-			"github.com/Gleipnir-Technology/nidus-sync/h3utils"
-			"github.com/aarondl/opt/omit"
-			"github.com/aarondl/opt/omitnull"
-			"github.com/stephenafamo/bob/dialect/psql"
-			"github.com/stephenafamo/bob/dialect/psql/um"
+		"github.com/Gleipnir-Technology/nidus-sync/db"
+		"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+		"github.com/aarondl/opt/omit"
+		"github.com/aarondl/opt/omitnull"
 	*/)
 
+type Contact struct {
+	Email string
+	Name  string
+	Phone string
+}
 type Report struct {
-	ID string
+	Address   string
+	Created   time.Time
+	ID        string
+	Location  string // GeoJSON
+	Reporter  Contact
+	SiteOwner Contact
+	Updated   time.Time
 }
 
-type ContextStatus struct {
+type ContentStatus struct {
 	Error    string
 	ReportID string
 }
-type ContextStatusByID struct {
-	Report Report
+type ContentStatusByID struct {
+	MapboxToken string
+	Report      Report
 }
 
 var (
@@ -66,7 +82,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		htmlpage.RenderOrError(
 			w,
 			Status,
-			ContextStatus{
+			ContentStatus{
 				Error:    "",
 				ReportID: "",
 			},
@@ -85,7 +101,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		htmlpage.RenderOrError(
 			w,
 			Status,
-			ContextStatus{
+			ContentStatus{
 				Error:    "Sorry, server's confused",
 				ReportID: report_id_str,
 			},
@@ -99,22 +115,103 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		Status,
-		ContextStatus{
+		ContentStatus{
 			Error:    "Sorry, we can't find that report",
 			ReportID: report_id_str,
 		},
 	)
 }
+func contentFromNuisance(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
+	nuisance, err := models.PublicreportNuisances.Query(
+		models.SelectWhere.PublicreportNuisances.PublicID.EQ(report_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
+	}
+	result.Report.ID = report_id
+	result.Report.Address = nuisance.Address
+	result.Report.Created = nuisance.Created
+	result.Report.Updated = nuisance.Created
+	result.Report.Reporter.Email = nuisance.ReporterEmail
+	result.Report.Reporter.Name = nuisance.ReporterName
+	result.Report.Reporter.Phone = nuisance.ReporterPhone
+
+	type LocationGeoJSON struct {
+		Location string
+	}
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.From(
+			psql.F("ST_AsGeoJSON", "location"),
+		).As("location"),
+		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
+	), scan.StructMapper[LocationGeoJSON]())
+	if err != nil {
+		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
+	}
+	result.Report.Location = row.Location
+
+	return result, err
+}
+func contentFromPool(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
+	return result, err
+}
+func contentFromQuick(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
+	quick, err := models.PublicreportQuicks.Query(
+		models.SelectWhere.PublicreportQuicks.PublicID.EQ(report_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
+	}
+	result.Report.ID = report_id
+	result.Report.Address = quick.Address
+	result.Report.Created = quick.Created
+	result.Report.Updated = quick.Created
+	result.Report.Reporter.Email = quick.ReporterEmail
+	result.Report.Reporter.Name = "-"
+	result.Report.Reporter.Phone = quick.ReporterPhone
+
+	type LocationGeoJSON struct {
+		Location string
+	}
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			psql.F("ST_AsGeoJSON", "location"),
+		),
+		sm.From("publicreport.quick"),
+		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
+	), scan.StructMapper[LocationGeoJSON]())
+	if err != nil {
+		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
+	}
+	result.Report.Location = row.Location
+
+	return result, err
+}
 func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	report_id := chi.URLParam(r, "report_id")
+	ctx := r.Context()
+
+	location, err := models.PublicreportReportLocations.Query(
+		models.SelectWhere.PublicreportReportLocations.PublicID.EQ(report_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to find report", err, http.StatusBadRequest)
+		return
+	}
+	var content ContentStatusByID
+	switch location.TableName.MustGet() {
+	case "nuisance":
+		content, err = contentFromNuisance(ctx, report_id)
+	case "pool":
+		content, err = contentFromPool(ctx, report_id)
+	case "quick":
+		content, err = contentFromQuick(ctx, report_id)
+	}
+	content.MapboxToken = config.MapboxToken
 	htmlpage.RenderOrError(
 		w,
 		StatusByID,
-		ContextStatusByID{
-			Report: Report{
-				ID: report_id,
-			},
-		},
+		content,
 	)
 }
 
@@ -123,7 +220,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		htmlpage.RenderOrError(
 			w,
 			Quick,
-			ContextQuick{},
+			ContentQuick{},
 		)
 	}
 
@@ -132,7 +229,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		htmlpage.RenderOrError(
 			w,
 			QuickSubmitComplete,
-			ContextQuickSubmitComplete{
+			ContentQuickSubmitComplete{
 				ReportID: report,
 			},
 		)

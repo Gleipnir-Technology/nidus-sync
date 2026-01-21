@@ -2,6 +2,7 @@
 
 {{define "title"}}Status of report {{.Report.ID|publicReportID}}{{end}}
 {{define "extraheader"}}
+<script src="/static/js/map-single-point.js"></script>
 <style>
 .timeline {
 	border-left: 3px solid #dee2e6;
@@ -51,7 +52,7 @@
 			<div class="row">
 				<div class="col-md-4 mb-3">
 					<strong><i class="fas fa-calendar-plus me-2"></i>Created:</strong> 
-					<span>July 15, 2023 - 9:30 AM</span>
+					<span>{{.Report.Created|timeSince}}</span>
 				</div>
 				<div class="col-md-4 mb-3">
 					<strong><i class="fas fa-sync me-2"></i>Last Updated:</strong> 
@@ -73,37 +74,45 @@
 					<h5 class="mb-0"><i class="fas fa-user me-2"></i>Reporter Information</h5>
 				</div>
 				<div class="card-body">
-					<p><strong>Name:</strong> Jane Doe</p>
-					<p><strong>Phone:</strong> (555) 123-4567</p>
-					<p><strong>Address:</strong> 123 Main Street, Anytown, USA 12345</p>
+					<p><strong>Name:</strong>{{.Report.Reporter.Name}}</p>
+					<p><strong>Phone:</strong>{{.Report.Reporter.Phone}}</p>
+					<p><strong>Email:</strong>{{.Report.Reporter.Email}}</p>
 				</div>
 			</div>
 		</div>
 		<div class="col-md-6">
 			<div class="card h-100">
 				<div class="card-header bg-secondary text-white">
-					<h5 class="mb-0"><i class="fas fa-home me-2"></i>Nuisance Property Information</h5>
+					<h5 class="mb-0"><i class="fas fa-home me-2"></i>Reported Location</h5>
 				</div>
 				<div class="card-body">
-					<p><strong>Owner:</strong> John Smith</p>
-					<p><strong>Address:</strong> 456 Elm Street, Anytown, USA 12345</p>
-					<p><strong>Description:</strong> Standing water in abandoned pool</p>
+					<p><strong>Site Contact Name:</strong>{{.Report.SiteOwner.Name}}</p>
+					<p><strong>Site Contact Phone:</strong>{{.Report.SiteOwner.Phone}}</p>
+					<p><strong>Site Contact Email:</strong>{{.Report.SiteOwner.Email}}</p>
+					<p><strong>Address:</strong>{{.Report.Address}}</p>
 				</div>
 			</div>
 		</div>
 	</div>
-
+	<!-- Report Information -->
+	<div class="row mb-4">
+		<div class="card-header bg-success text-white">
+			<h5 class="mb-0"><i class="fas fa-history me-2"></i>Report Detail</h5>
+		</div>
+		<div class="card-body">
+			<p><strong>Foo:</strong>Bar</p>
+		</div>
+	</div>
 	<!-- Map Section -->
 	<div class="card mb-4">
 		<div class="card-header bg-info text-white">
 			<h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Location Map</h5>
 		</div>
 		<div class="card-body p-0">
-			<div class="map-container">
-				<!-- Replace with actual map embed code -->
-				<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d-122.4194!3d37.7749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDQ2JzI5LjYiTiAxMjLCsDI1JzEwLjAiVw!5e0!3m2!1sen!2sus!4v1627309456789!5m2!1sen!2sus" 
-					width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-			</div>
+			<map-single-point
+				api-key="{{ .MapboxToken }}"
+				geojson="{{ .Report.Location }}"
+				zoom="14"></map-single-point>
 		</div>
 	</div>
 
