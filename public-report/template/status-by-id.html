@@ -51,12 +51,12 @@
 		<div class="card-body">
 			<div class="row">
 				<div class="col-md-4 mb-3">
-					<strong><i class="fas fa-calendar-plus me-2"></i>Created:</strong> 
-					<span>{{.Report.Created|timeSince}}</span>
+					<strong><i class="fas fa-sync me-2"></i>Type:</strong> 
+					<span>{{.Report.Type}}</span>
 				</div>
 				<div class="col-md-4 mb-3">
-					<strong><i class="fas fa-sync me-2"></i>Last Updated:</strong> 
-					<span>July 17, 2023 - 2:45 PM</span>
+					<strong><i class="fas fa-calendar-plus me-2"></i>Created:</strong> 
+					<span>{{.Report.Created|timeSince}}</span>
 				</div>
 				<div class="col-md-4 mb-3">
 					<strong><i class="fas fa-hourglass-half me-2"></i>Next Step:</strong> 
@@ -94,8 +94,9 @@
 			</div>
 		</div>
 	</div>
+
 	<!-- Report Information -->
-	<div class="row mb-4">
+	<div class="card mb-4">
 		<div class="card-header bg-success text-white">
 			<h5 class="mb-0"><i class="fas fa-history me-2"></i>Report Detail</h5>
 		</div>
@@ -103,6 +104,7 @@
 			<p><strong>Foo:</strong>Bar</p>
 		</div>
 	</div>
+
 	<!-- Map Section -->
 	<div class="card mb-4">
 		<div class="card-header bg-info text-white">
@@ -113,6 +115,21 @@
 				api-key="{{ .MapboxToken }}"
 				geojson="{{ .Report.Location }}"
 				zoom="14"></map-single-point>
+		</div>
+	</div>
+
+	<div class="card mb-4">
+		<div class="card-header bg-info text-white">
+			<h5 class="mb-0"><i class="fas fa-photo me-2"></i>Images</h5>
+		</div>
+		<div class="card-body p-0">
+			{{ if gt (len .Report.Images) 0 }}
+				{{ range .Report.Images }}
+				<img src="{{ .URL }}" width="256"/>
+				{{ end }}
+			{{ else }}
+				<p>None</p>
+			{{ end }}
 		</div>
 	</div>
 

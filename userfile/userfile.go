@@ -3,6 +3,7 @@ package userfile
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -78,6 +79,43 @@ func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	log.Info().Str("filepath", filepath).Msg("Saved public report image file content")
 	return nil
 }
+
 func PublicImageFileContentPathRaw(uid string) string {
 	return fmt.Sprintf("%s/%s.raw", config.FilesDirectoryPublic, uid)
+}
+
+func PublicImageFileToResponse(w http.ResponseWriter, uid string) {
+	image_path := PublicImageFileContentPathRaw(uid)
+
+	// Open the file
+	file, err := os.Open(image_path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "Image not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to retrieve image", http.StatusInternalServerError)
+		}
+		return
+	}
+	defer file.Close()
+
+	// Get file info for Content-Length header
+	fileInfo, err := file.Stat()
+	if err != nil {
+		http.Error(w, "Failed to get image information", http.StatusInternalServerError)
+		return
+	}
+
+	// Set appropriate headers
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
+
+	// Copy file contents to response writer
+	_, err = io.Copy(w, file)
+	if err != nil {
+		// Note: At this point, we've already started writing the response,
+		// so we can't change the status code anymore. The best we can do
+		// is log the error and abandon the connection.
+		return
+	}
 }

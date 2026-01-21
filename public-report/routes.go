@@ -11,6 +11,7 @@ func Router() chi.Router {
 	r.Get("/privacy", getPrivacy)
 	r.Get("/robots.txt", getRobots)
 	r.Get("/email/report/{report_id}/subscription-confirmation", getEmailReportSubscriptionConfirmation)
+	r.Get("/image/{uuid}", getImageByUUID)
 	r.Get("/nuisance", getNuisance)
 	r.Post("/nuisance-submit", postNuisance)
 	r.Get("/nuisance-submit-complete", getNuisanceSubmitComplete)

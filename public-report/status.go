@@ -32,14 +32,19 @@ type Contact struct {
 	Name  string
 	Phone string
 }
+type Image struct {
+	URL string
+}
 type Report struct {
 	Address   string
+	Comments  string
 	Created   time.Time
 	ID        string
+	Images    []Image
 	Location  string // GeoJSON
 	Reporter  Contact
 	SiteOwner Contact
-	Updated   time.Time
+	Type      string
 }
 
 type ContentStatus struct {
@@ -131,7 +136,6 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
-	result.Report.Updated = nuisance.Created
 	result.Report.Reporter.Email = nuisance.ReporterEmail
 	result.Report.Reporter.Name = nuisance.ReporterName
 	result.Report.Reporter.Phone = nuisance.ReporterPhone
@@ -162,14 +166,26 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 	if err != nil {
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
+
+	images, err := quick.Images().All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
+	}
+
 	result.Report.ID = report_id
 	result.Report.Address = quick.Address
+	result.Report.Comments = quick.Comments
 	result.Report.Created = quick.Created
-	result.Report.Updated = quick.Created
 	result.Report.Reporter.Email = quick.ReporterEmail
 	result.Report.Reporter.Name = "-"
 	result.Report.Reporter.Phone = quick.ReporterPhone
+	result.Report.Type = "Quick"
 
+	for _, image := range images {
+		result.Report.Images = append(result.Report.Images, Image{
+			URL: fmt.Sprintf("https://%s/image/%s", config.RMODomain, image.StorageUUID),
+		})
+	}
 	type LocationGeoJSON struct {
 		Location string
 	}
