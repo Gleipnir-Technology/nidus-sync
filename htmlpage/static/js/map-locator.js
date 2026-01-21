@@ -27,42 +27,17 @@ class MapLocator extends HTMLElement {
 		}
 	}
 
-	// Lifecycle: watch these attributes for changes
-	static get observedAttributes() {
-		return ['api-key', 'latitude', 'longitude', 'zoom'];
-	}
-
-	// Lifecycle: respond to attribute changes
-	attributeChangedCallback(name, oldValue, newValue) {
-		// Only handle if map exists and values actually changed
-		if (!this._map || oldValue === newValue) return;
-		
-		if (name === 'api-key') {
-			this._apiKey = newValue;
-		}
-		
-		if (name === 'latitude' || name === 'longitude') {
-			if (this.hasAttribute('latitude') && this.hasAttribute('longitude')) {
-				const lat = Number(this.getAttribute('latitude'));
-				const lng = Number(this.getAttribute('longitude'));
-				this._map.setCenter([lat, lng]);
-			}
-		}
-
-		if (name === 'zoom') {
-			this._map.setZoom(Number(newValue));
-		}
-	}
-	
 	_initializeMap() {
 		console.log("Setting up the map...");
+		const apiKey = this.getAttribute("api-key");
 		const lat = Number(this.getAttribute('latitude') || 36.2);
 		const lng = Number(this.getAttribute('longitude') || -119.2);
 		const zoom = Number(this.getAttribute('zoom') || 15);
 
-		mapboxgl.accessToken = this._apiKey;
+		const mapElement = this.shadowRoot.querySelector("#map");
+		mapboxgl.accessToken = apiKey;
 		map = new mapboxgl.Map({
-			container: "map",
+			container: mapElement,
 			center: {
 				lat: lat,
 				lng: lng,
@@ -79,68 +54,12 @@ class MapLocator extends HTMLElement {
 		}));
 		map.addControl(new mapboxgl.NavigationControl());
 		map.on("load", function() {
-			this.dispatchEvent(new CustomEvent('load') {
+			this.dispatchEvent(new CustomEvent('load'), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
 				detail: {
 					map: this
 				}
-			});
-		});
-	}
-
-	async _fetchAddressSuggestions(text) {
-		try {
-			const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&access_token=${this._apiKey}`;
-			
-			const response = await fetch(url);
-			const data = await response.json();
-			return data;
-		} catch (error) {
-			console.error('Error fetching geocoding suggestions:', error);
-		}
-	}
-
-	_renderSuggestions(suggestions) {
-		console.log("Rendering suggestions", suggestions);
-		this._suggestions.innerHTML = suggestions.map((item, index) => {
-			if (item.properties.place_formatted != "") {
-				return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.geometry.coordinates[1]}"
-						data-lng="${item.geometry.coordinates[0]}">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`
-			} else {
-				return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.coordinates.lat}"
-						data-lng="${item.coordinates.lng}">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`
-			}
-		}).join('');
-		
-		// Add click listeners to suggestions
-		this.shadowRoot.querySelectorAll('.suggestion-item').forEach(el => {
-			el.addEventListener('click', e => {
-				const index = parseInt(el.dataset.index);
-				const suggestion = suggestions[index];
-				this.value = suggestion.properties.full_address;
-				this._suggestions.innerHTML = '';
-				
-				// Dispatch custom event
-				this.dispatchEvent(new CustomEvent('address-selected', {
-					bubbles: true,
-					composed: true, // Allows event to cross shadow DOM boundary
-					detail: {
-						location: suggestion
-					}
-				}));
 			});
 		});
 	}
