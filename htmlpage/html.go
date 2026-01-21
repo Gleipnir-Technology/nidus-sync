@@ -110,6 +110,8 @@ func bigNumber(n int) string {
 func makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
 		"bigNumber":          bigNumber,
+		"html":               unescapeHTML,
+		"json":               unescapeJS,
 		"GISStatement":       gisStatement,
 		"latLngDisplay":      latLngDisplay,
 		"publicReportID":     publicReportID,
@@ -290,6 +292,12 @@ func timeSince(t time.Time) string {
 		days := hours / 24
 		return fmt.Sprintf("%d days ago", int(days))
 	}
+}
+func unescapeHTML(s string) template.HTML {
+	return template.HTML(s)
+}
+func unescapeJS(s string) template.JS {
+	return template.JS(s)
 }
 func uuidShort(uuid uuid.UUID) string {
 	s := uuid.String()

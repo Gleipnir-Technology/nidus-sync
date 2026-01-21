@@ -19,8 +19,6 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/scan"
 	/*
-		"strconv"
-
 		"github.com/Gleipnir-Technology/nidus-sync/db"
 		"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 		"github.com/aarondl/opt/omit"
@@ -33,7 +31,8 @@ type Contact struct {
 	Phone string
 }
 type Image struct {
-	URL string
+	Location string
+	URL      string
 }
 type Report struct {
 	Address   string
@@ -167,7 +166,7 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
 
-	images, err := quick.Images().All(ctx, db.PGInstance.BobDB)
+	images, err := sql.PublicreportImageWithJSONByQuickID(quick.ID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
@@ -183,23 +182,24 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 
 	for _, image := range images {
 		result.Report.Images = append(result.Report.Images, Image{
-			URL: fmt.Sprintf("https://%s/image/%s", config.RMODomain, image.StorageUUID),
+			Location: image.LocationJSON,
+			URL:      fmt.Sprintf("https://%s/image/%s", config.RMODomain, image.StorageUUID),
 		})
 	}
 	type LocationGeoJSON struct {
 		Location string
 	}
-	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			psql.F("ST_AsGeoJSON", "location"),
 		),
 		sm.From("publicreport.quick"),
 		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	), scan.StructMapper[LocationGeoJSON]())
+	), scan.SingleColumnMapper[string])
 	if err != nil {
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
-	result.Report.Location = row.Location
+	result.Report.Location = location
 
 	return result, err
 }

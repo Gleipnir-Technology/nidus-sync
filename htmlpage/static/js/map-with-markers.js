@@ -1,6 +1,6 @@
 var map = null;
-// A map that just shows a single point location, and can't be moved
-class MapSinglePoint extends HTMLElement {
+// A map that just shows a bunch of markers, it can't change them
+class MapWithMarkers extends HTMLElement {
 	constructor() {
 		super();
 
@@ -10,8 +10,10 @@ class MapSinglePoint extends HTMLElement {
 		// Initial render
 		this.render();
 
+		this._map = null;
+
 		// markers shown on the map. Should be none or 1, generally.
-		this._markers = null;
+		this._markers = [];
 	}
 
 	// Lifecycle: when element is added to the DOM
@@ -35,7 +37,7 @@ class MapSinglePoint extends HTMLElement {
 
 		mapboxgl.accessToken = apiKey;
 		const mapElement = this.shadowRoot.querySelector("#map");
-		map = new mapboxgl.Map({
+		this._map = new mapboxgl.Map({
 			container: mapElement,
 			center: {
 				lat: lat,
@@ -44,7 +46,8 @@ class MapSinglePoint extends HTMLElement {
 			style: 'mapbox://styles/mapbox/streets-v12', // style URL
 			zoom: zoom,
 		});
-		map.on("load", function() {
+		this._map.on("load", () => {
+			console.log("map loaded");
 			this.dispatchEvent(new CustomEvent('load'), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
@@ -53,11 +56,13 @@ class MapSinglePoint extends HTMLElement {
 				}
 			});
 		});
+		this._markers = [];
 	}
 
 	// Initial render of component
 	render() {
 		this.shadowRoot.innerHTML = `
+			<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
 			<style>
 				.map-container {
 					background-color: #e9ecef;
@@ -91,28 +96,16 @@ class MapSinglePoint extends HTMLElement {
 		this._map.jumpTo(args);
 	}
 
-	setMarker(coords) {
-		console.log("Setting map marker", coords);
-		this._map.jumpTo({
-			center: coords,
-			zoom: 14,
-		});
+	clearMarkers() {
 		this._markers.forEach((marker) => marker.remove());
-
-		const marker = new mapboxgl.Marker({
-			color: "#FF0000",
-			draggable: true
-		}).setLngLat(coords).addTo(map);
-		marker.on('dragend', function(e) {
-			const markerDraggedEvent = new CustomEvent("markerdragend", {
-				detail: {
-					marker: marker
-				}
-			});
-			mapContainer.dispatchEvent(markerDraggedEvent);
-		});
-		this._markers = [marker];
+	}
+	addMarker(coords, color) {
+		console.log("Add marker", coords, color);
+		const el = document.createElement("div");
+		el.id = "marker";
+		const marker = new mapboxgl.Marker().setLngLat(coords).addTo(this._map);
+		this._markers.push(marker);
 	}
 }
 
-customElements.define('map-single-point', MapSinglePoint);
+customElements.define('map-with-markers', MapWithMarkers);
