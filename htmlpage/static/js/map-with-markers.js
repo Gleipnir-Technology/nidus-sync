@@ -103,7 +103,10 @@ class MapWithMarkers extends HTMLElement {
 		console.log("Add marker", coords, color);
 		const el = document.createElement("div");
 		el.id = "marker";
-		const marker = new mapboxgl.Marker().setLngLat(coords).addTo(this._map);
+		const marker = new mapboxgl.Marker({
+			color: color,
+			scale: 1.5,
+		}).setLngLat(coords).addTo(this._map);
 		this._markers.push(marker);
 	}
 }

@@ -54,7 +54,10 @@ function onLoad() {
 			center: GEOJSON_LOCATION.coordinates,
 			zoom: 14,
 		});
-		map.addMarker(GEOJSON_LOCATION.coordinates, "#FF0000");
+		map.addMarker(GEOJSON_LOCATION.coordinates, "#00FF00");
+		GEOJSON_IMAGE_LOCATIONS.forEach((image) => {
+			map.addMarker(image.coordinates, "#FF0000");
+		});
 	});
 }
 document.addEventListener("DOMContentLoaded", onLoad);
