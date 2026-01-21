@@ -44,22 +44,22 @@ type CommsPhoneTemplate struct {
 }
 
 type commsPhoneR struct {
-	SourceEmailLogs    []*commsPhoneRSourceEmailLogsR
-	DestinationSMSLogs []*commsPhoneRDestinationSMSLogsR
-	SourceSMSLogs      []*commsPhoneRSourceSMSLogsR
+	SourceEmailLogs     []*commsPhoneRSourceEmailLogsR
+	DestinationTextLogs []*commsPhoneRDestinationTextLogsR
+	SourceTextLogs      []*commsPhoneRSourceTextLogsR
 }
 
 type commsPhoneRSourceEmailLogsR struct {
 	number int
 	o      *CommsEmailLogTemplate
 }
-type commsPhoneRDestinationSMSLogsR struct {
+type commsPhoneRDestinationTextLogsR struct {
 	number int
-	o      *CommsSMSLogTemplate
+	o      *CommsTextLogTemplate
 }
-type commsPhoneRSourceSMSLogsR struct {
+type commsPhoneRSourceTextLogsR struct {
 	number int
-	o      *CommsSMSLogTemplate
+	o      *CommsTextLogTemplate
 }
 
 // Apply mods to the CommsPhoneTemplate
@@ -85,9 +85,9 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 		o.R.SourceEmailLogs = rel
 	}
 
-	if t.r.DestinationSMSLogs != nil {
-		rel := models.CommsSMSLogSlice{}
-		for _, r := range t.r.DestinationSMSLogs {
+	if t.r.DestinationTextLogs != nil {
+		rel := models.CommsTextLogSlice{}
+		for _, r := range t.r.DestinationTextLogs {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
 				rel.Destination = o.E164 // h2
@@ -95,12 +95,12 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			}
 			rel = append(rel, related...)
 		}
-		o.R.DestinationSMSLogs = rel
+		o.R.DestinationTextLogs = rel
 	}
 
-	if t.r.SourceSMSLogs != nil {
-		rel := models.CommsSMSLogSlice{}
-		for _, r := range t.r.SourceSMSLogs {
+	if t.r.SourceTextLogs != nil {
+		rel := models.CommsTextLogSlice{}
+		for _, r := range t.r.SourceTextLogs {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
 				rel.Source = o.E164 // h2
@@ -108,7 +108,7 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			}
 			rel = append(rel, related...)
 		}
-		o.R.SourceSMSLogs = rel
+		o.R.SourceTextLogs = rel
 	}
 }
 
@@ -209,19 +209,19 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 		}
 	}
 
-	isDestinationSMSLogsDone, _ := commsPhoneRelDestinationSMSLogsCtx.Value(ctx)
-	if !isDestinationSMSLogsDone && o.r.DestinationSMSLogs != nil {
-		ctx = commsPhoneRelDestinationSMSLogsCtx.WithValue(ctx, true)
-		for _, r := range o.r.DestinationSMSLogs {
+	isDestinationTextLogsDone, _ := commsPhoneRelDestinationTextLogsCtx.Value(ctx)
+	if !isDestinationTextLogsDone && o.r.DestinationTextLogs != nil {
+		ctx = commsPhoneRelDestinationTextLogsCtx.WithValue(ctx, true)
+		for _, r := range o.r.DestinationTextLogs {
 			if r.o.alreadyPersisted {
-				m.R.DestinationSMSLogs = append(m.R.DestinationSMSLogs, r.o.Build())
+				m.R.DestinationTextLogs = append(m.R.DestinationTextLogs, r.o.Build())
 			} else {
 				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDestinationSMSLogs(ctx, exec, rel1...)
+				err = m.AttachDestinationTextLogs(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -229,19 +229,19 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 		}
 	}
 
-	isSourceSMSLogsDone, _ := commsPhoneRelSourceSMSLogsCtx.Value(ctx)
-	if !isSourceSMSLogsDone && o.r.SourceSMSLogs != nil {
-		ctx = commsPhoneRelSourceSMSLogsCtx.WithValue(ctx, true)
-		for _, r := range o.r.SourceSMSLogs {
+	isSourceTextLogsDone, _ := commsPhoneRelSourceTextLogsCtx.Value(ctx)
+	if !isSourceTextLogsDone && o.r.SourceTextLogs != nil {
+		ctx = commsPhoneRelSourceTextLogsCtx.WithValue(ctx, true)
+		for _, r := range o.r.SourceTextLogs {
 			if r.o.alreadyPersisted {
-				m.R.SourceSMSLogs = append(m.R.SourceSMSLogs, r.o.Build())
+				m.R.SourceTextLogs = append(m.R.SourceTextLogs, r.o.Build())
 			} else {
 				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSourceSMSLogs(ctx, exec, rel2...)
+				err = m.AttachSourceTextLogs(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -465,98 +465,98 @@ func (m commsPhoneMods) WithoutSourceEmailLogs() CommsPhoneMod {
 	})
 }
 
-func (m commsPhoneMods) WithDestinationSMSLogs(number int, related *CommsSMSLogTemplate) CommsPhoneMod {
+func (m commsPhoneMods) WithDestinationTextLogs(number int, related *CommsTextLogTemplate) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.DestinationSMSLogs = []*commsPhoneRDestinationSMSLogsR{{
+		o.r.DestinationTextLogs = []*commsPhoneRDestinationTextLogsR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m commsPhoneMods) WithNewDestinationSMSLogs(number int, mods ...CommsSMSLogMod) CommsPhoneMod {
+func (m commsPhoneMods) WithNewDestinationTextLogs(number int, mods ...CommsTextLogMod) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsSMSLogWithContext(ctx, mods...)
-		m.WithDestinationSMSLogs(number, related).Apply(ctx, o)
+		related := o.f.NewCommsTextLogWithContext(ctx, mods...)
+		m.WithDestinationTextLogs(number, related).Apply(ctx, o)
 	})
 }
 
-func (m commsPhoneMods) AddDestinationSMSLogs(number int, related *CommsSMSLogTemplate) CommsPhoneMod {
+func (m commsPhoneMods) AddDestinationTextLogs(number int, related *CommsTextLogTemplate) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.DestinationSMSLogs = append(o.r.DestinationSMSLogs, &commsPhoneRDestinationSMSLogsR{
+		o.r.DestinationTextLogs = append(o.r.DestinationTextLogs, &commsPhoneRDestinationTextLogsR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m commsPhoneMods) AddNewDestinationSMSLogs(number int, mods ...CommsSMSLogMod) CommsPhoneMod {
+func (m commsPhoneMods) AddNewDestinationTextLogs(number int, mods ...CommsTextLogMod) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsSMSLogWithContext(ctx, mods...)
-		m.AddDestinationSMSLogs(number, related).Apply(ctx, o)
+		related := o.f.NewCommsTextLogWithContext(ctx, mods...)
+		m.AddDestinationTextLogs(number, related).Apply(ctx, o)
 	})
 }
 
-func (m commsPhoneMods) AddExistingDestinationSMSLogs(existingModels ...*models.CommsSMSLog) CommsPhoneMod {
+func (m commsPhoneMods) AddExistingDestinationTextLogs(existingModels ...*models.CommsTextLog) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		for _, em := range existingModels {
-			o.r.DestinationSMSLogs = append(o.r.DestinationSMSLogs, &commsPhoneRDestinationSMSLogsR{
-				o: o.f.FromExistingCommsSMSLog(em),
+			o.r.DestinationTextLogs = append(o.r.DestinationTextLogs, &commsPhoneRDestinationTextLogsR{
+				o: o.f.FromExistingCommsTextLog(em),
 			})
 		}
 	})
 }
 
-func (m commsPhoneMods) WithoutDestinationSMSLogs() CommsPhoneMod {
+func (m commsPhoneMods) WithoutDestinationTextLogs() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.DestinationSMSLogs = nil
+		o.r.DestinationTextLogs = nil
 	})
 }
 
-func (m commsPhoneMods) WithSourceSMSLogs(number int, related *CommsSMSLogTemplate) CommsPhoneMod {
+func (m commsPhoneMods) WithSourceTextLogs(number int, related *CommsTextLogTemplate) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceSMSLogs = []*commsPhoneRSourceSMSLogsR{{
+		o.r.SourceTextLogs = []*commsPhoneRSourceTextLogsR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m commsPhoneMods) WithNewSourceSMSLogs(number int, mods ...CommsSMSLogMod) CommsPhoneMod {
+func (m commsPhoneMods) WithNewSourceTextLogs(number int, mods ...CommsTextLogMod) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsSMSLogWithContext(ctx, mods...)
-		m.WithSourceSMSLogs(number, related).Apply(ctx, o)
+		related := o.f.NewCommsTextLogWithContext(ctx, mods...)
+		m.WithSourceTextLogs(number, related).Apply(ctx, o)
 	})
 }
 
-func (m commsPhoneMods) AddSourceSMSLogs(number int, related *CommsSMSLogTemplate) CommsPhoneMod {
+func (m commsPhoneMods) AddSourceTextLogs(number int, related *CommsTextLogTemplate) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceSMSLogs = append(o.r.SourceSMSLogs, &commsPhoneRSourceSMSLogsR{
+		o.r.SourceTextLogs = append(o.r.SourceTextLogs, &commsPhoneRSourceTextLogsR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m commsPhoneMods) AddNewSourceSMSLogs(number int, mods ...CommsSMSLogMod) CommsPhoneMod {
+func (m commsPhoneMods) AddNewSourceTextLogs(number int, mods ...CommsTextLogMod) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsSMSLogWithContext(ctx, mods...)
-		m.AddSourceSMSLogs(number, related).Apply(ctx, o)
+		related := o.f.NewCommsTextLogWithContext(ctx, mods...)
+		m.AddSourceTextLogs(number, related).Apply(ctx, o)
 	})
 }
 
-func (m commsPhoneMods) AddExistingSourceSMSLogs(existingModels ...*models.CommsSMSLog) CommsPhoneMod {
+func (m commsPhoneMods) AddExistingSourceTextLogs(existingModels ...*models.CommsTextLog) CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		for _, em := range existingModels {
-			o.r.SourceSMSLogs = append(o.r.SourceSMSLogs, &commsPhoneRSourceSMSLogsR{
-				o: o.f.FromExistingCommsSMSLog(em),
+			o.r.SourceTextLogs = append(o.r.SourceTextLogs, &commsPhoneRSourceTextLogsR{
+				o: o.f.FromExistingCommsTextLog(em),
 			})
 		}
 	})
 }
 
-func (m commsPhoneMods) WithoutSourceSMSLogs() CommsPhoneMod {
+func (m commsPhoneMods) WithoutSourceTextLogs() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceSMSLogs = nil
+		o.r.SourceTextLogs = nil
 	})
 }

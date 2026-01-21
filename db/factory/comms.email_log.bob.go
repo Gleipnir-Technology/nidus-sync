@@ -39,7 +39,7 @@ type CommsEmailLogTemplate struct {
 	Created     func() time.Time
 	Destination func() string
 	Source      func() string
-	Type        func() enums.CommsEmailmessagetype
+	Type        func() enums.CommsMessagetypeemail
 
 	r commsEmailLogR
 	f *Factory
@@ -172,7 +172,7 @@ func ensureCreatableCommsEmailLog(m *models.CommsEmailLogSetter) {
 		m.Source = omit.From(val)
 	}
 	if !(m.Type.IsValue()) {
-		val := random_enums_CommsEmailmessagetype(nil)
+		val := random_enums_CommsMessagetypeemail(nil)
 		m.Type = omit.From(val)
 	}
 }
@@ -413,14 +413,14 @@ func (m commsEmailLogMods) RandomSource(f *faker.Faker) CommsEmailLogMod {
 }
 
 // Set the model columns to this value
-func (m commsEmailLogMods) Type(val enums.CommsEmailmessagetype) CommsEmailLogMod {
+func (m commsEmailLogMods) Type(val enums.CommsMessagetypeemail) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
-		o.Type = func() enums.CommsEmailmessagetype { return val }
+		o.Type = func() enums.CommsMessagetypeemail { return val }
 	})
 }
 
 // Set the Column from the function
-func (m commsEmailLogMods) TypeFunc(f func() enums.CommsEmailmessagetype) CommsEmailLogMod {
+func (m commsEmailLogMods) TypeFunc(f func() enums.CommsMessagetypeemail) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
 		o.Type = f
 	})
@@ -437,8 +437,8 @@ func (m commsEmailLogMods) UnsetType() CommsEmailLogMod {
 // if faker is nil, a default faker is used
 func (m commsEmailLogMods) RandomType(f *faker.Faker) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
-		o.Type = func() enums.CommsEmailmessagetype {
-			return random_enums_CommsEmailmessagetype(f)
+		o.Type = func() enums.CommsMessagetypeemail {
+			return random_enums_CommsMessagetypeemail(f)
 		}
 	})
 }

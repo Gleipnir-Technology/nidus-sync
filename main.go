@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
-	"sync"
 	"syscall"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/public-report"
-	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -64,36 +62,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	background.NewOAuthTokenChannel = make(chan struct{}, 10)
-	queue.ChannelJobAudio = make(chan queue.JobAudio, 100) // Buffered channel to prevent blocking
-	queue.ChannelJobEmail = make(chan queue.JobEmail, 100) // Buffered channel to prevent blocking
-	queue.ChannelJobSMS = make(chan queue.JobSMS, 100)     // Buffered channel to prevent blocking
-
-	var waitGroup sync.WaitGroup
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		background.RefreshFieldseekerData(ctx, background.NewOAuthTokenChannel)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		background.StartWorkerAudio(ctx, queue.ChannelJobAudio)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		background.StartWorkerEmail(ctx, queue.ChannelJobEmail)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		background.StartWorkerSMS(ctx, queue.ChannelJobSMS)
-	}()
+	background.Start(ctx)
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,
@@ -119,8 +88,7 @@ func main() {
 	}
 
 	cancel()
-
-	waitGroup.Wait()
+	background.WaitForExit()
 
 	log.Info().Msg("Shutdown complete")
 }

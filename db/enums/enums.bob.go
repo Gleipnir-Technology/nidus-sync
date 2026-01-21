@@ -193,32 +193,35 @@ func (e *Audiodatatype) Scan(value any) error {
 	return nil
 }
 
-// Enum values for CommsEmailmessagetype
+// Enum values for CommsMessagetypeemail
 const (
-	CommsEmailmessagetypeReportSubscriptionConfirmation CommsEmailmessagetype = "report-subscription-confirmation"
-	CommsEmailmessagetypeReportStatusScheduled          CommsEmailmessagetype = "report-status-scheduled"
-	CommsEmailmessagetypeReportStatusComplete           CommsEmailmessagetype = "report-status-complete"
+	CommsMessagetypeemailInitialContact                 CommsMessagetypeemail = "initial-contact"
+	CommsMessagetypeemailReportSubscriptionConfirmation CommsMessagetypeemail = "report-subscription-confirmation"
+	CommsMessagetypeemailReportStatusScheduled          CommsMessagetypeemail = "report-status-scheduled"
+	CommsMessagetypeemailReportStatusComplete           CommsMessagetypeemail = "report-status-complete"
 )
 
-func AllCommsEmailmessagetype() []CommsEmailmessagetype {
-	return []CommsEmailmessagetype{
-		CommsEmailmessagetypeReportSubscriptionConfirmation,
-		CommsEmailmessagetypeReportStatusScheduled,
-		CommsEmailmessagetypeReportStatusComplete,
+func AllCommsMessagetypeemail() []CommsMessagetypeemail {
+	return []CommsMessagetypeemail{
+		CommsMessagetypeemailInitialContact,
+		CommsMessagetypeemailReportSubscriptionConfirmation,
+		CommsMessagetypeemailReportStatusScheduled,
+		CommsMessagetypeemailReportStatusComplete,
 	}
 }
 
-type CommsEmailmessagetype string
+type CommsMessagetypeemail string
 
-func (e CommsEmailmessagetype) String() string {
+func (e CommsMessagetypeemail) String() string {
 	return string(e)
 }
 
-func (e CommsEmailmessagetype) Valid() bool {
+func (e CommsMessagetypeemail) Valid() bool {
 	switch e {
-	case CommsEmailmessagetypeReportSubscriptionConfirmation,
-		CommsEmailmessagetypeReportStatusScheduled,
-		CommsEmailmessagetypeReportStatusComplete:
+	case CommsMessagetypeemailInitialContact,
+		CommsMessagetypeemailReportSubscriptionConfirmation,
+		CommsMessagetypeemailReportStatusScheduled,
+		CommsMessagetypeemailReportStatusComplete:
 		return true
 	default:
 		return false
@@ -226,75 +229,78 @@ func (e CommsEmailmessagetype) Valid() bool {
 }
 
 // useful when testing in other packages
-func (e CommsEmailmessagetype) All() []CommsEmailmessagetype {
-	return AllCommsEmailmessagetype()
+func (e CommsMessagetypeemail) All() []CommsMessagetypeemail {
+	return AllCommsMessagetypeemail()
 }
 
-func (e CommsEmailmessagetype) MarshalText() ([]byte, error) {
+func (e CommsMessagetypeemail) MarshalText() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsEmailmessagetype) UnmarshalText(text []byte) error {
+func (e *CommsMessagetypeemail) UnmarshalText(text []byte) error {
 	return e.Scan(text)
 }
 
-func (e CommsEmailmessagetype) MarshalBinary() ([]byte, error) {
+func (e CommsMessagetypeemail) MarshalBinary() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsEmailmessagetype) UnmarshalBinary(data []byte) error {
+func (e *CommsMessagetypeemail) UnmarshalBinary(data []byte) error {
 	return e.Scan(data)
 }
 
-func (e CommsEmailmessagetype) Value() (driver.Value, error) {
+func (e CommsMessagetypeemail) Value() (driver.Value, error) {
 	return string(e), nil
 }
 
-func (e *CommsEmailmessagetype) Scan(value any) error {
+func (e *CommsMessagetypeemail) Scan(value any) error {
 	switch x := value.(type) {
 	case string:
-		*e = CommsEmailmessagetype(x)
+		*e = CommsMessagetypeemail(x)
 	case []byte:
-		*e = CommsEmailmessagetype(x)
+		*e = CommsMessagetypeemail(x)
 	case nil:
-		return fmt.Errorf("cannot nil into CommsEmailmessagetype")
+		return fmt.Errorf("cannot nil into CommsMessagetypeemail")
 	default:
 		return fmt.Errorf("cannot scan type %T: %v", value, value)
 	}
 
 	if !e.Valid() {
-		return fmt.Errorf("invalid CommsEmailmessagetype value: %s", *e)
+		return fmt.Errorf("invalid CommsMessagetypeemail value: %s", *e)
 	}
 
 	return nil
 }
 
-// Enum values for CommsSmsmessagetype
+// Enum values for CommsMessagetypetext
 const (
-	CommsSmsmessagetypeReportSubscriptionConfirmation CommsSmsmessagetype = "report-subscription-confirmation"
-	CommsSmsmessagetypeReportStatusScheduled          CommsSmsmessagetype = "report-status-scheduled"
-	CommsSmsmessagetypeReportStatusComplete           CommsSmsmessagetype = "report-status-complete"
+	CommsMessagetypetextInitialContact                 CommsMessagetypetext = "initial-contact"
+	CommsMessagetypetextReportSubscriptionConfirmation CommsMessagetypetext = "report-subscription-confirmation"
+	CommsMessagetypetextReportStatusScheduled          CommsMessagetypetext = "report-status-scheduled"
+	CommsMessagetypetextReportStatusComplete           CommsMessagetypetext = "report-status-complete"
 )
 
-func AllCommsSmsmessagetype() []CommsSmsmessagetype {
-	return []CommsSmsmessagetype{
-		CommsSmsmessagetypeReportSubscriptionConfirmation,
-		CommsSmsmessagetypeReportStatusScheduled,
-		CommsSmsmessagetypeReportStatusComplete,
+func AllCommsMessagetypetext() []CommsMessagetypetext {
+	return []CommsMessagetypetext{
+		CommsMessagetypetextInitialContact,
+		CommsMessagetypetextReportSubscriptionConfirmation,
+		CommsMessagetypetextReportStatusScheduled,
+		CommsMessagetypetextReportStatusComplete,
 	}
 }
 
-type CommsSmsmessagetype string
+type CommsMessagetypetext string
 
-func (e CommsSmsmessagetype) String() string {
+func (e CommsMessagetypetext) String() string {
 	return string(e)
 }
 
-func (e CommsSmsmessagetype) Valid() bool {
+func (e CommsMessagetypetext) Valid() bool {
 	switch e {
-	case CommsSmsmessagetypeReportSubscriptionConfirmation,
-		CommsSmsmessagetypeReportStatusScheduled,
-		CommsSmsmessagetypeReportStatusComplete:
+	case CommsMessagetypetextInitialContact,
+		CommsMessagetypetextReportSubscriptionConfirmation,
+		CommsMessagetypetextReportStatusScheduled,
+		CommsMessagetypetextReportStatusComplete:
 		return true
 	default:
 		return false
@@ -302,44 +308,44 @@ func (e CommsSmsmessagetype) Valid() bool {
 }
 
 // useful when testing in other packages
-func (e CommsSmsmessagetype) All() []CommsSmsmessagetype {
-	return AllCommsSmsmessagetype()
+func (e CommsMessagetypetext) All() []CommsMessagetypetext {
+	return AllCommsMessagetypetext()
 }
 
-func (e CommsSmsmessagetype) MarshalText() ([]byte, error) {
+func (e CommsMessagetypetext) MarshalText() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsSmsmessagetype) UnmarshalText(text []byte) error {
+func (e *CommsMessagetypetext) UnmarshalText(text []byte) error {
 	return e.Scan(text)
 }
 
-func (e CommsSmsmessagetype) MarshalBinary() ([]byte, error) {
+func (e CommsMessagetypetext) MarshalBinary() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsSmsmessagetype) UnmarshalBinary(data []byte) error {
+func (e *CommsMessagetypetext) UnmarshalBinary(data []byte) error {
 	return e.Scan(data)
 }
 
-func (e CommsSmsmessagetype) Value() (driver.Value, error) {
+func (e CommsMessagetypetext) Value() (driver.Value, error) {
 	return string(e), nil
 }
 
-func (e *CommsSmsmessagetype) Scan(value any) error {
+func (e *CommsMessagetypetext) Scan(value any) error {
 	switch x := value.(type) {
 	case string:
-		*e = CommsSmsmessagetype(x)
+		*e = CommsMessagetypetext(x)
 	case []byte:
-		*e = CommsSmsmessagetype(x)
+		*e = CommsMessagetypetext(x)
 	case nil:
-		return fmt.Errorf("cannot nil into CommsSmsmessagetype")
+		return fmt.Errorf("cannot nil into CommsMessagetypetext")
 	default:
 		return fmt.Errorf("cannot scan type %T: %v", value, value)
 	}
 
 	if !e.Valid() {
-		return fmt.Errorf("invalid CommsSmsmessagetype value: %s", *e)
+		return fmt.Errorf("invalid CommsMessagetypetext value: %s", *e)
 	}
 
 	return nil

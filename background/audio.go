@@ -8,14 +8,26 @@ import (
 	"os/exec"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
-// StartAudioWorker initializes the audio job channel and starts the worker goroutine.
-func StartWorkerAudio(ctx context.Context, audioJobChannel chan queue.JobAudio) {
+// AudioJob represents a job to process an audio file.
+type jobAudio struct {
+	AudioUUID uuid.UUID
+}
+
+var channelJobAudio chan jobAudio
+
+func AudioTranscode(audio_uuid uuid.UUID) {
+	enqueueAudioJob(jobAudio{
+		AudioUUID: audio_uuid,
+	})
+}
+
+// startAudioWorker initializes the audio job channel and starts the worker goroutine.
+func startWorkerAudio(ctx context.Context, audioJobChannel chan jobAudio) {
 	go func() {
 		for {
 			select {
@@ -31,6 +43,16 @@ func StartWorkerAudio(ctx context.Context, audioJobChannel chan queue.JobAudio) 
 			}
 		}
 	}()
+}
+
+// EnqueueAudioJob sends an audio processing job to the worker.
+func enqueueAudioJob(job jobAudio) {
+	select {
+	case channelJobAudio <- job:
+		log.Info().Str("uuid", job.AudioUUID.String()).Msg("Enqueued audio job")
+	default:
+		log.Warn().Str("uuid", job.AudioUUID.String()).Msg("Audio job channel is full, dropping job")
+	}
 }
 
 func normalizeAudio(audioUUID uuid.UUID) error {
@@ -70,7 +92,7 @@ func processAudioFile(audioUUID uuid.UUID) error {
 		return fmt.Errorf("failed to transcode audio %s to OGG: %v", audioUUID, err)
 	}
 
-	queue.EnqueueLabelStudioJob(queue.LabelStudioJob{
+	enqueueLabelStudioJob(jobLabelStudio{
 		UUID: audioUUID,
 	})
 	return nil

@@ -51,7 +51,7 @@ type NoOAuthForOrg struct{}
 
 func (e NoOAuthForOrg) Error() string { return "No oauth available for organization" }
 
-var NewOAuthTokenChannel chan struct{}
+var newOAuthTokenChannel chan struct{}
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
 
 type OAuthTokenResponse struct {
@@ -118,7 +118,7 @@ func IsSyncOngoing(org_id int32) bool {
 }
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
-func RefreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
+func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 	syncStatusByOrg = make(map[int32]bool, 0)
 	for {
 		workerCtx, cancel := context.WithCancel(context.Background())
@@ -328,7 +328,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	maybeCreateWebhook(ctx, fieldseekerClient)
 	downloadFieldseekerSchema(ctx, fieldseekerClient, arcgis_id)
 	notification.ClearOauth(ctx, user)
-	NewOAuthTokenChannel <- struct{}{}
+	newOAuthTokenChannel <- struct{}{}
 }
 
 func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32) (*arcgis.PortalsResponse, error) {

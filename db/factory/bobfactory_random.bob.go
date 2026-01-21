@@ -89,22 +89,22 @@ func random_enums_Audiodatatype(f *faker.Faker, limits ...string) enums.Audiodat
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
-func random_enums_CommsEmailmessagetype(f *faker.Faker, limits ...string) enums.CommsEmailmessagetype {
+func random_enums_CommsMessagetypeemail(f *faker.Faker, limits ...string) enums.CommsMessagetypeemail {
 	if f == nil {
 		f = &defaultFaker
 	}
 
-	var e enums.CommsEmailmessagetype
+	var e enums.CommsMessagetypeemail
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
-func random_enums_CommsSmsmessagetype(f *faker.Faker, limits ...string) enums.CommsSmsmessagetype {
+func random_enums_CommsMessagetypetext(f *faker.Faker, limits ...string) enums.CommsMessagetypetext {
 	if f == nil {
 		f = &defaultFaker
 	}
 
-	var e enums.CommsSmsmessagetype
+	var e enums.CommsMessagetypetext
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

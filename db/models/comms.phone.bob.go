@@ -43,9 +43,9 @@ type CommsPhonesQuery = *psql.ViewQuery[*CommsPhone, CommsPhoneSlice]
 
 // commsPhoneR is where relationships are stored.
 type commsPhoneR struct {
-	SourceEmailLogs    CommsEmailLogSlice // comms.email_log.email_log_source_fkey
-	DestinationSMSLogs CommsSMSLogSlice   // comms.sms_log.sms_log_destination_fkey
-	SourceSMSLogs      CommsSMSLogSlice   // comms.sms_log.sms_log_source_fkey
+	SourceEmailLogs     CommsEmailLogSlice // comms.email_log.email_log_source_fkey
+	DestinationTextLogs CommsTextLogSlice  // comms.text_log.text_log_destination_fkey
+	SourceTextLogs      CommsTextLogSlice  // comms.text_log.text_log_source_fkey
 }
 
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
@@ -396,14 +396,14 @@ func (os CommsPhoneSlice) SourceEmailLogs(mods ...bob.Mod[*dialect.SelectQuery])
 	)...)
 }
 
-// DestinationSMSLogs starts a query for related objects on comms.sms_log
-func (o *CommsPhone) DestinationSMSLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsSMSLogsQuery {
-	return CommsSMSLogs.Query(append(mods,
-		sm.Where(CommsSMSLogs.Columns.Destination.EQ(psql.Arg(o.E164))),
+// DestinationTextLogs starts a query for related objects on comms.text_log
+func (o *CommsPhone) DestinationTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextLogsQuery {
+	return CommsTextLogs.Query(append(mods,
+		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(o.E164))),
 	)...)
 }
 
-func (os CommsPhoneSlice) DestinationSMSLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsSMSLogsQuery {
+func (os CommsPhoneSlice) DestinationTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextLogsQuery {
 	pkE164 := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -415,19 +415,19 @@ func (os CommsPhoneSlice) DestinationSMSLogs(mods ...bob.Mod[*dialect.SelectQuer
 		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
 	))
 
-	return CommsSMSLogs.Query(append(mods,
-		sm.Where(psql.Group(CommsSMSLogs.Columns.Destination).OP("IN", PKArgExpr)),
+	return CommsTextLogs.Query(append(mods,
+		sm.Where(psql.Group(CommsTextLogs.Columns.Destination).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// SourceSMSLogs starts a query for related objects on comms.sms_log
-func (o *CommsPhone) SourceSMSLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsSMSLogsQuery {
-	return CommsSMSLogs.Query(append(mods,
-		sm.Where(CommsSMSLogs.Columns.Source.EQ(psql.Arg(o.E164))),
+// SourceTextLogs starts a query for related objects on comms.text_log
+func (o *CommsPhone) SourceTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextLogsQuery {
+	return CommsTextLogs.Query(append(mods,
+		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(o.E164))),
 	)...)
 }
 
-func (os CommsPhoneSlice) SourceSMSLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsSMSLogsQuery {
+func (os CommsPhoneSlice) SourceTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextLogsQuery {
 	pkE164 := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -439,8 +439,8 @@ func (os CommsPhoneSlice) SourceSMSLogs(mods ...bob.Mod[*dialect.SelectQuery]) C
 		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
 	))
 
-	return CommsSMSLogs.Query(append(mods,
-		sm.Where(psql.Group(CommsSMSLogs.Columns.Source).OP("IN", PKArgExpr)),
+	return CommsTextLogs.Query(append(mods,
+		sm.Where(psql.Group(CommsTextLogs.Columns.Source).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -512,66 +512,66 @@ func (commsPhone0 *CommsPhone) AttachSourceEmailLogs(ctx context.Context, exec b
 	return nil
 }
 
-func insertCommsPhoneDestinationSMSLogs0(ctx context.Context, exec bob.Executor, commsSMSLogs1 []*CommsSMSLogSetter, commsPhone0 *CommsPhone) (CommsSMSLogSlice, error) {
-	for i := range commsSMSLogs1 {
-		commsSMSLogs1[i].Destination = omit.From(commsPhone0.E164)
+func insertCommsPhoneDestinationTextLogs0(ctx context.Context, exec bob.Executor, commsTextLogs1 []*CommsTextLogSetter, commsPhone0 *CommsPhone) (CommsTextLogSlice, error) {
+	for i := range commsTextLogs1 {
+		commsTextLogs1[i].Destination = omit.From(commsPhone0.E164)
 	}
 
-	ret, err := CommsSMSLogs.Insert(bob.ToMods(commsSMSLogs1...)).All(ctx, exec)
+	ret, err := CommsTextLogs.Insert(bob.ToMods(commsTextLogs1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertCommsPhoneDestinationSMSLogs0: %w", err)
+		return ret, fmt.Errorf("insertCommsPhoneDestinationTextLogs0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachCommsPhoneDestinationSMSLogs0(ctx context.Context, exec bob.Executor, count int, commsSMSLogs1 CommsSMSLogSlice, commsPhone0 *CommsPhone) (CommsSMSLogSlice, error) {
-	setter := &CommsSMSLogSetter{
+func attachCommsPhoneDestinationTextLogs0(ctx context.Context, exec bob.Executor, count int, commsTextLogs1 CommsTextLogSlice, commsPhone0 *CommsPhone) (CommsTextLogSlice, error) {
+	setter := &CommsTextLogSetter{
 		Destination: omit.From(commsPhone0.E164),
 	}
 
-	err := commsSMSLogs1.UpdateAll(ctx, exec, *setter)
+	err := commsTextLogs1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsPhoneDestinationSMSLogs0: %w", err)
+		return nil, fmt.Errorf("attachCommsPhoneDestinationTextLogs0: %w", err)
 	}
 
-	return commsSMSLogs1, nil
+	return commsTextLogs1, nil
 }
 
-func (commsPhone0 *CommsPhone) InsertDestinationSMSLogs(ctx context.Context, exec bob.Executor, related ...*CommsSMSLogSetter) error {
+func (commsPhone0 *CommsPhone) InsertDestinationTextLogs(ctx context.Context, exec bob.Executor, related ...*CommsTextLogSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	commsSMSLogs1, err := insertCommsPhoneDestinationSMSLogs0(ctx, exec, related, commsPhone0)
+	commsTextLogs1, err := insertCommsPhoneDestinationTextLogs0(ctx, exec, related, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.DestinationSMSLogs = append(commsPhone0.R.DestinationSMSLogs, commsSMSLogs1...)
+	commsPhone0.R.DestinationTextLogs = append(commsPhone0.R.DestinationTextLogs, commsTextLogs1...)
 
-	for _, rel := range commsSMSLogs1 {
+	for _, rel := range commsTextLogs1 {
 		rel.R.DestinationPhone = commsPhone0
 	}
 	return nil
 }
 
-func (commsPhone0 *CommsPhone) AttachDestinationSMSLogs(ctx context.Context, exec bob.Executor, related ...*CommsSMSLog) error {
+func (commsPhone0 *CommsPhone) AttachDestinationTextLogs(ctx context.Context, exec bob.Executor, related ...*CommsTextLog) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	commsSMSLogs1 := CommsSMSLogSlice(related)
+	commsTextLogs1 := CommsTextLogSlice(related)
 
-	_, err = attachCommsPhoneDestinationSMSLogs0(ctx, exec, len(related), commsSMSLogs1, commsPhone0)
+	_, err = attachCommsPhoneDestinationTextLogs0(ctx, exec, len(related), commsTextLogs1, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.DestinationSMSLogs = append(commsPhone0.R.DestinationSMSLogs, commsSMSLogs1...)
+	commsPhone0.R.DestinationTextLogs = append(commsPhone0.R.DestinationTextLogs, commsTextLogs1...)
 
 	for _, rel := range related {
 		rel.R.DestinationPhone = commsPhone0
@@ -580,66 +580,66 @@ func (commsPhone0 *CommsPhone) AttachDestinationSMSLogs(ctx context.Context, exe
 	return nil
 }
 
-func insertCommsPhoneSourceSMSLogs0(ctx context.Context, exec bob.Executor, commsSMSLogs1 []*CommsSMSLogSetter, commsPhone0 *CommsPhone) (CommsSMSLogSlice, error) {
-	for i := range commsSMSLogs1 {
-		commsSMSLogs1[i].Source = omit.From(commsPhone0.E164)
+func insertCommsPhoneSourceTextLogs0(ctx context.Context, exec bob.Executor, commsTextLogs1 []*CommsTextLogSetter, commsPhone0 *CommsPhone) (CommsTextLogSlice, error) {
+	for i := range commsTextLogs1 {
+		commsTextLogs1[i].Source = omit.From(commsPhone0.E164)
 	}
 
-	ret, err := CommsSMSLogs.Insert(bob.ToMods(commsSMSLogs1...)).All(ctx, exec)
+	ret, err := CommsTextLogs.Insert(bob.ToMods(commsTextLogs1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertCommsPhoneSourceSMSLogs0: %w", err)
+		return ret, fmt.Errorf("insertCommsPhoneSourceTextLogs0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachCommsPhoneSourceSMSLogs0(ctx context.Context, exec bob.Executor, count int, commsSMSLogs1 CommsSMSLogSlice, commsPhone0 *CommsPhone) (CommsSMSLogSlice, error) {
-	setter := &CommsSMSLogSetter{
+func attachCommsPhoneSourceTextLogs0(ctx context.Context, exec bob.Executor, count int, commsTextLogs1 CommsTextLogSlice, commsPhone0 *CommsPhone) (CommsTextLogSlice, error) {
+	setter := &CommsTextLogSetter{
 		Source: omit.From(commsPhone0.E164),
 	}
 
-	err := commsSMSLogs1.UpdateAll(ctx, exec, *setter)
+	err := commsTextLogs1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsPhoneSourceSMSLogs0: %w", err)
+		return nil, fmt.Errorf("attachCommsPhoneSourceTextLogs0: %w", err)
 	}
 
-	return commsSMSLogs1, nil
+	return commsTextLogs1, nil
 }
 
-func (commsPhone0 *CommsPhone) InsertSourceSMSLogs(ctx context.Context, exec bob.Executor, related ...*CommsSMSLogSetter) error {
+func (commsPhone0 *CommsPhone) InsertSourceTextLogs(ctx context.Context, exec bob.Executor, related ...*CommsTextLogSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	commsSMSLogs1, err := insertCommsPhoneSourceSMSLogs0(ctx, exec, related, commsPhone0)
+	commsTextLogs1, err := insertCommsPhoneSourceTextLogs0(ctx, exec, related, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.SourceSMSLogs = append(commsPhone0.R.SourceSMSLogs, commsSMSLogs1...)
+	commsPhone0.R.SourceTextLogs = append(commsPhone0.R.SourceTextLogs, commsTextLogs1...)
 
-	for _, rel := range commsSMSLogs1 {
+	for _, rel := range commsTextLogs1 {
 		rel.R.SourcePhone = commsPhone0
 	}
 	return nil
 }
 
-func (commsPhone0 *CommsPhone) AttachSourceSMSLogs(ctx context.Context, exec bob.Executor, related ...*CommsSMSLog) error {
+func (commsPhone0 *CommsPhone) AttachSourceTextLogs(ctx context.Context, exec bob.Executor, related ...*CommsTextLog) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	commsSMSLogs1 := CommsSMSLogSlice(related)
+	commsTextLogs1 := CommsTextLogSlice(related)
 
-	_, err = attachCommsPhoneSourceSMSLogs0(ctx, exec, len(related), commsSMSLogs1, commsPhone0)
+	_, err = attachCommsPhoneSourceTextLogs0(ctx, exec, len(related), commsTextLogs1, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.SourceSMSLogs = append(commsPhone0.R.SourceSMSLogs, commsSMSLogs1...)
+	commsPhone0.R.SourceTextLogs = append(commsPhone0.R.SourceTextLogs, commsTextLogs1...)
 
 	for _, rel := range related {
 		rel.R.SourcePhone = commsPhone0
@@ -684,13 +684,13 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "DestinationSMSLogs":
-		rels, ok := retrieved.(CommsSMSLogSlice)
+	case "DestinationTextLogs":
+		rels, ok := retrieved.(CommsTextLogSlice)
 		if !ok {
 			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.DestinationSMSLogs = rels
+		o.R.DestinationTextLogs = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -698,13 +698,13 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "SourceSMSLogs":
-		rels, ok := retrieved.(CommsSMSLogSlice)
+	case "SourceTextLogs":
+		rels, ok := retrieved.(CommsTextLogSlice)
 		if !ok {
 			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.SourceSMSLogs = rels
+		o.R.SourceTextLogs = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -724,20 +724,20 @@ func buildCommsPhonePreloader() commsPhonePreloader {
 }
 
 type commsPhoneThenLoader[Q orm.Loadable] struct {
-	SourceEmailLogs    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DestinationSMSLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceSMSLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceEmailLogs     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	type SourceEmailLogsLoadInterface interface {
 		LoadSourceEmailLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type DestinationSMSLogsLoadInterface interface {
-		LoadDestinationSMSLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type DestinationTextLogsLoadInterface interface {
+		LoadDestinationTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type SourceSMSLogsLoadInterface interface {
-		LoadSourceSMSLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type SourceTextLogsLoadInterface interface {
+		LoadSourceTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneThenLoader[Q]{
@@ -747,16 +747,16 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 				return retrieved.LoadSourceEmailLogs(ctx, exec, mods...)
 			},
 		),
-		DestinationSMSLogs: thenLoadBuilder[Q](
-			"DestinationSMSLogs",
-			func(ctx context.Context, exec bob.Executor, retrieved DestinationSMSLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadDestinationSMSLogs(ctx, exec, mods...)
+		DestinationTextLogs: thenLoadBuilder[Q](
+			"DestinationTextLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadDestinationTextLogs(ctx, exec, mods...)
 			},
 		),
-		SourceSMSLogs: thenLoadBuilder[Q](
-			"SourceSMSLogs",
-			func(ctx context.Context, exec bob.Executor, retrieved SourceSMSLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadSourceSMSLogs(ctx, exec, mods...)
+		SourceTextLogs: thenLoadBuilder[Q](
+			"SourceTextLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved SourceTextLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSourceTextLogs(ctx, exec, mods...)
 			},
 		),
 	}
@@ -823,16 +823,16 @@ func (os CommsPhoneSlice) LoadSourceEmailLogs(ctx context.Context, exec bob.Exec
 	return nil
 }
 
-// LoadDestinationSMSLogs loads the commsPhone's DestinationSMSLogs into the .R struct
-func (o *CommsPhone) LoadDestinationSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationTextLogs loads the commsPhone's DestinationTextLogs into the .R struct
+func (o *CommsPhone) LoadDestinationTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.DestinationSMSLogs = nil
+	o.R.DestinationTextLogs = nil
 
-	related, err := o.DestinationSMSLogs(mods...).All(ctx, exec)
+	related, err := o.DestinationTextLogs(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -841,17 +841,17 @@ func (o *CommsPhone) LoadDestinationSMSLogs(ctx context.Context, exec bob.Execut
 		rel.R.DestinationPhone = o
 	}
 
-	o.R.DestinationSMSLogs = related
+	o.R.DestinationTextLogs = related
 	return nil
 }
 
-// LoadDestinationSMSLogs loads the commsPhone's DestinationSMSLogs into the .R struct
-func (os CommsPhoneSlice) LoadDestinationSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationTextLogs loads the commsPhone's DestinationTextLogs into the .R struct
+func (os CommsPhoneSlice) LoadDestinationTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	commsSMSLogs, err := os.DestinationSMSLogs(mods...).All(ctx, exec)
+	commsTextLogs, err := os.DestinationTextLogs(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -861,7 +861,7 @@ func (os CommsPhoneSlice) LoadDestinationSMSLogs(ctx context.Context, exec bob.E
 			continue
 		}
 
-		o.R.DestinationSMSLogs = nil
+		o.R.DestinationTextLogs = nil
 	}
 
 	for _, o := range os {
@@ -869,7 +869,7 @@ func (os CommsPhoneSlice) LoadDestinationSMSLogs(ctx context.Context, exec bob.E
 			continue
 		}
 
-		for _, rel := range commsSMSLogs {
+		for _, rel := range commsTextLogs {
 
 			if !(o.E164 == rel.Destination) {
 				continue
@@ -877,23 +877,23 @@ func (os CommsPhoneSlice) LoadDestinationSMSLogs(ctx context.Context, exec bob.E
 
 			rel.R.DestinationPhone = o
 
-			o.R.DestinationSMSLogs = append(o.R.DestinationSMSLogs, rel)
+			o.R.DestinationTextLogs = append(o.R.DestinationTextLogs, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadSourceSMSLogs loads the commsPhone's SourceSMSLogs into the .R struct
-func (o *CommsPhone) LoadSourceSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadSourceTextLogs loads the commsPhone's SourceTextLogs into the .R struct
+func (o *CommsPhone) LoadSourceTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.SourceSMSLogs = nil
+	o.R.SourceTextLogs = nil
 
-	related, err := o.SourceSMSLogs(mods...).All(ctx, exec)
+	related, err := o.SourceTextLogs(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -902,17 +902,17 @@ func (o *CommsPhone) LoadSourceSMSLogs(ctx context.Context, exec bob.Executor, m
 		rel.R.SourcePhone = o
 	}
 
-	o.R.SourceSMSLogs = related
+	o.R.SourceTextLogs = related
 	return nil
 }
 
-// LoadSourceSMSLogs loads the commsPhone's SourceSMSLogs into the .R struct
-func (os CommsPhoneSlice) LoadSourceSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadSourceTextLogs loads the commsPhone's SourceTextLogs into the .R struct
+func (os CommsPhoneSlice) LoadSourceTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	commsSMSLogs, err := os.SourceSMSLogs(mods...).All(ctx, exec)
+	commsTextLogs, err := os.SourceTextLogs(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -922,7 +922,7 @@ func (os CommsPhoneSlice) LoadSourceSMSLogs(ctx context.Context, exec bob.Execut
 			continue
 		}
 
-		o.R.SourceSMSLogs = nil
+		o.R.SourceTextLogs = nil
 	}
 
 	for _, o := range os {
@@ -930,7 +930,7 @@ func (os CommsPhoneSlice) LoadSourceSMSLogs(ctx context.Context, exec bob.Execut
 			continue
 		}
 
-		for _, rel := range commsSMSLogs {
+		for _, rel := range commsTextLogs {
 
 			if !(o.E164 == rel.Source) {
 				continue
@@ -938,7 +938,7 @@ func (os CommsPhoneSlice) LoadSourceSMSLogs(ctx context.Context, exec bob.Execut
 
 			rel.R.SourcePhone = o
 
-			o.R.SourceSMSLogs = append(o.R.SourceSMSLogs, rel)
+			o.R.SourceTextLogs = append(o.R.SourceTextLogs, rel)
 		}
 	}
 
@@ -947,9 +947,9 @@ func (os CommsPhoneSlice) LoadSourceSMSLogs(ctx context.Context, exec bob.Execut
 
 // commsPhoneC is where relationship counts are stored.
 type commsPhoneC struct {
-	SourceEmailLogs    *int64
-	DestinationSMSLogs *int64
-	SourceSMSLogs      *int64
+	SourceEmailLogs     *int64
+	DestinationTextLogs *int64
+	SourceTextLogs      *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -961,18 +961,18 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 	switch name {
 	case "SourceEmailLogs":
 		o.C.SourceEmailLogs = &count
-	case "DestinationSMSLogs":
-		o.C.DestinationSMSLogs = &count
-	case "SourceSMSLogs":
-		o.C.SourceSMSLogs = &count
+	case "DestinationTextLogs":
+		o.C.DestinationTextLogs = &count
+	case "SourceTextLogs":
+		o.C.SourceTextLogs = &count
 	}
 	return nil
 }
 
 type commsPhoneCountPreloader struct {
-	SourceEmailLogs    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DestinationSMSLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	SourceSMSLogs      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	SourceEmailLogs     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
@@ -994,8 +994,8 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
-		DestinationSMSLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*CommsPhone]("DestinationSMSLogs", func(parent string) bob.Expression {
+		DestinationTextLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("DestinationTextLogs", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = CommsPhones.Alias()
@@ -1004,15 +1004,15 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(CommsSMSLogs.Name()),
-					sm.Where(psql.Quote(CommsSMSLogs.Alias(), "destination").EQ(psql.Quote(parent, "e164"))),
+					sm.From(CommsTextLogs.Name()),
+					sm.Where(psql.Quote(CommsTextLogs.Alias(), "destination").EQ(psql.Quote(parent, "e164"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
-		SourceSMSLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*CommsPhone]("SourceSMSLogs", func(parent string) bob.Expression {
+		SourceTextLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("SourceTextLogs", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = CommsPhones.Alias()
@@ -1021,8 +1021,8 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(CommsSMSLogs.Name()),
-					sm.Where(psql.Quote(CommsSMSLogs.Alias(), "source").EQ(psql.Quote(parent, "e164"))),
+					sm.From(CommsTextLogs.Name()),
+					sm.Where(psql.Quote(CommsTextLogs.Alias(), "source").EQ(psql.Quote(parent, "e164"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -1032,20 +1032,20 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 }
 
 type commsPhoneCountThenLoader[Q orm.Loadable] struct {
-	SourceEmailLogs    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DestinationSMSLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceSMSLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceEmailLogs     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[Q] {
 	type SourceEmailLogsCountInterface interface {
 		LoadCountSourceEmailLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type DestinationSMSLogsCountInterface interface {
-		LoadCountDestinationSMSLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type DestinationTextLogsCountInterface interface {
+		LoadCountDestinationTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type SourceSMSLogsCountInterface interface {
-		LoadCountSourceSMSLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type SourceTextLogsCountInterface interface {
+		LoadCountSourceTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneCountThenLoader[Q]{
@@ -1055,16 +1055,16 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 				return retrieved.LoadCountSourceEmailLogs(ctx, exec, mods...)
 			},
 		),
-		DestinationSMSLogs: countThenLoadBuilder[Q](
-			"DestinationSMSLogs",
-			func(ctx context.Context, exec bob.Executor, retrieved DestinationSMSLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountDestinationSMSLogs(ctx, exec, mods...)
+		DestinationTextLogs: countThenLoadBuilder[Q](
+			"DestinationTextLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountDestinationTextLogs(ctx, exec, mods...)
 			},
 		),
-		SourceSMSLogs: countThenLoadBuilder[Q](
-			"SourceSMSLogs",
-			func(ctx context.Context, exec bob.Executor, retrieved SourceSMSLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSourceSMSLogs(ctx, exec, mods...)
+		SourceTextLogs: countThenLoadBuilder[Q](
+			"SourceTextLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved SourceTextLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountSourceTextLogs(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1100,29 +1100,29 @@ func (os CommsPhoneSlice) LoadCountSourceEmailLogs(ctx context.Context, exec bob
 	return nil
 }
 
-// LoadCountDestinationSMSLogs loads the count of DestinationSMSLogs into the C struct
-func (o *CommsPhone) LoadCountDestinationSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountDestinationTextLogs loads the count of DestinationTextLogs into the C struct
+func (o *CommsPhone) LoadCountDestinationTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.DestinationSMSLogs(mods...).Count(ctx, exec)
+	count, err := o.DestinationTextLogs(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.DestinationSMSLogs = &count
+	o.C.DestinationTextLogs = &count
 	return nil
 }
 
-// LoadCountDestinationSMSLogs loads the count of DestinationSMSLogs for a slice
-func (os CommsPhoneSlice) LoadCountDestinationSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountDestinationTextLogs loads the count of DestinationTextLogs for a slice
+func (os CommsPhoneSlice) LoadCountDestinationTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountDestinationSMSLogs(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountDestinationTextLogs(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -1130,29 +1130,29 @@ func (os CommsPhoneSlice) LoadCountDestinationSMSLogs(ctx context.Context, exec 
 	return nil
 }
 
-// LoadCountSourceSMSLogs loads the count of SourceSMSLogs into the C struct
-func (o *CommsPhone) LoadCountSourceSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountSourceTextLogs loads the count of SourceTextLogs into the C struct
+func (o *CommsPhone) LoadCountSourceTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.SourceSMSLogs(mods...).Count(ctx, exec)
+	count, err := o.SourceTextLogs(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.SourceSMSLogs = &count
+	o.C.SourceTextLogs = &count
 	return nil
 }
 
-// LoadCountSourceSMSLogs loads the count of SourceSMSLogs for a slice
-func (os CommsPhoneSlice) LoadCountSourceSMSLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountSourceTextLogs loads the count of SourceTextLogs for a slice
+func (os CommsPhoneSlice) LoadCountSourceTextLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountSourceSMSLogs(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountSourceTextLogs(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -1161,10 +1161,10 @@ func (os CommsPhoneSlice) LoadCountSourceSMSLogs(ctx context.Context, exec bob.E
 }
 
 type commsPhoneJoins[Q dialect.Joinable] struct {
-	typ                string
-	SourceEmailLogs    modAs[Q, commsEmailLogColumns]
-	DestinationSMSLogs modAs[Q, commsSMSLogColumns]
-	SourceSMSLogs      modAs[Q, commsSMSLogColumns]
+	typ                 string
+	SourceEmailLogs     modAs[Q, commsEmailLogColumns]
+	DestinationTextLogs modAs[Q, commsTextLogColumns]
+	SourceTextLogs      modAs[Q, commsTextLogColumns]
 }
 
 func (j commsPhoneJoins[Q]) aliasedAs(alias string) commsPhoneJoins[Q] {
@@ -1188,13 +1188,13 @@ func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string
 				return mods
 			},
 		},
-		DestinationSMSLogs: modAs[Q, commsSMSLogColumns]{
-			c: CommsSMSLogs.Columns,
-			f: func(to commsSMSLogColumns) bob.Mod[Q] {
+		DestinationTextLogs: modAs[Q, commsTextLogColumns]{
+			c: CommsTextLogs.Columns,
+			f: func(to commsTextLogColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, CommsSMSLogs.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, CommsTextLogs.Name().As(to.Alias())).On(
 						to.Destination.EQ(cols.E164),
 					))
 				}
@@ -1202,13 +1202,13 @@ func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string
 				return mods
 			},
 		},
-		SourceSMSLogs: modAs[Q, commsSMSLogColumns]{
-			c: CommsSMSLogs.Columns,
-			f: func(to commsSMSLogColumns) bob.Mod[Q] {
+		SourceTextLogs: modAs[Q, commsTextLogColumns]{
+			c: CommsTextLogs.Columns,
+			f: func(to commsTextLogColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, CommsSMSLogs.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, CommsTextLogs.Name().As(to.Alias())).On(
 						to.Source.EQ(cols.E164),
 					))
 				}

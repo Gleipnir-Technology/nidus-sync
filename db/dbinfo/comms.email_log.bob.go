@@ -44,7 +44,7 @@ var CommsEmailLogs = Table[
 		},
 		Type: column{
 			Name:      "type",
-			DBType:    "comms.emailmessagetype",
+			DBType:    "comms.messagetypeemail",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,

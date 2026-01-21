@@ -28,7 +28,7 @@ type CommsEmailLog struct {
 	Created     time.Time                   `db:"created" `
 	Destination string                      `db:"destination,pk" `
 	Source      string                      `db:"source,pk" `
-	Type        enums.CommsEmailmessagetype `db:"type,pk" `
+	Type        enums.CommsMessagetypeemail `db:"type,pk" `
 
 	R commsEmailLogR `db:"-" `
 }
@@ -86,7 +86,7 @@ type CommsEmailLogSetter struct {
 	Created     omit.Val[time.Time]                   `db:"created" `
 	Destination omit.Val[string]                      `db:"destination,pk" `
 	Source      omit.Val[string]                      `db:"source,pk" `
-	Type        omit.Val[enums.CommsEmailmessagetype] `db:"type,pk" `
+	Type        omit.Val[enums.CommsMessagetypeemail] `db:"type,pk" `
 }
 
 func (s CommsEmailLogSetter) SetColumns() []string {
@@ -196,7 +196,7 @@ func (s CommsEmailLogSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindCommsEmailLog retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindCommsEmailLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsEmailmessagetype, cols ...string) (*CommsEmailLog, error) {
+func FindCommsEmailLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypeemail, cols ...string) (*CommsEmailLog, error) {
 	if len(cols) == 0 {
 		return CommsEmailLogs.Query(
 			sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
@@ -214,7 +214,7 @@ func FindCommsEmailLog(ctx context.Context, exec bob.Executor, DestinationPK str
 }
 
 // CommsEmailLogExists checks the presence of a single record by primary key
-func CommsEmailLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsEmailmessagetype) (bool, error) {
+func CommsEmailLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypeemail) (bool, error) {
 	return CommsEmailLogs.Query(
 		sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
 		sm.Where(CommsEmailLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
@@ -583,7 +583,7 @@ type commsEmailLogWhere[Q psql.Filterable] struct {
 	Created     psql.WhereMod[Q, time.Time]
 	Destination psql.WhereMod[Q, string]
 	Source      psql.WhereMod[Q, string]
-	Type        psql.WhereMod[Q, enums.CommsEmailmessagetype]
+	Type        psql.WhereMod[Q, enums.CommsMessagetypeemail]
 }
 
 func (commsEmailLogWhere[Q]) AliasedAs(alias string) commsEmailLogWhere[Q] {
@@ -595,7 +595,7 @@ func buildCommsEmailLogWhere[Q psql.Filterable](cols commsEmailLogColumns) comms
 		Created:     psql.Where[Q, time.Time](cols.Created),
 		Destination: psql.Where[Q, string](cols.Destination),
 		Source:      psql.Where[Q, string](cols.Source),
-		Type:        psql.Where[Q, enums.CommsEmailmessagetype](cols.Type),
+		Type:        psql.Where[Q, enums.CommsMessagetypeemail](cols.Type),
 	}
 }
 

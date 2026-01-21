@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/background"
+	"github.com/Gleipnir-Technology/nidus-sync/comms"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
-	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -157,16 +157,17 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 	consent := r.PostFormValue("consent")
 	email := r.PostFormValue("email")
-	phone := r.PostFormValue("phone")
+	phone_str := r.PostFormValue("phone")
 	report_id := r.PostFormValue("report_id")
 	if consent != "on" {
 		respondError(w, "You must consent", nil, http.StatusBadRequest)
 		return
 	}
-	if email == "" && phone == "" {
+	if email == "" && phone_str == "" {
 		http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", report_id), http.StatusFound)
 		return
 	}
+	phone, err := comms.ParsePhoneNumber(phone_str)
 	result, err := psql.Update(
 		um.Table("publicreport.quick"),
 		um.SetCol("reporter_email").ToArg(email),
@@ -183,18 +184,10 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if email != "" {
-		queue.EnqueueJobEmail(queue.JobEmail{
-			Destination: email,
-			Source:      config.ForwardEmailReportAddress,
-			Type:        enums.CommsEmailmessagetypeReportSubscriptionConfirmation,
-		})
+		background.ReportSubscriptionConfirmationEmail(email)
 	}
-	if phone != "" {
-		queue.EnqueueJobSMS(queue.JobSMS{
-			Destination: phone,
-			Source:      config.VoipMSNumber,
-			Type:        enums.CommsSmsmessagetypeReportSubscriptionConfirmation,
-		})
+	if phone_str != "" {
+		background.ReportSubscriptionConfirmationText(*phone, report_id)
 	}
 	if rowcount == 0 {
 		http.Redirect(w, r, fmt.Sprintf("/error?code=no-rows-affected&report=%s", report_id), http.StatusFound)

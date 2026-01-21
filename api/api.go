@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/queue"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -74,7 +74,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
 	}
 
-	queue.EnqueueAudioJob(queue.JobAudio{AudioUUID: audioUUID})
+	background.AudioTranscode(audioUUID)
 	w.WriteHeader(http.StatusOK)
 }
 

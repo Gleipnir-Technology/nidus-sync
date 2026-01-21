@@ -22,7 +22,7 @@ type preloaders struct {
 	CommsEmail                        commsEmailPreloader
 	CommsEmailLog                     commsEmailLogPreloader
 	CommsPhone                        commsPhonePreloader
-	CommsSMSLog                       commsSMSLogPreloader
+	CommsTextLog                      commsTextLogPreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogPreloader
 	FieldseekerHabitatrelate          fieldseekerHabitatrelatePreloader
@@ -78,7 +78,7 @@ func getPreloaders() preloaders {
 		CommsEmail:                        buildCommsEmailPreloader(),
 		CommsEmailLog:                     buildCommsEmailLogPreloader(),
 		CommsPhone:                        buildCommsPhonePreloader(),
-		CommsSMSLog:                       buildCommsSMSLogPreloader(),
+		CommsTextLog:                      buildCommsTextLogPreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogPreloader(),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelatePreloader(),
@@ -140,7 +140,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsEmail                        commsEmailThenLoader[Q]
 	CommsEmailLog                     commsEmailLogThenLoader[Q]
 	CommsPhone                        commsPhoneThenLoader[Q]
-	CommsSMSLog                       commsSMSLogThenLoader[Q]
+	CommsTextLog                      commsTextLogThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogThenLoader[Q]
 	FieldseekerHabitatrelate          fieldseekerHabitatrelateThenLoader[Q]
@@ -196,7 +196,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsEmail:                        buildCommsEmailThenLoader[Q](),
 		CommsEmailLog:                     buildCommsEmailLogThenLoader[Q](),
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
-		CommsSMSLog:                       buildCommsSMSLogThenLoader[Q](),
+		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogThenLoader[Q](),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelateThenLoader[Q](),

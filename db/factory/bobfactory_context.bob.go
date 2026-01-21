@@ -27,15 +27,15 @@ var (
 	commsEmailLogRelSourcePhoneCtx       = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
 
 	// Relationship Contexts for comms.phone
-	commsPhoneWithParentsCascadingCtx  = newContextual[bool]("commsPhoneWithParentsCascading")
-	commsPhoneRelSourceEmailLogsCtx    = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
-	commsPhoneRelDestinationSMSLogsCtx = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_destination_fkey")
-	commsPhoneRelSourceSMSLogsCtx      = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_source_fkey")
+	commsPhoneWithParentsCascadingCtx   = newContextual[bool]("commsPhoneWithParentsCascading")
+	commsPhoneRelSourceEmailLogsCtx     = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
+	commsPhoneRelDestinationTextLogsCtx = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
+	commsPhoneRelSourceTextLogsCtx      = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
 
-	// Relationship Contexts for comms.sms_log
-	commsSMSLogWithParentsCascadingCtx = newContextual[bool]("commsSMSLogWithParentsCascading")
-	commsSMSLogRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_destination_fkey")
-	commsSMSLogRelSourcePhoneCtx       = newContextual[bool]("comms.phone.comms.sms_log.comms.sms_log.sms_log_source_fkey")
+	// Relationship Contexts for comms.text_log
+	commsTextLogWithParentsCascadingCtx = newContextual[bool]("commsTextLogWithParentsCascading")
+	commsTextLogRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
+	commsTextLogRelSourcePhoneCtx       = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
 
 	// Relationship Contexts for fieldseeker.containerrelate
 	fieldseekerContainerrelateWithParentsCascadingCtx = newContextual[bool]("fieldseekerContainerrelateWithParentsCascading")

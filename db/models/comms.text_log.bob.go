@@ -23,37 +23,37 @@ import (
 	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
-// CommsSMSLog is an object representing the database table.
-type CommsSMSLog struct {
-	Created     time.Time                 `db:"created" `
-	Destination string                    `db:"destination,pk" `
-	Source      string                    `db:"source,pk" `
-	Type        enums.CommsSmsmessagetype `db:"type,pk" `
+// CommsTextLog is an object representing the database table.
+type CommsTextLog struct {
+	Created     time.Time                  `db:"created" `
+	Destination string                     `db:"destination,pk" `
+	Source      string                     `db:"source,pk" `
+	Type        enums.CommsMessagetypetext `db:"type,pk" `
 
-	R commsSMSLogR `db:"-" `
+	R commsTextLogR `db:"-" `
 }
 
-// CommsSMSLogSlice is an alias for a slice of pointers to CommsSMSLog.
-// This should almost always be used instead of []*CommsSMSLog.
-type CommsSMSLogSlice []*CommsSMSLog
+// CommsTextLogSlice is an alias for a slice of pointers to CommsTextLog.
+// This should almost always be used instead of []*CommsTextLog.
+type CommsTextLogSlice []*CommsTextLog
 
-// CommsSMSLogs contains methods to work with the sms_log table
-var CommsSMSLogs = psql.NewTablex[*CommsSMSLog, CommsSMSLogSlice, *CommsSMSLogSetter]("comms", "sms_log", buildCommsSMSLogColumns("comms.sms_log"))
+// CommsTextLogs contains methods to work with the text_log table
+var CommsTextLogs = psql.NewTablex[*CommsTextLog, CommsTextLogSlice, *CommsTextLogSetter]("comms", "text_log", buildCommsTextLogColumns("comms.text_log"))
 
-// CommsSMSLogsQuery is a query on the sms_log table
-type CommsSMSLogsQuery = *psql.ViewQuery[*CommsSMSLog, CommsSMSLogSlice]
+// CommsTextLogsQuery is a query on the text_log table
+type CommsTextLogsQuery = *psql.ViewQuery[*CommsTextLog, CommsTextLogSlice]
 
-// commsSMSLogR is where relationships are stored.
-type commsSMSLogR struct {
-	DestinationPhone *CommsPhone // comms.sms_log.sms_log_destination_fkey
-	SourcePhone      *CommsPhone // comms.sms_log.sms_log_source_fkey
+// commsTextLogR is where relationships are stored.
+type commsTextLogR struct {
+	DestinationPhone *CommsPhone // comms.text_log.text_log_destination_fkey
+	SourcePhone      *CommsPhone // comms.text_log.text_log_source_fkey
 }
 
-func buildCommsSMSLogColumns(alias string) commsSMSLogColumns {
-	return commsSMSLogColumns{
+func buildCommsTextLogColumns(alias string) commsTextLogColumns {
+	return commsTextLogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
 			"created", "destination", "source", "type",
-		).WithParent("comms.sms_log"),
+		).WithParent("comms.text_log"),
 		tableAlias:  alias,
 		Created:     psql.Quote(alias, "created"),
 		Destination: psql.Quote(alias, "destination"),
@@ -62,7 +62,7 @@ func buildCommsSMSLogColumns(alias string) commsSMSLogColumns {
 	}
 }
 
-type commsSMSLogColumns struct {
+type commsTextLogColumns struct {
 	expr.ColumnsExpr
 	tableAlias  string
 	Created     psql.Expression
@@ -71,25 +71,25 @@ type commsSMSLogColumns struct {
 	Type        psql.Expression
 }
 
-func (c commsSMSLogColumns) Alias() string {
+func (c commsTextLogColumns) Alias() string {
 	return c.tableAlias
 }
 
-func (commsSMSLogColumns) AliasedAs(alias string) commsSMSLogColumns {
-	return buildCommsSMSLogColumns(alias)
+func (commsTextLogColumns) AliasedAs(alias string) commsTextLogColumns {
+	return buildCommsTextLogColumns(alias)
 }
 
-// CommsSMSLogSetter is used for insert/upsert/update operations
+// CommsTextLogSetter is used for insert/upsert/update operations
 // All values are optional, and do not have to be set
 // Generated columns are not included
-type CommsSMSLogSetter struct {
-	Created     omit.Val[time.Time]                 `db:"created" `
-	Destination omit.Val[string]                    `db:"destination,pk" `
-	Source      omit.Val[string]                    `db:"source,pk" `
-	Type        omit.Val[enums.CommsSmsmessagetype] `db:"type,pk" `
+type CommsTextLogSetter struct {
+	Created     omit.Val[time.Time]                  `db:"created" `
+	Destination omit.Val[string]                     `db:"destination,pk" `
+	Source      omit.Val[string]                     `db:"source,pk" `
+	Type        omit.Val[enums.CommsMessagetypetext] `db:"type,pk" `
 }
 
-func (s CommsSMSLogSetter) SetColumns() []string {
+func (s CommsTextLogSetter) SetColumns() []string {
 	vals := make([]string, 0, 4)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
@@ -106,7 +106,7 @@ func (s CommsSMSLogSetter) SetColumns() []string {
 	return vals
 }
 
-func (s CommsSMSLogSetter) Overwrite(t *CommsSMSLog) {
+func (s CommsTextLogSetter) Overwrite(t *CommsTextLog) {
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
 	}
@@ -121,9 +121,9 @@ func (s CommsSMSLogSetter) Overwrite(t *CommsSMSLog) {
 	}
 }
 
-func (s *CommsSMSLogSetter) Apply(q *dialect.InsertQuery) {
+func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-		return CommsSMSLogs.BeforeInsertHooks.RunHooks(ctx, exec, s)
+		return CommsTextLogs.BeforeInsertHooks.RunHooks(ctx, exec, s)
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
@@ -156,11 +156,11 @@ func (s *CommsSMSLogSetter) Apply(q *dialect.InsertQuery) {
 	}))
 }
 
-func (s CommsSMSLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (s CommsTextLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return um.Set(s.Expressions()...)
 }
 
-func (s CommsSMSLogSetter) Expressions(prefix ...string) []bob.Expression {
+func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 4)
 
 	if s.Created.IsValue() {
@@ -194,54 +194,54 @@ func (s CommsSMSLogSetter) Expressions(prefix ...string) []bob.Expression {
 	return exprs
 }
 
-// FindCommsSMSLog retrieves a single record by primary key
+// FindCommsTextLog retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindCommsSMSLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsSmsmessagetype, cols ...string) (*CommsSMSLog, error) {
+func FindCommsTextLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypetext, cols ...string) (*CommsTextLog, error) {
 	if len(cols) == 0 {
-		return CommsSMSLogs.Query(
-			sm.Where(CommsSMSLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-			sm.Where(CommsSMSLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-			sm.Where(CommsSMSLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		return CommsTextLogs.Query(
+			sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
+			sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
+			sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
 		).One(ctx, exec)
 	}
 
-	return CommsSMSLogs.Query(
-		sm.Where(CommsSMSLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsSMSLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsSMSLogs.Columns.Type.EQ(psql.Arg(TypePK))),
-		sm.Columns(CommsSMSLogs.Columns.Only(cols...)),
+	return CommsTextLogs.Query(
+		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
+		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
+		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		sm.Columns(CommsTextLogs.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
-// CommsSMSLogExists checks the presence of a single record by primary key
-func CommsSMSLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsSmsmessagetype) (bool, error) {
-	return CommsSMSLogs.Query(
-		sm.Where(CommsSMSLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsSMSLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsSMSLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+// CommsTextLogExists checks the presence of a single record by primary key
+func CommsTextLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypetext) (bool, error) {
+	return CommsTextLogs.Query(
+		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
+		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
+		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
 	).Exists(ctx, exec)
 }
 
-// AfterQueryHook is called after CommsSMSLog is retrieved from the database
-func (o *CommsSMSLog) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after CommsTextLog is retrieved from the database
+func (o *CommsTextLog) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = CommsSMSLogs.AfterSelectHooks.RunHooks(ctx, exec, CommsSMSLogSlice{o})
+		ctx, err = CommsTextLogs.AfterSelectHooks.RunHooks(ctx, exec, CommsTextLogSlice{o})
 	case bob.QueryTypeInsert:
-		ctx, err = CommsSMSLogs.AfterInsertHooks.RunHooks(ctx, exec, CommsSMSLogSlice{o})
+		ctx, err = CommsTextLogs.AfterInsertHooks.RunHooks(ctx, exec, CommsTextLogSlice{o})
 	case bob.QueryTypeUpdate:
-		ctx, err = CommsSMSLogs.AfterUpdateHooks.RunHooks(ctx, exec, CommsSMSLogSlice{o})
+		ctx, err = CommsTextLogs.AfterUpdateHooks.RunHooks(ctx, exec, CommsTextLogSlice{o})
 	case bob.QueryTypeDelete:
-		ctx, err = CommsSMSLogs.AfterDeleteHooks.RunHooks(ctx, exec, CommsSMSLogSlice{o})
+		ctx, err = CommsTextLogs.AfterDeleteHooks.RunHooks(ctx, exec, CommsTextLogSlice{o})
 	}
 
 	return err
 }
 
-// primaryKeyVals returns the primary key values of the CommsSMSLog
-func (o *CommsSMSLog) primaryKeyVals() bob.Expression {
+// primaryKeyVals returns the primary key values of the CommsTextLog
+func (o *CommsTextLog) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
 		o.Destination,
 		o.Source,
@@ -249,15 +249,15 @@ func (o *CommsSMSLog) primaryKeyVals() bob.Expression {
 	)
 }
 
-func (o *CommsSMSLog) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("comms.sms_log", "destination"), psql.Quote("comms.sms_log", "source"), psql.Quote("comms.sms_log", "type")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+func (o *CommsTextLog) pkEQ() dialect.Expression {
+	return psql.Group(psql.Quote("comms.text_log", "destination"), psql.Quote("comms.text_log", "source"), psql.Quote("comms.text_log", "type")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
 
-// Update uses an executor to update the CommsSMSLog
-func (o *CommsSMSLog) Update(ctx context.Context, exec bob.Executor, s *CommsSMSLogSetter) error {
-	v, err := CommsSMSLogs.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
+// Update uses an executor to update the CommsTextLog
+func (o *CommsTextLog) Update(ctx context.Context, exec bob.Executor, s *CommsTextLogSetter) error {
+	v, err := CommsTextLogs.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -268,18 +268,18 @@ func (o *CommsSMSLog) Update(ctx context.Context, exec bob.Executor, s *CommsSMS
 	return nil
 }
 
-// Delete deletes a single CommsSMSLog record with an executor
-func (o *CommsSMSLog) Delete(ctx context.Context, exec bob.Executor) error {
-	_, err := CommsSMSLogs.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
+// Delete deletes a single CommsTextLog record with an executor
+func (o *CommsTextLog) Delete(ctx context.Context, exec bob.Executor) error {
+	_, err := CommsTextLogs.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
 	return err
 }
 
-// Reload refreshes the CommsSMSLog using the executor
-func (o *CommsSMSLog) Reload(ctx context.Context, exec bob.Executor) error {
-	o2, err := CommsSMSLogs.Query(
-		sm.Where(CommsSMSLogs.Columns.Destination.EQ(psql.Arg(o.Destination))),
-		sm.Where(CommsSMSLogs.Columns.Source.EQ(psql.Arg(o.Source))),
-		sm.Where(CommsSMSLogs.Columns.Type.EQ(psql.Arg(o.Type))),
+// Reload refreshes the CommsTextLog using the executor
+func (o *CommsTextLog) Reload(ctx context.Context, exec bob.Executor) error {
+	o2, err := CommsTextLogs.Query(
+		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(o.Destination))),
+		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(o.Source))),
+		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(o.Type))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -290,30 +290,30 @@ func (o *CommsSMSLog) Reload(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
-// AfterQueryHook is called after CommsSMSLogSlice is retrieved from the database
-func (o CommsSMSLogSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after CommsTextLogSlice is retrieved from the database
+func (o CommsTextLogSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = CommsSMSLogs.AfterSelectHooks.RunHooks(ctx, exec, o)
+		ctx, err = CommsTextLogs.AfterSelectHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeInsert:
-		ctx, err = CommsSMSLogs.AfterInsertHooks.RunHooks(ctx, exec, o)
+		ctx, err = CommsTextLogs.AfterInsertHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeUpdate:
-		ctx, err = CommsSMSLogs.AfterUpdateHooks.RunHooks(ctx, exec, o)
+		ctx, err = CommsTextLogs.AfterUpdateHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeDelete:
-		ctx, err = CommsSMSLogs.AfterDeleteHooks.RunHooks(ctx, exec, o)
+		ctx, err = CommsTextLogs.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
 }
 
-func (o CommsSMSLogSlice) pkIN() dialect.Expression {
+func (o CommsTextLogSlice) pkIN() dialect.Expression {
 	if len(o) == 0 {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("comms.sms_log", "destination"), psql.Quote("comms.sms_log", "source"), psql.Quote("comms.sms_log", "type")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("comms.text_log", "destination"), psql.Quote("comms.text_log", "source"), psql.Quote("comms.text_log", "type")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -325,7 +325,7 @@ func (o CommsSMSLogSlice) pkIN() dialect.Expression {
 // copyMatchingRows finds models in the given slice that have the same primary key
 // then it first copies the existing relationships from the old model to the new model
 // and then replaces the old model in the slice with the new model
-func (o CommsSMSLogSlice) copyMatchingRows(from ...*CommsSMSLog) {
+func (o CommsTextLogSlice) copyMatchingRows(from ...*CommsTextLog) {
 	for i, old := range o {
 		for _, new := range from {
 			if new.Destination != old.Destination {
@@ -345,25 +345,25 @@ func (o CommsSMSLogSlice) copyMatchingRows(from ...*CommsSMSLog) {
 }
 
 // UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
-func (o CommsSMSLogSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (o CommsTextLogSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return CommsSMSLogs.BeforeUpdateHooks.RunHooks(ctx, exec, o)
+			return CommsTextLogs.BeforeUpdateHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *CommsSMSLog:
+			case *CommsTextLog:
 				o.copyMatchingRows(retrieved)
-			case []*CommsSMSLog:
+			case []*CommsTextLog:
 				o.copyMatchingRows(retrieved...)
-			case CommsSMSLogSlice:
+			case CommsTextLogSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a CommsSMSLog or a slice of CommsSMSLog
+				// If the retrieved value is not a CommsTextLog or a slice of CommsTextLog
 				// then run the AfterUpdateHooks on the slice
-				_, err = CommsSMSLogs.AfterUpdateHooks.RunHooks(ctx, exec, o)
+				_, err = CommsTextLogs.AfterUpdateHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -374,25 +374,25 @@ func (o CommsSMSLogSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 // DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
-func (o CommsSMSLogSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
+func (o CommsTextLogSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return CommsSMSLogs.BeforeDeleteHooks.RunHooks(ctx, exec, o)
+			return CommsTextLogs.BeforeDeleteHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *CommsSMSLog:
+			case *CommsTextLog:
 				o.copyMatchingRows(retrieved)
-			case []*CommsSMSLog:
+			case []*CommsTextLog:
 				o.copyMatchingRows(retrieved...)
-			case CommsSMSLogSlice:
+			case CommsTextLogSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a CommsSMSLog or a slice of CommsSMSLog
+				// If the retrieved value is not a CommsTextLog or a slice of CommsTextLog
 				// then run the AfterDeleteHooks on the slice
-				_, err = CommsSMSLogs.AfterDeleteHooks.RunHooks(ctx, exec, o)
+				_, err = CommsTextLogs.AfterDeleteHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -402,30 +402,30 @@ func (o CommsSMSLogSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	})
 }
 
-func (o CommsSMSLogSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals CommsSMSLogSetter) error {
+func (o CommsTextLogSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals CommsTextLogSetter) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := CommsSMSLogs.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
+	_, err := CommsTextLogs.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
 	return err
 }
 
-func (o CommsSMSLogSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
+func (o CommsTextLogSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := CommsSMSLogs.Delete(o.DeleteMod()).Exec(ctx, exec)
+	_, err := CommsTextLogs.Delete(o.DeleteMod()).Exec(ctx, exec)
 	return err
 }
 
-func (o CommsSMSLogSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
+func (o CommsTextLogSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	o2, err := CommsSMSLogs.Query(sm.Where(o.pkIN())).All(ctx, exec)
+	o2, err := CommsTextLogs.Query(sm.Where(o.pkIN())).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -436,13 +436,13 @@ func (o CommsSMSLogSlice) ReloadAll(ctx context.Context, exec bob.Executor) erro
 }
 
 // DestinationPhone starts a query for related objects on comms.phone
-func (o *CommsSMSLog) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+func (o *CommsTextLog) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	return CommsPhones.Query(append(mods,
 		sm.Where(CommsPhones.Columns.E164.EQ(psql.Arg(o.Destination))),
 	)...)
 }
 
-func (os CommsSMSLogSlice) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+func (os CommsTextLogSlice) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	pkDestination := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -460,13 +460,13 @@ func (os CommsSMSLogSlice) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery
 }
 
 // SourcePhone starts a query for related objects on comms.phone
-func (o *CommsSMSLog) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+func (o *CommsTextLog) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	return CommsPhones.Query(append(mods,
 		sm.Where(CommsPhones.Columns.E164.EQ(psql.Arg(o.Source))),
 	)...)
 }
 
-func (os CommsSMSLogSlice) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+func (os CommsTextLogSlice) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	pkSource := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -483,20 +483,20 @@ func (os CommsSMSLogSlice) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) Co
 	)...)
 }
 
-func attachCommsSMSLogDestinationPhone0(ctx context.Context, exec bob.Executor, count int, commsSMSLog0 *CommsSMSLog, commsPhone1 *CommsPhone) (*CommsSMSLog, error) {
-	setter := &CommsSMSLogSetter{
+func attachCommsTextLogDestinationPhone0(ctx context.Context, exec bob.Executor, count int, commsTextLog0 *CommsTextLog, commsPhone1 *CommsPhone) (*CommsTextLog, error) {
+	setter := &CommsTextLogSetter{
 		Destination: omit.From(commsPhone1.E164),
 	}
 
-	err := commsSMSLog0.Update(ctx, exec, setter)
+	err := commsTextLog0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsSMSLogDestinationPhone0: %w", err)
+		return nil, fmt.Errorf("attachCommsTextLogDestinationPhone0: %w", err)
 	}
 
-	return commsSMSLog0, nil
+	return commsTextLog0, nil
 }
 
-func (commsSMSLog0 *CommsSMSLog) InsertDestinationPhone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
+func (commsTextLog0 *CommsTextLog) InsertDestinationPhone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
 	var err error
 
 	commsPhone1, err := CommsPhones.Insert(related).One(ctx, exec)
@@ -504,47 +504,47 @@ func (commsSMSLog0 *CommsSMSLog) InsertDestinationPhone(ctx context.Context, exe
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachCommsSMSLogDestinationPhone0(ctx, exec, 1, commsSMSLog0, commsPhone1)
+	_, err = attachCommsTextLogDestinationPhone0(ctx, exec, 1, commsTextLog0, commsPhone1)
 	if err != nil {
 		return err
 	}
 
-	commsSMSLog0.R.DestinationPhone = commsPhone1
+	commsTextLog0.R.DestinationPhone = commsPhone1
 
-	commsPhone1.R.DestinationSMSLogs = append(commsPhone1.R.DestinationSMSLogs, commsSMSLog0)
+	commsPhone1.R.DestinationTextLogs = append(commsPhone1.R.DestinationTextLogs, commsTextLog0)
 
 	return nil
 }
 
-func (commsSMSLog0 *CommsSMSLog) AttachDestinationPhone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
+func (commsTextLog0 *CommsTextLog) AttachDestinationPhone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
 	var err error
 
-	_, err = attachCommsSMSLogDestinationPhone0(ctx, exec, 1, commsSMSLog0, commsPhone1)
+	_, err = attachCommsTextLogDestinationPhone0(ctx, exec, 1, commsTextLog0, commsPhone1)
 	if err != nil {
 		return err
 	}
 
-	commsSMSLog0.R.DestinationPhone = commsPhone1
+	commsTextLog0.R.DestinationPhone = commsPhone1
 
-	commsPhone1.R.DestinationSMSLogs = append(commsPhone1.R.DestinationSMSLogs, commsSMSLog0)
+	commsPhone1.R.DestinationTextLogs = append(commsPhone1.R.DestinationTextLogs, commsTextLog0)
 
 	return nil
 }
 
-func attachCommsSMSLogSourcePhone0(ctx context.Context, exec bob.Executor, count int, commsSMSLog0 *CommsSMSLog, commsPhone1 *CommsPhone) (*CommsSMSLog, error) {
-	setter := &CommsSMSLogSetter{
+func attachCommsTextLogSourcePhone0(ctx context.Context, exec bob.Executor, count int, commsTextLog0 *CommsTextLog, commsPhone1 *CommsPhone) (*CommsTextLog, error) {
+	setter := &CommsTextLogSetter{
 		Source: omit.From(commsPhone1.E164),
 	}
 
-	err := commsSMSLog0.Update(ctx, exec, setter)
+	err := commsTextLog0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsSMSLogSourcePhone0: %w", err)
+		return nil, fmt.Errorf("attachCommsTextLogSourcePhone0: %w", err)
 	}
 
-	return commsSMSLog0, nil
+	return commsTextLog0, nil
 }
 
-func (commsSMSLog0 *CommsSMSLog) InsertSourcePhone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
+func (commsTextLog0 *CommsTextLog) InsertSourcePhone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
 	var err error
 
 	commsPhone1, err := CommsPhones.Insert(related).One(ctx, exec)
@@ -552,54 +552,54 @@ func (commsSMSLog0 *CommsSMSLog) InsertSourcePhone(ctx context.Context, exec bob
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachCommsSMSLogSourcePhone0(ctx, exec, 1, commsSMSLog0, commsPhone1)
+	_, err = attachCommsTextLogSourcePhone0(ctx, exec, 1, commsTextLog0, commsPhone1)
 	if err != nil {
 		return err
 	}
 
-	commsSMSLog0.R.SourcePhone = commsPhone1
+	commsTextLog0.R.SourcePhone = commsPhone1
 
-	commsPhone1.R.SourceSMSLogs = append(commsPhone1.R.SourceSMSLogs, commsSMSLog0)
+	commsPhone1.R.SourceTextLogs = append(commsPhone1.R.SourceTextLogs, commsTextLog0)
 
 	return nil
 }
 
-func (commsSMSLog0 *CommsSMSLog) AttachSourcePhone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
+func (commsTextLog0 *CommsTextLog) AttachSourcePhone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
 	var err error
 
-	_, err = attachCommsSMSLogSourcePhone0(ctx, exec, 1, commsSMSLog0, commsPhone1)
+	_, err = attachCommsTextLogSourcePhone0(ctx, exec, 1, commsTextLog0, commsPhone1)
 	if err != nil {
 		return err
 	}
 
-	commsSMSLog0.R.SourcePhone = commsPhone1
+	commsTextLog0.R.SourcePhone = commsPhone1
 
-	commsPhone1.R.SourceSMSLogs = append(commsPhone1.R.SourceSMSLogs, commsSMSLog0)
+	commsPhone1.R.SourceTextLogs = append(commsPhone1.R.SourceTextLogs, commsTextLog0)
 
 	return nil
 }
 
-type commsSMSLogWhere[Q psql.Filterable] struct {
+type commsTextLogWhere[Q psql.Filterable] struct {
 	Created     psql.WhereMod[Q, time.Time]
 	Destination psql.WhereMod[Q, string]
 	Source      psql.WhereMod[Q, string]
-	Type        psql.WhereMod[Q, enums.CommsSmsmessagetype]
+	Type        psql.WhereMod[Q, enums.CommsMessagetypetext]
 }
 
-func (commsSMSLogWhere[Q]) AliasedAs(alias string) commsSMSLogWhere[Q] {
-	return buildCommsSMSLogWhere[Q](buildCommsSMSLogColumns(alias))
+func (commsTextLogWhere[Q]) AliasedAs(alias string) commsTextLogWhere[Q] {
+	return buildCommsTextLogWhere[Q](buildCommsTextLogColumns(alias))
 }
 
-func buildCommsSMSLogWhere[Q psql.Filterable](cols commsSMSLogColumns) commsSMSLogWhere[Q] {
-	return commsSMSLogWhere[Q]{
+func buildCommsTextLogWhere[Q psql.Filterable](cols commsTextLogColumns) commsTextLogWhere[Q] {
+	return commsTextLogWhere[Q]{
 		Created:     psql.Where[Q, time.Time](cols.Created),
 		Destination: psql.Where[Q, string](cols.Destination),
 		Source:      psql.Where[Q, string](cols.Source),
-		Type:        psql.Where[Q, enums.CommsSmsmessagetype](cols.Type),
+		Type:        psql.Where[Q, enums.CommsMessagetypetext](cols.Type),
 	}
 }
 
-func (o *CommsSMSLog) Preload(name string, retrieved any) error {
+func (o *CommsTextLog) Preload(name string, retrieved any) error {
 	if o == nil {
 		return nil
 	}
@@ -608,45 +608,45 @@ func (o *CommsSMSLog) Preload(name string, retrieved any) error {
 	case "DestinationPhone":
 		rel, ok := retrieved.(*CommsPhone)
 		if !ok {
-			return fmt.Errorf("commsSMSLog cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("commsTextLog cannot load %T as %q", retrieved, name)
 		}
 
 		o.R.DestinationPhone = rel
 
 		if rel != nil {
-			rel.R.DestinationSMSLogs = CommsSMSLogSlice{o}
+			rel.R.DestinationTextLogs = CommsTextLogSlice{o}
 		}
 		return nil
 	case "SourcePhone":
 		rel, ok := retrieved.(*CommsPhone)
 		if !ok {
-			return fmt.Errorf("commsSMSLog cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("commsTextLog cannot load %T as %q", retrieved, name)
 		}
 
 		o.R.SourcePhone = rel
 
 		if rel != nil {
-			rel.R.SourceSMSLogs = CommsSMSLogSlice{o}
+			rel.R.SourceTextLogs = CommsTextLogSlice{o}
 		}
 		return nil
 	default:
-		return fmt.Errorf("commsSMSLog has no relationship %q", name)
+		return fmt.Errorf("commsTextLog has no relationship %q", name)
 	}
 }
 
-type commsSMSLogPreloader struct {
+type commsTextLogPreloader struct {
 	DestinationPhone func(...psql.PreloadOption) psql.Preloader
 	SourcePhone      func(...psql.PreloadOption) psql.Preloader
 }
 
-func buildCommsSMSLogPreloader() commsSMSLogPreloader {
-	return commsSMSLogPreloader{
+func buildCommsTextLogPreloader() commsTextLogPreloader {
+	return commsTextLogPreloader{
 		DestinationPhone: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*CommsPhone, CommsPhoneSlice](psql.PreloadRel{
 				Name: "DestinationPhone",
 				Sides: []psql.PreloadSide{
 					{
-						From:        CommsSMSLogs,
+						From:        CommsTextLogs,
 						To:          CommsPhones,
 						FromColumns: []string{"destination"},
 						ToColumns:   []string{"e164"},
@@ -659,7 +659,7 @@ func buildCommsSMSLogPreloader() commsSMSLogPreloader {
 				Name: "SourcePhone",
 				Sides: []psql.PreloadSide{
 					{
-						From:        CommsSMSLogs,
+						From:        CommsTextLogs,
 						To:          CommsPhones,
 						FromColumns: []string{"source"},
 						ToColumns:   []string{"e164"},
@@ -670,12 +670,12 @@ func buildCommsSMSLogPreloader() commsSMSLogPreloader {
 	}
 }
 
-type commsSMSLogThenLoader[Q orm.Loadable] struct {
+type commsTextLogThenLoader[Q orm.Loadable] struct {
 	DestinationPhone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	SourcePhone      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
-func buildCommsSMSLogThenLoader[Q orm.Loadable]() commsSMSLogThenLoader[Q] {
+func buildCommsTextLogThenLoader[Q orm.Loadable]() commsTextLogThenLoader[Q] {
 	type DestinationPhoneLoadInterface interface {
 		LoadDestinationPhone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -683,7 +683,7 @@ func buildCommsSMSLogThenLoader[Q orm.Loadable]() commsSMSLogThenLoader[Q] {
 		LoadSourcePhone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
-	return commsSMSLogThenLoader[Q]{
+	return commsTextLogThenLoader[Q]{
 		DestinationPhone: thenLoadBuilder[Q](
 			"DestinationPhone",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationPhoneLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -699,8 +699,8 @@ func buildCommsSMSLogThenLoader[Q orm.Loadable]() commsSMSLogThenLoader[Q] {
 	}
 }
 
-// LoadDestinationPhone loads the commsSMSLog's DestinationPhone into the .R struct
-func (o *CommsSMSLog) LoadDestinationPhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationPhone loads the commsTextLog's DestinationPhone into the .R struct
+func (o *CommsTextLog) LoadDestinationPhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
@@ -713,14 +713,14 @@ func (o *CommsSMSLog) LoadDestinationPhone(ctx context.Context, exec bob.Executo
 		return err
 	}
 
-	related.R.DestinationSMSLogs = CommsSMSLogSlice{o}
+	related.R.DestinationTextLogs = CommsTextLogSlice{o}
 
 	o.R.DestinationPhone = related
 	return nil
 }
 
-// LoadDestinationPhone loads the commsSMSLog's DestinationPhone into the .R struct
-func (os CommsSMSLogSlice) LoadDestinationPhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationPhone loads the commsTextLog's DestinationPhone into the .R struct
+func (os CommsTextLogSlice) LoadDestinationPhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -741,7 +741,7 @@ func (os CommsSMSLogSlice) LoadDestinationPhone(ctx context.Context, exec bob.Ex
 				continue
 			}
 
-			rel.R.DestinationSMSLogs = append(rel.R.DestinationSMSLogs, o)
+			rel.R.DestinationTextLogs = append(rel.R.DestinationTextLogs, o)
 
 			o.R.DestinationPhone = rel
 			break
@@ -751,8 +751,8 @@ func (os CommsSMSLogSlice) LoadDestinationPhone(ctx context.Context, exec bob.Ex
 	return nil
 }
 
-// LoadSourcePhone loads the commsSMSLog's SourcePhone into the .R struct
-func (o *CommsSMSLog) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadSourcePhone loads the commsTextLog's SourcePhone into the .R struct
+func (o *CommsTextLog) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
@@ -765,14 +765,14 @@ func (o *CommsSMSLog) LoadSourcePhone(ctx context.Context, exec bob.Executor, mo
 		return err
 	}
 
-	related.R.SourceSMSLogs = CommsSMSLogSlice{o}
+	related.R.SourceTextLogs = CommsTextLogSlice{o}
 
 	o.R.SourcePhone = related
 	return nil
 }
 
-// LoadSourcePhone loads the commsSMSLog's SourcePhone into the .R struct
-func (os CommsSMSLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadSourcePhone loads the commsTextLog's SourcePhone into the .R struct
+func (os CommsTextLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -793,7 +793,7 @@ func (os CommsSMSLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Executo
 				continue
 			}
 
-			rel.R.SourceSMSLogs = append(rel.R.SourceSMSLogs, o)
+			rel.R.SourceTextLogs = append(rel.R.SourceTextLogs, o)
 
 			o.R.SourcePhone = rel
 			break
@@ -803,18 +803,18 @@ func (os CommsSMSLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Executo
 	return nil
 }
 
-type commsSMSLogJoins[Q dialect.Joinable] struct {
+type commsTextLogJoins[Q dialect.Joinable] struct {
 	typ              string
 	DestinationPhone modAs[Q, commsPhoneColumns]
 	SourcePhone      modAs[Q, commsPhoneColumns]
 }
 
-func (j commsSMSLogJoins[Q]) aliasedAs(alias string) commsSMSLogJoins[Q] {
-	return buildCommsSMSLogJoins[Q](buildCommsSMSLogColumns(alias), j.typ)
+func (j commsTextLogJoins[Q]) aliasedAs(alias string) commsTextLogJoins[Q] {
+	return buildCommsTextLogJoins[Q](buildCommsTextLogColumns(alias), j.typ)
 }
 
-func buildCommsSMSLogJoins[Q dialect.Joinable](cols commsSMSLogColumns, typ string) commsSMSLogJoins[Q] {
-	return commsSMSLogJoins[Q]{
+func buildCommsTextLogJoins[Q dialect.Joinable](cols commsTextLogColumns, typ string) commsTextLogJoins[Q] {
+	return commsTextLogJoins[Q]{
 		typ: typ,
 		DestinationPhone: modAs[Q, commsPhoneColumns]{
 			c: CommsPhones.Columns,

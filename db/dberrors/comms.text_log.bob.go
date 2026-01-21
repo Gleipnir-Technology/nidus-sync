@@ -3,15 +3,15 @@
 
 package dberrors
 
-var CommsSMSLogErrors = &commsSMSLogErrors{
-	ErrUniqueSmsLogPkey: &UniqueConstraintError{
+var CommsTextLogErrors = &commsTextLogErrors{
+	ErrUniqueTextLogPkey: &UniqueConstraintError{
 		schema:  "comms",
-		table:   "sms_log",
+		table:   "text_log",
 		columns: []string{"destination", "source", "type"},
-		s:       "sms_log_pkey",
+		s:       "text_log_pkey",
 	},
 }
 
-type commsSMSLogErrors struct {
-	ErrUniqueSmsLogPkey *UniqueConstraintError
+type commsTextLogErrors struct {
+	ErrUniqueTextLogPkey *UniqueConstraintError
 }

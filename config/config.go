@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/nyaruka/phonenumbers"
 )
 
 var (
@@ -21,12 +23,14 @@ var (
 	ForwardEmailReportUsername string
 	MapboxToken                string
 	PGDSN                      string
+	RMODomain                  string
+	RMOPhoneNumber             phonenumbers.PhoneNumber
 	URLReport                  string
 	URLSync                    string
 	URLTegola                  string
-	VoipMSPassword             string
-	VoipMSNumber               string
-	VoipMSUsername             string
+	TwilioAuthToken            string
+	TwilioAccountSID           string
+	TwilioMessagingServiceSID  string
 )
 
 // Build the ArcGIS authorization URL with PKCE
@@ -62,7 +66,7 @@ func MakeURLSync(path string) string {
 	return fmt.Sprintf("https://%s%s", URLSync, path)
 }
 
-func Parse() error {
+func Parse() (err error) {
 	Bind = os.Getenv("BIND")
 	if Bind == "" {
 		Bind = ":9001"
@@ -118,6 +122,20 @@ func Parse() error {
 	if PGDSN == "" {
 		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
 	}
+	RMODomain = os.Getenv("RMO_DOMAIN")
+	if RMODomain == "" {
+		return fmt.Errorf("You must specify a non-empty RMO_DOMAIN")
+	}
+	rmo_phone_number := os.Getenv("RMO_PHONE_NUMBER")
+	if rmo_phone_number == "" {
+		return fmt.Errorf("You must specify a non-empty RMO_PHONE_NUMBER")
+	}
+	p, err := phonenumbers.Parse(rmo_phone_number, "US")
+	if err != nil {
+		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", rmo_phone_number, err)
+	}
+	RMOPhoneNumber = *p
+
 	URLReport = os.Getenv("URL_REPORT")
 	if URLReport == "" {
 		return fmt.Errorf("You must specify a non-empty URL_REPORT")
@@ -130,17 +148,17 @@ func Parse() error {
 	if URLTegola == "" {
 		return fmt.Errorf("You must specify a non-empty URL_TEGOLA")
 	}
-	VoipMSNumber = os.Getenv("VOIPMS_NUMBER")
-	if VoipMSNumber == "" {
-		return fmt.Errorf("You must specify a non-empty VOIPMS_NUMBER")
+	TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
+	if TwilioAccountSID == "" {
+		return fmt.Errorf("You must specify a non-empty TWILIO_ACCOUNT_SID")
 	}
-	VoipMSPassword = os.Getenv("VOIPMS_PASSWORD")
-	if VoipMSPassword == "" {
-		return fmt.Errorf("You must specify a non-empty VOIPMS_PASSWORD")
+	TwilioAuthToken = os.Getenv("TWILIO_AUTH_TOKEN")
+	if TwilioAuthToken == "" {
+		return fmt.Errorf("You must specify a non-empty TWILIO_AUTH_TOKEN")
 	}
-	VoipMSUsername = os.Getenv("VOIPMS_USERNAME")
-	if VoipMSUsername == "" {
-		return fmt.Errorf("You must specify a non-empty VOIPMS_USERNAME")
+	TwilioMessagingServiceSID = os.Getenv("TWILIO_MESSAGING_SERVICE_SID")
+	if TwilioMessagingServiceSID == "" {
+		return fmt.Errorf("You must specify a non-empty TWILIO_MESSAGING_SERVICE_SID")
 	}
 	return nil
 }

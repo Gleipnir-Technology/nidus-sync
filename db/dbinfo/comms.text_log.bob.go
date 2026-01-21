@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var CommsSMSLogs = Table[
-	commsSMSLogColumns,
-	commsSMSLogIndexes,
-	commsSMSLogForeignKeys,
-	commsSMSLogUniques,
-	commsSMSLogChecks,
+var CommsTextLogs = Table[
+	commsTextLogColumns,
+	commsTextLogIndexes,
+	commsTextLogForeignKeys,
+	commsTextLogUniques,
+	commsTextLogChecks,
 ]{
 	Schema: "comms",
-	Name:   "sms_log",
-	Columns: commsSMSLogColumns{
+	Name:   "text_log",
+	Columns: commsTextLogColumns{
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -44,7 +44,7 @@ var CommsSMSLogs = Table[
 		},
 		Type: column{
 			Name:      "type",
-			DBType:    "comms.smsmessagetype",
+			DBType:    "comms.messagetypetext",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -52,10 +52,10 @@ var CommsSMSLogs = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: commsSMSLogIndexes{
-		SMSLogPkey: index{
+	Indexes: commsTextLogIndexes{
+		TextLogPkey: index{
 			Type: "btree",
-			Name: "sms_log_pkey",
+			Name: "text_log_pkey",
 			Columns: []indexColumn{
 				{
 					Name:         "destination",
@@ -82,23 +82,23 @@ var CommsSMSLogs = Table[
 		},
 	},
 	PrimaryKey: &constraint{
-		Name:    "sms_log_pkey",
+		Name:    "text_log_pkey",
 		Columns: []string{"destination", "source", "type"},
 		Comment: "",
 	},
-	ForeignKeys: commsSMSLogForeignKeys{
-		CommsSMSLogSMSLogDestinationFkey: foreignKey{
+	ForeignKeys: commsTextLogForeignKeys{
+		CommsTextLogTextLogDestinationFkey: foreignKey{
 			constraint: constraint{
-				Name:    "comms.sms_log.sms_log_destination_fkey",
+				Name:    "comms.text_log.text_log_destination_fkey",
 				Columns: []string{"destination"},
 				Comment: "",
 			},
 			ForeignTable:   "comms.phone",
 			ForeignColumns: []string{"e164"},
 		},
-		CommsSMSLogSMSLogSourceFkey: foreignKey{
+		CommsTextLogTextLogSourceFkey: foreignKey{
 			constraint: constraint{
-				Name:    "comms.sms_log.sms_log_source_fkey",
+				Name:    "comms.text_log.text_log_source_fkey",
 				Columns: []string{"source"},
 				Comment: "",
 			},
@@ -110,48 +110,48 @@ var CommsSMSLogs = Table[
 	Comment: "",
 }
 
-type commsSMSLogColumns struct {
+type commsTextLogColumns struct {
 	Created     column
 	Destination column
 	Source      column
 	Type        column
 }
 
-func (c commsSMSLogColumns) AsSlice() []column {
+func (c commsTextLogColumns) AsSlice() []column {
 	return []column{
 		c.Created, c.Destination, c.Source, c.Type,
 	}
 }
 
-type commsSMSLogIndexes struct {
-	SMSLogPkey index
+type commsTextLogIndexes struct {
+	TextLogPkey index
 }
 
-func (i commsSMSLogIndexes) AsSlice() []index {
+func (i commsTextLogIndexes) AsSlice() []index {
 	return []index{
-		i.SMSLogPkey,
+		i.TextLogPkey,
 	}
 }
 
-type commsSMSLogForeignKeys struct {
-	CommsSMSLogSMSLogDestinationFkey foreignKey
-	CommsSMSLogSMSLogSourceFkey      foreignKey
+type commsTextLogForeignKeys struct {
+	CommsTextLogTextLogDestinationFkey foreignKey
+	CommsTextLogTextLogSourceFkey      foreignKey
 }
 
-func (f commsSMSLogForeignKeys) AsSlice() []foreignKey {
+func (f commsTextLogForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.CommsSMSLogSMSLogDestinationFkey, f.CommsSMSLogSMSLogSourceFkey,
+		f.CommsTextLogTextLogDestinationFkey, f.CommsTextLogTextLogSourceFkey,
 	}
 }
 
-type commsSMSLogUniques struct{}
+type commsTextLogUniques struct{}
 
-func (u commsSMSLogUniques) AsSlice() []constraint {
+func (u commsTextLogUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type commsSMSLogChecks struct{}
+type commsTextLogChecks struct{}
 
-func (c commsSMSLogChecks) AsSlice() []check {
+func (c commsTextLogChecks) AsSlice() []check {
 	return []check{}
 }

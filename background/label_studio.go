@@ -1,4 +1,4 @@
-package queue
+package background
 
 import (
 	"context"
@@ -16,15 +16,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type LabelStudioJob struct {
+type jobLabelStudio struct {
 	UUID uuid.UUID
 }
 
-var labelJobChannel chan LabelStudioJob
+var channelJobLabelStudio chan jobLabelStudio
 
-func EnqueueLabelStudioJob(job LabelStudioJob) {
+func enqueueLabelStudioJob(job jobLabelStudio) {
 	select {
-	case labelJobChannel <- job:
+	case channelJobLabelStudio <- job:
 		log.Printf("Enqueued label job for UUID: %s", job.UUID)
 	default:
 		log.Printf("Label job channel is full, dropping job for UUID: %s", job.UUID)
@@ -49,7 +49,7 @@ func StartLabelStudioWorker(ctx context.Context) error {
 		return fmt.Errorf("Failed to create minio client: %v", err)
 	}
 	buffer := 100
-	labelJobChannel = make(chan LabelStudioJob, buffer) // Buffered channel to prevent blocking
+	channelJobLabelStudio = make(chan jobLabelStudio, buffer) // Buffered channel to prevent blocking
 	log.Printf("Started label studio worker with buffer depth %d", buffer)
 	go func() {
 		for {
@@ -57,7 +57,7 @@ func StartLabelStudioWorker(ctx context.Context) error {
 			case <-ctx.Done():
 				log.Println("Audio worker shutting down.")
 				return
-			case job := <-labelJobChannel:
+			case job := <-channelJobLabelStudio:
 				log.Printf("Processing label job for UUID: %s", job.UUID)
 				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, project, job)
 				if err != nil {
@@ -99,7 +99,7 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 	return labelStudioClient, nil
 }
 
-func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, project *labelstudio.Project, job LabelStudioJob) error {
+func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, project *labelstudio.Project, job jobLabelStudio) error {
 	customer := os.Getenv("CUSTOMER")
 	if customer == "" {
 		return errors.New("You must specify a CUSTOMER env var")

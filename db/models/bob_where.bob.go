@@ -22,7 +22,7 @@ func Where[Q psql.Filterable]() struct {
 	CommsEmails                        commsEmailWhere[Q]
 	CommsEmailLogs                     commsEmailLogWhere[Q]
 	CommsPhones                        commsPhoneWhere[Q]
-	CommsSMSLogs                       commsSMSLogWhere[Q]
+	CommsTextLogs                      commsTextLogWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -85,7 +85,7 @@ func Where[Q psql.Filterable]() struct {
 		CommsEmails                        commsEmailWhere[Q]
 		CommsEmailLogs                     commsEmailLogWhere[Q]
 		CommsPhones                        commsPhoneWhere[Q]
-		CommsSMSLogs                       commsSMSLogWhere[Q]
+		CommsTextLogs                      commsTextLogWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -147,7 +147,7 @@ func Where[Q psql.Filterable]() struct {
 		CommsEmails:                        buildCommsEmailWhere[Q](CommsEmails.Columns),
 		CommsEmailLogs:                     buildCommsEmailLogWhere[Q](CommsEmailLogs.Columns),
 		CommsPhones:                        buildCommsPhoneWhere[Q](CommsPhones.Columns),
-		CommsSMSLogs:                       buildCommsSMSLogWhere[Q](CommsSMSLogs.Columns),
+		CommsTextLogs:                      buildCommsTextLogWhere[Q](CommsTextLogs.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),

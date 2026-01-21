@@ -23,7 +23,7 @@ type Factory struct {
 	baseCommsEmailMods                        CommsEmailModSlice
 	baseCommsEmailLogMods                     CommsEmailLogModSlice
 	baseCommsPhoneMods                        CommsPhoneModSlice
-	baseCommsSMSLogMods                       CommsSMSLogModSlice
+	baseCommsTextLogMods                      CommsTextLogModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
 	baseFieldseekerFieldscoutinglogMods       FieldseekerFieldscoutinglogModSlice
 	baseFieldseekerHabitatrelateMods          FieldseekerHabitatrelateModSlice
@@ -213,7 +213,7 @@ func (f *Factory) FromExistingCommsEmailLog(m *models.CommsEmailLog) *CommsEmail
 	o.Created = func() time.Time { return m.Created }
 	o.Destination = func() string { return m.Destination }
 	o.Source = func() string { return m.Source }
-	o.Type = func() enums.CommsEmailmessagetype { return m.Type }
+	o.Type = func() enums.CommsMessagetypeemail { return m.Type }
 
 	ctx := context.Background()
 	if m.R.DestinationEmail != nil {
@@ -252,46 +252,46 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	if len(m.R.SourceEmailLogs) > 0 {
 		CommsPhoneMods.AddExistingSourceEmailLogs(m.R.SourceEmailLogs...).Apply(ctx, o)
 	}
-	if len(m.R.DestinationSMSLogs) > 0 {
-		CommsPhoneMods.AddExistingDestinationSMSLogs(m.R.DestinationSMSLogs...).Apply(ctx, o)
+	if len(m.R.DestinationTextLogs) > 0 {
+		CommsPhoneMods.AddExistingDestinationTextLogs(m.R.DestinationTextLogs...).Apply(ctx, o)
 	}
-	if len(m.R.SourceSMSLogs) > 0 {
-		CommsPhoneMods.AddExistingSourceSMSLogs(m.R.SourceSMSLogs...).Apply(ctx, o)
+	if len(m.R.SourceTextLogs) > 0 {
+		CommsPhoneMods.AddExistingSourceTextLogs(m.R.SourceTextLogs...).Apply(ctx, o)
 	}
 
 	return o
 }
 
-func (f *Factory) NewCommsSMSLog(mods ...CommsSMSLogMod) *CommsSMSLogTemplate {
-	return f.NewCommsSMSLogWithContext(context.Background(), mods...)
+func (f *Factory) NewCommsTextLog(mods ...CommsTextLogMod) *CommsTextLogTemplate {
+	return f.NewCommsTextLogWithContext(context.Background(), mods...)
 }
 
-func (f *Factory) NewCommsSMSLogWithContext(ctx context.Context, mods ...CommsSMSLogMod) *CommsSMSLogTemplate {
-	o := &CommsSMSLogTemplate{f: f}
+func (f *Factory) NewCommsTextLogWithContext(ctx context.Context, mods ...CommsTextLogMod) *CommsTextLogTemplate {
+	o := &CommsTextLogTemplate{f: f}
 
 	if f != nil {
-		f.baseCommsSMSLogMods.Apply(ctx, o)
+		f.baseCommsTextLogMods.Apply(ctx, o)
 	}
 
-	CommsSMSLogModSlice(mods).Apply(ctx, o)
+	CommsTextLogModSlice(mods).Apply(ctx, o)
 
 	return o
 }
 
-func (f *Factory) FromExistingCommsSMSLog(m *models.CommsSMSLog) *CommsSMSLogTemplate {
-	o := &CommsSMSLogTemplate{f: f, alreadyPersisted: true}
+func (f *Factory) FromExistingCommsTextLog(m *models.CommsTextLog) *CommsTextLogTemplate {
+	o := &CommsTextLogTemplate{f: f, alreadyPersisted: true}
 
 	o.Created = func() time.Time { return m.Created }
 	o.Destination = func() string { return m.Destination }
 	o.Source = func() string { return m.Source }
-	o.Type = func() enums.CommsSmsmessagetype { return m.Type }
+	o.Type = func() enums.CommsMessagetypetext { return m.Type }
 
 	ctx := context.Background()
 	if m.R.DestinationPhone != nil {
-		CommsSMSLogMods.WithExistingDestinationPhone(m.R.DestinationPhone).Apply(ctx, o)
+		CommsTextLogMods.WithExistingDestinationPhone(m.R.DestinationPhone).Apply(ctx, o)
 	}
 	if m.R.SourcePhone != nil {
-		CommsSMSLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
+		CommsTextLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
 	}
 
 	return o
@@ -3198,12 +3198,12 @@ func (f *Factory) AddBaseCommsPhoneMod(mods ...CommsPhoneMod) {
 	f.baseCommsPhoneMods = append(f.baseCommsPhoneMods, mods...)
 }
 
-func (f *Factory) ClearBaseCommsSMSLogMods() {
-	f.baseCommsSMSLogMods = nil
+func (f *Factory) ClearBaseCommsTextLogMods() {
+	f.baseCommsTextLogMods = nil
 }
 
-func (f *Factory) AddBaseCommsSMSLogMod(mods ...CommsSMSLogMod) {
-	f.baseCommsSMSLogMods = append(f.baseCommsSMSLogMods, mods...)
+func (f *Factory) AddBaseCommsTextLogMod(mods ...CommsTextLogMod) {
+	f.baseCommsTextLogMods = append(f.baseCommsTextLogMods, mods...)
 }
 
 func (f *Factory) ClearBaseFieldseekerContainerrelateMods() {
