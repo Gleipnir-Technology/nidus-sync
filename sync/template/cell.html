@@ -85,8 +85,8 @@
 								<tr>
 									<td><a href="/source/{{.ID}}">{{.ID|uuidShort}}</a></td>
 									<td>{{.Type}}</td>
-									<td>{{.LastInspected|timeSince}}</td>
-									<td>{{.LastTreated|timeSince}}</td>
+									<td>{{.LastInspected|timeSincePtr}}</td>
+									<td>{{.LastTreated|timeSincePtr}}</td>
 								</tr>
 								{{ end }}
 							</tbody>
@@ -130,7 +130,7 @@
 								<tr>
 									<td><a href="/source/{{.LocationID}}">{{.LocationID|uuidShort}}</a></td>
 									<td>{{.Location}}</td>
-									<td>{{.Date|timeSince}}</td>
+									<td>{{.Date|timeSincePtr}}</td>
 									<td>{{.Action}}</td>
 									<td>{{.Notes}}</td>
 								</tr>
@@ -208,7 +208,7 @@
 								{{ range .Treatments }}
 								<tr>
 									<td><a href="/source/{{.LocationID}}">{{.LocationID|uuidShort}}</a></td>
-									<td>{{.Date|timeSince}}</td>
+									<td>{{.Date|timeSincePtr}}</td>
 									<td>{{.Product}}</td>
 									<td>{{.Notes}}</td>
 								</tr>

@@ -82,7 +82,7 @@ window.addEventListener("load", onLoad);
 				</p>
 			{{ else }}
 				<p class="last-refreshed mb-0">
-				<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync | timeSince }}</span>
+				<i class="fas fa-sync-alt me-2"></i>Last updated: <span id="last-refreshed-time">{{ .LastSync | timeSincePtr }}</span>
 					<button class="btn btn-sm btn-outline-primary ms-3">Refresh Data</button>
 				</p>
 			{{ end }}
@@ -99,7 +99,7 @@ window.addEventListener("load", onLoad);
 						<i class="fas fa-clock"></i>
 					</div>
 					<h5 class="card-title">Last Data Refresh</h5>
-					<p class="metric-value">{{ .LastSync | timeSince }}</p>
+					<p class="metric-value">{{ .LastSync | timeSincePtr }}</p>
 					<!-- <p class="card-text text-muted">Last sync: 12:45 PM</p> -->
 				</div>
 			</div>
@@ -207,7 +207,7 @@ window.addEventListener("load", onLoad);
 							<tbody>
 							{{ range $i, $sr := .RecentRequests }}
 								<tr>
-									<td>{{ $sr.Date | timeSince }}</td>
+									<td>{{ $sr.Date | timeSincePtr }}</td>
 									<td>Service Request</td>
 									<td>{{ $sr.Location }}</td>
 									<td><span class="badge bg-success">Completed</span></td>

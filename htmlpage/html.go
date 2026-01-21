@@ -118,6 +118,7 @@ func makeFuncMap() template.FuncMap {
 		"timeElapsed":        timeElapsed,
 		"timeInterval":       timeInterval,
 		"timeSince":          timeSince,
+		"timeSincePtr":       timeSincePtr,
 		"uuidShort":          uuidShort,
 	}
 	return funcMap
@@ -269,12 +270,15 @@ func timeInterval(d time.Duration) string {
 	years := days / 365
 	return fmt.Sprintf("every %d years", int(math.Round(years)))
 }
-func timeSince(t *time.Time) string {
+func timeSincePtr(t *time.Time) string {
 	if t == nil {
 		return "never"
 	}
+	return timeSince(*t)
+}
+func timeSince(t time.Time) string {
 	now := time.Now()
-	diff := now.Sub(*t)
+	diff := now.Sub(t)
 
 	hours := diff.Hours()
 	if hours < 1 {

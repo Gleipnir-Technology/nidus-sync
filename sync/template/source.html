@@ -147,11 +147,11 @@
 						<table class="info-table">
 							<tr>
 								<td class="info-label">Creation date</td>
-								<td>{{ .Source.Created|timeSince }}</td>
+								<td>{{ .Source.Created|timeSincePtr }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Edit date</td>
-								<td>{{ .Source.EditedAt|timeSince }}</td>
+								<td>{{ .Source.EditedAt|timeSincePtr }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Larva Inspect Interval</td>
@@ -179,7 +179,7 @@
 							</tr>
 							<tr>
 								<td class="info-label">Last Inspect Date</td>
-								<td>{{ .Source.LastInspectionDate|timeSince }}</td>
+								<td>{{ .Source.LastInspectionDate|timeSincePtr }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Last Inspect Species</td>
@@ -195,7 +195,7 @@
 							</tr>
 							<tr>
 								<td class="info-label">Last Treat Date</td>
-								<td>{{ .Source.LastTreatmentDate|timeSince }}</td>
+								<td>{{ .Source.LastTreatmentDate|timeSincePtr }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Last Treat Product</td>
@@ -211,7 +211,7 @@
 							</tr>
 							<tr>
 								<td class="info-label">Next action date scheduled:</td>
-								<td>{{ .Source.NextActionScheduledDate|timeSince }}</td>
+								<td>{{ .Source.NextActionScheduledDate|timeSincePtr }}</td>
 							</tr>
 							<tr>
 								<td class="info-label">Treatment Cadence:</td>
@@ -272,7 +272,7 @@
 							<tbody>
 								{{ range .Treatments }}
 								<tr>
-									<td>{{.Date|timeSince}}</td>
+									<td>{{.Date|timeSincePtr}}</td>
 									<td>{{.Product}}</td>
 									<td class="time-delta-neutral">{{.CadenceDelta|timeDelta}}</td>
 									<td>{{.Notes}}</td>
@@ -304,7 +304,7 @@
 							<tbody>
 								{{ range .Inspections }}
 								<tr>
-									<td>{{.Date|timeSince}}</td>
+									<td>{{.Date|timeSincePtr}}</td>
 									<td>{{.Action}}</td>
 									<td>{{.Notes}}</td>
 								</tr>
@@ -348,7 +348,7 @@
 						<!-- Trap 1 with multiple collections -->
 							{{ range .Counts }}
 							<tr>
-								<td>{{ .Ended|timeSince }}</td>
+								<td>{{ .Ended|timeSincePtr }}</td>
 								<td>{{ .Females }}</td>
 								<td>{{ .Males }}</td>
 								<td>{{ .Total }}</td>

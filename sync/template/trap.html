@@ -115,7 +115,7 @@
 						<!-- Trap 1 with multiple collections -->
 						{{ range .Trap.Collections }}
 							<tr>
-								<td>{{ .EndDateTime|timeSince }}</td>
+								<td>{{ .EndDateTime|timeSincePtr }}</td>
 								<td>{{ .GlobalID }}</td>
 								<td>{{ .Count.Females }}</td>
 								<td>{{ .Count.Males }}</td>
