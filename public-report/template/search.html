@@ -7,14 +7,8 @@
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map-multipoint.js"></script>
+<script src="/static/js/report-table.js"></script>
 <style>
-.clickable-row {
-	cursor: pointer;
-	transition: background-color 0.15s ease-in-out;
-}
-.clickable-row:hover {
-	background-color: rgba(13, 110, 253, 0.1);
-}
 .map-container {
 	background-color: #e9ecef;
 	border-radius: 10px;
@@ -34,9 +28,6 @@
 	max-width: none;
 	min-width: 0px;
 	height: auto;
-}
-.report-type-badge {
-	font-size: 0.85rem;
 }
 .search-box {
 	box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -70,58 +61,18 @@ function getUniqueFeatures(features, comparatorProperty) {
 function renderReports(features) {
 	console.log("render reports", features);
 	
-	const reportTableBodyEl = document.getElementById('report-table-body');
-	const empty = document.createElement('p');
-	// Clear any existing listings
-	//listingEl.innerHTML = '';
-	reportTableBodyEl.innerHTML = '';
-	if (features.length) {
-		for (const feature of features) {
-			/*
-			const itemLink = document.createElement('a');
-			const label = `${feature.properties.name} (${feature.properties.abbrev})`;
-			itemLink.href = feature.properties.wikipedia;
-			itemLink.target = '_blank';
-			itemLink.textContent = label;
-			itemLink.addEventListener('mouseover', () => {
-				// Highlight corresponding feature on the map
-				popup
-					.setLngLat(feature.geometry.coordinates)
-					.setText(label)
-					.addTo(map);
-			});
-			listingEl.appendChild(itemLink);
-			*/
-
-			const tableRow = document.createElement("tr");
-
-			const reportIdCol = document.createElement("td");
-			reportIdCol.textContent = feature.properties.public_id;
-			tableRow.appendChild(reportIdCol);
-
-			const ageCol = document.createElement("td");
-			ageCol.textContent = feature.properties.created;
-			tableRow.appendChild(ageCol);
-
-			const typeCol = document.createElement("td");
-			typeCol.textContent = feature.properties.table_name;
-			tableRow.appendChild(typeCol);
-
-			const addressCol = document.createElement("td");
-			addressCol.textContent = feature.properties.address;
-			tableRow.appendChild(addressCol);
-
-			const statusCol = document.createElement("td");
-			statusCol.textContent = feature.properties.status;
-			tableRow.appendChild(statusCol);
-
-			reportTableBodyEl.appendChild(tableRow);
-		}
-	} else if (features.length === 0 ) {
-		empty.textContent = 'No results found';
-		reportTableBodyEl.appendChild(empty);
-	} else {
+	const report_table = document.querySelector('report-table');
+	let reports = [];
+	for (const feature of features) {
+		reports.push({
+			address: feature.properties.address,
+			created: feature.properties.created,
+			id: feature.properties.public_id,
+			status: feature.properties.status,
+			type: feature.properties.table_name
+		});
 	}
+	report_table.reports = reports;
 }
 function onLoad() {
 	const map = document.querySelector("map-multipoint");
@@ -139,7 +90,7 @@ function onLoad() {
 			'type': 'circle',
 			'paint': {
 				'circle-color': '#4264fb',
-				'circle-radius': 4,
+				'circle-radius': 7,
 				'circle-stroke-width': 2,
 				'circle-stroke-color': '#ffffff'
 			}
@@ -233,70 +184,10 @@ document.addEventListener('DOMContentLoaded', onLoad);
 		</div>
 		<div class="card-body p-0">
 			<div class="table-responsive">
-				<table class="table table-hover mb-0">
-					<thead class="table-light">
-						<tr>
-							<th scope="col">Report ID</th>
-							<th scope="col">Reported</th>
-							<th scope="col">Type</th>
-							<th scope="col">Address</th>
-							<th scope="col">Status</th>
-						</tr>
-					</thead>
-					<tbody id="report-table-body">
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12345'">
-							<td><strong>#12345</strong></td>
-							<td>2 days ago</td>
-							<td><span class="badge bg-danger report-type-badge">Mosquito Nuisance</span></td>
-							<td>456 Elm Street, Anytown, USA</td>
-							<td><span class="badge bg-warning text-dark">Scheduled</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12346'">
-							<td><strong>#12346</strong></td>
-							<td>3 days ago</td>
-							<td><span class="badge bg-success report-type-badge">Green Pool</span></td>
-							<td>789 Oak Avenue, Anytown, USA</td>
-							<td><span class="badge bg-success">Treated</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12347'">
-							<td><strong>#12347</strong></td>
-							<td>1 week ago</td>
-							<td><span class="badge bg-primary report-type-badge">Mosquito Nuisance</span></td>
-							<td>123 Pine Road, Anytown, USA</td>
-							<td><span class="badge bg-info">Visited</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12348'">
-							<td><strong>#12348</strong></td>
-							<td>1 day ago</td>
-							<td><span class="badge bg-secondary report-type-badge">Quick Report</span></td>
-							<td>567 Maple Lane, Anytown, USA</td>
-							<td><span class="badge bg-secondary">In Review</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12349'">
-							<td><strong>#12349</strong></td>
-							<td>2 weeks ago</td>
-							<td><span class="badge bg-success report-type-badge">Green Pool</span></td>
-							<td>890 Cedar Court, Anytown, USA</td>
-							<td><span class="badge bg-success">Treated</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12350'">
-							<td><strong>#12350</strong></td>
-							<td>5 days ago</td>
-							<td><span class="badge bg-danger report-type-badge">Mosquito Nuisance</span></td>
-							<td>234 Birch Blvd, Anytown, USA</td>
-							<td><span class="badge bg-warning text-dark">Scheduled</span></td>
-						</tr>
-						<tr class="clickable-row" onclick="window.location='report-status.html?id=12351'">
-							<td><strong>#12351</strong></td>
-							<td>3 hours ago</td>
-							<td><span class="badge bg-secondary report-type-badge">Quick Report</span></td>
-							<td>678 Spruce Street, Anytown, USA</td>
-							<td><span class="badge bg-secondary">In Review</span></td>
-						</tr>
-					</tbody>
-				</table>
+				<report-table />
 			</div>
 		</div>
+		<!--
 		<div class="card-footer">
 			<nav aria-label="Page navigation">
 				<ul class="pagination justify-content-center mb-0">
@@ -312,6 +203,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				</ul>
 			</nav>
 		</div>
+		-->
 	</div>
 	
 	<!-- Create Report Button (Fixed at bottom on mobile) -->
