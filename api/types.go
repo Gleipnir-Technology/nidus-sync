@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/null"
 	"github.com/go-chi/render"
+	"github.com/rs/zerolog/log"
 )
 
 type H3Cell uint64
@@ -171,13 +173,18 @@ func (rtd ResponseMosquitoSource) Render(w http.ResponseWriter, r *http.Request)
 
 func NewResponseMosquitoSource(ms platform.MosquitoSource) ResponseMosquitoSource {
 	pl := ms.PointLocation
+	h3cell, err := h3utils.ToCell(pl.H3cell.GetOr("0"))
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to convert h3 cell")
+		h3cell = 0
+	}
 	return ResponseMosquitoSource{
-		Active:      toBool16(pl.Active),
-		Access:      pl.Accessdesc.GetOr(""),
-		Comments:    pl.Comments.GetOr(""),
-		Created:     formatTime(pl.Creationdate),
-		Description: pl.Description.GetOr(""),
-		//H3Cell:                  pl.H3Cell,
+		Active:                  toBool16(pl.Active),
+		Access:                  pl.Accessdesc.GetOr(""),
+		Comments:                pl.Comments.GetOr(""),
+		Created:                 formatTime(pl.Creationdate),
+		Description:             pl.Description.GetOr(""),
+		H3Cell:                  int64(h3cell),
 		ID:                      pl.Globalid.String(),
 		LastInspectionDate:      formatTime(pl.Lastinspectdate),
 		Habitat:                 pl.Habitat.GetOr(""),
