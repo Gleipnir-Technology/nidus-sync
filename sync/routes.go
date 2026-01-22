@@ -49,6 +49,8 @@ func Router() chi.Router {
 
 	r.Get("/oauth/refresh", getOAuthRefresh)
 
+	r.Get("/privacy", getPrivacy)
+
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)

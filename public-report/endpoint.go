@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContextRoot struct{}
+type ContentRoot struct{}
 
 var (
 	PrivacyT = buildTemplate("privacy", "base")
@@ -20,14 +20,14 @@ func getPrivacy(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		PrivacyT,
-		ContextRoot{},
+		ContentRoot{},
 	)
 }
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		RootT,
-		ContextRoot{},
+		ContentRoot{},
 	)
 }
 
@@ -39,7 +39,7 @@ func getTerms(w http.ResponseWriter, r *http.Request) {
 	htmlpage.RenderOrError(
 		w,
 		TermsT,
-		ContextRoot{},
+		ContentRoot{},
 	)
 }
 
