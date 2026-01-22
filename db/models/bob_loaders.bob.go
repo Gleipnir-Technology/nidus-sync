@@ -64,6 +64,7 @@ type preloaders struct {
 	Organization                      organizationPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
+	PublicreportNuisance              publicreportNuisancePreloader
 	PublicreportPool                  publicreportPoolPreloader
 	PublicreportPoolImage             publicreportPoolImagePreloader
 	PublicreportQuick                 publicreportQuickPreloader
@@ -120,6 +121,7 @@ func getPreloaders() preloaders {
 		Organization:                      buildOrganizationPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
+		PublicreportNuisance:              buildPublicreportNuisancePreloader(),
 		PublicreportPool:                  buildPublicreportPoolPreloader(),
 		PublicreportPoolImage:             buildPublicreportPoolImagePreloader(),
 		PublicreportQuick:                 buildPublicreportQuickPreloader(),
@@ -182,6 +184,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	Organization                      organizationThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
+	PublicreportNuisance              publicreportNuisanceThenLoader[Q]
 	PublicreportPool                  publicreportPoolThenLoader[Q]
 	PublicreportPoolImage             publicreportPoolImageThenLoader[Q]
 	PublicreportQuick                 publicreportQuickThenLoader[Q]
@@ -238,6 +241,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Organization:                      buildOrganizationThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
+		PublicreportNuisance:              buildPublicreportNuisanceThenLoader[Q](),
 		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),
 		PublicreportPoolImage:             buildPublicreportPoolImageThenLoader[Q](),
 		PublicreportQuick:                 buildPublicreportQuickThenLoader[Q](),

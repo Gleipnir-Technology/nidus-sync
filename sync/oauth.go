@@ -2,6 +2,8 @@ package sync
 
 import (
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
@@ -19,8 +21,33 @@ type ContextOauthPrompt struct {
 	User User
 }
 
+// Build the ArcGIS authorization URL with PKCE
+func buildArcGISAuthURL(clientID string) string {
+	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/authorize/"
+
+	params := url.Values{}
+	params.Add("client_id", clientID)
+	params.Add("redirect_uri", config.ArcGISOauthRedirectURL())
+	params.Add("response_type", "code")
+	//params.Add("code_challenge", generateCodeChallenge(codeVerifier))
+	//params.Add("code_challenge_method", "S256")
+
+	// See https://developers.arcgis.com/rest/users-groups-and-items/token/
+	// expiration is defined in minutes
+	var expiration int
+	if config.IsProductionEnvironment() {
+		// 2 weeks is the maximum allowed
+		expiration = 20160
+	} else {
+		expiration = 20
+	}
+	params.Add("expiration", strconv.Itoa(expiration))
+
+	return baseURL + "?" + params.Encode()
+}
+
 func getArcgisOauthBegin(w http.ResponseWriter, r *http.Request) {
-	authURL := config.BuildArcGISAuthURL(config.ClientID)
+	authURL := buildArcGISAuthURL(config.ClientID)
 	http.Redirect(w, r, authURL, http.StatusFound)
 }
 
@@ -41,7 +68,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to handle access code", err, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, config.MakeURLSync("/"), http.StatusFound)
+	http.Redirect(w, r, config.MakeURLNidus("/"), http.StatusFound)
 }
 
 func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {

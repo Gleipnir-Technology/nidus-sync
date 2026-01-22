@@ -78,6 +78,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		LogoUUID: column{
+			Name:      "logo_uuid",
+			DBType:    "uuid",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -172,11 +181,12 @@ type organizationColumns struct {
 	FieldseekerURL    column
 	ImportDistrictGid column
 	Website           column
+	LogoUUID          column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID,
 	}
 }
 

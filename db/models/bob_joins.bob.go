@@ -79,6 +79,7 @@ type joins[Q dialect.Joinable] struct {
 	Organizations                      joinSet[organizationJoins[Q]]
 	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
 	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
+	PublicreportNuisances              joinSet[publicreportNuisanceJoins[Q]]
 	PublicreportPools                  joinSet[publicreportPoolJoins[Q]]
 	PublicreportPoolImages             joinSet[publicreportPoolImageJoins[Q]]
 	PublicreportQuicks                 joinSet[publicreportQuickJoins[Q]]
@@ -143,6 +144,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
 		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
 		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
+		PublicreportNuisances:              buildJoinSet[publicreportNuisanceJoins[Q]](PublicreportNuisances.Columns, buildPublicreportNuisanceJoins),
 		PublicreportPools:                  buildJoinSet[publicreportPoolJoins[Q]](PublicreportPools.Columns, buildPublicreportPoolJoins),
 		PublicreportPoolImages:             buildJoinSet[publicreportPoolImageJoins[Q]](PublicreportPoolImages.Columns, buildPublicreportPoolImageJoins),
 		PublicreportQuicks:                 buildJoinSet[publicreportQuickJoins[Q]](PublicreportQuicks.Columns, buildPublicreportQuickJoins),

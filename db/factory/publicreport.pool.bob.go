@@ -68,6 +68,7 @@ type PublicreportPoolTemplate struct {
 	ReporterPhone   func() string
 	Subscribe       func() bool
 	Status          func() enums.PublicreportReportstatustype
+	OrganizationID  func() null.Val[int32]
 
 	r publicreportPoolR
 	f *Factory
@@ -76,9 +77,13 @@ type PublicreportPoolTemplate struct {
 }
 
 type publicreportPoolR struct {
-	Images []*publicreportPoolRImagesR
+	Organization *publicreportPoolROrganizationR
+	Images       []*publicreportPoolRImagesR
 }
 
+type publicreportPoolROrganizationR struct {
+	o *OrganizationTemplate
+}
 type publicreportPoolRImagesR struct {
 	number int
 	o      *PublicreportImageTemplate
@@ -94,6 +99,13 @@ func (o *PublicreportPoolTemplate) Apply(ctx context.Context, mods ...Publicrepo
 // setModelRels creates and sets the relationships on *models.PublicreportPool
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportPoolTemplate) setModelRels(o *models.PublicreportPool) {
+	if t.r.Organization != nil {
+		rel := t.r.Organization.o.Build()
+		rel.R.PublicreportPool = append(rel.R.PublicreportPool, o)
+		o.OrganizationID = null.From(rel.ID) // h2
+		o.R.Organization = rel
+	}
+
 	if t.r.Images != nil {
 		rel := models.PublicreportImageSlice{}
 		for _, r := range t.r.Images {
@@ -232,6 +244,10 @@ func (o PublicreportPoolTemplate) BuildSetter() *models.PublicreportPoolSetter {
 		val := o.Status()
 		m.Status = omit.From(val)
 	}
+	if o.OrganizationID != nil {
+		val := o.OrganizationID()
+		m.OrganizationID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -343,6 +359,9 @@ func (o PublicreportPoolTemplate) Build() *models.PublicreportPool {
 	}
 	if o.Status != nil {
 		m.Status = o.Status()
+	}
+	if o.OrganizationID != nil {
+		m.OrganizationID = o.OrganizationID()
 	}
 
 	o.setModelRels(m)
@@ -480,6 +499,25 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 func (o *PublicreportPoolTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportPool) error {
 	var err error
 
+	isOrganizationDone, _ := publicreportPoolRelOrganizationCtx.Value(ctx)
+	if !isOrganizationDone && o.r.Organization != nil {
+		ctx = publicreportPoolRelOrganizationCtx.WithValue(ctx, true)
+		if o.r.Organization.o.alreadyPersisted {
+			m.R.Organization = o.r.Organization.o.Build()
+		} else {
+			var rel0 *models.Organization
+			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachOrganization(ctx, exec, rel0)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	isImagesDone, _ := publicreportPoolRelImagesCtx.Value(ctx)
 	if !isImagesDone && o.r.Images != nil {
 		ctx = publicreportPoolRelImagesCtx.WithValue(ctx, true)
@@ -487,12 +525,12 @@ func (o *PublicreportPoolTemplate) insertOptRels(ctx context.Context, exec bob.E
 			if r.o.alreadyPersisted {
 				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachImages(ctx, exec, rel0...)
+				err = m.AttachImages(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -622,6 +660,7 @@ func (m publicreportPoolMods) RandomizeAllColumns(f *faker.Faker) PublicreportPo
 		PublicreportPoolMods.RandomReporterPhone(f),
 		PublicreportPoolMods.RandomSubscribe(f),
 		PublicreportPoolMods.RandomStatus(f),
+		PublicreportPoolMods.RandomOrganizationID(f),
 	}
 }
 
@@ -1599,12 +1638,100 @@ func (m publicreportPoolMods) RandomStatus(f *faker.Faker) PublicreportPoolMod {
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportPoolMods) OrganizationID(val null.Val[int32]) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.OrganizationID = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) OrganizationIDFunc(f func() null.Val[int32]) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.OrganizationID = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetOrganizationID() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.OrganizationID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportPoolMods) RandomOrganizationID(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportPoolMods) RandomOrganizationIDNotNull(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportPoolMods) WithParentsCascading() PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
 		if isDone, _ := publicreportPoolWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = publicreportPoolWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
+			m.WithOrganization(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m publicreportPoolMods) WithOrganization(rel *OrganizationTemplate) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.Organization = &publicreportPoolROrganizationR{
+			o: rel,
+		}
+	})
+}
+
+func (m publicreportPoolMods) WithNewOrganization(mods ...OrganizationMod) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+
+		m.WithOrganization(related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportPoolMods) WithExistingOrganization(em *models.Organization) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.Organization = &publicreportPoolROrganizationR{
+			o: o.f.FromExistingOrganization(em),
+		}
+	})
+}
+
+func (m publicreportPoolMods) WithoutOrganization() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.Organization = nil
 	})
 }
 

@@ -29,16 +29,17 @@ import (
 
 // PublicreportQuick is an object representing the database table.
 type PublicreportQuick struct {
-	ID            int32                              `db:"id,pk" `
-	Created       time.Time                          `db:"created" `
-	Comments      string                             `db:"comments" `
-	Location      null.Val[string]                   `db:"location" `
-	H3cell        null.Val[string]                   `db:"h3cell" `
-	PublicID      string                             `db:"public_id" `
-	ReporterEmail string                             `db:"reporter_email" `
-	ReporterPhone string                             `db:"reporter_phone" `
-	Address       string                             `db:"address" `
-	Status        enums.PublicreportReportstatustype `db:"status" `
+	ID             int32                              `db:"id,pk" `
+	Created        time.Time                          `db:"created" `
+	Comments       string                             `db:"comments" `
+	Location       null.Val[string]                   `db:"location" `
+	H3cell         null.Val[string]                   `db:"h3cell" `
+	PublicID       string                             `db:"public_id" `
+	ReporterEmail  string                             `db:"reporter_email" `
+	ReporterPhone  string                             `db:"reporter_phone" `
+	Address        string                             `db:"address" `
+	Status         enums.PublicreportReportstatustype `db:"status" `
+	OrganizationID null.Val[int32]                    `db:"organization_id" `
 
 	R publicreportQuickR `db:"-" `
 
@@ -57,41 +58,44 @@ type PublicreportQuicksQuery = *psql.ViewQuery[*PublicreportQuick, PublicreportQ
 
 // publicreportQuickR is where relationships are stored.
 type publicreportQuickR struct {
-	Images PublicreportImageSlice // publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey
+	Organization *Organization          // publicreport.quick.quick_organization_id_fkey
+	Images       PublicreportImageSlice // publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey
 }
 
 func buildPublicreportQuickColumns(alias string) publicreportQuickColumns {
 	return publicreportQuickColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "created", "comments", "location", "h3cell", "public_id", "reporter_email", "reporter_phone", "address", "status",
+			"id", "created", "comments", "location", "h3cell", "public_id", "reporter_email", "reporter_phone", "address", "status", "organization_id",
 		).WithParent("publicreport.quick"),
-		tableAlias:    alias,
-		ID:            psql.Quote(alias, "id"),
-		Created:       psql.Quote(alias, "created"),
-		Comments:      psql.Quote(alias, "comments"),
-		Location:      psql.Quote(alias, "location"),
-		H3cell:        psql.Quote(alias, "h3cell"),
-		PublicID:      psql.Quote(alias, "public_id"),
-		ReporterEmail: psql.Quote(alias, "reporter_email"),
-		ReporterPhone: psql.Quote(alias, "reporter_phone"),
-		Address:       psql.Quote(alias, "address"),
-		Status:        psql.Quote(alias, "status"),
+		tableAlias:     alias,
+		ID:             psql.Quote(alias, "id"),
+		Created:        psql.Quote(alias, "created"),
+		Comments:       psql.Quote(alias, "comments"),
+		Location:       psql.Quote(alias, "location"),
+		H3cell:         psql.Quote(alias, "h3cell"),
+		PublicID:       psql.Quote(alias, "public_id"),
+		ReporterEmail:  psql.Quote(alias, "reporter_email"),
+		ReporterPhone:  psql.Quote(alias, "reporter_phone"),
+		Address:        psql.Quote(alias, "address"),
+		Status:         psql.Quote(alias, "status"),
+		OrganizationID: psql.Quote(alias, "organization_id"),
 	}
 }
 
 type publicreportQuickColumns struct {
 	expr.ColumnsExpr
-	tableAlias    string
-	ID            psql.Expression
-	Created       psql.Expression
-	Comments      psql.Expression
-	Location      psql.Expression
-	H3cell        psql.Expression
-	PublicID      psql.Expression
-	ReporterEmail psql.Expression
-	ReporterPhone psql.Expression
-	Address       psql.Expression
-	Status        psql.Expression
+	tableAlias     string
+	ID             psql.Expression
+	Created        psql.Expression
+	Comments       psql.Expression
+	Location       psql.Expression
+	H3cell         psql.Expression
+	PublicID       psql.Expression
+	ReporterEmail  psql.Expression
+	ReporterPhone  psql.Expression
+	Address        psql.Expression
+	Status         psql.Expression
+	OrganizationID psql.Expression
 }
 
 func (c publicreportQuickColumns) Alias() string {
@@ -106,20 +110,21 @@ func (publicreportQuickColumns) AliasedAs(alias string) publicreportQuickColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportQuickSetter struct {
-	ID            omit.Val[int32]                              `db:"id,pk" `
-	Created       omit.Val[time.Time]                          `db:"created" `
-	Comments      omit.Val[string]                             `db:"comments" `
-	Location      omitnull.Val[string]                         `db:"location" `
-	H3cell        omitnull.Val[string]                         `db:"h3cell" `
-	PublicID      omit.Val[string]                             `db:"public_id" `
-	ReporterEmail omit.Val[string]                             `db:"reporter_email" `
-	ReporterPhone omit.Val[string]                             `db:"reporter_phone" `
-	Address       omit.Val[string]                             `db:"address" `
-	Status        omit.Val[enums.PublicreportReportstatustype] `db:"status" `
+	ID             omit.Val[int32]                              `db:"id,pk" `
+	Created        omit.Val[time.Time]                          `db:"created" `
+	Comments       omit.Val[string]                             `db:"comments" `
+	Location       omitnull.Val[string]                         `db:"location" `
+	H3cell         omitnull.Val[string]                         `db:"h3cell" `
+	PublicID       omit.Val[string]                             `db:"public_id" `
+	ReporterEmail  omit.Val[string]                             `db:"reporter_email" `
+	ReporterPhone  omit.Val[string]                             `db:"reporter_phone" `
+	Address        omit.Val[string]                             `db:"address" `
+	Status         omit.Val[enums.PublicreportReportstatustype] `db:"status" `
+	OrganizationID omitnull.Val[int32]                          `db:"organization_id" `
 }
 
 func (s PublicreportQuickSetter) SetColumns() []string {
-	vals := make([]string, 0, 10)
+	vals := make([]string, 0, 11)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -149,6 +154,9 @@ func (s PublicreportQuickSetter) SetColumns() []string {
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
+	}
+	if !s.OrganizationID.IsUnset() {
+		vals = append(vals, "organization_id")
 	}
 	return vals
 }
@@ -184,6 +192,9 @@ func (s PublicreportQuickSetter) Overwrite(t *PublicreportQuick) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
+	if !s.OrganizationID.IsUnset() {
+		t.OrganizationID = s.OrganizationID.MustGetNull()
+	}
 }
 
 func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
@@ -192,7 +203,7 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 10)
+		vals := make([]bob.Expression, 11)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -253,6 +264,12 @@ func (s *PublicreportQuickSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
+		if !s.OrganizationID.IsUnset() {
+			vals[10] = psql.Arg(s.OrganizationID.MustGetNull())
+		} else {
+			vals[10] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -262,7 +279,7 @@ func (s PublicreportQuickSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 10)
+	exprs := make([]bob.Expression, 0, 11)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -331,6 +348,13 @@ func (s PublicreportQuickSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
 			psql.Arg(s.Status),
+		}})
+	}
+
+	if !s.OrganizationID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "organization_id")...),
+			psql.Arg(s.OrganizationID),
 		}})
 	}
 
@@ -560,6 +584,30 @@ func (o PublicreportQuickSlice) ReloadAll(ctx context.Context, exec bob.Executor
 	return nil
 }
 
+// Organization starts a query for related objects on organization
+func (o *PublicreportQuick) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
+	)...)
+}
+
+func (os PublicreportQuickSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Images starts a query for related objects on publicreport.image
 func (o *PublicreportQuick) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	return PublicreportImages.Query(append(mods,
@@ -587,6 +635,54 @@ func (os PublicreportQuickSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) P
 		),
 		sm.Where(psql.Group(PublicreportQuickImages.Columns.QuickID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func attachPublicreportQuickOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportQuick0 *PublicreportQuick, organization1 *Organization) (*PublicreportQuick, error) {
+	setter := &PublicreportQuickSetter{
+		OrganizationID: omitnull.From(organization1.ID),
+	}
+
+	err := publicreportQuick0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportQuickOrganization0: %w", err)
+	}
+
+	return publicreportQuick0, nil
+}
+
+func (publicreportQuick0 *PublicreportQuick) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := Organizations.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportQuickOrganization0(ctx, exec, 1, publicreportQuick0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportQuick0.R.Organization = organization1
+
+	organization1.R.Quicks = append(organization1.R.Quicks, publicreportQuick0)
+
+	return nil
+}
+
+func (publicreportQuick0 *PublicreportQuick) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachPublicreportQuickOrganization0(ctx, exec, 1, publicreportQuick0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportQuick0.R.Organization = organization1
+
+	organization1.R.Quicks = append(organization1.R.Quicks, publicreportQuick0)
+
+	return nil
 }
 
 func attachPublicreportQuickImages0(ctx context.Context, exec bob.Executor, count int, publicreportQuick0 *PublicreportQuick, publicreportImages2 PublicreportImageSlice) (PublicreportQuickImageSlice, error) {
@@ -655,16 +751,17 @@ func (publicreportQuick0 *PublicreportQuick) AttachImages(ctx context.Context, e
 }
 
 type publicreportQuickWhere[Q psql.Filterable] struct {
-	ID            psql.WhereMod[Q, int32]
-	Created       psql.WhereMod[Q, time.Time]
-	Comments      psql.WhereMod[Q, string]
-	Location      psql.WhereNullMod[Q, string]
-	H3cell        psql.WhereNullMod[Q, string]
-	PublicID      psql.WhereMod[Q, string]
-	ReporterEmail psql.WhereMod[Q, string]
-	ReporterPhone psql.WhereMod[Q, string]
-	Address       psql.WhereMod[Q, string]
-	Status        psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	ID             psql.WhereMod[Q, int32]
+	Created        psql.WhereMod[Q, time.Time]
+	Comments       psql.WhereMod[Q, string]
+	Location       psql.WhereNullMod[Q, string]
+	H3cell         psql.WhereNullMod[Q, string]
+	PublicID       psql.WhereMod[Q, string]
+	ReporterEmail  psql.WhereMod[Q, string]
+	ReporterPhone  psql.WhereMod[Q, string]
+	Address        psql.WhereMod[Q, string]
+	Status         psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID psql.WhereNullMod[Q, int32]
 }
 
 func (publicreportQuickWhere[Q]) AliasedAs(alias string) publicreportQuickWhere[Q] {
@@ -673,16 +770,17 @@ func (publicreportQuickWhere[Q]) AliasedAs(alias string) publicreportQuickWhere[
 
 func buildPublicreportQuickWhere[Q psql.Filterable](cols publicreportQuickColumns) publicreportQuickWhere[Q] {
 	return publicreportQuickWhere[Q]{
-		ID:            psql.Where[Q, int32](cols.ID),
-		Created:       psql.Where[Q, time.Time](cols.Created),
-		Comments:      psql.Where[Q, string](cols.Comments),
-		Location:      psql.WhereNull[Q, string](cols.Location),
-		H3cell:        psql.WhereNull[Q, string](cols.H3cell),
-		PublicID:      psql.Where[Q, string](cols.PublicID),
-		ReporterEmail: psql.Where[Q, string](cols.ReporterEmail),
-		ReporterPhone: psql.Where[Q, string](cols.ReporterPhone),
-		Address:       psql.Where[Q, string](cols.Address),
-		Status:        psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		ID:             psql.Where[Q, int32](cols.ID),
+		Created:        psql.Where[Q, time.Time](cols.Created),
+		Comments:       psql.Where[Q, string](cols.Comments),
+		Location:       psql.WhereNull[Q, string](cols.Location),
+		H3cell:         psql.WhereNull[Q, string](cols.H3cell),
+		PublicID:       psql.Where[Q, string](cols.PublicID),
+		ReporterEmail:  psql.Where[Q, string](cols.ReporterEmail),
+		ReporterPhone:  psql.Where[Q, string](cols.ReporterPhone),
+		Address:        psql.Where[Q, string](cols.Address),
+		Status:         psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID: psql.WhereNull[Q, int32](cols.OrganizationID),
 	}
 }
 
@@ -692,6 +790,18 @@ func (o *PublicreportQuick) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Organization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("publicreportQuick cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.Quicks = PublicreportQuickSlice{o}
+		}
+		return nil
 	case "Images":
 		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
@@ -711,22 +821,48 @@ func (o *PublicreportQuick) Preload(name string, retrieved any) error {
 	}
 }
 
-type publicreportQuickPreloader struct{}
+type publicreportQuickPreloader struct {
+	Organization func(...psql.PreloadOption) psql.Preloader
+}
 
 func buildPublicreportQuickPreloader() publicreportQuickPreloader {
-	return publicreportQuickPreloader{}
+	return publicreportQuickPreloader{
+		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "Organization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportQuicks,
+						To:          Organizations,
+						FromColumns: []string{"organization_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
+	}
 }
 
 type publicreportQuickThenLoader[Q orm.Loadable] struct {
-	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportQuickThenLoader[Q orm.Loadable]() publicreportQuickThenLoader[Q] {
+	type OrganizationLoadInterface interface {
+		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ImagesLoadInterface interface {
 		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportQuickThenLoader[Q]{
+		Organization: thenLoadBuilder[Q](
+			"Organization",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
 		Images: thenLoadBuilder[Q](
 			"Images",
 			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -734,6 +870,61 @@ func buildPublicreportQuickThenLoader[Q orm.Loadable]() publicreportQuickThenLoa
 			},
 		),
 	}
+}
+
+// LoadOrganization loads the publicreportQuick's Organization into the .R struct
+func (o *PublicreportQuick) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organization = nil
+
+	related, err := o.Organization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Quicks = PublicreportQuickSlice{o}
+
+	o.R.Organization = related
+	return nil
+}
+
+// LoadOrganization loads the publicreportQuick's Organization into the .R struct
+func (os PublicreportQuickSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.Organization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+			if !o.OrganizationID.IsValue() {
+				continue
+			}
+
+			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Quicks = append(rel.R.Quicks, o)
+
+			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
 }
 
 // LoadImages loads the publicreportQuick's Images into the .R struct
@@ -914,8 +1105,9 @@ func (os PublicreportQuickSlice) LoadCountImages(ctx context.Context, exec bob.E
 }
 
 type publicreportQuickJoins[Q dialect.Joinable] struct {
-	typ    string
-	Images modAs[Q, publicreportImageColumns]
+	typ          string
+	Organization modAs[Q, organizationColumns]
+	Images       modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportQuickJoins[Q]) aliasedAs(alias string) publicreportQuickJoins[Q] {
@@ -925,6 +1117,20 @@ func (j publicreportQuickJoins[Q]) aliasedAs(alias string) publicreportQuickJoin
 func buildPublicreportQuickJoins[Q dialect.Joinable](cols publicreportQuickColumns, typ string) publicreportQuickJoins[Q] {
 	return publicreportQuickJoins[Q]{
 		typ: typ,
+		Organization: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Images: modAs[Q, publicreportImageColumns]{
 			c: PublicreportImages.Columns,
 			f: func(to publicreportImageColumns) bob.Mod[Q] {

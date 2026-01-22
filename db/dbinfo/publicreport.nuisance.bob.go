@@ -258,6 +258,15 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -300,7 +309,17 @@ var PublicreportNuisances = Table[
 		Columns: []string{"id"},
 		Comment: "",
 	},
-
+	ForeignKeys: publicreportNuisanceForeignKeys{
+		PublicreportNuisanceNuisanceOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.nuisance.nuisance_organization_id_fkey",
+				Columns: []string{"organization_id"},
+				Comment: "",
+			},
+			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
+	},
 	Uniques: publicreportNuisanceUniques{
 		NuisancePublicIDKey: constraint{
 			Name:    "nuisance_public_id_key",
@@ -340,11 +359,12 @@ type publicreportNuisanceColumns struct {
 	Address            column
 	Location           column
 	Status             column
+	OrganizationID     column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.Email, c.InspectionType, c.SourceLocation, c.PreferredDateRange, c.PreferredTime, c.RequestCall, c.Severity, c.SourceContainer, c.SourceDescription, c.SourceRoof, c.SourceStagnant, c.TimeOfDayDay, c.TimeOfDayEarly, c.TimeOfDayEvening, c.TimeOfDayNight, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.Email, c.InspectionType, c.SourceLocation, c.PreferredDateRange, c.PreferredTime, c.RequestCall, c.Severity, c.SourceContainer, c.SourceDescription, c.SourceRoof, c.SourceStagnant, c.TimeOfDayDay, c.TimeOfDayEarly, c.TimeOfDayEvening, c.TimeOfDayNight, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID,
 	}
 }
 
@@ -359,10 +379,14 @@ func (i publicreportNuisanceIndexes) AsSlice() []index {
 	}
 }
 
-type publicreportNuisanceForeignKeys struct{}
+type publicreportNuisanceForeignKeys struct {
+	PublicreportNuisanceNuisanceOrganizationIDFkey foreignKey
+}
 
 func (f publicreportNuisanceForeignKeys) AsSlice() []foreignKey {
-	return []foreignKey{}
+	return []foreignKey{
+		f.PublicreportNuisanceNuisanceOrganizationIDFkey,
+	}
 }
 
 type publicreportNuisanceUniques struct {

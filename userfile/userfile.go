@@ -41,11 +41,17 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	log.Info().Str("filepath", filepath).Msg("Save audio file content")
 	return nil
 }
-func ImageFileContentPathRaw(uid string) string {
-	return fmt.Sprintf("%s/%s.raw", config.FilesDirectoryUser, uid)
+func ImageFileContentPathRawUser(uid string) string {
+	return imageFileContentPath(config.FilesDirectoryUser, uid, "raw")
+}
+func imageFileContentPathLogoPng(uid string) string {
+	return imageFileContentPath(config.FilesDirectoryLogo, uid, "png")
+}
+func imageFileContentPath(dir string, uid string, ext string) string {
+	return fmt.Sprintf("%s/%s.%s", dir, uid, ext)
 }
 func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
-	filepath := ImageFileContentPathRaw(uid.String())
+	filepath := ImageFileContentPathRawUser(uid.String())
 
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
@@ -61,6 +67,11 @@ func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	}
 	return nil
 }
+func ImageFileContentWriteLogo(w http.ResponseWriter, uid uuid.UUID) {
+	image_path := imageFileContentPathLogoPng(uid.String())
+	writeFileContent(w, image_path)
+}
+
 func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
 	filepath := PublicImageFileContentPathRaw(uid.String())
@@ -86,7 +97,10 @@ func PublicImageFileContentPathRaw(uid string) string {
 
 func PublicImageFileToResponse(w http.ResponseWriter, uid string) {
 	image_path := PublicImageFileContentPathRaw(uid)
+	writeFileContent(w, image_path)
+}
 
+func writeFileContent(w http.ResponseWriter, image_path string) {
 	// Open the file
 	file, err := os.Open(image_path)
 	if err != nil {

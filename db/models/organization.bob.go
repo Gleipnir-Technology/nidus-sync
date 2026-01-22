@@ -11,6 +11,7 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -25,13 +26,14 @@ import (
 
 // Organization is an object representing the database table.
 type Organization struct {
-	ID                int32            `db:"id,pk" `
-	Name              string           `db:"name" `
-	ArcgisID          null.Val[string] `db:"arcgis_id" `
-	ArcgisName        null.Val[string] `db:"arcgis_name" `
-	FieldseekerURL    null.Val[string] `db:"fieldseeker_url" `
-	ImportDistrictGid null.Val[int32]  `db:"import_district_gid" `
-	Website           null.Val[string] `db:"website" `
+	ID                int32               `db:"id,pk" `
+	Name              string              `db:"name" `
+	ArcgisID          null.Val[string]    `db:"arcgis_id" `
+	ArcgisName        null.Val[string]    `db:"arcgis_name" `
+	FieldseekerURL    null.Val[string]    `db:"fieldseeker_url" `
+	ImportDistrictGid null.Val[int32]     `db:"import_district_gid" `
+	Website           null.Val[string]    `db:"website" `
+	LogoUUID          null.Val[uuid.UUID] `db:"logo_uuid" `
 
 	R organizationR `db:"-" `
 
@@ -82,13 +84,16 @@ type organizationR struct {
 	NoteAudios                NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
 	NoteImages                NoteImageSlice                         // note_image.note_image_organization_id_fkey
 	ImportDistrictGidDistrict *ImportDistrict                        // organization.organization_import_district_gid_fkey
+	Nuisances                 PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
+	PublicreportPool          PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
+	Quicks                    PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
 	User                      UserSlice                              // user_.user__organization_id_fkey
 }
 
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website",
+			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid",
 		).WithParent("organization"),
 		tableAlias:        alias,
 		ID:                psql.Quote(alias, "id"),
@@ -98,6 +103,7 @@ func buildOrganizationColumns(alias string) organizationColumns {
 		FieldseekerURL:    psql.Quote(alias, "fieldseeker_url"),
 		ImportDistrictGid: psql.Quote(alias, "import_district_gid"),
 		Website:           psql.Quote(alias, "website"),
+		LogoUUID:          psql.Quote(alias, "logo_uuid"),
 	}
 }
 
@@ -111,6 +117,7 @@ type organizationColumns struct {
 	FieldseekerURL    psql.Expression
 	ImportDistrictGid psql.Expression
 	Website           psql.Expression
+	LogoUUID          psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -125,17 +132,18 @@ func (organizationColumns) AliasedAs(alias string) organizationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type OrganizationSetter struct {
-	ID                omit.Val[int32]      `db:"id,pk" `
-	Name              omit.Val[string]     `db:"name" `
-	ArcgisID          omitnull.Val[string] `db:"arcgis_id" `
-	ArcgisName        omitnull.Val[string] `db:"arcgis_name" `
-	FieldseekerURL    omitnull.Val[string] `db:"fieldseeker_url" `
-	ImportDistrictGid omitnull.Val[int32]  `db:"import_district_gid" `
-	Website           omitnull.Val[string] `db:"website" `
+	ID                omit.Val[int32]         `db:"id,pk" `
+	Name              omit.Val[string]        `db:"name" `
+	ArcgisID          omitnull.Val[string]    `db:"arcgis_id" `
+	ArcgisName        omitnull.Val[string]    `db:"arcgis_name" `
+	FieldseekerURL    omitnull.Val[string]    `db:"fieldseeker_url" `
+	ImportDistrictGid omitnull.Val[int32]     `db:"import_district_gid" `
+	Website           omitnull.Val[string]    `db:"website" `
+	LogoUUID          omitnull.Val[uuid.UUID] `db:"logo_uuid" `
 }
 
 func (s OrganizationSetter) SetColumns() []string {
-	vals := make([]string, 0, 7)
+	vals := make([]string, 0, 8)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -156,6 +164,9 @@ func (s OrganizationSetter) SetColumns() []string {
 	}
 	if !s.Website.IsUnset() {
 		vals = append(vals, "website")
+	}
+	if !s.LogoUUID.IsUnset() {
+		vals = append(vals, "logo_uuid")
 	}
 	return vals
 }
@@ -182,6 +193,9 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if !s.Website.IsUnset() {
 		t.Website = s.Website.MustGetNull()
 	}
+	if !s.LogoUUID.IsUnset() {
+		t.LogoUUID = s.LogoUUID.MustGetNull()
+	}
 }
 
 func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
@@ -190,7 +204,7 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 7)
+		vals := make([]bob.Expression, 8)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -233,6 +247,12 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
+		if !s.LogoUUID.IsUnset() {
+			vals[7] = psql.Arg(s.LogoUUID.MustGetNull())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -242,7 +262,7 @@ func (s OrganizationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 7)
+	exprs := make([]bob.Expression, 0, 8)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -290,6 +310,13 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "website")...),
 			psql.Arg(s.Website),
+		}})
+	}
+
+	if !s.LogoUUID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "logo_uuid")...),
+			psql.Arg(s.LogoUUID),
 		}})
 	}
 
@@ -1284,6 +1311,78 @@ func (os OrganizationSlice) ImportDistrictGidDistrict(mods ...bob.Mod[*dialect.S
 
 	return ImportDistricts.Query(append(mods,
 		sm.Where(psql.Group(ImportDistricts.Columns.Gid).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Nuisances starts a query for related objects on publicreport.nuisance
+func (o *Organization) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+	return PublicreportNuisances.Query(append(mods,
+		sm.Where(PublicreportNuisances.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportNuisances.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNuisances.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// PublicreportPool starts a query for related objects on publicreport.pool
+func (o *Organization) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolsQuery {
+	return PublicreportPools.Query(append(mods,
+		sm.Where(PublicreportPools.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportPools.Query(append(mods,
+		sm.Where(psql.Group(PublicreportPools.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Quicks starts a query for related objects on publicreport.quick
+func (o *Organization) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
+	return PublicreportQuicks.Query(append(mods,
+		sm.Where(PublicreportQuicks.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportQuicks.Query(append(mods,
+		sm.Where(psql.Group(PublicreportQuicks.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -3467,6 +3566,210 @@ func (organization0 *Organization) AttachImportDistrictGidDistrict(ctx context.C
 	return nil
 }
 
+func insertOrganizationNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, organization0 *Organization) (PublicreportNuisanceSlice, error) {
+	for i := range publicreportNuisances1 {
+		publicreportNuisances1[i].OrganizationID = omitnull.From(organization0.ID)
+	}
+
+	ret, err := PublicreportNuisances.Insert(bob.ToMods(publicreportNuisances1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationNuisances0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNuisances1 PublicreportNuisanceSlice, organization0 *Organization) (PublicreportNuisanceSlice, error) {
+	setter := &PublicreportNuisanceSetter{
+		OrganizationID: omitnull.From(organization0.ID),
+	}
+
+	err := publicreportNuisances1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationNuisances0: %w", err)
+	}
+
+	return publicreportNuisances1, nil
+}
+
+func (organization0 *Organization) InsertNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNuisances1, err := insertOrganizationNuisances0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Nuisances = append(organization0.R.Nuisances, publicreportNuisances1...)
+
+	for _, rel := range publicreportNuisances1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisance) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNuisances1 := PublicreportNuisanceSlice(related)
+
+	_, err = attachOrganizationNuisances0(ctx, exec, len(related), publicreportNuisances1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Nuisances = append(organization0.R.Nuisances, publicreportNuisances1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
+func insertOrganizationPublicreportPool0(ctx context.Context, exec bob.Executor, publicreportPools1 []*PublicreportPoolSetter, organization0 *Organization) (PublicreportPoolSlice, error) {
+	for i := range publicreportPools1 {
+		publicreportPools1[i].OrganizationID = omitnull.From(organization0.ID)
+	}
+
+	ret, err := PublicreportPools.Insert(bob.ToMods(publicreportPools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationPublicreportPool0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationPublicreportPool0(ctx context.Context, exec bob.Executor, count int, publicreportPools1 PublicreportPoolSlice, organization0 *Organization) (PublicreportPoolSlice, error) {
+	setter := &PublicreportPoolSetter{
+		OrganizationID: omitnull.From(organization0.ID),
+	}
+
+	err := publicreportPools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationPublicreportPool0: %w", err)
+	}
+
+	return publicreportPools1, nil
+}
+
+func (organization0 *Organization) InsertPublicreportPool(ctx context.Context, exec bob.Executor, related ...*PublicreportPoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportPools1, err := insertOrganizationPublicreportPool0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.PublicreportPool = append(organization0.R.PublicreportPool, publicreportPools1...)
+
+	for _, rel := range publicreportPools1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachPublicreportPool(ctx context.Context, exec bob.Executor, related ...*PublicreportPool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportPools1 := PublicreportPoolSlice(related)
+
+	_, err = attachOrganizationPublicreportPool0(ctx, exec, len(related), publicreportPools1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.PublicreportPool = append(organization0.R.PublicreportPool, publicreportPools1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
+func insertOrganizationQuicks0(ctx context.Context, exec bob.Executor, publicreportQuicks1 []*PublicreportQuickSetter, organization0 *Organization) (PublicreportQuickSlice, error) {
+	for i := range publicreportQuicks1 {
+		publicreportQuicks1[i].OrganizationID = omitnull.From(organization0.ID)
+	}
+
+	ret, err := PublicreportQuicks.Insert(bob.ToMods(publicreportQuicks1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationQuicks0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationQuicks0(ctx context.Context, exec bob.Executor, count int, publicreportQuicks1 PublicreportQuickSlice, organization0 *Organization) (PublicreportQuickSlice, error) {
+	setter := &PublicreportQuickSetter{
+		OrganizationID: omitnull.From(organization0.ID),
+	}
+
+	err := publicreportQuicks1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationQuicks0: %w", err)
+	}
+
+	return publicreportQuicks1, nil
+}
+
+func (organization0 *Organization) InsertQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuickSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportQuicks1, err := insertOrganizationQuicks0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Quicks = append(organization0.R.Quicks, publicreportQuicks1...)
+
+	for _, rel := range publicreportQuicks1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuick) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportQuicks1 := PublicreportQuickSlice(related)
+
+	_, err = attachOrganizationQuicks0(ctx, exec, len(related), publicreportQuicks1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Quicks = append(organization0.R.Quicks, publicreportQuicks1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationUser0(ctx context.Context, exec bob.Executor, users1 []*UserSetter, organization0 *Organization) (UserSlice, error) {
 	for i := range users1 {
 		users1[i].OrganizationID = omit.From(organization0.ID)
@@ -3543,6 +3846,7 @@ type organizationWhere[Q psql.Filterable] struct {
 	FieldseekerURL    psql.WhereNullMod[Q, string]
 	ImportDistrictGid psql.WhereNullMod[Q, int32]
 	Website           psql.WhereNullMod[Q, string]
+	LogoUUID          psql.WhereNullMod[Q, uuid.UUID]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -3558,6 +3862,7 @@ func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organiz
 		FieldseekerURL:    psql.WhereNull[Q, string](cols.FieldseekerURL),
 		ImportDistrictGid: psql.WhereNull[Q, int32](cols.ImportDistrictGid),
 		Website:           psql.WhereNull[Q, string](cols.Website),
+		LogoUUID:          psql.WhereNull[Q, uuid.UUID](cols.LogoUUID),
 	}
 }
 
@@ -4013,6 +4318,48 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			rel.R.ImportDistrictGidOrganization = o
 		}
 		return nil
+	case "Nuisances":
+		rels, ok := retrieved.(PublicreportNuisanceSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Nuisances = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
+	case "PublicreportPool":
+		rels, ok := retrieved.(PublicreportPoolSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PublicreportPool = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
+	case "Quicks":
+		rels, ok := retrieved.(PublicreportQuickSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Quicks = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "User":
 		rels, ok := retrieved.(UserSlice)
 		if !ok {
@@ -4087,6 +4434,9 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	NoteAudios                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ImportDistrictGidDistrict func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Nuisances                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PublicreportPool          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Quicks                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -4186,6 +4536,15 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type ImportDistrictGidDistrictLoadInterface interface {
 		LoadImportDistrictGidDistrict(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type NuisancesLoadInterface interface {
+		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PublicreportPoolLoadInterface interface {
+		LoadPublicreportPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type QuicksLoadInterface interface {
+		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserLoadInterface interface {
 		LoadUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -4382,6 +4741,24 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"ImportDistrictGidDistrict",
 			func(ctx context.Context, exec bob.Executor, retrieved ImportDistrictGidDistrictLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadImportDistrictGidDistrict(ctx, exec, mods...)
+			},
+		),
+		Nuisances: thenLoadBuilder[Q](
+			"Nuisances",
+			func(ctx context.Context, exec bob.Executor, retrieved NuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNuisances(ctx, exec, mods...)
+			},
+		),
+		PublicreportPool: thenLoadBuilder[Q](
+			"PublicreportPool",
+			func(ctx context.Context, exec bob.Executor, retrieved PublicreportPoolLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPublicreportPool(ctx, exec, mods...)
+			},
+		),
+		Quicks: thenLoadBuilder[Q](
+			"Quicks",
+			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadQuicks(ctx, exec, mods...)
 			},
 		),
 		User: thenLoadBuilder[Q](
@@ -6339,6 +6716,198 @@ func (os OrganizationSlice) LoadImportDistrictGidDistrict(ctx context.Context, e
 	return nil
 }
 
+// LoadNuisances loads the organization's Nuisances into the .R struct
+func (o *Organization) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Nuisances = nil
+
+	related, err := o.Nuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Nuisances = related
+	return nil
+}
+
+// LoadNuisances loads the organization's Nuisances into the .R struct
+func (os OrganizationSlice) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNuisances, err := os.Nuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Nuisances = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNuisances {
+
+			if !rel.OrganizationID.IsValue() {
+				continue
+			}
+			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Nuisances = append(o.R.Nuisances, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPublicreportPool loads the organization's PublicreportPool into the .R struct
+func (o *Organization) LoadPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PublicreportPool = nil
+
+	related, err := o.PublicreportPool(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.PublicreportPool = related
+	return nil
+}
+
+// LoadPublicreportPool loads the organization's PublicreportPool into the .R struct
+func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportPools, err := os.PublicreportPool(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PublicreportPool = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportPools {
+
+			if !rel.OrganizationID.IsValue() {
+				continue
+			}
+			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.PublicreportPool = append(o.R.PublicreportPool, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadQuicks loads the organization's Quicks into the .R struct
+func (o *Organization) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Quicks = nil
+
+	related, err := o.Quicks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Quicks = related
+	return nil
+}
+
+// LoadQuicks loads the organization's Quicks into the .R struct
+func (os OrganizationSlice) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportQuicks, err := os.Quicks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Quicks = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportQuicks {
+
+			if !rel.OrganizationID.IsValue() {
+				continue
+			}
+			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Quicks = append(o.R.Quicks, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadUser loads the organization's User into the .R struct
 func (o *Organization) LoadUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -6433,6 +7002,9 @@ type organizationC struct {
 	H3Aggregations          *int64
 	NoteAudios              *int64
 	NoteImages              *int64
+	Nuisances               *int64
+	PublicreportPool        *int64
+	Quicks                  *int64
 	User                    *int64
 }
 
@@ -6505,6 +7077,12 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.NoteAudios = &count
 	case "NoteImages":
 		o.C.NoteImages = &count
+	case "Nuisances":
+		o.C.Nuisances = &count
+	case "PublicreportPool":
+		o.C.PublicreportPool = &count
+	case "Quicks":
+		o.C.Quicks = &count
 	case "User":
 		o.C.User = &count
 	}
@@ -6543,6 +7121,9 @@ type organizationCountPreloader struct {
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	User                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
@@ -7075,6 +7656,57 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Nuisances: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Nuisances", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNuisances.Name()),
+					sm.Where(psql.Quote(PublicreportNuisances.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		PublicreportPool: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("PublicreportPool", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportPools.Name()),
+					sm.Where(psql.Quote(PublicreportPools.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		Quicks: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Quicks", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportQuicks.Name()),
+					sm.Where(psql.Quote(PublicreportQuicks.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		User: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("User", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -7127,6 +7759,9 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -7223,6 +7858,15 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type NoteImagesCountInterface interface {
 		LoadCountNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type NuisancesCountInterface interface {
+		LoadCountNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PublicreportPoolCountInterface interface {
+		LoadCountPublicreportPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type QuicksCountInterface interface {
+		LoadCountQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserCountInterface interface {
 		LoadCountUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -7413,6 +8057,24 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"NoteImages",
 			func(ctx context.Context, exec bob.Executor, retrieved NoteImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountNoteImages(ctx, exec, mods...)
+			},
+		),
+		Nuisances: countThenLoadBuilder[Q](
+			"Nuisances",
+			func(ctx context.Context, exec bob.Executor, retrieved NuisancesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountNuisances(ctx, exec, mods...)
+			},
+		),
+		PublicreportPool: countThenLoadBuilder[Q](
+			"PublicreportPool",
+			func(ctx context.Context, exec bob.Executor, retrieved PublicreportPoolCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPublicreportPool(ctx, exec, mods...)
+			},
+		),
+		Quicks: countThenLoadBuilder[Q](
+			"Quicks",
+			func(ctx context.Context, exec bob.Executor, retrieved QuicksCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountQuicks(ctx, exec, mods...)
 			},
 		),
 		User: countThenLoadBuilder[Q](
@@ -8354,6 +9016,96 @@ func (os OrganizationSlice) LoadCountNoteImages(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+// LoadCountNuisances loads the count of Nuisances into the C struct
+func (o *Organization) LoadCountNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Nuisances(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Nuisances = &count
+	return nil
+}
+
+// LoadCountNuisances loads the count of Nuisances for a slice
+func (os OrganizationSlice) LoadCountNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountNuisances(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountPublicreportPool loads the count of PublicreportPool into the C struct
+func (o *Organization) LoadCountPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.PublicreportPool(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.PublicreportPool = &count
+	return nil
+}
+
+// LoadCountPublicreportPool loads the count of PublicreportPool for a slice
+func (os OrganizationSlice) LoadCountPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPublicreportPool(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountQuicks loads the count of Quicks into the C struct
+func (o *Organization) LoadCountQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Quicks(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Quicks = &count
+	return nil
+}
+
+// LoadCountQuicks loads the count of Quicks for a slice
+func (os OrganizationSlice) LoadCountQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountQuicks(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountUser loads the count of User into the C struct
 func (o *Organization) LoadCountUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -8418,6 +9170,9 @@ type organizationJoins[Q dialect.Joinable] struct {
 	NoteAudios                modAs[Q, noteAudioColumns]
 	NoteImages                modAs[Q, noteImageColumns]
 	ImportDistrictGidDistrict modAs[Q, importDistrictColumns]
+	Nuisances                 modAs[Q, publicreportNuisanceColumns]
+	PublicreportPool          modAs[Q, publicreportPoolColumns]
+	Quicks                    modAs[Q, publicreportQuickColumns]
 	User                      modAs[Q, userColumns]
 }
 
@@ -8870,6 +9625,48 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 				{
 					mods = append(mods, dialect.Join[Q](typ, ImportDistricts.Name().As(to.Alias())).On(
 						to.Gid.EQ(cols.ImportDistrictGid),
+					))
+				}
+
+				return mods
+			},
+		},
+		Nuisances: modAs[Q, publicreportNuisanceColumns]{
+			c: PublicreportNuisances.Columns,
+			f: func(to publicreportNuisanceColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNuisances.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		PublicreportPool: modAs[Q, publicreportPoolColumns]{
+			c: PublicreportPools.Columns,
+			f: func(to publicreportPoolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportPools.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Quicks: modAs[Q, publicreportQuickColumns]{
+			c: PublicreportQuicks.Columns,
+			f: func(to publicreportQuickColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportQuicks.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
 					))
 				}
 

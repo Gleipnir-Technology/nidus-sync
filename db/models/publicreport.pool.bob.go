@@ -59,6 +59,7 @@ type PublicreportPool struct {
 	ReporterPhone   string                             `db:"reporter_phone" `
 	Subscribe       bool                               `db:"subscribe" `
 	Status          enums.PublicreportReportstatustype `db:"status" `
+	OrganizationID  null.Val[int32]                    `db:"organization_id" `
 
 	R publicreportPoolR `db:"-" `
 
@@ -77,13 +78,14 @@ type PublicreportPoolsQuery = *psql.ViewQuery[*PublicreportPool, PublicreportPoo
 
 // publicreportPoolR is where relationships are stored.
 type publicreportPoolR struct {
-	Images PublicreportImageSlice // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
+	Organization *Organization          // publicreport.pool.pool_organization_id_fkey
+	Images       PublicreportImageSlice // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
 }
 
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "subscribe", "status",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "subscribe", "status", "organization_id",
 		).WithParent("publicreport.pool"),
 		tableAlias:      alias,
 		ID:              psql.Quote(alias, "id"),
@@ -116,6 +118,7 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		ReporterPhone:   psql.Quote(alias, "reporter_phone"),
 		Subscribe:       psql.Quote(alias, "subscribe"),
 		Status:          psql.Quote(alias, "status"),
+		OrganizationID:  psql.Quote(alias, "organization_id"),
 	}
 }
 
@@ -152,6 +155,7 @@ type publicreportPoolColumns struct {
 	ReporterPhone   psql.Expression
 	Subscribe       psql.Expression
 	Status          psql.Expression
+	OrganizationID  psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -196,10 +200,11 @@ type PublicreportPoolSetter struct {
 	ReporterPhone   omit.Val[string]                             `db:"reporter_phone" `
 	Subscribe       omit.Val[bool]                               `db:"subscribe" `
 	Status          omit.Val[enums.PublicreportReportstatustype] `db:"status" `
+	OrganizationID  omitnull.Val[int32]                          `db:"organization_id" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 30)
+	vals := make([]string, 0, 31)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -289,6 +294,9 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
+	}
+	if !s.OrganizationID.IsUnset() {
+		vals = append(vals, "organization_id")
 	}
 	return vals
 }
@@ -384,6 +392,9 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
+	if !s.OrganizationID.IsUnset() {
+		t.OrganizationID = s.OrganizationID.MustGetNull()
+	}
 }
 
 func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -392,7 +403,7 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 30)
+		vals := make([]bob.Expression, 31)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -573,6 +584,12 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
+		if !s.OrganizationID.IsUnset() {
+			vals[30] = psql.Arg(s.OrganizationID.MustGetNull())
+		} else {
+			vals[30] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -582,7 +599,7 @@ func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 30)
+	exprs := make([]bob.Expression, 0, 31)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -791,6 +808,13 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
 			psql.Arg(s.Status),
+		}})
+	}
+
+	if !s.OrganizationID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "organization_id")...),
+			psql.Arg(s.OrganizationID),
 		}})
 	}
 
@@ -1020,6 +1044,30 @@ func (o PublicreportPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor)
 	return nil
 }
 
+// Organization starts a query for related objects on organization
+func (o *PublicreportPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
+	)...)
+}
+
+func (os PublicreportPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Images starts a query for related objects on publicreport.image
 func (o *PublicreportPool) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	return PublicreportImages.Query(append(mods,
@@ -1047,6 +1095,54 @@ func (os PublicreportPoolSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) Pu
 		),
 		sm.Where(psql.Group(PublicreportPoolImages.Columns.PoolID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func attachPublicreportPoolOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, organization1 *Organization) (*PublicreportPool, error) {
+	setter := &PublicreportPoolSetter{
+		OrganizationID: omitnull.From(organization1.ID),
+	}
+
+	err := publicreportPool0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportPoolOrganization0: %w", err)
+	}
+
+	return publicreportPool0, nil
+}
+
+func (publicreportPool0 *PublicreportPool) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := Organizations.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportPoolOrganization0(ctx, exec, 1, publicreportPool0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.Organization = organization1
+
+	organization1.R.PublicreportPool = append(organization1.R.PublicreportPool, publicreportPool0)
+
+	return nil
+}
+
+func (publicreportPool0 *PublicreportPool) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachPublicreportPoolOrganization0(ctx, exec, 1, publicreportPool0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.Organization = organization1
+
+	organization1.R.PublicreportPool = append(organization1.R.PublicreportPool, publicreportPool0)
+
+	return nil
 }
 
 func attachPublicreportPoolImages0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, publicreportImages2 PublicreportImageSlice) (PublicreportPoolImageSlice, error) {
@@ -1145,6 +1241,7 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	ReporterPhone   psql.WhereMod[Q, string]
 	Subscribe       psql.WhereMod[Q, bool]
 	Status          psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID  psql.WhereNullMod[Q, int32]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1183,6 +1280,7 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		ReporterPhone:   psql.Where[Q, string](cols.ReporterPhone),
 		Subscribe:       psql.Where[Q, bool](cols.Subscribe),
 		Status:          psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID:  psql.WhereNull[Q, int32](cols.OrganizationID),
 	}
 }
 
@@ -1192,6 +1290,18 @@ func (o *PublicreportPool) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Organization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.PublicreportPool = PublicreportPoolSlice{o}
+		}
+		return nil
 	case "Images":
 		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
@@ -1211,22 +1321,48 @@ func (o *PublicreportPool) Preload(name string, retrieved any) error {
 	}
 }
 
-type publicreportPoolPreloader struct{}
+type publicreportPoolPreloader struct {
+	Organization func(...psql.PreloadOption) psql.Preloader
+}
 
 func buildPublicreportPoolPreloader() publicreportPoolPreloader {
-	return publicreportPoolPreloader{}
+	return publicreportPoolPreloader{
+		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "Organization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportPools,
+						To:          Organizations,
+						FromColumns: []string{"organization_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
+	}
 }
 
 type publicreportPoolThenLoader[Q orm.Loadable] struct {
-	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoader[Q] {
+	type OrganizationLoadInterface interface {
+		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ImagesLoadInterface interface {
 		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportPoolThenLoader[Q]{
+		Organization: thenLoadBuilder[Q](
+			"Organization",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
 		Images: thenLoadBuilder[Q](
 			"Images",
 			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1234,6 +1370,61 @@ func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoade
 			},
 		),
 	}
+}
+
+// LoadOrganization loads the publicreportPool's Organization into the .R struct
+func (o *PublicreportPool) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organization = nil
+
+	related, err := o.Organization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.PublicreportPool = PublicreportPoolSlice{o}
+
+	o.R.Organization = related
+	return nil
+}
+
+// LoadOrganization loads the publicreportPool's Organization into the .R struct
+func (os PublicreportPoolSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.Organization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+			if !o.OrganizationID.IsValue() {
+				continue
+			}
+
+			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.PublicreportPool = append(rel.R.PublicreportPool, o)
+
+			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
 }
 
 // LoadImages loads the publicreportPool's Images into the .R struct
@@ -1414,8 +1605,9 @@ func (os PublicreportPoolSlice) LoadCountImages(ctx context.Context, exec bob.Ex
 }
 
 type publicreportPoolJoins[Q dialect.Joinable] struct {
-	typ    string
-	Images modAs[Q, publicreportImageColumns]
+	typ          string
+	Organization modAs[Q, organizationColumns]
+	Images       modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[Q] {
@@ -1425,6 +1617,20 @@ func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[
 func buildPublicreportPoolJoins[Q dialect.Joinable](cols publicreportPoolColumns, typ string) publicreportPoolJoins[Q] {
 	return publicreportPoolJoins[Q]{
 		typ: typ,
+		Organization: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Images: modAs[Q, publicreportImageColumns]{
 			c: PublicreportImages.Columns,
 			f: func(to publicreportImageColumns) bob.Mod[Q] {

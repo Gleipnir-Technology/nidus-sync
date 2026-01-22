@@ -2550,6 +2550,7 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.FieldseekerURL = func() null.Val[string] { return m.FieldseekerURL }
 	o.ImportDistrictGid = func() null.Val[int32] { return m.ImportDistrictGid }
 	o.Website = func() null.Val[string] { return m.Website }
+	o.LogoUUID = func() null.Val[uuid.UUID] { return m.LogoUUID }
 
 	ctx := context.Background()
 	if len(m.R.Containerrelates) > 0 {
@@ -2647,6 +2648,15 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if m.R.ImportDistrictGidDistrict != nil {
 		OrganizationMods.WithExistingImportDistrictGidDistrict(m.R.ImportDistrictGidDistrict).Apply(ctx, o)
+	}
+	if len(m.R.Nuisances) > 0 {
+		OrganizationMods.AddExistingNuisances(m.R.Nuisances...).Apply(ctx, o)
+	}
+	if len(m.R.PublicreportPool) > 0 {
+		OrganizationMods.AddExistingPublicreportPool(m.R.PublicreportPool...).Apply(ctx, o)
+	}
+	if len(m.R.Quicks) > 0 {
+		OrganizationMods.AddExistingQuicks(m.R.Quicks...).Apply(ctx, o)
 	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
@@ -2775,6 +2785,12 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.Address = func() string { return m.Address }
 	o.Location = func() null.Val[string] { return m.Location }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
+	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.Organization != nil {
+		PublicreportNuisanceMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -2828,8 +2844,12 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.ReporterPhone = func() string { return m.ReporterPhone }
 	o.Subscribe = func() bool { return m.Subscribe }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
+	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 
 	ctx := context.Background()
+	if m.R.Organization != nil {
+		PublicreportPoolMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
 	if len(m.R.Images) > 0 {
 		PublicreportPoolMods.AddExistingImages(m.R.Images...).Apply(ctx, o)
 	}
@@ -2899,8 +2919,12 @@ func (f *Factory) FromExistingPublicreportQuick(m *models.PublicreportQuick) *Pu
 	o.ReporterPhone = func() string { return m.ReporterPhone }
 	o.Address = func() string { return m.Address }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
+	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 
 	ctx := context.Background()
+	if m.R.Organization != nil {
+		PublicreportQuickMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
 	if len(m.R.Images) > 0 {
 		PublicreportQuickMods.AddExistingImages(m.R.Images...).Apply(ctx, o)
 	}

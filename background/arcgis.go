@@ -72,7 +72,7 @@ func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 		"grant_type":   []string{"authorization_code"},
 		"code":         []string{code},
 		"client_id":    []string{config.ClientID},
-		"redirect_uri": []string{config.RedirectURL()},
+		"redirect_uri": []string{config.ArcGISOauthRedirectURL()},
 	}
 
 	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
@@ -652,7 +652,7 @@ func refreshRefreshToken(ctx context.Context, oauth *models.OauthToken) error {
 	form := url.Values{
 		"grant_type":    []string{"exchange_refresh_token"},
 		"client_id":     []string{config.ClientID},
-		"redirect_uri":  []string{config.RedirectURL()},
+		"redirect_uri":  []string{config.ArcGISOauthRedirectURL()},
 		"refresh_token": []string{oauth.RefreshToken},
 	}
 

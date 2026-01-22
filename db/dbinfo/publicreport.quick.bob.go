@@ -105,6 +105,15 @@ var PublicreportQuicks = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportQuickIndexes{
 		QuickPkey: index{
@@ -147,7 +156,17 @@ var PublicreportQuicks = Table[
 		Columns: []string{"id"},
 		Comment: "",
 	},
-
+	ForeignKeys: publicreportQuickForeignKeys{
+		PublicreportQuickQuickOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.quick.quick_organization_id_fkey",
+				Columns: []string{"organization_id"},
+				Comment: "",
+			},
+			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
+	},
 	Uniques: publicreportQuickUniques{
 		QuickPublicIDKey: constraint{
 			Name:    "quick_public_id_key",
@@ -160,21 +179,22 @@ var PublicreportQuicks = Table[
 }
 
 type publicreportQuickColumns struct {
-	ID            column
-	Created       column
-	Comments      column
-	Location      column
-	H3cell        column
-	PublicID      column
-	ReporterEmail column
-	ReporterPhone column
-	Address       column
-	Status        column
+	ID             column
+	Created        column
+	Comments       column
+	Location       column
+	H3cell         column
+	PublicID       column
+	ReporterEmail  column
+	ReporterPhone  column
+	Address        column
+	Status         column
+	OrganizationID column
 }
 
 func (c publicreportQuickColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.PublicID, c.ReporterEmail, c.ReporterPhone, c.Address, c.Status,
+		c.ID, c.Created, c.Comments, c.Location, c.H3cell, c.PublicID, c.ReporterEmail, c.ReporterPhone, c.Address, c.Status, c.OrganizationID,
 	}
 }
 
@@ -189,10 +209,14 @@ func (i publicreportQuickIndexes) AsSlice() []index {
 	}
 }
 
-type publicreportQuickForeignKeys struct{}
+type publicreportQuickForeignKeys struct {
+	PublicreportQuickQuickOrganizationIDFkey foreignKey
+}
 
 func (f publicreportQuickForeignKeys) AsSlice() []foreignKey {
-	return []foreignKey{}
+	return []foreignKey{
+		f.PublicreportQuickQuickOrganizationIDFkey,
+	}
 }
 
 type publicreportQuickUniques struct {

@@ -38,6 +38,7 @@ type Report struct {
 	Address   string
 	Comments  string
 	Created   time.Time
+	District  string
 	ID        string
 	Images    []Image
 	Location  string // GeoJSON
@@ -175,6 +176,7 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 	result.Report.Address = quick.Address
 	result.Report.Comments = quick.Comments
 	result.Report.Created = quick.Created
+	result.Report.District = "Unknown"
 	result.Report.Reporter.Email = quick.ReporterEmail
 	result.Report.Reporter.Name = "-"
 	result.Report.Reporter.Phone = quick.ReporterPhone
@@ -183,7 +185,7 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 	for _, image := range images {
 		result.Report.Images = append(result.Report.Images, Image{
 			Location: image.LocationJSON,
-			URL:      fmt.Sprintf("https://%s/image/%s", config.RMODomain, image.StorageUUID),
+			URL:      config.MakeURLReport("/image/%s", image.StorageUUID),
 		})
 	}
 	type LocationGeoJSON struct {

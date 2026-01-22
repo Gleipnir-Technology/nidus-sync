@@ -5,6 +5,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -19,6 +20,9 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/bob/dialect/psql/um"
 	"github.com/stephenafamo/bob/expr"
+	"github.com/stephenafamo/bob/mods"
+	"github.com/stephenafamo/bob/orm"
+	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 // PublicreportNuisance is an object representing the database table.
@@ -50,6 +54,9 @@ type PublicreportNuisance struct {
 	Address            string                                           `db:"address" `
 	Location           null.Val[string]                                 `db:"location" `
 	Status             enums.PublicreportReportstatustype               `db:"status" `
+	OrganizationID     null.Val[int32]                                  `db:"organization_id" `
+
+	R publicreportNuisanceR `db:"-" `
 }
 
 // PublicreportNuisanceSlice is an alias for a slice of pointers to PublicreportNuisance.
@@ -62,10 +69,15 @@ var PublicreportNuisances = psql.NewTablex[*PublicreportNuisance, PublicreportNu
 // PublicreportNuisancesQuery is a query on the nuisance table
 type PublicreportNuisancesQuery = *psql.ViewQuery[*PublicreportNuisance, PublicreportNuisanceSlice]
 
+// publicreportNuisanceR is where relationships are stored.
+type publicreportNuisanceR struct {
+	Organization *Organization // publicreport.nuisance.nuisance_organization_id_fkey
+}
+
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "email", "inspection_type", "source_location", "preferred_date_range", "preferred_time", "request_call", "severity", "source_container", "source_description", "source_roof", "source_stagnant", "time_of_day_day", "time_of_day_early", "time_of_day_evening", "time_of_day_night", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status",
+			"id", "additional_info", "created", "duration", "email", "inspection_type", "source_location", "preferred_date_range", "preferred_time", "request_call", "severity", "source_container", "source_description", "source_roof", "source_stagnant", "time_of_day_day", "time_of_day_early", "time_of_day_evening", "time_of_day_night", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:         alias,
 		ID:                 psql.Quote(alias, "id"),
@@ -95,6 +107,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		Address:            psql.Quote(alias, "address"),
 		Location:           psql.Quote(alias, "location"),
 		Status:             psql.Quote(alias, "status"),
+		OrganizationID:     psql.Quote(alias, "organization_id"),
 	}
 }
 
@@ -128,6 +141,7 @@ type publicreportNuisanceColumns struct {
 	Address            psql.Expression
 	Location           psql.Expression
 	Status             psql.Expression
+	OrganizationID     psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -169,10 +183,11 @@ type PublicreportNuisanceSetter struct {
 	Address            omit.Val[string]                                           `db:"address" `
 	Location           omitnull.Val[string]                                       `db:"location" `
 	Status             omit.Val[enums.PublicreportReportstatustype]               `db:"status" `
+	OrganizationID     omitnull.Val[int32]                                        `db:"organization_id" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 27)
+	vals := make([]string, 0, 28)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -253,6 +268,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
+	}
+	if !s.OrganizationID.IsUnset() {
+		vals = append(vals, "organization_id")
 	}
 	return vals
 }
@@ -339,6 +357,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
+	if !s.OrganizationID.IsUnset() {
+		t.OrganizationID = s.OrganizationID.MustGetNull()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -347,7 +368,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 27)
+		vals := make([]bob.Expression, 28)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -510,6 +531,12 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
+		if !s.OrganizationID.IsUnset() {
+			vals[27] = psql.Arg(s.OrganizationID.MustGetNull())
+		} else {
+			vals[27] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -519,7 +546,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 27)
+	exprs := make([]bob.Expression, 0, 28)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -710,6 +737,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
+	if !s.OrganizationID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "organization_id")...),
+			psql.Arg(s.OrganizationID),
+		}})
+	}
+
 	return exprs
 }
 
@@ -771,6 +805,7 @@ func (o *PublicreportNuisance) Update(ctx context.Context, exec bob.Executor, s 
 		return err
 	}
 
+	o.R = v.R
 	*o = *v
 
 	return nil
@@ -790,7 +825,7 @@ func (o *PublicreportNuisance) Reload(ctx context.Context, exec bob.Executor) er
 	if err != nil {
 		return err
 	}
-
+	o2.R = o.R
 	*o = *o2
 
 	return nil
@@ -837,7 +872,7 @@ func (o PublicreportNuisanceSlice) copyMatchingRows(from ...*PublicreportNuisanc
 			if new.ID != old.ID {
 				continue
 			}
-
+			new.R = old.R
 			o[i] = new
 			break
 		}
@@ -935,6 +970,78 @@ func (o PublicreportNuisanceSlice) ReloadAll(ctx context.Context, exec bob.Execu
 	return nil
 }
 
+// Organization starts a query for related objects on organization
+func (o *PublicreportNuisance) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
+	)...)
+}
+
+func (os PublicreportNuisanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+func attachPublicreportNuisanceOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, organization1 *Organization) (*PublicreportNuisance, error) {
+	setter := &PublicreportNuisanceSetter{
+		OrganizationID: omitnull.From(organization1.ID),
+	}
+
+	err := publicreportNuisance0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportNuisanceOrganization0: %w", err)
+	}
+
+	return publicreportNuisance0, nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := Organizations.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportNuisanceOrganization0(ctx, exec, 1, publicreportNuisance0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Organization = organization1
+
+	organization1.R.Nuisances = append(organization1.R.Nuisances, publicreportNuisance0)
+
+	return nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachPublicreportNuisanceOrganization0(ctx, exec, 1, publicreportNuisance0, organization1)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Organization = organization1
+
+	organization1.R.Nuisances = append(organization1.R.Nuisances, publicreportNuisance0)
+
+	return nil
+}
+
 type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ID                 psql.WhereMod[Q, int32]
 	AdditionalInfo     psql.WhereMod[Q, string]
@@ -963,6 +1070,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	Address            psql.WhereMod[Q, string]
 	Location           psql.WhereNullMod[Q, string]
 	Status             psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID     psql.WhereNullMod[Q, int32]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -998,5 +1106,154 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		Address:            psql.Where[Q, string](cols.Address),
 		Location:           psql.WhereNull[Q, string](cols.Location),
 		Status:             psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID:     psql.WhereNull[Q, int32](cols.OrganizationID),
+	}
+}
+
+func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "Organization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.Nuisances = PublicreportNuisanceSlice{o}
+		}
+		return nil
+	default:
+		return fmt.Errorf("publicreportNuisance has no relationship %q", name)
+	}
+}
+
+type publicreportNuisancePreloader struct {
+	Organization func(...psql.PreloadOption) psql.Preloader
+}
+
+func buildPublicreportNuisancePreloader() publicreportNuisancePreloader {
+	return publicreportNuisancePreloader{
+		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "Organization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportNuisances,
+						To:          Organizations,
+						FromColumns: []string{"organization_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
+	}
+}
+
+type publicreportNuisanceThenLoader[Q orm.Loadable] struct {
+	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceThenLoader[Q] {
+	type OrganizationLoadInterface interface {
+		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return publicreportNuisanceThenLoader[Q]{
+		Organization: thenLoadBuilder[Q](
+			"Organization",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadOrganization loads the publicreportNuisance's Organization into the .R struct
+func (o *PublicreportNuisance) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organization = nil
+
+	related, err := o.Organization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Nuisances = PublicreportNuisanceSlice{o}
+
+	o.R.Organization = related
+	return nil
+}
+
+// LoadOrganization loads the publicreportNuisance's Organization into the .R struct
+func (os PublicreportNuisanceSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.Organization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+			if !o.OrganizationID.IsValue() {
+				continue
+			}
+
+			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Nuisances = append(rel.R.Nuisances, o)
+
+			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+type publicreportNuisanceJoins[Q dialect.Joinable] struct {
+	typ          string
+	Organization modAs[Q, organizationColumns]
+}
+
+func (j publicreportNuisanceJoins[Q]) aliasedAs(alias string) publicreportNuisanceJoins[Q] {
+	return buildPublicreportNuisanceJoins[Q](buildPublicreportNuisanceColumns(alias), j.typ)
+}
+
+func buildPublicreportNuisanceJoins[Q dialect.Joinable](cols publicreportNuisanceColumns, typ string) publicreportNuisanceJoins[Q] {
+	return publicreportNuisanceJoins[Q]{
+		typ: typ,
+		Organization: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
 	}
 }

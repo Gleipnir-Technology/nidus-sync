@@ -8,9 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContextRegisterNotificationsComplete struct {
-	ReportID string
-}
 type ContextRoot struct{}
 
 var (

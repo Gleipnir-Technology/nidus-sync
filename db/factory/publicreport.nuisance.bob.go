@@ -65,10 +65,20 @@ type PublicreportNuisanceTemplate struct {
 	Address            func() string
 	Location           func() null.Val[string]
 	Status             func() enums.PublicreportReportstatustype
+	OrganizationID     func() null.Val[int32]
 
+	r publicreportNuisanceR
 	f *Factory
 
 	alreadyPersisted bool
+}
+
+type publicreportNuisanceR struct {
+	Organization *publicreportNuisanceROrganizationR
+}
+
+type publicreportNuisanceROrganizationR struct {
+	o *OrganizationTemplate
 }
 
 // Apply mods to the PublicreportNuisanceTemplate
@@ -80,7 +90,14 @@ func (o *PublicreportNuisanceTemplate) Apply(ctx context.Context, mods ...Public
 
 // setModelRels creates and sets the relationships on *models.PublicreportNuisance
 // according to the relationships in the template. Nothing is inserted into the db
-func (t PublicreportNuisanceTemplate) setModelRels(o *models.PublicreportNuisance) {}
+func (t PublicreportNuisanceTemplate) setModelRels(o *models.PublicreportNuisance) {
+	if t.r.Organization != nil {
+		rel := t.r.Organization.o.Build()
+		rel.R.Nuisances = append(rel.R.Nuisances, o)
+		o.OrganizationID = null.From(rel.ID) // h2
+		o.R.Organization = rel
+	}
+}
 
 // BuildSetter returns an *models.PublicreportNuisanceSetter
 // this does nothing with the relationship templates
@@ -195,6 +212,10 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.Status()
 		m.Status = omit.From(val)
 	}
+	if o.OrganizationID != nil {
+		val := o.OrganizationID()
+		m.OrganizationID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -297,6 +318,9 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	}
 	if o.Status != nil {
 		m.Status = o.Status()
+	}
+	if o.OrganizationID != nil {
+		m.OrganizationID = o.OrganizationID()
 	}
 
 	o.setModelRels(m)
@@ -426,6 +450,25 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 func (o *PublicreportNuisanceTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportNuisance) error {
 	var err error
 
+	isOrganizationDone, _ := publicreportNuisanceRelOrganizationCtx.Value(ctx)
+	if !isOrganizationDone && o.r.Organization != nil {
+		ctx = publicreportNuisanceRelOrganizationCtx.WithValue(ctx, true)
+		if o.r.Organization.o.alreadyPersisted {
+			m.R.Organization = o.r.Organization.o.Build()
+		} else {
+			var rel0 *models.Organization
+			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachOrganization(ctx, exec, rel0)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return err
 }
 
@@ -545,6 +588,7 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomAddress(f),
 		PublicreportNuisanceMods.RandomLocation(f),
 		PublicreportNuisanceMods.RandomStatus(f),
+		PublicreportNuisanceMods.RandomOrganizationID(f),
 	}
 }
 
@@ -1407,11 +1451,99 @@ func (m publicreportNuisanceMods) RandomStatus(f *faker.Faker) PublicreportNuisa
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportNuisanceMods) OrganizationID(val null.Val[int32]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.OrganizationID = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) OrganizationIDFunc(f func() null.Val[int32]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.OrganizationID = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetOrganizationID() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.OrganizationID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportNuisanceMods) RandomOrganizationID(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomOrganizationIDNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportNuisanceMods) WithParentsCascading() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
 		if isDone, _ := publicreportNuisanceWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = publicreportNuisanceWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
+			m.WithOrganization(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithOrganization(rel *OrganizationTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Organization = &publicreportNuisanceROrganizationR{
+			o: rel,
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithNewOrganization(mods ...OrganizationMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+
+		m.WithOrganization(related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) WithExistingOrganization(em *models.Organization) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Organization = &publicreportNuisanceROrganizationR{
+			o: o.f.FromExistingOrganization(em),
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithoutOrganization() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Organization = nil
 	})
 }

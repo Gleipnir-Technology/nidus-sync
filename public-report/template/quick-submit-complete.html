@@ -29,6 +29,11 @@
 							<span class="fs-4 fw-bold">{{.ReportID|publicReportID}}</span>
 						</div>
 						<p class="text-muted">Please save this ID for your reference.</p>
+						{{ if not (eq .District nil) }}
+							<p>Your report has been assigned to</p>
+							<p><b>{{ .District.Name }}</b></p>
+							<img src="{{ .District.LogoURL }}" width="256"/>
+						{{ end }}
 					</div>
 					
 					<hr class="my-4">

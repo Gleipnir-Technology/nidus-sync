@@ -2,9 +2,7 @@ package config
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/nyaruka/phonenumbers"
 )
@@ -13,7 +11,11 @@ var (
 	Bind                       string
 	ClientID                   string
 	ClientSecret               string
+	DomainRMO                  string
+	DomainNidus                string
+	DomainTegola               string
 	Environment                string
+	FilesDirectoryLogo         string
 	FilesDirectoryPublic       string
 	FilesDirectoryUser         string
 	FieldseekerSchemaDirectory string
@@ -23,47 +25,29 @@ var (
 	ForwardEmailReportUsername string
 	MapboxToken                string
 	PGDSN                      string
-	RMODomain                  string
 	RMOPhoneNumber             phonenumbers.PhoneNumber
-	URLReport                  string
-	URLSync                    string
-	URLTegola                  string
 	TwilioAuthToken            string
 	TwilioAccountSID           string
 	TwilioMessagingServiceSID  string
 )
 
-// Build the ArcGIS authorization URL with PKCE
-func BuildArcGISAuthURL(clientID string) string {
-	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/authorize/"
-
-	params := url.Values{}
-	params.Add("client_id", clientID)
-	params.Add("redirect_uri", RedirectURL())
-	params.Add("response_type", "code")
-	//params.Add("code_challenge", generateCodeChallenge(codeVerifier))
-	//params.Add("code_challenge_method", "S256")
-
-	// See https://developers.arcgis.com/rest/users-groups-and-items/token/
-	// expiration is defined in minutes
-	var expiration int
-	if IsProductionEnvironment() {
-		// 2 weeks is the maximum allowed
-		expiration = 20160
-	} else {
-		expiration = 20
-	}
-	params.Add("expiration", strconv.Itoa(expiration))
-
-	return baseURL + "?" + params.Encode()
-}
-
 func IsProductionEnvironment() bool {
 	return Environment == "PRODUCTION"
 }
 
-func MakeURLSync(path string) string {
-	return fmt.Sprintf("https://%s%s", URLSync, path)
+func makeURL(domain, path string, args ...interface{}) string {
+	pattern := "https://" + domain + path
+	return fmt.Sprintf(pattern, args...)
+}
+
+func MakeURLNidus(path string, args ...interface{}) string {
+	return makeURL(DomainNidus, path, args...)
+}
+func MakeURLReport(path string, args ...interface{}) string {
+	return makeURL(DomainRMO, path, args...)
+}
+func MakeURLTegola(path string, args ...interface{}) string {
+	return makeURL(DomainTegola, path, args...)
 }
 
 func Parse() (err error) {
@@ -79,6 +63,18 @@ func Parse() (err error) {
 	if ClientSecret == "" {
 		return fmt.Errorf("You must specify a non-empty ARCGIS_CLIENT_SECRET")
 	}
+	DomainNidus = os.Getenv("DOMAIN_NIDUS")
+	if DomainNidus == "" {
+		return fmt.Errorf("You must specify a non-empty DOMAIN_NIDUS")
+	}
+	DomainRMO = os.Getenv("DOMAIN_RMO")
+	if DomainRMO == "" {
+		return fmt.Errorf("You must specify a non-empty DOMAIN_RMO")
+	}
+	DomainTegola = os.Getenv("DOMAIN_TEGOLA")
+	if DomainTegola == "" {
+		return fmt.Errorf("You must specify a non-empty DOMAIN_TEGOLA")
+	}
 	Environment = os.Getenv("ENVIRONMENT")
 	if Environment == "" {
 		return fmt.Errorf("You must specify a non-empty ENVIRONMENT")
@@ -89,6 +85,10 @@ func Parse() (err error) {
 	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")
 	if FieldseekerSchemaDirectory == "" {
 		return fmt.Errorf("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
+	}
+	FilesDirectoryLogo = os.Getenv("FILES_DIRECTORY_LOGO")
+	if FilesDirectoryLogo == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_LOGO")
 	}
 	FilesDirectoryPublic = os.Getenv("FILES_DIRECTORY_PUBLIC")
 	if FilesDirectoryPublic == "" {
@@ -122,10 +122,6 @@ func Parse() (err error) {
 	if PGDSN == "" {
 		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
 	}
-	RMODomain = os.Getenv("RMO_DOMAIN")
-	if RMODomain == "" {
-		return fmt.Errorf("You must specify a non-empty RMO_DOMAIN")
-	}
 	rmo_phone_number := os.Getenv("RMO_PHONE_NUMBER")
 	if rmo_phone_number == "" {
 		return fmt.Errorf("You must specify a non-empty RMO_PHONE_NUMBER")
@@ -136,18 +132,6 @@ func Parse() (err error) {
 	}
 	RMOPhoneNumber = *p
 
-	URLReport = os.Getenv("URL_REPORT")
-	if URLReport == "" {
-		return fmt.Errorf("You must specify a non-empty URL_REPORT")
-	}
-	URLSync = os.Getenv("URL_SYNC")
-	if URLSync == "" {
-		return fmt.Errorf("You must specify a non-empty URL_SYNC")
-	}
-	URLTegola = os.Getenv("URL_TEGOLA")
-	if URLTegola == "" {
-		return fmt.Errorf("You must specify a non-empty URL_TEGOLA")
-	}
 	TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
 	if TwilioAccountSID == "" {
 		return fmt.Errorf("You must specify a non-empty TWILIO_ACCOUNT_SID")
@@ -163,6 +147,6 @@ func Parse() (err error) {
 	return nil
 }
 
-func RedirectURL() string {
-	return MakeURLSync("/arcgis/oauth/callback")
+func ArcGISOauthRedirectURL() string {
+	return MakeURLNidus("/arcgis/oauth/callback")
 }

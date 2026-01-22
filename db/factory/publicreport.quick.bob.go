@@ -38,16 +38,17 @@ func (mods PublicreportQuickModSlice) Apply(ctx context.Context, n *Publicreport
 // PublicreportQuickTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportQuickTemplate struct {
-	ID            func() int32
-	Created       func() time.Time
-	Comments      func() string
-	Location      func() null.Val[string]
-	H3cell        func() null.Val[string]
-	PublicID      func() string
-	ReporterEmail func() string
-	ReporterPhone func() string
-	Address       func() string
-	Status        func() enums.PublicreportReportstatustype
+	ID             func() int32
+	Created        func() time.Time
+	Comments       func() string
+	Location       func() null.Val[string]
+	H3cell         func() null.Val[string]
+	PublicID       func() string
+	ReporterEmail  func() string
+	ReporterPhone  func() string
+	Address        func() string
+	Status         func() enums.PublicreportReportstatustype
+	OrganizationID func() null.Val[int32]
 
 	r publicreportQuickR
 	f *Factory
@@ -56,9 +57,13 @@ type PublicreportQuickTemplate struct {
 }
 
 type publicreportQuickR struct {
-	Images []*publicreportQuickRImagesR
+	Organization *publicreportQuickROrganizationR
+	Images       []*publicreportQuickRImagesR
 }
 
+type publicreportQuickROrganizationR struct {
+	o *OrganizationTemplate
+}
 type publicreportQuickRImagesR struct {
 	number int
 	o      *PublicreportImageTemplate
@@ -74,6 +79,13 @@ func (o *PublicreportQuickTemplate) Apply(ctx context.Context, mods ...Publicrep
 // setModelRels creates and sets the relationships on *models.PublicreportQuick
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportQuickTemplate) setModelRels(o *models.PublicreportQuick) {
+	if t.r.Organization != nil {
+		rel := t.r.Organization.o.Build()
+		rel.R.Quicks = append(rel.R.Quicks, o)
+		o.OrganizationID = null.From(rel.ID) // h2
+		o.R.Organization = rel
+	}
+
 	if t.r.Images != nil {
 		rel := models.PublicreportImageSlice{}
 		for _, r := range t.r.Images {
@@ -132,6 +144,10 @@ func (o PublicreportQuickTemplate) BuildSetter() *models.PublicreportQuickSetter
 		val := o.Status()
 		m.Status = omit.From(val)
 	}
+	if o.OrganizationID != nil {
+		val := o.OrganizationID()
+		m.OrganizationID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -183,6 +199,9 @@ func (o PublicreportQuickTemplate) Build() *models.PublicreportQuick {
 	}
 	if o.Status != nil {
 		m.Status = o.Status()
+	}
+	if o.OrganizationID != nil {
+		m.OrganizationID = o.OrganizationID()
 	}
 
 	o.setModelRels(m)
@@ -240,6 +259,25 @@ func ensureCreatablePublicreportQuick(m *models.PublicreportQuickSetter) {
 func (o *PublicreportQuickTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportQuick) error {
 	var err error
 
+	isOrganizationDone, _ := publicreportQuickRelOrganizationCtx.Value(ctx)
+	if !isOrganizationDone && o.r.Organization != nil {
+		ctx = publicreportQuickRelOrganizationCtx.WithValue(ctx, true)
+		if o.r.Organization.o.alreadyPersisted {
+			m.R.Organization = o.r.Organization.o.Build()
+		} else {
+			var rel0 *models.Organization
+			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachOrganization(ctx, exec, rel0)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	isImagesDone, _ := publicreportQuickRelImagesCtx.Value(ctx)
 	if !isImagesDone && o.r.Images != nil {
 		ctx = publicreportQuickRelImagesCtx.WithValue(ctx, true)
@@ -247,12 +285,12 @@ func (o *PublicreportQuickTemplate) insertOptRels(ctx context.Context, exec bob.
 			if r.o.alreadyPersisted {
 				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachImages(ctx, exec, rel0...)
+				err = m.AttachImages(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -362,6 +400,7 @@ func (m publicreportQuickMods) RandomizeAllColumns(f *faker.Faker) PublicreportQ
 		PublicreportQuickMods.RandomReporterPhone(f),
 		PublicreportQuickMods.RandomAddress(f),
 		PublicreportQuickMods.RandomStatus(f),
+		PublicreportQuickMods.RandomOrganizationID(f),
 	}
 }
 
@@ -719,12 +758,100 @@ func (m publicreportQuickMods) RandomStatus(f *faker.Faker) PublicreportQuickMod
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportQuickMods) OrganizationID(val null.Val[int32]) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.OrganizationID = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportQuickMods) OrganizationIDFunc(f func() null.Val[int32]) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.OrganizationID = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportQuickMods) UnsetOrganizationID() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.OrganizationID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportQuickMods) RandomOrganizationID(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportQuickMods) RandomOrganizationIDNotNull(f *faker.Faker) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(_ context.Context, o *PublicreportQuickTemplate) {
+		o.OrganizationID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportQuickMods) WithParentsCascading() PublicreportQuickMod {
 	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
 		if isDone, _ := publicreportQuickWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = publicreportQuickWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
+			m.WithOrganization(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m publicreportQuickMods) WithOrganization(rel *OrganizationTemplate) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
+		o.r.Organization = &publicreportQuickROrganizationR{
+			o: rel,
+		}
+	})
+}
+
+func (m publicreportQuickMods) WithNewOrganization(mods ...OrganizationMod) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+
+		m.WithOrganization(related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportQuickMods) WithExistingOrganization(em *models.Organization) PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
+		o.r.Organization = &publicreportQuickROrganizationR{
+			o: o.f.FromExistingOrganization(em),
+		}
+	})
+}
+
+func (m publicreportQuickMods) WithoutOrganization() PublicreportQuickMod {
+	return PublicreportQuickModFunc(func(ctx context.Context, o *PublicreportQuickTemplate) {
+		o.r.Organization = nil
 	})
 }
 

@@ -13,21 +13,27 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aarondl/opt/omit"
-	"github.com/dsoprea/go-exif/v3"
-	exifcommon "github.com/dsoprea/go-exif/v3/common"
-	//"github.com/dsoprea/go-jpeg-image-structure/v2"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/rwcarlsen/goexif/exif"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/um"
+	//exif "github.com/rwcarlsen/goexif/exif"
+	//"github.com/dsoprea/go-exif-extra/format"
 )
 
+type GPS struct {
+	Latitude  float64
+	Longitude float64
+}
+
 type ExifCollection struct {
-	GPS  *exif.GpsInfo
+	GPS  *GPS
 	Tags map[string]string
 }
 
@@ -42,43 +48,30 @@ type ImageUpload struct {
 	UUID           uuid.UUID
 }
 
-func extractExif(file_bytes []byte) (result ExifCollection, err error) {
+func extractExif(content_type string, file_bytes []byte) (result ExifCollection, err error) {
+	/*
+		Using "github.com/evanoberholster/imagemeta"
+		meta, err := imagemeta.Decode(bytes.NewReader(file_bytes))
+		if err != nil {
+			return result, fmt.Errorf("Failed to decode image meta: %w", err)
+		}
+		result.GPS = &GPS{
+			Latitude: meta.GPS.Latitude(),
+			Longitude: meta.GPS.Longitude(),
+		}
+		return result, err
+	*/
 
-	raw_exif, err := exif.SearchAndExtractExifWithReader(bytes.NewReader(file_bytes))
+	exif, err := exif.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
-		return result, fmt.Errorf("Failed to find exif: %w", err)
+		return result, fmt.Errorf("Failed to decode image meta: %w", err)
 	}
-	im, err := exifcommon.NewIfdMappingWithStandard()
-	if err != nil {
-		return result, fmt.Errorf("Failed to create new idf mapping: %w", err)
+	lat, lng, _ := exif.LatLong()
+	result.GPS = &GPS{
+		Latitude:  lat,
+		Longitude: lng,
 	}
-	ti := exif.NewTagIndex()
-	_, index, err := exif.Collect(im, ti, raw_exif)
-	if err != nil {
-		return result, fmt.Errorf("Failed to collect exif: %w", err)
-	}
-	ifd, err := index.RootIfd.ChildWithIfdPath(exifcommon.IfdGpsInfoStandardIfdIdentity)
-	if err != nil {
-		return result, fmt.Errorf("Failed to find gps exif: %w", err)
-	}
-	gi, err := ifd.GpsInfo()
-	if err != nil {
-		log.Info().Err(err).Msg("Failed to get GPS info for uploaded image")
-		result.GPS = nil
-	} else {
-		result.GPS = gi
-	}
-	result.Tags = make(map[string]string, 0)
-
-	tags, _, err := exif.GetFlatExifData(raw_exif, &exif.ScanOptions{})
-	if err != nil {
-		return result, fmt.Errorf("Failed to gather flat exif: %w", err)
-	}
-	for _, t := range tags {
-		result.Tags[t.TagName] = t.Formatted
-	}
-	log.Info().Str("GPS", fmt.Sprintf("%s", gi)).Int("count", len(result.Tags)).Msg("Extracted exif tags")
-	return result, nil
+	return result, err
 }
 
 func extractImageUpload(headers *multipart.FileHeader) (upload ImageUpload, err error) {
@@ -91,11 +84,12 @@ func extractImageUpload(headers *multipart.FileHeader) (upload ImageUpload, err 
 	file_bytes, err := io.ReadAll(file)
 	content_type := http.DetectContentType(file_bytes)
 
-	exif, err := extractExif(file_bytes)
+	exif, err := extractExif(content_type, file_bytes)
 	if err != nil {
 		//return upload, fmt.Errorf("Failed to extract EXIF data: %w", err)
 		log.Warn().Err(err).Msg("Failed to extract EXIF data")
 	}
+	log.Debug().Float64("lat", exif.GPS.Latitude).Float64("lng", exif.GPS.Longitude).Msg("extracted GPS from exif")
 
 	i, format, err := image.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
@@ -143,7 +137,8 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 			ContentType: omit.From(u.ContentType),
 
 			Created: omit.From(time.Now()),
-			//Location: omitnull.From(nil),
+			//Location: 	psql.Raw("NULL"),
+			Location:         omitnull.FromPtr[string](nil),
 			ResolutionX:      omit.From(int32(u.Bounds.Max.X)),
 			ResolutionY:      omit.From(int32(u.Bounds.Max.Y)),
 			StorageUUID:      omit.From(u.UUID),
@@ -158,7 +153,7 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 		if u.Exif.GPS != nil {
 			_, err = psql.Update(
 				um.Table("publicreport.image"),
-				um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", u.Exif.GPS.Longitude.Decimal(), u.Exif.GPS.Latitude.Decimal())),
+				um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
 				um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
 			).Exec(ctx, tx)
 		}
@@ -171,9 +166,11 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 				Value:   omit.From(v),
 			})
 		}
-		_, err = models.PublicreportImageExifs.Insert(bob.ToMods(exif_setters...)).Exec(ctx, tx)
-		if err != nil {
-			return images, fmt.Errorf("Failed to create photo exif records: %w", err)
+		if len(exif_setters) > 0 {
+			_, err = models.PublicreportImageExifs.Insert(bob.ToMods(exif_setters...)).Exec(ctx, tx)
+			if err != nil {
+				return images, fmt.Errorf("Failed to create photo exif records: %w", err)
+			}
 		}
 		images = append(images, image)
 		log.Info().Int32("id", image.ID).Int("tags", len(u.Exif.Tags)).Msg("Saved an uploaded file to the database")

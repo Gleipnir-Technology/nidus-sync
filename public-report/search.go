@@ -22,7 +22,7 @@ func getSearch(w http.ResponseWriter, r *http.Request) {
 		Search,
 		ContentSearch{
 			MapboxToken: config.MapboxToken,
-			URLTegola:   config.URLTegola,
+			URLTegola:   config.MakeURLTegola("/"),
 		},
 	)
 }

@@ -78,46 +78,6 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 	w.WriteHeader(http.StatusOK)
 }
 
-func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
-	var latStr, lngStr string
-	err := r.ParseForm()
-	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
-		return
-	} else {
-		latStr = r.FormValue("lat")
-		lngStr = r.FormValue("lng")
-	}
-	lat, err := strconv.ParseFloat(latStr, 64)
-	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to parse lat as float: %w", err)))
-		return
-	}
-	lng, err := strconv.ParseFloat(lngStr, 64)
-	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to parse lng as float: %w", err)))
-		return
-	}
-	district, err := platform.DistrictForLocation(r.Context(), lng, lat)
-	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to get district: %w", err)))
-		return
-	}
-	if district == nil {
-		http.NotFound(w, r)
-		return
-	}
-	d := ResponseDistrict{
-		Agency:  district.Agency.GetOr(""),
-		Manager: district.GeneralMG.GetOr(""),
-		Phone:   district.Phone1.GetOr(""),
-		Website: district.Website.GetOr(""),
-	}
-	if err := render.Render(w, r, d); err != nil {
-		render.Render(w, r, errRender(err))
-	}
-}
-
 func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
 	var sinceStr string
 	err := r.ParseForm()

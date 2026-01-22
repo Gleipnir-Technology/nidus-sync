@@ -4,6 +4,9 @@ aliases:
     up_singular: "ArcgisUser"
     down_plural: "arcgisusers"
     down_singular: "arcgisuser"
+  organization:
+    relationships:
+      publicreport.pool.pool_organization_id_fkey: "PublicreportPool"
   user_:
     up_plural: "Users"
     up_singular: "User"

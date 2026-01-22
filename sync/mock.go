@@ -49,7 +49,7 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	if code == "" {
 		respondError(w, "There should always be a code", nil, http.StatusBadRequest)
 	}
-	content := config.MakeURLSync("/report/" + code)
+	content := config.MakeURLNidus("/report/%s", code)
 	// Get optional size parameter (default to 256)
 	size := 256
 	if sizeStr := r.URL.Query().Get("size"); sizeStr != "" {

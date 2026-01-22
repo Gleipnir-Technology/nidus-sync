@@ -52,11 +52,11 @@ func main() {
 	sr := nidussync.Router()
 	hr.Map("", sr)                                  // default
 	hr.Map("*", sr)                                 // default
-	hr.Map(config.URLReport, publicreport.Router()) // report.mosquitoes.online
-	hr.Map(config.URLSync, sr)
+	hr.Map(config.DomainRMO, publicreport.Router()) // report.mosquitoes.online
+	hr.Map(config.DomainNidus, sr)
 	r.Mount("/", hr)
 
-	log.Info().Str("report url", config.URLReport).Str("sync url", config.URLSync).Msg("Serving at URLs")
+	log.Info().Str("report url", config.DomainRMO).Str("sync url", config.DomainNidus).Msg("Serving at URLs")
 
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())

@@ -285,6 +285,15 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportPoolIndexes{
 		PoolPkey: index{
@@ -327,7 +336,17 @@ var PublicreportPools = Table[
 		Columns: []string{"id"},
 		Comment: "",
 	},
-
+	ForeignKeys: publicreportPoolForeignKeys{
+		PublicreportPoolPoolOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.pool.pool_organization_id_fkey",
+				Columns: []string{"organization_id"},
+				Comment: "",
+			},
+			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
+	},
 	Uniques: publicreportPoolUniques{
 		PoolPublicIDKey: constraint{
 			Name:    "pool_public_id_key",
@@ -370,11 +389,12 @@ type publicreportPoolColumns struct {
 	ReporterPhone   column
 	Subscribe       column
 	Status          column
+	OrganizationID  column
 }
 
 func (c publicreportPoolColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Subscribe, c.Status,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Subscribe, c.Status, c.OrganizationID,
 	}
 }
 
@@ -389,10 +409,14 @@ func (i publicreportPoolIndexes) AsSlice() []index {
 	}
 }
 
-type publicreportPoolForeignKeys struct{}
+type publicreportPoolForeignKeys struct {
+	PublicreportPoolPoolOrganizationIDFkey foreignKey
+}
 
 func (f publicreportPoolForeignKeys) AsSlice() []foreignKey {
-	return []foreignKey{}
+	return []foreignKey{
+		f.PublicreportPoolPoolOrganizationIDFkey,
+	}
 }
 
 type publicreportPoolUniques struct {

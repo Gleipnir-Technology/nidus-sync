@@ -11,6 +11,7 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -43,6 +44,7 @@ type OrganizationTemplate struct {
 	FieldseekerURL    func() null.Val[string]
 	ImportDistrictGid func() null.Val[int32]
 	Website           func() null.Val[string]
+	LogoUUID          func() null.Val[uuid.UUID]
 
 	r organizationR
 	f *Factory
@@ -83,6 +85,9 @@ type organizationR struct {
 	NoteAudios                []*organizationRNoteAudiosR
 	NoteImages                []*organizationRNoteImagesR
 	ImportDistrictGidDistrict *organizationRImportDistrictGidDistrictR
+	Nuisances                 []*organizationRNuisancesR
+	PublicreportPool          []*organizationRPublicreportPoolR
+	Quicks                    []*organizationRQuicksR
 	User                      []*organizationRUserR
 }
 
@@ -212,6 +217,18 @@ type organizationRNoteImagesR struct {
 }
 type organizationRImportDistrictGidDistrictR struct {
 	o *ImportDistrictTemplate
+}
+type organizationRNuisancesR struct {
+	number int
+	o      *PublicreportNuisanceTemplate
+}
+type organizationRPublicreportPoolR struct {
+	number int
+	o      *PublicreportPoolTemplate
+}
+type organizationRQuicksR struct {
+	number int
+	o      *PublicreportQuickTemplate
 }
 type organizationRUserR struct {
 	number int
@@ -638,6 +655,45 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.ImportDistrictGidDistrict = rel
 	}
 
+	if t.r.Nuisances != nil {
+		rel := models.PublicreportNuisanceSlice{}
+		for _, r := range t.r.Nuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = null.From(o.ID) // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Nuisances = rel
+	}
+
+	if t.r.PublicreportPool != nil {
+		rel := models.PublicreportPoolSlice{}
+		for _, r := range t.r.PublicreportPool {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = null.From(o.ID) // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PublicreportPool = rel
+	}
+
+	if t.r.Quicks != nil {
+		rel := models.PublicreportQuickSlice{}
+		for _, r := range t.r.Quicks {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = null.From(o.ID) // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Quicks = rel
+	}
+
 	if t.r.User != nil {
 		rel := models.UserSlice{}
 		for _, r := range t.r.User {
@@ -685,6 +741,10 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.Website()
 		m.Website = omitnull.FromNull(val)
 	}
+	if o.LogoUUID != nil {
+		val := o.LogoUUID()
+		m.LogoUUID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -727,6 +787,9 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.Website != nil {
 		m.Website = o.Website()
+	}
+	if o.LogoUUID != nil {
+		m.LogoUUID = o.LogoUUID()
 	}
 
 	o.setModelRels(m)
@@ -1399,6 +1462,66 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 
 	}
 
+	isNuisancesDone, _ := organizationRelNuisancesCtx.Value(ctx)
+	if !isNuisancesDone && o.r.Nuisances != nil {
+		ctx = organizationRelNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Nuisances {
+			if r.o.alreadyPersisted {
+				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
+			} else {
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNuisances(ctx, exec, rel32...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPublicreportPoolDone, _ := organizationRelPublicreportPoolCtx.Value(ctx)
+	if !isPublicreportPoolDone && o.r.PublicreportPool != nil {
+		ctx = organizationRelPublicreportPoolCtx.WithValue(ctx, true)
+		for _, r := range o.r.PublicreportPool {
+			if r.o.alreadyPersisted {
+				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
+			} else {
+				rel33, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPublicreportPool(ctx, exec, rel33...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isQuicksDone, _ := organizationRelQuicksCtx.Value(ctx)
+	if !isQuicksDone && o.r.Quicks != nil {
+		ctx = organizationRelQuicksCtx.WithValue(ctx, true)
+		for _, r := range o.r.Quicks {
+			if r.o.alreadyPersisted {
+				m.R.Quicks = append(m.R.Quicks, r.o.Build())
+			} else {
+				rel34, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachQuicks(ctx, exec, rel34...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isUserDone, _ := organizationRelUserCtx.Value(ctx)
 	if !isUserDone && o.r.User != nil {
 		ctx = organizationRelUserCtx.WithValue(ctx, true)
@@ -1406,12 +1529,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel32...)
+				err = m.AttachUser(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1518,6 +1641,7 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomFieldseekerURL(f),
 		OrganizationMods.RandomImportDistrictGid(f),
 		OrganizationMods.RandomWebsite(f),
+		OrganizationMods.RandomLogoUUID(f),
 	}
 }
 
@@ -1843,6 +1967,59 @@ func (m organizationMods) RandomWebsiteNotNull(f *faker.Faker) OrganizationMod {
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) LogoUUID(val null.Val[uuid.UUID]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.LogoUUID = func() null.Val[uuid.UUID] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) LogoUUIDFunc(f func() null.Val[uuid.UUID]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.LogoUUID = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetLogoUUID() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.LogoUUID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomLogoUUID(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.LogoUUID = func() null.Val[uuid.UUID] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_uuid_UUID(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomLogoUUIDNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.LogoUUID = func() null.Val[uuid.UUID] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_uuid_UUID(f)
 			return null.From(val)
 		}
 	})
@@ -3377,6 +3554,150 @@ func (m organizationMods) AddExistingNoteImages(existingModels ...*models.NoteIm
 func (m organizationMods) WithoutNoteImages() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.NoteImages = nil
+	})
+}
+
+func (m organizationMods) WithNuisances(number int, related *PublicreportNuisanceTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Nuisances = []*organizationRNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewNuisances(number int, mods ...PublicreportNuisanceMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportNuisanceWithContext(ctx, mods...)
+		m.WithNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddNuisances(number int, related *PublicreportNuisanceTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Nuisances = append(o.r.Nuisances, &organizationRNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewNuisances(number int, mods ...PublicreportNuisanceMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportNuisanceWithContext(ctx, mods...)
+		m.AddNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingNuisances(existingModels ...*models.PublicreportNuisance) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Nuisances = append(o.r.Nuisances, &organizationRNuisancesR{
+				o: o.f.FromExistingPublicreportNuisance(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutNuisances() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Nuisances = nil
+	})
+}
+
+func (m organizationMods) WithPublicreportPool(number int, related *PublicreportPoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.PublicreportPool = []*organizationRPublicreportPoolR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewPublicreportPool(number int, mods ...PublicreportPoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportPoolWithContext(ctx, mods...)
+		m.WithPublicreportPool(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddPublicreportPool(number int, related *PublicreportPoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.PublicreportPool = append(o.r.PublicreportPool, &organizationRPublicreportPoolR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewPublicreportPool(number int, mods ...PublicreportPoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportPoolWithContext(ctx, mods...)
+		m.AddPublicreportPool(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingPublicreportPool(existingModels ...*models.PublicreportPool) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.PublicreportPool = append(o.r.PublicreportPool, &organizationRPublicreportPoolR{
+				o: o.f.FromExistingPublicreportPool(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutPublicreportPool() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.PublicreportPool = nil
+	})
+}
+
+func (m organizationMods) WithQuicks(number int, related *PublicreportQuickTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Quicks = []*organizationRQuicksR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewQuicks(number int, mods ...PublicreportQuickMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportQuickWithContext(ctx, mods...)
+		m.WithQuicks(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddQuicks(number int, related *PublicreportQuickTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Quicks = append(o.r.Quicks, &organizationRQuicksR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewQuicks(number int, mods ...PublicreportQuickMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportQuickWithContext(ctx, mods...)
+		m.AddQuicks(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingQuicks(existingModels ...*models.PublicreportQuick) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Quicks = append(o.r.Quicks, &organizationRQuicksR{
+				o: o.f.FromExistingPublicreportQuick(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutQuicks() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Quicks = nil
 	})
 }
 

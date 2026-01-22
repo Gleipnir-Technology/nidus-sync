@@ -284,7 +284,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 	}
 	data := ContextDashboard{
 		Config: Config{
-			URLTegola: config.URLTegola,
+			URLTegola: config.MakeURLTegola("/"),
 		},
 		CountTraps:           int(trapCount),
 		CountMosquitoSources: int(sourceCount),
