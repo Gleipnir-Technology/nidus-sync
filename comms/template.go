@@ -96,7 +96,8 @@ func buildTemplate(name string) *builtTemplate {
 
 func parseEmbeddedHTML(embeddedFiles embed.FS, subdir string, file string) *templatehtml.Template {
 	// Remap the file names to embedded paths
-	embeddedFilePaths := []string{strings.TrimPrefix(file, subdir)}
+	to_trim := subdir + "/"
+	embeddedFilePaths := []string{strings.TrimPrefix(file, to_trim)}
 	name := path.Base(embeddedFilePaths[0])
 	log.Debug().Str("name", name).Strs("paths", embeddedFilePaths).Msg("Parsing embedded template")
 	return templatehtml.Must(
@@ -104,7 +105,8 @@ func parseEmbeddedHTML(embeddedFiles embed.FS, subdir string, file string) *temp
 }
 func parseEmbeddedTXT(embeddedFiles embed.FS, subdir string, file string) *templatetxt.Template {
 	// Remap the file names to embedded paths
-	embeddedFilePaths := []string{strings.TrimPrefix(file, subdir)}
+	to_trim := subdir + "/"
+	embeddedFilePaths := []string{strings.TrimPrefix(file, to_trim)}
 	name := path.Base(embeddedFilePaths[0])
 	log.Debug().Str("name", name).Strs("paths", embeddedFilePaths).Msg("Parsing embedded template")
 	return templatetxt.Must(
