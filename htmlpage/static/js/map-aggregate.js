@@ -82,7 +82,7 @@ class MapAggregate extends HTMLElement {
 			map.addSource('tegola', {
 				'type': 'vector',
 				'tiles': [
-					`${tegola}/maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`
+					`${tegola}maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`
 				]
 			});
 			map.addInteraction('nidus-mouseenter-interaction', {
