@@ -33,12 +33,14 @@ You'll need a number of environment variables for configuring things;
 
 ### Districts
 
-There's a table containing district information in the database, `public.district`. It was created with:
+There's a table containing district information in the database, `import.district`. It was created with:
 
 ```
-shp2pgsql -s 3857 -c -D -I CA_districts.shp public.district | psql -d nidus-sync
 psql
-ALTER TABLE district ADD COLUMN geom_4326 geometry(MultiPolygon,4326) GENERATED ALWAYS AS (ST_Transform(geom, 4326)) STORED;
+CREATE SCHEMA import;
+shp2pgsql -s 3857 -c -D -I CA_districts.shp import.district | psql -d nidus-sync
+psql
+ALTER TABLE import.district ADD COLUMN geom_4326 geometry(MultiPolygon,4326) GENERATED ALWAYS AS (ST_Transform(geom, 4326)) STORED;
 ```
 
 ## Hacking
