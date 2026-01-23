@@ -2,14 +2,20 @@ package comms
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,19 +29,19 @@ func RenderEmailReportConfirmation(w http.ResponseWriter, report_id string) {
 	renderOrError(w, reportConfirmationT, content)
 }
 
-func SendEmailInitialContact(destination string) error {
+func SendEmailInitialContact(ctx context.Context, destination string) error {
 	content := newContentEmailInitial(destination)
 	text, html, err := renderEmailTemplates(reportConfirmationT, content)
 	if err != nil {
 		return fmt.Errorf("Failed to render email temlate: %w", err)
 	}
-	resp, err := sendEmail(emailRequest{
+	resp, err := sendEmail(ctx, emailRequest{
 		From:    config.ForwardEmailReportAddress,
 		HTML:    html,
 		Subject: "Welcome",
 		Text:    text,
 		To:      destination,
-	})
+	}, enums.CommsMessagetypeemailInitialContact)
 	if err != nil {
 		return fmt.Errorf("Failed to send email to %s: %w", err)
 	}
@@ -43,20 +49,20 @@ func SendEmailInitialContact(destination string) error {
 	return nil
 }
 
-func SendEmailReportConfirmation(to string, report_id string) error {
+func SendEmailReportConfirmation(ctx context.Context, to string, report_id string) error {
 	report_id_str := publicReportID(report_id)
 	content := newContentEmailSubscriptionConfirmation(report_id)
 	text, html, err := renderEmailTemplates(reportConfirmationT, content)
 	if err != nil {
 		return fmt.Errorf("Failed to render template %s: %w", reportConfirmationT.name, err)
 	}
-	resp, err := sendEmail(emailRequest{
+	resp, err := sendEmail(ctx, emailRequest{
 		From:    config.ForwardEmailReportAddress,
 		HTML:    html,
 		Subject: fmt.Sprintf("Mosquito Report Submission - %s", report_id_str),
 		Text:    text,
 		To:      to,
-	})
+	}, enums.CommsMessagetypeemailReportSubscriptionConfirmation)
 	if err != nil {
 		return fmt.Errorf("Failed to send email report confirmation to %s for report %s: %w", to, report_id, err)
 	}
@@ -184,12 +190,42 @@ func renderOrError(w http.ResponseWriter, template *builtTemplate, context inter
 
 var FORWARDEMAIL_API = "https://api.forwardemail.net/v1/emails"
 
-func sendEmail(email emailRequest) (response emailResponse, err error) {
+func ensureInDB(ctx context.Context, destination string) (err error) {
+	_, err = models.FindCommsEmail(ctx, db.PGInstance.BobDB, destination)
+	if err != nil {
+		// assume it exists
+		log.Warn().Err(err).Msg("ElI, check what this error should look like")
+		return nil
+	}
+	_, err = models.CommsEmails.Insert(&models.CommsEmailSetter{
+		Address:      omit.From(destination),
+		Confirmed:    omit.From(false),
+		IsSubscribed: omit.From(false),
+	}).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to insert new email: %w", err)
+	}
+	log.Info().Str("email", destination).Msg("Added email to the comms database")
+	return nil
+}
+
+func insertEmailLog(ctx context.Context, email emailRequest, t enums.CommsMessagetypeemail) (err error) {
+	_, err = models.CommsEmailLogs.Insert(&models.CommsEmailLogSetter{
+		Created:     omit.From(time.Now()),
+		Destination: omit.From(email.To),
+		Source:      omit.From(email.From),
+		Type:        omit.From(t),
+	}).One(ctx, db.PGInstance.BobDB)
+	return err
+}
+func sendEmail(ctx context.Context, email emailRequest, t enums.CommsMessagetypeemail) (response emailResponse, err error) {
+	ensureInDB(ctx, email.To)
 	payload, err := json.Marshal(email)
 	if err != nil {
 		return response, fmt.Errorf("Failed to marshal email request: %w", err)
 	}
 
+	insertEmailLog(ctx, email, t)
 	req, _ := http.NewRequest("POST", FORWARDEMAIL_API, bytes.NewReader(payload))
 	req.SetBasicAuth(config.ForwardEmailAPIToken, "")
 	req.Header.Add("Content-Type", "application/json")

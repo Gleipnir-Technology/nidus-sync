@@ -70,7 +70,7 @@ func startWorkerEmail(ctx context.Context, channel chan jobEmail) {
 				log.Info().Msg("Email worker shutting down.")
 				return
 			case job := <-channel:
-				err := jobProcessEmail(job)
+				err := jobProcessEmail(ctx, job)
 				if err != nil {
 					log.Error().Err(err).Str("dest", job.Destination).Str("type", string(job.Type)).Msg("Error processing email")
 				}
@@ -96,10 +96,10 @@ func startWorkerText(ctx context.Context, channel chan jobText) {
 	}()
 }
 
-func jobProcessEmail(job jobEmail) error {
+func jobProcessEmail(ctx context.Context, job jobEmail) error {
 	switch job.Type {
 	case enums.CommsMessagetypeemailInitialContact:
-		return comms.SendEmailInitialContact(job.Destination)
+		return comms.SendEmailInitialContact(ctx, job.Destination)
 	default:
 		return errors.New("not implemented")
 	}
