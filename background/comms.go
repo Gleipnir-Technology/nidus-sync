@@ -97,8 +97,19 @@ func startWorkerText(ctx context.Context, channel chan jobText) {
 }
 
 func jobProcessEmail(job jobEmail) error {
-	log.Info().Str("dest", job.Destination).Str("type", string(job.Type)).Msg("Pretend doing email job")
-	return nil
+	switch job.Type {
+	case enums.CommsMessagetypeemailInitialContact:
+		return comms.SendEmailInitialContact(job.Destination)
+	default:
+		return errors.New("not implemented")
+	}
+	/*
+		case enums.CommsMessagetypeemailReportSubscriptionConfirmation:
+		case enums.CommsMessagetypeemailReportStatusScheduled:
+		case enums.CommsMessagetypeemailReportStatusComplete:
+
+		}
+	*/
 }
 
 func jobProcessText(job jobText) error {

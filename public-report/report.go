@@ -4,11 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"net/http"
 	"strings"
-
-	"github.com/Gleipnir-Technology/nidus-sync/comms"
-	"github.com/go-chi/chi/v5"
 )
 
 // GenerateReportID creates a 12-character random string using only unambiguous
@@ -34,9 +30,4 @@ func GenerateReportID() (string, error) {
 	}
 
 	return builder.String(), nil
-}
-
-func getEmailReportSubscriptionConfirmation(w http.ResponseWriter, r *http.Request) {
-	report_id := chi.URLParam(r, "report_id")
-	comms.RenderEmailReportConfirmation(w, report_id)
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/nyaruka/phonenumbers"
@@ -35,18 +36,22 @@ func IsProductionEnvironment() bool {
 	return Environment == "PRODUCTION"
 }
 
-func makeURL(domain, path string, args ...interface{}) string {
+func makeURL(domain, path string, args ...string) string {
+	to_add := make([]any, 0)
+	for _, a := range args {
+		to_add = append(to_add, url.QueryEscape(a))
+	}
 	pattern := "https://" + domain + path
-	return fmt.Sprintf(pattern, args...)
+	return fmt.Sprintf(pattern, to_add...)
 }
 
-func MakeURLNidus(path string, args ...interface{}) string {
+func MakeURLNidus(path string, args ...string) string {
 	return makeURL(DomainNidus, path, args...)
 }
-func MakeURLReport(path string, args ...interface{}) string {
+func MakeURLReport(path string, args ...string) string {
 	return makeURL(DomainRMO, path, args...)
 }
-func MakeURLTegola(path string, args ...interface{}) string {
+func MakeURLTegola(path string, args ...string) string {
 	return makeURL(DomainTegola, path, args...)
 }
 

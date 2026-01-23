@@ -13,13 +13,39 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func RenderEmailInitial(w http.ResponseWriter, destination string) {
+	content := newContentEmailInitial(destination)
+	renderOrError(w, initialT, content)
+}
+
 func RenderEmailReportConfirmation(w http.ResponseWriter, report_id string) {
-	content := contentEmailSubscriptionConfirmation(report_id)
+	content := newContentEmailSubscriptionConfirmation(report_id)
 	renderOrError(w, reportConfirmationT, content)
 }
+
+func SendEmailInitialContact(destination string) error {
+	content := newContentEmailInitial(destination)
+	text, html, err := renderEmailTemplates(reportConfirmationT, content)
+	if err != nil {
+		return fmt.Errorf("Failed to render email temlate: %w", err)
+	}
+	resp, err := sendEmail(emailRequest{
+		From:    config.ForwardEmailReportAddress,
+		HTML:    html,
+		Subject: "Welcome",
+		Text:    text,
+		To:      destination,
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to send email to %s: %w", err)
+	}
+	log.Info().Str("id", resp.ID).Str("to", destination).Msg("Sent initial contact email")
+	return nil
+}
+
 func SendEmailReportConfirmation(to string, report_id string) error {
 	report_id_str := publicReportID(report_id)
-	content := contentEmailSubscriptionConfirmation(report_id)
+	content := newContentEmailSubscriptionConfirmation(report_id)
 	text, html, err := renderEmailTemplates(reportConfirmationT, content)
 	if err != nil {
 		return fmt.Errorf("Failed to render template %s: %w", reportConfirmationT.name, err)
@@ -39,6 +65,7 @@ func SendEmailReportConfirmation(to string, report_id string) error {
 }
 
 var (
+	initialT            = buildTemplate("initial")
 	reportConfirmationT = buildTemplate("report-subscription-confirmation")
 )
 
@@ -50,11 +77,20 @@ type attachmentRequest struct {
 	Content  string `json:"content"`
 }
 
+type contentEmailBase struct {
+	URLLogo          string
+	URLUnsubscribe   string
+	URLViewInBrowser string
+}
+
 type contentEmailReportConfirmation struct {
-	URLLogo              string
-	URLReportStatus      string
-	URLReportUnsubscribe string
-	URLViewInBrowser     string
+	Base            contentEmailBase
+	URLReportStatus string
+}
+type contentEmailInitial struct {
+	Base         contentEmailBase
+	Destination  string
+	URLSubscribe string
 }
 
 type emailRequest struct {
@@ -104,13 +140,28 @@ type emailResponse struct {
 	Message        string            `json:"message"`
 }
 
-func contentEmailSubscriptionConfirmation(report_id string) contentEmailReportConfirmation {
-	return contentEmailReportConfirmation{
-		URLLogo:              config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png"),
-		URLReportStatus:      config.MakeURLReport("/status/%s", report_id),
-		URLReportUnsubscribe: config.MakeURLReport("/report/%s/unsubscribe", report_id),
-		URLViewInBrowser:     config.MakeURLReport("/email/report/%s/subscription-confirmation", report_id),
-	}
+func newContentBase(b *contentEmailBase, url string) {
+	b.URLLogo = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
+	b.URLUnsubscribe = config.MakeURLReport("/email/unsubscribe")
+	b.URLViewInBrowser = url
+}
+
+func newContentEmailInitial(destination string) (result contentEmailInitial) {
+	newContentBase(
+		&result.Base,
+		config.MakeURLReport("/email/initial"),
+	)
+	result.Destination = destination
+	result.URLSubscribe = config.MakeURLReport("/email/subscribe?email=%s", destination)
+	return result
+}
+func newContentEmailSubscriptionConfirmation(report_id string) (result contentEmailReportConfirmation) {
+	newContentBase(
+		&result.Base,
+		config.MakeURLReport("/email/report/%s/subscription-confirmation", report_id),
+	)
+	result.URLReportStatus = config.MakeURLReport("/status/%s", report_id)
+	return result
 }
 
 func publicReportID(s string) string {

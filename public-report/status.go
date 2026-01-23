@@ -185,7 +185,7 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 	for _, image := range images {
 		result.Report.Images = append(result.Report.Images, Image{
 			Location: image.LocationJSON,
-			URL:      config.MakeURLReport("/image/%s", image.StorageUUID),
+			URL:      config.MakeURLReport("/image/%s", image.StorageUUID.String()),
 		})
 	}
 	type LocationGeoJSON struct {
