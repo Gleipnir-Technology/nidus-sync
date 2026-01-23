@@ -72,7 +72,7 @@ func startWorkerEmail(ctx context.Context, channel chan jobEmail) {
 			case job := <-channel:
 				err := jobProcessEmail(job)
 				if err != nil {
-					log.Error().Err(err).Str("dest", job.Destination).Str("type", string(job.Type)).Msg("Error processing audio file")
+					log.Error().Err(err).Str("dest", job.Destination).Str("type", string(job.Type)).Msg("Error processing email")
 				}
 			}
 		}
