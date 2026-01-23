@@ -1,17 +1,18 @@
 package publicreport
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms"
+	//"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/go-chi/chi/v5"
 )
 
-func getEmailInitial(w http.ResponseWriter, r *http.Request) {
-	email := chi.URLParam(r, "email")
-	comms.RenderEmailInitial(w, email)
-}
-func getEmailReportSubscriptionConfirmation(w http.ResponseWriter, r *http.Request) {
-	report_id := chi.URLParam(r, "report_id")
-	comms.RenderEmailReportConfirmation(w, report_id)
+func getEmailByCode(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	if code == "" {
+		http.Error(w, "You must specify a code", http.StatusBadRequest)
+		return
+	}
+	fmt.Fprintf(w, "Pretend email contet for %s", code)
 }

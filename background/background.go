@@ -3,6 +3,8 @@ package background
 import (
 	"context"
 	"sync"
+
+	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 )
 
 var waitGroup sync.WaitGroup
@@ -10,9 +12,9 @@ var waitGroup sync.WaitGroup
 func Start(ctx context.Context) {
 	newOAuthTokenChannel = make(chan struct{}, 10)
 
-	channelJobAudio = make(chan jobAudio, 100) // Buffered channel to prevent blocking
-	channelJobEmail = make(chan jobEmail, 100) // Buffered channel to prevent blocking
-	channelJobText = make(chan jobText, 100)   // Buffered channel to prevent blocking
+	channelJobAudio = make(chan jobAudio, 100)  // Buffered channel to prevent blocking
+	channelJobEmail = make(chan email.Job, 100) // Buffered channel to prevent blocking
+	channelJobText = make(chan jobText, 100)    // Buffered channel to prevent blocking
 
 	waitGroup.Add(1)
 	go func() {

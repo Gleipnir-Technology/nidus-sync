@@ -15,13 +15,15 @@ import (
 	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/bob/types"
+	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 type Factory struct {
 	baseArcgisUserMods                        ArcgisUserModSlice
 	baseArcgisUserPrivilegeMods               ArcgisUserPrivilegeModSlice
-	baseCommsEmailMods                        CommsEmailModSlice
+	baseCommsEmailContactMods                 CommsEmailContactModSlice
 	baseCommsEmailLogMods                     CommsEmailLogModSlice
+	baseCommsEmailTemplateMods                CommsEmailTemplateModSlice
 	baseCommsPhoneMods                        CommsPhoneModSlice
 	baseCommsTextLogMods                      CommsTextLogModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
@@ -160,32 +162,33 @@ func (f *Factory) FromExistingArcgisUserPrivilege(m *models.ArcgisUserPrivilege)
 	return o
 }
 
-func (f *Factory) NewCommsEmail(mods ...CommsEmailMod) *CommsEmailTemplate {
-	return f.NewCommsEmailWithContext(context.Background(), mods...)
+func (f *Factory) NewCommsEmailContact(mods ...CommsEmailContactMod) *CommsEmailContactTemplate {
+	return f.NewCommsEmailContactWithContext(context.Background(), mods...)
 }
 
-func (f *Factory) NewCommsEmailWithContext(ctx context.Context, mods ...CommsEmailMod) *CommsEmailTemplate {
-	o := &CommsEmailTemplate{f: f}
+func (f *Factory) NewCommsEmailContactWithContext(ctx context.Context, mods ...CommsEmailContactMod) *CommsEmailContactTemplate {
+	o := &CommsEmailContactTemplate{f: f}
 
 	if f != nil {
-		f.baseCommsEmailMods.Apply(ctx, o)
+		f.baseCommsEmailContactMods.Apply(ctx, o)
 	}
 
-	CommsEmailModSlice(mods).Apply(ctx, o)
+	CommsEmailContactModSlice(mods).Apply(ctx, o)
 
 	return o
 }
 
-func (f *Factory) FromExistingCommsEmail(m *models.CommsEmail) *CommsEmailTemplate {
-	o := &CommsEmailTemplate{f: f, alreadyPersisted: true}
+func (f *Factory) FromExistingCommsEmailContact(m *models.CommsEmailContact) *CommsEmailContactTemplate {
+	o := &CommsEmailContactTemplate{f: f, alreadyPersisted: true}
 
 	o.Address = func() string { return m.Address }
 	o.Confirmed = func() bool { return m.Confirmed }
 	o.IsSubscribed = func() bool { return m.IsSubscribed }
+	o.PublicID = func() string { return m.PublicID }
 
 	ctx := context.Background()
 	if len(m.R.DestinationEmailLogs) > 0 {
-		CommsEmailMods.AddExistingDestinationEmailLogs(m.R.DestinationEmailLogs...).Apply(ctx, o)
+		CommsEmailContactMods.AddExistingDestinationEmailLogs(m.R.DestinationEmailLogs...).Apply(ctx, o)
 	}
 
 	return o
@@ -210,17 +213,60 @@ func (f *Factory) NewCommsEmailLogWithContext(ctx context.Context, mods ...Comms
 func (f *Factory) FromExistingCommsEmailLog(m *models.CommsEmailLog) *CommsEmailLogTemplate {
 	o := &CommsEmailLogTemplate{f: f, alreadyPersisted: true}
 
+	o.ID = func() int32 { return m.ID }
 	o.Created = func() time.Time { return m.Created }
+	o.DeliveryStatus = func() string { return m.DeliveryStatus }
 	o.Destination = func() string { return m.Destination }
+	o.PublicID = func() string { return m.PublicID }
+	o.SentAt = func() null.Val[time.Time] { return m.SentAt }
 	o.Source = func() string { return m.Source }
+	o.Subject = func() string { return m.Subject }
+	o.TemplateID = func() null.Val[int32] { return m.TemplateID }
+	o.TemplateData = func() pgtypes.HStore { return m.TemplateData }
 	o.Type = func() enums.CommsMessagetypeemail { return m.Type }
 
 	ctx := context.Background()
-	if m.R.DestinationEmail != nil {
-		CommsEmailLogMods.WithExistingDestinationEmail(m.R.DestinationEmail).Apply(ctx, o)
+	if m.R.DestinationEmailContact != nil {
+		CommsEmailLogMods.WithExistingDestinationEmailContact(m.R.DestinationEmailContact).Apply(ctx, o)
 	}
-	if m.R.SourcePhone != nil {
-		CommsEmailLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
+	if m.R.TemplateEmailTemplate != nil {
+		CommsEmailLogMods.WithExistingTemplateEmailTemplate(m.R.TemplateEmailTemplate).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewCommsEmailTemplate(mods ...CommsEmailTemplateMod) *CommsEmailTemplateTemplate {
+	return f.NewCommsEmailTemplateWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewCommsEmailTemplateWithContext(ctx context.Context, mods ...CommsEmailTemplateMod) *CommsEmailTemplateTemplate {
+	o := &CommsEmailTemplateTemplate{f: f}
+
+	if f != nil {
+		f.baseCommsEmailTemplateMods.Apply(ctx, o)
+	}
+
+	CommsEmailTemplateModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingCommsEmailTemplate(m *models.CommsEmailTemplate) *CommsEmailTemplateTemplate {
+	o := &CommsEmailTemplateTemplate{f: f, alreadyPersisted: true}
+
+	o.ContentHTML = func() string { return m.ContentHTML }
+	o.ContentTXT = func() string { return m.ContentTXT }
+	o.ContentHashHTML = func() string { return m.ContentHashHTML }
+	o.ContentHashTXT = func() string { return m.ContentHashTXT }
+	o.Created = func() time.Time { return m.Created }
+	o.ID = func() int32 { return m.ID }
+	o.Superceded = func() null.Val[time.Time] { return m.Superceded }
+	o.MessageType = func() enums.CommsMessagetypeemail { return m.MessageType }
+
+	ctx := context.Background()
+	if len(m.R.TemplateEmailLogs) > 0 {
+		CommsEmailTemplateMods.AddExistingTemplateEmailLogs(m.R.TemplateEmailLogs...).Apply(ctx, o)
 	}
 
 	return o
@@ -249,9 +295,6 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	o.IsSubscribed = func() bool { return m.IsSubscribed }
 
 	ctx := context.Background()
-	if len(m.R.SourceEmailLogs) > 0 {
-		CommsPhoneMods.AddExistingSourceEmailLogs(m.R.SourceEmailLogs...).Apply(ctx, o)
-	}
 	if len(m.R.DestinationTextLogs) > 0 {
 		CommsPhoneMods.AddExistingDestinationTextLogs(m.R.DestinationTextLogs...).Apply(ctx, o)
 	}
@@ -3198,12 +3241,12 @@ func (f *Factory) AddBaseArcgisUserPrivilegeMod(mods ...ArcgisUserPrivilegeMod) 
 	f.baseArcgisUserPrivilegeMods = append(f.baseArcgisUserPrivilegeMods, mods...)
 }
 
-func (f *Factory) ClearBaseCommsEmailMods() {
-	f.baseCommsEmailMods = nil
+func (f *Factory) ClearBaseCommsEmailContactMods() {
+	f.baseCommsEmailContactMods = nil
 }
 
-func (f *Factory) AddBaseCommsEmailMod(mods ...CommsEmailMod) {
-	f.baseCommsEmailMods = append(f.baseCommsEmailMods, mods...)
+func (f *Factory) AddBaseCommsEmailContactMod(mods ...CommsEmailContactMod) {
+	f.baseCommsEmailContactMods = append(f.baseCommsEmailContactMods, mods...)
 }
 
 func (f *Factory) ClearBaseCommsEmailLogMods() {
@@ -3212,6 +3255,14 @@ func (f *Factory) ClearBaseCommsEmailLogMods() {
 
 func (f *Factory) AddBaseCommsEmailLogMod(mods ...CommsEmailLogMod) {
 	f.baseCommsEmailLogMods = append(f.baseCommsEmailLogMods, mods...)
+}
+
+func (f *Factory) ClearBaseCommsEmailTemplateMods() {
+	f.baseCommsEmailTemplateMods = nil
+}
+
+func (f *Factory) AddBaseCommsEmailTemplateMod(mods ...CommsEmailTemplateMod) {
+	f.baseCommsEmailTemplateMods = append(f.baseCommsEmailTemplateMods, mods...)
 }
 
 func (f *Factory) ClearBaseCommsPhoneMods() {

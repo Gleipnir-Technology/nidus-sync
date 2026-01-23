@@ -258,7 +258,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if email != "" {
-		background.ReportSubscriptionConfirmationEmail(email)
+		background.ReportSubscriptionConfirmationEmail(email, report_id)
 	}
 	if phone_str != "" {
 		background.ReportSubscriptionConfirmationText(*phone, report_id)

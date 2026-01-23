@@ -19,8 +19,9 @@ var Preload = getPreloaders()
 type preloaders struct {
 	ArcgisUser                        arcgisuserPreloader
 	ArcgisUserPrivilege               arcgisUserPrivilegePreloader
-	CommsEmail                        commsEmailPreloader
+	CommsEmailContact                 commsEmailContactPreloader
 	CommsEmailLog                     commsEmailLogPreloader
+	CommsEmailTemplate                commsEmailTemplatePreloader
 	CommsPhone                        commsPhonePreloader
 	CommsTextLog                      commsTextLogPreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
@@ -76,8 +77,9 @@ func getPreloaders() preloaders {
 	return preloaders{
 		ArcgisUser:                        buildArcgisUserPreloader(),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegePreloader(),
-		CommsEmail:                        buildCommsEmailPreloader(),
+		CommsEmailContact:                 buildCommsEmailContactPreloader(),
 		CommsEmailLog:                     buildCommsEmailLogPreloader(),
+		CommsEmailTemplate:                buildCommsEmailTemplatePreloader(),
 		CommsPhone:                        buildCommsPhonePreloader(),
 		CommsTextLog:                      buildCommsTextLogPreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
@@ -139,8 +141,9 @@ var (
 type thenLoaders[Q orm.Loadable] struct {
 	ArcgisUser                        arcgisuserThenLoader[Q]
 	ArcgisUserPrivilege               arcgisUserPrivilegeThenLoader[Q]
-	CommsEmail                        commsEmailThenLoader[Q]
+	CommsEmailContact                 commsEmailContactThenLoader[Q]
 	CommsEmailLog                     commsEmailLogThenLoader[Q]
+	CommsEmailTemplate                commsEmailTemplateThenLoader[Q]
 	CommsPhone                        commsPhoneThenLoader[Q]
 	CommsTextLog                      commsTextLogThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
@@ -196,8 +199,9 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
 		ArcgisUser:                        buildArcgisUserThenLoader[Q](),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegeThenLoader[Q](),
-		CommsEmail:                        buildCommsEmailThenLoader[Q](),
+		CommsEmailContact:                 buildCommsEmailContactThenLoader[Q](),
 		CommsEmailLog:                     buildCommsEmailLogThenLoader[Q](),
+		CommsEmailTemplate:                buildCommsEmailTemplateThenLoader[Q](),
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
 		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),

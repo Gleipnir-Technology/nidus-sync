@@ -10,9 +10,12 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 type CommsEmailLogMod interface {
@@ -36,10 +39,17 @@ func (mods CommsEmailLogModSlice) Apply(ctx context.Context, n *CommsEmailLogTem
 // CommsEmailLogTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type CommsEmailLogTemplate struct {
-	Created     func() time.Time
-	Destination func() string
-	Source      func() string
-	Type        func() enums.CommsMessagetypeemail
+	ID             func() int32
+	Created        func() time.Time
+	DeliveryStatus func() string
+	Destination    func() string
+	PublicID       func() string
+	SentAt         func() null.Val[time.Time]
+	Source         func() string
+	Subject        func() string
+	TemplateID     func() null.Val[int32]
+	TemplateData   func() pgtypes.HStore
+	Type           func() enums.CommsMessagetypeemail
 
 	r commsEmailLogR
 	f *Factory
@@ -48,15 +58,15 @@ type CommsEmailLogTemplate struct {
 }
 
 type commsEmailLogR struct {
-	DestinationEmail *commsEmailLogRDestinationEmailR
-	SourcePhone      *commsEmailLogRSourcePhoneR
+	DestinationEmailContact *commsEmailLogRDestinationEmailContactR
+	TemplateEmailTemplate   *commsEmailLogRTemplateEmailTemplateR
 }
 
-type commsEmailLogRDestinationEmailR struct {
-	o *CommsEmailTemplate
+type commsEmailLogRDestinationEmailContactR struct {
+	o *CommsEmailContactTemplate
 }
-type commsEmailLogRSourcePhoneR struct {
-	o *CommsPhoneTemplate
+type commsEmailLogRTemplateEmailTemplateR struct {
+	o *CommsEmailTemplateTemplate
 }
 
 // Apply mods to the CommsEmailLogTemplate
@@ -69,18 +79,18 @@ func (o *CommsEmailLogTemplate) Apply(ctx context.Context, mods ...CommsEmailLog
 // setModelRels creates and sets the relationships on *models.CommsEmailLog
 // according to the relationships in the template. Nothing is inserted into the db
 func (t CommsEmailLogTemplate) setModelRels(o *models.CommsEmailLog) {
-	if t.r.DestinationEmail != nil {
-		rel := t.r.DestinationEmail.o.Build()
+	if t.r.DestinationEmailContact != nil {
+		rel := t.r.DestinationEmailContact.o.Build()
 		rel.R.DestinationEmailLogs = append(rel.R.DestinationEmailLogs, o)
 		o.Destination = rel.Address // h2
-		o.R.DestinationEmail = rel
+		o.R.DestinationEmailContact = rel
 	}
 
-	if t.r.SourcePhone != nil {
-		rel := t.r.SourcePhone.o.Build()
-		rel.R.SourceEmailLogs = append(rel.R.SourceEmailLogs, o)
-		o.Source = rel.E164 // h2
-		o.R.SourcePhone = rel
+	if t.r.TemplateEmailTemplate != nil {
+		rel := t.r.TemplateEmailTemplate.o.Build()
+		rel.R.TemplateEmailLogs = append(rel.R.TemplateEmailLogs, o)
+		o.TemplateID = null.From(rel.ID) // h2
+		o.R.TemplateEmailTemplate = rel
 	}
 }
 
@@ -89,17 +99,45 @@ func (t CommsEmailLogTemplate) setModelRels(o *models.CommsEmailLog) {
 func (o CommsEmailLogTemplate) BuildSetter() *models.CommsEmailLogSetter {
 	m := &models.CommsEmailLogSetter{}
 
+	if o.ID != nil {
+		val := o.ID()
+		m.ID = omit.From(val)
+	}
 	if o.Created != nil {
 		val := o.Created()
 		m.Created = omit.From(val)
+	}
+	if o.DeliveryStatus != nil {
+		val := o.DeliveryStatus()
+		m.DeliveryStatus = omit.From(val)
 	}
 	if o.Destination != nil {
 		val := o.Destination()
 		m.Destination = omit.From(val)
 	}
+	if o.PublicID != nil {
+		val := o.PublicID()
+		m.PublicID = omit.From(val)
+	}
+	if o.SentAt != nil {
+		val := o.SentAt()
+		m.SentAt = omitnull.FromNull(val)
+	}
 	if o.Source != nil {
 		val := o.Source()
 		m.Source = omit.From(val)
+	}
+	if o.Subject != nil {
+		val := o.Subject()
+		m.Subject = omit.From(val)
+	}
+	if o.TemplateID != nil {
+		val := o.TemplateID()
+		m.TemplateID = omitnull.FromNull(val)
+	}
+	if o.TemplateData != nil {
+		val := o.TemplateData()
+		m.TemplateData = omit.From(val)
 	}
 	if o.Type != nil {
 		val := o.Type()
@@ -127,14 +165,35 @@ func (o CommsEmailLogTemplate) BuildManySetter(number int) []*models.CommsEmailL
 func (o CommsEmailLogTemplate) Build() *models.CommsEmailLog {
 	m := &models.CommsEmailLog{}
 
+	if o.ID != nil {
+		m.ID = o.ID()
+	}
 	if o.Created != nil {
 		m.Created = o.Created()
+	}
+	if o.DeliveryStatus != nil {
+		m.DeliveryStatus = o.DeliveryStatus()
 	}
 	if o.Destination != nil {
 		m.Destination = o.Destination()
 	}
+	if o.PublicID != nil {
+		m.PublicID = o.PublicID()
+	}
+	if o.SentAt != nil {
+		m.SentAt = o.SentAt()
+	}
 	if o.Source != nil {
 		m.Source = o.Source()
+	}
+	if o.Subject != nil {
+		m.Subject = o.Subject()
+	}
+	if o.TemplateID != nil {
+		m.TemplateID = o.TemplateID()
+	}
+	if o.TemplateData != nil {
+		m.TemplateData = o.TemplateData()
 	}
 	if o.Type != nil {
 		m.Type = o.Type()
@@ -163,13 +222,29 @@ func ensureCreatableCommsEmailLog(m *models.CommsEmailLogSetter) {
 		val := random_time_Time(nil)
 		m.Created = omit.From(val)
 	}
+	if !(m.DeliveryStatus.IsValue()) {
+		val := random_string(nil, "16")
+		m.DeliveryStatus = omit.From(val)
+	}
 	if !(m.Destination.IsValue()) {
 		val := random_string(nil)
 		m.Destination = omit.From(val)
 	}
+	if !(m.PublicID.IsValue()) {
+		val := random_string(nil, "64")
+		m.PublicID = omit.From(val)
+	}
 	if !(m.Source.IsValue()) {
 		val := random_string(nil)
 		m.Source = omit.From(val)
+	}
+	if !(m.Subject.IsValue()) {
+		val := random_string(nil, "255")
+		m.Subject = omit.From(val)
+	}
+	if !(m.TemplateData.IsValue()) {
+		val := random_pgtypes_HStore(nil)
+		m.TemplateData = omit.From(val)
 	}
 	if !(m.Type.IsValue()) {
 		val := random_enums_CommsMessagetypeemail(nil)
@@ -183,6 +258,25 @@ func ensureCreatableCommsEmailLog(m *models.CommsEmailLogSetter) {
 func (o *CommsEmailLogTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.CommsEmailLog) error {
 	var err error
 
+	isTemplateEmailTemplateDone, _ := commsEmailLogRelTemplateEmailTemplateCtx.Value(ctx)
+	if !isTemplateEmailTemplateDone && o.r.TemplateEmailTemplate != nil {
+		ctx = commsEmailLogRelTemplateEmailTemplateCtx.WithValue(ctx, true)
+		if o.r.TemplateEmailTemplate.o.alreadyPersisted {
+			m.R.TemplateEmailTemplate = o.r.TemplateEmailTemplate.o.Build()
+		} else {
+			var rel1 *models.CommsEmailTemplate
+			rel1, err = o.r.TemplateEmailTemplate.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachTemplateEmailTemplate(ctx, exec, rel1)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return err
 }
 
@@ -193,16 +287,16 @@ func (o *CommsEmailLogTemplate) Create(ctx context.Context, exec bob.Executor) (
 	opt := o.BuildSetter()
 	ensureCreatableCommsEmailLog(opt)
 
-	if o.r.DestinationEmail == nil {
-		CommsEmailLogMods.WithNewDestinationEmail().Apply(ctx, o)
+	if o.r.DestinationEmailContact == nil {
+		CommsEmailLogMods.WithNewDestinationEmailContact().Apply(ctx, o)
 	}
 
-	var rel0 *models.CommsEmail
+	var rel0 *models.CommsEmailContact
 
-	if o.r.DestinationEmail.o.alreadyPersisted {
-		rel0 = o.r.DestinationEmail.o.Build()
+	if o.r.DestinationEmailContact.o.alreadyPersisted {
+		rel0 = o.r.DestinationEmailContact.o.Build()
 	} else {
-		rel0, err = o.r.DestinationEmail.o.Create(ctx, exec)
+		rel0, err = o.r.DestinationEmailContact.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
@@ -210,30 +304,12 @@ func (o *CommsEmailLogTemplate) Create(ctx context.Context, exec bob.Executor) (
 
 	opt.Destination = omit.From(rel0.Address)
 
-	if o.r.SourcePhone == nil {
-		CommsEmailLogMods.WithNewSourcePhone().Apply(ctx, o)
-	}
-
-	var rel1 *models.CommsPhone
-
-	if o.r.SourcePhone.o.alreadyPersisted {
-		rel1 = o.r.SourcePhone.o.Build()
-	} else {
-		rel1, err = o.r.SourcePhone.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.Source = omit.From(rel1.E164)
-
 	m, err := models.CommsEmailLogs.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.DestinationEmail = rel0
-	m.R.SourcePhone = rel1
+	m.R.DestinationEmailContact = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -312,11 +388,49 @@ type commsEmailLogMods struct{}
 
 func (m commsEmailLogMods) RandomizeAllColumns(f *faker.Faker) CommsEmailLogMod {
 	return CommsEmailLogModSlice{
+		CommsEmailLogMods.RandomID(f),
 		CommsEmailLogMods.RandomCreated(f),
+		CommsEmailLogMods.RandomDeliveryStatus(f),
 		CommsEmailLogMods.RandomDestination(f),
+		CommsEmailLogMods.RandomPublicID(f),
+		CommsEmailLogMods.RandomSentAt(f),
 		CommsEmailLogMods.RandomSource(f),
+		CommsEmailLogMods.RandomSubject(f),
+		CommsEmailLogMods.RandomTemplateID(f),
+		CommsEmailLogMods.RandomTemplateData(f),
 		CommsEmailLogMods.RandomType(f),
 	}
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) ID(val int32) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.ID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) IDFunc(f func() int32) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.ID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetID() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.ID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsEmailLogMods) RandomID(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.ID = func() int32 {
+			return random_int32(f)
+		}
+	})
 }
 
 // Set the model columns to this value
@@ -346,6 +460,37 @@ func (m commsEmailLogMods) RandomCreated(f *faker.Faker) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
 		o.Created = func() time.Time {
 			return random_time_Time(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) DeliveryStatus(val string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.DeliveryStatus = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) DeliveryStatusFunc(f func() string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.DeliveryStatus = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetDeliveryStatus() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.DeliveryStatus = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsEmailLogMods) RandomDeliveryStatus(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.DeliveryStatus = func() string {
+			return random_string(f, "16")
 		}
 	})
 }
@@ -382,6 +527,90 @@ func (m commsEmailLogMods) RandomDestination(f *faker.Faker) CommsEmailLogMod {
 }
 
 // Set the model columns to this value
+func (m commsEmailLogMods) PublicID(val string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.PublicID = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) PublicIDFunc(f func() string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.PublicID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetPublicID() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.PublicID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsEmailLogMods) RandomPublicID(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.PublicID = func() string {
+			return random_string(f, "64")
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) SentAt(val null.Val[time.Time]) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.SentAt = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) SentAtFunc(f func() null.Val[time.Time]) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.SentAt = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetSentAt() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.SentAt = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m commsEmailLogMods) RandomSentAt(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.SentAt = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m commsEmailLogMods) RandomSentAtNotNull(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.SentAt = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
 func (m commsEmailLogMods) Source(val string) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
 		o.Source = func() string { return val }
@@ -408,6 +637,121 @@ func (m commsEmailLogMods) RandomSource(f *faker.Faker) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
 		o.Source = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) Subject(val string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.Subject = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) SubjectFunc(f func() string) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.Subject = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetSubject() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.Subject = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsEmailLogMods) RandomSubject(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.Subject = func() string {
+			return random_string(f, "255")
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) TemplateID(val null.Val[int32]) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateID = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) TemplateIDFunc(f func() null.Val[int32]) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetTemplateID() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m commsEmailLogMods) RandomTemplateID(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m commsEmailLogMods) RandomTemplateIDNotNull(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsEmailLogMods) TemplateData(val pgtypes.HStore) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateData = func() pgtypes.HStore { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsEmailLogMods) TemplateDataFunc(f func() pgtypes.HStore) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateData = f
+	})
+}
+
+// Clear any values for the column
+func (m commsEmailLogMods) UnsetTemplateData() CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateData = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsEmailLogMods) RandomTemplateData(f *faker.Faker) CommsEmailLogMod {
+	return CommsEmailLogModFunc(func(_ context.Context, o *CommsEmailLogTemplate) {
+		o.TemplateData = func() pgtypes.HStore {
+			return random_pgtypes_HStore(f)
 		}
 	})
 }
@@ -451,73 +795,73 @@ func (m commsEmailLogMods) WithParentsCascading() CommsEmailLogMod {
 		ctx = commsEmailLogWithParentsCascadingCtx.WithValue(ctx, true)
 		{
 
-			related := o.f.NewCommsEmailWithContext(ctx, CommsEmailMods.WithParentsCascading())
-			m.WithDestinationEmail(related).Apply(ctx, o)
+			related := o.f.NewCommsEmailContactWithContext(ctx, CommsEmailContactMods.WithParentsCascading())
+			m.WithDestinationEmailContact(related).Apply(ctx, o)
 		}
 		{
 
-			related := o.f.NewCommsPhoneWithContext(ctx, CommsPhoneMods.WithParentsCascading())
-			m.WithSourcePhone(related).Apply(ctx, o)
+			related := o.f.NewCommsEmailTemplateWithContext(ctx, CommsEmailTemplateMods.WithParentsCascading())
+			m.WithTemplateEmailTemplate(related).Apply(ctx, o)
 		}
 	})
 }
 
-func (m commsEmailLogMods) WithDestinationEmail(rel *CommsEmailTemplate) CommsEmailLogMod {
+func (m commsEmailLogMods) WithDestinationEmailContact(rel *CommsEmailContactTemplate) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.DestinationEmail = &commsEmailLogRDestinationEmailR{
+		o.r.DestinationEmailContact = &commsEmailLogRDestinationEmailContactR{
 			o: rel,
 		}
 	})
 }
 
-func (m commsEmailLogMods) WithNewDestinationEmail(mods ...CommsEmailMod) CommsEmailLogMod {
+func (m commsEmailLogMods) WithNewDestinationEmailContact(mods ...CommsEmailContactMod) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		related := o.f.NewCommsEmailWithContext(ctx, mods...)
+		related := o.f.NewCommsEmailContactWithContext(ctx, mods...)
 
-		m.WithDestinationEmail(related).Apply(ctx, o)
+		m.WithDestinationEmailContact(related).Apply(ctx, o)
 	})
 }
 
-func (m commsEmailLogMods) WithExistingDestinationEmail(em *models.CommsEmail) CommsEmailLogMod {
+func (m commsEmailLogMods) WithExistingDestinationEmailContact(em *models.CommsEmailContact) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.DestinationEmail = &commsEmailLogRDestinationEmailR{
-			o: o.f.FromExistingCommsEmail(em),
+		o.r.DestinationEmailContact = &commsEmailLogRDestinationEmailContactR{
+			o: o.f.FromExistingCommsEmailContact(em),
 		}
 	})
 }
 
-func (m commsEmailLogMods) WithoutDestinationEmail() CommsEmailLogMod {
+func (m commsEmailLogMods) WithoutDestinationEmailContact() CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.DestinationEmail = nil
+		o.r.DestinationEmailContact = nil
 	})
 }
 
-func (m commsEmailLogMods) WithSourcePhone(rel *CommsPhoneTemplate) CommsEmailLogMod {
+func (m commsEmailLogMods) WithTemplateEmailTemplate(rel *CommsEmailTemplateTemplate) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.SourcePhone = &commsEmailLogRSourcePhoneR{
+		o.r.TemplateEmailTemplate = &commsEmailLogRTemplateEmailTemplateR{
 			o: rel,
 		}
 	})
 }
 
-func (m commsEmailLogMods) WithNewSourcePhone(mods ...CommsPhoneMod) CommsEmailLogMod {
+func (m commsEmailLogMods) WithNewTemplateEmailTemplate(mods ...CommsEmailTemplateMod) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		related := o.f.NewCommsPhoneWithContext(ctx, mods...)
+		related := o.f.NewCommsEmailTemplateWithContext(ctx, mods...)
 
-		m.WithSourcePhone(related).Apply(ctx, o)
+		m.WithTemplateEmailTemplate(related).Apply(ctx, o)
 	})
 }
 
-func (m commsEmailLogMods) WithExistingSourcePhone(em *models.CommsPhone) CommsEmailLogMod {
+func (m commsEmailLogMods) WithExistingTemplateEmailTemplate(em *models.CommsEmailTemplate) CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.SourcePhone = &commsEmailLogRSourcePhoneR{
-			o: o.f.FromExistingCommsPhone(em),
+		o.r.TemplateEmailTemplate = &commsEmailLogRTemplateEmailTemplateR{
+			o: o.f.FromExistingCommsEmailTemplate(em),
 		}
 	})
 }
 
-func (m commsEmailLogMods) WithoutSourcePhone() CommsEmailLogMod {
+func (m commsEmailLogMods) WithoutTemplateEmailTemplate() CommsEmailLogMod {
 	return CommsEmailLogModFunc(func(ctx context.Context, o *CommsEmailLogTemplate) {
-		o.r.SourcePhone = nil
+		o.r.TemplateEmailTemplate = nil
 	})
 }

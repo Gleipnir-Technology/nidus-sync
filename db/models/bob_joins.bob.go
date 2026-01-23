@@ -34,8 +34,9 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 type joins[Q dialect.Joinable] struct {
 	ArcgisUsers                        joinSet[arcgisuserJoins[Q]]
 	ArcgisUserPrivileges               joinSet[arcgisUserPrivilegeJoins[Q]]
-	CommsEmails                        joinSet[commsEmailJoins[Q]]
+	CommsEmailContacts                 joinSet[commsEmailContactJoins[Q]]
 	CommsEmailLogs                     joinSet[commsEmailLogJoins[Q]]
+	CommsEmailTemplates                joinSet[commsEmailTemplateJoins[Q]]
 	CommsPhones                        joinSet[commsPhoneJoins[Q]]
 	CommsTextLogs                      joinSet[commsTextLogJoins[Q]]
 	FieldseekerContainerrelates        joinSet[fieldseekerContainerrelateJoins[Q]]
@@ -99,8 +100,9 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
 		ArcgisUsers:                        buildJoinSet[arcgisuserJoins[Q]](ArcgisUsers.Columns, buildArcgisUserJoins),
 		ArcgisUserPrivileges:               buildJoinSet[arcgisUserPrivilegeJoins[Q]](ArcgisUserPrivileges.Columns, buildArcgisUserPrivilegeJoins),
-		CommsEmails:                        buildJoinSet[commsEmailJoins[Q]](CommsEmails.Columns, buildCommsEmailJoins),
+		CommsEmailContacts:                 buildJoinSet[commsEmailContactJoins[Q]](CommsEmailContacts.Columns, buildCommsEmailContactJoins),
 		CommsEmailLogs:                     buildJoinSet[commsEmailLogJoins[Q]](CommsEmailLogs.Columns, buildCommsEmailLogJoins),
+		CommsEmailTemplates:                buildJoinSet[commsEmailTemplateJoins[Q]](CommsEmailTemplates.Columns, buildCommsEmailTemplateJoins),
 		CommsPhones:                        buildJoinSet[commsPhoneJoins[Q]](CommsPhones.Columns, buildCommsPhoneJoins),
 		CommsTextLogs:                      buildJoinSet[commsTextLogJoins[Q]](CommsTextLogs.Columns, buildCommsTextLogJoins),
 		FieldseekerContainerrelates:        buildJoinSet[fieldseekerContainerrelateJoins[Q]](FieldseekerContainerrelates.Columns, buildFieldseekerContainerrelateJoins),

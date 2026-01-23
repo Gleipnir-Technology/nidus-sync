@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var CommsEmails = Table[
-	commsEmailColumns,
-	commsEmailIndexes,
-	commsEmailForeignKeys,
-	commsEmailUniques,
-	commsEmailChecks,
+var CommsEmailContacts = Table[
+	commsEmailContactColumns,
+	commsEmailContactIndexes,
+	commsEmailContactForeignKeys,
+	commsEmailContactUniques,
+	commsEmailContactChecks,
 ]{
 	Schema: "comms",
-	Name:   "email",
-	Columns: commsEmailColumns{
+	Name:   "email_contact",
+	Columns: commsEmailContactColumns{
 		Address: column{
 			Name:      "address",
 			DBType:    "text",
@@ -42,8 +42,17 @@ var CommsEmails = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		PublicID: column{
+			Name:      "public_id",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
-	Indexes: commsEmailIndexes{
+	Indexes: commsEmailContactIndexes{
 		EmailPkey: index{
 			Type: "btree",
 			Name: "email_pkey",
@@ -71,42 +80,43 @@ var CommsEmails = Table[
 	Comment: "",
 }
 
-type commsEmailColumns struct {
+type commsEmailContactColumns struct {
 	Address      column
 	Confirmed    column
 	IsSubscribed column
+	PublicID     column
 }
 
-func (c commsEmailColumns) AsSlice() []column {
+func (c commsEmailContactColumns) AsSlice() []column {
 	return []column{
-		c.Address, c.Confirmed, c.IsSubscribed,
+		c.Address, c.Confirmed, c.IsSubscribed, c.PublicID,
 	}
 }
 
-type commsEmailIndexes struct {
+type commsEmailContactIndexes struct {
 	EmailPkey index
 }
 
-func (i commsEmailIndexes) AsSlice() []index {
+func (i commsEmailContactIndexes) AsSlice() []index {
 	return []index{
 		i.EmailPkey,
 	}
 }
 
-type commsEmailForeignKeys struct{}
+type commsEmailContactForeignKeys struct{}
 
-func (f commsEmailForeignKeys) AsSlice() []foreignKey {
+func (f commsEmailContactForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type commsEmailUniques struct{}
+type commsEmailContactUniques struct{}
 
-func (u commsEmailUniques) AsSlice() []constraint {
+func (u commsEmailContactUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type commsEmailChecks struct{}
+type commsEmailContactChecks struct{}
 
-func (c commsEmailChecks) AsSlice() []check {
+func (c commsEmailContactChecks) AsSlice() []check {
 	return []check{}
 }

@@ -5,6 +5,7 @@ package factory
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -18,6 +19,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/bob/types"
+	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 var defaultFaker = faker.New()
@@ -279,6 +281,18 @@ func random_int64(f *faker.Faker, limits ...string) int64 {
 	}
 
 	return f.Int64()
+}
+
+func random_pgtypes_HStore(f *faker.Faker, limits ...string) pgtypes.HStore {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	hs := make(pgtypes.HStore)
+	for range f.IntBetween(1, 5) {
+		hs[random_string(f)] = sql.Null[string]{V: random_string(f, limits...), Valid: f.Bool()}
+	}
+	return hs
 }
 
 func random_pq_BoolArray(f *faker.Faker, limits ...string) pq.BoolArray {

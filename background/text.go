@@ -11,16 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var channelJobEmail chan jobEmail
 var channelJobText chan jobText
-
-func ReportSubscriptionConfirmationEmail(destination string) {
-	enqueueJobEmail(jobEmail{
-		Destination: destination,
-		Source:      config.ForwardEmailReportAddress,
-		Type:        enums.CommsMessagetypeemailReportSubscriptionConfirmation,
-	})
-}
 
 func ReportSubscriptionConfirmationText(destination comms.E164, report_id string) {
 	enqueueJobText(jobText{
@@ -31,26 +22,11 @@ func ReportSubscriptionConfirmationText(destination comms.E164, report_id string
 	})
 }
 
-type jobEmail struct {
-	Destination string
-	ReportID    string
-	Source      string
-	Type        enums.CommsMessagetypeemail
-}
 type jobText struct {
 	Destination comms.E164
 	ReportID    string
 	Source      comms.E164
 	Type        enums.CommsMessagetypetext
-}
-
-func enqueueJobEmail(job jobEmail) {
-	select {
-	case channelJobEmail <- job:
-		log.Info().Str("destination", job.Destination).Msg("Enqueued email job")
-	default:
-		log.Warn().Msg("email job channel is full, dropping job")
-	}
 }
 
 func enqueueJobText(job jobText) {
@@ -60,23 +36,6 @@ func enqueueJobText(job jobText) {
 	default:
 		log.Warn().Msg("sms job channel is full, dropping job")
 	}
-}
-
-func startWorkerEmail(ctx context.Context, channel chan jobEmail) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info().Msg("Email worker shutting down.")
-				return
-			case job := <-channel:
-				err := jobProcessEmail(ctx, job)
-				if err != nil {
-					log.Error().Err(err).Str("dest", job.Destination).Str("type", string(job.Type)).Msg("Error processing email")
-				}
-			}
-		}
-	}()
 }
 
 func startWorkerText(ctx context.Context, channel chan jobText) {
@@ -94,22 +53,6 @@ func startWorkerText(ctx context.Context, channel chan jobText) {
 			}
 		}
 	}()
-}
-
-func jobProcessEmail(ctx context.Context, job jobEmail) error {
-	switch job.Type {
-	case enums.CommsMessagetypeemailInitialContact:
-		return comms.SendEmailInitialContact(ctx, job.Destination)
-	default:
-		return errors.New("not implemented")
-	}
-	/*
-		case enums.CommsMessagetypeemailReportSubscriptionConfirmation:
-		case enums.CommsMessagetypeemailReportStatusScheduled:
-		case enums.CommsMessagetypeemailReportStatusComplete:
-
-		}
-	*/
 }
 
 func jobProcessText(job jobText) error {

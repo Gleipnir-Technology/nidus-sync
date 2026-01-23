@@ -15,9 +15,27 @@ var CommsEmailLogs = Table[
 	Schema: "comms",
 	Name:   "email_log",
 	Columns: commsEmailLogColumns{
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('comms.email_log_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		DeliveryStatus: column{
+			Name:      "delivery_status",
+			DBType:    "character varying",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -33,9 +51,54 @@ var CommsEmailLogs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		PublicID: column{
+			Name:      "public_id",
+			DBType:    "character varying",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SentAt: column{
+			Name:      "sent_at",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Source: column{
 			Name:      "source",
 			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Subject: column{
+			Name:      "subject",
+			DBType:    "character varying",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TemplateID: column{
+			Name:      "template_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TemplateData: column{
+			Name:      "template_data",
+			DBType:    "hstore",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -58,24 +121,14 @@ var CommsEmailLogs = Table[
 			Name: "email_log_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "destination",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "source",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "type",
+					Name:         "id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
 			},
 			Unique:        true,
 			Comment:       "",
-			NullsFirst:    []bool{false, false, false},
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -83,7 +136,7 @@ var CommsEmailLogs = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "email_log_pkey",
-		Columns: []string{"destination", "source", "type"},
+		Columns: []string{"id"},
 		Comment: "",
 	},
 	ForeignKeys: commsEmailLogForeignKeys{
@@ -93,17 +146,17 @@ var CommsEmailLogs = Table[
 				Columns: []string{"destination"},
 				Comment: "",
 			},
-			ForeignTable:   "comms.email",
+			ForeignTable:   "comms.email_contact",
 			ForeignColumns: []string{"address"},
 		},
-		CommsEmailLogEmailLogSourceFkey: foreignKey{
+		CommsEmailLogEmailLogTemplateIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "comms.email_log.email_log_source_fkey",
-				Columns: []string{"source"},
+				Name:    "comms.email_log.email_log_template_id_fkey",
+				Columns: []string{"template_id"},
 				Comment: "",
 			},
-			ForeignTable:   "comms.phone",
-			ForeignColumns: []string{"e164"},
+			ForeignTable:   "comms.email_template",
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -111,15 +164,22 @@ var CommsEmailLogs = Table[
 }
 
 type commsEmailLogColumns struct {
-	Created     column
-	Destination column
-	Source      column
-	Type        column
+	ID             column
+	Created        column
+	DeliveryStatus column
+	Destination    column
+	PublicID       column
+	SentAt         column
+	Source         column
+	Subject        column
+	TemplateID     column
+	TemplateData   column
+	Type           column
 }
 
 func (c commsEmailLogColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Destination, c.Source, c.Type,
+		c.ID, c.Created, c.DeliveryStatus, c.Destination, c.PublicID, c.SentAt, c.Source, c.Subject, c.TemplateID, c.TemplateData, c.Type,
 	}
 }
 
@@ -135,12 +195,12 @@ func (i commsEmailLogIndexes) AsSlice() []index {
 
 type commsEmailLogForeignKeys struct {
 	CommsEmailLogEmailLogDestinationFkey foreignKey
-	CommsEmailLogEmailLogSourceFkey      foreignKey
+	CommsEmailLogEmailLogTemplateIDFkey  foreignKey
 }
 
 func (f commsEmailLogForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.CommsEmailLogEmailLogDestinationFkey, f.CommsEmailLogEmailLogSourceFkey,
+		f.CommsEmailLogEmailLogDestinationFkey, f.CommsEmailLogEmailLogTemplateIDFkey,
 	}
 }
 

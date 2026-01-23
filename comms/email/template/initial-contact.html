@@ -65,31 +65,31 @@
 <body>
 	<div class="container">
 		<div class="view-browser">
-			Email not displaying correctly? <a href="{{.Base.URLViewInBrowser}}">View it in your browser</a>
+			Email not displaying correctly? <a href="{{.url_browser}}">View it in your browser</a>
 		</div>
 		
 		<div class="header">
 			<!-- Logo Placeholder -->
-			<img src="{{.Base.URLLogo}}" alt="Report Mosquitoes Online Logo" class="logo"></img>
+			<img src="{{.url_logo}}" alt="Report Mosquitoes Online Logo" class="logo"></img>
 		</div>
 		
 		<div class="content">
 			<h1>Welcome</h1>
 			
-			<p>We're sending you this email because it's the first time we've gotten this email address ({{.Destination}}).</p>
+			<p>We're sending you this email because it's the first time we've gotten this email address ({{.destination}}).</p>
 			
 			<p>If you'd rather not receive emails from us you can reply with "Unsubscribe" in the subject or body of the email. You can also use the "Unsubscribe" feature of your mail client, if it supports list unsubscribes.</p>
 			
 			<p>If instead you'd like to confirm that you're willing to receive emails at this address, you can do so by clicking below:</p>
 
 			<div style="text-align: center;">
-				<a href="{{.URLSubscribe}}" class="button">I want emails from Report Mosquitoes Online</a>
+				<a href="{{.url_subscribe}}" class="button">I want emails from Report Mosquitoes Online</a>
 			</div>
 		</div>
 		
 		<div class="footer">
 			<p>This email was sent to you because you or someone else gave your email address to Report Mosquitoes Online.</p>
-			<p>If you no longer wish to receive these updates, <a href="{{.Base.URLUnsubscribe}}">click here to unsubscribe</a>.</p>
+			<p>If you no longer wish to receive these updates, <a href="{{.url_unsubscribe}}">click here to unsubscribe</a>.</p>
 			<p>&copy; 2026 Gleipnir LLC. All rights reserved.</p>
 		</div>
 	</div>

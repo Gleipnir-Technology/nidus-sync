@@ -3,15 +3,15 @@
 
 package dberrors
 
-var CommsEmailErrors = &commsEmailErrors{
+var CommsEmailContactErrors = &commsEmailContactErrors{
 	ErrUniqueEmailPkey: &UniqueConstraintError{
 		schema:  "comms",
-		table:   "email",
+		table:   "email_contact",
 		columns: []string{"address"},
 		s:       "email_pkey",
 	},
 }
 
-type commsEmailErrors struct {
+type commsEmailContactErrors struct {
 	ErrUniqueEmailPkey *UniqueConstraintError
 }

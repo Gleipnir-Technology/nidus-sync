@@ -44,15 +44,10 @@ type CommsPhoneTemplate struct {
 }
 
 type commsPhoneR struct {
-	SourceEmailLogs     []*commsPhoneRSourceEmailLogsR
 	DestinationTextLogs []*commsPhoneRDestinationTextLogsR
 	SourceTextLogs      []*commsPhoneRSourceTextLogsR
 }
 
-type commsPhoneRSourceEmailLogsR struct {
-	number int
-	o      *CommsEmailLogTemplate
-}
 type commsPhoneRDestinationTextLogsR struct {
 	number int
 	o      *CommsTextLogTemplate
@@ -72,19 +67,6 @@ func (o *CommsPhoneTemplate) Apply(ctx context.Context, mods ...CommsPhoneMod) {
 // setModelRels creates and sets the relationships on *models.CommsPhone
 // according to the relationships in the template. Nothing is inserted into the db
 func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
-	if t.r.SourceEmailLogs != nil {
-		rel := models.CommsEmailLogSlice{}
-		for _, r := range t.r.SourceEmailLogs {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.Source = o.E164 // h2
-				rel.R.SourcePhone = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.SourceEmailLogs = rel
-	}
-
 	if t.r.DestinationTextLogs != nil {
 		rel := models.CommsTextLogSlice{}
 		for _, r := range t.r.DestinationTextLogs {
@@ -189,26 +171,6 @@ func ensureCreatableCommsPhone(m *models.CommsPhoneSetter) {
 func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.CommsPhone) error {
 	var err error
 
-	isSourceEmailLogsDone, _ := commsPhoneRelSourceEmailLogsCtx.Value(ctx)
-	if !isSourceEmailLogsDone && o.r.SourceEmailLogs != nil {
-		ctx = commsPhoneRelSourceEmailLogsCtx.WithValue(ctx, true)
-		for _, r := range o.r.SourceEmailLogs {
-			if r.o.alreadyPersisted {
-				m.R.SourceEmailLogs = append(m.R.SourceEmailLogs, r.o.Build())
-			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachSourceEmailLogs(ctx, exec, rel0...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
 	isDestinationTextLogsDone, _ := commsPhoneRelDestinationTextLogsCtx.Value(ctx)
 	if !isDestinationTextLogsDone && o.r.DestinationTextLogs != nil {
 		ctx = commsPhoneRelDestinationTextLogsCtx.WithValue(ctx, true)
@@ -216,12 +178,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.DestinationTextLogs = append(m.R.DestinationTextLogs, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDestinationTextLogs(ctx, exec, rel1...)
+				err = m.AttachDestinationTextLogs(ctx, exec, rel0...)
 				if err != nil {
 					return err
 				}
@@ -236,12 +198,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.SourceTextLogs = append(m.R.SourceTextLogs, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSourceTextLogs(ctx, exec, rel2...)
+				err = m.AttachSourceTextLogs(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -414,54 +376,6 @@ func (m commsPhoneMods) WithParentsCascading() CommsPhoneMod {
 			return
 		}
 		ctx = commsPhoneWithParentsCascadingCtx.WithValue(ctx, true)
-	})
-}
-
-func (m commsPhoneMods) WithSourceEmailLogs(number int, related *CommsEmailLogTemplate) CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceEmailLogs = []*commsPhoneRSourceEmailLogsR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m commsPhoneMods) WithNewSourceEmailLogs(number int, mods ...CommsEmailLogMod) CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsEmailLogWithContext(ctx, mods...)
-		m.WithSourceEmailLogs(number, related).Apply(ctx, o)
-	})
-}
-
-func (m commsPhoneMods) AddSourceEmailLogs(number int, related *CommsEmailLogTemplate) CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceEmailLogs = append(o.r.SourceEmailLogs, &commsPhoneRSourceEmailLogsR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m commsPhoneMods) AddNewSourceEmailLogs(number int, mods ...CommsEmailLogMod) CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		related := o.f.NewCommsEmailLogWithContext(ctx, mods...)
-		m.AddSourceEmailLogs(number, related).Apply(ctx, o)
-	})
-}
-
-func (m commsPhoneMods) AddExistingSourceEmailLogs(existingModels ...*models.CommsEmailLog) CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		for _, em := range existingModels {
-			o.r.SourceEmailLogs = append(o.r.SourceEmailLogs, &commsPhoneRSourceEmailLogsR{
-				o: o.f.FromExistingCommsEmailLog(em),
-			})
-		}
-	})
-}
-
-func (m commsPhoneMods) WithoutSourceEmailLogs() CommsPhoneMod {
-	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
-		o.r.SourceEmailLogs = nil
 	})
 }
 

@@ -17,18 +17,21 @@ var (
 	arcgisUserPrivilegeWithParentsCascadingCtx = newContextual[bool]("arcgisUserPrivilegeWithParentsCascading")
 	arcgisUserPrivilegeRelUserUserCtx          = newContextual[bool]("arcgis.user_.arcgis.user_privilege.arcgis.user_privilege.user_privilege_user_id_fkey")
 
-	// Relationship Contexts for comms.email
-	commsEmailWithParentsCascadingCtx    = newContextual[bool]("commsEmailWithParentsCascading")
-	commsEmailRelDestinationEmailLogsCtx = newContextual[bool]("comms.email.comms.email_log.comms.email_log.email_log_destination_fkey")
+	// Relationship Contexts for comms.email_contact
+	commsEmailContactWithParentsCascadingCtx    = newContextual[bool]("commsEmailContactWithParentsCascading")
+	commsEmailContactRelDestinationEmailLogsCtx = newContextual[bool]("comms.email_contact.comms.email_log.comms.email_log.email_log_destination_fkey")
 
 	// Relationship Contexts for comms.email_log
-	commsEmailLogWithParentsCascadingCtx = newContextual[bool]("commsEmailLogWithParentsCascading")
-	commsEmailLogRelDestinationEmailCtx  = newContextual[bool]("comms.email.comms.email_log.comms.email_log.email_log_destination_fkey")
-	commsEmailLogRelSourcePhoneCtx       = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
+	commsEmailLogWithParentsCascadingCtx       = newContextual[bool]("commsEmailLogWithParentsCascading")
+	commsEmailLogRelDestinationEmailContactCtx = newContextual[bool]("comms.email_contact.comms.email_log.comms.email_log.email_log_destination_fkey")
+	commsEmailLogRelTemplateEmailTemplateCtx   = newContextual[bool]("comms.email_log.comms.email_template.comms.email_log.email_log_template_id_fkey")
+
+	// Relationship Contexts for comms.email_template
+	commsEmailTemplateWithParentsCascadingCtx = newContextual[bool]("commsEmailTemplateWithParentsCascading")
+	commsEmailTemplateRelTemplateEmailLogsCtx = newContextual[bool]("comms.email_log.comms.email_template.comms.email_log.email_log_template_id_fkey")
 
 	// Relationship Contexts for comms.phone
 	commsPhoneWithParentsCascadingCtx   = newContextual[bool]("commsPhoneWithParentsCascading")
-	commsPhoneRelSourceEmailLogsCtx     = newContextual[bool]("comms.email_log.comms.phone.comms.email_log.email_log_source_fkey")
 	commsPhoneRelDestinationTextLogsCtx = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsPhoneRelSourceTextLogsCtx      = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
 

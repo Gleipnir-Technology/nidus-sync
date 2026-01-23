@@ -10,7 +10,9 @@ import (
 	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -25,10 +27,17 @@ import (
 
 // CommsEmailLog is an object representing the database table.
 type CommsEmailLog struct {
-	Created     time.Time                   `db:"created" `
-	Destination string                      `db:"destination,pk" `
-	Source      string                      `db:"source,pk" `
-	Type        enums.CommsMessagetypeemail `db:"type,pk" `
+	ID             int32                       `db:"id,pk" `
+	Created        time.Time                   `db:"created" `
+	DeliveryStatus string                      `db:"delivery_status" `
+	Destination    string                      `db:"destination" `
+	PublicID       string                      `db:"public_id" `
+	SentAt         null.Val[time.Time]         `db:"sent_at" `
+	Source         string                      `db:"source" `
+	Subject        string                      `db:"subject" `
+	TemplateID     null.Val[int32]             `db:"template_id" `
+	TemplateData   pgtypes.HStore              `db:"template_data" `
+	Type           enums.CommsMessagetypeemail `db:"type" `
 
 	R commsEmailLogR `db:"-" `
 }
@@ -45,30 +54,44 @@ type CommsEmailLogsQuery = *psql.ViewQuery[*CommsEmailLog, CommsEmailLogSlice]
 
 // commsEmailLogR is where relationships are stored.
 type commsEmailLogR struct {
-	DestinationEmail *CommsEmail // comms.email_log.email_log_destination_fkey
-	SourcePhone      *CommsPhone // comms.email_log.email_log_source_fkey
+	DestinationEmailContact *CommsEmailContact  // comms.email_log.email_log_destination_fkey
+	TemplateEmailTemplate   *CommsEmailTemplate // comms.email_log.email_log_template_id_fkey
 }
 
 func buildCommsEmailLogColumns(alias string) commsEmailLogColumns {
 	return commsEmailLogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "destination", "source", "type",
+			"id", "created", "delivery_status", "destination", "public_id", "sent_at", "source", "subject", "template_id", "template_data", "type",
 		).WithParent("comms.email_log"),
-		tableAlias:  alias,
-		Created:     psql.Quote(alias, "created"),
-		Destination: psql.Quote(alias, "destination"),
-		Source:      psql.Quote(alias, "source"),
-		Type:        psql.Quote(alias, "type"),
+		tableAlias:     alias,
+		ID:             psql.Quote(alias, "id"),
+		Created:        psql.Quote(alias, "created"),
+		DeliveryStatus: psql.Quote(alias, "delivery_status"),
+		Destination:    psql.Quote(alias, "destination"),
+		PublicID:       psql.Quote(alias, "public_id"),
+		SentAt:         psql.Quote(alias, "sent_at"),
+		Source:         psql.Quote(alias, "source"),
+		Subject:        psql.Quote(alias, "subject"),
+		TemplateID:     psql.Quote(alias, "template_id"),
+		TemplateData:   psql.Quote(alias, "template_data"),
+		Type:           psql.Quote(alias, "type"),
 	}
 }
 
 type commsEmailLogColumns struct {
 	expr.ColumnsExpr
-	tableAlias  string
-	Created     psql.Expression
-	Destination psql.Expression
-	Source      psql.Expression
-	Type        psql.Expression
+	tableAlias     string
+	ID             psql.Expression
+	Created        psql.Expression
+	DeliveryStatus psql.Expression
+	Destination    psql.Expression
+	PublicID       psql.Expression
+	SentAt         psql.Expression
+	Source         psql.Expression
+	Subject        psql.Expression
+	TemplateID     psql.Expression
+	TemplateData   psql.Expression
+	Type           psql.Expression
 }
 
 func (c commsEmailLogColumns) Alias() string {
@@ -83,22 +106,50 @@ func (commsEmailLogColumns) AliasedAs(alias string) commsEmailLogColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsEmailLogSetter struct {
-	Created     omit.Val[time.Time]                   `db:"created" `
-	Destination omit.Val[string]                      `db:"destination,pk" `
-	Source      omit.Val[string]                      `db:"source,pk" `
-	Type        omit.Val[enums.CommsMessagetypeemail] `db:"type,pk" `
+	ID             omit.Val[int32]                       `db:"id,pk" `
+	Created        omit.Val[time.Time]                   `db:"created" `
+	DeliveryStatus omit.Val[string]                      `db:"delivery_status" `
+	Destination    omit.Val[string]                      `db:"destination" `
+	PublicID       omit.Val[string]                      `db:"public_id" `
+	SentAt         omitnull.Val[time.Time]               `db:"sent_at" `
+	Source         omit.Val[string]                      `db:"source" `
+	Subject        omit.Val[string]                      `db:"subject" `
+	TemplateID     omitnull.Val[int32]                   `db:"template_id" `
+	TemplateData   omit.Val[pgtypes.HStore]              `db:"template_data" `
+	Type           omit.Val[enums.CommsMessagetypeemail] `db:"type" `
 }
 
 func (s CommsEmailLogSetter) SetColumns() []string {
-	vals := make([]string, 0, 4)
+	vals := make([]string, 0, 11)
+	if s.ID.IsValue() {
+		vals = append(vals, "id")
+	}
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
+	}
+	if s.DeliveryStatus.IsValue() {
+		vals = append(vals, "delivery_status")
 	}
 	if s.Destination.IsValue() {
 		vals = append(vals, "destination")
 	}
+	if s.PublicID.IsValue() {
+		vals = append(vals, "public_id")
+	}
+	if !s.SentAt.IsUnset() {
+		vals = append(vals, "sent_at")
+	}
 	if s.Source.IsValue() {
 		vals = append(vals, "source")
+	}
+	if s.Subject.IsValue() {
+		vals = append(vals, "subject")
+	}
+	if !s.TemplateID.IsUnset() {
+		vals = append(vals, "template_id")
+	}
+	if s.TemplateData.IsValue() {
+		vals = append(vals, "template_data")
 	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type")
@@ -107,14 +158,35 @@ func (s CommsEmailLogSetter) SetColumns() []string {
 }
 
 func (s CommsEmailLogSetter) Overwrite(t *CommsEmailLog) {
+	if s.ID.IsValue() {
+		t.ID = s.ID.MustGet()
+	}
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
+	}
+	if s.DeliveryStatus.IsValue() {
+		t.DeliveryStatus = s.DeliveryStatus.MustGet()
 	}
 	if s.Destination.IsValue() {
 		t.Destination = s.Destination.MustGet()
 	}
+	if s.PublicID.IsValue() {
+		t.PublicID = s.PublicID.MustGet()
+	}
+	if !s.SentAt.IsUnset() {
+		t.SentAt = s.SentAt.MustGetNull()
+	}
 	if s.Source.IsValue() {
 		t.Source = s.Source.MustGet()
+	}
+	if s.Subject.IsValue() {
+		t.Subject = s.Subject.MustGet()
+	}
+	if !s.TemplateID.IsUnset() {
+		t.TemplateID = s.TemplateID.MustGetNull()
+	}
+	if s.TemplateData.IsValue() {
+		t.TemplateData = s.TemplateData.MustGet()
 	}
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
@@ -127,29 +199,71 @@ func (s *CommsEmailLogSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 4)
-		if s.Created.IsValue() {
-			vals[0] = psql.Arg(s.Created.MustGet())
+		vals := make([]bob.Expression, 11)
+		if s.ID.IsValue() {
+			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.Destination.IsValue() {
-			vals[1] = psql.Arg(s.Destination.MustGet())
+		if s.Created.IsValue() {
+			vals[1] = psql.Arg(s.Created.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Source.IsValue() {
-			vals[2] = psql.Arg(s.Source.MustGet())
+		if s.DeliveryStatus.IsValue() {
+			vals[2] = psql.Arg(s.DeliveryStatus.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Type.IsValue() {
-			vals[3] = psql.Arg(s.Type.MustGet())
+		if s.Destination.IsValue() {
+			vals[3] = psql.Arg(s.Destination.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
+		}
+
+		if s.PublicID.IsValue() {
+			vals[4] = psql.Arg(s.PublicID.MustGet())
+		} else {
+			vals[4] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SentAt.IsUnset() {
+			vals[5] = psql.Arg(s.SentAt.MustGetNull())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
+		}
+
+		if s.Source.IsValue() {
+			vals[6] = psql.Arg(s.Source.MustGet())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
+		if s.Subject.IsValue() {
+			vals[7] = psql.Arg(s.Subject.MustGet())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
+		}
+
+		if !s.TemplateID.IsUnset() {
+			vals[8] = psql.Arg(s.TemplateID.MustGetNull())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
+		}
+
+		if s.TemplateData.IsValue() {
+			vals[9] = psql.Arg(s.TemplateData.MustGet())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
+		if s.Type.IsValue() {
+			vals[10] = psql.Arg(s.Type.MustGet())
+		} else {
+			vals[10] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -161,12 +275,26 @@ func (s CommsEmailLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsEmailLogSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 4)
+	exprs := make([]bob.Expression, 0, 11)
+
+	if s.ID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "id")...),
+			psql.Arg(s.ID),
+		}})
+	}
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "created")...),
 			psql.Arg(s.Created),
+		}})
+	}
+
+	if s.DeliveryStatus.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "delivery_status")...),
+			psql.Arg(s.DeliveryStatus),
 		}})
 	}
 
@@ -177,10 +305,45 @@ func (s CommsEmailLogSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.PublicID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "public_id")...),
+			psql.Arg(s.PublicID),
+		}})
+	}
+
+	if !s.SentAt.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "sent_at")...),
+			psql.Arg(s.SentAt),
+		}})
+	}
+
 	if s.Source.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source")...),
 			psql.Arg(s.Source),
+		}})
+	}
+
+	if s.Subject.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "subject")...),
+			psql.Arg(s.Subject),
+		}})
+	}
+
+	if !s.TemplateID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "template_id")...),
+			psql.Arg(s.TemplateID),
+		}})
+	}
+
+	if s.TemplateData.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "template_data")...),
+			psql.Arg(s.TemplateData),
 		}})
 	}
 
@@ -196,29 +359,23 @@ func (s CommsEmailLogSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindCommsEmailLog retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindCommsEmailLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypeemail, cols ...string) (*CommsEmailLog, error) {
+func FindCommsEmailLog(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*CommsEmailLog, error) {
 	if len(cols) == 0 {
 		return CommsEmailLogs.Query(
-			sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-			sm.Where(CommsEmailLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-			sm.Where(CommsEmailLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+			sm.Where(CommsEmailLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 		).One(ctx, exec)
 	}
 
 	return CommsEmailLogs.Query(
-		sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsEmailLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsEmailLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		sm.Where(CommsEmailLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 		sm.Columns(CommsEmailLogs.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // CommsEmailLogExists checks the presence of a single record by primary key
-func CommsEmailLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypeemail) (bool, error) {
+func CommsEmailLogExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
 	return CommsEmailLogs.Query(
-		sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsEmailLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsEmailLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		sm.Where(CommsEmailLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 	).Exists(ctx, exec)
 }
 
@@ -242,15 +399,11 @@ func (o *CommsEmailLog) AfterQueryHook(ctx context.Context, exec bob.Executor, q
 
 // primaryKeyVals returns the primary key values of the CommsEmailLog
 func (o *CommsEmailLog) primaryKeyVals() bob.Expression {
-	return psql.ArgGroup(
-		o.Destination,
-		o.Source,
-		o.Type,
-	)
+	return psql.Arg(o.ID)
 }
 
 func (o *CommsEmailLog) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("comms.email_log", "destination"), psql.Quote("comms.email_log", "source"), psql.Quote("comms.email_log", "type")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("comms.email_log", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -277,9 +430,7 @@ func (o *CommsEmailLog) Delete(ctx context.Context, exec bob.Executor) error {
 // Reload refreshes the CommsEmailLog using the executor
 func (o *CommsEmailLog) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := CommsEmailLogs.Query(
-		sm.Where(CommsEmailLogs.Columns.Destination.EQ(psql.Arg(o.Destination))),
-		sm.Where(CommsEmailLogs.Columns.Source.EQ(psql.Arg(o.Source))),
-		sm.Where(CommsEmailLogs.Columns.Type.EQ(psql.Arg(o.Type))),
+		sm.Where(CommsEmailLogs.Columns.ID.EQ(psql.Arg(o.ID))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -313,7 +464,7 @@ func (o CommsEmailLogSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("comms.email_log", "destination"), psql.Quote("comms.email_log", "source"), psql.Quote("comms.email_log", "type")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("comms.email_log", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -328,13 +479,7 @@ func (o CommsEmailLogSlice) pkIN() dialect.Expression {
 func (o CommsEmailLogSlice) copyMatchingRows(from ...*CommsEmailLog) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Destination != old.Destination {
-				continue
-			}
-			if new.Source != old.Source {
-				continue
-			}
-			if new.Type != old.Type {
+			if new.ID != old.ID {
 				continue
 			}
 			new.R = old.R
@@ -435,14 +580,14 @@ func (o CommsEmailLogSlice) ReloadAll(ctx context.Context, exec bob.Executor) er
 	return nil
 }
 
-// DestinationEmail starts a query for related objects on comms.email
-func (o *CommsEmailLog) DestinationEmail(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailsQuery {
-	return CommsEmails.Query(append(mods,
-		sm.Where(CommsEmails.Columns.Address.EQ(psql.Arg(o.Destination))),
+// DestinationEmailContact starts a query for related objects on comms.email_contact
+func (o *CommsEmailLog) DestinationEmailContact(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailContactsQuery {
+	return CommsEmailContacts.Query(append(mods,
+		sm.Where(CommsEmailContacts.Columns.Address.EQ(psql.Arg(o.Destination))),
 	)...)
 }
 
-func (os CommsEmailLogSlice) DestinationEmail(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailsQuery {
+func (os CommsEmailLogSlice) DestinationEmailContact(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailContactsQuery {
 	pkDestination := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -454,136 +599,143 @@ func (os CommsEmailLogSlice) DestinationEmail(mods ...bob.Mod[*dialect.SelectQue
 		psql.F("unnest", psql.Cast(psql.Arg(pkDestination), "text[]")),
 	))
 
-	return CommsEmails.Query(append(mods,
-		sm.Where(psql.Group(CommsEmails.Columns.Address).OP("IN", PKArgExpr)),
+	return CommsEmailContacts.Query(append(mods,
+		sm.Where(psql.Group(CommsEmailContacts.Columns.Address).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// SourcePhone starts a query for related objects on comms.phone
-func (o *CommsEmailLog) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
-	return CommsPhones.Query(append(mods,
-		sm.Where(CommsPhones.Columns.E164.EQ(psql.Arg(o.Source))),
+// TemplateEmailTemplate starts a query for related objects on comms.email_template
+func (o *CommsEmailLog) TemplateEmailTemplate(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailTemplatesQuery {
+	return CommsEmailTemplates.Query(append(mods,
+		sm.Where(CommsEmailTemplates.Columns.ID.EQ(psql.Arg(o.TemplateID))),
 	)...)
 }
 
-func (os CommsEmailLogSlice) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
-	pkSource := make(pgtypes.Array[string], 0, len(os))
+func (os CommsEmailLogSlice) TemplateEmailTemplate(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailTemplatesQuery {
+	pkTemplateID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
-		pkSource = append(pkSource, o.Source)
+		pkTemplateID = append(pkTemplateID, o.TemplateID)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkSource), "text[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkTemplateID), "integer[]")),
 	))
 
-	return CommsPhones.Query(append(mods,
-		sm.Where(psql.Group(CommsPhones.Columns.E164).OP("IN", PKArgExpr)),
+	return CommsEmailTemplates.Query(append(mods,
+		sm.Where(psql.Group(CommsEmailTemplates.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-func attachCommsEmailLogDestinationEmail0(ctx context.Context, exec bob.Executor, count int, commsEmailLog0 *CommsEmailLog, commsEmail1 *CommsEmail) (*CommsEmailLog, error) {
+func attachCommsEmailLogDestinationEmailContact0(ctx context.Context, exec bob.Executor, count int, commsEmailLog0 *CommsEmailLog, commsEmailContact1 *CommsEmailContact) (*CommsEmailLog, error) {
 	setter := &CommsEmailLogSetter{
-		Destination: omit.From(commsEmail1.Address),
+		Destination: omit.From(commsEmailContact1.Address),
 	}
 
 	err := commsEmailLog0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsEmailLogDestinationEmail0: %w", err)
+		return nil, fmt.Errorf("attachCommsEmailLogDestinationEmailContact0: %w", err)
 	}
 
 	return commsEmailLog0, nil
 }
 
-func (commsEmailLog0 *CommsEmailLog) InsertDestinationEmail(ctx context.Context, exec bob.Executor, related *CommsEmailSetter) error {
+func (commsEmailLog0 *CommsEmailLog) InsertDestinationEmailContact(ctx context.Context, exec bob.Executor, related *CommsEmailContactSetter) error {
 	var err error
 
-	commsEmail1, err := CommsEmails.Insert(related).One(ctx, exec)
+	commsEmailContact1, err := CommsEmailContacts.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachCommsEmailLogDestinationEmail0(ctx, exec, 1, commsEmailLog0, commsEmail1)
+	_, err = attachCommsEmailLogDestinationEmailContact0(ctx, exec, 1, commsEmailLog0, commsEmailContact1)
 	if err != nil {
 		return err
 	}
 
-	commsEmailLog0.R.DestinationEmail = commsEmail1
+	commsEmailLog0.R.DestinationEmailContact = commsEmailContact1
 
-	commsEmail1.R.DestinationEmailLogs = append(commsEmail1.R.DestinationEmailLogs, commsEmailLog0)
+	commsEmailContact1.R.DestinationEmailLogs = append(commsEmailContact1.R.DestinationEmailLogs, commsEmailLog0)
 
 	return nil
 }
 
-func (commsEmailLog0 *CommsEmailLog) AttachDestinationEmail(ctx context.Context, exec bob.Executor, commsEmail1 *CommsEmail) error {
+func (commsEmailLog0 *CommsEmailLog) AttachDestinationEmailContact(ctx context.Context, exec bob.Executor, commsEmailContact1 *CommsEmailContact) error {
 	var err error
 
-	_, err = attachCommsEmailLogDestinationEmail0(ctx, exec, 1, commsEmailLog0, commsEmail1)
+	_, err = attachCommsEmailLogDestinationEmailContact0(ctx, exec, 1, commsEmailLog0, commsEmailContact1)
 	if err != nil {
 		return err
 	}
 
-	commsEmailLog0.R.DestinationEmail = commsEmail1
+	commsEmailLog0.R.DestinationEmailContact = commsEmailContact1
 
-	commsEmail1.R.DestinationEmailLogs = append(commsEmail1.R.DestinationEmailLogs, commsEmailLog0)
+	commsEmailContact1.R.DestinationEmailLogs = append(commsEmailContact1.R.DestinationEmailLogs, commsEmailLog0)
 
 	return nil
 }
 
-func attachCommsEmailLogSourcePhone0(ctx context.Context, exec bob.Executor, count int, commsEmailLog0 *CommsEmailLog, commsPhone1 *CommsPhone) (*CommsEmailLog, error) {
+func attachCommsEmailLogTemplateEmailTemplate0(ctx context.Context, exec bob.Executor, count int, commsEmailLog0 *CommsEmailLog, commsEmailTemplate1 *CommsEmailTemplate) (*CommsEmailLog, error) {
 	setter := &CommsEmailLogSetter{
-		Source: omit.From(commsPhone1.E164),
+		TemplateID: omitnull.From(commsEmailTemplate1.ID),
 	}
 
 	err := commsEmailLog0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsEmailLogSourcePhone0: %w", err)
+		return nil, fmt.Errorf("attachCommsEmailLogTemplateEmailTemplate0: %w", err)
 	}
 
 	return commsEmailLog0, nil
 }
 
-func (commsEmailLog0 *CommsEmailLog) InsertSourcePhone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
+func (commsEmailLog0 *CommsEmailLog) InsertTemplateEmailTemplate(ctx context.Context, exec bob.Executor, related *CommsEmailTemplateSetter) error {
 	var err error
 
-	commsPhone1, err := CommsPhones.Insert(related).One(ctx, exec)
+	commsEmailTemplate1, err := CommsEmailTemplates.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachCommsEmailLogSourcePhone0(ctx, exec, 1, commsEmailLog0, commsPhone1)
+	_, err = attachCommsEmailLogTemplateEmailTemplate0(ctx, exec, 1, commsEmailLog0, commsEmailTemplate1)
 	if err != nil {
 		return err
 	}
 
-	commsEmailLog0.R.SourcePhone = commsPhone1
+	commsEmailLog0.R.TemplateEmailTemplate = commsEmailTemplate1
 
-	commsPhone1.R.SourceEmailLogs = append(commsPhone1.R.SourceEmailLogs, commsEmailLog0)
+	commsEmailTemplate1.R.TemplateEmailLogs = append(commsEmailTemplate1.R.TemplateEmailLogs, commsEmailLog0)
 
 	return nil
 }
 
-func (commsEmailLog0 *CommsEmailLog) AttachSourcePhone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
+func (commsEmailLog0 *CommsEmailLog) AttachTemplateEmailTemplate(ctx context.Context, exec bob.Executor, commsEmailTemplate1 *CommsEmailTemplate) error {
 	var err error
 
-	_, err = attachCommsEmailLogSourcePhone0(ctx, exec, 1, commsEmailLog0, commsPhone1)
+	_, err = attachCommsEmailLogTemplateEmailTemplate0(ctx, exec, 1, commsEmailLog0, commsEmailTemplate1)
 	if err != nil {
 		return err
 	}
 
-	commsEmailLog0.R.SourcePhone = commsPhone1
+	commsEmailLog0.R.TemplateEmailTemplate = commsEmailTemplate1
 
-	commsPhone1.R.SourceEmailLogs = append(commsPhone1.R.SourceEmailLogs, commsEmailLog0)
+	commsEmailTemplate1.R.TemplateEmailLogs = append(commsEmailTemplate1.R.TemplateEmailLogs, commsEmailLog0)
 
 	return nil
 }
 
 type commsEmailLogWhere[Q psql.Filterable] struct {
-	Created     psql.WhereMod[Q, time.Time]
-	Destination psql.WhereMod[Q, string]
-	Source      psql.WhereMod[Q, string]
-	Type        psql.WhereMod[Q, enums.CommsMessagetypeemail]
+	ID             psql.WhereMod[Q, int32]
+	Created        psql.WhereMod[Q, time.Time]
+	DeliveryStatus psql.WhereMod[Q, string]
+	Destination    psql.WhereMod[Q, string]
+	PublicID       psql.WhereMod[Q, string]
+	SentAt         psql.WhereNullMod[Q, time.Time]
+	Source         psql.WhereMod[Q, string]
+	Subject        psql.WhereMod[Q, string]
+	TemplateID     psql.WhereNullMod[Q, int32]
+	TemplateData   psql.WhereMod[Q, pgtypes.HStore]
+	Type           psql.WhereMod[Q, enums.CommsMessagetypeemail]
 }
 
 func (commsEmailLogWhere[Q]) AliasedAs(alias string) commsEmailLogWhere[Q] {
@@ -592,10 +744,17 @@ func (commsEmailLogWhere[Q]) AliasedAs(alias string) commsEmailLogWhere[Q] {
 
 func buildCommsEmailLogWhere[Q psql.Filterable](cols commsEmailLogColumns) commsEmailLogWhere[Q] {
 	return commsEmailLogWhere[Q]{
-		Created:     psql.Where[Q, time.Time](cols.Created),
-		Destination: psql.Where[Q, string](cols.Destination),
-		Source:      psql.Where[Q, string](cols.Source),
-		Type:        psql.Where[Q, enums.CommsMessagetypeemail](cols.Type),
+		ID:             psql.Where[Q, int32](cols.ID),
+		Created:        psql.Where[Q, time.Time](cols.Created),
+		DeliveryStatus: psql.Where[Q, string](cols.DeliveryStatus),
+		Destination:    psql.Where[Q, string](cols.Destination),
+		PublicID:       psql.Where[Q, string](cols.PublicID),
+		SentAt:         psql.WhereNull[Q, time.Time](cols.SentAt),
+		Source:         psql.Where[Q, string](cols.Source),
+		Subject:        psql.Where[Q, string](cols.Subject),
+		TemplateID:     psql.WhereNull[Q, int32](cols.TemplateID),
+		TemplateData:   psql.Where[Q, pgtypes.HStore](cols.TemplateData),
+		Type:           psql.Where[Q, enums.CommsMessagetypeemail](cols.Type),
 	}
 }
 
@@ -605,28 +764,28 @@ func (o *CommsEmailLog) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "DestinationEmail":
-		rel, ok := retrieved.(*CommsEmail)
+	case "DestinationEmailContact":
+		rel, ok := retrieved.(*CommsEmailContact)
 		if !ok {
 			return fmt.Errorf("commsEmailLog cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.DestinationEmail = rel
+		o.R.DestinationEmailContact = rel
 
 		if rel != nil {
 			rel.R.DestinationEmailLogs = CommsEmailLogSlice{o}
 		}
 		return nil
-	case "SourcePhone":
-		rel, ok := retrieved.(*CommsPhone)
+	case "TemplateEmailTemplate":
+		rel, ok := retrieved.(*CommsEmailTemplate)
 		if !ok {
 			return fmt.Errorf("commsEmailLog cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.SourcePhone = rel
+		o.R.TemplateEmailTemplate = rel
 
 		if rel != nil {
-			rel.R.SourceEmailLogs = CommsEmailLogSlice{o}
+			rel.R.TemplateEmailLogs = CommsEmailLogSlice{o}
 		}
 		return nil
 	default:
@@ -635,97 +794,97 @@ func (o *CommsEmailLog) Preload(name string, retrieved any) error {
 }
 
 type commsEmailLogPreloader struct {
-	DestinationEmail func(...psql.PreloadOption) psql.Preloader
-	SourcePhone      func(...psql.PreloadOption) psql.Preloader
+	DestinationEmailContact func(...psql.PreloadOption) psql.Preloader
+	TemplateEmailTemplate   func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildCommsEmailLogPreloader() commsEmailLogPreloader {
 	return commsEmailLogPreloader{
-		DestinationEmail: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*CommsEmail, CommsEmailSlice](psql.PreloadRel{
-				Name: "DestinationEmail",
+		DestinationEmailContact: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*CommsEmailContact, CommsEmailContactSlice](psql.PreloadRel{
+				Name: "DestinationEmailContact",
 				Sides: []psql.PreloadSide{
 					{
 						From:        CommsEmailLogs,
-						To:          CommsEmails,
+						To:          CommsEmailContacts,
 						FromColumns: []string{"destination"},
 						ToColumns:   []string{"address"},
 					},
 				},
-			}, CommsEmails.Columns.Names(), opts...)
+			}, CommsEmailContacts.Columns.Names(), opts...)
 		},
-		SourcePhone: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*CommsPhone, CommsPhoneSlice](psql.PreloadRel{
-				Name: "SourcePhone",
+		TemplateEmailTemplate: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*CommsEmailTemplate, CommsEmailTemplateSlice](psql.PreloadRel{
+				Name: "TemplateEmailTemplate",
 				Sides: []psql.PreloadSide{
 					{
 						From:        CommsEmailLogs,
-						To:          CommsPhones,
-						FromColumns: []string{"source"},
-						ToColumns:   []string{"e164"},
+						To:          CommsEmailTemplates,
+						FromColumns: []string{"template_id"},
+						ToColumns:   []string{"id"},
 					},
 				},
-			}, CommsPhones.Columns.Names(), opts...)
+			}, CommsEmailTemplates.Columns.Names(), opts...)
 		},
 	}
 }
 
 type commsEmailLogThenLoader[Q orm.Loadable] struct {
-	DestinationEmail func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourcePhone      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationEmailContact func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	TemplateEmailTemplate   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsEmailLogThenLoader[Q orm.Loadable]() commsEmailLogThenLoader[Q] {
-	type DestinationEmailLoadInterface interface {
-		LoadDestinationEmail(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type DestinationEmailContactLoadInterface interface {
+		LoadDestinationEmailContact(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type SourcePhoneLoadInterface interface {
-		LoadSourcePhone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type TemplateEmailTemplateLoadInterface interface {
+		LoadTemplateEmailTemplate(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsEmailLogThenLoader[Q]{
-		DestinationEmail: thenLoadBuilder[Q](
-			"DestinationEmail",
-			func(ctx context.Context, exec bob.Executor, retrieved DestinationEmailLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadDestinationEmail(ctx, exec, mods...)
+		DestinationEmailContact: thenLoadBuilder[Q](
+			"DestinationEmailContact",
+			func(ctx context.Context, exec bob.Executor, retrieved DestinationEmailContactLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadDestinationEmailContact(ctx, exec, mods...)
 			},
 		),
-		SourcePhone: thenLoadBuilder[Q](
-			"SourcePhone",
-			func(ctx context.Context, exec bob.Executor, retrieved SourcePhoneLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadSourcePhone(ctx, exec, mods...)
+		TemplateEmailTemplate: thenLoadBuilder[Q](
+			"TemplateEmailTemplate",
+			func(ctx context.Context, exec bob.Executor, retrieved TemplateEmailTemplateLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadTemplateEmailTemplate(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadDestinationEmail loads the commsEmailLog's DestinationEmail into the .R struct
-func (o *CommsEmailLog) LoadDestinationEmail(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationEmailContact loads the commsEmailLog's DestinationEmailContact into the .R struct
+func (o *CommsEmailLog) LoadDestinationEmailContact(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.DestinationEmail = nil
+	o.R.DestinationEmailContact = nil
 
-	related, err := o.DestinationEmail(mods...).One(ctx, exec)
+	related, err := o.DestinationEmailContact(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	related.R.DestinationEmailLogs = CommsEmailLogSlice{o}
 
-	o.R.DestinationEmail = related
+	o.R.DestinationEmailContact = related
 	return nil
 }
 
-// LoadDestinationEmail loads the commsEmailLog's DestinationEmail into the .R struct
-func (os CommsEmailLogSlice) LoadDestinationEmail(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadDestinationEmailContact loads the commsEmailLog's DestinationEmailContact into the .R struct
+func (os CommsEmailLogSlice) LoadDestinationEmailContact(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	commsEmails, err := os.DestinationEmail(mods...).All(ctx, exec)
+	commsEmailContacts, err := os.DestinationEmailContact(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -735,7 +894,7 @@ func (os CommsEmailLogSlice) LoadDestinationEmail(ctx context.Context, exec bob.
 			continue
 		}
 
-		for _, rel := range commsEmails {
+		for _, rel := range commsEmailContacts {
 
 			if !(o.Destination == rel.Address) {
 				continue
@@ -743,7 +902,7 @@ func (os CommsEmailLogSlice) LoadDestinationEmail(ctx context.Context, exec bob.
 
 			rel.R.DestinationEmailLogs = append(rel.R.DestinationEmailLogs, o)
 
-			o.R.DestinationEmail = rel
+			o.R.DestinationEmailContact = rel
 			break
 		}
 	}
@@ -751,33 +910,33 @@ func (os CommsEmailLogSlice) LoadDestinationEmail(ctx context.Context, exec bob.
 	return nil
 }
 
-// LoadSourcePhone loads the commsEmailLog's SourcePhone into the .R struct
-func (o *CommsEmailLog) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadTemplateEmailTemplate loads the commsEmailLog's TemplateEmailTemplate into the .R struct
+func (o *CommsEmailLog) LoadTemplateEmailTemplate(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.SourcePhone = nil
+	o.R.TemplateEmailTemplate = nil
 
-	related, err := o.SourcePhone(mods...).One(ctx, exec)
+	related, err := o.TemplateEmailTemplate(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	related.R.SourceEmailLogs = CommsEmailLogSlice{o}
+	related.R.TemplateEmailLogs = CommsEmailLogSlice{o}
 
-	o.R.SourcePhone = related
+	o.R.TemplateEmailTemplate = related
 	return nil
 }
 
-// LoadSourcePhone loads the commsEmailLog's SourcePhone into the .R struct
-func (os CommsEmailLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadTemplateEmailTemplate loads the commsEmailLog's TemplateEmailTemplate into the .R struct
+func (os CommsEmailLogSlice) LoadTemplateEmailTemplate(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	commsPhones, err := os.SourcePhone(mods...).All(ctx, exec)
+	commsEmailTemplates, err := os.TemplateEmailTemplate(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -787,15 +946,18 @@ func (os CommsEmailLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Execu
 			continue
 		}
 
-		for _, rel := range commsPhones {
-
-			if !(o.Source == rel.E164) {
+		for _, rel := range commsEmailTemplates {
+			if !o.TemplateID.IsValue() {
 				continue
 			}
 
-			rel.R.SourceEmailLogs = append(rel.R.SourceEmailLogs, o)
+			if !(o.TemplateID.IsValue() && o.TemplateID.MustGet() == rel.ID) {
+				continue
+			}
 
-			o.R.SourcePhone = rel
+			rel.R.TemplateEmailLogs = append(rel.R.TemplateEmailLogs, o)
+
+			o.R.TemplateEmailTemplate = rel
 			break
 		}
 	}
@@ -804,9 +966,9 @@ func (os CommsEmailLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Execu
 }
 
 type commsEmailLogJoins[Q dialect.Joinable] struct {
-	typ              string
-	DestinationEmail modAs[Q, commsEmailColumns]
-	SourcePhone      modAs[Q, commsPhoneColumns]
+	typ                     string
+	DestinationEmailContact modAs[Q, commsEmailContactColumns]
+	TemplateEmailTemplate   modAs[Q, commsEmailTemplateColumns]
 }
 
 func (j commsEmailLogJoins[Q]) aliasedAs(alias string) commsEmailLogJoins[Q] {
@@ -816,13 +978,13 @@ func (j commsEmailLogJoins[Q]) aliasedAs(alias string) commsEmailLogJoins[Q] {
 func buildCommsEmailLogJoins[Q dialect.Joinable](cols commsEmailLogColumns, typ string) commsEmailLogJoins[Q] {
 	return commsEmailLogJoins[Q]{
 		typ: typ,
-		DestinationEmail: modAs[Q, commsEmailColumns]{
-			c: CommsEmails.Columns,
-			f: func(to commsEmailColumns) bob.Mod[Q] {
+		DestinationEmailContact: modAs[Q, commsEmailContactColumns]{
+			c: CommsEmailContacts.Columns,
+			f: func(to commsEmailContactColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmails.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
 						to.Address.EQ(cols.Destination),
 					))
 				}
@@ -830,14 +992,14 @@ func buildCommsEmailLogJoins[Q dialect.Joinable](cols commsEmailLogColumns, typ 
 				return mods
 			},
 		},
-		SourcePhone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
+		TemplateEmailTemplate: modAs[Q, commsEmailTemplateColumns]{
+			c: CommsEmailTemplates.Columns,
+			f: func(to commsEmailTemplateColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.Source),
+					mods = append(mods, dialect.Join[Q](typ, CommsEmailTemplates.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.TemplateID),
 					))
 				}
 

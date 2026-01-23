@@ -19,8 +19,9 @@ var (
 func Where[Q psql.Filterable]() struct {
 	ArcgisUsers                        arcgisuserWhere[Q]
 	ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
-	CommsEmails                        commsEmailWhere[Q]
+	CommsEmailContacts                 commsEmailContactWhere[Q]
 	CommsEmailLogs                     commsEmailLogWhere[Q]
+	CommsEmailTemplates                commsEmailTemplateWhere[Q]
 	CommsPhones                        commsPhoneWhere[Q]
 	CommsTextLogs                      commsTextLogWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
@@ -82,8 +83,9 @@ func Where[Q psql.Filterable]() struct {
 	return struct {
 		ArcgisUsers                        arcgisuserWhere[Q]
 		ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
-		CommsEmails                        commsEmailWhere[Q]
+		CommsEmailContacts                 commsEmailContactWhere[Q]
 		CommsEmailLogs                     commsEmailLogWhere[Q]
+		CommsEmailTemplates                commsEmailTemplateWhere[Q]
 		CommsPhones                        commsPhoneWhere[Q]
 		CommsTextLogs                      commsTextLogWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
@@ -144,8 +146,9 @@ func Where[Q psql.Filterable]() struct {
 	}{
 		ArcgisUsers:                        buildArcgisUserWhere[Q](ArcgisUsers.Columns),
 		ArcgisUserPrivileges:               buildArcgisUserPrivilegeWhere[Q](ArcgisUserPrivileges.Columns),
-		CommsEmails:                        buildCommsEmailWhere[Q](CommsEmails.Columns),
+		CommsEmailContacts:                 buildCommsEmailContactWhere[Q](CommsEmailContacts.Columns),
 		CommsEmailLogs:                     buildCommsEmailLogWhere[Q](CommsEmailLogs.Columns),
+		CommsEmailTemplates:                buildCommsEmailTemplateWhere[Q](CommsEmailTemplates.Columns),
 		CommsPhones:                        buildCommsPhoneWhere[Q](CommsPhones.Columns),
 		CommsTextLogs:                      buildCommsTextLogWhere[Q](CommsTextLogs.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),

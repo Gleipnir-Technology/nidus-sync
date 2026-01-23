@@ -7,7 +7,7 @@ var CommsEmailLogErrors = &commsEmailLogErrors{
 	ErrUniqueEmailLogPkey: &UniqueConstraintError{
 		schema:  "comms",
 		table:   "email_log",
-		columns: []string{"destination", "source", "type"},
+		columns: []string{"id"},
 		s:       "email_log_pkey",
 	},
 }
