@@ -162,6 +162,14 @@ function setLocationInputs(location) {
        street.value = context.country.name;
 }
 
+function toggleCollapse(something) {
+	el = document.getElementById(something)
+	if (el.classList.contains('collapse')) {
+		el.classList.remove('collapse');
+	} else {
+		el.classList.add('collapse');
+	}
+}
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
 	const photoInput = document.getElementById('photos');
@@ -339,145 +347,151 @@ function displaySelectedCoordinates(lngLat) {
 				<input type="hidden" id="map-zoom" name="map-zoom"/>
 			</div>
 
-			<!-- Source Details Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-water"></i>
-					<h3>Source Details</h3>
-				</div>
-				
-				<div class="row mb-4">
-					<div class="col-md-6">
-						<label for="duration" class="form-label">How long has this production source been present?</label>
-						<select class="form-select" id="duration" name="source-duration">
-							<option value="none">I don't know</option>
-							<option value="less-than-week">Less than a week</option>
-							<option value="1-2-weeks">1-2 weeks</option>
-							<option value="2-4-weeks">2-4 weeks</option>
-							<option value="1-3-months">1-3 months</option>
-							<option value="more-than-3-months">More than 3 months</option>
-						</select>
+			<button class="btn btn-primary" type="button" onClick="toggleCollapse('collapse-additional-fields')">
+				Answer a few more questions to better help us solve your mosquito problem
+			</button>
+			<div class="collapse" id="collapse-additional-fields">
+
+				<!-- Source Details Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-water"></i>
+						<h3>Source Details</h3>
 					</div>
 					
-					<div class="col-md-6">
-						<label class="form-label d-block">Have you observed any of the following? <a href="#" data-bs-toggle="modal" data-bs-target="#larvaeInfoModal"><i class="bi bi-question-circle small ms-1"></i></a></label>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="larvae" name="has-larvae">
-							<label class="form-check-label" for="larvae">
-								Larvae (wigglers) in water
-							</label>
+					<div class="row mb-4">
+						<div class="col-md-6">
+							<label for="duration" class="form-label">How long has this production source been present?</label>
+							<select class="form-select" id="duration" name="source-duration">
+								<option value="none">I don't know</option>
+								<option value="less-than-week">Less than a week</option>
+								<option value="1-2-weeks">1-2 weeks</option>
+								<option value="2-4-weeks">2-4 weeks</option>
+								<option value="1-3-months">1-3 months</option>
+								<option value="more-than-3-months">More than 3 months</option>
+							</select>
 						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="pupae" name="has-pupae">
-							<label class="form-check-label" for="pupae">
-								Pupae (tumblers) in water
-							</label>
-						</div>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="adult" name="has-adult">
-							<label class="form-check-label" for="adult">
-								Adult mosquitoes near the source
-							</label>
+						
+						<div class="col-md-6">
+							<label class="form-label d-block">Have you observed any of the following? <a href="#" data-bs-toggle="modal" data-bs-target="#larvaeInfoModal"><i class="bi bi-question-circle small ms-1"></i></a></label>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="larvae" name="has-larvae">
+								<label class="form-check-label" for="larvae">
+									Larvae (wigglers) in water
+								</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="pupae" name="has-pupae">
+								<label class="form-check-label" for="pupae">
+									Pupae (tumblers) in water
+								</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="adult" name="has-adult">
+								<label class="form-check-label" for="adult">
+									Adult mosquitoes near the source
+								</label>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- Access Information Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-unlock"></i>
-					<h3>Access Information</h3>
-				</div>
-				<p class="mb-3">Please provide any details about how to access the mosquito source. This helps our technicians when they visit the site.</p>
-				
-				<div class="row mb-3">
-					<div class="col-md-12">
-						<label for="access-comments" class="form-label">How can the source be accessed?</label>
-						<textarea class="form-control" id="access-comments" name="access-comments" rows="3" placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."></textarea>
+				<!-- Access Information Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-unlock"></i>
+						<h3>Access Information</h3>
 					</div>
-				</div>
-				
-				<div class="row mb-3">
-					<div class="col-md-12">
-						<label class="form-label d-block">Access obstacles (check all that apply):</label>
-						<div class="row">
-							<div class="col-md-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="gate" name="access-gate">
-									<label class="form-check-label" for="gate">Gate</label>
+					<p class="mb-3">Please provide any details about how to access the mosquito source. This helps our technicians when they visit the site.</p>
+					
+					<div class="row mb-3">
+						<div class="col-md-12">
+							<label for="access-comments" class="form-label">How can the source be accessed?</label>
+							<textarea class="form-control" id="access-comments" name="access-comments" rows="3" placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."></textarea>
+						</div>
+					</div>
+					
+					<div class="row mb-3">
+						<div class="col-md-12">
+							<label class="form-label d-block">Access obstacles (check all that apply):</label>
+							<div class="row">
+								<div class="col-md-4">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="gate" name="access-gate">
+										<label class="form-check-label" for="gate">Gate</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="fence" name="access-fence">
+										<label class="form-check-label" for="fence">Fence</label>
+									</div>
 								</div>
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="fence" name="access-fence">
-									<label class="form-check-label" for="fence">Fence</label>
+								<div class="col-md-4">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="locked" name="access-locked">
+										<label class="form-check-label" for="locked">Locked entrance</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="dogs" name="access-dog">
+										<label class="form-check-label" for="dogs">Dogs/pets</label>
+									</div>
 								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="locked" name="access-locked">
-									<label class="form-check-label" for="locked">Locked entrance</label>
-								</div>
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="dogs" name="access-dog">
-									<label class="form-check-label" for="dogs">Dogs/pets</label>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="access-other" name="access-other">
-									<label class="form-check-label" for="access-other">Other obstacle</label>
+								<div class="col-md-4">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="access-other" name="access-other">
+										<label class="form-check-label" for="access-other">Other obstacle</label>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<!-- Contact Information Sections -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-person-lines-fill"></i>
-					<h3>Contact Information</h3>
-				</div>
-				
-				<!-- Property Owner Information -->
-				<h5 class="mb-3">Property Owner Information (if known)</h5>
-				<div class="row mb-4">
-					<div class="col-md-6 mb-3">
-						<label for="owner-name" class="form-label">Owner Name</label>
-						<input type="text" class="form-control" id="owner-name" name="owner-name">
+				<!-- Contact Information Sections -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-person-lines-fill"></i>
+						<h3>Contact Information</h3>
 					</div>
-					<div class="col-md-6 mb-3">
-						<label for="owner-phone" class="form-label">Owner Phone</label>
-						<input type="tel" class="form-control" id="owner-phone" name="owner-phone">
+					
+					<!-- Property Owner Information -->
+					<h5 class="mb-3">Property Owner Information (if known)</h5>
+					<div class="row mb-4">
+						<div class="col-md-6 mb-3">
+							<label for="owner-name" class="form-label">Owner Name</label>
+							<input type="text" class="form-control" id="owner-name" name="owner-name">
+						</div>
+						<div class="col-md-6 mb-3">
+							<label for="owner-phone" class="form-label">Owner Phone</label>
+							<input type="tel" class="form-control" id="owner-phone" name="owner-phone">
+						</div>
+						<div class="col-md-12">
+							<label for="owner-email" class="form-label">Owner Email</label>
+							<input type="email" class="form-control" id="owner-email" name="owner-email">
+						</div>
 					</div>
-					<div class="col-md-12">
-						<label for="owner-email" class="form-label">Owner Email</label>
-						<input type="email" class="form-control" id="owner-email" name="owner-email">
-					</div>
-				</div>
-				
-				<!-- Your Contact Information -->
-				<h5 class="mb-3">Your Contact Information (for updates)</h5>
-				<div class="row mb-3">
-					<div class="col-md-6 mb-3">
-						<label for="reporter-name" class="form-label">Your Name</label>
-						<input type="text" class="form-control" id="reporter-name" name="reporter-name">
-					</div>
-					<div class="col-md-6 mb-3">
-						<label for="reporter-phone" class="form-label">Your Phone</label>
-						<input type="tel" class="form-control" id="reporter-phone" name="reporter-phone">
-					</div>
-					<div class="col-md-12 mb-3">
-						<label for="reporter-email" class="form-label">Your Email</label>
-						<input type="email" class="form-control" id="reporter-email" name="reporter-email">
-					</div>
-					<div class="col-md-12">
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="subscribe" name="subscribe" checked>
-							<label class="form-check-label" for="subscribe">
-								I would like to receive updates on this report
-							</label>
+					
+					<!-- Your Contact Information -->
+					<h5 class="mb-3">Your Contact Information (for updates)</h5>
+					<div class="row mb-3">
+						<div class="col-md-6 mb-3">
+							<label for="reporter-name" class="form-label">Your Name</label>
+							<input type="text" class="form-control" id="reporter-name" name="reporter-name">
+						</div>
+						<div class="col-md-6 mb-3">
+							<label for="reporter-phone" class="form-label">Your Phone</label>
+							<input type="tel" class="form-control" id="reporter-phone" name="reporter-phone">
+						</div>
+						<div class="col-md-12 mb-3">
+							<label for="reporter-email" class="form-label">Your Email</label>
+							<input type="email" class="form-control" id="reporter-email" name="reporter-email">
+						</div>
+						<div class="col-md-12">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="subscribe" name="subscribe" checked>
+								<label class="form-check-label" for="subscribe">
+									I would like to receive updates on this report
+								</label>
+							</div>
 						</div>
 					</div>
 				</div>
