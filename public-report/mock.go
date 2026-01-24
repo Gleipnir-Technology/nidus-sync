@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	mockDistrictRootT = buildTemplate("mock/district-root", "base")
-	mockNuisanceT     = buildTemplate("mock/nuisance", "base")
-	mockRootT         = buildTemplate("mock/root", "base")
+	mockDistrictRootT           = buildTemplate("mock/district-root", "base")
+	mockNuisanceT               = buildTemplate("mock/nuisance", "base")
+	mockNuisanceSubmitCompleteT = buildTemplate("mock/nuisance-submit-complete", "base")
+	mockRootT                   = buildTemplate("mock/root", "base")
 )
 
 type ContentDistrict struct {
@@ -19,23 +20,27 @@ type ContentDistrict struct {
 	URLLogo string
 }
 type ContentURL struct {
-	Nuisance string
+	Nuisance               string
+	NuisanceSubmitComplete string
 }
 type ContentMock struct {
 	District    ContentDistrict
 	MapboxToken string
+	ReportID    string
 	URL         ContentURL
 }
 
 func addMockRoutes(r chi.Router) {
 	r.Get("/", renderMock(mockRootT))
 	r.Get("/nuisance", renderMock(mockNuisanceT))
+	r.Get("/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
 	r.Get("/district/{slug}", renderMock(mockDistrictRootT))
 }
 
 func makeContentURL() ContentURL {
 	return ContentURL{
-		Nuisance: makeURLMock("nuisance"),
+		Nuisance:               makeURLMock("nuisance"),
+		NuisanceSubmitComplete: makeURLMock("nuisance-submit-complete"),
 	}
 }
 
@@ -54,6 +59,7 @@ func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Reque
 					URLLogo: config.MakeURLNidus("/api/district/%s/logo", slug),
 				},
 				MapboxToken: config.MapboxToken,
+				ReportID:    "abcd-1234-5678",
 				URL:         makeContentURL(),
 			},
 		)
