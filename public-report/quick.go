@@ -75,7 +75,7 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		log.Debug().Int32("org_id", org.ID).Int32("d_gid", d.Gid).Msg("Getting district")
 		if d != nil {
 			district = &District{
-				LogoURL: config.MakeURLNidus("/api/district/%s/logo", strconv.Itoa(int(org_id))),
+				LogoURL: config.MakeURLNidus("/api/district/%s/logo", org.Slug.GetOr("placeholder")),
 				Name:    d.Agency.GetOr("Unknown"),
 			}
 		}

@@ -54,21 +54,29 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetDistrictLogo(w http.ResponseWriter, r *http.Request) {
-	id_str := chi.URLParam(r, "id")
-	org_id, err := strconv.ParseInt(id_str, 10, 32)
+	slug := chi.URLParam(r, "slug")
+	ctx := r.Context()
+	rows, err := models.Organizations.Query(
+		models.SelectWhere.Organizations.Slug.EQ(slug),
+	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("%s is not a recognized organization ID: %w", id_str, err)))
+		http.Error(w, "Failed to query", http.StatusInternalServerError)
 		return
 	}
-	ctx := r.Context()
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, int32(org_id))
-	if err != nil {
+	switch len(rows) {
+	case 0:
 		http.Error(w, "Organization not found", http.StatusNotFound)
 		return
-	}
-	if org.LogoUUID.IsNull() {
-		http.Error(w, "Logo not found", http.StatusNotFound)
+	case 1:
+		org := rows[0]
+		if org.LogoUUID.IsNull() {
+			http.Error(w, "Logo not found", http.StatusNotFound)
+			return
+		}
+		userfile.ImageFileContentWriteLogo(w, org.LogoUUID.MustGet())
+		return
+	default:
+		http.Error(w, "Too many organizations, this is a programmer error", http.StatusInternalServerError)
 		return
 	}
-	userfile.ImageFileContentWriteLogo(w, org.LogoUUID.MustGet())
 }

@@ -45,6 +45,7 @@ type OrganizationTemplate struct {
 	ImportDistrictGid func() null.Val[int32]
 	Website           func() null.Val[string]
 	LogoUUID          func() null.Val[uuid.UUID]
+	Slug              func() null.Val[string]
 
 	r organizationR
 	f *Factory
@@ -745,6 +746,10 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.LogoUUID()
 		m.LogoUUID = omitnull.FromNull(val)
 	}
+	if o.Slug != nil {
+		val := o.Slug()
+		m.Slug = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -790,6 +795,9 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.LogoUUID != nil {
 		m.LogoUUID = o.LogoUUID()
+	}
+	if o.Slug != nil {
+		m.Slug = o.Slug()
 	}
 
 	o.setModelRels(m)
@@ -1642,6 +1650,7 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomImportDistrictGid(f),
 		OrganizationMods.RandomWebsite(f),
 		OrganizationMods.RandomLogoUUID(f),
+		OrganizationMods.RandomSlug(f),
 	}
 }
 
@@ -2020,6 +2029,59 @@ func (m organizationMods) RandomLogoUUIDNotNull(f *faker.Faker) OrganizationMod 
 			}
 
 			val := random_uuid_UUID(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) Slug(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Slug = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) SlugFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Slug = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetSlug() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Slug = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomSlug(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Slug = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f, "24")
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomSlugNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.Slug = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f, "24")
 			return null.From(val)
 		}
 	})

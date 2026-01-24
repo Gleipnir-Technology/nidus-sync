@@ -2594,6 +2594,7 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.ImportDistrictGid = func() null.Val[int32] { return m.ImportDistrictGid }
 	o.Website = func() null.Val[string] { return m.Website }
 	o.LogoUUID = func() null.Val[uuid.UUID] { return m.LogoUUID }
+	o.Slug = func() null.Val[string] { return m.Slug }
 
 	ctx := context.Background()
 	if len(m.R.Containerrelates) > 0 {

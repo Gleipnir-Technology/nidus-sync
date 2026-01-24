@@ -1,0 +1,89 @@
+{{template "base.html" .}}
+
+{{define "title"}}Main{{end}}
+{{define "extraheader"}}
+<style>
+.service-card {
+	transition: transform 0.3s;
+	height: 100%;
+}
+.service-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.quick-report-mobile {
+	background-color: #ff9800;
+}
+.quick-report-desktop {
+	background-color: #ffefd5;
+	border-left: 4px solid #ff9800;
+}
+</style>
+{{end}}
+{{define "content"}}
+<!-- Main Content -->
+<main>
+	<!-- Introduction Section -->
+	<section class="py-5 bg-primary text-white">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-lg-10">
+					<h2 class="text-center mb-4">Report Mosquitoes for {{.District.Name}}</h2>
+					<img src="{{.District.LogoURL}}" width="256"/>
+					<p class="lead text-center">This is the reporting page for mosquito problems in your area.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- Services Section -->
+	<section class="py-5">
+		<div class="container">
+			<h3 class="text-center mb-4">How Can We Help You Today?</h3>
+			<div class="row g-4">
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								{{ template "svg/mosquito" }}
+							</div>
+							<h4 class="card-title">Report Mosquito Nuisance</h4>
+							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
+							<a href="/nuisance" class="btn btn-primary mt-3">Report Problem</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								{{ template "svg/pond" }}
+							</div>
+							<h4 class="card-title">Report Standing Water</h4>
+							<p class="card-text">Report any water that has been sitting for several days, where mosquitoes can live.</p>
+							<a href="/pool" class="btn btn-primary mt-3">Report Source</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								{{ template "svg/check-report" }}
+							</div>
+							<h4 class="card-title">Follow-up or Check Status</h4>
+							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
+							<a href="/status" class="btn btn-primary mt-3">Get Status</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+
+{{end}}

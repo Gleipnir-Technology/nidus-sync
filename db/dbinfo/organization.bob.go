@@ -87,6 +87,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Slug: column{
+			Name:      "slug",
+			DBType:    "character varying",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -182,11 +191,12 @@ type organizationColumns struct {
 	ImportDistrictGid column
 	Website           column
 	LogoUUID          column
+	Slug              column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug,
 	}
 }
 

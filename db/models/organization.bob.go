@@ -34,6 +34,7 @@ type Organization struct {
 	ImportDistrictGid null.Val[int32]     `db:"import_district_gid" `
 	Website           null.Val[string]    `db:"website" `
 	LogoUUID          null.Val[uuid.UUID] `db:"logo_uuid" `
+	Slug              null.Val[string]    `db:"slug" `
 
 	R organizationR `db:"-" `
 
@@ -93,7 +94,7 @@ type organizationR struct {
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid",
+			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid", "slug",
 		).WithParent("organization"),
 		tableAlias:        alias,
 		ID:                psql.Quote(alias, "id"),
@@ -104,6 +105,7 @@ func buildOrganizationColumns(alias string) organizationColumns {
 		ImportDistrictGid: psql.Quote(alias, "import_district_gid"),
 		Website:           psql.Quote(alias, "website"),
 		LogoUUID:          psql.Quote(alias, "logo_uuid"),
+		Slug:              psql.Quote(alias, "slug"),
 	}
 }
 
@@ -118,6 +120,7 @@ type organizationColumns struct {
 	ImportDistrictGid psql.Expression
 	Website           psql.Expression
 	LogoUUID          psql.Expression
+	Slug              psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -140,10 +143,11 @@ type OrganizationSetter struct {
 	ImportDistrictGid omitnull.Val[int32]     `db:"import_district_gid" `
 	Website           omitnull.Val[string]    `db:"website" `
 	LogoUUID          omitnull.Val[uuid.UUID] `db:"logo_uuid" `
+	Slug              omitnull.Val[string]    `db:"slug" `
 }
 
 func (s OrganizationSetter) SetColumns() []string {
-	vals := make([]string, 0, 8)
+	vals := make([]string, 0, 9)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -167,6 +171,9 @@ func (s OrganizationSetter) SetColumns() []string {
 	}
 	if !s.LogoUUID.IsUnset() {
 		vals = append(vals, "logo_uuid")
+	}
+	if !s.Slug.IsUnset() {
+		vals = append(vals, "slug")
 	}
 	return vals
 }
@@ -196,6 +203,9 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if !s.LogoUUID.IsUnset() {
 		t.LogoUUID = s.LogoUUID.MustGetNull()
 	}
+	if !s.Slug.IsUnset() {
+		t.Slug = s.Slug.MustGetNull()
+	}
 }
 
 func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
@@ -204,7 +214,7 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 8)
+		vals := make([]bob.Expression, 9)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -253,6 +263,12 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Slug.IsUnset() {
+			vals[8] = psql.Arg(s.Slug.MustGetNull())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -262,7 +278,7 @@ func (s OrganizationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 8)
+	exprs := make([]bob.Expression, 0, 9)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -317,6 +333,13 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "logo_uuid")...),
 			psql.Arg(s.LogoUUID),
+		}})
+	}
+
+	if !s.Slug.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "slug")...),
+			psql.Arg(s.Slug),
 		}})
 	}
 
@@ -3847,6 +3870,7 @@ type organizationWhere[Q psql.Filterable] struct {
 	ImportDistrictGid psql.WhereNullMod[Q, int32]
 	Website           psql.WhereNullMod[Q, string]
 	LogoUUID          psql.WhereNullMod[Q, uuid.UUID]
+	Slug              psql.WhereNullMod[Q, string]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -3863,6 +3887,7 @@ func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organiz
 		ImportDistrictGid: psql.WhereNull[Q, int32](cols.ImportDistrictGid),
 		Website:           psql.WhereNull[Q, string](cols.Website),
 		LogoUUID:          psql.WhereNull[Q, uuid.UUID](cols.LogoUUID),
+		Slug:              psql.WhereNull[Q, string](cols.Slug),
 	}
 }
 
