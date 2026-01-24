@@ -28,7 +28,14 @@ function selectInspectionType(type) {
 		document.getElementById('schedulingSection').style.display = 'none';
 	}
 }
-
+function toggleCollapse(something) {
+	el = document.getElementById(something)
+	if (el.classList.contains('collapse')) {
+		el.classList.remove('collapse');
+	} else {
+		el.classList.add('collapse');
+	}
+}
 // Check for source identification
 document.addEventListener('DOMContentLoaded', function() {
 	const sourceCheckboxes = [
@@ -378,110 +385,115 @@ document.addEventListener('DOMContentLoaded', function() {
 			</div>
 		</div>
 
-		<!-- Potential Sources Section -->
-		<div class="form-section">
-			<div class="section-heading">
-				<i class="bi bi-search"></i>
-				<h3>Potential Mosquito Sources</h3>
-				<span class="optional-label">optional</span>
-			</div>
-			<p class="mb-3">Have you noticed any of these common mosquito breeding sources in your area?</p>
-
-			<div class="card card-highlight mb-4">
-				<div class="card-body">
-					<h5 class="card-title">Did you know?</h5>
-					<p class="card-text">Mosquitoes can breed in as little as a bottle cap of water! Eliminating standing water is the most effective way to reduce mosquito populations.</p>
+		<button class="btn btn-primary" type="button" onClick="toggleCollapse('collapse-additional-fields')">
+			Answer a few more questions to better help us solve your mosquito problem
+		</button>
+		<div class="collapse" id="collapse-additional-fields">
+			<!-- Potential Sources Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-search"></i>
+					<h3>Potential Mosquito Sources</h3>
+					<span class="optional-label">optional</span>
 				</div>
-			</div>
+				<p class="mb-3">Have you noticed any of these common mosquito breeding sources in your area?</p>
 
-			<div class="row g-4 mb-4">
-				<!-- Source 1 -->
-				<div class="col-md-4">
-					<div class="card source-card">
-						<div class="card-body text-center">
-							<div class="source-icon">
-								<i class="bi bi-water"></i>
-							</div>
-							<h5 class="card-title">Stagnant Water</h5>
-							<p class="card-text">Green pools, ponds, fountains, or birdbaths that aren't maintained</p>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" name="source-stagnant" id="sourceStagnantWater">
-								<label class="form-check-label" for="sourceStagnantWater">
-									I've noticed this
-								</label>
+				<div class="card card-highlight mb-4">
+					<div class="card-body">
+						<h5 class="card-title">Did you know?</h5>
+						<p class="card-text">Mosquitoes can breed in as little as a bottle cap of water! Eliminating standing water is the most effective way to reduce mosquito populations.</p>
+					</div>
+				</div>
+
+				<div class="row g-4 mb-4">
+					<!-- Source 1 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-water"></i>
+								</div>
+								<h5 class="card-title">Stagnant Water</h5>
+								<p class="card-text">Green pools, ponds, fountains, or birdbaths that aren't maintained</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" name="source-stagnant" id="sourceStagnantWater">
+									<label class="form-check-label" for="sourceStagnantWater">
+										I've noticed this
+									</label>
+								</div>
 							</div>
 						</div>
 					</div>
+					
+					<!-- Source 2 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-droplet"></i>
+								</div>
+								<h5 class="card-title">Containers</h5>
+								<p class="card-text">Buckets, planters, toys, tires, or any items that collect rainwater</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" name="source-container" id="sourceContainers">
+									<label class="form-check-label" for="sourceContainers">
+										I've noticed this
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Source 3 -->
+					<div class="col-md-4">
+						<div class="card source-card">
+							<div class="card-body text-center">
+								<div class="source-icon">
+									<i class="bi bi-house"></i>
+								</div>
+								<h5 class="card-title">Roof & Gutters</h5>
+								<p class="card-text">Clogged street gutters, yard drains, or AC units that collect water</p>
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" name="source-gutters" id="sourceGutters">
+									<label class="form-check-label" for="sourceGutters">
+										I've noticed this
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="alert alert-warning mb-4" id="sourceFoundAlert" style="display: none;">
+					<h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Potential Breeding Source Found!</h5>
+					<p>It looks like you may have identified a mosquito breeding source. If you'd like to report a specific source (like a green pool), please use our <a href="/report-green-pool" class="alert-link">Report a Green Pool</a> form for faster service.</p>
+				</div>
+
+				<div class="row">
+					<div class="col-md-12">
+						<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
+						<textarea class="form-control" id="otherSources" name="source-description" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
+						{{template "photo-upload"}}
+					</div>
+				</div>
+			</div>
+
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-card-text"></i>
+					<h3>Additional Information</h3>
+					<span class="optional-label">optional</span>
 				</div>
 				
-				<!-- Source 2 -->
-				<div class="col-md-4">
-					<div class="card source-card">
-						<div class="card-body text-center">
-							<div class="source-icon">
-								<i class="bi bi-droplet"></i>
-							</div>
-							<h5 class="card-title">Containers</h5>
-							<p class="card-text">Buckets, planters, toys, tires, or any items that collect rainwater</p>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" name="source-container" id="sourceContainers">
-								<label class="form-check-label" for="sourceContainers">
-									I've noticed this
-								</label>
-							</div>
-						</div>
-					</div>
-				</div>
-				
-				<!-- Source 3 -->
-				<div class="col-md-4">
-					<div class="card source-card">
-						<div class="card-body text-center">
-							<div class="source-icon">
-								<i class="bi bi-house"></i>
-							</div>
-							<h5 class="card-title">Roof & Gutters</h5>
-							<p class="card-text">Clogged street gutters, yard drains, or AC units that collect water</p>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" name="source-gutters" id="sourceGutters">
-								<label class="form-check-label" for="sourceGutters">
-									I've noticed this
-								</label>
-							</div>
-						</div>
+				<div class="row">
+					<div class="col-md-12">
+						<label for="additionalInfo" class="form-label">Is there anything else you'd like us to know?</label>
+						<textarea class="form-control" id="additionalInfo" name="additional-info" rows="4" placeholder="Additional details about the mosquito issue..."></textarea>
 					</div>
 				</div>
 			</div>
 
-			<div class="alert alert-warning mb-4" id="sourceFoundAlert" style="display: none;">
-				<h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Potential Breeding Source Found!</h5>
-				<p>It looks like you may have identified a mosquito breeding source. If you'd like to report a specific source (like a green pool), please use our <a href="/report-green-pool" class="alert-link">Report a Green Pool</a> form for faster service.</p>
-			</div>
-
-			<div class="row">
-				<div class="col-md-12">
-					<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
-					<textarea class="form-control" id="otherSources" name="source-description" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
-					{{template "photo-upload"}}
-				</div>
-			</div>
 		</div>
-
-		<div class="form-section">
-			<div class="section-heading">
-				<i class="bi bi-card-text"></i>
-				<h3>Additional Information</h3>
-				<span class="optional-label">optional</span>
-			</div>
-			
-			<div class="row">
-				<div class="col-md-12">
-					<label for="additionalInfo" class="form-label">Is there anything else you'd like us to know?</label>
-					<textarea class="form-control" id="additionalInfo" name="additional-info" rows="4" placeholder="Additional details about the mosquito issue..."></textarea>
-				</div>
-			</div>
-		</div>
-
 		<!-- Submit Section -->
 		<div class="submit-container">
 			<div class="row align-items-center">
