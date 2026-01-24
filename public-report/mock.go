@@ -9,23 +9,38 @@ import (
 )
 
 var (
-	mockRootT         = buildTemplate("mock/root", "base")
 	mockDistrictRootT = buildTemplate("mock/district-root", "base")
+	mockNuisanceT     = buildTemplate("mock/nuisance", "base")
+	mockRootT         = buildTemplate("mock/root", "base")
 )
 
 type ContentDistrict struct {
-	LogoURL string
 	Name    string
+	URLLogo string
+}
+type ContentURL struct {
+	Nuisance string
 }
 type ContentMock struct {
 	District ContentDistrict
+	URL      ContentURL
 }
 
 func addMockRoutes(r chi.Router) {
 	r.Get("/", renderMock(mockRootT))
+	r.Get("/nuisance", renderMock(mockNuisanceT))
 	r.Get("/district/{slug}", renderMock(mockDistrictRootT))
 }
 
+func makeContentURL() ContentURL {
+	return ContentURL{
+		Nuisance: makeURLMock("nuisance"),
+	}
+}
+
+func makeURLMock(p string) string {
+	return config.MakeURLReport("/mock/%s", p)
+}
 func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := chi.URLParam(r, "slug")
@@ -34,9 +49,10 @@ func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Reque
 			t,
 			ContentMock{
 				District: ContentDistrict{
-					LogoURL: config.MakeURLNidus("/api/district/%s/logo", slug),
 					Name:    "Delta MCD",
+					URLLogo: config.MakeURLNidus("/api/district/%s/logo", slug),
 				},
+				URL: makeContentURL(),
 			},
 		)
 	}

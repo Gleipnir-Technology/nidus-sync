@@ -36,7 +36,7 @@
 			<div class="row justify-content-center">
 				<div class="col-lg-10">
 					<h2 class="text-center mb-4">Report Mosquitoes for {{.District.Name}}</h2>
-					<img class="district-logo" src="{{.District.LogoURL}}" />
+					<img class="district-logo" src="{{.District.URLLogo}}" />
 					<p class="lead text-center">This is the reporting page for mosquito problems in your area.</p>
 					<p class="lead text-center">Reports submitted here are reviewed by {{.District.Name}}, which helps identify and address mosquito problems in your community.</p>
 				</div>
@@ -57,7 +57,7 @@
 							</div>
 							<h4 class="card-title">Report Mosquito Nuisance</h4>
 							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
-							<a href="/nuisance" class="btn btn-primary mt-3">Report Problem</a>
+							<a href="{{ .URL.Nuisance }}" class="btn btn-primary mt-3">Report Problem</a>
 						</div>
 					</div>
 				</div>
