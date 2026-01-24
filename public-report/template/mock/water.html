@@ -275,18 +275,35 @@ function displaySelectedCoordinates(lngLat) {
 		</div>
 
 		<!-- Report Form -->
-		<form id="greenPoolForm" action="/pool-submit" method="POST" enctype="multipart/form-data">
+		<form id="standingWater" action="/water-submit" method="POST" enctype="multipart/form-data">
 			<!-- Photo Upload Section -->
 			<div class="form-section">
 				<div class="section-heading">
 					<i class="bi bi-camera"></i>
 					<h3>Photos</h3>
 				</div>
-				<p class="mb-3">Photos help us identify the severity of the issue and may contain location data that can help us find the source.</p>
+				<p class="mb-3">Photos help us identify the severity of the issue and may contain location data that can help us find the production source.</p>
 				<div class="mb-4">
 					{{template "photo-upload"}}
 				</div>
 			</div>
+
+			<!-- Additional Information Section -->
+			<div class="form-section">
+				<div class="section-heading">
+					<i class="bi bi-card-text"></i>
+					<h3>Additional Information</h3>
+				</div>
+				<p class="mb-3">Please provide any other information that might help us address this mosquito production source.</p>
+				
+				<div class="row">
+					<div class="col-md-12">
+						<label for="comments" class="form-label">Additional Details</label>
+						<textarea class="form-control" id="comments" name="comments" rows="4" placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."></textarea>
+					</div>
+				</div>
+			</div>
+
 
 			<!-- Location Section -->
 			<div class="form-section">
@@ -331,7 +348,7 @@ function displaySelectedCoordinates(lngLat) {
 				
 				<div class="row mb-4">
 					<div class="col-md-6">
-						<label for="duration" class="form-label">How long has this source been present?</label>
+						<label for="duration" class="form-label">How long has this production source been present?</label>
 						<select class="form-select" id="duration" name="source-duration">
 							<option value="none">I don't know</option>
 							<option value="less-than-week">Less than a week</option>
@@ -462,22 +479,6 @@ function displaySelectedCoordinates(lngLat) {
 								I would like to receive updates on this report
 							</label>
 						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Additional Information Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-card-text"></i>
-					<h3>Additional Information</h3>
-				</div>
-				<p class="mb-3">Please provide any other information that might help us address this mosquito source.</p>
-				
-				<div class="row">
-					<div class="col-md-12">
-						<label for="comments" class="form-label">Additional Details</label>
-						<textarea class="form-control" id="comments" name="comments" rows="4" placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."></textarea>
 					</div>
 				</div>
 			</div>
