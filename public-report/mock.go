@@ -36,22 +36,25 @@ type ContentMock struct {
 func addMockRoutes(r chi.Router) {
 	r.Get("/", renderMock(mockRootT))
 	r.Get("/district/{slug}", renderMock(mockDistrictRootT))
+	r.Get("/district/{slug}/nuisance", renderMock(mockNuisanceT))
+	r.Get("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
+	r.Get("/district/{slug}/status", renderMock(mockStatusT))
 	r.Get("/nuisance", renderMock(mockNuisanceT))
 	r.Get("/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
 	r.Get("/status", renderMock(mockStatusT))
 }
 
-func makeContentURL() ContentURL {
+func makeContentURL(slug string) ContentURL {
 	return ContentURL{
-		Nuisance:               makeURLMock("nuisance"),
-		NuisanceSubmitComplete: makeURLMock("nuisance-submit-complete"),
-		Status:                 makeURLMock("status"),
+		Nuisance:               makeURLMock(slug, "nuisance"),
+		NuisanceSubmitComplete: makeURLMock(slug, "nuisance-submit-complete"),
+		Status:                 makeURLMock(slug, "status"),
 		Tegola:                 config.MakeURLTegola("/"),
 	}
 }
 
-func makeURLMock(p string) string {
-	return config.MakeURLReport("/mock/%s", p)
+func makeURLMock(slug, p string) string {
+	return config.MakeURLReport("/mock/district/%s/%s", slug, p)
 }
 func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -64,12 +67,12 @@ func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Reque
 			t,
 			ContentMock{
 				District: ContentDistrict{
-					Name:    "Delta MCD",
+					Name:    "Delta MVCD",
 					URLLogo: config.MakeURLNidus("/api/district/%s/logo", slug),
 				},
 				MapboxToken: config.MapboxToken,
 				ReportID:    "abcd-1234-5678",
-				URL:         makeContentURL(),
+				URL:         makeContentURL(slug),
 			},
 		)
 	}

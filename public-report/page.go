@@ -10,7 +10,7 @@ import (
 //go:embed template/*
 var embeddedFiles embed.FS
 
-var components = [...]string{"footer", "photo-upload", "photo-upload-header"}
+var components = [...]string{"footer", "header", "photo-upload", "photo-upload-header"}
 var svgs = [...]string{"check-report", "mosquito", "pond"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
