@@ -12,7 +12,7 @@ class MapLocator extends HTMLElement {
 		this.render();
 
 		// markers shown on the map. Should be none or 1, generally.
-		this._markers = null;
+		this._markers = [];
 	}
 
 	// Lifecycle: when element is added to the DOM
@@ -34,9 +34,9 @@ class MapLocator extends HTMLElement {
 		const lng = Number(this.getAttribute('longitude') || -119.2);
 		const zoom = Number(this.getAttribute('zoom') || 15);
 
-		const mapElement = this.shadowRoot.querySelector("#map");
 		mapboxgl.accessToken = apiKey;
-		map = new mapboxgl.Map({
+		const mapElement = this.shadowRoot.querySelector("#map");
+		this._map = new mapboxgl.Map({
 			container: mapElement,
 			center: {
 				lat: lat,
@@ -45,6 +45,7 @@ class MapLocator extends HTMLElement {
 			style: 'mapbox://styles/mapbox/streets-v12', // style URL
 			zoom: zoom,
 		});
+		/*
 		map.addControl(new mapboxgl.GeolocateControl({
 			positionOptions: {
 				enableHighAccuracy: true
@@ -53,7 +54,9 @@ class MapLocator extends HTMLElement {
 			showUserHeading: true
 		}));
 		map.addControl(new mapboxgl.NavigationControl());
-		map.on("load", function() {
+		*/
+		this._map.on("load", () => {
+			console.log("map loaded");
 			this.dispatchEvent(new CustomEvent('load'), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
@@ -67,6 +70,7 @@ class MapLocator extends HTMLElement {
 	// Initial render of component
 	render() {
 		this.shadowRoot.innerHTML = `
+			<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
 			<style>
 				.map-container {
 					background-color: #e9ecef;
@@ -111,7 +115,7 @@ class MapLocator extends HTMLElement {
 		const marker = new mapboxgl.Marker({
 			color: "#FF0000",
 			draggable: true
-		}).setLngLat(coords).addTo(map);
+		}).setLngLat(coords).addTo(this._map);
 		marker.on('dragend', function(e) {
 			const markerDraggedEvent = new CustomEvent("markerdragend", {
 				detail: {

@@ -22,8 +22,9 @@ type ContentURL struct {
 	Nuisance string
 }
 type ContentMock struct {
-	District ContentDistrict
-	URL      ContentURL
+	District    ContentDistrict
+	MapboxToken string
+	URL         ContentURL
 }
 
 func addMockRoutes(r chi.Router) {
@@ -52,7 +53,8 @@ func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Reque
 					Name:    "Delta MCD",
 					URLLogo: config.MakeURLNidus("/api/district/%s/logo", slug),
 				},
-				URL: makeContentURL(),
+				MapboxToken: config.MapboxToken,
+				URL:         makeContentURL(),
 			},
 		)
 	}
