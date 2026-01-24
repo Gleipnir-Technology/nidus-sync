@@ -50,6 +50,9 @@ func makeURLMock(p string) string {
 func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := chi.URLParam(r, "slug")
+		if slug == "" {
+			slug = "delta-mvcd"
+		}
 		htmlpage.RenderOrError(
 			w,
 			t,
