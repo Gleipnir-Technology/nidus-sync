@@ -215,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log("location error", error);
 		})
 	})
-	mapLocator.addEventListener("markerdragend", 
 	let mapZoom = document.getElementById('map-zoom');
 	mapLocator.addEventListener("zoomend", function(e) {
 		mapZoom.value = e.target.getZoom();
@@ -315,9 +314,6 @@ function displaySelectedCoordinates(lngLat) {
 									api-key="{{ .MapboxToken }}">
 							</address-input>
 						</div>
-					</div>
-					<div class="col-md-6">
-						<address-display></address-display>
 					</div>
 				</div>
 				
