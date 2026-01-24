@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', onLoad);
 </script>
 {{end}}
 {{define "content"}}
+{{if .District}}
+	{{template "header" .}}
+{{end}}
 <div class="container my-4">
 	<!-- Search Box -->
 	<div class="card search-box mb-4">
