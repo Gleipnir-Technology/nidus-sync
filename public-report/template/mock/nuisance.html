@@ -164,6 +164,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	<!-- Report Form -->
 	<form id="mosquitoNuisanceForm" action="/nuisance-submit" method="POST">
+		<!-- Location & Contact Section -->
+		<div class="form-section">
+			<div class="section-heading">
+				<i class="bi bi-geo-alt"></i>
+				<h3>Location & Contact Information</h3>
+			</div>
+
+			<div class="row mb-4">
+				<div class="col-md-12">
+					<label for="address" class="form-label">Your Address</label>
+					<input type="text" class="form-control" name="address" placeholder="Enter your street address">
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-6 mb-3">
+					<label for="name" class="form-label">Your Name</label>
+					<input type="text" class="form-control" name="name">
+				</div>
+				<div class="col-md-6 mb-3">
+					<label for="phone" class="form-label">Phone Number</label>
+					<input type="tel" class="form-control" id="phone" name="phone">
+				</div>
+				<div class="col-md-12 mb-3">
+					<label for="email" class="form-label">Email Address</label>
+					<input type="email" class="form-control" id="email" name="email">
+					<div class="form-text">We'll use this to send you a confirmation and follow-up information.</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Mosquito Activity Section -->
 		<div class="form-section">
 			<div class="section-heading">
@@ -355,113 +386,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				<div class="col-md-12">
 					<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
 					<textarea class="form-control" id="otherSources" name="source-description" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
-				</div>
-			</div>
-		</div>
-
-		<!-- Inspection Request Section -->
-		<div class="form-section">
-			<div class="section-heading">
-				<i class="bi bi-clipboard-check"></i>
-				<h3>Inspection Request</h3>
-			</div>
-			<p class="mb-4">Would you like our technicians to inspect for potential mosquito sources?</p>
-
-			<div class="row g-4 mb-4">
-				<div class="col-md-6">
-					<div class="inspection-type-card" onclick="selectInspectionType('property')" id="propertyInspection">
-						<h5><i class="bi bi-house-door me-2"></i>Property Inspection</h5>
-						<p>Request a technician to inspect your property for mosquito sources. We'll contact you to schedule a convenient time.</p>
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="inspection-type" id="inspectionTypeProperty" value="property">
-							<label class="form-check-label" for="inspectionTypeProperty">
-								<strong>Schedule a property inspection</strong>
-							</label>
-						</div>
-					</div>
-				</div>
-
-				<div class="col-md-6">
-					<div class="inspection-type-card" onclick="selectInspectionType('neighborhood')" id="neighborhoodInspection">
-						<h5><i class="bi bi-map me-2"></i>Neighborhood Inspection</h5>
-						<p>Request a general inspection of your neighborhood. We'll survey the area for potential mosquito breeding sources.</p>
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="inspection-type" id="inspectionTypeNeighborhood" value="neighborhood">
-							<label class="form-check-label" for="inspectionTypeNeighborhood">
-								<strong>Request neighborhood inspection</strong>
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Property Inspection Scheduling (hidden by default) -->
-			<div id="schedulingSection" style="display: none;">
-				<div class="card mb-4">
-					<div class="card-body">
-						<h5 class="card-title">Schedule Property Inspection</h5>
-						<p class="card-text">Please indicate your availability for a technician visit.</p>
-						
-						<div class="row mb-3">
-							<div class="col-md-6">
-								<label for="preferredDateRange" class="form-label">Preferred Date Range</label>
-								<select class="form-select" id="preferredDateRange" name="preferred-date-range">
-									<option value="">Select preferred dates</option>
-									<option value="next-week">Next week</option>
-									<option value="in-two-weeks">In two weeks</option>
-									<option value="any-time">Any time</option>
-								</select>
-							</div>
-							
-							<div class="col-md-6">
-								<label for="preferredTime" class="form-label">Preferred Time of Day</label>
-								<select class="form-select" id="preferredTime" name="preferred-time">
-									<option value="">Select preferred time</option>
-									<option value="morning">Morning (8am-12pm)</option>
-									<option value="afternoon">Afternoon (12pm-4pm)</option>
-									<option value="any-time">Any time</option>
-								</select>
-							</div>
-						</div>
-						
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="requestCall" name="request-call">
-							<label class="form-check-label" for="requestCall">
-								Please call me to schedule a specific appointment time
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Location & Contact Section -->
-		<div class="form-section">
-			<div class="section-heading">
-				<i class="bi bi-geo-alt"></i>
-				<h3>Location & Contact Information</h3>
-			</div>
-
-			<div class="row mb-4">
-				<div class="col-md-12">
-					<label for="address" class="form-label">Your Address</label>
-					<input type="text" class="form-control" name="address" placeholder="Enter your street address">
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col-md-6 mb-3">
-					<label for="name" class="form-label">Your Name</label>
-					<input type="text" class="form-control" name="name">
-				</div>
-				<div class="col-md-6 mb-3">
-					<label for="phone" class="form-label">Phone Number</label>
-					<input type="tel" class="form-control" id="phone" name="phone">
-				</div>
-				<div class="col-md-12 mb-3">
-					<label for="email" class="form-label">Email Address</label>
-					<input type="email" class="form-control" id="email" name="email">
-					<div class="form-text">We'll use this to send you a confirmation and follow-up information.</div>
 				</div>
 			</div>
 		</div>
