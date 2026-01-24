@@ -12,6 +12,7 @@ func Router() chi.Router {
 	r.Get("/robots.txt", getRobots)
 	r.Get("/email", getEmailByCode)
 	r.Get("/image/{uuid}", getImageByUUID)
+	r.Get("/mock", getMockRoot)
 	r.Get("/nuisance", getNuisance)
 	r.Post("/nuisance-submit", postNuisance)
 	r.Get("/nuisance-submit-complete", getNuisanceSubmitComplete)

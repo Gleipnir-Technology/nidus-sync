@@ -1,0 +1,135 @@
+{{template "base.html" .}}
+
+{{define "title"}}Main{{end}}
+{{define "extraheader"}}
+<style>
+.service-card {
+	transition: transform 0.3s;
+	height: 100%;
+}
+.service-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.quick-report-mobile {
+	background-color: #ff9800;
+}
+.quick-report-desktop {
+	background-color: #ffefd5;
+	border-left: 4px solid #ff9800;
+}
+</style>
+{{end}}
+{{define "content"}}
+<!-- Main Content -->
+<main>
+	<!-- Introduction Section -->
+	<section class="py-5 bg-primary text-white">
+		<div class="container">
+			<div class="row justify-content-center">
+				<div class="col-lg-10">
+					<h2 class="text-center mb-4">Report Mosquitoes Online</h2>
+					<p class="lead text-center">
+						We are dedicated to protecting public health and improving quality of life by reducing 
+						mosquito populations and the diseases they can carry. Our districts provide comprehensive 
+						mosquito surveillance, control, and education services to our community.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	
+	<!-- Quick Report for Mobile - Only visible on small screens -->
+	<section class="py-3 quick-report-mobile d-md-none">
+		<div class="container">
+			<div class="row">
+				<div class="col-12 text-center">
+					<h4 class="mb-2">On the go?</h4>
+					<a href="/quick" class="btn btn-dark btn-lg">Make a Quick Report</a>
+					<p class="mb-0 mt-2"><small>Report mosquito issues in under 60 seconds</small></p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Services Section -->
+	<section class="py-5">
+		<div class="container">
+			<h3 class="text-center mb-4">How Can We Help You Today?</h3>
+			<div class="row g-4">
+				<!-- Service Option 1 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+									<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Follow-up or Check Status</h4>
+							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
+							<a href="/status" class="btn btn-primary mt-3">Get Status</a>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Service Option 2 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-water" viewBox="0 0 16 16">
+									<path d="M.036 3.314a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 3.964a.5.5 0 0 1-.278-.65zm0 3a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 6.964a.5.5 0 0 1-.278-.65zm0 3a.5.5 0 0 1 .65-.278l1.757.703a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.014-.406a2.5 2.5 0 0 1 1.857 0l1.015.406a1.5 1.5 0 0 0 1.114 0l1.757-.703a.5.5 0 1 1 .372.928l-1.758.703a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0l-1.014-.406a1.5 1.5 0 0 0-1.114 0l-1.015.406a2.5 2.5 0 0 1-1.857 0L.664 9.964a.5.5 0 0 1-.278-.65z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Report a Green Pool</h4>
+							<p class="card-text">Report stagnant water sources like abandoned pools that may breed mosquitoes.</p>
+							<a href="/pool" class="btn btn-primary mt-3">Report Source</a>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Service Option 3 -->
+				<div class="col-md-4">
+					<div class="card service-card h-100">
+						<div class="card-body text-center">
+							<div class="mb-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-bug" viewBox="0 0 16 16">
+									<path d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A4.979 4.979 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A4.985 4.985 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623zM4 7v4a4 4 0 0 0 3.5 3.97V7H4zm4.5 0v7.97A4 4 0 0 0 12 11V7H8.5zM12 6a3.989 3.989 0 0 0-1.334-2.982A3.983 3.983 0 0 0 8 2a3.983 3.983 0 0 0-2.667 1.018A3.989 3.989 0 0 0 4 6h8z"/>
+								</svg>
+							</div>
+							<h4 class="card-title">Report Mosquito Nuisance</h4>
+							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
+							<a href="/nuisance" class="btn btn-primary mt-3">Report Problem</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Quick Report for Desktop - Only visible on medium screens and up -->
+			<div class="row mt-4 d-none d-md-block">
+				<div class="col-12">
+					<div class="card quick-report-desktop">
+						<div class="card-body py-3">
+							<div class="row align-items-center">
+								<div class="col-md-8">
+									<h5 class="mb-1">Need to make a quick report?</h5>
+									<p class="mb-0">Use our streamlined form to report mosquito issues in under 60 seconds</p>
+								</div>
+								<div class="col-md-4 text-md-end mt-3 mt-md-0">
+									<a href="/quick" class="btn btn-warning">Quick Report</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+
+{{end}}
