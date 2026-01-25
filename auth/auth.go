@@ -46,7 +46,6 @@ func AddUserSession(r *http.Request, user *models.User) {
 	id := strconv.Itoa(int(user.ID))
 	sessionManager.Put(r.Context(), "user_id", id)
 	sessionManager.Put(r.Context(), "username", user.Username)
-	log.Info().Str("username", user.Username).Str("user_id", id).Msg("Created new user session")
 }
 
 func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
@@ -58,7 +57,6 @@ func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
 			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
 		}
 		username := sessionManager.GetString(r.Context(), "username")
-		log.Info().Int("user_id", user_id).Str("username", username).Msg("Current session info")
 		if user_id > 0 && username != "" {
 			return findUser(r.Context(), user_id)
 		}

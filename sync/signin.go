@@ -39,7 +39,7 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	log.Info().Str("username", username).Msg("Signin")
+	log.Info().Str("username", username).Msg("HTML Signin")
 
 	_, err := auth.SigninUser(r, username, password)
 	if err != nil {
