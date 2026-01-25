@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -188,6 +189,18 @@ func hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+func redact(s string) string {
+	if len(s) <= 4 {
+		return s
+	}
+
+	first_two := s[:2]
+	last_two := s[len(s)-2:]
+	middle_length := len(s) - 4
+
+	return first_two + strings.Repeat("*", middle_length) + last_two
+}
+
 func validatePassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
@@ -198,17 +211,18 @@ func validateUser(ctx context.Context, username string, password string) (*model
 	if err != nil {
 		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
-	log.Info().Str("username", username).Str("password", password).Str("hash", passwordHash).Msg("Validating user")
 	result, err := sql.UserByUsername(username).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query for user: %w", err)
 	}
 	switch len(result) {
 	case 0:
+		log.Info().Str("username", username).Str("password", redact(password)).Msg("Invalid username")
 		return nil, InvalidUsername{}
 	case 1:
 		row := result[0]
 		if !validatePassword(password, row.PasswordHash) {
+			log.Info().Str("username", username).Str("password", redact(password)).Str("hash", passwordHash).Msg("Invalid password for user")
 			return nil, InvalidCredentials{}
 		}
 		user := models.User{
@@ -223,6 +237,7 @@ func validateUser(ctx context.Context, username string, password string) (*model
 			OrganizationID:            row.OrganizationID,
 			Username:                  row.Username,
 		}
+		log.Info().Str("username", username).Msg("Validated user")
 		return &user, nil
 	default:
 		return nil, errors.New("More than one matching row, this should be impossible.")
