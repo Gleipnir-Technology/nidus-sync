@@ -18,6 +18,13 @@ var OrganizationErrors = &organizationErrors{
 		s:       "organization_import_district_gid_key",
 	},
 
+	ErrUniqueOrganizationSlugKey: &UniqueConstraintError{
+		schema:  "",
+		table:   "organization",
+		columns: []string{"slug"},
+		s:       "organization_slug_key",
+	},
+
 	ErrUniqueOrganizationWebsiteKey: &UniqueConstraintError{
 		schema:  "",
 		table:   "organization",
@@ -30,6 +37,8 @@ type organizationErrors struct {
 	ErrUniqueOrganizationPkey *UniqueConstraintError
 
 	ErrUniqueOrganizationImportDistrictGidKey *UniqueConstraintError
+
+	ErrUniqueOrganizationSlugKey *UniqueConstraintError
 
 	ErrUniqueOrganizationWebsiteKey *UniqueConstraintError
 }

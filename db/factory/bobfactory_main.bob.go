@@ -324,10 +324,12 @@ func (f *Factory) NewCommsTextLogWithContext(ctx context.Context, mods ...CommsT
 func (f *Factory) FromExistingCommsTextLog(m *models.CommsTextLog) *CommsTextLogTemplate {
 	o := &CommsTextLogTemplate{f: f, alreadyPersisted: true}
 
+	o.Content = func() string { return m.Content }
 	o.Created = func() time.Time { return m.Created }
 	o.Destination = func() string { return m.Destination }
+	o.ID = func() int32 { return m.ID }
+	o.Origin = func() enums.CommsTextorigin { return m.Origin }
 	o.Source = func() string { return m.Source }
-	o.Type = func() enums.CommsMessagetypetext { return m.Type }
 
 	ctx := context.Background()
 	if m.R.DestinationPhone != nil {

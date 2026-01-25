@@ -132,6 +132,23 @@ var Organizations = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		OrganizationSlugKey: index{
+			Type: "btree",
+			Name: "organization_slug_key",
+			Columns: []indexColumn{
+				{
+					Name:         "slug",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 		OrganizationWebsiteKey: index{
 			Type: "btree",
 			Name: "organization_website_key",
@@ -172,6 +189,11 @@ var Organizations = Table[
 			Columns: []string{"import_district_gid"},
 			Comment: "",
 		},
+		OrganizationSlugKey: constraint{
+			Name:    "organization_slug_key",
+			Columns: []string{"slug"},
+			Comment: "",
+		},
 		OrganizationWebsiteKey: constraint{
 			Name:    "organization_website_key",
 			Columns: []string{"website"},
@@ -203,12 +225,13 @@ func (c organizationColumns) AsSlice() []column {
 type organizationIndexes struct {
 	OrganizationPkey                 index
 	OrganizationImportDistrictGidKey index
+	OrganizationSlugKey              index
 	OrganizationWebsiteKey           index
 }
 
 func (i organizationIndexes) AsSlice() []index {
 	return []index{
-		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationWebsiteKey,
+		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationSlugKey, i.OrganizationWebsiteKey,
 	}
 }
 
@@ -224,12 +247,13 @@ func (f organizationForeignKeys) AsSlice() []foreignKey {
 
 type organizationUniques struct {
 	OrganizationImportDistrictGidKey constraint
+	OrganizationSlugKey              constraint
 	OrganizationWebsiteKey           constraint
 }
 
 func (u organizationUniques) AsSlice() []constraint {
 	return []constraint{
-		u.OrganizationImportDistrictGidKey, u.OrganizationWebsiteKey,
+		u.OrganizationImportDistrictGidKey, u.OrganizationSlugKey, u.OrganizationWebsiteKey,
 	}
 }
 

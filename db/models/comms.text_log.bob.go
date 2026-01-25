@@ -25,10 +25,12 @@ import (
 
 // CommsTextLog is an object representing the database table.
 type CommsTextLog struct {
-	Created     time.Time                  `db:"created" `
-	Destination string                     `db:"destination,pk" `
-	Source      string                     `db:"source,pk" `
-	Type        enums.CommsMessagetypetext `db:"type,pk" `
+	Content     string                `db:"content" `
+	Created     time.Time             `db:"created" `
+	Destination string                `db:"destination" `
+	ID          int32                 `db:"id,pk" `
+	Origin      enums.CommsTextorigin `db:"origin" `
+	Source      string                `db:"source" `
 
 	R commsTextLogR `db:"-" `
 }
@@ -52,23 +54,27 @@ type commsTextLogR struct {
 func buildCommsTextLogColumns(alias string) commsTextLogColumns {
 	return commsTextLogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "destination", "source", "type",
+			"content", "created", "destination", "id", "origin", "source",
 		).WithParent("comms.text_log"),
 		tableAlias:  alias,
+		Content:     psql.Quote(alias, "content"),
 		Created:     psql.Quote(alias, "created"),
 		Destination: psql.Quote(alias, "destination"),
+		ID:          psql.Quote(alias, "id"),
+		Origin:      psql.Quote(alias, "origin"),
 		Source:      psql.Quote(alias, "source"),
-		Type:        psql.Quote(alias, "type"),
 	}
 }
 
 type commsTextLogColumns struct {
 	expr.ColumnsExpr
 	tableAlias  string
+	Content     psql.Expression
 	Created     psql.Expression
 	Destination psql.Expression
+	ID          psql.Expression
+	Origin      psql.Expression
 	Source      psql.Expression
-	Type        psql.Expression
 }
 
 func (c commsTextLogColumns) Alias() string {
@@ -83,41 +89,55 @@ func (commsTextLogColumns) AliasedAs(alias string) commsTextLogColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsTextLogSetter struct {
-	Created     omit.Val[time.Time]                  `db:"created" `
-	Destination omit.Val[string]                     `db:"destination,pk" `
-	Source      omit.Val[string]                     `db:"source,pk" `
-	Type        omit.Val[enums.CommsMessagetypetext] `db:"type,pk" `
+	Content     omit.Val[string]                `db:"content" `
+	Created     omit.Val[time.Time]             `db:"created" `
+	Destination omit.Val[string]                `db:"destination" `
+	ID          omit.Val[int32]                 `db:"id,pk" `
+	Origin      omit.Val[enums.CommsTextorigin] `db:"origin" `
+	Source      omit.Val[string]                `db:"source" `
 }
 
 func (s CommsTextLogSetter) SetColumns() []string {
-	vals := make([]string, 0, 4)
+	vals := make([]string, 0, 6)
+	if s.Content.IsValue() {
+		vals = append(vals, "content")
+	}
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
 	if s.Destination.IsValue() {
 		vals = append(vals, "destination")
 	}
+	if s.ID.IsValue() {
+		vals = append(vals, "id")
+	}
+	if s.Origin.IsValue() {
+		vals = append(vals, "origin")
+	}
 	if s.Source.IsValue() {
 		vals = append(vals, "source")
-	}
-	if s.Type.IsValue() {
-		vals = append(vals, "type")
 	}
 	return vals
 }
 
 func (s CommsTextLogSetter) Overwrite(t *CommsTextLog) {
+	if s.Content.IsValue() {
+		t.Content = s.Content.MustGet()
+	}
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
 	}
 	if s.Destination.IsValue() {
 		t.Destination = s.Destination.MustGet()
 	}
+	if s.ID.IsValue() {
+		t.ID = s.ID.MustGet()
+	}
+	if s.Origin.IsValue() {
+		t.Origin = s.Origin.MustGet()
+	}
 	if s.Source.IsValue() {
 		t.Source = s.Source.MustGet()
-	}
-	if s.Type.IsValue() {
-		t.Type = s.Type.MustGet()
 	}
 }
 
@@ -127,29 +147,41 @@ func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 4)
-		if s.Created.IsValue() {
-			vals[0] = psql.Arg(s.Created.MustGet())
+		vals := make([]bob.Expression, 6)
+		if s.Content.IsValue() {
+			vals[0] = psql.Arg(s.Content.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.Destination.IsValue() {
-			vals[1] = psql.Arg(s.Destination.MustGet())
+		if s.Created.IsValue() {
+			vals[1] = psql.Arg(s.Created.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Source.IsValue() {
-			vals[2] = psql.Arg(s.Source.MustGet())
+		if s.Destination.IsValue() {
+			vals[2] = psql.Arg(s.Destination.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Type.IsValue() {
-			vals[3] = psql.Arg(s.Type.MustGet())
+		if s.ID.IsValue() {
+			vals[3] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
+		}
+
+		if s.Origin.IsValue() {
+			vals[4] = psql.Arg(s.Origin.MustGet())
+		} else {
+			vals[4] = psql.Raw("DEFAULT")
+		}
+
+		if s.Source.IsValue() {
+			vals[5] = psql.Arg(s.Source.MustGet())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -161,7 +193,14 @@ func (s CommsTextLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 4)
+	exprs := make([]bob.Expression, 0, 6)
+
+	if s.Content.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "content")...),
+			psql.Arg(s.Content),
+		}})
+	}
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -177,17 +216,24 @@ func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.ID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "id")...),
+			psql.Arg(s.ID),
+		}})
+	}
+
+	if s.Origin.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "origin")...),
+			psql.Arg(s.Origin),
+		}})
+	}
+
 	if s.Source.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source")...),
 			psql.Arg(s.Source),
-		}})
-	}
-
-	if s.Type.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "type")...),
-			psql.Arg(s.Type),
 		}})
 	}
 
@@ -196,29 +242,23 @@ func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindCommsTextLog retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindCommsTextLog(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypetext, cols ...string) (*CommsTextLog, error) {
+func FindCommsTextLog(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*CommsTextLog, error) {
 	if len(cols) == 0 {
 		return CommsTextLogs.Query(
-			sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-			sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-			sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+			sm.Where(CommsTextLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 		).One(ctx, exec)
 	}
 
 	return CommsTextLogs.Query(
-		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		sm.Where(CommsTextLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 		sm.Columns(CommsTextLogs.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // CommsTextLogExists checks the presence of a single record by primary key
-func CommsTextLogExists(ctx context.Context, exec bob.Executor, DestinationPK string, SourcePK string, TypePK enums.CommsMessagetypetext) (bool, error) {
+func CommsTextLogExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
 	return CommsTextLogs.Query(
-		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(DestinationPK))),
-		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(SourcePK))),
-		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(TypePK))),
+		sm.Where(CommsTextLogs.Columns.ID.EQ(psql.Arg(IDPK))),
 	).Exists(ctx, exec)
 }
 
@@ -242,15 +282,11 @@ func (o *CommsTextLog) AfterQueryHook(ctx context.Context, exec bob.Executor, qu
 
 // primaryKeyVals returns the primary key values of the CommsTextLog
 func (o *CommsTextLog) primaryKeyVals() bob.Expression {
-	return psql.ArgGroup(
-		o.Destination,
-		o.Source,
-		o.Type,
-	)
+	return psql.Arg(o.ID)
 }
 
 func (o *CommsTextLog) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("comms.text_log", "destination"), psql.Quote("comms.text_log", "source"), psql.Quote("comms.text_log", "type")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("comms.text_log", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -277,9 +313,7 @@ func (o *CommsTextLog) Delete(ctx context.Context, exec bob.Executor) error {
 // Reload refreshes the CommsTextLog using the executor
 func (o *CommsTextLog) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := CommsTextLogs.Query(
-		sm.Where(CommsTextLogs.Columns.Destination.EQ(psql.Arg(o.Destination))),
-		sm.Where(CommsTextLogs.Columns.Source.EQ(psql.Arg(o.Source))),
-		sm.Where(CommsTextLogs.Columns.Type.EQ(psql.Arg(o.Type))),
+		sm.Where(CommsTextLogs.Columns.ID.EQ(psql.Arg(o.ID))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -313,7 +347,7 @@ func (o CommsTextLogSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("comms.text_log", "destination"), psql.Quote("comms.text_log", "source"), psql.Quote("comms.text_log", "type")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("comms.text_log", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -328,13 +362,7 @@ func (o CommsTextLogSlice) pkIN() dialect.Expression {
 func (o CommsTextLogSlice) copyMatchingRows(from ...*CommsTextLog) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.Destination != old.Destination {
-				continue
-			}
-			if new.Source != old.Source {
-				continue
-			}
-			if new.Type != old.Type {
+			if new.ID != old.ID {
 				continue
 			}
 			new.R = old.R
@@ -580,10 +608,12 @@ func (commsTextLog0 *CommsTextLog) AttachSourcePhone(ctx context.Context, exec b
 }
 
 type commsTextLogWhere[Q psql.Filterable] struct {
+	Content     psql.WhereMod[Q, string]
 	Created     psql.WhereMod[Q, time.Time]
 	Destination psql.WhereMod[Q, string]
+	ID          psql.WhereMod[Q, int32]
+	Origin      psql.WhereMod[Q, enums.CommsTextorigin]
 	Source      psql.WhereMod[Q, string]
-	Type        psql.WhereMod[Q, enums.CommsMessagetypetext]
 }
 
 func (commsTextLogWhere[Q]) AliasedAs(alias string) commsTextLogWhere[Q] {
@@ -592,10 +622,12 @@ func (commsTextLogWhere[Q]) AliasedAs(alias string) commsTextLogWhere[Q] {
 
 func buildCommsTextLogWhere[Q psql.Filterable](cols commsTextLogColumns) commsTextLogWhere[Q] {
 	return commsTextLogWhere[Q]{
+		Content:     psql.Where[Q, string](cols.Content),
 		Created:     psql.Where[Q, time.Time](cols.Created),
 		Destination: psql.Where[Q, string](cols.Destination),
+		ID:          psql.Where[Q, int32](cols.ID),
+		Origin:      psql.Where[Q, enums.CommsTextorigin](cols.Origin),
 		Source:      psql.Where[Q, string](cols.Source),
-		Type:        psql.Where[Q, enums.CommsMessagetypetext](cols.Type),
 	}
 }
 

@@ -272,35 +272,32 @@ func (e *CommsMessagetypeemail) Scan(value any) error {
 	return nil
 }
 
-// Enum values for CommsMessagetypetext
+// Enum values for CommsTextorigin
 const (
-	CommsMessagetypetextInitialContact                 CommsMessagetypetext = "initial-contact"
-	CommsMessagetypetextReportSubscriptionConfirmation CommsMessagetypetext = "report-subscription-confirmation"
-	CommsMessagetypetextReportStatusScheduled          CommsMessagetypetext = "report-status-scheduled"
-	CommsMessagetypetextReportStatusComplete           CommsMessagetypetext = "report-status-complete"
+	CommsTextoriginDistrict      CommsTextorigin = "district"
+	CommsTextoriginLLM           CommsTextorigin = "llm"
+	CommsTextoriginWebsiteAction CommsTextorigin = "website-action"
 )
 
-func AllCommsMessagetypetext() []CommsMessagetypetext {
-	return []CommsMessagetypetext{
-		CommsMessagetypetextInitialContact,
-		CommsMessagetypetextReportSubscriptionConfirmation,
-		CommsMessagetypetextReportStatusScheduled,
-		CommsMessagetypetextReportStatusComplete,
+func AllCommsTextorigin() []CommsTextorigin {
+	return []CommsTextorigin{
+		CommsTextoriginDistrict,
+		CommsTextoriginLLM,
+		CommsTextoriginWebsiteAction,
 	}
 }
 
-type CommsMessagetypetext string
+type CommsTextorigin string
 
-func (e CommsMessagetypetext) String() string {
+func (e CommsTextorigin) String() string {
 	return string(e)
 }
 
-func (e CommsMessagetypetext) Valid() bool {
+func (e CommsTextorigin) Valid() bool {
 	switch e {
-	case CommsMessagetypetextInitialContact,
-		CommsMessagetypetextReportSubscriptionConfirmation,
-		CommsMessagetypetextReportStatusScheduled,
-		CommsMessagetypetextReportStatusComplete:
+	case CommsTextoriginDistrict,
+		CommsTextoriginLLM,
+		CommsTextoriginWebsiteAction:
 		return true
 	default:
 		return false
@@ -308,44 +305,44 @@ func (e CommsMessagetypetext) Valid() bool {
 }
 
 // useful when testing in other packages
-func (e CommsMessagetypetext) All() []CommsMessagetypetext {
-	return AllCommsMessagetypetext()
+func (e CommsTextorigin) All() []CommsTextorigin {
+	return AllCommsTextorigin()
 }
 
-func (e CommsMessagetypetext) MarshalText() ([]byte, error) {
+func (e CommsTextorigin) MarshalText() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsMessagetypetext) UnmarshalText(text []byte) error {
+func (e *CommsTextorigin) UnmarshalText(text []byte) error {
 	return e.Scan(text)
 }
 
-func (e CommsMessagetypetext) MarshalBinary() ([]byte, error) {
+func (e CommsTextorigin) MarshalBinary() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *CommsMessagetypetext) UnmarshalBinary(data []byte) error {
+func (e *CommsTextorigin) UnmarshalBinary(data []byte) error {
 	return e.Scan(data)
 }
 
-func (e CommsMessagetypetext) Value() (driver.Value, error) {
+func (e CommsTextorigin) Value() (driver.Value, error) {
 	return string(e), nil
 }
 
-func (e *CommsMessagetypetext) Scan(value any) error {
+func (e *CommsTextorigin) Scan(value any) error {
 	switch x := value.(type) {
 	case string:
-		*e = CommsMessagetypetext(x)
+		*e = CommsTextorigin(x)
 	case []byte:
-		*e = CommsMessagetypetext(x)
+		*e = CommsTextorigin(x)
 	case nil:
-		return fmt.Errorf("cannot nil into CommsMessagetypetext")
+		return fmt.Errorf("cannot nil into CommsTextorigin")
 	default:
 		return fmt.Errorf("cannot scan type %T: %v", value, value)
 	}
 
 	if !e.Valid() {
-		return fmt.Errorf("invalid CommsMessagetypetext value: %s", *e)
+		return fmt.Errorf("invalid CommsTextorigin value: %s", *e)
 	}
 
 	return nil

@@ -1,10 +1,12 @@
-package comms
+package text
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go"
@@ -17,16 +19,23 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
-func SendText(source E164, destination E164, message string) error {
-	log.Info().Msg("Sending text message...")
-	// Make sure TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN exists in your environment
+func sendText(ctx context.Context, source E164, destination E164, message string, origin enums.CommsTextorigin) error {
+	src := phonenumbers.Format(&source, phonenumbers.E164)
+	dest := phonenumbers.Format(&destination, phonenumbers.E164)
+	err := ensureInDB(ctx, dest)
+	if err != nil {
+		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
+	}
+	err = insertTextLog(ctx, message, dest, src, origin)
+	if err != nil {
+		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
+	}
 	client := twilio.NewRestClient()
 
 	params := &twilioApi.CreateMessageParams{}
 	params.SetMessagingServiceSid(config.TwilioMessagingServiceSID)
 
 	params.SetBody(message)
-	dest := phonenumbers.Format(&destination, phonenumbers.E164)
 	params.SetTo(dest)
 	resp, err := client.Api.CreateMessage(params)
 

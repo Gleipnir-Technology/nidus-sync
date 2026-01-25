@@ -7,7 +7,7 @@ var CommsTextLogErrors = &commsTextLogErrors{
 	ErrUniqueTextLogPkey: &UniqueConstraintError{
 		schema:  "comms",
 		table:   "text_log",
-		columns: []string{"destination", "source", "type"},
+		columns: []string{"id"},
 		s:       "text_log_pkey",
 	},
 }

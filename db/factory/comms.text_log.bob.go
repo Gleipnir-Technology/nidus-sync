@@ -36,10 +36,12 @@ func (mods CommsTextLogModSlice) Apply(ctx context.Context, n *CommsTextLogTempl
 // CommsTextLogTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type CommsTextLogTemplate struct {
+	Content     func() string
 	Created     func() time.Time
 	Destination func() string
+	ID          func() int32
+	Origin      func() enums.CommsTextorigin
 	Source      func() string
-	Type        func() enums.CommsMessagetypetext
 
 	r commsTextLogR
 	f *Factory
@@ -89,6 +91,10 @@ func (t CommsTextLogTemplate) setModelRels(o *models.CommsTextLog) {
 func (o CommsTextLogTemplate) BuildSetter() *models.CommsTextLogSetter {
 	m := &models.CommsTextLogSetter{}
 
+	if o.Content != nil {
+		val := o.Content()
+		m.Content = omit.From(val)
+	}
 	if o.Created != nil {
 		val := o.Created()
 		m.Created = omit.From(val)
@@ -97,13 +103,17 @@ func (o CommsTextLogTemplate) BuildSetter() *models.CommsTextLogSetter {
 		val := o.Destination()
 		m.Destination = omit.From(val)
 	}
+	if o.ID != nil {
+		val := o.ID()
+		m.ID = omit.From(val)
+	}
+	if o.Origin != nil {
+		val := o.Origin()
+		m.Origin = omit.From(val)
+	}
 	if o.Source != nil {
 		val := o.Source()
 		m.Source = omit.From(val)
-	}
-	if o.Type != nil {
-		val := o.Type()
-		m.Type = omit.From(val)
 	}
 
 	return m
@@ -127,17 +137,23 @@ func (o CommsTextLogTemplate) BuildManySetter(number int) []*models.CommsTextLog
 func (o CommsTextLogTemplate) Build() *models.CommsTextLog {
 	m := &models.CommsTextLog{}
 
+	if o.Content != nil {
+		m.Content = o.Content()
+	}
 	if o.Created != nil {
 		m.Created = o.Created()
 	}
 	if o.Destination != nil {
 		m.Destination = o.Destination()
 	}
+	if o.ID != nil {
+		m.ID = o.ID()
+	}
+	if o.Origin != nil {
+		m.Origin = o.Origin()
+	}
 	if o.Source != nil {
 		m.Source = o.Source()
-	}
-	if o.Type != nil {
-		m.Type = o.Type()
 	}
 
 	o.setModelRels(m)
@@ -159,6 +175,10 @@ func (o CommsTextLogTemplate) BuildMany(number int) models.CommsTextLogSlice {
 }
 
 func ensureCreatableCommsTextLog(m *models.CommsTextLogSetter) {
+	if !(m.Content.IsValue()) {
+		val := random_string(nil)
+		m.Content = omit.From(val)
+	}
 	if !(m.Created.IsValue()) {
 		val := random_time_Time(nil)
 		m.Created = omit.From(val)
@@ -167,13 +187,13 @@ func ensureCreatableCommsTextLog(m *models.CommsTextLogSetter) {
 		val := random_string(nil)
 		m.Destination = omit.From(val)
 	}
+	if !(m.Origin.IsValue()) {
+		val := random_enums_CommsTextorigin(nil)
+		m.Origin = omit.From(val)
+	}
 	if !(m.Source.IsValue()) {
 		val := random_string(nil)
 		m.Source = omit.From(val)
-	}
-	if !(m.Type.IsValue()) {
-		val := random_enums_CommsMessagetypetext(nil)
-		m.Type = omit.From(val)
 	}
 }
 
@@ -312,11 +332,44 @@ type commsTextLogMods struct{}
 
 func (m commsTextLogMods) RandomizeAllColumns(f *faker.Faker) CommsTextLogMod {
 	return CommsTextLogModSlice{
+		CommsTextLogMods.RandomContent(f),
 		CommsTextLogMods.RandomCreated(f),
 		CommsTextLogMods.RandomDestination(f),
+		CommsTextLogMods.RandomID(f),
+		CommsTextLogMods.RandomOrigin(f),
 		CommsTextLogMods.RandomSource(f),
-		CommsTextLogMods.RandomType(f),
 	}
+}
+
+// Set the model columns to this value
+func (m commsTextLogMods) Content(val string) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Content = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextLogMods) ContentFunc(f func() string) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Content = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextLogMods) UnsetContent() CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Content = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsTextLogMods) RandomContent(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Content = func() string {
+			return random_string(f)
+		}
+	})
 }
 
 // Set the model columns to this value
@@ -382,6 +435,68 @@ func (m commsTextLogMods) RandomDestination(f *faker.Faker) CommsTextLogMod {
 }
 
 // Set the model columns to this value
+func (m commsTextLogMods) ID(val int32) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.ID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextLogMods) IDFunc(f func() int32) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.ID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextLogMods) UnsetID() CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.ID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsTextLogMods) RandomID(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.ID = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsTextLogMods) Origin(val enums.CommsTextorigin) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Origin = func() enums.CommsTextorigin { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextLogMods) OriginFunc(f func() enums.CommsTextorigin) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Origin = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextLogMods) UnsetOrigin() CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Origin = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsTextLogMods) RandomOrigin(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.Origin = func() enums.CommsTextorigin {
+			return random_enums_CommsTextorigin(f)
+		}
+	})
+}
+
+// Set the model columns to this value
 func (m commsTextLogMods) Source(val string) CommsTextLogMod {
 	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
 		o.Source = func() string { return val }
@@ -408,37 +523,6 @@ func (m commsTextLogMods) RandomSource(f *faker.Faker) CommsTextLogMod {
 	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
 		o.Source = func() string {
 			return random_string(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m commsTextLogMods) Type(val enums.CommsMessagetypetext) CommsTextLogMod {
-	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
-		o.Type = func() enums.CommsMessagetypetext { return val }
-	})
-}
-
-// Set the Column from the function
-func (m commsTextLogMods) TypeFunc(f func() enums.CommsMessagetypetext) CommsTextLogMod {
-	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
-		o.Type = f
-	})
-}
-
-// Clear any values for the column
-func (m commsTextLogMods) UnsetType() CommsTextLogMod {
-	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
-		o.Type = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m commsTextLogMods) RandomType(f *faker.Faker) CommsTextLogMod {
-	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
-		o.Type = func() enums.CommsMessagetypetext {
-			return random_enums_CommsMessagetypetext(f)
 		}
 	})
 }

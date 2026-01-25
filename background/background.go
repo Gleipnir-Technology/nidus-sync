@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
+	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 )
 
 var waitGroup sync.WaitGroup
@@ -14,7 +15,7 @@ func Start(ctx context.Context) {
 
 	channelJobAudio = make(chan jobAudio, 100)  // Buffered channel to prevent blocking
 	channelJobEmail = make(chan email.Job, 100) // Buffered channel to prevent blocking
-	channelJobText = make(chan jobText, 100)    // Buffered channel to prevent blocking
+	channelJobText = make(chan text.Job, 100)   // Buffered channel to prevent blocking
 
 	waitGroup.Add(1)
 	go func() {

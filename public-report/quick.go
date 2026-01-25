@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/background"
-	"github.com/Gleipnir-Technology/nidus-sync/comms"
+	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -241,7 +241,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", report_id), http.StatusFound)
 		return
 	}
-	phone, err := comms.ParsePhoneNumber(phone_str)
+	phone, err := text.ParsePhoneNumber(phone_str)
 	result, err := psql.Update(
 		um.Table("publicreport.quick"),
 		um.SetCol("reporter_email").ToArg(email),

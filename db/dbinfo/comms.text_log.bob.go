@@ -15,6 +15,15 @@ var CommsTextLogs = Table[
 	Schema: "comms",
 	Name:   "text_log",
 	Columns: commsTextLogColumns{
+		Content: column{
+			Name:      "content",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -33,18 +42,27 @@ var CommsTextLogs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Source: column{
-			Name:      "source",
-			DBType:    "text",
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('comms.text_log_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Origin: column{
+			Name:      "origin",
+			DBType:    "comms.textorigin",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Type: column{
-			Name:      "type",
-			DBType:    "comms.messagetypetext",
+		Source: column{
+			Name:      "source",
+			DBType:    "text",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -58,24 +76,14 @@ var CommsTextLogs = Table[
 			Name: "text_log_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "destination",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "source",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "type",
+					Name:         "id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
 			},
 			Unique:        true,
 			Comment:       "",
-			NullsFirst:    []bool{false, false, false},
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -83,7 +91,7 @@ var CommsTextLogs = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "text_log_pkey",
-		Columns: []string{"destination", "source", "type"},
+		Columns: []string{"id"},
 		Comment: "",
 	},
 	ForeignKeys: commsTextLogForeignKeys{
@@ -111,15 +119,17 @@ var CommsTextLogs = Table[
 }
 
 type commsTextLogColumns struct {
+	Content     column
 	Created     column
 	Destination column
+	ID          column
+	Origin      column
 	Source      column
-	Type        column
 }
 
 func (c commsTextLogColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Destination, c.Source, c.Type,
+		c.Content, c.Created, c.Destination, c.ID, c.Origin, c.Source,
 	}
 }
 
