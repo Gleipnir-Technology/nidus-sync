@@ -37,6 +37,7 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid-credentials", http.StatusUnauthorized)
 			return
 		}
+		log.Error().Err(err).Str("username", username).Msg("Login server error")
 		http.Error(w, "signin-server-error", http.StatusInternalServerError)
 		return
 	}
