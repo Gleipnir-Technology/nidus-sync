@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
+	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 )
 
@@ -73,6 +74,17 @@ func isSubscribed(ctx context.Context, src string) (bool, error) {
 	return phone.IsSubscribed, nil
 }
 
+func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
+	if err != nil {
+		return fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
+	}
+	phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
+		IsSubscribed: omit.From(is_subscribed),
+	})
+	return nil
+}
+
 func HandleTextMessage(from string, to string, body string) {
 	ctx := context.Background()
 	type_, src := splitPhoneSource(from)
@@ -81,12 +93,17 @@ func HandleTextMessage(from string, to string, body string) {
 		log.Error().Err(err).Str("to", to).Msg("Failed to get dst")
 		return
 	}
-	subscribed, err := isSubscribed(ctx, from)
+	subscribed, err := isSubscribed(ctx, src)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to handle message")
 		return
 	}
 	if !subscribed {
+		body_l := strings.TrimSpace(strings.ToLower(body))
+		if body_l == "stop" {
+			setSubscribed(ctx, src, false)
+			return
+		}
 		err = text.SendInitialReprompt(ctx, dst, src)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to resend initial prompt.")
