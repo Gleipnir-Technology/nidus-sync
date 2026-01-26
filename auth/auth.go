@@ -131,7 +131,7 @@ func SignoutUser(r *http.Request, user *models.User) {
 }
 
 func SignupUser(ctx context.Context, username string, name string, password string) (*models.User, error) {
-	passwordHash, err := hashPassword(password)
+	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot signup user, failed to create hashed password: %w", err)
 	}
@@ -182,7 +182,7 @@ func findUser(ctx context.Context, user_id int) (*models.User, error) {
 	return user, err
 }
 
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
 }
@@ -205,7 +205,7 @@ func validatePassword(password, hash string) bool {
 }
 
 func validateUser(ctx context.Context, username string, password string) (*models.User, error) {
-	passwordHash, err := hashPassword(password)
+	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
