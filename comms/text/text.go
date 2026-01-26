@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go"
@@ -19,15 +18,7 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
-func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool) error {
-	err := ensureInDB(ctx, destination)
-	if err != nil {
-		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
-	}
-	err = insertTextLog(ctx, message, destination, source, origin, is_welcome)
-	if err != nil {
-		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
-	}
+func SendText(ctx context.Context, source string, destination string, message string) error {
 	client := twilio.NewRestClient()
 
 	params := &twilioApi.CreateMessageParams{}
