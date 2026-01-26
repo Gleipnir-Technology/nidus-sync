@@ -23,6 +23,7 @@ type preloaders struct {
 	CommsEmailLog                     commsEmailLogPreloader
 	CommsEmailTemplate                commsEmailTemplatePreloader
 	CommsPhone                        commsPhonePreloader
+	CommsTextJob                      commsTextJobPreloader
 	CommsTextLog                      commsTextLogPreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogPreloader
@@ -81,6 +82,7 @@ func getPreloaders() preloaders {
 		CommsEmailLog:                     buildCommsEmailLogPreloader(),
 		CommsEmailTemplate:                buildCommsEmailTemplatePreloader(),
 		CommsPhone:                        buildCommsPhonePreloader(),
+		CommsTextJob:                      buildCommsTextJobPreloader(),
 		CommsTextLog:                      buildCommsTextLogPreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogPreloader(),
@@ -145,6 +147,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsEmailLog                     commsEmailLogThenLoader[Q]
 	CommsEmailTemplate                commsEmailTemplateThenLoader[Q]
 	CommsPhone                        commsPhoneThenLoader[Q]
+	CommsTextJob                      commsTextJobThenLoader[Q]
 	CommsTextLog                      commsTextLogThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogThenLoader[Q]
@@ -203,6 +206,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsEmailLog:                     buildCommsEmailLogThenLoader[Q](),
 		CommsEmailTemplate:                buildCommsEmailTemplateThenLoader[Q](),
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
+		CommsTextJob:                      buildCommsTextJobThenLoader[Q](),
 		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogThenLoader[Q](),

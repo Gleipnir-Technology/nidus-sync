@@ -48,9 +48,24 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 		return fmt.Errorf("job is not for report subscription confirmation")
 	}
 
-	err := sendText(ctx, j.src, j.dst, j.content(), enums.CommsTextoriginWebsiteAction)
+	sub, err := isSubscribed(ctx, job.destination())
 	if err != nil {
-		return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
+		return fmt.Errorf("Failed to check if subscribed: %w", err)
+	}
+	if !sub {
+		err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction)
+		if err != nil {
+			return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
+		}
+	} else {
+		err = delayMessage(ctx, j.source(), j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
+		if err != nil {
+			return fmt.Errorf("Failed to delay report subscription message: %w", err)
+		}
+		err := ensureInitialText(ctx, j.source(), j.destination())
+		if err != nil {
+			return fmt.Errorf("Failed to ensure initial text has been sent: %w", err)
+		}
 	}
 	return nil
 }

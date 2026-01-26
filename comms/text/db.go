@@ -10,20 +10,42 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
+	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
+func StoreSources() error {
+	ctx := context.TODO()
+	src := phonenumbers.Format(&config.PhoneNumberReport, phonenumbers.E164)
+	return ensureInDB(ctx, src)
+}
 func convertToPGData(data map[string]string) pgtypes.HStore {
 	result := pgtypes.HStore{}
 	for k, v := range data {
 		result[k] = sql.Null[string]{V: v, Valid: true}
 	}
 	return result
+}
+
+func delayMessage(ctx context.Context, source string, destination string, content string, type_ enums.CommsTextjobtype) error {
+	job, err := models.CommsTextJobs.Insert(&models.CommsTextJobSetter{
+		Content:     omit.From(content),
+		Created:     omit.From(time.Now()),
+		Destination: omit.From(destination),
+		//ID:
+		Type: omit.From(type_),
+	}).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to add delayed text job: %w", err)
+	}
+	log.Info().Int32("id", job.ID).Msg("Created delayed text job")
+	return nil
 }
 
 func ensureInDB(ctx context.Context, destination string) (err error) {
@@ -58,6 +80,17 @@ func insertTextLog(ctx context.Context, content string, destination string, sour
 
 	return err
 }
+func isSubscribed(ctx context.Context, destination string) (bool, error) {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, destination)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to find phone number %s: %w", destination, err)
+	}
+	return phone.IsSubscribed, nil
+}
+
 func generatePublicId(t enums.CommsMessagetypeemail, m map[string]string) string {
 	if m == nil || len(m) == 0 {
 		// Return hash of empty string for empty maps

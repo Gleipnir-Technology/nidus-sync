@@ -43,6 +43,7 @@ type CommsPhonesQuery = *psql.ViewQuery[*CommsPhone, CommsPhoneSlice]
 
 // commsPhoneR is where relationships are stored.
 type commsPhoneR struct {
+	DestinationTextJobs CommsTextJobSlice // comms.text_job.text_job_destination_fkey
 	DestinationTextLogs CommsTextLogSlice // comms.text_log.text_log_destination_fkey
 	SourceTextLogs      CommsTextLogSlice // comms.text_log.text_log_source_fkey
 }
@@ -371,6 +372,30 @@ func (o CommsPhoneSlice) ReloadAll(ctx context.Context, exec bob.Executor) error
 	return nil
 }
 
+// DestinationTextJobs starts a query for related objects on comms.text_job
+func (o *CommsPhone) DestinationTextJobs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextJobsQuery {
+	return CommsTextJobs.Query(append(mods,
+		sm.Where(CommsTextJobs.Columns.Destination.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) DestinationTextJobs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextJobsQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return CommsTextJobs.Query(append(mods,
+		sm.Where(psql.Group(CommsTextJobs.Columns.Destination).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // DestinationTextLogs starts a query for related objects on comms.text_log
 func (o *CommsPhone) DestinationTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextLogsQuery {
 	return CommsTextLogs.Query(append(mods,
@@ -417,6 +442,74 @@ func (os CommsPhoneSlice) SourceTextLogs(mods ...bob.Mod[*dialect.SelectQuery]) 
 	return CommsTextLogs.Query(append(mods,
 		sm.Where(psql.Group(CommsTextLogs.Columns.Source).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertCommsPhoneDestinationTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, commsPhone0 *CommsPhone) (CommsTextJobSlice, error) {
+	for i := range commsTextJobs1 {
+		commsTextJobs1[i].Destination = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := CommsTextJobs.Insert(bob.ToMods(commsTextJobs1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhoneDestinationTextJobs0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhoneDestinationTextJobs0(ctx context.Context, exec bob.Executor, count int, commsTextJobs1 CommsTextJobSlice, commsPhone0 *CommsPhone) (CommsTextJobSlice, error) {
+	setter := &CommsTextJobSetter{
+		Destination: omit.From(commsPhone0.E164),
+	}
+
+	err := commsTextJobs1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhoneDestinationTextJobs0: %w", err)
+	}
+
+	return commsTextJobs1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertDestinationTextJobs(ctx context.Context, exec bob.Executor, related ...*CommsTextJobSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	commsTextJobs1, err := insertCommsPhoneDestinationTextJobs0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.DestinationTextJobs = append(commsPhone0.R.DestinationTextJobs, commsTextJobs1...)
+
+	for _, rel := range commsTextJobs1 {
+		rel.R.DestinationPhone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachDestinationTextJobs(ctx context.Context, exec bob.Executor, related ...*CommsTextJob) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	commsTextJobs1 := CommsTextJobSlice(related)
+
+	_, err = attachCommsPhoneDestinationTextJobs0(ctx, exec, len(related), commsTextJobs1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.DestinationTextJobs = append(commsPhone0.R.DestinationTextJobs, commsTextJobs1...)
+
+	for _, rel := range related {
+		rel.R.DestinationPhone = commsPhone0
+	}
+
+	return nil
 }
 
 func insertCommsPhoneDestinationTextLogs0(ctx context.Context, exec bob.Executor, commsTextLogs1 []*CommsTextLogSetter, commsPhone0 *CommsPhone) (CommsTextLogSlice, error) {
@@ -577,6 +670,20 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "DestinationTextJobs":
+		rels, ok := retrieved.(CommsTextJobSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.DestinationTextJobs = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.DestinationPhone = o
+			}
+		}
+		return nil
 	case "DestinationTextLogs":
 		rels, ok := retrieved.(CommsTextLogSlice)
 		if !ok {
@@ -617,11 +724,15 @@ func buildCommsPhonePreloader() commsPhonePreloader {
 }
 
 type commsPhoneThenLoader[Q orm.Loadable] struct {
+	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
+	type DestinationTextJobsLoadInterface interface {
+		LoadDestinationTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type DestinationTextLogsLoadInterface interface {
 		LoadDestinationTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -630,6 +741,12 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	}
 
 	return commsPhoneThenLoader[Q]{
+		DestinationTextJobs: thenLoadBuilder[Q](
+			"DestinationTextJobs",
+			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextJobsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadDestinationTextJobs(ctx, exec, mods...)
+			},
+		),
 		DestinationTextLogs: thenLoadBuilder[Q](
 			"DestinationTextLogs",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -643,6 +760,67 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadDestinationTextJobs loads the commsPhone's DestinationTextJobs into the .R struct
+func (o *CommsPhone) LoadDestinationTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.DestinationTextJobs = nil
+
+	related, err := o.DestinationTextJobs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.DestinationPhone = o
+	}
+
+	o.R.DestinationTextJobs = related
+	return nil
+}
+
+// LoadDestinationTextJobs loads the commsPhone's DestinationTextJobs into the .R struct
+func (os CommsPhoneSlice) LoadDestinationTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	commsTextJobs, err := os.DestinationTextJobs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.DestinationTextJobs = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range commsTextJobs {
+
+			if !(o.E164 == rel.Destination) {
+				continue
+			}
+
+			rel.R.DestinationPhone = o
+
+			o.R.DestinationTextJobs = append(o.R.DestinationTextJobs, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadDestinationTextLogs loads the commsPhone's DestinationTextLogs into the .R struct
@@ -769,6 +947,7 @@ func (os CommsPhoneSlice) LoadSourceTextLogs(ctx context.Context, exec bob.Execu
 
 // commsPhoneC is where relationship counts are stored.
 type commsPhoneC struct {
+	DestinationTextJobs *int64
 	DestinationTextLogs *int64
 	SourceTextLogs      *int64
 }
@@ -780,6 +959,8 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "DestinationTextJobs":
+		o.C.DestinationTextJobs = &count
 	case "DestinationTextLogs":
 		o.C.DestinationTextLogs = &count
 	case "SourceTextLogs":
@@ -789,12 +970,30 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 }
 
 type commsPhoneCountPreloader struct {
+	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 	return commsPhoneCountPreloader{
+		DestinationTextJobs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("DestinationTextJobs", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsPhones.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(CommsTextJobs.Name()),
+					sm.Where(psql.Quote(CommsTextJobs.Alias(), "destination").EQ(psql.Quote(parent, "e164"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		DestinationTextLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*CommsPhone]("DestinationTextLogs", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -833,11 +1032,15 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 }
 
 type commsPhoneCountThenLoader[Q orm.Loadable] struct {
+	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[Q] {
+	type DestinationTextJobsCountInterface interface {
+		LoadCountDestinationTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type DestinationTextLogsCountInterface interface {
 		LoadCountDestinationTextLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -846,6 +1049,12 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 	}
 
 	return commsPhoneCountThenLoader[Q]{
+		DestinationTextJobs: countThenLoadBuilder[Q](
+			"DestinationTextJobs",
+			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextJobsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountDestinationTextJobs(ctx, exec, mods...)
+			},
+		),
 		DestinationTextLogs: countThenLoadBuilder[Q](
 			"DestinationTextLogs",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationTextLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -859,6 +1068,36 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 			},
 		),
 	}
+}
+
+// LoadCountDestinationTextJobs loads the count of DestinationTextJobs into the C struct
+func (o *CommsPhone) LoadCountDestinationTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.DestinationTextJobs(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.DestinationTextJobs = &count
+	return nil
+}
+
+// LoadCountDestinationTextJobs loads the count of DestinationTextJobs for a slice
+func (os CommsPhoneSlice) LoadCountDestinationTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountDestinationTextJobs(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountDestinationTextLogs loads the count of DestinationTextLogs into the C struct
@@ -923,6 +1162,7 @@ func (os CommsPhoneSlice) LoadCountSourceTextLogs(ctx context.Context, exec bob.
 
 type commsPhoneJoins[Q dialect.Joinable] struct {
 	typ                 string
+	DestinationTextJobs modAs[Q, commsTextJobColumns]
 	DestinationTextLogs modAs[Q, commsTextLogColumns]
 	SourceTextLogs      modAs[Q, commsTextLogColumns]
 }
@@ -934,6 +1174,20 @@ func (j commsPhoneJoins[Q]) aliasedAs(alias string) commsPhoneJoins[Q] {
 func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string) commsPhoneJoins[Q] {
 	return commsPhoneJoins[Q]{
 		typ: typ,
+		DestinationTextJobs: modAs[Q, commsTextJobColumns]{
+			c: CommsTextJobs.Columns,
+			f: func(to commsTextJobColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, CommsTextJobs.Name().As(to.Alias())).On(
+						to.Destination.EQ(cols.E164),
+					))
+				}
+
+				return mods
+			},
+		},
 		DestinationTextLogs: modAs[Q, commsTextLogColumns]{
 			c: CommsTextLogs.Columns,
 			f: func(to commsTextLogColumns) bob.Mod[Q] {

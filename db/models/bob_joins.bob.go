@@ -38,6 +38,7 @@ type joins[Q dialect.Joinable] struct {
 	CommsEmailLogs                     joinSet[commsEmailLogJoins[Q]]
 	CommsEmailTemplates                joinSet[commsEmailTemplateJoins[Q]]
 	CommsPhones                        joinSet[commsPhoneJoins[Q]]
+	CommsTextJobs                      joinSet[commsTextJobJoins[Q]]
 	CommsTextLogs                      joinSet[commsTextLogJoins[Q]]
 	FieldseekerContainerrelates        joinSet[fieldseekerContainerrelateJoins[Q]]
 	FieldseekerFieldscoutinglogs       joinSet[fieldseekerFieldscoutinglogJoins[Q]]
@@ -104,6 +105,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		CommsEmailLogs:                     buildJoinSet[commsEmailLogJoins[Q]](CommsEmailLogs.Columns, buildCommsEmailLogJoins),
 		CommsEmailTemplates:                buildJoinSet[commsEmailTemplateJoins[Q]](CommsEmailTemplates.Columns, buildCommsEmailTemplateJoins),
 		CommsPhones:                        buildJoinSet[commsPhoneJoins[Q]](CommsPhones.Columns, buildCommsPhoneJoins),
+		CommsTextJobs:                      buildJoinSet[commsTextJobJoins[Q]](CommsTextJobs.Columns, buildCommsTextJobJoins),
 		CommsTextLogs:                      buildJoinSet[commsTextLogJoins[Q]](CommsTextLogs.Columns, buildCommsTextLogJoins),
 		FieldseekerContainerrelates:        buildJoinSet[fieldseekerContainerrelateJoins[Q]](FieldseekerContainerrelates.Columns, buildFieldseekerContainerrelateJoins),
 		FieldseekerFieldscoutinglogs:       buildJoinSet[fieldseekerFieldscoutinglogJoins[Q]](FieldseekerFieldscoutinglogs.Columns, buildFieldseekerFieldscoutinglogJoins),

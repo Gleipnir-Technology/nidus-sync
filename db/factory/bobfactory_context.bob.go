@@ -32,8 +32,13 @@ var (
 
 	// Relationship Contexts for comms.phone
 	commsPhoneWithParentsCascadingCtx   = newContextual[bool]("commsPhoneWithParentsCascading")
+	commsPhoneRelDestinationTextJobsCtx = newContextual[bool]("comms.phone.comms.text_job.comms.text_job.text_job_destination_fkey")
 	commsPhoneRelDestinationTextLogsCtx = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsPhoneRelSourceTextLogsCtx      = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
+
+	// Relationship Contexts for comms.text_job
+	commsTextJobWithParentsCascadingCtx = newContextual[bool]("commsTextJobWithParentsCascading")
+	commsTextJobRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.text_job.comms.text_job.text_job_destination_fkey")
 
 	// Relationship Contexts for comms.text_log
 	commsTextLogWithParentsCascadingCtx = newContextual[bool]("commsTextLogWithParentsCascading")

@@ -29,6 +29,7 @@ type CommsTextLog struct {
 	Created     time.Time             `db:"created" `
 	Destination string                `db:"destination" `
 	ID          int32                 `db:"id,pk" `
+	IsWelcome   bool                  `db:"is_welcome" `
 	Origin      enums.CommsTextorigin `db:"origin" `
 	Source      string                `db:"source" `
 
@@ -54,13 +55,14 @@ type commsTextLogR struct {
 func buildCommsTextLogColumns(alias string) commsTextLogColumns {
 	return commsTextLogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"content", "created", "destination", "id", "origin", "source",
+			"content", "created", "destination", "id", "is_welcome", "origin", "source",
 		).WithParent("comms.text_log"),
 		tableAlias:  alias,
 		Content:     psql.Quote(alias, "content"),
 		Created:     psql.Quote(alias, "created"),
 		Destination: psql.Quote(alias, "destination"),
 		ID:          psql.Quote(alias, "id"),
+		IsWelcome:   psql.Quote(alias, "is_welcome"),
 		Origin:      psql.Quote(alias, "origin"),
 		Source:      psql.Quote(alias, "source"),
 	}
@@ -73,6 +75,7 @@ type commsTextLogColumns struct {
 	Created     psql.Expression
 	Destination psql.Expression
 	ID          psql.Expression
+	IsWelcome   psql.Expression
 	Origin      psql.Expression
 	Source      psql.Expression
 }
@@ -93,12 +96,13 @@ type CommsTextLogSetter struct {
 	Created     omit.Val[time.Time]             `db:"created" `
 	Destination omit.Val[string]                `db:"destination" `
 	ID          omit.Val[int32]                 `db:"id,pk" `
+	IsWelcome   omit.Val[bool]                  `db:"is_welcome" `
 	Origin      omit.Val[enums.CommsTextorigin] `db:"origin" `
 	Source      omit.Val[string]                `db:"source" `
 }
 
 func (s CommsTextLogSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 7)
 	if s.Content.IsValue() {
 		vals = append(vals, "content")
 	}
@@ -110,6 +114,9 @@ func (s CommsTextLogSetter) SetColumns() []string {
 	}
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
+	}
+	if s.IsWelcome.IsValue() {
+		vals = append(vals, "is_welcome")
 	}
 	if s.Origin.IsValue() {
 		vals = append(vals, "origin")
@@ -133,6 +140,9 @@ func (s CommsTextLogSetter) Overwrite(t *CommsTextLog) {
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
 	}
+	if s.IsWelcome.IsValue() {
+		t.IsWelcome = s.IsWelcome.MustGet()
+	}
 	if s.Origin.IsValue() {
 		t.Origin = s.Origin.MustGet()
 	}
@@ -147,7 +157,7 @@ func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 7)
 		if s.Content.IsValue() {
 			vals[0] = psql.Arg(s.Content.MustGet())
 		} else {
@@ -172,16 +182,22 @@ func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.Origin.IsValue() {
-			vals[4] = psql.Arg(s.Origin.MustGet())
+		if s.IsWelcome.IsValue() {
+			vals[4] = psql.Arg(s.IsWelcome.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.Source.IsValue() {
-			vals[5] = psql.Arg(s.Source.MustGet())
+		if s.Origin.IsValue() {
+			vals[5] = psql.Arg(s.Origin.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
+		}
+
+		if s.Source.IsValue() {
+			vals[6] = psql.Arg(s.Source.MustGet())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -193,7 +209,7 @@ func (s CommsTextLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.Content.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -220,6 +236,13 @@ func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "id")...),
 			psql.Arg(s.ID),
+		}})
+	}
+
+	if s.IsWelcome.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_welcome")...),
+			psql.Arg(s.IsWelcome),
 		}})
 	}
 
@@ -612,6 +635,7 @@ type commsTextLogWhere[Q psql.Filterable] struct {
 	Created     psql.WhereMod[Q, time.Time]
 	Destination psql.WhereMod[Q, string]
 	ID          psql.WhereMod[Q, int32]
+	IsWelcome   psql.WhereMod[Q, bool]
 	Origin      psql.WhereMod[Q, enums.CommsTextorigin]
 	Source      psql.WhereMod[Q, string]
 }
@@ -626,6 +650,7 @@ func buildCommsTextLogWhere[Q psql.Filterable](cols commsTextLogColumns) commsTe
 		Created:     psql.Where[Q, time.Time](cols.Created),
 		Destination: psql.Where[Q, string](cols.Destination),
 		ID:          psql.Where[Q, int32](cols.ID),
+		IsWelcome:   psql.Where[Q, bool](cols.IsWelcome),
 		Origin:      psql.Where[Q, enums.CommsTextorigin](cols.Origin),
 		Source:      psql.Where[Q, string](cols.Source),
 	}

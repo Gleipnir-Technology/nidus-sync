@@ -19,14 +19,12 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
-func sendText(ctx context.Context, source E164, destination E164, message string, origin enums.CommsTextorigin) error {
-	src := phonenumbers.Format(&source, phonenumbers.E164)
-	dest := phonenumbers.Format(&destination, phonenumbers.E164)
-	err := ensureInDB(ctx, dest)
+func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin) error {
+	err := ensureInDB(ctx, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	err = insertTextLog(ctx, message, dest, src, origin)
+	err = insertTextLog(ctx, message, destination, source, origin)
 	if err != nil {
 		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
 	}
@@ -36,16 +34,16 @@ func sendText(ctx context.Context, source E164, destination E164, message string
 	params.SetMessagingServiceSid(config.TwilioMessagingServiceSID)
 
 	params.SetBody(message)
-	params.SetTo(dest)
+	params.SetTo(destination)
 	resp, err := client.Api.CreateMessage(params)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create message to %s: %w", dest, err)
+		return fmt.Errorf("Failed to create message to %s: %w", destination, err)
 	} else {
 		if resp.Body != nil {
-			log.Info().Str("dest", dest).Str("body", *resp.Body).Msg("Text message response")
+			log.Info().Str("dest", destination).Str("body", *resp.Body).Msg("Text message response")
 		} else {
-			log.Info().Str("dest", dest).Msg("Text message response is nil")
+			log.Info().Str("dest", destination).Msg("Text message response is nil")
 		}
 	}
 	return nil

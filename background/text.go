@@ -14,7 +14,7 @@ func ReportSubscriptionConfirmationText(destination text.E164, report_id string)
 	enqueueJobText(text.NewJobReportSubscriptionConfirmation(
 		destination,
 		report_id,
-		config.RMOPhoneNumber,
+		config.PhoneNumberReport,
 	))
 }
 

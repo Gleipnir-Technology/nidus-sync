@@ -101,6 +101,16 @@ func random_enums_CommsMessagetypeemail(f *faker.Faker, limits ...string) enums.
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_CommsTextjobtype(f *faker.Faker, limits ...string) enums.CommsTextjobtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.CommsTextjobtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_CommsTextorigin(f *faker.Faker, limits ...string) enums.CommsTextorigin {
 	if f == nil {
 		f = &defaultFaker

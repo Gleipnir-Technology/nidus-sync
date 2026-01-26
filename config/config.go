@@ -26,7 +26,7 @@ var (
 	ForwardEmailReportUsername string
 	MapboxToken                string
 	PGDSN                      string
-	RMOPhoneNumber             phonenumbers.PhoneNumber
+	PhoneNumberReport          phonenumbers.PhoneNumber
 	TwilioAuthToken            string
 	TwilioAccountSID           string
 	TwilioMessagingServiceSID  string
@@ -135,7 +135,7 @@ func Parse() (err error) {
 	if err != nil {
 		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", rmo_phone_number, err)
 	}
-	RMOPhoneNumber = *p
+	PhoneNumberReport = *p
 
 	TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
 	if TwilioAccountSID == "" {

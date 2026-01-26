@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
+	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/public-report"
@@ -46,6 +47,11 @@ func main() {
 		os.Exit(3)
 	}
 
+	err = text.StoreSources()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to store text source phone numbers")
+		os.Exit(4)
+	}
 	router_logger := log.With().Logger()
 	r := chi.NewRouter()
 

@@ -44,10 +44,15 @@ type CommsPhoneTemplate struct {
 }
 
 type commsPhoneR struct {
+	DestinationTextJobs []*commsPhoneRDestinationTextJobsR
 	DestinationTextLogs []*commsPhoneRDestinationTextLogsR
 	SourceTextLogs      []*commsPhoneRSourceTextLogsR
 }
 
+type commsPhoneRDestinationTextJobsR struct {
+	number int
+	o      *CommsTextJobTemplate
+}
 type commsPhoneRDestinationTextLogsR struct {
 	number int
 	o      *CommsTextLogTemplate
@@ -67,6 +72,19 @@ func (o *CommsPhoneTemplate) Apply(ctx context.Context, mods ...CommsPhoneMod) {
 // setModelRels creates and sets the relationships on *models.CommsPhone
 // according to the relationships in the template. Nothing is inserted into the db
 func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
+	if t.r.DestinationTextJobs != nil {
+		rel := models.CommsTextJobSlice{}
+		for _, r := range t.r.DestinationTextJobs {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.Destination = o.E164 // h2
+				rel.R.DestinationPhone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.DestinationTextJobs = rel
+	}
+
 	if t.r.DestinationTextLogs != nil {
 		rel := models.CommsTextLogSlice{}
 		for _, r := range t.r.DestinationTextLogs {
@@ -171,6 +189,26 @@ func ensureCreatableCommsPhone(m *models.CommsPhoneSetter) {
 func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.CommsPhone) error {
 	var err error
 
+	isDestinationTextJobsDone, _ := commsPhoneRelDestinationTextJobsCtx.Value(ctx)
+	if !isDestinationTextJobsDone && o.r.DestinationTextJobs != nil {
+		ctx = commsPhoneRelDestinationTextJobsCtx.WithValue(ctx, true)
+		for _, r := range o.r.DestinationTextJobs {
+			if r.o.alreadyPersisted {
+				m.R.DestinationTextJobs = append(m.R.DestinationTextJobs, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachDestinationTextJobs(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isDestinationTextLogsDone, _ := commsPhoneRelDestinationTextLogsCtx.Value(ctx)
 	if !isDestinationTextLogsDone && o.r.DestinationTextLogs != nil {
 		ctx = commsPhoneRelDestinationTextLogsCtx.WithValue(ctx, true)
@@ -178,12 +216,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.DestinationTextLogs = append(m.R.DestinationTextLogs, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDestinationTextLogs(ctx, exec, rel0...)
+				err = m.AttachDestinationTextLogs(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -198,12 +236,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.SourceTextLogs = append(m.R.SourceTextLogs, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSourceTextLogs(ctx, exec, rel1...)
+				err = m.AttachSourceTextLogs(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -376,6 +414,54 @@ func (m commsPhoneMods) WithParentsCascading() CommsPhoneMod {
 			return
 		}
 		ctx = commsPhoneWithParentsCascadingCtx.WithValue(ctx, true)
+	})
+}
+
+func (m commsPhoneMods) WithDestinationTextJobs(number int, related *CommsTextJobTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.DestinationTextJobs = []*commsPhoneRDestinationTextJobsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewDestinationTextJobs(number int, mods ...CommsTextJobMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewCommsTextJobWithContext(ctx, mods...)
+		m.WithDestinationTextJobs(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddDestinationTextJobs(number int, related *CommsTextJobTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.DestinationTextJobs = append(o.r.DestinationTextJobs, &commsPhoneRDestinationTextJobsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewDestinationTextJobs(number int, mods ...CommsTextJobMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewCommsTextJobWithContext(ctx, mods...)
+		m.AddDestinationTextJobs(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingDestinationTextJobs(existingModels ...*models.CommsTextJob) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.DestinationTextJobs = append(o.r.DestinationTextJobs, &commsPhoneRDestinationTextJobsR{
+				o: o.f.FromExistingCommsTextJob(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutDestinationTextJobs() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.DestinationTextJobs = nil
 	})
 }
 

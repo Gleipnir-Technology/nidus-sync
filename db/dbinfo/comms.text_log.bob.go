@@ -51,6 +51,15 @@ var CommsTextLogs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		IsWelcome: column{
+			Name:      "is_welcome",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Origin: column{
 			Name:      "origin",
 			DBType:    "comms.textorigin",
@@ -115,7 +124,7 @@ var CommsTextLogs = Table[
 		},
 	},
 
-	Comment: "",
+	Comment: "Used to track text messages that were sent.",
 }
 
 type commsTextLogColumns struct {
@@ -123,13 +132,14 @@ type commsTextLogColumns struct {
 	Created     column
 	Destination column
 	ID          column
+	IsWelcome   column
 	Origin      column
 	Source      column
 }
 
 func (c commsTextLogColumns) AsSlice() []column {
 	return []column{
-		c.Content, c.Created, c.Destination, c.ID, c.Origin, c.Source,
+		c.Content, c.Created, c.Destination, c.ID, c.IsWelcome, c.Origin, c.Source,
 	}
 }
 
