@@ -293,7 +293,7 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	o := &CommsPhoneTemplate{f: f, alreadyPersisted: true}
 
 	o.E164 = func() string { return m.E164 }
-	o.IsSubscribed = func() bool { return m.IsSubscribed }
+	o.IsSubscribed = func() null.Val[bool] { return m.IsSubscribed }
 
 	ctx := context.Background()
 	if len(m.R.DestinationTextJobs) > 0 {

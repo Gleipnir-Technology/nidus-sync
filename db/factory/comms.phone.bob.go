@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -35,7 +37,7 @@ func (mods CommsPhoneModSlice) Apply(ctx context.Context, n *CommsPhoneTemplate)
 // all columns are optional and should be set by mods
 type CommsPhoneTemplate struct {
 	E164         func() string
-	IsSubscribed func() bool
+	IsSubscribed func() null.Val[bool]
 
 	r commsPhoneR
 	f *Factory
@@ -123,7 +125,7 @@ func (o CommsPhoneTemplate) BuildSetter() *models.CommsPhoneSetter {
 	}
 	if o.IsSubscribed != nil {
 		val := o.IsSubscribed()
-		m.IsSubscribed = omit.From(val)
+		m.IsSubscribed = omitnull.FromNull(val)
 	}
 
 	return m
@@ -176,10 +178,6 @@ func ensureCreatableCommsPhone(m *models.CommsPhoneSetter) {
 	if !(m.E164.IsValue()) {
 		val := random_string(nil)
 		m.E164 = omit.From(val)
-	}
-	if !(m.IsSubscribed.IsValue()) {
-		val := random_bool(nil)
-		m.IsSubscribed = omit.From(val)
 	}
 }
 
@@ -378,14 +376,14 @@ func (m commsPhoneMods) RandomE164(f *faker.Faker) CommsPhoneMod {
 }
 
 // Set the model columns to this value
-func (m commsPhoneMods) IsSubscribed(val bool) CommsPhoneMod {
+func (m commsPhoneMods) IsSubscribed(val null.Val[bool]) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
-		o.IsSubscribed = func() bool { return val }
+		o.IsSubscribed = func() null.Val[bool] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m commsPhoneMods) IsSubscribedFunc(f func() bool) CommsPhoneMod {
+func (m commsPhoneMods) IsSubscribedFunc(f func() null.Val[bool]) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
 		o.IsSubscribed = f
 	})
@@ -400,10 +398,32 @@ func (m commsPhoneMods) UnsetIsSubscribed() CommsPhoneMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m commsPhoneMods) RandomIsSubscribed(f *faker.Faker) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
-		o.IsSubscribed = func() bool {
-			return random_bool(f)
+		o.IsSubscribed = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m commsPhoneMods) RandomIsSubscribedNotNull(f *faker.Faker) CommsPhoneMod {
+	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
+		o.IsSubscribed = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
 		}
 	})
 }

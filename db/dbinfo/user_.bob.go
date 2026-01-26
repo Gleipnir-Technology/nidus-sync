@@ -142,6 +142,23 @@ var Users = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		UserUsernameUnique: index{
+			Type: "btree",
+			Name: "user_username_unique",
+			Columns: []indexColumn{
+				{
+					Name:         "username",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "user__pkey",
@@ -157,6 +174,13 @@ var Users = Table[
 			},
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
+		},
+	},
+	Uniques: userUniques{
+		UserUsernameUnique: constraint{
+			Name:    "user_username_unique",
+			Columns: []string{"username"},
+			Comment: "",
 		},
 	},
 
@@ -185,12 +209,13 @@ func (c userColumns) AsSlice() []column {
 }
 
 type userIndexes struct {
-	UserPkey index
+	UserPkey           index
+	UserUsernameUnique index
 }
 
 func (i userIndexes) AsSlice() []index {
 	return []index{
-		i.UserPkey,
+		i.UserPkey, i.UserUsernameUnique,
 	}
 }
 
@@ -204,10 +229,14 @@ func (f userForeignKeys) AsSlice() []foreignKey {
 	}
 }
 
-type userUniques struct{}
+type userUniques struct {
+	UserUsernameUnique constraint
+}
 
 func (u userUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.UserUsernameUnique,
+	}
 }
 
 type userChecks struct{}

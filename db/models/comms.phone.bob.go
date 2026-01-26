@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -23,8 +25,8 @@ import (
 
 // CommsPhone is an object representing the database table.
 type CommsPhone struct {
-	E164         string `db:"e164,pk" `
-	IsSubscribed bool   `db:"is_subscribed" `
+	E164         string         `db:"e164,pk" `
+	IsSubscribed null.Val[bool] `db:"is_subscribed" `
 
 	R commsPhoneR `db:"-" `
 
@@ -78,8 +80,8 @@ func (commsPhoneColumns) AliasedAs(alias string) commsPhoneColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsPhoneSetter struct {
-	E164         omit.Val[string] `db:"e164,pk" `
-	IsSubscribed omit.Val[bool]   `db:"is_subscribed" `
+	E164         omit.Val[string]   `db:"e164,pk" `
+	IsSubscribed omitnull.Val[bool] `db:"is_subscribed" `
 }
 
 func (s CommsPhoneSetter) SetColumns() []string {
@@ -87,7 +89,7 @@ func (s CommsPhoneSetter) SetColumns() []string {
 	if s.E164.IsValue() {
 		vals = append(vals, "e164")
 	}
-	if s.IsSubscribed.IsValue() {
+	if !s.IsSubscribed.IsUnset() {
 		vals = append(vals, "is_subscribed")
 	}
 	return vals
@@ -97,8 +99,8 @@ func (s CommsPhoneSetter) Overwrite(t *CommsPhone) {
 	if s.E164.IsValue() {
 		t.E164 = s.E164.MustGet()
 	}
-	if s.IsSubscribed.IsValue() {
-		t.IsSubscribed = s.IsSubscribed.MustGet()
+	if !s.IsSubscribed.IsUnset() {
+		t.IsSubscribed = s.IsSubscribed.MustGetNull()
 	}
 }
 
@@ -115,8 +117,8 @@ func (s *CommsPhoneSetter) Apply(q *dialect.InsertQuery) {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsSubscribed.IsValue() {
-			vals[1] = psql.Arg(s.IsSubscribed.MustGet())
+		if !s.IsSubscribed.IsUnset() {
+			vals[1] = psql.Arg(s.IsSubscribed.MustGetNull())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
@@ -139,7 +141,7 @@ func (s CommsPhoneSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.IsSubscribed.IsValue() {
+	if !s.IsSubscribed.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "is_subscribed")...),
 			psql.Arg(s.IsSubscribed),
@@ -650,7 +652,7 @@ func (commsPhone0 *CommsPhone) AttachSourceTextLogs(ctx context.Context, exec bo
 
 type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
-	IsSubscribed psql.WhereMod[Q, bool]
+	IsSubscribed psql.WhereNullMod[Q, bool]
 }
 
 func (commsPhoneWhere[Q]) AliasedAs(alias string) commsPhoneWhere[Q] {
@@ -660,7 +662,7 @@ func (commsPhoneWhere[Q]) AliasedAs(alias string) commsPhoneWhere[Q] {
 func buildCommsPhoneWhere[Q psql.Filterable](cols commsPhoneColumns) commsPhoneWhere[Q] {
 	return commsPhoneWhere[Q]{
 		E164:         psql.Where[Q, string](cols.E164),
-		IsSubscribed: psql.Where[Q, bool](cols.IsSubscribed),
+		IsSubscribed: psql.WhereNull[Q, bool](cols.IsSubscribed),
 	}
 }
 

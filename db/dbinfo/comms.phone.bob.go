@@ -27,9 +27,9 @@ var CommsPhones = Table[
 		IsSubscribed: column{
 			Name:      "is_subscribed",
 			DBType:    "boolean",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},

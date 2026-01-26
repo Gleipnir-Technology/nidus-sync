@@ -10,8 +10,17 @@ var UserErrors = &userErrors{
 		columns: []string{"id"},
 		s:       "user__pkey",
 	},
+
+	ErrUniqueUserUsernameUnique: &UniqueConstraintError{
+		schema:  "",
+		table:   "user_",
+		columns: []string{"username"},
+		s:       "user_username_unique",
+	},
 }
 
 type userErrors struct {
 	ErrUniqueUser_Pkey *UniqueConstraintError
+
+	ErrUniqueUserUsernameUnique *UniqueConstraintError
 }

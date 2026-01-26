@@ -11,7 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
-	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,12 +66,16 @@ func splitPhoneSource(s string) (string, string) {
 
 }
 
-func isSubscribed(ctx context.Context, src string) (bool, error) {
+func isSubscribed(ctx context.Context, src string) (*bool, error) {
 	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
 	if err != nil {
-		return false, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
+		return nil, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
-	return phone.IsSubscribed, nil
+	if phone.IsSubscribed.IsNull() {
+		return nil, nil
+	}
+	result := phone.IsSubscribed.MustGet()
+	return &result, nil
 }
 
 func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
@@ -80,11 +84,16 @@ func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
 		return fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
 	phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
-		IsSubscribed: omit.From(is_subscribed),
+		IsSubscribed: omitnull.From(is_subscribed),
 	})
+	log.Info().Str("src", src).Bool("is_subscribed", is_subscribed).Msg("Set number subscribed")
 	return nil
 }
 
+func handleWaitingTextJobs(ctx context.Context, src string) {
+	log.Info().Str("src", src).Msg("Pretend handle waiting jobs")
+
+}
 func HandleTextMessage(from string, to string, body string) {
 	ctx := context.Background()
 	type_, src := splitPhoneSource(from)
@@ -98,17 +107,24 @@ func HandleTextMessage(from string, to string, body string) {
 		log.Error().Err(err).Msg("Failed to handle message")
 		return
 	}
-	if !subscribed {
+	// We don't know if they're subscribed or not.
+	if subscribed == nil {
 		body_l := strings.TrimSpace(strings.ToLower(body))
-		if body_l == "stop" {
+		switch body_l {
+		case "stop":
 			setSubscribed(ctx, src, false)
-			return
-		}
-		err = text.SendInitialReprompt(ctx, dst, src)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to resend initial prompt.")
+		case "yes":
+			setSubscribed(ctx, src, true)
+			handleWaitingTextJobs(ctx, src)
+		default:
+			err = text.SendInitialReprompt(ctx, dst, src)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to resend initial prompt.")
+			}
 		}
 		return
+	}
+	if !(*subscribed) {
 	}
 	previous_messages, err := loadPreviousMessages(ctx, dst, src)
 	if err != nil {

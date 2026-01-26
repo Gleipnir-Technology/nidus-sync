@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/bob/types/pgtypes"
@@ -55,7 +56,7 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 		if err.Error() == "sql: no rows in result set" {
 			_, err = models.CommsPhones.Insert(&models.CommsPhoneSetter{
 				E164:         omit.From(destination),
-				IsSubscribed: omit.From(false),
+				IsSubscribed: omitnull.FromPtr[bool](nil),
 			}).One(ctx, db.PGInstance.BobDB)
 			if err != nil {
 				return fmt.Errorf("Failed to insert new phone contact: %w", err)
@@ -80,16 +81,6 @@ func insertTextLog(ctx context.Context, content string, destination string, sour
 	}).One(ctx, db.PGInstance.BobDB)
 
 	return err
-}
-func isSubscribed(ctx context.Context, destination string) (bool, error) {
-	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, destination)
-	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			return false, nil
-		}
-		return false, fmt.Errorf("Failed to find phone number %s: %w", destination, err)
-	}
-	return phone.IsSubscribed, nil
 }
 
 func generatePublicId(t enums.CommsMessagetypeemail, m map[string]string) string {

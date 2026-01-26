@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	//"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	//"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/nyaruka/phonenumbers"
 	//"github.com/rs/zerolog/log"
 )
@@ -43,29 +44,32 @@ func (j jobReportSubscription) source() string {
 }
 
 func sendReportSubscription(ctx context.Context, job Job) error {
-	j, ok := job.(jobReportSubscription)
-	if !ok {
-		return fmt.Errorf("job is not for report subscription confirmation")
-	}
+	/*
+		j, ok := job.(jobReportSubscription)
+		if !ok {
+			return fmt.Errorf("job is not for report subscription confirmation")
+		}
 
-	sub, err := isSubscribed(ctx, job.destination())
-	if err != nil {
-		return fmt.Errorf("Failed to check if subscribed: %w", err)
-	}
-	if !sub {
-		err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction, false)
+		sub, err := isSubscribed(ctx, job.destination())
 		if err != nil {
-			return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
+			return fmt.Errorf("Failed to check if subscribed: %w", err)
 		}
-	} else {
-		err = delayMessage(ctx, j.source(), j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
-		if err != nil {
-			return fmt.Errorf("Failed to delay report subscription message: %w", err)
+		if !sub {
+			err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction, false)
+			if err != nil {
+				return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
+			}
+		} else {
+			err = delayMessage(ctx, j.source(), j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
+			if err != nil {
+				return fmt.Errorf("Failed to delay report subscription message: %w", err)
+			}
+			err := ensureInitialText(ctx, j.source(), j.destination())
+			if err != nil {
+				return fmt.Errorf("Failed to ensure initial text has been sent: %w", err)
+			}
 		}
-		err := ensureInitialText(ctx, j.source(), j.destination())
-		if err != nil {
-			return fmt.Errorf("Failed to ensure initial text has been sent: %w", err)
-		}
-	}
+		return nil
+	*/
 	return nil
 }
