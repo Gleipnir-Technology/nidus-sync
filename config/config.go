@@ -27,9 +27,11 @@ var (
 	MapboxToken                string
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
+	PhoneNumberReportStr       string
 	TwilioAuthToken            string
 	TwilioAccountSID           string
 	TwilioMessagingServiceSID  string
+	TwilioRCSSenderRMO         string
 )
 
 func IsProductionEnvironment() bool {
@@ -127,13 +129,13 @@ func Parse() (err error) {
 	if PGDSN == "" {
 		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
 	}
-	rmo_phone_number := os.Getenv("RMO_PHONE_NUMBER")
-	if rmo_phone_number == "" {
+	PhoneNumberReportStr = os.Getenv("RMO_PHONE_NUMBER")
+	if PhoneNumberReportStr == "" {
 		return fmt.Errorf("You must specify a non-empty RMO_PHONE_NUMBER")
 	}
-	p, err := phonenumbers.Parse(rmo_phone_number, "US")
+	p, err := phonenumbers.Parse(PhoneNumberReportStr, "US")
 	if err != nil {
-		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", rmo_phone_number, err)
+		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", PhoneNumberReportStr, err)
 	}
 	PhoneNumberReport = *p
 
@@ -148,6 +150,10 @@ func Parse() (err error) {
 	TwilioMessagingServiceSID = os.Getenv("TWILIO_MESSAGING_SERVICE_SID")
 	if TwilioMessagingServiceSID == "" {
 		return fmt.Errorf("You must specify a non-empty TWILIO_MESSAGING_SERVICE_SID")
+	}
+	TwilioRCSSenderRMO = os.Getenv("TWILIO_RCS_SENDER_RMO")
+	if TwilioRCSSenderRMO == "" {
+		return fmt.Errorf("You must specify a non-empty TWILIO_RCS_SENDER_RMO")
 	}
 	return nil
 }

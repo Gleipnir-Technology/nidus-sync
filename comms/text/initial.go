@@ -23,9 +23,15 @@ func ensureInitialText(ctx context.Context, src string, dst string) error {
 		return nil
 	}
 	content := "Welcome to Report Mosquitoes Online. We received your request and want to confirm text updates. Reply YES to continue. Reply STOP at any time to unsubscribe"
-	err = sendText(ctx, src, dst, content, origin)
+	err = sendText(ctx, src, dst, content, origin, true)
 	if err != nil {
 		return fmt.Errorf("Failed to send initial confirmation: %w", err)
 	}
 	return nil
+}
+
+func SendInitialReprompt(ctx context.Context, src string, dst string) error {
+	content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
+	err := sendText(ctx, src, dst, content, enums.CommsTextoriginLLM, false)
+	return err
 }

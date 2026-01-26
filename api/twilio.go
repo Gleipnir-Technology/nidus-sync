@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go/twiml"
 )
@@ -39,11 +40,9 @@ func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 	to_zip := r.PostFormValue("ToZip")
 	to_country := r.PostFormValue("ToCountry")
 	log.Info().Str("message_sid", message_sid).Str("account_sid", account_sid).Str("messaging_service_sid", messaging_service_sid).Str("from", from).Str("to_", to_).Str("body", body).Str("num_media", num_media).Str("num_segments", num_segments).Str("media_content_type0", media_content_type0).Str("media_url0", media_url0).Str("from_city", from_city).Str("from_state", from_state).Str("from_zip", from_zip).Str("from_country", from_country).Str("to_city", to_city).Str("to_state", to_state).Str("to_zip", to_zip).Str("to_country", to_country).Msg("got text")
-	twiml, _ := twiml.Messages([]twiml.Element{
-		&twiml.MessagingMessage{
-			Body: "Hey there.",
-		},
-	})
+
+	twiml, _ := twiml.Messages([]twiml.Element{})
+	go platform.HandleTextMessage(from, to_, body)
 	w.Header().Set("Content-Type", "text/xml")
 	fmt.Fprintf(w, "%s", twiml)
 }

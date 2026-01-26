@@ -53,7 +53,7 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 		return fmt.Errorf("Failed to check if subscribed: %w", err)
 	}
 	if !sub {
-		err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction)
+		err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction, false)
 		if err != nil {
 			return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
 		}

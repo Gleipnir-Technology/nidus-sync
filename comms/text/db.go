@@ -68,12 +68,13 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 	return nil
 }
 
-func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin) (err error) {
+func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool) (err error) {
 	_, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
 		//ID:
 		Content:     omit.From(content),
 		Created:     omit.From(time.Now()),
 		Destination: omit.From(destination),
+		IsWelcome:   omit.From(is_welcome),
 		Origin:      omit.From(origin),
 		Source:      omit.From(source),
 	}).One(ctx, db.PGInstance.BobDB)

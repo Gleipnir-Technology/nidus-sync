@@ -19,12 +19,12 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
-func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin) error {
+func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool) error {
 	err := ensureInDB(ctx, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	err = insertTextLog(ctx, message, destination, source, origin)
+	err = insertTextLog(ctx, message, destination, source, origin, is_welcome)
 	if err != nil {
 		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
 	}

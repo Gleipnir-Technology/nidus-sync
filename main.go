@@ -16,6 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/public-report"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/go-chi/chi/v5"
@@ -52,6 +53,7 @@ func main() {
 		log.Error().Err(err).Msg("Failed to store text source phone numbers")
 		os.Exit(4)
 	}
+
 	router_logger := log.With().Logger()
 	r := chi.NewRouter()
 
@@ -75,6 +77,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	err = llm.CreateOpenAIClient(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to start openAI client")
+		os.Exit(5)
+	}
 	background.Start(ctx)
 	server := &http.Server{
 		Addr:    config.Bind,
