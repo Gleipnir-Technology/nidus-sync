@@ -3,8 +3,8 @@ package background
 import (
 	"context"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,10 +29,11 @@ func enqueueJobText(job text.Job) {
 
 func startWorkerText(ctx context.Context, channel chan text.Job) {
 	go func() {
+		log.Info().Msg("Text worker started")
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("Email worker shutting down.")
+				log.Info().Msg("Text worker shutting down.")
 				return
 			case job := <-channel:
 				text.Handle(ctx, job)

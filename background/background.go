@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
-	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 )
 
 var waitGroup sync.WaitGroup

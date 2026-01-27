@@ -1,4 +1,4 @@
-package platform
+package text
 
 import (
 	"context"
@@ -21,6 +21,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type E164 = phonenumbers.PhoneNumber
+
 func HandleTextMessage(from string, to string, body string) {
 	ctx := context.Background()
 	type_, src := splitPhoneSource(from)
@@ -30,7 +32,7 @@ func HandleTextMessage(from string, to string, body string) {
 		return
 	}
 
-	_, err = insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false)
+	_, err = insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false, true)
 	if err != nil {
 		log.Error().Err(err).Str("dst", dst).Msg("Failed to add text message log")
 		return
@@ -51,12 +53,7 @@ func HandleTextMessage(from string, to string, body string) {
 			handleWaitingTextJobs(ctx, src)
 		default:
 			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
-			/*err := insertTextLog(ctx, body, src, dst, enums.CommsTextoriginReiteration, false)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to add reiteration to the text log")
-				return
-			}*/
-			err = sendText(ctx, dst, src, content, enums.CommsTextoriginReiteration, false)
+			err = sendText(ctx, dst, src, content, enums.CommsTextoriginReiteration, false, false)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to resend initial prompt.")
 			}
@@ -79,14 +76,7 @@ func HandleTextMessage(from string, to string, body string) {
 		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to generate next message")
 		return
 	}
-	/*
-		err = insertTextLog(ctx, next_message.Content, src, dst, enums.CommsTextoriginLLM, false)
-		if err != nil {
-			log.Error().Err(err).Str("dst", dst).Msg("Failed to insert new text message to the text log")
-			return
-		}
-	*/
-	err = sendText(ctx, src, dst, next_message.Content, enums.CommsTextoriginLLM, false)
+	err = sendText(ctx, dst, src, next_message.Content, enums.CommsTextoriginLLM, false, true)
 	if err != nil {
 		log.Error().Err(err).Str("src", src).Str("dst", dst).Str("content", next_message.Content).Msg("Failed to send response text")
 		return
@@ -94,7 +84,11 @@ func HandleTextMessage(from string, to string, body string) {
 	log.Info().Str("from", from).Str("from-type", type_).Str("to", to).Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
 }
 
-func TextStoreSources() error {
+func ParsePhoneNumber(input string) (*E164, error) {
+	return phonenumbers.Parse(input, "US")
+}
+
+func StoreSources() error {
 	ctx := context.TODO()
 	src := phonenumbers.Format(&config.PhoneNumberReport, phonenumbers.E164)
 	return ensureInDB(ctx, src)
@@ -132,9 +126,32 @@ func delayMessage(ctx context.Context, source string, destination string, conten
 	return nil
 }
 
+func resendInitialText(ctx context.Context, src string, dst string) error {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, dst)
+	if err != nil {
+		return fmt.Errorf("Failed to find phone %s: %w", dst, err)
+	}
+	err = phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
+		IsSubscribed: omitnull.FromPtr[bool](nil),
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to clear subscription on phone %s: %w", dst, err)
+	}
+	return nil
+}
+
+func sendInitialText(ctx context.Context, src string, dst string) error {
+	content := "Welcome to Report Mosquitoes Online. We received your request and want to confirm text updates. Reply YES to continue. Reply STOP at any time to unsubscribe"
+	origin := enums.CommsTextoriginWebsiteAction
+	err := sendText(ctx, src, dst, content, origin, true, true)
+	if err != nil {
+		return fmt.Errorf("Failed to send initial confirmation: %w", err)
+	}
+	return nil
+}
+
 func ensureInitialText(ctx context.Context, src string, dst string) error {
 	//
-	origin := enums.CommsTextoriginWebsiteAction
 	rows, err := models.CommsTextLogs.Query(
 		models.SelectWhere.CommsTextLogs.Destination.EQ(dst),
 		models.SelectWhere.CommsTextLogs.IsWelcome.EQ(true),
@@ -145,12 +162,7 @@ func ensureInitialText(ctx context.Context, src string, dst string) error {
 	if len(rows) > 0 {
 		return nil
 	}
-	content := "Welcome to Report Mosquitoes Online. We received your request and want to confirm text updates. Reply YES to continue. Reply STOP at any time to unsubscribe"
-	err = sendText(ctx, src, dst, content, origin, true)
-	if err != nil {
-		return fmt.Errorf("Failed to send initial confirmation: %w", err)
-	}
-	return nil
+	return sendInitialText(ctx, src, dst)
 }
 
 func ensureInDB(ctx context.Context, destination string) (err error) {
@@ -213,14 +225,14 @@ func handleResetConversation(ctx context.Context, src string, dst string) {
 	if err != nil {
 		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to wipe memory")
 		content := "Failed to wip memory"
-		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false)
+		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
 		if err != nil {
 			log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wipe failure.")
 		}
 		return
 	}
 	content := "LLM memory wiped"
-	err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false)
+	err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
 	if err != nil {
 		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wiped.")
 		return
@@ -228,13 +240,13 @@ func handleResetConversation(ctx context.Context, src string, dst string) {
 	log.Info().Err(err).Str("src", src).Str("dst", dst).Msg("Wiped LLM memory")
 }
 
-func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool) (log *models.CommsTextLog, err error) {
+func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) (log *models.CommsTextLog, err error) {
 	log, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
 		//ID:
 		Content:        omit.From(content),
 		Created:        omit.From(time.Now()),
 		Destination:    omit.From(destination),
-		IsVisibleToLLM: omit.From(true),
+		IsVisibleToLLM: omit.From(is_visible_to_llm),
 		IsWelcome:      omit.From(is_welcome),
 		Origin:         omit.From(origin),
 		Source:         omit.From(source),
@@ -263,7 +275,6 @@ func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Mes
 	if err != nil {
 		return results, fmt.Errorf("Failed to get message history for %s and %s: %w", dst, src, err)
 	}
-	log.Info().Int("count", len(messages)).Str("src", src).Str("dst", dst).Msg("Found previous messages")
 	for _, m := range messages {
 		if m.IsVisibleToLLM {
 			is_from_customer := (m.Source == src)
@@ -276,12 +287,12 @@ func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Mes
 	return results, nil
 }
 
-func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool) error {
+func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) error {
 	err := ensureInDB(ctx, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	log, err := insertTextLog(ctx, message, destination, source, origin, is_welcome)
+	l, err := insertTextLog(ctx, message, destination, source, origin, is_welcome, is_visible_to_llm)
 	if err != nil {
 		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
 	}
@@ -289,10 +300,14 @@ func sendText(ctx context.Context, source string, destination string, message st
 	if err != nil {
 		return fmt.Errorf("Failed to send text message: %w", err)
 	}
-	err = log.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
+	err = l.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
 		TwilioSid:    omitnull.From(sid),
 		TwilioStatus: omit.From("created"),
 	})
+	if err != nil {
+		return fmt.Errorf("Failed to update text Twilio status: %w", err)
+	}
+	log.Info().Int32("id", l.ID).Bool("is_visible_to_llm", is_visible_to_llm).Str("message", message).Msg("inserted text log")
 
 	return nil
 }

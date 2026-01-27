@@ -6,17 +6,10 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
-
-type E164 = phonenumbers.PhoneNumber
-
-func ParsePhoneNumber(input string) (*E164, error) {
-	return phonenumbers.Parse(input, "US")
-}
 
 func SendText(ctx context.Context, source string, destination string, message string) (string, error) {
 	client := twilio.NewRestClient()
@@ -31,11 +24,11 @@ func SendText(ctx context.Context, source string, destination string, message st
 	if err != nil {
 		return "", fmt.Errorf("Failed to create message to %s: %w", destination, err)
 	}
-	//log.Info().Str("dest", destination).Str("sid", *resp.Body).Msg("Text message response")
 	if resp.Sid == nil {
 		log.Warn().Str("src", source).Str("dst", destination).Msg("Text message sid is nil")
 		return "", nil
 	}
+	log.Info().Str("src", source).Str("dst", destination).Str("message", message).Str("sid", *resp.Sid).Msg("Created text message")
 	return *resp.Sid, nil
 }
 

@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"go.mau.fi/util/exzerolog"
+	//"go.mau.fi/util/exzerolog"
 )
 
 type Logger = zerolog.Logger
 
 func linkLogger(logger *zerolog.Logger) {
-	exzerolog.SetupDefaults(logger)
+	//exzerolog.SetupDefaults(logger)
 }
 
 type ZerologWriter struct {
