@@ -368,6 +368,8 @@ func (f *Factory) FromExistingCommsTextLog(m *models.CommsTextLog) *CommsTextLog
 	o.IsWelcome = func() bool { return m.IsWelcome }
 	o.Origin = func() enums.CommsTextorigin { return m.Origin }
 	o.Source = func() string { return m.Source }
+	o.TwilioSid = func() null.Val[string] { return m.TwilioSid }
+	o.TwilioStatus = func() string { return m.TwilioStatus }
 
 	ctx := context.Background()
 	if m.R.DestinationPhone != nil {

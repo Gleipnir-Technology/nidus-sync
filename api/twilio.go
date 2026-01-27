@@ -18,6 +18,7 @@ func twilioStatusPost(w http.ResponseWriter, r *http.Request) {
 	message_sid := r.PostFormValue("MessageSid")
 	message_status := r.PostFormValue("MessageStatus")
 	log.Info().Str("sid", message_sid).Str("status", message_status).Msg("Updated message status")
+	platform.UpdateMessageStatus(message_sid, message_status)
 	fmt.Fprintf(w, "")
 }
 func twilioTextPost(w http.ResponseWriter, r *http.Request) {

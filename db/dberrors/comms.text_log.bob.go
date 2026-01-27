@@ -10,8 +10,17 @@ var CommsTextLogErrors = &commsTextLogErrors{
 		columns: []string{"id"},
 		s:       "text_log_pkey",
 	},
+
+	ErrUniqueTextLogTwilioSidKey: &UniqueConstraintError{
+		schema:  "comms",
+		table:   "text_log",
+		columns: []string{"twilio_sid"},
+		s:       "text_log_twilio_sid_key",
+	},
 }
 
 type commsTextLogErrors struct {
 	ErrUniqueTextLogPkey *UniqueConstraintError
+
+	ErrUniqueTextLogTwilioSidKey *UniqueConstraintError
 }

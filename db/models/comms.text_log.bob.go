@@ -10,7 +10,9 @@ import (
 	"time"
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/bob/dialect/psql/dialect"
@@ -25,13 +27,15 @@ import (
 
 // CommsTextLog is an object representing the database table.
 type CommsTextLog struct {
-	Content     string                `db:"content" `
-	Created     time.Time             `db:"created" `
-	Destination string                `db:"destination" `
-	ID          int32                 `db:"id,pk" `
-	IsWelcome   bool                  `db:"is_welcome" `
-	Origin      enums.CommsTextorigin `db:"origin" `
-	Source      string                `db:"source" `
+	Content      string                `db:"content" `
+	Created      time.Time             `db:"created" `
+	Destination  string                `db:"destination" `
+	ID           int32                 `db:"id,pk" `
+	IsWelcome    bool                  `db:"is_welcome" `
+	Origin       enums.CommsTextorigin `db:"origin" `
+	Source       string                `db:"source" `
+	TwilioSid    null.Val[string]      `db:"twilio_sid" `
+	TwilioStatus string                `db:"twilio_status" `
 
 	R commsTextLogR `db:"-" `
 }
@@ -55,29 +59,33 @@ type commsTextLogR struct {
 func buildCommsTextLogColumns(alias string) commsTextLogColumns {
 	return commsTextLogColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"content", "created", "destination", "id", "is_welcome", "origin", "source",
+			"content", "created", "destination", "id", "is_welcome", "origin", "source", "twilio_sid", "twilio_status",
 		).WithParent("comms.text_log"),
-		tableAlias:  alias,
-		Content:     psql.Quote(alias, "content"),
-		Created:     psql.Quote(alias, "created"),
-		Destination: psql.Quote(alias, "destination"),
-		ID:          psql.Quote(alias, "id"),
-		IsWelcome:   psql.Quote(alias, "is_welcome"),
-		Origin:      psql.Quote(alias, "origin"),
-		Source:      psql.Quote(alias, "source"),
+		tableAlias:   alias,
+		Content:      psql.Quote(alias, "content"),
+		Created:      psql.Quote(alias, "created"),
+		Destination:  psql.Quote(alias, "destination"),
+		ID:           psql.Quote(alias, "id"),
+		IsWelcome:    psql.Quote(alias, "is_welcome"),
+		Origin:       psql.Quote(alias, "origin"),
+		Source:       psql.Quote(alias, "source"),
+		TwilioSid:    psql.Quote(alias, "twilio_sid"),
+		TwilioStatus: psql.Quote(alias, "twilio_status"),
 	}
 }
 
 type commsTextLogColumns struct {
 	expr.ColumnsExpr
-	tableAlias  string
-	Content     psql.Expression
-	Created     psql.Expression
-	Destination psql.Expression
-	ID          psql.Expression
-	IsWelcome   psql.Expression
-	Origin      psql.Expression
-	Source      psql.Expression
+	tableAlias   string
+	Content      psql.Expression
+	Created      psql.Expression
+	Destination  psql.Expression
+	ID           psql.Expression
+	IsWelcome    psql.Expression
+	Origin       psql.Expression
+	Source       psql.Expression
+	TwilioSid    psql.Expression
+	TwilioStatus psql.Expression
 }
 
 func (c commsTextLogColumns) Alias() string {
@@ -92,17 +100,19 @@ func (commsTextLogColumns) AliasedAs(alias string) commsTextLogColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsTextLogSetter struct {
-	Content     omit.Val[string]                `db:"content" `
-	Created     omit.Val[time.Time]             `db:"created" `
-	Destination omit.Val[string]                `db:"destination" `
-	ID          omit.Val[int32]                 `db:"id,pk" `
-	IsWelcome   omit.Val[bool]                  `db:"is_welcome" `
-	Origin      omit.Val[enums.CommsTextorigin] `db:"origin" `
-	Source      omit.Val[string]                `db:"source" `
+	Content      omit.Val[string]                `db:"content" `
+	Created      omit.Val[time.Time]             `db:"created" `
+	Destination  omit.Val[string]                `db:"destination" `
+	ID           omit.Val[int32]                 `db:"id,pk" `
+	IsWelcome    omit.Val[bool]                  `db:"is_welcome" `
+	Origin       omit.Val[enums.CommsTextorigin] `db:"origin" `
+	Source       omit.Val[string]                `db:"source" `
+	TwilioSid    omitnull.Val[string]            `db:"twilio_sid" `
+	TwilioStatus omit.Val[string]                `db:"twilio_status" `
 }
 
 func (s CommsTextLogSetter) SetColumns() []string {
-	vals := make([]string, 0, 7)
+	vals := make([]string, 0, 9)
 	if s.Content.IsValue() {
 		vals = append(vals, "content")
 	}
@@ -123,6 +133,12 @@ func (s CommsTextLogSetter) SetColumns() []string {
 	}
 	if s.Source.IsValue() {
 		vals = append(vals, "source")
+	}
+	if !s.TwilioSid.IsUnset() {
+		vals = append(vals, "twilio_sid")
+	}
+	if s.TwilioStatus.IsValue() {
+		vals = append(vals, "twilio_status")
 	}
 	return vals
 }
@@ -149,6 +165,12 @@ func (s CommsTextLogSetter) Overwrite(t *CommsTextLog) {
 	if s.Source.IsValue() {
 		t.Source = s.Source.MustGet()
 	}
+	if !s.TwilioSid.IsUnset() {
+		t.TwilioSid = s.TwilioSid.MustGetNull()
+	}
+	if s.TwilioStatus.IsValue() {
+		t.TwilioStatus = s.TwilioStatus.MustGet()
+	}
 }
 
 func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
@@ -157,7 +179,7 @@ func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 7)
+		vals := make([]bob.Expression, 9)
 		if s.Content.IsValue() {
 			vals[0] = psql.Arg(s.Content.MustGet())
 		} else {
@@ -200,6 +222,18 @@ func (s *CommsTextLogSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
+		if !s.TwilioSid.IsUnset() {
+			vals[7] = psql.Arg(s.TwilioSid.MustGetNull())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
+		}
+
+		if s.TwilioStatus.IsValue() {
+			vals[8] = psql.Arg(s.TwilioStatus.MustGet())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -209,7 +243,7 @@ func (s CommsTextLogSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 7)
+	exprs := make([]bob.Expression, 0, 9)
 
 	if s.Content.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -257,6 +291,20 @@ func (s CommsTextLogSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source")...),
 			psql.Arg(s.Source),
+		}})
+	}
+
+	if !s.TwilioSid.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "twilio_sid")...),
+			psql.Arg(s.TwilioSid),
+		}})
+	}
+
+	if s.TwilioStatus.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "twilio_status")...),
+			psql.Arg(s.TwilioStatus),
 		}})
 	}
 
@@ -631,13 +679,15 @@ func (commsTextLog0 *CommsTextLog) AttachSourcePhone(ctx context.Context, exec b
 }
 
 type commsTextLogWhere[Q psql.Filterable] struct {
-	Content     psql.WhereMod[Q, string]
-	Created     psql.WhereMod[Q, time.Time]
-	Destination psql.WhereMod[Q, string]
-	ID          psql.WhereMod[Q, int32]
-	IsWelcome   psql.WhereMod[Q, bool]
-	Origin      psql.WhereMod[Q, enums.CommsTextorigin]
-	Source      psql.WhereMod[Q, string]
+	Content      psql.WhereMod[Q, string]
+	Created      psql.WhereMod[Q, time.Time]
+	Destination  psql.WhereMod[Q, string]
+	ID           psql.WhereMod[Q, int32]
+	IsWelcome    psql.WhereMod[Q, bool]
+	Origin       psql.WhereMod[Q, enums.CommsTextorigin]
+	Source       psql.WhereMod[Q, string]
+	TwilioSid    psql.WhereNullMod[Q, string]
+	TwilioStatus psql.WhereMod[Q, string]
 }
 
 func (commsTextLogWhere[Q]) AliasedAs(alias string) commsTextLogWhere[Q] {
@@ -646,13 +696,15 @@ func (commsTextLogWhere[Q]) AliasedAs(alias string) commsTextLogWhere[Q] {
 
 func buildCommsTextLogWhere[Q psql.Filterable](cols commsTextLogColumns) commsTextLogWhere[Q] {
 	return commsTextLogWhere[Q]{
-		Content:     psql.Where[Q, string](cols.Content),
-		Created:     psql.Where[Q, time.Time](cols.Created),
-		Destination: psql.Where[Q, string](cols.Destination),
-		ID:          psql.Where[Q, int32](cols.ID),
-		IsWelcome:   psql.Where[Q, bool](cols.IsWelcome),
-		Origin:      psql.Where[Q, enums.CommsTextorigin](cols.Origin),
-		Source:      psql.Where[Q, string](cols.Source),
+		Content:      psql.Where[Q, string](cols.Content),
+		Created:      psql.Where[Q, time.Time](cols.Created),
+		Destination:  psql.Where[Q, string](cols.Destination),
+		ID:           psql.Where[Q, int32](cols.ID),
+		IsWelcome:    psql.Where[Q, bool](cols.IsWelcome),
+		Origin:       psql.Where[Q, enums.CommsTextorigin](cols.Origin),
+		Source:       psql.Where[Q, string](cols.Source),
+		TwilioSid:    psql.WhereNull[Q, string](cols.TwilioSid),
+		TwilioStatus: psql.Where[Q, string](cols.TwilioStatus),
 	}
 }
 

@@ -19,12 +19,97 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func HandleTextMessage(from string, to string, body string) {
+	ctx := context.Background()
+	type_, src := splitPhoneSource(from)
+	dst, err := getDst(ctx, to)
+	if err != nil {
+		log.Error().Err(err).Str("to", to).Msg("Failed to get dst")
+		return
+	}
+
+	_, err = insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false)
+	if err != nil {
+		log.Error().Err(err).Str("dst", dst).Msg("Failed to add text message log")
+		return
+	}
+	subscribed, err := isSubscribed(ctx, src)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to handle message")
+		return
+	}
+	// We don't know if they're subscribed or not.
+	if subscribed == nil {
+		body_l := strings.TrimSpace(strings.ToLower(body))
+		switch body_l {
+		case "stop":
+			setSubscribed(ctx, src, false)
+		case "yes":
+			setSubscribed(ctx, src, true)
+			handleWaitingTextJobs(ctx, src)
+		default:
+			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
+			/*err := insertTextLog(ctx, body, src, dst, enums.CommsTextoriginReiteration, false)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to add reiteration to the text log")
+				return
+			}*/
+			err = sendText(ctx, src, dst, content, enums.CommsTextoriginReiteration, false)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to resend initial prompt.")
+			}
+		}
+		return
+	}
+	previous_messages, err := loadPreviousMessages(ctx, dst, src)
+	if err != nil {
+		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to get previous messages")
+		return
+	}
+	log.Info().Int("len", len(previous_messages)).Msg("passing")
+	next_message, err := llm.GenerateNextMessage(ctx, previous_messages, src)
+	if err != nil {
+		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to generate next message")
+		return
+	}
+	/*
+		err = insertTextLog(ctx, next_message.Content, src, dst, enums.CommsTextoriginLLM, false)
+		if err != nil {
+			log.Error().Err(err).Str("dst", dst).Msg("Failed to insert new text message to the text log")
+			return
+		}
+	*/
+	err = sendText(ctx, dst, src, next_message.Content, enums.CommsTextoriginLLM, false)
+	if err != nil {
+		log.Error().Err(err).Str("src", src).Str("dst", dst).Str("content", next_message.Content).Msg("Failed to send response text")
+		return
+	}
+	log.Info().Str("from", from).Str("from-type", type_).Str("to", to).Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
+}
+
 func TextStoreSources() error {
 	ctx := context.TODO()
 	src := phonenumbers.Format(&config.PhoneNumberReport, phonenumbers.E164)
 	return ensureInDB(ctx, src)
 }
 
+func UpdateMessageStatus(twilio_sid string, status string) {
+	ctx := context.TODO()
+	l, err := models.CommsTextLogs.Query(
+		models.SelectWhere.CommsTextLogs.TwilioSid.EQ(twilio_sid),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Str("twilio_sid", twilio_sid).Str("status", status).Msg("Failed to update message status query failed")
+		return
+	}
+	err = l.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
+		TwilioStatus: omit.From(status),
+	})
+	if err != nil {
+		log.Error().Err(err).Str("twilio_sid", twilio_sid).Str("status", status).Msg("Failed to update message status update failed")
+		return
+	}
+}
 func delayMessage(ctx context.Context, source string, destination string, content string, type_ enums.CommsTextjobtype) error {
 	job, err := models.CommsTextJobs.Insert(&models.CommsTextJobSetter{
 		Content:     omit.From(content),
@@ -81,20 +166,6 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 	return nil
 }
 
-func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool) (err error) {
-	_, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
-		//ID:
-		Content:     omit.From(content),
-		Created:     omit.From(time.Now()),
-		Destination: omit.From(destination),
-		IsWelcome:   omit.From(is_welcome),
-		Origin:      omit.From(origin),
-		Source:      omit.From(source),
-	}).One(ctx, db.PGInstance.BobDB)
-
-	return err
-}
-
 // Translate from Twilio's representation of a RCS message sender to our concept of a phone number
 // From: rcs:dev_report_mosquitoes_online_dosrvwxm_agent
 // To: +16235525879
@@ -111,6 +182,39 @@ func getDst(ctx context.Context, to string) (string, error) {
 		return phone.E164, nil
 	*/
 	return "", fmt.Errorf("Cannot match phone number to '%s'", to)
+}
+
+func handleWaitingTextJobs(ctx context.Context, src string) {
+	log.Info().Str("src", src).Msg("Pretend handle waiting jobs")
+
+}
+
+func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool) (log *models.CommsTextLog, err error) {
+	log, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
+		//ID:
+		Content:      omit.From(content),
+		Created:      omit.From(time.Now()),
+		Destination:  omit.From(destination),
+		IsWelcome:    omit.From(is_welcome),
+		Origin:       omit.From(origin),
+		Source:       omit.From(source),
+		TwilioSid:    omitnull.FromPtr[string](nil),
+		TwilioStatus: omit.From(""),
+	}).One(ctx, db.PGInstance.BobDB)
+
+	return log, err
+}
+
+func isSubscribed(ctx context.Context, src string) (*bool, error) {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
+	}
+	if phone.IsSubscribed.IsNull() {
+		return nil, nil
+	}
+	result := phone.IsSubscribed.MustGet()
+	return &result, nil
 }
 
 func loadPreviousMessages(ctx context.Context, dst, src string) ([]llm.Message, error) {
@@ -135,11 +239,19 @@ func sendText(ctx context.Context, source string, destination string, message st
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	err = insertTextLog(ctx, message, destination, source, origin, is_welcome)
+	log, err := insertTextLog(ctx, message, destination, source, origin, is_welcome)
 	if err != nil {
 		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
 	}
-	err = text.SendText(ctx, source, destination, message)
+	sid, err := text.SendText(ctx, source, destination, message)
+	if err != nil {
+		return fmt.Errorf("Failed to send text message: %w", err)
+	}
+	err = log.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
+		TwilioSid:    omitnull.From(sid),
+		TwilioStatus: omit.From("created"),
+	})
+
 	return nil
 }
 
@@ -159,18 +271,6 @@ func splitPhoneSource(s string) (string, string) {
 
 }
 
-func isSubscribed(ctx context.Context, src string) (*bool, error) {
-	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
-	}
-	if phone.IsSubscribed.IsNull() {
-		return nil, nil
-	}
-	result := phone.IsSubscribed.MustGet()
-	return &result, nil
-}
-
 func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
 	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
 	if err != nil {
@@ -181,58 +281,4 @@ func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
 	})
 	log.Info().Str("src", src).Bool("is_subscribed", is_subscribed).Msg("Set number subscribed")
 	return nil
-}
-
-func handleWaitingTextJobs(ctx context.Context, src string) {
-	log.Info().Str("src", src).Msg("Pretend handle waiting jobs")
-
-}
-func HandleTextMessage(from string, to string, body string) {
-	ctx := context.Background()
-	type_, src := splitPhoneSource(from)
-	dst, err := getDst(ctx, to)
-	if err != nil {
-		log.Error().Err(err).Str("to", to).Msg("Failed to get dst")
-		return
-	}
-	subscribed, err := isSubscribed(ctx, src)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to handle message")
-		return
-	}
-	// We don't know if they're subscribed or not.
-	if subscribed == nil {
-		body_l := strings.TrimSpace(strings.ToLower(body))
-		switch body_l {
-		case "stop":
-			setSubscribed(ctx, src, false)
-		case "yes":
-			setSubscribed(ctx, src, true)
-			handleWaitingTextJobs(ctx, src)
-		default:
-			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
-			err := text.SendText(ctx, src, dst, content)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to resend initial prompt.")
-			}
-		}
-		return
-	}
-	previous_messages, err := loadPreviousMessages(ctx, dst, src)
-	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to get previous messages")
-		return
-	}
-	current := llm.Message{
-		Content:        body,
-		IsFromCustomer: true,
-	}
-	log.Info().Int("len", len(previous_messages)).Msg("passing")
-	next_message, err := llm.GenerateNextMessage(previous_messages, current)
-	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to generate next message")
-		return
-	}
-	text.SendTextFromLLM(next_message.Content)
-	log.Info().Str("from", from).Str("from-type", type_).Str("to", to).Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handling text message")
 }

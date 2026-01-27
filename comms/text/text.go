@@ -18,7 +18,7 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
-func SendText(ctx context.Context, source string, destination string, message string) error {
+func SendText(ctx context.Context, source string, destination string, message string) (string, error) {
 	client := twilio.NewRestClient()
 
 	params := &twilioApi.CreateMessageParams{}
@@ -29,15 +29,14 @@ func SendText(ctx context.Context, source string, destination string, message st
 	resp, err := client.Api.CreateMessage(params)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create message to %s: %w", destination, err)
-	} else {
-		if resp.Body != nil {
-			log.Info().Str("dest", destination).Str("body", *resp.Body).Msg("Text message response")
-		} else {
-			log.Info().Str("dest", destination).Msg("Text message response is nil")
-		}
+		return "", fmt.Errorf("Failed to create message to %s: %w", destination, err)
 	}
-	return nil
+	//log.Info().Str("dest", destination).Str("sid", *resp.Body).Msg("Text message response")
+	if resp.Sid == nil {
+		log.Warn().Str("src", source).Str("dst", destination).Msg("Text message sid is nil")
+		return "", nil
+	}
+	return *resp.Sid, nil
 }
 
 func sendSMS(destination, source, message string) error {

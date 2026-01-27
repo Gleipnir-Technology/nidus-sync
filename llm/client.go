@@ -1,7 +1,9 @@
 package llm
 
 import (
-	"github.com/rs/zerolog/log"
+	"context"
+	"fmt"
+	//"github.com/rs/zerolog/log"
 )
 
 type Message struct {
@@ -9,14 +11,10 @@ type Message struct {
 	IsFromCustomer bool
 }
 
-func GenerateNextMessage(history []Message, current Message) (Message, error) {
-	// In general our history
-	for i, msg := range history {
-		log.Info().Int("i", i).Bool("is_customer", msg.IsFromCustomer).Msg("History")
+func GenerateNextMessage(ctx context.Context, history []Message, customer_phone string) (Message, error) {
+	next, err := client.continueConversation(ctx, history, customer_phone)
+	if err != nil {
+		return Message{}, fmt.Errorf("Failed to generate next message: %w", err)
 	}
-
-	return Message{
-		Content:        "hey there. :)",
-		IsFromCustomer: false,
-	}, nil
+	return next, nil
 }

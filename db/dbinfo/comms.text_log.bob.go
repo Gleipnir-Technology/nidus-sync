@@ -78,6 +78,24 @@ var CommsTextLogs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		TwilioSid: column{
+			Name:      "twilio_sid",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TwilioStatus: column{
+			Name:      "twilio_status",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: commsTextLogIndexes{
 		TextLogPkey: index{
@@ -86,6 +104,23 @@ var CommsTextLogs = Table[
 			Columns: []indexColumn{
 				{
 					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		TextLogTwilioSidKey: index{
+			Type: "btree",
+			Name: "text_log_twilio_sid_key",
+			Columns: []indexColumn{
+				{
+					Name:         "twilio_sid",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -123,33 +158,43 @@ var CommsTextLogs = Table[
 			ForeignColumns: []string{"e164"},
 		},
 	},
+	Uniques: commsTextLogUniques{
+		TextLogTwilioSidKey: constraint{
+			Name:    "text_log_twilio_sid_key",
+			Columns: []string{"twilio_sid"},
+			Comment: "",
+		},
+	},
 
 	Comment: "Used to track text messages that were sent.",
 }
 
 type commsTextLogColumns struct {
-	Content     column
-	Created     column
-	Destination column
-	ID          column
-	IsWelcome   column
-	Origin      column
-	Source      column
+	Content      column
+	Created      column
+	Destination  column
+	ID           column
+	IsWelcome    column
+	Origin       column
+	Source       column
+	TwilioSid    column
+	TwilioStatus column
 }
 
 func (c commsTextLogColumns) AsSlice() []column {
 	return []column{
-		c.Content, c.Created, c.Destination, c.ID, c.IsWelcome, c.Origin, c.Source,
+		c.Content, c.Created, c.Destination, c.ID, c.IsWelcome, c.Origin, c.Source, c.TwilioSid, c.TwilioStatus,
 	}
 }
 
 type commsTextLogIndexes struct {
-	TextLogPkey index
+	TextLogPkey         index
+	TextLogTwilioSidKey index
 }
 
 func (i commsTextLogIndexes) AsSlice() []index {
 	return []index{
-		i.TextLogPkey,
+		i.TextLogPkey, i.TextLogTwilioSidKey,
 	}
 }
 
@@ -164,10 +209,14 @@ func (f commsTextLogForeignKeys) AsSlice() []foreignKey {
 	}
 }
 
-type commsTextLogUniques struct{}
+type commsTextLogUniques struct {
+	TextLogTwilioSidKey constraint
+}
 
 func (u commsTextLogUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.TextLogTwilioSidKey,
+	}
 }
 
 type commsTextLogChecks struct{}

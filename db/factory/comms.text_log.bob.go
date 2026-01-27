@@ -10,7 +10,9 @@ import (
 
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 	"github.com/stephenafamo/bob"
 )
@@ -36,13 +38,15 @@ func (mods CommsTextLogModSlice) Apply(ctx context.Context, n *CommsTextLogTempl
 // CommsTextLogTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type CommsTextLogTemplate struct {
-	Content     func() string
-	Created     func() time.Time
-	Destination func() string
-	ID          func() int32
-	IsWelcome   func() bool
-	Origin      func() enums.CommsTextorigin
-	Source      func() string
+	Content      func() string
+	Created      func() time.Time
+	Destination  func() string
+	ID           func() int32
+	IsWelcome    func() bool
+	Origin       func() enums.CommsTextorigin
+	Source       func() string
+	TwilioSid    func() null.Val[string]
+	TwilioStatus func() string
 
 	r commsTextLogR
 	f *Factory
@@ -120,6 +124,14 @@ func (o CommsTextLogTemplate) BuildSetter() *models.CommsTextLogSetter {
 		val := o.Source()
 		m.Source = omit.From(val)
 	}
+	if o.TwilioSid != nil {
+		val := o.TwilioSid()
+		m.TwilioSid = omitnull.FromNull(val)
+	}
+	if o.TwilioStatus != nil {
+		val := o.TwilioStatus()
+		m.TwilioStatus = omit.From(val)
+	}
 
 	return m
 }
@@ -162,6 +174,12 @@ func (o CommsTextLogTemplate) Build() *models.CommsTextLog {
 	}
 	if o.Source != nil {
 		m.Source = o.Source()
+	}
+	if o.TwilioSid != nil {
+		m.TwilioSid = o.TwilioSid()
+	}
+	if o.TwilioStatus != nil {
+		m.TwilioStatus = o.TwilioStatus()
 	}
 
 	o.setModelRels(m)
@@ -206,6 +224,10 @@ func ensureCreatableCommsTextLog(m *models.CommsTextLogSetter) {
 	if !(m.Source.IsValue()) {
 		val := random_string(nil)
 		m.Source = omit.From(val)
+	}
+	if !(m.TwilioStatus.IsValue()) {
+		val := random_string(nil)
+		m.TwilioStatus = omit.From(val)
 	}
 }
 
@@ -351,6 +373,8 @@ func (m commsTextLogMods) RandomizeAllColumns(f *faker.Faker) CommsTextLogMod {
 		CommsTextLogMods.RandomIsWelcome(f),
 		CommsTextLogMods.RandomOrigin(f),
 		CommsTextLogMods.RandomSource(f),
+		CommsTextLogMods.RandomTwilioSid(f),
+		CommsTextLogMods.RandomTwilioStatus(f),
 	}
 }
 
@@ -566,6 +590,90 @@ func (m commsTextLogMods) UnsetSource() CommsTextLogMod {
 func (m commsTextLogMods) RandomSource(f *faker.Faker) CommsTextLogMod {
 	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
 		o.Source = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsTextLogMods) TwilioSid(val null.Val[string]) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioSid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextLogMods) TwilioSidFunc(f func() null.Val[string]) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioSid = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextLogMods) UnsetTwilioSid() CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioSid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m commsTextLogMods) RandomTwilioSid(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioSid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m commsTextLogMods) RandomTwilioSidNotNull(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioSid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsTextLogMods) TwilioStatus(val string) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioStatus = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextLogMods) TwilioStatusFunc(f func() string) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioStatus = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextLogMods) UnsetTwilioStatus() CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioStatus = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsTextLogMods) RandomTwilioStatus(f *faker.Faker) CommsTextLogMod {
+	return CommsTextLogModFunc(func(_ context.Context, o *CommsTextLogTemplate) {
+		o.TwilioStatus = func() string {
 			return random_string(f)
 		}
 	})

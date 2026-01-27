@@ -4,28 +4,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/maruel/genai"
 	"github.com/maruel/genai/adapters"
 	"github.com/maruel/genai/providers/openaichat"
 	"github.com/rs/zerolog/log"
 )
-
-type openAIClient struct {
-	client        *openaichat.Client
-	conversations map[string][]genai.Message
-	log           *Logger
-}
-
-var client *openAIClient
-
-type AIRequest struct {
-	Displayname string
-	Message     string
-	Sender      string
-	Timestamp   time.Time
-}
 
 func CreateOpenAIClient(ctx context.Context) error {
 	logger := createLogger()
@@ -45,131 +29,73 @@ func CreateOpenAIClient(ctx context.Context) error {
 	return nil
 }
 
-func (c *openAIClient) continueConversation(ctx context.Context, req AIRequest) error {
-	msgs, ok := c.conversations["roomid"]
-	if !ok {
-		msgs = genai.Messages{
-			c.startConversation(ctx, req),
-		}
-	} else {
-		msgs = append(msgs, genai.NewTextMessage(fmt.Sprintf("(%s) user: %s\nbot: ", req.Timestamp.String(), req.Message)))
-	}
+type openAIClient struct {
+	client        *openaichat.Client
+	conversations map[string][]genai.Message
+	log           *Logger
+}
 
-	c.log.Debug().Msg("Generating response...")
+type QueryReportStatusInput struct {
+	ReportID string `json:"report_id"`
+}
+
+var client *openAIClient
+
+func (c *openAIClient) continueConversation(ctx context.Context, history []Message, customer_phone string) (Message, error) {
 	opts := genai.OptionsTools{
 		Tools: []genai.ToolDef{
 			{
-				Name:        "followup_timer",
-				Description: "This should be used to indicate that the bot should follow up with the user in the future to check on task progress.",
-				Callback: func(ctx2 context.Context, input *FollowupTimerInput) (string, error) {
-					return c.followupSchedule(ctx2, req, input)
-				},
-			}, {
-				Name:        "switch_task",
-				Description: "Any time the user indicates they change tasks this must be called to update the record of what tasks are being done.",
-				Callback: func(ctx2 context.Context, input *SwitchTaskInput) (string, error) {
-					return c.switchTask(ctx2, req, input)
+				Name:        "query_report_status",
+				Description: "This is used to answer any questions about the current state of the mosquito nuisance report.",
+				Callback: func(ctx2 context.Context, input *QueryReportStatusInput) (string, error) {
+					return c.queryReportStatus(ctx2, customer_phone)
 				},
 			},
 		},
 	}
 
-	res, _, err := adapters.GenSyncWithToolCallLoop(ctx, c.client, msgs, &opts)
+	msg := c.convertHistory(history)
+	res, _, err := adapters.GenSyncWithToolCallLoop(ctx, c.client, genai.Messages{msg}, &opts)
 	if err != nil {
-		return fmt.Errorf("Failed to continue conversation: %v", err)
+		return Message{}, fmt.Errorf("Failed to continue conversation: %v", err)
 	}
 
 	for _, m := range res {
-		msgs = append(msgs, m)
 		// Empty responses are tool call related.
 		if m.String() == "" {
+			log.Debug().Msg("Tool called")
 		} else {
-			//c.log.Info().Str("room", req.RoomID.String()).Msg(m.String())
 			var toSay string = m.String()
-			toSay = strings.Replace(toSay, "bot: ", "", 1)
-			log.Info().Str("to say", toSay).Msg("Responding")
-			/*c.aiResponseChannel <- AIResponse{
-				Message: toSay,
-				RoomID:  req.RoomID,
-			}*/
+			toSay = strings.Replace(toSay, "report-mosquitoes-online: ", "", 1)
+			return Message{
+				Content:        toSay,
+				IsFromCustomer: false,
+			}, nil
 		}
 	}
-	//c.conversations[req.RoomID.String()] = msgs
 
-	return nil
+	return Message{}, nil
 }
 
-type FollowupTimerInput struct {
-	DelayInSeconds int64 `json:"delay_in_seconds"`
-}
-
-func (c *openAIClient) followupFire(ctx context.Context, req AIRequest, duration time.Duration) {
-	if err := ctx.Err(); err != nil {
-		//c.log.Info().Str("room", req.RoomID.String()).Msg("Context canceled")
-		return
+func (c *openAIClient) convertHistory(history []Message) genai.Message {
+	var sb strings.Builder
+	sb.WriteString(
+		`This is a text chat conversation between a customer that's a member of the public and a mosquito abatement district.
+		The customer has reported a mosquito nuisance or mosquito breeding through the website report.mosquitoes.online.
+		Messages from the customer are prefixed with 'customer:' and reponses from the service agent servicing the request are prefixed with 'agent:'.
+		The agent wants to provide clear, confident, and succint information about the state of the customer's request. The agent also provides general information about how members of the public can help with controlling mosquitoes. For complex or highly specific requests, the agent will need to defer to the mosquito abatement district. This will take some time because contacting the district may take a few hours to get a response. When the agent needs to contact the district, the agent should tell the customer they are reaching out to the district and to expect a delay.
+		Transcript starts:`,
+	)
+	for _, h := range history {
+		if h.IsFromCustomer {
+			sb.WriteString(fmt.Sprintf("\n\ncustomer (%s): %s\n", h.Content))
+		} else {
+			sb.WriteString(fmt.Sprintf("\n\nagent (%s): %s\n", h.Content))
+		}
 	}
-	msgs, ok := c.conversations["roomid"]
-	if !ok {
-		//c.log.Warn().Str("room", req.RoomID.String()).Str("elapsed", duration.String()).Msg("No messages for room")
-		return
-	}
-	msgs = append(msgs, genai.NewTextMessage(fmt.Sprintf("<%s passed>", duration.String())))
-	res, err := c.client.GenSync(ctx, msgs)
-	if err != nil {
-		//c.log.Error().Str("room", req.RoomID.String()).Err(err).Msg("Failed to continue after timer")
-		return
-	}
-	msgs = append(msgs, res.Message)
-	var toSay string = res.String()
-	toSay = strings.Replace(toSay, "bot: ", "", 1)
-	log.Info().Str("to say", toSay).Msg("To say")
-	/*c.aiResponseChannel <- AIResponse{
-		Message: toSay,
-		RoomID:  req.RoomID,
-	}
-	c.conversations[req.RoomID.String()] = msgs
-	*/
+	return genai.NewTextMessage(sb.String())
 }
 
-func (c *openAIClient) followupSchedule(ctx context.Context, req AIRequest, input *FollowupTimerInput) (string, error) {
-	//c.log.Info().Str("room", req.RoomID.String()).Int64("delay", input.DelayInSeconds).Msg("Followup timer scheduled.")
-	duration, err := time.ParseDuration(fmt.Sprintf("%ds", input.DelayInSeconds))
-	if err != nil {
-		return "", fmt.Errorf("Failed to parse %d as a valid duration: %v", input.DelayInSeconds, err)
-	}
-	/*c.aiResponseChannel <- AIResponse{
-		Message: fmt.Sprintf("⌛ followup scheduled '%s'", duration.String()),
-		RoomID:  req.RoomID,
-	}*/
-	time.AfterFunc(duration, func() {
-		c.followupFire(ctx, req, duration)
-	})
-	return fmt.Sprintf("Followup timer set for %s in the future", duration.String()), nil
-}
-
-type SwitchTaskInput struct {
-	TaskName string `json:"task_name"`
-}
-
-func (c *openAIClient) switchTask(ctx context.Context, req AIRequest, input *SwitchTaskInput) (string, error) {
-	//c.log.Info().Str("room", req.RoomID.String()).Str("task", input.TaskName).Msg("Task Switched")
-	/*c.aiResponseChannel <- AIResponse{
-		Message: fmt.Sprintf("📋 notes task '%s'", input.TaskName),
-		RoomID:  req.RoomID,
-	}*/
-
-	return fmt.Sprintf("Recorded a switch to task %s at %s", input.TaskName, time.Now().String()), nil
-}
-
-func (c *openAIClient) startConversation(ctx context.Context, req AIRequest) genai.Message {
-	return genai.NewTextMessage(fmt.Sprintf(
-		`This is a text chat conversation between an employee and a chatbot helping to manage timecards.
-		The user's name is '%[1]s'.
-		Messages from the user will start with '(timestamp) %[1]s:'.
-		Messages from the bot will start with 'bot:'.
-		Sometimes the user won't say anything for a long time and the chatbot needs to follow-up with them.
-		When time passes, there will be a prompt like '<200s passed>'.
-		The bot should then prompt the user to provide a bit of information about what they've been working on during that time.
-		The bot should be interested to know what the user's goals are at a high level and should pay attention to any difficulties or frustrations the user experiences.\n\n
-		(%[2]s) user: %[3]s\nbot:`, req.Displayname, req.Timestamp.String(), req.Message))
+func (c *openAIClient) queryReportStatus(ctx context.Context, customer_phone string) (string, error) {
+	return "Report is scheduled for work in 3 days at 2:00pm by the district", nil
 }

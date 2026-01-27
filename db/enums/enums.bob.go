@@ -347,6 +347,8 @@ const (
 	CommsTextoriginDistrict      CommsTextorigin = "district"
 	CommsTextoriginLLM           CommsTextorigin = "llm"
 	CommsTextoriginWebsiteAction CommsTextorigin = "website-action"
+	CommsTextoriginCustomer      CommsTextorigin = "customer"
+	CommsTextoriginReiteration   CommsTextorigin = "reiteration"
 )
 
 func AllCommsTextorigin() []CommsTextorigin {
@@ -354,6 +356,8 @@ func AllCommsTextorigin() []CommsTextorigin {
 		CommsTextoriginDistrict,
 		CommsTextoriginLLM,
 		CommsTextoriginWebsiteAction,
+		CommsTextoriginCustomer,
+		CommsTextoriginReiteration,
 	}
 }
 
@@ -367,7 +371,9 @@ func (e CommsTextorigin) Valid() bool {
 	switch e {
 	case CommsTextoriginDistrict,
 		CommsTextoriginLLM,
-		CommsTextoriginWebsiteAction:
+		CommsTextoriginWebsiteAction,
+		CommsTextoriginCustomer,
+		CommsTextoriginReiteration:
 		return true
 	default:
 		return false
