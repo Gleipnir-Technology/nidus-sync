@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/maruel/genai"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type Message struct {
@@ -45,6 +45,14 @@ func GenerateNextMessage(ctx context.Context, history []Message, _handle_report_
 	if err != nil {
 		return Message{}, fmt.Errorf("Failed to generate next message: %w", err)
 	}
+	trimmed, found := strings.CutPrefix(next.Content, "agent:")
+	if !found {
+		trimmed, found = strings.CutPrefix(next.Content, "Agent:")
+		if !found {
+			log.Warn().Str("content", next.Content).Msg("No 'agent:' prefix on next message")
+		}
+	}
+	next.Content = trimmed
 
 	return next, nil
 }
@@ -63,9 +71,9 @@ func convertHistory(history []Message) genai.Message {
 	)
 	for _, h := range history {
 		if h.IsFromCustomer {
-			sb.WriteString(fmt.Sprintf("\n\ncustomer (%s): %s\n", h.Content))
+			sb.WriteString(fmt.Sprintf("\n\ncustomer: %s\n", h.Content))
 		} else {
-			sb.WriteString(fmt.Sprintf("\n\nagent (%s): %s\n", h.Content))
+			sb.WriteString(fmt.Sprintf("\n\nagent: %s\n", h.Content))
 		}
 	}
 	return genai.NewTextMessage(sb.String())

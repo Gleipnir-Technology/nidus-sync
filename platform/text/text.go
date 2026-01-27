@@ -187,7 +187,7 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 
 func generateNextMessage(ctx context.Context, history []llm.Message, customer_phone string) (llm.Message, error) {
 	_handle_report_status := func() (string, error) {
-		return "Report: ABCD-1234-5678, Status: scheduled, Appointment: Wednesday 3:30pm", nil
+		return "Report: ABCD-1234-5678, District: Delta MVCD, Status: scheduled, Appointment: Wednesday 3:30pm", nil
 	}
 	_handle_contact_district := func(reason string) {
 		log.Warn().Str("reason", reason).Msg("Contacting district")
