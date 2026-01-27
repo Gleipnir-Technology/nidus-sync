@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 func convertToPGData(data map[string]string) pgtypes.HStore {

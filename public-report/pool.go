@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -13,9 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/um"
 )
 
 type ContextPool struct {

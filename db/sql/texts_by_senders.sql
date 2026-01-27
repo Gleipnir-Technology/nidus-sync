@@ -5,6 +5,7 @@ SELECT
     created,
     source,
     destination,
+    is_visible_to_llm,
     is_welcome,
     origin
 FROM 

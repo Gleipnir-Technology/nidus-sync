@@ -22,6 +22,10 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -33,10 +37,6 @@ import (
 	"github.com/alitto/pond/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/dm"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
-	"github.com/stephenafamo/bob/dialect/psql/um"
 )
 
 var syncStatusByOrg map[int32]bool

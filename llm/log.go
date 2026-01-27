@@ -3,7 +3,6 @@ package llm
 import (
 	"log"
 	"strings"
-	"time"
 
 	"github.com/rs/zerolog"
 	"go.mau.fi/util/exzerolog"
@@ -11,14 +10,8 @@ import (
 
 type Logger = zerolog.Logger
 
-func createLogger() *Logger {
-	l := zerolog.New(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-		//w.Out = io.Writer(buf)
-		w.TimeFormat = time.Stamp
-	})).With().Timestamp().Logger()
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	exzerolog.SetupDefaults(&l)
-	return &l
+func linkLogger(logger *zerolog.Logger) {
+	exzerolog.SetupDefaults(logger)
 }
 
 type ZerologWriter struct {

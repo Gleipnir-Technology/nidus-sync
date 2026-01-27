@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -16,7 +17,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/uber/h3-go/v4"
 )
 

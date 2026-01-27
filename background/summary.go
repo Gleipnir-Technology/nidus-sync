@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/dialect"
-	"github.com/stephenafamo/bob/dialect/psql/dm"
-	"github.com/stephenafamo/bob/dialect/psql/im"
 	"github.com/uber/h3-go/v4"
 )
 

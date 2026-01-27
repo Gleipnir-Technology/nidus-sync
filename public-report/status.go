@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -14,9 +17,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
 	"github.com/stephenafamo/scan"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db"

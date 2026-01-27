@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -38,9 +40,9 @@ func HandleTextMessage(from string, to string, body string) {
 		log.Error().Err(err).Msg("Failed to handle message")
 		return
 	}
+	body_l := strings.TrimSpace(strings.ToLower(body))
 	// We don't know if they're subscribed or not.
 	if subscribed == nil {
-		body_l := strings.TrimSpace(strings.ToLower(body))
 		switch body_l {
 		case "stop":
 			setSubscribed(ctx, src, false)
@@ -54,20 +56,25 @@ func HandleTextMessage(from string, to string, body string) {
 				log.Error().Err(err).Msg("Failed to add reiteration to the text log")
 				return
 			}*/
-			err = sendText(ctx, src, dst, content, enums.CommsTextoriginReiteration, false)
+			err = sendText(ctx, dst, src, content, enums.CommsTextoriginReiteration, false)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to resend initial prompt.")
 			}
 		}
 		return
 	}
-	previous_messages, err := loadPreviousMessages(ctx, dst, src)
+	// If we get the super-special "reset conversation" then wipe the LLM's memory
+	if body_l == "reset conversation" {
+		handleResetConversation(ctx, src, dst)
+		return
+	}
+	previous_messages, err := loadPreviousMessagesForLLM(ctx, dst, src)
 	if err != nil {
 		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to get previous messages")
 		return
 	}
 	log.Info().Int("len", len(previous_messages)).Msg("passing")
-	next_message, err := llm.GenerateNextMessage(ctx, previous_messages, src)
+	next_message, err := generateNextMessage(ctx, previous_messages, src)
 	if err != nil {
 		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to generate next message")
 		return
@@ -79,7 +86,7 @@ func HandleTextMessage(from string, to string, body string) {
 			return
 		}
 	*/
-	err = sendText(ctx, dst, src, next_message.Content, enums.CommsTextoriginLLM, false)
+	err = sendText(ctx, src, dst, next_message.Content, enums.CommsTextoriginLLM, false)
 	if err != nil {
 		log.Error().Err(err).Str("src", src).Str("dst", dst).Str("content", next_message.Content).Msg("Failed to send response text")
 		return
@@ -166,6 +173,19 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 	return nil
 }
 
+func generateNextMessage(ctx context.Context, history []llm.Message, customer_phone string) (llm.Message, error) {
+	_handle_report_status := func() (string, error) {
+		return "Report: ABCD-1234-5678, Status: scheduled, Appointment: Wednesday 3:30pm", nil
+	}
+	_handle_contact_district := func(reason string) {
+		log.Warn().Str("reason", reason).Msg("Contacting district")
+	}
+	_handle_contact_supervisor := func(reason string) {
+		log.Warn().Str("reason", reason).Msg("Contacting supervisor")
+	}
+	return llm.GenerateNextMessage(ctx, history, _handle_report_status, _handle_contact_district, _handle_contact_supervisor)
+}
+
 // Translate from Twilio's representation of a RCS message sender to our concept of a phone number
 // From: rcs:dev_report_mosquitoes_online_dosrvwxm_agent
 // To: +16235525879
@@ -188,18 +208,38 @@ func handleWaitingTextJobs(ctx context.Context, src string) {
 	log.Info().Str("src", src).Msg("Pretend handle waiting jobs")
 
 }
+func handleResetConversation(ctx context.Context, src string, dst string) {
+	err := wipeLLMMemory(ctx, src, dst)
+	if err != nil {
+		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to wipe memory")
+		content := "Failed to wip memory"
+		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false)
+		if err != nil {
+			log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wipe failure.")
+		}
+		return
+	}
+	content := "LLM memory wiped"
+	err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false)
+	if err != nil {
+		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wiped.")
+		return
+	}
+	log.Info().Err(err).Str("src", src).Str("dst", dst).Msg("Wiped LLM memory")
+}
 
 func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool) (log *models.CommsTextLog, err error) {
 	log, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
 		//ID:
-		Content:      omit.From(content),
-		Created:      omit.From(time.Now()),
-		Destination:  omit.From(destination),
-		IsWelcome:    omit.From(is_welcome),
-		Origin:       omit.From(origin),
-		Source:       omit.From(source),
-		TwilioSid:    omitnull.FromPtr[string](nil),
-		TwilioStatus: omit.From(""),
+		Content:        omit.From(content),
+		Created:        omit.From(time.Now()),
+		Destination:    omit.From(destination),
+		IsVisibleToLLM: omit.From(true),
+		IsWelcome:      omit.From(is_welcome),
+		Origin:         omit.From(origin),
+		Source:         omit.From(source),
+		TwilioSid:      omitnull.FromPtr[string](nil),
+		TwilioStatus:   omit.From(""),
 	}).One(ctx, db.PGInstance.BobDB)
 
 	return log, err
@@ -217,7 +257,7 @@ func isSubscribed(ctx context.Context, src string) (*bool, error) {
 	return &result, nil
 }
 
-func loadPreviousMessages(ctx context.Context, dst, src string) ([]llm.Message, error) {
+func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Message, error) {
 	messages, err := sql.TextsBySenders(dst, src).All(ctx, db.PGInstance.BobDB)
 	results := make([]llm.Message, 0)
 	if err != nil {
@@ -225,11 +265,13 @@ func loadPreviousMessages(ctx context.Context, dst, src string) ([]llm.Message, 
 	}
 	log.Info().Int("count", len(messages)).Str("src", src).Str("dst", dst).Msg("Found previous messages")
 	for _, m := range messages {
-		is_from_customer := (m.Source == src)
-		results = append(results, llm.Message{
-			IsFromCustomer: is_from_customer,
-			Content:        m.Content,
-		})
+		if m.IsVisibleToLLM {
+			is_from_customer := (m.Source == src)
+			results = append(results, llm.Message{
+				IsFromCustomer: is_from_customer,
+				Content:        m.Content,
+			})
+		}
 	}
 	return results, nil
 }
@@ -280,5 +322,27 @@ func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
 		IsSubscribed: omitnull.From(is_subscribed),
 	})
 	log.Info().Str("src", src).Bool("is_subscribed", is_subscribed).Msg("Set number subscribed")
+	return nil
+}
+
+func wipeLLMMemory(ctx context.Context, src string, dst string) error {
+	rows, err := sql.TextsBySenders(dst, src).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to query for texts: %w", err)
+	}
+	ids := make([]int32, 0)
+	for _, r := range rows {
+		ids = append(ids, r.ID)
+	}
+	_, err = models.CommsTextLogs.Update(
+		um.Where(
+			models.CommsTextLogs.Columns.ID.EQ(psql.Any(ids)),
+		),
+		um.SetCol("is_visible_to_llm").ToArg(false),
+	).Exec(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to update texts: %w", err)
+	}
+
 	return nil
 }

@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	//"github.com/stephenafamo/bob"
-	//"github.com/stephenafamo/bob/dialect/psql"
+	//"github.com/Gleipnir-Technology/bob"
+	//"github.com/Gleipnir-Technology/bob/dialect/psql"
 )
 
 type QueryWriter interface {

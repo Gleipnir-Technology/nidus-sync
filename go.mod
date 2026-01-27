@@ -4,6 +4,7 @@ go 1.24.9
 
 require (
 	github.com/Gleipnir-Technology/arcgis-go v0.0.6
+	github.com/Gleipnir-Technology/bob v0.42.5
 	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
@@ -24,7 +25,6 @@ require (
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/shopspring/decimal v1.4.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	github.com/stephenafamo/bob v0.42.0
 	github.com/stephenafamo/scan v0.7.0
 	github.com/tidwall/geojson v1.4.5
 	github.com/twilio/twilio-go v1.29.1
@@ -81,3 +81,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+// replace github.com/stephenafamo/bob v0.42.0 => ../bob

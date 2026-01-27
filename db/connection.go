@@ -11,12 +11,12 @@ import (
 
 	//"github.com/georgysavva/scany/v2/pgxscan"
 	//"github.com/jackc/pgx/v5"
+	"github.com/Gleipnir-Technology/bob"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
 )
 
 //go:embed migrations/*.sql

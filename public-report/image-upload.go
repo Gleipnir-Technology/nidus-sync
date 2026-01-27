@@ -13,6 +13,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
@@ -20,9 +23,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/rwcarlsen/goexif/exif"
-	"github.com/stephenafamo/bob"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/um"
 	//exif "github.com/rwcarlsen/goexif/exif"
 	//"github.com/dsoprea/go-exif-extra/format"
 )

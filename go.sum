@@ -4,6 +4,8 @@ github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 h1:UQHMgLO+TxOEl
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Gleipnir-Technology/arcgis-go v0.0.6 h1:h21+ijW5NNAgRoBn2ktJwfmbgFX6f/CdlUojB4xQCWo=
 github.com/Gleipnir-Technology/arcgis-go v0.0.6/go.mod h1:Stx2sn5Lvuyhy4SaTQpbLNCAfenboDINi/UU5gQvz4k=
+github.com/Gleipnir-Technology/bob v0.42.5 h1:fm4vH48E7scLwMFSJ4fX3+q2wSo+6Iphh+yVIrMgatE=
+github.com/Gleipnir-Technology/bob v0.42.5/go.mod h1:cjUNiSRIMBsk94NQQrpYoraCe0WxIc04C8A+PcJ5z8Q=
 github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0 h1:6OMVxoiX9r7dEkIyYYKtSu7I2UDq64dww4JxJTo3p78=
 github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0/go.mod h1:W77HoRoEXUWAc24AbDHIaSH2U4vJNWgNRpEuySXzqDs=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=

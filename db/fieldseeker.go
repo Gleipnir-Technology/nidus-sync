@@ -5,14 +5,14 @@ import (
 	"fmt"
 
 	fslayer "github.com/Gleipnir-Technology/arcgis-go/fieldseeker/layer"
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/gofrs/uuid/v5"
 	googleuuid "github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob"
-	"github.com/stephenafamo/bob/dialect/psql"
 	"github.com/stephenafamo/scan"
 )
 

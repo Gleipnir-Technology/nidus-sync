@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob/types/pgtypes"
 )
 
 func convertToPGData(data map[string]string) pgtypes.HStore {

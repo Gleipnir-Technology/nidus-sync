@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/sm"
 )
 
 func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.ImportDistrict, *models.Organization, error) {

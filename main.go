@@ -77,7 +77,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = llm.CreateOpenAIClient(ctx)
+	openai_logger := log.With().Logger()
+	err = llm.CreateOpenAIClient(ctx, &openai_logger)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start openAI client")
 		os.Exit(5)
