@@ -54,19 +54,14 @@ func Router() chi.Router {
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)
-	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Get("/signup", getSignup)
 	r.Post("/signup", postSignup)
-	r.Get("/sms", getSMS)
-	r.Post("/sms", postSMS)
-	r.Get("/sms.php", getSMS)
-	r.Get("/sms/{org}", getSMS)
-	r.Post("/sms/{org}", postSMS)
 
 	// Authenticated endpoints
 	r.Route("/api", api.AddRoutes)
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
+	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
 

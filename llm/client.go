@@ -67,7 +67,7 @@ func convertHistory(history []Message) genai.Message {
 		The agent rarely asks questions, preferring to just answer direct queries.
 		For complex or highly specific requests, the agent will need to defer to the mosquito abatement district. This will take some time because contacting the district may take a few hours to get a response. When the agent needs to contact the district, the agent should tell the customer they are reaching out to the district and to expect a delay.
 		When conversations start to veer away from the agent's job they should contact a supervisor.
-		Transcript starts:`,
+		Transcript:\n`,
 	)
 	for _, h := range history {
 		if h.IsFromCustomer {
