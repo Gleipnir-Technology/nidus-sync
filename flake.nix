@@ -20,10 +20,12 @@
                                 devShells.default = pkgs.mkShell {
                                         buildInputs = [
 						pkgs.air
+						pkgs.autoprefixer
                                                 pkgs.go
                                                 pkgs.goose
                                                 pkgs.gotools
                                                 pkgs.lefthook
+						pkgs.sass
                                         ];
                                 };
                         }

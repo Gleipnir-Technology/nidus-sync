@@ -13,6 +13,16 @@ nix develop
 go build .
 ```
 
+## Building Custom Theme
+
+We're using a customized Bootstrap theme for this site. You'll need to build the SCSS into CSS:
+
+```
+nix develop
+cd scss
+scss custom.scss > ../htmlpage/static/css/bootstrap.css
+```
+
 ## Running
 
 You'll need a number of environment variables for configuring things;
