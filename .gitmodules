@@ -4,6 +4,3 @@
 [submodule "go-geojson2h3"]
 	path = go-geojson2h3
 	url = git@github.com:Gleipnir-Technology/go-geojson2h3.git
-[submodule "bootstrap"]
-	path = bootstrap
-	url = https://github.com/twbs/bootstrap.git

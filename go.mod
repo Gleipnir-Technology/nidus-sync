@@ -18,6 +18,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jaswdr/faker/v2 v2.8.1
 	github.com/lib/pq v1.10.9
+	github.com/maruel/genai v0.0.0-20251221000642-77279d1194c1
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/nyaruka/phonenumbers v1.6.8
 	github.com/pressly/goose/v3 v3.26.0
@@ -50,7 +51,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/mailru/easyjson v0.9.1 // indirect
-	github.com/maruel/genai v0.0.0-20251221000642-77279d1194c1 // indirect
 	github.com/maruel/httpjson v0.5.0 // indirect
 	github.com/maruel/roundtrippers v0.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -71,7 +71,6 @@ require (
 	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
-	go.mau.fi/util v0.9.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.49.0 // indirect
@@ -81,4 +80,5 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob

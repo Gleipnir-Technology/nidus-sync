@@ -1,4 +1,5 @@
 nidus-sync
 htmlpage/static/css/bootstrap.css
-scss/.sass-cache/
+htmlpage/static/css/bootstrap.css.map
+.sass-cache/
 tmp/
