@@ -22,12 +22,13 @@ import (
 
 // Authenticated pages
 var (
-	cellT      = buildTemplate("cell", "authenticated")
-	dashboardT = buildTemplate("dashboard", "authenticated")
-	districtT  = buildTemplate("district", "base")
-	settingsT  = buildTemplate("settings", "authenticated")
-	sourceT    = buildTemplate("source", "authenticated")
-	trapT      = buildTemplate("trap", "authenticated")
+	cellT       = buildTemplate("cell", "authenticated")
+	dashboardT  = buildTemplate("dashboard", "authenticated")
+	districtT   = buildTemplate("district", "base")
+	layoutTestT = buildTemplate("layout-test", "authenticated")
+	settingsT   = buildTemplate("settings", "authenticated")
+	sourceT     = buildTemplate("source", "authenticated")
+	trapT       = buildTemplate("trap", "authenticated")
 )
 
 type Config struct {
@@ -71,6 +72,9 @@ type ContextDashboard struct {
 	User                 User
 }
 
+type ContentLayoutTest struct {
+	User User
+}
 type ContextDistrict struct {
 	MapboxToken string
 }
@@ -94,6 +98,15 @@ func getDistrict(w http.ResponseWriter, r *http.Request) {
 		MapboxToken: config.MapboxToken,
 	}
 	htmlpage.RenderOrError(w, districtT, &context)
+}
+
+func getLayoutTest(w http.ResponseWriter, r *http.Request, u *models.User) {
+	userContent, err := contentForUser(r.Context(), u)
+	if err != nil {
+		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
+		return
+	}
+	htmlpage.RenderOrError(w, layoutTestT, &ContentLayoutTest{User: userContent})
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {

@@ -8,15 +8,123 @@
 	<link href="/static/vendor/css/bootstrap.min.css" rel="stylesheet">
 	<!-- Fontawesome Icons -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+	<!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 	<!-- favicon -->
 	<link rel="icon" href="/static/favicon.ico" type="image/x-icon"/>
+	<style>
+        body {
+            min-height: 100vh;
+        }
+        
+        #sidebar {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            transition: all 0.3s;
+            width: 250px;
+            position: fixed;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        #sidebar.collapsed {
+            width: 70px;
+            padding: 20px 10px;
+        }
+        
+        #content {
+            transition: all 0.3s;
+            margin-left: 250px;
+            width: calc(100% - 250px);
+        }
+        
+        #content.expanded {
+            margin-left: 70px;
+            width: calc(100% - 70px);
+        }
+        
+        .sidebar-header {
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar-menu li {
+            padding: 10px 0;
+        }
+        
+        .sidebar-menu li a {
+            text-decoration: none;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .sidebar-menu li a:hover {
+            color: #007bff;
+        }
+        
+        .sidebar-menu .menu-icon {
+            font-size: 1.2rem;
+            min-width: 30px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .sidebar-menu .menu-text {
+            transition: opacity 0.3s;
+        }
+        
+        #sidebar.collapsed .menu-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+        }
+        
+        #sidebar.collapsed .sidebar-header h4 {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        #sidebar.collapsed .sidebar-menu .menu-icon {
+            min-width: 100%;
+            font-size: 1.5rem;
+        }
+        
+        #sidebarToggle i {
+            transition: transform 0.3s;
+        }
+        
+        #sidebar.collapsed + #content #sidebarToggle i {
+            transform: rotate(180deg);
+        }
+    </style>
 	{{block "extraheader" .}} {{end}}
 </head>
 <body>
-{{if .User}}
-	{{template "header" .User}}
-{{end}}
+{{template "icons"}}
+<div class="d-flex">
+	{{if .User}}
+		{{template "sidebar" .User}}
+	{{end}}
+</div>
+
 {{template "content" .}}
 <script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
+<script>
+	document.getElementById('sidebarToggle').addEventListener('click', function() {
+		document.getElementById('sidebar').classList.toggle('collapsed');
+		document.getElementById('content').classList.toggle('expanded');
+	});
+</script>
 </body>
 </html>

@@ -12,7 +12,7 @@ import (
 //go:embed template/*
 var embeddedFiles embed.FS
 
-var components = [...]string{"header", "map"}
+var components = [...]string{"header", "icons", "map", "sidebar"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	subdir := "sync"

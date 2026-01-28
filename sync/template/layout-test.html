@@ -1,0 +1,50 @@
+{{template "authenticated.html" . }}
+{{define "title"}}Layout Test{{end}}
+{{define "extraheader"}}
+{{end}}
+{{define "content"}}
+<!-- Main Content -->
+        <div id="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm">
+                <div class="container-fluid">
+                    <button id="sidebarToggle" class="btn btn-outline-secondary">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <span class="navbar-brand ms-3">My Application</span>
+                </div>
+            </nav>
+            
+            <div class="container-fluid">
+                <div class="row mb-4">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Welcome to the Dashboard</h5>
+                                <p class="card-text">This is an example of a Bootstrap layout with a collapsible sidebar.</p>
+                                <p>The sidebar can be toggled using the button in the navigation bar. When the sidebar collapses, only the icons remain visible.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Card 1</h5>
+                                <p class="card-text">Some example content for the first card.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Card 2</h5>
+                                <p class="card-text">Some example content for the second card.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{{end}}

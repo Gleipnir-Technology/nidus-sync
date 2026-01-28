@@ -60,6 +60,7 @@ func Router() chi.Router {
 	// Authenticated endpoints
 	r.Route("/api", api.AddRoutes)
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
+	r.Method("GET", "/layout-test", auth.NewEnsureAuth(getLayoutTest))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
