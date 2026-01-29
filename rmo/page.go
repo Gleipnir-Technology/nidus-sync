@@ -1,4 +1,4 @@
-package publicreport
+package rmo
 
 import (
 	"embed"
@@ -14,7 +14,7 @@ var components = [...]string{"footer", "header", "photo-upload", "photo-upload-h
 var svgs = [...]string{"check-report", "mosquito", "pond"}
 
 func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
-	subdir := "public-report"
+	subdir := "rmo"
 	full_files := make([]string, 0)
 	for _, f := range files {
 		full_files = append(full_files, fmt.Sprintf("%s/template/%s.html", subdir, f))
@@ -25,5 +25,5 @@ func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	for _, c := range svgs {
 		full_files = append(full_files, fmt.Sprintf("%s/template/svg/%s.svg", subdir, c))
 	}
-	return htmlpage.NewBuiltTemplate(embeddedFiles, "public-report/", full_files...)
+	return htmlpage.NewBuiltTemplate(embeddedFiles, "rmo/", full_files...)
 }

@@ -1,4 +1,4 @@
-package publicreport
+package rmo
 
 import (
 	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"

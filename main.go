@@ -17,7 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
-	"github.com/Gleipnir-Technology/nidus-sync/public-report"
+	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -105,9 +105,9 @@ func main() {
 
 	// Set up routing by hostname
 	sr := nidussync.Router()
-	hr.Map("", sr)                                  // default
-	hr.Map("*", sr)                                 // default
-	hr.Map(config.DomainRMO, publicreport.Router()) // report.mosquitoes.online
+	hr.Map("", sr)                         // default
+	hr.Map("*", sr)                        // default
+	hr.Map(config.DomainRMO, rmo.Router()) // report.mosquitoes.online
 	hr.Map(config.DomainNidus, sr)
 	r.Mount("/", hr)
 
