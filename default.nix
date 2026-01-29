@@ -9,7 +9,7 @@ pkgs.buildGoModule rec {
         subPackages = [];
         version = "0.0.11";
         # Needs to be updated after every modification of go.mod/go.sum
-        vendorHash = "sha256-8OxBra5YoqaFXj5oZEZfoCS4Om8rWkP1WD99eT9UjMg=";
+        vendorHash = "sha256-aaJnH258H1LkXvb22rR3Clg7fKzA/HSmBZUkh1E8jKI=";
 
 	nativeBuildInputs = [ pkgs.sass ];
 

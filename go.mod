@@ -10,6 +10,8 @@ require (
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alitto/pond/v2 v2.5.0
+	github.com/getsentry/sentry-go v0.42.0
+	github.com/getsentry/sentry-go/zerolog v0.42.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/hostrouter v0.3.0
 	github.com/go-chi/render v1.0.3
@@ -40,8 +42,6 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/getsentry/sentry-go v0.42.0 // indirect
-	github.com/getsentry/sentry-go/zerolog v0.42.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
