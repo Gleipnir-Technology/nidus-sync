@@ -1,22 +1,25 @@
 package api
 
 import (
+	"io"
+	"net/http"
 	"os"
 
 	"github.com/rs/zerolog/log"
 )
 
-func debugSaveRequest(body []byte, err error, message string) {
-	// TODO(eliribble): avoid using a single static filename and instead securely generate
-	// this value
+func debugSaveRequest(r *http.Request) {
+	tmpFile, err := os.CreateTemp("/tmp", "request-*.data")
 	if err != nil {
-		log.Error().Err(err).Msg(message)
+		log.Error().Err(err).Msg("failed to create temp file for debugSaveRequest")
+		return
 	}
-	output, err := os.OpenFile("/tmp/request.body", os.O_RDWR|os.O_CREATE, 0666)
+	defer tmpFile.Close()
+
+	_, err = io.Copy(tmpFile, r.Body)
 	if err != nil {
-		log.Info().Msg("Failed to open temp request.bady")
+		log.Error().Err(err).Msg("failed to copy request body in debugSaveRequest")
+		return
 	}
-	defer output.Close()
-	output.Write(body)
-	log.Info().Msg("Wrote request to /tmp/request.body")
+	log.Info().Str("filename", tmpFile.Name()).Msg("Saved request body")
 }

@@ -31,10 +31,14 @@ var (
 	PhoneNumberSupport         phonenumbers.PhoneNumber
 	PhoneNumberSupportStr      string
 	SentryDSN                  string
+	TextProvider               string
 	TwilioAuthToken            string
 	TwilioAccountSID           string
 	TwilioMessagingServiceSID  string
 	TwilioRCSSenderRMO         string
+	VoipMSNumber               string
+	VoipMSPassword             string
+	VoipMSUsername             string
 )
 
 func IsProductionEnvironment() bool {
@@ -156,6 +160,16 @@ func Parse() (err error) {
 	if SentryDSN == "" {
 		return fmt.Errorf("You must specify a non-empty SENTRY_DSN")
 	}
+	TextProvider = os.Getenv("TEXT_PROVIDER")
+	switch TextProvider {
+	case "":
+		return fmt.Errorf("You must specify a non-empty TEXT_PROVIDER")
+	case "twilio":
+	case "voipms":
+		break
+	default:
+		return fmt.Errorf("Unrecognized text provider '%s'", TextProvider)
+	}
 	TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
 	if TwilioAccountSID == "" {
 		return fmt.Errorf("You must specify a non-empty TWILIO_ACCOUNT_SID")
@@ -171,6 +185,18 @@ func Parse() (err error) {
 	TwilioRCSSenderRMO = os.Getenv("TWILIO_RCS_SENDER_RMO")
 	if TwilioRCSSenderRMO == "" {
 		return fmt.Errorf("You must specify a non-empty TWILIO_RCS_SENDER_RMO")
+	}
+	VoipMSNumber = os.Getenv("VOIPMS_NUMBER")
+	if VoipMSNumber == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_NUMBER")
+	}
+	VoipMSPassword = os.Getenv("VOIPMS_PASSWORD")
+	if VoipMSPassword == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_PASSWORD")
+	}
+	VoipMSUsername = os.Getenv("VOIPMS_USERNAME")
+	if VoipMSPassword == "" {
+		return fmt.Errorf("You must specify a non-empty VOIPMS_USERNAME")
 	}
 	return nil
 }

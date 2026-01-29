@@ -39,7 +39,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		debugSaveRequest(body, err, "Audio note POST JSON decode error")
+		//debugSaveRequest(body, err, "Audio note POST JSON decode error")
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
@@ -136,7 +136,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
-		debugSaveRequest(body, err, "Image note POST JSON decode error")
+		//debugSaveRequest(body, err, "Image note POST JSON decode error")
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}

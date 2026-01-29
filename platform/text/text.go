@@ -46,8 +46,6 @@ func HandleTextMessage(from string, to string, body string) {
 	// We don't know if they're subscribed or not.
 	if subscribed == nil {
 		switch body_l {
-		case "stop":
-			setSubscribed(ctx, src, false)
 		case "yes":
 			setSubscribed(ctx, src, true)
 			handleWaitingTextJobs(ctx, src)
@@ -60,10 +58,19 @@ func HandleTextMessage(from string, to string, body string) {
 		}
 		return
 	}
-	// If we get the super-special "reset conversation" then wipe the LLM's memory
-	if body_l == "reset conversation" {
+	switch body_l {
+	case "stop":
+		content := "You have successfully been unsubscribed. You will not receive any more messages from this number. Reply START to resubscribe."
+		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to send unsubscribe acknowledgement.")
+		}
+		setSubscribed(ctx, src, false)
+		return
+	case "reset conversation":
 		handleResetConversation(ctx, src, dst)
 		return
+	default:
 	}
 	previous_messages, err := loadPreviousMessagesForLLM(ctx, dst, src)
 	if err != nil {
@@ -90,8 +97,13 @@ func ParsePhoneNumber(input string) (*E164, error) {
 
 func StoreSources() error {
 	ctx := context.TODO()
-	src := phonenumbers.Format(&config.PhoneNumberReport, phonenumbers.E164)
-	return ensureInDB(ctx, src)
+	for _, n := range []string{config.PhoneNumberReportStr, config.PhoneNumberSupportStr, config.VoipMSNumber} {
+		err := ensureInDB(ctx, n)
+		if err != nil {
+			return fmt.Errorf("Failed to add number '%s' to DB: %w", n, err)
+		}
+	}
+	return nil
 }
 
 func UpdateMessageStatus(twilio_sid string, status string) {

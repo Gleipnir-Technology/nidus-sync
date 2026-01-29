@@ -28,6 +28,8 @@ func AddRoutes(r chi.Router) {
 	r.Post("/twilio/message", twilioMessagePost)
 	r.Post("/twilio/text", twilioTextPost)
 	r.Post("/twilio/text/status", twilioTextStatusPost)
+	r.Get("/voipms/text", voipmsTextGet)
+	r.Post("/voipms/text", voipmsTextPost)
 	r.Get("/webhook/fieldseeker", webhookFieldseeker)
 	r.Post("/webhook/fieldseeker", webhookFieldseeker)
 }
