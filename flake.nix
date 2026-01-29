@@ -26,6 +26,7 @@
                                                 pkgs.gotools
                                                 pkgs.lefthook
 						pkgs.sass
+						pkgs.watchexec
                                         ];
                                 };
                         }

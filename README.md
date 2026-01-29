@@ -84,3 +84,11 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 > GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose down
 > GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose up
 ```
+
+### watchexec
+
+For iterating on styles
+
+```
+watchexec -e *.scss sass --style=compressed scss/custom.scss:htmlpage/static/css/bootstrap.css
+```
