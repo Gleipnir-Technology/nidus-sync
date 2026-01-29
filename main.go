@@ -38,7 +38,7 @@ func main() {
 	log.Info().Msg("Starting...")
 
 	err = sentry.Init(sentry.ClientOptions{
-		Debug:            !config.IsProductionEnvironment(),
+		Debug:            false, //!config.IsProductionEnvironment(),
 		Dsn:              config.SentryDSN,
 		EnableTracing:    true,
 		SendDefaultPII:   true,
