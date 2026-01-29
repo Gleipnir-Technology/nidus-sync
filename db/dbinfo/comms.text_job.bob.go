@@ -60,6 +60,24 @@ var CommsTextJobs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Source: column{
+			Name:      "source",
+			DBType:    "comms.textjobsource",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Completed: column{
+			Name:      "completed",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: commsTextJobIndexes{
 		TextJobPkey: index{
@@ -106,11 +124,13 @@ type commsTextJobColumns struct {
 	Destination column
 	ID          column
 	Type        column
+	Source      column
+	Completed   column
 }
 
 func (c commsTextJobColumns) AsSlice() []column {
 	return []column{
-		c.Content, c.Created, c.Destination, c.ID, c.Type,
+		c.Content, c.Created, c.Destination, c.ID, c.Type, c.Source, c.Completed,
 	}
 }
 

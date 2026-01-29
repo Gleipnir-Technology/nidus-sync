@@ -20,16 +20,20 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // CommsTextJob is an object representing the database table.
 type CommsTextJob struct {
-	Content     string                 `db:"content" `
-	Created     time.Time              `db:"created" `
-	Destination string                 `db:"destination" `
-	ID          int32                  `db:"id,pk" `
-	Type        enums.CommsTextjobtype `db:"type_" `
+	Content     string                   `db:"content" `
+	Created     time.Time                `db:"created" `
+	Destination string                   `db:"destination" `
+	ID          int32                    `db:"id,pk" `
+	Type        enums.CommsTextjobtype   `db:"type_" `
+	Source      enums.CommsTextjobsource `db:"source" `
+	Completed   null.Val[time.Time]      `db:"completed" `
 
 	R commsTextJobR `db:"-" `
 }
@@ -52,7 +56,7 @@ type commsTextJobR struct {
 func buildCommsTextJobColumns(alias string) commsTextJobColumns {
 	return commsTextJobColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"content", "created", "destination", "id", "type_",
+			"content", "created", "destination", "id", "type_", "source", "completed",
 		).WithParent("comms.text_job"),
 		tableAlias:  alias,
 		Content:     psql.Quote(alias, "content"),
@@ -60,6 +64,8 @@ func buildCommsTextJobColumns(alias string) commsTextJobColumns {
 		Destination: psql.Quote(alias, "destination"),
 		ID:          psql.Quote(alias, "id"),
 		Type:        psql.Quote(alias, "type_"),
+		Source:      psql.Quote(alias, "source"),
+		Completed:   psql.Quote(alias, "completed"),
 	}
 }
 
@@ -71,6 +77,8 @@ type commsTextJobColumns struct {
 	Destination psql.Expression
 	ID          psql.Expression
 	Type        psql.Expression
+	Source      psql.Expression
+	Completed   psql.Expression
 }
 
 func (c commsTextJobColumns) Alias() string {
@@ -85,15 +93,17 @@ func (commsTextJobColumns) AliasedAs(alias string) commsTextJobColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsTextJobSetter struct {
-	Content     omit.Val[string]                 `db:"content" `
-	Created     omit.Val[time.Time]              `db:"created" `
-	Destination omit.Val[string]                 `db:"destination" `
-	ID          omit.Val[int32]                  `db:"id,pk" `
-	Type        omit.Val[enums.CommsTextjobtype] `db:"type_" `
+	Content     omit.Val[string]                   `db:"content" `
+	Created     omit.Val[time.Time]                `db:"created" `
+	Destination omit.Val[string]                   `db:"destination" `
+	ID          omit.Val[int32]                    `db:"id,pk" `
+	Type        omit.Val[enums.CommsTextjobtype]   `db:"type_" `
+	Source      omit.Val[enums.CommsTextjobsource] `db:"source" `
+	Completed   omitnull.Val[time.Time]            `db:"completed" `
 }
 
 func (s CommsTextJobSetter) SetColumns() []string {
-	vals := make([]string, 0, 5)
+	vals := make([]string, 0, 7)
 	if s.Content.IsValue() {
 		vals = append(vals, "content")
 	}
@@ -108,6 +118,12 @@ func (s CommsTextJobSetter) SetColumns() []string {
 	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type_")
+	}
+	if s.Source.IsValue() {
+		vals = append(vals, "source")
+	}
+	if !s.Completed.IsUnset() {
+		vals = append(vals, "completed")
 	}
 	return vals
 }
@@ -128,6 +144,12 @@ func (s CommsTextJobSetter) Overwrite(t *CommsTextJob) {
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
 	}
+	if s.Source.IsValue() {
+		t.Source = s.Source.MustGet()
+	}
+	if !s.Completed.IsUnset() {
+		t.Completed = s.Completed.MustGetNull()
+	}
 }
 
 func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
@@ -136,7 +158,7 @@ func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 5)
+		vals := make([]bob.Expression, 7)
 		if s.Content.IsValue() {
 			vals[0] = psql.Arg(s.Content.MustGet())
 		} else {
@@ -167,6 +189,18 @@ func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
+		if s.Source.IsValue() {
+			vals[5] = psql.Arg(s.Source.MustGet())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
+		}
+
+		if !s.Completed.IsUnset() {
+			vals[6] = psql.Arg(s.Completed.MustGetNull())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -176,7 +210,7 @@ func (s CommsTextJobSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsTextJobSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 5)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.Content.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -210,6 +244,20 @@ func (s CommsTextJobSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "type_")...),
 			psql.Arg(s.Type),
+		}})
+	}
+
+	if s.Source.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source")...),
+			psql.Arg(s.Source),
+		}})
+	}
+
+	if !s.Completed.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "completed")...),
+			psql.Arg(s.Completed),
 		}})
 	}
 
@@ -517,6 +565,8 @@ type commsTextJobWhere[Q psql.Filterable] struct {
 	Destination psql.WhereMod[Q, string]
 	ID          psql.WhereMod[Q, int32]
 	Type        psql.WhereMod[Q, enums.CommsTextjobtype]
+	Source      psql.WhereMod[Q, enums.CommsTextjobsource]
+	Completed   psql.WhereNullMod[Q, time.Time]
 }
 
 func (commsTextJobWhere[Q]) AliasedAs(alias string) commsTextJobWhere[Q] {
@@ -530,6 +580,8 @@ func buildCommsTextJobWhere[Q psql.Filterable](cols commsTextJobColumns) commsTe
 		Destination: psql.Where[Q, string](cols.Destination),
 		ID:          psql.Where[Q, int32](cols.ID),
 		Type:        psql.Where[Q, enums.CommsTextjobtype](cols.Type),
+		Source:      psql.Where[Q, enums.CommsTextjobsource](cols.Source),
+		Completed:   psql.WhereNull[Q, time.Time](cols.Completed),
 	}
 }
 

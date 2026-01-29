@@ -272,6 +272,79 @@ func (e *CommsMessagetypeemail) Scan(value any) error {
 	return nil
 }
 
+// Enum values for CommsTextjobsource
+const (
+	CommsTextjobsourceRmo   CommsTextjobsource = "rmo"
+	CommsTextjobsourceNidus CommsTextjobsource = "nidus"
+)
+
+func AllCommsTextjobsource() []CommsTextjobsource {
+	return []CommsTextjobsource{
+		CommsTextjobsourceRmo,
+		CommsTextjobsourceNidus,
+	}
+}
+
+type CommsTextjobsource string
+
+func (e CommsTextjobsource) String() string {
+	return string(e)
+}
+
+func (e CommsTextjobsource) Valid() bool {
+	switch e {
+	case CommsTextjobsourceRmo,
+		CommsTextjobsourceNidus:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e CommsTextjobsource) All() []CommsTextjobsource {
+	return AllCommsTextjobsource()
+}
+
+func (e CommsTextjobsource) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsTextjobsource) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e CommsTextjobsource) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsTextjobsource) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e CommsTextjobsource) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *CommsTextjobsource) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = CommsTextjobsource(x)
+	case []byte:
+		*e = CommsTextjobsource(x)
+	case nil:
+		return fmt.Errorf("cannot nil into CommsTextjobsource")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid CommsTextjobsource value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for CommsTextjobtype
 const (
 	CommsTextjobtypeReportConfirmation CommsTextjobtype = "report-confirmation"

@@ -333,6 +333,8 @@ func (f *Factory) FromExistingCommsTextJob(m *models.CommsTextJob) *CommsTextJob
 	o.Destination = func() string { return m.Destination }
 	o.ID = func() int32 { return m.ID }
 	o.Type = func() enums.CommsTextjobtype { return m.Type }
+	o.Source = func() enums.CommsTextjobsource { return m.Source }
+	o.Completed = func() null.Val[time.Time] { return m.Completed }
 
 	ctx := context.Background()
 	if m.R.DestinationPhone != nil {

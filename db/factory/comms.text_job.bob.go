@@ -11,7 +11,9 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -41,6 +43,8 @@ type CommsTextJobTemplate struct {
 	Destination func() string
 	ID          func() int32
 	Type        func() enums.CommsTextjobtype
+	Source      func() enums.CommsTextjobsource
+	Completed   func() null.Val[time.Time]
 
 	r commsTextJobR
 	f *Factory
@@ -99,6 +103,14 @@ func (o CommsTextJobTemplate) BuildSetter() *models.CommsTextJobSetter {
 		val := o.Type()
 		m.Type = omit.From(val)
 	}
+	if o.Source != nil {
+		val := o.Source()
+		m.Source = omit.From(val)
+	}
+	if o.Completed != nil {
+		val := o.Completed()
+		m.Completed = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -136,6 +148,12 @@ func (o CommsTextJobTemplate) Build() *models.CommsTextJob {
 	if o.Type != nil {
 		m.Type = o.Type()
 	}
+	if o.Source != nil {
+		m.Source = o.Source()
+	}
+	if o.Completed != nil {
+		m.Completed = o.Completed()
+	}
 
 	o.setModelRels(m)
 
@@ -171,6 +189,10 @@ func ensureCreatableCommsTextJob(m *models.CommsTextJobSetter) {
 	if !(m.Type.IsValue()) {
 		val := random_enums_CommsTextjobtype(nil)
 		m.Type = omit.From(val)
+	}
+	if !(m.Source.IsValue()) {
+		val := random_enums_CommsTextjobsource(nil)
+		m.Source = omit.From(val)
 	}
 }
 
@@ -296,6 +318,8 @@ func (m commsTextJobMods) RandomizeAllColumns(f *faker.Faker) CommsTextJobMod {
 		CommsTextJobMods.RandomDestination(f),
 		CommsTextJobMods.RandomID(f),
 		CommsTextJobMods.RandomType(f),
+		CommsTextJobMods.RandomSource(f),
+		CommsTextJobMods.RandomCompleted(f),
 	}
 }
 
@@ -450,6 +474,90 @@ func (m commsTextJobMods) RandomType(f *faker.Faker) CommsTextJobMod {
 	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
 		o.Type = func() enums.CommsTextjobtype {
 			return random_enums_CommsTextjobtype(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsTextJobMods) Source(val enums.CommsTextjobsource) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Source = func() enums.CommsTextjobsource { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextJobMods) SourceFunc(f func() enums.CommsTextjobsource) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Source = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextJobMods) UnsetSource() CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Source = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsTextJobMods) RandomSource(f *faker.Faker) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Source = func() enums.CommsTextjobsource {
+			return random_enums_CommsTextjobsource(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsTextJobMods) Completed(val null.Val[time.Time]) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Completed = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsTextJobMods) CompletedFunc(f func() null.Val[time.Time]) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Completed = f
+	})
+}
+
+// Clear any values for the column
+func (m commsTextJobMods) UnsetCompleted() CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Completed = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m commsTextJobMods) RandomCompleted(f *faker.Faker) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Completed = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m commsTextJobMods) RandomCompletedNotNull(f *faker.Faker) CommsTextJobMod {
+	return CommsTextJobModFunc(func(_ context.Context, o *CommsTextJobTemplate) {
+		o.Completed = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
 		}
 	})
 }

@@ -123,13 +123,14 @@ func UpdateMessageStatus(twilio_sid string, status string) {
 		return
 	}
 }
-func delayMessage(ctx context.Context, source string, destination string, content string, type_ enums.CommsTextjobtype) error {
+func delayMessage(ctx context.Context, source enums.CommsTextjobsource, destination string, content string, type_ enums.CommsTextjobtype) error {
 	job, err := models.CommsTextJobs.Insert(&models.CommsTextJobSetter{
 		Content:     omit.From(content),
 		Created:     omit.From(time.Now()),
 		Destination: omit.From(destination),
 		//ID:
-		Type: omit.From(type_),
+		Source: omit.From(source),
+		Type:   omit.From(type_),
 	}).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fmt.Errorf("Failed to add delayed text job: %w", err)
@@ -229,9 +230,39 @@ func getDst(ctx context.Context, to string) (string, error) {
 }
 
 func handleWaitingTextJobs(ctx context.Context, src string) {
-	log.Info().Str("src", src).Msg("Pretend handle waiting jobs")
-
+	jobs, err := models.CommsTextJobs.Query(
+		models.SelectWhere.CommsTextJobs.Destination.EQ(src),
+		models.SelectWhere.CommsTextJobs.Completed.IsNull(),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to query for jobs")
+		return
+	}
+	for _, job := range jobs {
+		var src string
+		switch job.Source {
+		case enums.CommsTextjobsourceRmo:
+			src = config.PhoneNumberReportStr
+		//case enums.CommsTextJobsourcenidus:
+		//src := config.PhoneNumebrNidusStr
+		default:
+			log.Error().Str("source", job.Source.String()).Msg("Can't support background text job.")
+		}
+		err = sendText(ctx, src, job.Destination, job.Content, enums.CommsTextoriginWebsiteAction, false, true)
+		if err != nil {
+			log.Error().Err(err).Int32("id", job.ID).Msg("Failed to send delayed text job.")
+			continue
+		}
+		err := job.Update(ctx, db.PGInstance.BobDB, &models.CommsTextJobSetter{
+			Completed: omitnull.From(time.Now()),
+		})
+		if err != nil {
+			log.Error().Err(err).Int32("id", job.ID).Msg("Failed to update delayed text job.")
+			continue
+		}
+	}
 }
+
 func handleResetConversation(ctx context.Context, src string, dst string) {
 	err := wipeLLMMemory(ctx, src, dst)
 	if err != nil {

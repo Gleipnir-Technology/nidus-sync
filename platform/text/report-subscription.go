@@ -53,7 +53,7 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 		return fmt.Errorf("Failed to check if subscribed: %w", err)
 	}
 	if sub == nil {
-		err = delayMessage(ctx, j.source(), j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
+		err = delayMessage(ctx, enums.CommsTextjobsourceRmo, j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
 		if err != nil {
 			return fmt.Errorf("Failed to delay report subscription message: %w", err)
 		}
