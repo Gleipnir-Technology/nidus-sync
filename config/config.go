@@ -28,6 +28,7 @@ var (
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
 	PhoneNumberReportStr       string
+	SentryDSN                  string
 	TwilioAuthToken            string
 	TwilioAccountSID           string
 	TwilioMessagingServiceSID  string
@@ -139,6 +140,10 @@ func Parse() (err error) {
 	}
 	PhoneNumberReport = *p
 
+	SentryDSN = os.Getenv("SENTRY_DSN")
+	if SentryDSN == "" {
+		return fmt.Errorf("You must specify a non-empty SENTRY_DSN")
+	}
 	TwilioAccountSID = os.Getenv("TWILIO_ACCOUNT_SID")
 	if TwilioAccountSID == "" {
 		return fmt.Errorf("You must specify a non-empty TWILIO_ACCOUNT_SID")

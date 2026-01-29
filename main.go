@@ -19,6 +19,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/public-report"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/getsentry/sentry-go/zerolog"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/hostrouter"
@@ -27,38 +30,75 @@ import (
 )
 
 func main() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	err := config.Parse()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse config")
 		os.Exit(1)
 	}
 	log.Info().Msg("Starting...")
+
+	err = sentry.Init(sentry.ClientOptions{
+		Debug:            !config.IsProductionEnvironment(),
+		Dsn:              config.SentryDSN,
+		EnableTracing:    true,
+		SendDefaultPII:   true,
+		TracesSampleRate: 1.0,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to start sentry connection")
+		os.Exit(2)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
+		ClientOptions: sentry.ClientOptions{
+			Dsn: config.SentryDSN,
+		},
+		Options: sentryzerolog.Options{
+			Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+			WithBreadcrumbs: true,
+			FlushTimeout:    3 * time.Second,
+		},
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to create sentry writer")
+		os.Exit(2)
+	}
+	defer sentryWriter.Close()
+
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+
 	err = db.InitializeDatabase(context.TODO(), config.PGDSN)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to connect to database")
-		os.Exit(2)
+		os.Exit(3)
 	}
 
 	err = email.LoadTemplates()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to load email templates")
-		os.Exit(3)
+		os.Exit(4)
 	}
 
 	err = text.StoreSources()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to store text source phone numbers")
-		os.Exit(4)
+		os.Exit(5)
 	}
 
 	router_logger := log.With().Logger()
+	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
+		Repanic: true,
+	})
 	r := chi.NewRouter()
 
 	r.Use(LoggerMiddleware(&router_logger))
+	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(sentryMiddleware.Handle)
 	r.Use(auth.NewSessionManager().LoadAndSave)
 
 	hr := hostrouter.New()
@@ -81,7 +121,7 @@ func main() {
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start openAI client")
-		os.Exit(5)
+		os.Exit(6)
 	}
 	background.Start(ctx)
 	server := &http.Server{
