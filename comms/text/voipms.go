@@ -17,6 +17,7 @@ import (
 var VOIP_MS_API = "https://voip.ms/api/v1/rest.php"
 
 type VoipMSResponse struct {
+	MMS     int    `json:"mms"`
 	Message string `json:"message"`
 	Status  string `json:"status"`
 	SMS     int    `json:"sms"`
@@ -47,8 +48,8 @@ func sendTextVoipms(ctx context.Context, to string, content string, media ...str
 	if err != nil {
 		return "", fmt.Errorf("Failed to send MMS: %w", err)
 	}
-	log.Info().Str("status", response.Status).Int("sms", response.SMS).Msg("Sent MMS message")
-	return strconv.Itoa(response.SMS), nil
+	log.Info().Str("status", response.Status).Int("mms", response.MMS).Msg("Sent MMS message")
+	return strconv.Itoa(response.MMS), nil
 }
 
 func sendSMSVoipms(to string, content string) (string, error) {
