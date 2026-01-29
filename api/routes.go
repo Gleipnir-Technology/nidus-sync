@@ -23,9 +23,11 @@ func AddRoutes(r chi.Router) {
 	r.Get("/district", apiGetDistrict)
 	r.Get("/district/{slug}/logo", apiGetDistrictLogo)
 	r.Post("/signin", postSignin)
+	r.Post("/twilio/call", twilioCallPost)
+	r.Post("/twilio/call/status", twilioCallStatusPost)
 	r.Post("/twilio/message", twilioMessagePost)
-	r.Post("/twilio/status", twilioStatusPost)
 	r.Post("/twilio/text", twilioTextPost)
+	r.Post("/twilio/text/status", twilioTextStatusPost)
 	r.Get("/webhook/fieldseeker", webhookFieldseeker)
 	r.Post("/webhook/fieldseeker", webhookFieldseeker)
 }

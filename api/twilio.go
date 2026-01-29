@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go/twiml"
@@ -14,11 +16,31 @@ func twilioMessagePost(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("sid", message_sid).Msg("Twilio Message POST")
 	fmt.Fprintf(w, "")
 }
-func twilioStatusPost(w http.ResponseWriter, r *http.Request) {
-	message_sid := r.PostFormValue("MessageSid")
-	message_status := r.PostFormValue("MessageStatus")
-	log.Info().Str("sid", message_sid).Str("status", message_status).Msg("Updated message status")
-	text.UpdateMessageStatus(message_sid, message_status)
+func twilioCallPost(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to read request body")
+	}
+	debugSaveRequest(body, nil, "just want a look")
+	say := &twiml.VoiceSay{
+		Message: "Thanks for calling Report Mosquitoes Online. I'll forward you to our tech support lead, Eli",
+	}
+	call := &twiml.VoiceDial{
+		Number: config.PhoneNumberSupportStr,
+	}
+	twimlResult, err := twiml.Voice([]twiml.Element{say, call})
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to produce TWIML")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "text/xml")
+	fmt.Fprintf(w, "%s", twimlResult)
+}
+
+func twilioCallStatusPost(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("Call status POST")
+	//message_sid := r.PostFormValue("MessageSid")
+	//message_status := r.PostFormValue("MessageStatus")
 	fmt.Fprintf(w, "")
 }
 func twilioTextPost(w http.ResponseWriter, r *http.Request) {
@@ -46,4 +68,11 @@ func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 	go text.HandleTextMessage(from, to_, body)
 	w.Header().Set("Content-Type", "text/xml")
 	fmt.Fprintf(w, "%s", twiml)
+}
+func twilioTextStatusPost(w http.ResponseWriter, r *http.Request) {
+	message_sid := r.PostFormValue("MessageSid")
+	message_status := r.PostFormValue("MessageStatus")
+	log.Info().Str("sid", message_sid).Str("status", message_status).Msg("Updated message status")
+	text.UpdateMessageStatus(message_sid, message_status)
+	fmt.Fprintf(w, "")
 }

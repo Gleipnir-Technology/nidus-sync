@@ -28,6 +28,8 @@ var (
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
 	PhoneNumberReportStr       string
+	PhoneNumberSupport         phonenumbers.PhoneNumber
+	PhoneNumberSupportStr      string
 	SentryDSN                  string
 	TwilioAuthToken            string
 	TwilioAccountSID           string
@@ -130,15 +132,25 @@ func Parse() (err error) {
 	if PGDSN == "" {
 		return fmt.Errorf("You must specify a non-empty POSTGRES_DSN")
 	}
-	PhoneNumberReportStr = os.Getenv("RMO_PHONE_NUMBER")
+	PhoneNumberReportStr = os.Getenv("PHONE_NUMBER_RMO")
 	if PhoneNumberReportStr == "" {
-		return fmt.Errorf("You must specify a non-empty RMO_PHONE_NUMBER")
+		return fmt.Errorf("You must specify a non-empty PHONE_NUMBER_RMO")
 	}
 	p, err := phonenumbers.Parse(PhoneNumberReportStr, "US")
 	if err != nil {
 		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", PhoneNumberReportStr, err)
 	}
 	PhoneNumberReport = *p
+
+	PhoneNumberSupportStr = os.Getenv("PHONE_NUMBER_SUPPORT")
+	if PhoneNumberSupportStr == "" {
+		return fmt.Errorf("You must specify a non-empty PHONE_NUMBER_SUPPORT")
+	}
+	p, err = phonenumbers.Parse(PhoneNumberSupportStr, "US")
+	if err != nil {
+		return fmt.Errorf("Failed to parse '%s' as a valid phone number: %w", PhoneNumberSupportStr, err)
+	}
+	PhoneNumberSupport = *p
 
 	SentryDSN = os.Getenv("SENTRY_DSN")
 	if SentryDSN == "" {
