@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -17,11 +16,35 @@ func twilioMessagePost(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "")
 }
 func twilioCallPost(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to read request body")
-	}
-	debugSaveRequest(body, nil, "just want a look")
+	called := r.PostFormValue("Called")
+	tostate := r.PostFormValue("ToState")
+	callercountry := r.PostFormValue("CallerCountry")
+	direction := r.PostFormValue("Direction")
+	callerstate := r.PostFormValue("CallerState")
+	tozip := r.PostFormValue("ToZip")
+	callsid := r.PostFormValue("CallSid")
+	to := r.PostFormValue("To")
+	callerzip := r.PostFormValue("CallerZip")
+	tocountry := r.PostFormValue("ToCountry")
+	stirverstat := r.PostFormValue("StirVerstat")
+	//calltoken := r.PostFormValue("CallToken")
+	calledzip := r.PostFormValue("CalledZip")
+	apiversion := r.PostFormValue("ApiVersion")
+	calledcity := r.PostFormValue("CalledCity")
+	callstatus := r.PostFormValue("CallStatus")
+	from := r.PostFormValue("From")
+	accountsid := r.PostFormValue("AccountSid")
+	calledcountry := r.PostFormValue("CalledCountry")
+	callercity := r.PostFormValue("CallerCity")
+	tocity := r.PostFormValue("ToCity")
+	fromcountry := r.PostFormValue("FromCountry")
+	caller := r.PostFormValue("Caller")
+	fromcity := r.PostFormValue("FromCity")
+	calledstate := r.PostFormValue("CalledState")
+	fromzip := r.PostFormValue("FromZip")
+	fromstate := r.PostFormValue("FromState")
+	log.Info().Str("called", called).Str("tostate", tostate).Str("callercountry", callercountry).Str("direction", direction).Str("callerstate", callerstate).Str("tozip", tozip).Str("callsid", callsid).Str("to", to).Str("callerzip", callerzip).Str("tocountry", tocountry).Str("stirverstat", stirverstat).Str("calledzip", calledzip).Str("apiversion", apiversion).Str("calledcity", calledcity).Str("callstatus", callstatus).Str("from", from).Str("accountsid", accountsid).Str("calledcountry", calledcountry).Str("callercity", callercity).Str("tocity", tocity).Str("fromcountry", fromcountry).Str("caller", caller).Str("fromcity", fromcity).Str("calledstate", calledstate).Str("fromzip", fromzip).Str("fromstate", fromstate).Msg("Incoming phone call")
+
 	say := &twiml.VoiceSay{
 		Message: "Thanks for calling Report Mosquitoes Online. I'll forward you to our tech support lead, Eli",
 	}
@@ -38,9 +61,17 @@ func twilioCallPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func twilioCallStatusPost(w http.ResponseWriter, r *http.Request) {
-	log.Info().Msg("Call status POST")
-	//message_sid := r.PostFormValue("MessageSid")
-	//message_status := r.PostFormValue("MessageStatus")
+	call_sid := r.PostFormValue("CallSid")
+	account_sid := r.PostFormValue("AccountSid")
+	from := r.PostFormValue("From")
+	to := r.PostFormValue("To")
+	call_status := r.PostFormValue("CallStatus")
+	api_version := r.PostFormValue("ApiVersion")
+	direction := r.PostFormValue("Direction")
+	forwarded_from := r.PostFormValue("ForwardedFrom")
+	caller_name := r.PostFormValue("CallerName")
+	parent_call_sid := r.PostFormValue("ParentCallSid")
+	log.Info().Str("call_sid", call_sid).Str("account_sid", account_sid).Str("from", from).Str("to", to).Str("call_status", call_status).Str("api_version", api_version).Str("direction", direction).Str("forwarded_from", forwarded_from).Str("caller_name", caller_name).Str("parent_call_sid", parent_call_sid)
 	fmt.Fprintf(w, "")
 }
 func twilioTextPost(w http.ResponseWriter, r *http.Request) {
