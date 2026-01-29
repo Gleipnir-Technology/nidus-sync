@@ -23,16 +23,10 @@ import (
 
 type E164 = phonenumbers.PhoneNumber
 
-func HandleTextMessage(from string, to string, body string) {
+func HandleTextMessage(src string, dst string, body string) {
 	ctx := context.Background()
-	type_, src := splitPhoneSource(from)
-	dst, err := getDst(ctx, to)
-	if err != nil {
-		log.Error().Err(err).Str("to", to).Msg("Failed to get dst")
-		return
-	}
 
-	_, err = insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false, true)
+	_, err := insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false, true)
 	if err != nil {
 		log.Error().Err(err).Str("dst", dst).Msg("Failed to add text message log")
 		return
@@ -74,13 +68,13 @@ func HandleTextMessage(from string, to string, body string) {
 	}
 	previous_messages, err := loadPreviousMessagesForLLM(ctx, dst, src)
 	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to get previous messages")
+		log.Error().Err(err).Str("dst", dst).Str("src", src).Msg("Failed to get previous messages")
 		return
 	}
 	log.Info().Int("len", len(previous_messages)).Msg("passing")
 	next_message, err := generateNextMessage(ctx, previous_messages, src)
 	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", from).Msg("Failed to generate next message")
+		log.Error().Err(err).Str("dst", dst).Str("src", src).Msg("Failed to generate next message")
 		return
 	}
 	err = sendText(ctx, dst, src, next_message.Content, enums.CommsTextoriginLLM, false, true)
@@ -88,7 +82,7 @@ func HandleTextMessage(from string, to string, body string) {
 		log.Error().Err(err).Str("src", src).Str("dst", dst).Str("content", next_message.Content).Msg("Failed to send response text")
 		return
 	}
-	log.Info().Str("from", from).Str("from-type", type_).Str("to", to).Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
+	log.Info().Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
 }
 
 func ParsePhoneNumber(input string) (*E164, error) {
@@ -217,24 +211,6 @@ func generateNextMessage(ctx context.Context, history []llm.Message, customer_ph
 	return llm.GenerateNextMessage(ctx, history, _handle_report_status, _handle_contact_district, _handle_contact_supervisor)
 }
 
-// Translate from Twilio's representation of a RCS message sender to our concept of a phone number
-// From: rcs:dev_report_mosquitoes_online_dosrvwxm_agent
-// To: +16235525879
-func getDst(ctx context.Context, to string) (string, error) {
-
-	if to == config.TwilioRCSSenderRMO {
-		return config.PhoneNumberReportStr, nil
-	}
-	/*
-		phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, to)
-		if err != nil {
-			return "", fmt.Errorf("Failed to search for dest phone %s: %w", to, err)
-		}
-		return phone.E164, nil
-	*/
-	return "", fmt.Errorf("Cannot match phone number to '%s'", to)
-}
-
 func handleWaitingTextJobs(ctx context.Context, src string) {
 	jobs, err := models.CommsTextJobs.Query(
 		models.SelectWhere.CommsTextJobs.Destination.EQ(src),
@@ -359,22 +335,6 @@ func sendText(ctx context.Context, source string, destination string, message st
 	log.Info().Int32("id", l.ID).Bool("is_visible_to_llm", is_visible_to_llm).Str("message", message).Msg("inserted text log")
 
 	return nil
-}
-
-func splitPhoneSource(s string) (string, string) {
-	parts := strings.Split(s, ":")
-	switch len(parts) {
-	case 0:
-		return "this isn't", "possible"
-	case 1:
-		return "", s
-	case 2:
-		return parts[0], parts[1]
-	default:
-		log.Warn().Str("s", s).Msg("Got an incomprehensible number of parts of a phone number")
-		return parts[0], parts[1]
-	}
-
 }
 
 func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {

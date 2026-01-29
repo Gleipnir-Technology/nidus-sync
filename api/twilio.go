@@ -3,12 +3,47 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go/twiml"
 )
+
+// Translate from Twilio's representation of a RCS message sender to our concept of a phone number
+// From: rcs:dev_report_mosquitoes_online_dosrvwxm_agent
+// To: +16235525879
+func getDst(to string) (string, error) {
+
+	if to == config.TwilioRCSSenderRMO {
+		return config.PhoneNumberReportStr, nil
+	}
+	/*
+		phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, to)
+		if err != nil {
+			return "", fmt.Errorf("Failed to search for dest phone %s: %w", to, err)
+		}
+		return phone.E164, nil
+	*/
+	return "", fmt.Errorf("Cannot match phone number to '%s'", to)
+}
+
+func splitPhoneSource(s string) (string, string) {
+	parts := strings.Split(s, ":")
+	switch len(parts) {
+	case 0:
+		return "this isn't", "possible"
+	case 1:
+		return "", s
+	case 2:
+		return parts[0], parts[1]
+	default:
+		log.Warn().Str("s", s).Msg("Got an incomprehensible number of parts of a phone number")
+		return parts[0], parts[1]
+	}
+
+}
 
 func twilioMessagePost(w http.ResponseWriter, r *http.Request) {
 	message_sid := r.PostFormValue("MessageSid")
@@ -93,10 +128,18 @@ func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 	to_state := r.PostFormValue("ToState")
 	to_zip := r.PostFormValue("ToZip")
 	to_country := r.PostFormValue("ToCountry")
-	log.Info().Str("message_sid", message_sid).Str("account_sid", account_sid).Str("messaging_service_sid", messaging_service_sid).Str("from", from).Str("to_", to_).Str("body", body).Str("num_media", num_media).Str("num_segments", num_segments).Str("media_content_type0", media_content_type0).Str("media_url0", media_url0).Str("from_city", from_city).Str("from_state", from_state).Str("from_zip", from_zip).Str("from_country", from_country).Str("to_city", to_city).Str("to_state", to_state).Str("to_zip", to_zip).Str("to_country", to_country).Msg("got text")
+	type_, src := splitPhoneSource(from)
+	log.Info().Str("message_sid", message_sid).Str("account_sid", account_sid).Str("messaging_service_sid", messaging_service_sid).Str("from", from).Str("to_", to_).Str("body", body).Str("num_media", num_media).Str("num_segments", num_segments).Str("media_content_type0", media_content_type0).Str("media_url0", media_url0).Str("from_city", from_city).Str("from_state", from_state).Str("from_zip", from_zip).Str("from_country", from_country).Str("to_city", to_city).Str("to_state", to_state).Str("to_zip", to_zip).Str("to_country", to_country).Str("type_", type_).Msg("got text")
 
 	twiml, _ := twiml.Messages([]twiml.Element{})
-	go text.HandleTextMessage(from, to_, body)
+
+	dst, err := getDst(to_)
+	if err != nil {
+		log.Error().Err(err).Str("to", to_).Msg("Failed to get dst")
+		return
+	}
+
+	go text.HandleTextMessage(src, dst, body)
 	w.Header().Set("Content-Type", "text/xml")
 	fmt.Fprintf(w, "%s", twiml)
 }
