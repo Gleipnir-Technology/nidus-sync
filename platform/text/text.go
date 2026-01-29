@@ -98,7 +98,13 @@ func ParsePhoneNumber(input string) (*E164, error) {
 func StoreSources() error {
 	ctx := context.TODO()
 	for _, n := range []string{config.PhoneNumberReportStr, config.PhoneNumberSupportStr, config.VoipMSNumber} {
-		err := ensureInDB(ctx, n)
+		var err error
+		// Deal with Voip.ms not expecting API calls with the prefixed +1
+		if !strings.HasPrefix(n, "+1") {
+			err = ensureInDB(ctx, "+1"+n)
+		} else {
+			err = ensureInDB(ctx, n)
+		}
 		if err != nil {
 			return fmt.Errorf("Failed to add number '%s' to DB: %w", n, err)
 		}

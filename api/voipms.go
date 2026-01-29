@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,13 +21,13 @@ import (
 	      "id": 101252305,
 	      "record_type": "message",
 	      "from": {
-	        "phone_number": "+18016984649"
+		"phone_number": "+18016984649"
 	      },
 	      "to": [
-	        {
-	          "phone_number": "+15593720139",
-	          "status": "webhook_delivered"
-	        }
+		{
+		  "phone_number": "+15593720139",
+		  "status": "webhook_delivered"
+		}
 	      ],
 	      "text": "test3",
 	      "received_at": "2026-01-29T20:16:23.000000+00:00",
@@ -91,6 +91,9 @@ func voipmsTextPost(w http.ResponseWriter, r *http.Request) {
 	if len(b.Data.Payload.To) > 0 {
 		to = b.Data.Payload.To[0].PhoneNumber
 	}
-	log.Info().Int("ID", b.Data.ID).Str("event_type", b.Data.EventType).Str("record_type", b.Data.RecordType).Str("from", b.Data.Payload.From.PhoneNumber).Str("to", to).Msg("Text status")
+	log.Info().Int("ID", b.Data.ID).Str("event_type", b.Data.EventType).Str("record_type", b.Data.RecordType).Str("from", b.Data.Payload.From.PhoneNumber).Str("to", to).Str("content", b.Data.Payload.Text).Msg("Text status")
+
+	// Convert phone numbers from Voip.ms into E164 format for consistency
+	go text.HandleTextMessage(b.Data.Payload.From.PhoneNumber, to, b.Data.Payload.Text)
 	fmt.Fprintf(w, "ok")
 }
