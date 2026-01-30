@@ -2,11 +2,9 @@ package html
 
 import (
 	"embed"
-	"io/fs"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
 )
 
 //go:embed static/*

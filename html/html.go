@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"math"
 	"net/http"
 	"os"
@@ -26,7 +27,6 @@ var TemplatesByFilename = make(map[string]BuiltTemplate, 0)
 type BuiltTemplate struct {
 	files  []string
 	subdir string
-	svgs   []string
 	// Nil if we are going to read templates off disk every time we render
 	// because we are in development mode.
 	template *template.Template
@@ -35,7 +35,7 @@ type BuiltTemplate struct {
 func (bt *BuiltTemplate) executeTemplate(w io.Writer, data any) error {
 	if bt.template == nil {
 		name := path.Base(bt.files[0])
-		templ, err := parseFromDisk(bt.svgs, bt.files)
+		templ, err := parseFromDisk(bt.subdir, bt.files)
 		if err != nil {
 			return fmt.Errorf("Failed to parse template file: %w", err)
 		}
@@ -51,7 +51,7 @@ func (bt *BuiltTemplate) executeTemplate(w io.Writer, data any) error {
 	}
 }
 
-func NewBuiltTemplate(embeddedFiles embed.FS, subdir string, svgs []string, files ...string) *BuiltTemplate {
+func NewBuiltTemplate(embeddedFiles embed.FS, subdir string, files ...string) *BuiltTemplate {
 	files_on_disk := true
 	for _, f := range files {
 		_, err := os.Stat(f)
@@ -68,15 +68,13 @@ func NewBuiltTemplate(embeddedFiles embed.FS, subdir string, svgs []string, file
 		result = BuiltTemplate{
 			files:    files,
 			subdir:   subdir,
-			svgs:     svgs,
 			template: nil,
 		}
 	} else {
 		result = BuiltTemplate{
 			files:    files,
 			subdir:   subdir,
-			svgs:     svgs,
-			template: parseEmbedded(embeddedFiles, subdir, svgs, files),
+			template: parseEmbedded(embeddedFiles, subdir, files),
 		}
 	}
 	TemplatesByFilename[path.Base(files[0])] = result
@@ -128,7 +126,32 @@ func makeFuncMap() template.FuncMap {
 	}
 	return funcMap
 }
-func parseEmbedded(embeddedFiles embed.FS, subdir string, svgs []string, files []string) *template.Template {
+func addSVGTemplates(fsys fs.FS, templ *template.Template) error {
+	svgs, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		log.Warn().Msg("Failed to read svg directory")
+		return nil
+	}
+	for _, svg := range svgs {
+		content, err := fs.ReadFile(fsys, svg.Name())
+		if err != nil {
+			return fmt.Errorf("Failed to read svg '%s' from embedded filesystem: %w", svg, err)
+		}
+		svg_name := svg.Name()
+		svg_template := fmt.Sprintf("{{define \"%s\"}}%s{{end}}", svg_name, string(content))
+		svg_t, err := template.New(svg_name).Parse(svg_template)
+		if err != nil {
+			return fmt.Errorf("Failed to parse svg '%s' from embedded filesystem: %v", svg, err)
+		}
+		_, err = templ.AddParseTree(svg_t.Name(), svg_t.Tree)
+		if err != nil {
+			return fmt.Errorf("Failed to add svg '%s' to embedded template: %v", svg, err)
+		}
+		log.Debug().Str("name", svg_name).Msg("add svg template")
+	}
+	return nil
+}
+func parseEmbedded(embeddedFiles embed.FS, subdir string, files []string) *template.Template {
 	funcMap := makeFuncMap()
 	// Remap the file names to embedded paths
 	embeddedFilePaths := make([]string, 0)
@@ -141,27 +164,18 @@ func parseEmbedded(embeddedFiles embed.FS, subdir string, svgs []string, files [
 	if err != nil {
 		panic(fmt.Sprintf("Failed to parse embedded template %s: %v", name, err))
 	}
-	for _, svg := range svgs {
-		svg_path := strings.TrimPrefix(svg, subdir)
-		content, err := embeddedFiles.ReadFile(svg_path)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to read svg '%s' from embedded filesystem: %v", svg, err))
-		}
-		svg_name := path.Base(svg)
-		svg_template := fmt.Sprintf("{{define \"%s\"}}%s{{end}}", svg_name, string(content))
-		svg_t, err := template.New(svg_name).Parse(svg_template)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to parse svg '%s' from embedded filesystem: %v", svg, err))
-		}
-		_, err = t.AddParseTree(svg_t.Name(), svg_t.Tree)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to add svg '%s' to embedded template: %v", svg, err))
-		}
+	svg_fs, err := fs.Sub(embeddedFiles, "template/svg")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read static/svg: %v", err))
+	}
+	err = addSVGTemplates(svg_fs, t)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to add SVG templates: %v", err))
 	}
 	return t
 }
 
-func parseFromDisk(svgs []string, files []string) (*template.Template, error) {
+func parseFromDisk(subdir string, files []string) (*template.Template, error) {
 	funcMap := makeFuncMap()
 	name := path.Base(files[0])
 	//log.Debug().Str("name", name).Strs("files", files).Msg("parsing from disk")
@@ -169,23 +183,10 @@ func parseFromDisk(svgs []string, files []string) (*template.Template, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse %s: %w", files, err)
 	}
-	for _, svg := range svgs {
-		content, err := os.ReadFile(svg)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to read svg '%s' from filesystem: %w", svg, err)
-		}
-		svg_name := path.Base(svg)
-		svg_template := fmt.Sprintf("{{define \"%s\"}}%s{{end}}", svg_name, string(content))
-		svg_t, err := template.New(svg_name).Parse(svg_template)
-		if err != nil {
-			log.Debug().Str("svg", svg).Str("svg_name", svg_name).Str("template", svg_template).Msg("failed to parse")
-			return nil, fmt.Errorf("Failed to parse svg '%s' from filesystem: %w", svg, err)
-		}
-		_, err = templ.AddParseTree(svg_t.Name(), svg_t.Tree)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to add svg '%s' to template: %w", svg, err)
-		}
-		log.Debug().Str("name", svg_t.Name()).Str("svg_name", svg_name).Msg("Added svg template")
+	fsys := os.DirFS(subdir + "/template/svg")
+	err = addSVGTemplates(fsys, templ)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to add SVGs from disk: %w", err)
 	}
 	return templ, nil
 }

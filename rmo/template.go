@@ -11,7 +11,6 @@ import (
 var embeddedFiles embed.FS
 
 var components = [...]string{"footer", "header", "photo-upload", "photo-upload-header"}
-var svgs = [...]string{"check-report", "mosquito", "pond"}
 
 func buildTemplate(files ...string) *html.BuiltTemplate {
 	subdir := "rmo"
@@ -22,9 +21,5 @@ func buildTemplate(files ...string) *html.BuiltTemplate {
 	for _, c := range components {
 		full_files = append(full_files, fmt.Sprintf("%s/template/component/%s.html", subdir, c))
 	}
-	full_svgs := make([]string, 0)
-	for _, c := range svgs {
-		full_svgs = append(full_svgs, fmt.Sprintf("%s/template/svg/%s.svg", subdir, c))
-	}
-	return html.NewBuiltTemplate(embeddedFiles, "rmo/", full_svgs, full_files...)
+	return html.NewBuiltTemplate(embeddedFiles, "rmo/", full_files...)
 }
