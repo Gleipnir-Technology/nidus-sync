@@ -18,6 +18,15 @@ $info: #D7B26D;
 // 4. Include any default map overrides here
 
 // 5. Include remainder of required parts
+@import "./bootstrap/scss/mixins/border-radius";
+@import "./bootstrap/scss/mixins/box-shadow";
+@import "./bootstrap/scss/mixins/breakpoints";
+@import "./bootstrap/scss/mixins/buttons";
+@import "./bootstrap/scss/mixins/gradients";
+@import "./bootstrap/scss/mixins/transition";
+@import "./bootstrap/scss/vendor/rfs";
+@import "./bootstrap/scss/buttons";
+@import "./bootstrap/scss/card";
 @import "./bootstrap/scss/maps";
 @import "./bootstrap/scss/mixins";
 @import "./bootstrap/scss/root";
