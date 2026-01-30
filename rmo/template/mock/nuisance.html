@@ -35,6 +35,7 @@ function toggleCollapse(something) {
 	} else {
 		el.classList.add('collapse');
 	}
+	document.getElementById("toggle-additional").classList.add("visually-hidden");
 }
 // Check for source identification
 document.addEventListener('DOMContentLoaded', function() {
@@ -351,7 +352,7 @@ select.tall {
 			</div>
 		</div>
 
-		<button class="btn btn-warning" type="button" onClick="toggleCollapse('collapse-additional-fields')">
+		<button id="toggle-additional" class="btn btn-warning" type="button" onClick="toggleCollapse('collapse-additional-fields')">
 			Click here to answer a few more questions to better help us solve your mosquito problem
 		</button>
 		<div class="collapse" id="collapse-additional-fields">
