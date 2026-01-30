@@ -14,7 +14,7 @@ class PhotoUpload extends HTMLElement {
 		const photoInput = this.shadowRoot.querySelector('#photos');
 
 		// Handle photo selection
-		photoInput.addEventListener('change', this._handlePhotoSelection);
+		photoInput.addEventListener('change', () => {this._handlePhotoSelection()});
 
 		// Handle drag and drop
 		const photoDropArea = this.shadowRoot.querySelector('#photoDropArea');
@@ -97,8 +97,8 @@ class PhotoUpload extends HTMLElement {
 	 * Handle photo selection and preview
 	 */
 	_handlePhotoSelection() {
-		const photoInput = document.getElementById('photos');
-		const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+		const photoInput = this.shadowRoot.querySelector('#photos');
+		const photoPreviewContainer = this.shadowRoot.querySelector('#photoPreviewContainer');
 
 		// Clear previous previews
 		photoPreviewContainer.innerHTML = '';
