@@ -25,6 +25,7 @@ type ContentRoot struct {
 }
 type ContentURL struct {
 	Nuisance               string
+	NuisanceSubmit         string
 	NuisanceSubmitComplete string
 	Status                 string
 	Tegola                 string
@@ -83,11 +84,11 @@ func getTerms(w http.ResponseWriter, r *http.Request) {
 
 func makeContentURL() ContentURL {
 	return ContentURL{
-		Nuisance:               makeURL("nuisance"),
-		NuisanceSubmitComplete: makeURL("nuisance-submit-complete"),
-		Status:                 makeURL("status"),
-		Tegola:                 config.MakeURLTegola("/"),
-		Water:                  makeURL("water"),
+		Nuisance:       makeURL("nuisance"),
+		NuisanceSubmit: makeURL("nuisance"),
+		Status:         makeURL("status"),
+		Tegola:         config.MakeURLTegola("/"),
+		Water:          makeURL("water"),
 	}
 }
 

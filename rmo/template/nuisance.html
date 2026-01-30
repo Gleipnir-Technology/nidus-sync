@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	</div>
 
 	<!-- Report Form -->
-	<form id="mosquitoNuisanceForm" action="/nuisance-submit" method="POST">
+	<form id="mosquitoNuisanceForm" action="{{ .URL.NuisanceSubmit }}" method="POST">
 		<!-- Location & Contact Section -->
 		<div class="form-section">
 			<div class="section-heading">
@@ -395,9 +395,9 @@ document.addEventListener('DOMContentLoaded', function() {
 					<p class="mb-0 small text-muted">After submission, you'll receive a confirmation with a report ID and further information.</p>
 				</div>
 				<div class="col-md-4 text-md-end mt-3 mt-md-0">
-					<a class="btn btn-primary btn-lg" href="{{.URL.NuisanceSubmitComplete}}">
+					<button type="submit" class="btn btn-primary btn-lg">
 						Submit Report
-					</a>
+					</button>
 				</div>
 			</div>
 		</div>
