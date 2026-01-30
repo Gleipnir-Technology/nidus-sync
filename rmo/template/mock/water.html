@@ -56,12 +56,6 @@
 	font-size: 1.5rem;
 	color: #0d6efd;
 }
-.optional-label {
-	font-size: 0.875rem;
-	color: #6c757d;
-	font-weight: normal;
-	margin-left: 8px;
-}
 .submit-container {
 	background-color: #f8f9fa;
 	padding: 20px;
@@ -169,6 +163,7 @@ function toggleCollapse(something) {
 	} else {
 		el.classList.add('collapse');
 	}
+	document.getElementById("toggle-additional").classList.add("visually-hidden");
 }
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
@@ -272,16 +267,6 @@ function displaySelectedCoordinates(lngLat) {
 			</div>
 		</div>
 
-		<!-- Info Alert -->
-		<div class="row mb-4">
-			<div class="col-12">
-				<div class="alert alert-info" role="alert">
-					<h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>All fields are optional</h5>
-					<p class="mb-0">We appreciate any information you can provide. The more details you share, the better we can address the issue. Photos and location information are especially helpful.</p>
-				</div>
-			</div>
-		</div>
-
 		<!-- Report Form -->
 		<form id="standingWater" action="/water-submit" method="POST" enctype="multipart/form-data">
 			<!-- Photo Upload Section -->
@@ -320,6 +305,11 @@ function displaySelectedCoordinates(lngLat) {
 					<h3>Location</h3>
 				</div>
 				<p class="mb-3">Please provide the location of the potential mosquito production source. We may be able to extract this information from your photos if they contain location data.</p>
+				<div class="col-md-12">
+					<div class="alert alert-info" role="info">
+						<p class="mb-0">You can select the location by address or by moving the marker on the map.</p>
+					</div>
+				</div>
 				
 				<div class="row mb-3">
 					<!-- Hidden fields for location data -->
@@ -347,8 +337,8 @@ function displaySelectedCoordinates(lngLat) {
 				<input type="hidden" id="map-zoom" name="map-zoom"/>
 			</div>
 
-			<button class="btn btn-warning" type="button" onClick="toggleCollapse('collapse-additional-fields')">
-				Answer a few more questions to better help us solve your mosquito problem
+			<button id="toggle-additional" class="btn btn-warning" type="button" onClick="toggleCollapse('collapse-additional-fields')">
+				Click here to answer a few more questions to better help us solve your mosquito problem
 			</button>
 			<div class="collapse" id="collapse-additional-fields">
 
