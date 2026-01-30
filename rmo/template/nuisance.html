@@ -8,6 +8,7 @@
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map-locator.js"></script>
+<script src="/static/js/photo-upload.js"></script>
 <script>
 const MAPBOX_ACCESS_TOKEN = "{{.MapboxToken}}";
 // Handle inspection type selection
@@ -76,26 +77,7 @@ function toggleCollapse(something) {
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
 	const addressInput = document.querySelector("address-input");
-	const photoInput = document.getElementById('photos');
-	const photoDropArea = document.getElementById('photoDropArea');
 	
-	photoDropArea.addEventListener('dragover', function(e) {
-		e.preventDefault();
-		photoDropArea.style.backgroundColor = '#e9ecef';
-	});
-	
-	photoDropArea.addEventListener('dragleave', function() {
-		photoDropArea.style.backgroundColor = '#f8f9fa';
-	});
-	
-	photoDropArea.addEventListener('drop', function(e) {
-		e.preventDefault();
-		photoDropArea.style.backgroundColor = '#f8f9fa';
-		
-		if (e.dataTransfer.files.length) {
-			handleFiles(e.dataTransfer.files);
-		}
-	});
 	const mapLocator = document.querySelector("map-locator");
 	mapLocator.addEventListener("load", (event) => {
 		getGeolocation({
@@ -358,16 +340,11 @@ document.addEventListener('DOMContentLoaded', function() {
 					</div>
 				</div>
 
-				<div class="alert alert-warning mb-4" id="sourceFoundAlert" style="display: none;">
-					<h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Potential Breeding Source Found!</h5>
-					<p>It looks like you may have identified a mosquito breeding source. If you'd like to report a specific source (like a green pool), please use our <a href="/report-green-pool" class="alert-link">Report a Green Pool</a> form for faster service.</p>
-				</div>
-
 				<div class="row">
 					<div class="col-md-12">
 						<label for="otherSources" class="form-label">Have you noticed any other potential mosquito breeding sources?</label>
 						<textarea class="form-control" id="otherSources" name="source-description" rows="2" placeholder="Describe any other potential breeding sites you've noticed..."></textarea>
-						{{template "photo-upload"}}
+						<photo-upload/>
 					</div>
 				</div>
 			</div>
