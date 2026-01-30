@@ -69,7 +69,7 @@ select.tall {
 	margin: 20px 0;
 }
 .btn-check:checked + .btn.time-of-day-btn {
-	background-color: #0d6efd;
+	background-color: $info;
 	color: white;
 }
 .inspection-type-card {
