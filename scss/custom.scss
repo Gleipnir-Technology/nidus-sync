@@ -1,65 +1,39 @@
-// Custom.scss
-// Option B: Include parts of Bootstrap
-
-// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
-@import "./bootstrap/scss/functions";
-
-// 2. Include any default variable overrides here
+// 1. Include specific theme variables
 $primary: #F76436;
 $secondary: #3C552D;
 $success: #8BAE67;
-$danger: #FFC01B;
+$warning: #FFC01B;
+$danger: #6b2737;
 $info: #D7B26D;
 
-
-// 3. Include remainder of required Bootstrap stylesheets
-@import "./bootstrap/scss/variables";
-
-// 4. Include any default map overrides here
-
-// 5. Include remainder of required parts
-@import "./bootstrap/scss/mixins/border-radius";
-@import "./bootstrap/scss/mixins/box-shadow";
-@import "./bootstrap/scss/mixins/breakpoints";
-@import "./bootstrap/scss/mixins/buttons";
-@import "./bootstrap/scss/mixins/color-mode";
-@import "./bootstrap/scss/mixins/forms";
-@import "./bootstrap/scss/mixins/gradients";
-@import "./bootstrap/scss/mixins/transition";
-@import "./bootstrap/scss/vendor/rfs";
-@import "./bootstrap/scss/alert";
-@import "./bootstrap/scss/buttons";
-@import "./bootstrap/scss/card";
-@import "./bootstrap/scss/forms";
-@import "./bootstrap/scss/maps";
-@import "./bootstrap/scss/mixins";
-@import "./bootstrap/scss/root";
-@import "./bootstrap/scss/transitions";
-
-// 6. Optionally include any other parts as needed
-@import "./bootstrap/scss/utilities";
-@import "./bootstrap/scss/reboot";
-@import "./bootstrap/scss/type";
-@import "./bootstrap/scss/images";
-@import "./bootstrap/scss/containers";
-@import "./bootstrap/scss/grid";
-@import "./bootstrap/scss/helpers";
-
-// 7. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
-@import "./bootstrap/scss/utilities/api";
-
-// 8. Add additional custom code here
-$custom-colors: (
-  "color1": $primary,
-  "color2": $danger,
-  "color3": #8C552D,
-  "color4": $success,
-  "color5": $info,
-);
 $off-white: #F8F9FA;
 $off-black: #495057;
 
-@import "./sidebar.scss";
+// 2. Configure color contrast
+$color-contrast-dark: #000;
+$color-contrast-light: #fff;
+$min-contrast-ratio: 2.0;
 
-// Merge the maps
-$theme-colors: map-merge($theme-colors, $custom-colors);
+$custom-colors: (
+  "color1": $primary,
+  "color2": $secondary,
+  "color3": $success,
+  "color4": $danger,
+  "color5": $warning,
+  "color6": $info,
+);
+$theme-colors: map-merge(
+	(
+		"primary": $primary,
+		"secondary": $secondary,
+		"success": $success,
+		"danger": $danger,
+		"warning": $warning,
+		"info": $info
+	),
+	$custom-colors
+);
+
+@import "./bootstrap/scss/bootstrap";
+
+@import "./sidebar.scss";
