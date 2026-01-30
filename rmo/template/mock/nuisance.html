@@ -138,99 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <style>
-.district-logo {
-	max-height: 80px;
-	width: auto;
-}
-.form-section {
-	margin-bottom: 2.5rem;
-	padding-bottom: 2rem;
-	border-bottom: 1px solid #dee2e6;
-}
-.form-section:last-child {
-	border-bottom: none;
-	margin-bottom: 1rem;
-	padding-bottom: 0;
-}
-.section-heading {
-	margin-bottom: 1.5rem;
-	display: flex;
-	align-items: center;
-}
-.section-heading i {
-	margin-right: 10px;
-	font-size: 1.5rem;
-	color: #0d6efd;
-}
-.submit-container {
-	background-color: #f8f9fa;
-	padding: 20px;
-	border-radius: 5px;
-	margin-top: 2rem;
-}
-.source-card {
-	height: 100%;
-	transition: transform 0.3s;
-}
-.source-card:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-.source-icon {
-	font-size: 2rem;
-	margin-bottom: 1rem;
-	color: #0d6efd;
-}
-.time-of-day-btn {
-	width: 100%;
-	margin-bottom: 10px;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 15px 0;
-}
-.time-of-day-icon {
-	font-size: 1.5rem;
-	margin-bottom: 8px;
-}
-.time-label {
-	font-size: 0.9rem;
-}
-select.tall {
-	height: 160px;
-}
-.severity-item {
-	text-align: center;
-	padding: 10px;
-}
-.severity-scale {
-	display: flex;
-	justify-content: space-between;
-	margin: 20px 0;
-}
-.btn-check:checked + .btn.time-of-day-btn {
-	background-color: #0d6efd;
-	color: white;
-}
-.inspection-type-card {
-	cursor: pointer;
-	border: 1px solid #dee2e6;
-	padding: 20px;
-	border-radius: 5px;
-	height: 100%;
-	transition: all 0.3s;
-}
-.inspection-type-card.selected {
-	border-color: #0d6efd;
-	background-color: rgba(13, 110, 253, 0.05);
-}
-.inspection-type-card:hover {
-	border-color: #0d6efd;
-}
-.card-highlight {
-	border-left: 4px solid #0d6efd;
-	background-color: #f8f9fa;
-}
 </style>
 {{end}}
 {{define "content"}}
@@ -275,7 +182,7 @@ select.tall {
 		<!-- Mosquito Activity Section -->
 		<div class="form-section">
 			<div class="section-heading">
-				{{ template "svg/mosquito" }}
+				{{ template "mosquito-color.svg" }}
 				<h3>Mosquito Activity Information</h3>
 			</div>
 			<p class="mb-4">The time when mosquitoes are active can help us identify the species and likely breeding sources.</p>

@@ -9,6 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ContentDistrict struct {
+	Name       string
+	URLLogo    string
+	URLWebsite string
+}
 type ContentPrivacy struct {
 	Address   string
 	Company   string
@@ -56,7 +61,9 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		RootT,
-		ContentRoot{},
+		ContentRoot{
+			URL: makeContentURL(),
+		},
 	)
 }
 
@@ -68,11 +75,13 @@ func getTerms(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		TermsT,
-		ContentRoot{},
+		ContentRoot{
+			URL: makeContentURL(),
+		},
 	)
 }
 
-func makeContentURL(slug string) ContentURL {
+func makeContentURL() ContentURL {
 	return ContentURL{
 		Nuisance:               makeURL("nuisance"),
 		NuisanceSubmitComplete: makeURL("nuisance-submit-complete"),

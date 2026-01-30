@@ -17,11 +17,6 @@ var (
 	mockWaterT                  = buildTemplate("mock/water", "base")
 )
 
-type ContentDistrict struct {
-	Name       string
-	URLLogo    string
-	URLWebsite string
-}
 type ContentMock struct {
 	District    ContentDistrict
 	MapboxToken string

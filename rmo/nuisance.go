@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -15,8 +16,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContextNuisance struct{}
-type ContextNuisanceSubmitComplete struct {
+type ContentNuisance struct {
+	District    *ContentDistrict
+	MapboxToken string
+	URL         ContentURL
+}
+type ContentNuisanceSubmitComplete struct {
 	ReportID string
 }
 
@@ -29,7 +34,11 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		Nuisance,
-		ContextNuisance{},
+		ContentNuisance{
+			District:    nil,
+			MapboxToken: config.MapboxToken,
+			URL:         makeContentURL(),
+		},
 	)
 }
 func getNuisanceSubmitComplete(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +46,7 @@ func getNuisanceSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		NuisanceSubmitComplete,
-		ContextNuisanceSubmitComplete{
+		ContentNuisanceSubmitComplete{
 			ReportID: report,
 		},
 	)
