@@ -116,13 +116,13 @@ class MapLocator extends HTMLElement {
 			color: "#FF0000",
 			draggable: true
 		}).setLngLat(coords).addTo(this._map);
-		marker.on('dragend', function(e) {
+		marker.on('dragend', (e) => {
 			const markerDraggedEvent = new CustomEvent("markerdragend", {
 				detail: {
 					marker: marker
 				}
 			});
-			mapContainer.dispatchEvent(markerDraggedEvent);
+			this.dispatchEvent(markerDraggedEvent);
 		});
 		this._markers = [marker];
 	}
