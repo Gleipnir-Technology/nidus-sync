@@ -440,28 +440,32 @@ function displaySelectedCoordinates(lngLat) {
 				<div class="form-section">
 					<div class="section-heading">
 						<i class="bi bi-person-lines-fill"></i>
-						<h3>Contact Information</h3>
+						<h3>Property Owner Information (if known)</h3>
 					</div>
 					
-					<!-- Property Owner Information -->
-					<h5 class="mb-3">Property Owner Information (if known)</h5>
 					<div class="row mb-4">
-						<div class="col-md-6 mb-3">
+						<div class="col-md-4 mb-3">
 							<label for="owner-name" class="form-label">Owner Name</label>
 							<input type="text" class="form-control" id="owner-name" name="owner-name">
 						</div>
-						<div class="col-md-6 mb-3">
+						<div class="col-md-4 mb-3">
 							<label for="owner-phone" class="form-label">Owner Phone</label>
 							<input type="tel" class="form-control" id="owner-phone" name="owner-phone">
 						</div>
-						<div class="col-md-6 mb-3">
+						<div class="col-md-4 mb-3">
 							<label for="owner-email" class="form-label">Owner Email</label>
 							<input type="email" class="form-control" id="owner-email" name="owner-email">
 						</div>
+					</div>
+					<div class="row mb-4">
 						<div class="col-md-6 mb-3 row">
 							<div class="form-check mt-4">
-								<input type="checkbox" class="form-check-input" id="property-ownership" name="property-ownership">
+								<input type="checkbox" class="form-check-input" name="property-ownership">
 								<label class="form-check-label" for="property-ownership">This is my property</label>
+							</div>
+							<div class="form-check mt-4">
+								<input type="checkbox" class="form-check-input" name="">
+								<label class="form-check-label" for="property-ownership">I grant permission to enter the back yard of this property.</label>
 							</div>
 						</div>
 					</div>
