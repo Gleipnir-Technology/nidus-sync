@@ -104,12 +104,14 @@
 						</a>
 					</div>
 
-					<div class="mb-4 row justify-content-center">
-						{{ if not (eq .District nil) }}
-							<p>Your report will be handled by</p>
-							<p><b>{{ .District.Name }}</b></p>
-							<img class="logo" src="{{ .District.URLLogo }}" />
-						{{ end }}
+					<div class="row">
+						<div class="mb-4 text-center">
+							{{ if not (eq .District nil) }}
+								<p>Your report will be handled by</p>
+								<p><b>{{ .District.Name }}</b></p>
+								<a href="{{ .District.URLWebsite }}"><img class="logo" src="{{ .District.URLLogo }}" /></a>
+							{{ end }}
+						</div>
 					</div>
 				</div>
 			</div>

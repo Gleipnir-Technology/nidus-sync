@@ -18,8 +18,9 @@ var (
 )
 
 type ContentDistrict struct {
-	Name    string
-	URLLogo string
+	Name       string
+	URLLogo    string
+	URLWebsite string
 }
 type ContentURL struct {
 	Nuisance               string
@@ -71,8 +72,9 @@ func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Reque
 			t,
 			ContentMock{
 				District: ContentDistrict{
-					Name:    "Delta MVCD",
-					URLLogo: config.MakeURLNidus("/api/district/%s/logo", slug),
+					Name:       "Delta MVCD",
+					URLLogo:    config.MakeURLNidus("/api/district/%s/logo", slug),
+					URLWebsite: "http://www.deltavcd.com/",
 				},
 				MapboxToken: config.MapboxToken,
 				ReportID:    "abcd-1234-5678",
