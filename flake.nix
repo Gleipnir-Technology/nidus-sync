@@ -21,11 +21,11 @@
                                         buildInputs = [
 						pkgs.air
 						pkgs.autoprefixer
+						pkgs.dart-sass
                                                 pkgs.go
                                                 pkgs.goose
                                                 pkgs.gotools
                                                 pkgs.lefthook
-						pkgs.sass
 						pkgs.watchexec
                                         ];
                                 };

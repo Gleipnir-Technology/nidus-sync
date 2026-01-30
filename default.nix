@@ -11,7 +11,7 @@ pkgs.buildGoModule rec {
         # Needs to be updated after every modification of go.mod/go.sum
         vendorHash = "sha256-aaJnH258H1LkXvb22rR3Clg7fKzA/HSmBZUkh1E8jKI=";
 
-	nativeBuildInputs = [ pkgs.sass ];
+	nativeBuildInputs = [ pkgs.dart-sass ];
 
 	preBuild = ''
 
