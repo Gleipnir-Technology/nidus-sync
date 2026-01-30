@@ -48,6 +48,10 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 		return fmt.Errorf("job is not for report subscription confirmation")
 	}
 
+	err := ensureInDB(ctx, job.destination())
+	if err != nil {
+		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
+	}
 	sub, err := isSubscribed(ctx, job.destination())
 	if err != nil {
 		return fmt.Errorf("Failed to check if subscribed: %w", err)
