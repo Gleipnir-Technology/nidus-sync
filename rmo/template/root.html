@@ -2,57 +2,14 @@
 
 {{define "title"}}Main{{end}}
 {{define "extraheader"}}
-<style>
-.service-card {
-	transition: transform 0.3s;
-	height: 100%;
-}
-.service-card:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.district-logo {
-	max-height: 80px;
-	width: auto;
-}
-.quick-report-mobile {
-	background-color: #ff9800;
-}
-.quick-report-desktop {
-	background-color: #ffefd5;
-	border-left: 4px solid #ff9800;
-}
-</style>
 {{end}}
 {{define "content"}}
 <!-- Main Content -->
 <main>
 	<!-- Introduction Section -->
 	<section class="py-5 bg-primary text-white">
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="col-lg-10">
-					<h2 class="text-center mb-4">Report Mosquitoes Online</h2>
-					<p class="lead text-center">
-						We are dedicated to protecting public health and improving quality of life by reducing 
-						mosquito populations and the diseases they can carry. Our districts provide comprehensive 
-						mosquito surveillance, control, and education services to our community.
-					</p>
-				</div>
-			</div>
-		</div>
-	</section>
-	
-	<!-- Quick Report for Mobile - Only visible on small screens -->
-	<section class="py-3 quick-report-mobile d-md-none">
-		<div class="container">
-			<div class="row">
-				<div class="col-12 text-center">
-					<h4 class="mb-2">On the go?</h4>
-					<a href="/quick" class="btn btn-dark btn-lg">Make a Quick Report</a>
-					<p class="mb-0 mt-2"><small>Report mosquito issues in under 60 seconds</small></p>
-				</div>
-			</div>
+		<div class="banner-container">
+			<img class="banner-image" src="/static/img/rmo/banner.jpg"/>
 		</div>
 	</section>
 
@@ -61,67 +18,45 @@
 		<div class="container">
 			<h3 class="text-center mb-4">How Can We Help You Today?</h3>
 			<div class="row g-4">
-				<!-- Service Option 1 -->
 				<div class="col-md-4">
 					<div class="card service-card h-100">
 						<div class="card-body text-center">
 							<div class="mb-3">
-								{{ template "mosquito.svg" }}
+								{{ template "mosquito-color.svg" }}
 							</div>
-							<h4 class="card-title">Follow-up or Check Status</h4>
-							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
-							<a href="/status" class="btn btn-primary mt-3">Get Status</a>
+							<h4 class="card-title">Report Mosquito Nuisance</h4>
+							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
+							<a href="{{ .URL.Nuisance }}" class="btn btn-primary mt-3">Report Problem</a>
 						</div>
 					</div>
 				</div>
-				
-				<!-- Service Option 2 -->
 				<div class="col-md-4">
 					<div class="card service-card h-100">
 						<div class="card-body text-center">
 							<div class="mb-3">
 								{{ template "pond.svg" }}
 							</div>
-							<h4 class="card-title">Report a Green Pool</h4>
-							<p class="card-text">Report stagnant water sources like abandoned pools that may breed mosquitoes.</p>
-							<a href="/pool" class="btn btn-primary mt-3">Report Source</a>
+							<h4 class="card-title">Report Standing Water</h4>
+							<p class="card-text">Report any water that has been sitting for several days, where mosquitoes can live.</p>
+							<a href="{{ .URL.Water }}" class="btn btn-primary mt-3">Report Source</a>
 						</div>
 					</div>
 				</div>
-				
-				<!-- Service Option 3 -->
 				<div class="col-md-4">
 					<div class="card service-card h-100">
 						<div class="card-body text-center">
 							<div class="mb-3">
 								{{ template "check-report.svg" }}
 							</div>
-							<h4 class="card-title">Report Mosquito Nuisance</h4>
-							<p class="card-text">Report areas with high adult mosquito activity causing discomfort or concern.</p>
-							<a href="/nuisance" class="btn btn-primary mt-3">Report Problem</a>
+							<h4 class="card-title">Follow-up or Check Status</h4>
+							<p class="card-text">Check on a previous request or view current mosquito activity in your area.</p>
+							<a href="{{ .URL.Status }}" class="btn btn-primary mt-3">Get Status</a>
 						</div>
 					</div>
 				</div>
+				
 			</div>
 			
-			<!-- Quick Report for Desktop - Only visible on medium screens and up -->
-			<div class="row mt-4 d-none d-md-block">
-				<div class="col-12">
-					<div class="card quick-report-desktop">
-						<div class="card-body py-3">
-							<div class="row align-items-center">
-								<div class="col-md-8">
-									<h5 class="mb-1">Need to make a quick report?</h5>
-									<p class="mb-0">Use our streamlined form to report mosquito issues in under 60 seconds</p>
-								</div>
-								<div class="col-md-4 text-md-end mt-3 mt-md-0">
-									<a href="/quick" class="btn btn-warning">Quick Report</a>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		</div>
 	</section>
 </main>

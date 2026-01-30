@@ -1,0 +1,32 @@
+.service-card {
+	transition: transform 0.3s;
+	height: 100%;
+}
+.service-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.district-logo {
+	max-height: 80px;
+	width: auto;
+}
+.quick-report-mobile {
+	background-color: #ff9800;
+}
+.quick-report-desktop {
+	background-color: #ffefd5;
+	border-left: 4px solid #ff9800;
+}
+
+.banner-container {
+  position: relative;
+  width: 100%;
+  background-color: #F76436;
+  overflow: hidden;
+}
+
+.banner-image {
+  display: block;
+  /* width as needed */
+}
+
