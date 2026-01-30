@@ -166,6 +166,14 @@ function toggleCollapse(something) {
 	document.getElementById("toggle-additional").classList.add("visually-hidden");
 }
 document.addEventListener('DOMContentLoaded', function() {
+	// Initialize tooltips
+	var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+	 tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+		return new bootstrap.Tooltip(tooltipTriggerEl, {
+			trigger: 'hover focus' // Works on hover (desktop) and tap (mobile)
+		});
+	});
+
 	// Elements
 	const photoInput = document.getElementById('photos');
 
@@ -464,8 +472,17 @@ function displaySelectedCoordinates(lngLat) {
 								<label class="form-check-label" for="property-ownership">This is my property</label>
 							</div>
 							<div class="form-check mt-4">
-								<input type="checkbox" class="form-check-input" name="">
-								<label class="form-check-label" for="property-ownership">I grant permission to enter the back yard of this property.</label>
+								<input type="checkbox" class="form-check-input" name="backyard-permission">
+								<label class="form-check-label" for="backyard-permission">I grant permission to enter the back yard of this property.</label>
+							</div>
+							<div class="form-check mt-4">
+								<input type="checkbox" class="form-check-input" name="reporter-confidential">
+								<label class="form-check-label" for="reporter-confidential">
+									<i class="bi bi-info-circle-fill text-primary ms-1" 
+										data-bs-toggle="tooltip" 
+										data-bs-placement="top" 
+										title="We share your information with mosquito control districts so they can follow up with any questions they may have about your report. Check this box if you would like the district to be careful not to share your information outside of the district operations team."></i>
+									I would like my personal information kept confidential.</label>
 							</div>
 						</div>
 					</div>
