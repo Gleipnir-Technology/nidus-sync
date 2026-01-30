@@ -23,38 +23,14 @@
 				</div>
 				<div class="card-body p-4">
 					<div class="text-center mb-4">
-						<p class="lead">Thank you for helping us control mosquito populations in your area!</p>
 						<div class="alert alert-info py-3">
 							<strong>Your Report ID:</strong> 
 							<span class="fs-4 fw-bold">{{.ReportID|publicReportID}}</span>
 						</div>
-						<p class="text-muted">Please save this ID for your reference.</p>
-						{{ if not (eq .District nil) }}
-							<p>Your report will be handled by</p>
-							<p><b>{{ .District.Name }}</b></p>
-							<img src="{{ .District.URLLogo }}" width="256"/>
-						{{ end }}
 					</div>
 					
 					<hr class="my-4">
-					
-					<!-- Status Check Section -->
-					<div class="mb-4">
-						<h4 class="mb-3">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
-								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-							</svg>
-							Check Your Report Status
-						</h4>
-						<p>You can check the status of your report at any time using your Report ID.</p>
-						<a href="/status/{{.ReportID}}" class="btn btn-outline-primary">
-							Check Status
-						</a>
-					</div>
-					
-					<hr class="my-4">
-					
-					<!-- Notifications Section -->
+
 					<div>
 						<h4 class="mb-3">
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell me-2" viewBox="0 0 16 16">
@@ -101,9 +77,39 @@
 									You must consent to receive notifications.
 								</div>
 							</div>
+							<div class="form-check mb-3 form-check">
+								<input class="form-check-input" type="checkbox" name="subscribe"/>
+								<label class="form-check-label" for="subscribe">
+									I'd like to subscribe to general notifications about mosquito control.
+								</label>
+							</div>
 							
 							<button type="submit" class="btn btn-primary">Register for Updates</button>
 						</form>
+					</div>
+
+					<hr class="my-4">
+					
+					<!-- Status Check Section -->
+					<div class="mb-4">
+						<h4 class="mb-3">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
+								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+							</svg>
+							Check Your Report Status
+						</h4>
+						<p>You can check the status of your report at any time using your Report ID.</p>
+						<a href="/status/{{.ReportID}}" class="btn btn-outline-primary">
+							Check Status
+						</a>
+					</div>
+
+					<div class="mb-4 row justify-content-center">
+						{{ if not (eq .District nil) }}
+							<p>Your report will be handled by</p>
+							<p><b>{{ .District.Name }}</b></p>
+							<img class="logo" src="{{ .District.URLLogo }}" />
+						{{ end }}
 					</div>
 				</div>
 			</div>
