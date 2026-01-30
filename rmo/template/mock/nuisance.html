@@ -195,6 +195,9 @@ document.addEventListener('DOMContentLoaded', function() {
 .time-label {
 	font-size: 0.9rem;
 }
+select.tall {
+	height: 160px;
+}
 .severity-item {
 	text-align: center;
 	padding: 10px;
@@ -336,15 +339,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			<div class="row">
 				<div class="col-md-12">
 					<label for="source-location" class="form-label">Where on your property do you notice the most mosquito activity?</label>
-					<select class="form-select" name="source-location">
+					<select class="form-select tall" multiple="true" name="source-location">
 						<option value="">Please select</option>
 						<option value="front-yard">Front yard</option>
 						<option value="backyard">Back yard</option>
-						<option value="patio">Patio/deck area</option>
 						<option value="garden">Garden</option>
 						<option value="pool-area">Pool area</option>
-						<option value="throughout">Throughout the property</option>
-						<option value="indoors">Indoors</option>
 						<option value="other">Other area</option>
 					</select>
 				</div>
