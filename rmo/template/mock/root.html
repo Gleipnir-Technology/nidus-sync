@@ -22,6 +22,19 @@
 	background-color: #ffefd5;
 	border-left: 4px solid #ff9800;
 }
+
+.banner-container {
+  position: relative;
+  width: 100%;
+  background-color: #F76436;
+  overflow: hidden;
+}
+
+.banner-image {
+  display: block;
+  /* width as needed */
+}
+
 </style>
 {{end}}
 {{define "content"}}
@@ -29,13 +42,8 @@
 <main>
 	<!-- Introduction Section -->
 	<section class="py-5 bg-primary text-white">
-		<div class="container">
-			<div class="row justify-content-center">
-				<div class="col-lg-10">
-					<h2 class="text-center mb-4">Report Mosquitoes Online</h2>
-					<p class="lead text-center">This is the reporting page for mosquito problems in your area.</p>
-				</div>
-			</div>
+		<div class="banner-container">
+			<img class="banner-image" src="/static/img/rmo/banner.jpg"/>
 		</div>
 	</section>
 	
