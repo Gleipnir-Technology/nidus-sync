@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	})
 	let mapZoom = document.getElementById('map-zoom');
 	mapLocator.addEventListener("zoomend", function(e) {
-		mapZoom.value = e.target.getZoom();
+		mapZoom.value = e.target.GetZoom();
 	});
 	mapLocator.addEventListener("markerdragend", (e) => {
 		const marker = event.detail.marker;

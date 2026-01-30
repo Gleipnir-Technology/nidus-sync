@@ -57,12 +57,19 @@ class MapLocator extends HTMLElement {
 		*/
 		this._map.on("load", () => {
 			console.log("map loaded");
-			this.dispatchEvent(new CustomEvent('load'), {
+			this.dispatchEvent(new CustomEvent("load"), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
 				detail: {
 					map: this
 				}
+			});
+		});
+		this._map.on("zoomend", (e) => {
+			this.dispatchEvent(new CustomEvent("zoomend"), {
+				bubbles: true,
+				composed: true,
+				detail: e,
 			});
 		});
 	}
@@ -98,6 +105,10 @@ class MapLocator extends HTMLElement {
 				<div id="map"></div>
 			</div>
 		`;
+	}
+
+	GetZoom() {
+		return this._map.getZoom();
 	}
 
 	JumpTo(args) {
