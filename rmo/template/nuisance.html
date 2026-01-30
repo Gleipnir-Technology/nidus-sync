@@ -27,6 +27,30 @@ function selectInspectionType(type) {
 		document.getElementById('schedulingSection').style.display = 'none';
 	}
 }
+function setLocationInputs(location) {
+       let country = document.getElementById('address-country');
+       let latitude = document.getElementById('latitude');
+       let longitude = document.getElementById('longitude');
+       let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+       let postcode = document.getElementById('address-postcode');
+       let place = document.getElementById('address-place');
+       let region = document.getElementById('address-region');
+       let street = document.getElementById('address-street');
+
+       // Extract context data from properties
+       const props = location.properties;
+       const context = props.context || {};
+
+       // Populate structured fields
+       country.value = context.country.name;
+       latitude.value = props.coordinates.latitude;
+       longitude.value = props.coordinates.longitude;
+       latlngAccuracyType.value = props.coordinates.accuracy;
+       postcode.value = context.postcode.name;
+       place.value = context.place.name;
+       region.value = context.region.name;
+       street.value = context.country.name;
+}
 function toggleCollapse(something) {
 	el = document.getElementById(something)
 	if (el.classList.contains('collapse')) {
@@ -39,29 +63,11 @@ function toggleCollapse(something) {
 
 // Check for source identification
 document.addEventListener('DOMContentLoaded', function() {
-	const sourceCheckboxes = [
-		document.getElementById('sourceStagnantWater'),
-		document.getElementById('sourceContainers'),
-		document.getElementById('sourceGutters')
-	];
-	
-	const sourceAlert = document.getElementById('sourceFoundAlert');
-	
-	sourceCheckboxes.forEach(checkbox => {
-		checkbox.addEventListener('change', function() {
-			// If any source is checked, show the alert
-			if (sourceCheckboxes.some(cb => cb.checked)) {
-				sourceAlert.style.display = 'block';
-			} else {
-				sourceAlert.style.display = 'none';
-			}
-		});
-	});
 	// Elements
 	const photoInput = document.getElementById('photos');
 
 	// Handle photo selection
-	photoInput.addEventListener('change', handlePhotoSelection);
+	//photoInput.addEventListener('change', handlePhotoSelection);
 
 	// Handle drag and drop
 	const photoDropArea = document.getElementById('photoDropArea');
@@ -90,14 +96,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			timeout: 10000,
 			maximumAge: 0
 		}).then(position => {
-			mapLocator.jumpTo({
+			mapLocator.JumpTo({
 				center: {
 					lng: position.coords.longitude,
 					lat: position.coords.latitude,
 				},
 				zoom: 14,
 			});
-			mapLocator.setMarker([
+			mapLocator.SetMarker([
 				position.coords.longitude,
 				position.coords.latitude,
 			]);
@@ -109,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log("location error", error);
 		})
 	})
-	//mapLocator.addEventListener("markerdragend", 
 	let mapZoom = document.getElementById('map-zoom');
 	mapLocator.addEventListener("zoomend", function(e) {
 		mapZoom.value = e.target.getZoom();
@@ -126,13 +131,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		const l = event.detail.location;
 		console.log("Address selected", l);
 		// Center map on selected address
-		mapSetMarker(l.geometry.coordinates);
-		mapJumpTo({
+		mapLocator.SetMarker(l.geometry.coordinates);
+		mapLocator.JumpTo({
 			center: l.geometry.coordinates,
 			zoom: 14,
 		});
 
-		addressDisplay.show(l);
 		setLocationInputs(l);
 	});
 });
@@ -180,6 +184,15 @@ document.addEventListener('DOMContentLoaded', function() {
 		<p class="small text-muted mb-2">You can also click on the map to mark the location precisely</p>
 		<map-locator api-key="{{ .MapboxToken }}"></map-locator>
 		<input type="hidden" id="map-zoom" name="map-zoom"/>
+		<input type="hidden" id="address-country" name="address-country"/>
+		<input type="hidden" id="address-postcode" name="address-postcode"/>
+		<input type="hidden" id="address-place" name="address-place"/>
+		<input type="hidden" id="address-region" name="address-region"/>
+		<input type="hidden" id="address-street" name="address-street"/>
+		<input type="hidden" id="latitude" name="latitude"/>
+		<input type="hidden" id="longitude" name="longitude"/>
+		<input type="hidden" id="latlng-accuracy-type" name="latlng-accuracy-type"/>
+		<input type="hidden" id="latlng-accuracy-value" name="latlng-accuracy-value"/>
 
 		<!-- Mosquito Activity Section -->
 		<div class="form-section">

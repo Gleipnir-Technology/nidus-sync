@@ -100,11 +100,11 @@ class MapLocator extends HTMLElement {
 		`;
 	}
 
-	jumpTo(args) {
+	JumpTo(args) {
 		this._map.jumpTo(args);
 	}
 
-	setMarker(coords) {
+	SetMarker(coords) {
 		console.log("Setting map marker", coords);
 		this._map.jumpTo({
 			center: coords,
