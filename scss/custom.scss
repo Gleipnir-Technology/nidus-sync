@@ -5,6 +5,8 @@ $success: #8BAE67;
 $warning: #FFC01B;
 $danger: #6b2737;
 $info: #D7B26D;
+$dark: #3b1002;
+$light: #fde1d8;
 
 $off-white: #F8F9FA;
 $off-black: #495057;
@@ -29,7 +31,9 @@ $theme-colors: map-merge(
 		"success": $success,
 		"danger": $danger,
 		"warning": $warning,
-		"info": $info
+		"info": $info,
+		"dark": $dark,
+		"light": $light
 	),
 	$custom-colors
 );
