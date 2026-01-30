@@ -336,29 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
 						<option value="seasonal">All season (recurring issue)</option>
 					</select>
 				</div>
-				
-				<!-- Severity -->
-				<div class="col-md-6">
-					<label for="severityRange" class="form-label">How would you rate the severity of the mosquito problem?</label>
-					<input type="range" class="form-range" id="severityRange" min="1" max="5" name="severity" oninput="document.getElementById('severityValue').innerText = this.value">
-					<div class="severity-scale">
-						<div class="severity-item">
-							<div>Minor</div>
-							<small>Occasional mosquito</small>
-						</div>
-						<div class="severity-item">
-							<div>Moderate</div>
-							<small>Regular presence</small>
-						</div>
-						<div class="severity-item">
-							<div>Severe</div>
-							<small>Many mosquitoes</small>
-						</div>
-					</div>
-					<div class="text-center">
-						Current selection: <span id="severityValue">3</span>/5
-					</div>
-				</div>
 			</div>
 
 			<!-- Location -->
