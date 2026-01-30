@@ -1,4 +1,4 @@
-package htmlpage
+package html
 
 import (
 	"embed"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 // FileServer conveniently sets up a http.FileServer handler to serve
@@ -36,9 +37,21 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 
 		var err error
 		var fileToServe http.File
+		found := false
 
-		if config.IsProductionEnvironment() {
-			// For production use the embedded filesystem
+		// For dev, try the current filesystem
+		if !config.IsProductionEnvironment() {
+			// Try to open from local filesystem for development
+			fileToServe, err = root.Open(requestedPath)
+			if err != nil {
+				log.Warn().Str("path", requestedPath).Msg("Failed to read static file for dev")
+				found = false
+			} else {
+				found = true
+			}
+		}
+		// For production use the embedded filesystem
+		if !found {
 			embeddedFilePath := filepath.Join(embeddedPath, requestedPath)
 			embeddedFile, err := embeddedFS.Open(embeddedFilePath)
 
@@ -49,14 +62,6 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 
 			// Wrap the embedded file to implement http.File interface
 			fileToServe = &embeddedFileWrapper{embeddedFile}
-
-		} else {
-			// Try to open from local filesystem for development
-			fileToServe, err = root.Open(requestedPath)
-			if err != nil {
-				RespondError(w, "Failed to open file", err, http.StatusNotFound)
-				return
-			}
 		}
 
 		// Create a custom ResponseWriter that allows us to modify headers

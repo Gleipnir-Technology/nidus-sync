@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 )
 
 type ContentSearch struct {
@@ -17,7 +17,7 @@ var (
 )
 
 func getSearch(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		Search,
 		ContentSearch{

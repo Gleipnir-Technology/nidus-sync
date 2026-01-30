@@ -1,7 +1,7 @@
 package rmo
 
 import (
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -28,6 +28,6 @@ func Router() chi.Router {
 	r.Get("/status", getStatus)
 	r.Get("/status/{report_id}", getStatusByID)
 	r.Get("/terms-of-service", getTerms)
-	htmlpage.AddStaticRoute(r, "/static")
+	html.AddStaticRoute(r, "/static")
 	return r
 }

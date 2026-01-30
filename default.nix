@@ -16,7 +16,7 @@ pkgs.buildGoModule rec {
 	preBuild = ''
 
 		SASS_SRC_DIR="./scss"
-		CSS_OUTPUT_DIR="./htmlpage/static/css/"
+		CSS_OUTPUT_DIR="./html/static/css/"
 
 		mkdir -p "$CSS_OUTPUT_DIR"
 

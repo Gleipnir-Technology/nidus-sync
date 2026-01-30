@@ -7,7 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
@@ -92,10 +92,10 @@ func signin(w http.ResponseWriter, errorCode string) {
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
 	}
-	htmlpage.RenderOrError(w, signinT, data)
+	html.RenderOrError(w, signinT, data)
 }
 
 func signup(w http.ResponseWriter, path string) {
 	data := ContentSignup{}
-	htmlpage.RenderOrError(w, signupT, data)
+	html.RenderOrError(w, signupT, data)
 }

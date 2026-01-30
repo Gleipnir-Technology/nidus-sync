@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 )
 
 type ContentPrivacy struct {
@@ -19,7 +19,7 @@ var (
 )
 
 func getPrivacy(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		PrivacyT,
 		ContentPrivacy{

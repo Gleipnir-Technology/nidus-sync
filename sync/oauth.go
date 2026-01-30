@@ -9,7 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
@@ -89,5 +89,5 @@ func oauthPrompt(w http.ResponseWriter, r *http.Request, user *models.User) {
 	data := ContextOauthPrompt{
 		User: userContent,
 	}
-	htmlpage.RenderOrError(w, oauthPromptT, data)
+	html.RenderOrError(w, oauthPromptT, data)
 }

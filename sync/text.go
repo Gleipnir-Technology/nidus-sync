@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 )
 
 type ContentTextMessages struct {
@@ -24,5 +24,5 @@ func getTextMessages(w http.ResponseWriter, r *http.Request, u *models.User) {
 	content := ContentTextMessages{
 		User: userContent,
 	}
-	htmlpage.RenderOrError(w, textMessagesT, content)
+	html.RenderOrError(w, textMessagesT, content)
 }

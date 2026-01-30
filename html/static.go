@@ -1,10 +1,12 @@
-package htmlpage
+package html
 
 import (
 	"embed"
+	"io/fs"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed static/*
@@ -14,7 +16,7 @@ var localFS http.Dir
 
 func AddStaticRoute(r chi.Router, path string) {
 	if localFS == "" {
-		localFS = http.Dir("./htmlpage/static")
+		localFS = http.Dir("./html/static")
 	}
 	FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 }

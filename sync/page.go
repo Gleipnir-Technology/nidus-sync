@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
@@ -14,7 +14,7 @@ var embeddedFiles embed.FS
 
 var components = [...]string{"header", "icons", "map", "sidebar"}
 
-func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
+func buildTemplate(files ...string) *html.BuiltTemplate {
 	subdir := "sync"
 	full_files := make([]string, 0)
 	for _, f := range files {
@@ -23,7 +23,7 @@ func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	for _, c := range components {
 		full_files = append(full_files, fmt.Sprintf("%s/template/components/%s.html", subdir, c))
 	}
-	return htmlpage.NewBuiltTemplate(embeddedFiles, "sync/", full_files...)
+	return html.NewBuiltTemplate(embeddedFiles, "sync/", full_files...)
 }
 
 // Respond with an error that is visible to the user

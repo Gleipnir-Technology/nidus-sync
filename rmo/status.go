@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
@@ -84,7 +84,7 @@ func formatReportID(s string) string {
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	report_id_str := r.URL.Query().Get("report")
 	if report_id_str == "" {
-		htmlpage.RenderOrError(
+		html.RenderOrError(
 			w,
 			Status,
 			ContentStatus{
@@ -103,7 +103,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(results) != 1 {
 		log.Error().Int("count", len(results)).Str("report_id", report_id_str).Msg("Got too many results for report id. This is a programmer error.")
-		htmlpage.RenderOrError(
+		html.RenderOrError(
 			w,
 			Status,
 			ContentStatus{
@@ -117,7 +117,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/status/%s", report_id), http.StatusFound)
 		return
 	}
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		Status,
 		ContentStatus{
@@ -226,7 +226,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		content, err = contentFromQuick(ctx, report_id)
 	}
 	content.MapboxToken = config.MapboxToken
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		StatusByID,
 		content,
@@ -235,7 +235,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 
 /*
 	func getQuick(w http.ResponseWriter, r *http.Request) {
-		htmlpage.RenderOrError(
+		html.RenderOrError(
 			w,
 			Quick,
 			ContentQuick{},
@@ -244,7 +244,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 
 	func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		report := r.URL.Query().Get("report")
-		htmlpage.RenderOrError(
+		html.RenderOrError(
 			w,
 			QuickSubmitComplete,
 			ContentQuickSubmitComplete{

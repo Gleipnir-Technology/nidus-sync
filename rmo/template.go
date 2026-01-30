@@ -4,7 +4,7 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 )
 
 //go:embed template/*
@@ -13,7 +13,7 @@ var embeddedFiles embed.FS
 var components = [...]string{"footer", "header", "photo-upload", "photo-upload-header"}
 var svgs = [...]string{"check-report", "mosquito", "pond"}
 
-func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
+func buildTemplate(files ...string) *html.BuiltTemplate {
 	subdir := "rmo"
 	full_files := make([]string, 0)
 	for _, f := range files {
@@ -25,5 +25,5 @@ func buildTemplate(files ...string) *htmlpage.BuiltTemplate {
 	for _, c := range svgs {
 		full_files = append(full_files, fmt.Sprintf("%s/template/svg/%s.svg", subdir, c))
 	}
-	return htmlpage.NewBuiltTemplate(embeddedFiles, "rmo/", full_files...)
+	return html.NewBuiltTemplate(embeddedFiles, "rmo/", full_files...)
 }

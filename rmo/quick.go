@@ -16,7 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/aarondl/opt/omit"
@@ -44,7 +44,7 @@ var (
 )
 
 func getQuick(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		quickT,
 		ContentQuick{},
@@ -80,7 +80,7 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		quickSubmitCompleteT,
 		ContentQuickSubmitComplete{
@@ -91,7 +91,7 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 }
 func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		registerNotificationsCompleteT,
 		ContentRegisterNotificationsComplete{

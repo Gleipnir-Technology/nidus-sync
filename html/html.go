@@ -1,4 +1,4 @@
-package htmlpage
+package html
 
 import (
 	"bytes"

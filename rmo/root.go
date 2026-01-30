@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,7 +24,7 @@ var (
 )
 
 func getPrivacy(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		PrivacyT,
 		ContentPrivacy{
@@ -36,7 +36,7 @@ func getPrivacy(w http.ResponseWriter, r *http.Request) {
 	)
 }
 func getRoot(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		RootT,
 		ContentRoot{},

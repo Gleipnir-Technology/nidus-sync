@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"github.com/skip2/go-qrcode"
@@ -125,13 +125,13 @@ func mock(t string, w http.ResponseWriter, code string) {
 			SettingUserAdd:      "/mock/setting/user/add",
 		},
 	}
-	template, ok := htmlpage.TemplatesByFilename[t+".html"]
+	template, ok := html.TemplatesByFilename[t+".html"]
 	if !ok {
 		log.Error().Str("template", t).Msg("Failed to find template")
 		respondError(w, "Failed to render template", nil, http.StatusInternalServerError)
 		return
 	}
-	htmlpage.RenderOrError(w, &template, data)
+	html.RenderOrError(w, &template, data)
 }
 
 func renderMock(templateName string) http.HandlerFunc {

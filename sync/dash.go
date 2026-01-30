@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/uber/h3-go/v4"
@@ -97,7 +97,7 @@ func getDistrict(w http.ResponseWriter, r *http.Request) {
 	context := ContextDistrict{
 		MapboxToken: config.MapboxToken,
 	}
-	htmlpage.RenderOrError(w, districtT, &context)
+	html.RenderOrError(w, districtT, &context)
 }
 
 func getLayoutTest(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -106,7 +106,7 @@ func getLayoutTest(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
-	htmlpage.RenderOrError(w, layoutTestT, &ContentLayoutTest{User: userContent})
+	html.RenderOrError(w, layoutTestT, &ContentLayoutTest{User: userContent})
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -241,7 +241,7 @@ func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 		Treatments: treatments,
 		User:       userContent,
 	}
-	htmlpage.RenderOrError(w, cellT, &data)
+	html.RenderOrError(w, cellT, &data)
 }
 
 func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
@@ -310,7 +310,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		RecentRequests: requests,
 		User:           userContent,
 	}
-	htmlpage.RenderOrError(w, dashboardT, data)
+	html.RenderOrError(w, dashboardT, data)
 }
 
 func settings(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -322,7 +322,7 @@ func settings(w http.ResponseWriter, r *http.Request, user *models.User) {
 	data := ContentAuthenticatedPlaceholder{
 		User: userContent,
 	}
-	htmlpage.RenderOrError(w, settingsT, data)
+	html.RenderOrError(w, settingsT, data)
 }
 
 func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
@@ -383,7 +383,7 @@ func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.U
 		User:            userContent,
 	}
 
-	htmlpage.RenderOrError(w, sourceT, data)
+	html.RenderOrError(w, sourceT, data)
 }
 
 func trap(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
@@ -423,5 +423,5 @@ func trap(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUI
 		User: userContent,
 	}
 
-	htmlpage.RenderOrError(w, trapT, data)
+	html.RenderOrError(w, trapT, data)
 }

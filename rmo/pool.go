@@ -13,7 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 )
@@ -31,7 +31,7 @@ var (
 )
 
 func getPool(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		Pool,
 		ContextPool{
@@ -41,7 +41,7 @@ func getPool(w http.ResponseWriter, r *http.Request) {
 }
 func getPoolSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		PoolSubmitComplete,
 		ContextPoolSubmitComplete{

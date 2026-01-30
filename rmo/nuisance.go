@@ -9,7 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -26,7 +26,7 @@ var (
 )
 
 func getNuisance(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		Nuisance,
 		ContextNuisance{},
@@ -34,7 +34,7 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 }
 func getNuisanceSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		NuisanceSubmitComplete,
 		ContextNuisanceSubmitComplete{

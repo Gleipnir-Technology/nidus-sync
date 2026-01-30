@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/htmlpage"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -57,17 +57,16 @@ func makeContentURL(slug string) ContentURL {
 		Water:                  makeURLMock(slug, "water"),
 	}
 }
-
 func makeURLMock(slug, p string) string {
 	return config.MakeURLReport("/mock/district/%s/%s", slug, p)
 }
-func renderMock(t *htmlpage.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
+func renderMock(t *html.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := chi.URLParam(r, "slug")
 		if slug == "" {
 			slug = "delta-mvcd"
 		}
-		htmlpage.RenderOrError(
+		html.RenderOrError(
 			w,
 			t,
 			ContentMock{
