@@ -22,13 +22,6 @@ type ContentDistrict struct {
 	URLLogo    string
 	URLWebsite string
 }
-type ContentURL struct {
-	Nuisance               string
-	NuisanceSubmitComplete string
-	Status                 string
-	Tegola                 string
-	Water                  string
-}
 type ContentMock struct {
 	District    ContentDistrict
 	MapboxToken string
@@ -48,7 +41,7 @@ func addMockRoutes(r chi.Router) {
 	r.Get("/status", renderMock(mockStatusT))
 }
 
-func makeContentURL(slug string) ContentURL {
+func makeContentURLMock(slug string) ContentURL {
 	return ContentURL{
 		Nuisance:               makeURLMock(slug, "nuisance"),
 		NuisanceSubmitComplete: makeURLMock(slug, "nuisance-submit-complete"),
@@ -77,7 +70,7 @@ func renderMock(t *html.BuiltTemplate) func(http.ResponseWriter, *http.Request) 
 				},
 				MapboxToken: config.MapboxToken,
 				ReportID:    "abcd-1234-5678",
-				URL:         makeContentURL(slug),
+				URL:         makeContentURLMock(slug),
 			},
 		)
 	}

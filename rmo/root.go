@@ -15,13 +15,30 @@ type ContentPrivacy struct {
 	Site      string
 	URLReport string
 }
-type ContentRoot struct{}
+type ContentRoot struct {
+	URL ContentURL
+}
+type ContentURL struct {
+	Nuisance               string
+	NuisanceSubmitComplete string
+	Status                 string
+	Tegola                 string
+	Water                  string
+}
 
 var (
 	PrivacyT = buildTemplate("privacy", "base")
 	RootT    = buildTemplate("root", "base")
 	TermsT   = buildTemplate("terms", "base")
 )
+
+func boolFromForm(r *http.Request, k string) bool {
+	s := r.PostFormValue(k)
+	if s == "on" {
+		return true
+	}
+	return false
+}
 
 func getPrivacy(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
@@ -48,31 +65,36 @@ func getRobots(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Allow: /\n")
 }
 func getTerms(w http.ResponseWriter, r *http.Request) {
-	htmlpage.RenderOrError(
+	html.RenderOrError(
 		w,
 		TermsT,
 		ContentRoot{},
 	)
 }
 
-// Respond with an error that is visible to the user
-func respondError(w http.ResponseWriter, m string, e error, s int) {
-	log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error")
-	http.Error(w, m, s)
-}
-
-func boolFromForm(r *http.Request, k string) bool {
-	s := r.PostFormValue(k)
-	if s == "on" {
-		return true
+func makeContentURL(slug string) ContentURL {
+	return ContentURL{
+		Nuisance:               makeURL("nuisance"),
+		NuisanceSubmitComplete: makeURL("nuisance-submit-complete"),
+		Status:                 makeURL("status"),
+		Tegola:                 config.MakeURLTegola("/"),
+		Water:                  makeURL("water"),
 	}
-	return false
 }
 
+func makeURL(p string) string {
+	return config.MakeURLReport("/%s", p)
+}
 func postFormValueOrNone(r *http.Request, k string) string {
 	v := r.PostFormValue(k)
 	if v == "" {
 		return "none"
 	}
 	return v
+}
+
+// Respond with an error that is visible to the user
+func respondError(w http.ResponseWriter, m string, e error, s int) {
+	log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error")
+	http.Error(w, m, s)
 }
