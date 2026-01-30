@@ -123,9 +123,7 @@ class AddressInput extends HTMLElement {
 			el.addEventListener('click', e => {
 				const index = parseInt(el.dataset.index);
 				const suggestion = suggestions[index];
-				this.value = suggestion.properties.full_address;
-				this._suggestions.innerHTML = '';
-				
+				this.SetValue(suggestion);
 				// Dispatch custom event
 				this.dispatchEvent(new CustomEvent('address-selected', {
 					bubbles: true,
@@ -193,6 +191,11 @@ class AddressInput extends HTMLElement {
 			this._input.value = '';
 			this._suggestions.innerHTML = '';
 		}
+	}
+
+	SetValue(suggestion) {
+		this.value = suggestion.properties.full_address;
+		this._suggestions.innerHTML = '';
 	}
 }
 

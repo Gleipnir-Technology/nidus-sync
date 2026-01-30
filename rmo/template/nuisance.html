@@ -11,6 +11,17 @@
 <script>
 const MAPBOX_ACCESS_TOKEN = "{{.MapboxToken}}";
 // Handle inspection type selection
+async function handleMarkerDrag(lngLat) {
+	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+		lat: lngLat.lat,
+		lng: lngLat.lng,
+	})
+	console.log("marker drag reverse geocode", response);
+	if (response !== undefined && response.features.length > 0) {
+		const addressInput = document.querySelector("address-input");
+		addressInput.SetValue(response.features[0]);
+	}
+}
 function selectInspectionType(type) {
 	// Remove selected class from both cards
 	document.getElementById('propertyInspection').classList.remove('selected');
@@ -64,12 +75,8 @@ function toggleCollapse(something) {
 // Check for source identification
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
+	const addressInput = document.querySelector("address-input");
 	const photoInput = document.getElementById('photos');
-
-	// Handle photo selection
-	//photoInput.addEventListener('change', handlePhotoSelection);
-
-	// Handle drag and drop
 	const photoDropArea = document.getElementById('photoDropArea');
 	
 	photoDropArea.addEventListener('dragover', function(e) {
@@ -122,12 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	mapLocator.addEventListener("markerdragend", (e) => {
 		const marker = event.detail.marker;
 		const lngLat = marker.getLngLat();
-		//displaySelectedCoordinates(lngLat);
-		geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat);
+		handleMarkerDrag(lngLat);
 	});
 
 	const addressDisplay = document.querySelector("address-display");
-	const addressInput = document.querySelector("address-input");
 	addressInput.addEventListener("address-selected", (event) => {
 		const l = event.detail.location;
 		console.log("Address selected", l);

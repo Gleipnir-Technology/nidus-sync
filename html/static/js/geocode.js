@@ -7,5 +7,5 @@ async function geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat) {
 		console.warn("No results for reverse geocode");
 		return;
 	}
-	const match = data.features[0];
+	return data
 }
