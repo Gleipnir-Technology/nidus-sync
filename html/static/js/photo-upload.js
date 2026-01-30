@@ -75,7 +75,7 @@ class PhotoUpload extends HTMLElement {
 				</svg>
 				<div class="file-upload-container" id="photoDropArea">
 					<input type="file" id="photos" name="photos" class="d-none" accept="image/*" multiple>
-					<button type="button" class="btn btn-outline-primary mb-2" onclick="document.getElementById('photos').click()">Add Photos</button>
+					<button type="button" class="btn btn-outline-primary mb-2" onclick="this.getRootNode().handleButtonClick()">Add Photos</button>
 				</div>
 				<small class="d-block text-muted">Take pictures of the mosquito problem area</small>
 
@@ -88,6 +88,10 @@ class PhotoUpload extends HTMLElement {
 
 		// Set the shadow DOM content
 		this.shadowRoot.innerHTML = style + html;
+		this.shadowRoot.handleButtonClick = () => {
+			const photoInput = this.shadowRoot.querySelector('#photos');
+			photoInput.click();
+		};
 	}
 	/**
 	 * Handle photo selection and preview
