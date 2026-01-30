@@ -23,7 +23,7 @@ func buildTemplate(files ...string) *html.BuiltTemplate {
 	for _, c := range components {
 		full_files = append(full_files, fmt.Sprintf("%s/template/components/%s.html", subdir, c))
 	}
-	return html.NewBuiltTemplate(embeddedFiles, "sync/", full_files...)
+	return html.NewBuiltTemplate(embeddedFiles, "sync/", []string{}, full_files...)
 }
 
 // Respond with an error that is visible to the user
