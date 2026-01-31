@@ -134,15 +134,21 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 	lng := r.FormValue("longitude")
 	comments := r.FormValue("comments")
 
-	latitude, err := strconv.ParseFloat(lat, 64)
-	if err != nil {
-		respondError(w, "Failed to create parse latitude", err, http.StatusBadRequest)
-		return
+	var latitude float64
+	if lat != "" {
+		latitude, err = strconv.ParseFloat(lat, 64)
+		if err != nil {
+			respondError(w, "Failed to parse latitude", err, http.StatusBadRequest)
+			return
+		}
 	}
-	longitude, err := strconv.ParseFloat(lng, 64)
-	if err != nil {
-		respondError(w, "Failed to create parse longitude", err, http.StatusBadRequest)
-		return
+	var longitude float64
+	if lng != "" {
+		longitude, err = strconv.ParseFloat(lng, 64)
+		if err != nil {
+			respondError(w, "Failed to parse longitude", err, http.StatusBadRequest)
+			return
+		}
 	}
 	u, err := report.GenerateReportID()
 	if err != nil {
