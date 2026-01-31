@@ -44,6 +44,7 @@ function setLocationInputs(location) {
        let latitude = document.getElementById('latitude');
        let longitude = document.getElementById('longitude');
        let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+       let latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
        let postcode = document.getElementById('address-postcode');
        let place = document.getElementById('address-place');
        let region = document.getElementById('address-region');
@@ -58,6 +59,7 @@ function setLocationInputs(location) {
        latitude.value = props.coordinates.latitude;
        longitude.value = props.coordinates.longitude;
        latlngAccuracyType.value = props.coordinates.accuracy;
+       latlngAccuracyValue.value = "0";
        postcode.value = context.postcode.name;
        place.value = context.place.name;
        region.value = context.region.name;
@@ -77,6 +79,10 @@ function toggleCollapse(something) {
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
 	const addressInput = document.querySelector("address-input");
+	const latitudeInput = document.getElementById('latitude');
+	const longitudeInput = document.getElementById('longitude');
+        const latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+        const latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
 	
 	const mapLocator = document.querySelector("map-locator");
 	mapLocator.addEventListener("load", (event) => {
@@ -85,6 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			timeout: 10000,
 			maximumAge: 0
 		}).then(position => {
+			console.log("Got location", position);
+			latitudeInput.value = position.coords.latitude;
+			longitudeInput.value = position.coords.longitude;
+			latLngAccuracyType.value = 'browser';
+			latLngAccuracyValue.value = position.coords.accuracy;
 			mapLocator.JumpTo({
 				center: {
 					lng: position.coords.longitude,
