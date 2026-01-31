@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 )
@@ -85,7 +86,7 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse zoom level", err, http.StatusBadRequest)
 		return
 	}
-	public_id, err := GenerateReportID()
+	public_id, err := report.GenerateReportID()
 	if err != nil {
 		respondError(w, "Failed to create pool report public ID", err, http.StatusInternalServerError)
 		return

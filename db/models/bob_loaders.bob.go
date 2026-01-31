@@ -25,6 +25,8 @@ type preloaders struct {
 	CommsPhone                        commsPhonePreloader
 	CommsTextJob                      commsTextJobPreloader
 	CommsTextLog                      commsTextLogPreloader
+	DistrictSubscriptionEmail         districtSubscriptionEmailPreloader
+	DistrictSubscriptionPhone         districtSubscriptionPhonePreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogPreloader
 	FieldseekerHabitatrelate          fieldseekerHabitatrelatePreloader
@@ -84,6 +86,8 @@ func getPreloaders() preloaders {
 		CommsPhone:                        buildCommsPhonePreloader(),
 		CommsTextJob:                      buildCommsTextJobPreloader(),
 		CommsTextLog:                      buildCommsTextLogPreloader(),
+		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailPreloader(),
+		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhonePreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogPreloader(),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelatePreloader(),
@@ -149,6 +153,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsPhone                        commsPhoneThenLoader[Q]
 	CommsTextJob                      commsTextJobThenLoader[Q]
 	CommsTextLog                      commsTextLogThenLoader[Q]
+	DistrictSubscriptionEmail         districtSubscriptionEmailThenLoader[Q]
+	DistrictSubscriptionPhone         districtSubscriptionPhoneThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogThenLoader[Q]
 	FieldseekerHabitatrelate          fieldseekerHabitatrelateThenLoader[Q]
@@ -208,6 +214,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
 		CommsTextJob:                      buildCommsTextJobThenLoader[Q](),
 		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
+		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailThenLoader[Q](),
+		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhoneThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogThenLoader[Q](),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelateThenLoader[Q](),

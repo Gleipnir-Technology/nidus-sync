@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -19,6 +20,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
+	"github.com/stephenafamo/scan"
 )
 
 // CommsEmailContact is an object representing the database table.
@@ -46,6 +48,7 @@ type CommsEmailContactsQuery = *psql.ViewQuery[*CommsEmailContact, CommsEmailCon
 // commsEmailContactR is where relationships are stored.
 type commsEmailContactR struct {
 	DestinationEmailLogs CommsEmailLogSlice // comms.email_log.email_log_destination_fkey
+	Organizations        OrganizationSlice  // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
 }
 
 func buildCommsEmailContactColumns(alias string) commsEmailContactColumns {
@@ -440,6 +443,35 @@ func (os CommsEmailContactSlice) DestinationEmailLogs(mods ...bob.Mod[*dialect.S
 	)...)
 }
 
+// Organizations starts a query for related objects on organization
+func (o *CommsEmailContact) Organizations(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionEmails.NameAs()).On(
+			Organizations.Columns.ID.EQ(DistrictSubscriptionEmails.Columns.OrganizationID)),
+		sm.Where(DistrictSubscriptionEmails.Columns.EmailContactAddress.EQ(psql.Arg(o.Address))),
+	)...)
+}
+
+func (os CommsEmailContactSlice) Organizations(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkAddress := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkAddress = append(pkAddress, o.Address)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkAddress), "text[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionEmails.NameAs()).On(
+			Organizations.Columns.ID.EQ(DistrictSubscriptionEmails.Columns.OrganizationID),
+		),
+		sm.Where(psql.Group(DistrictSubscriptionEmails.Columns.EmailContactAddress).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertCommsEmailContactDestinationEmailLogs0(ctx context.Context, exec bob.Executor, commsEmailLogs1 []*CommsEmailLogSetter, commsEmailContact0 *CommsEmailContact) (CommsEmailLogSlice, error) {
 	for i := range commsEmailLogs1 {
 		commsEmailLogs1[i].Destination = omit.From(commsEmailContact0.Address)
@@ -508,6 +540,71 @@ func (commsEmailContact0 *CommsEmailContact) AttachDestinationEmailLogs(ctx cont
 	return nil
 }
 
+func attachCommsEmailContactOrganizations0(ctx context.Context, exec bob.Executor, count int, commsEmailContact0 *CommsEmailContact, organizations2 OrganizationSlice) (DistrictSubscriptionEmailSlice, error) {
+	setters := make([]*DistrictSubscriptionEmailSetter, count)
+	for i := range count {
+		setters[i] = &DistrictSubscriptionEmailSetter{
+			EmailContactAddress: omit.From(commsEmailContact0.Address),
+			OrganizationID:      omit.From(organizations2[i].ID),
+		}
+	}
+
+	districtSubscriptionEmails1, err := DistrictSubscriptionEmails.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsEmailContactOrganizations0: %w", err)
+	}
+
+	return districtSubscriptionEmails1, nil
+}
+
+func (commsEmailContact0 *CommsEmailContact) InsertOrganizations(ctx context.Context, exec bob.Executor, related ...*OrganizationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	inserted, err := Organizations.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	organizations2 := OrganizationSlice(inserted)
+
+	_, err = attachCommsEmailContactOrganizations0(ctx, exec, len(related), commsEmailContact0, organizations2)
+	if err != nil {
+		return err
+	}
+
+	commsEmailContact0.R.Organizations = append(commsEmailContact0.R.Organizations, organizations2...)
+
+	for _, rel := range organizations2 {
+		rel.R.EmailContacts = append(rel.R.EmailContacts, commsEmailContact0)
+	}
+	return nil
+}
+
+func (commsEmailContact0 *CommsEmailContact) AttachOrganizations(ctx context.Context, exec bob.Executor, related ...*Organization) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	organizations2 := OrganizationSlice(related)
+
+	_, err = attachCommsEmailContactOrganizations0(ctx, exec, len(related), commsEmailContact0, organizations2)
+	if err != nil {
+		return err
+	}
+
+	commsEmailContact0.R.Organizations = append(commsEmailContact0.R.Organizations, organizations2...)
+
+	for _, rel := range related {
+		rel.R.EmailContacts = append(rel.R.EmailContacts, commsEmailContact0)
+	}
+
+	return nil
+}
+
 type commsEmailContactWhere[Q psql.Filterable] struct {
 	Address      psql.WhereMod[Q, string]
 	Confirmed    psql.WhereMod[Q, bool]
@@ -548,6 +645,20 @@ func (o *CommsEmailContact) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Organizations":
+		rels, ok := retrieved.(OrganizationSlice)
+		if !ok {
+			return fmt.Errorf("commsEmailContact cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organizations = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.EmailContacts = CommsEmailContactSlice{o}
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("commsEmailContact has no relationship %q", name)
 	}
@@ -561,11 +672,15 @@ func buildCommsEmailContactPreloader() commsEmailContactPreloader {
 
 type commsEmailContactThenLoader[Q orm.Loadable] struct {
 	DestinationEmailLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organizations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsEmailContactThenLoader[Q orm.Loadable]() commsEmailContactThenLoader[Q] {
 	type DestinationEmailLogsLoadInterface interface {
 		LoadDestinationEmailLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type OrganizationsLoadInterface interface {
+		LoadOrganizations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsEmailContactThenLoader[Q]{
@@ -573,6 +688,12 @@ func buildCommsEmailContactThenLoader[Q orm.Loadable]() commsEmailContactThenLoa
 			"DestinationEmailLogs",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationEmailLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadDestinationEmailLogs(ctx, exec, mods...)
+			},
+		),
+		Organizations: thenLoadBuilder[Q](
+			"Organizations",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganizations(ctx, exec, mods...)
 			},
 		),
 	}
@@ -639,9 +760,91 @@ func (os CommsEmailContactSlice) LoadDestinationEmailLogs(ctx context.Context, e
 	return nil
 }
 
+// LoadOrganizations loads the commsEmailContact's Organizations into the .R struct
+func (o *CommsEmailContact) LoadOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organizations = nil
+
+	related, err := o.Organizations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.EmailContacts = CommsEmailContactSlice{o}
+	}
+
+	o.R.Organizations = related
+	return nil
+}
+
+// LoadOrganizations loads the commsEmailContact's Organizations into the .R struct
+func (os CommsEmailContactSlice) LoadOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(Organizations.Columns))
+	}
+
+	q := os.Organizations(append(
+		mods,
+		sm.Columns(DistrictSubscriptionEmails.Columns.EmailContactAddress.As("related_comms.email_contact.Address")),
+	)...)
+
+	AddressSlice := []string{}
+
+	mapper := scan.Mod(scan.StructMapper[*Organization](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				AddressSlice = append(AddressSlice, *new(string))
+				row.ScheduleScanByName("related_comms.email_contact.Address", &AddressSlice[len(AddressSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	organizations, err := bob.Allx[bob.SliceTransformer[*Organization, OrganizationSlice]](ctx, exec, q, mapper)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		o.R.Organizations = nil
+	}
+
+	for _, o := range os {
+		for i, rel := range organizations {
+			if !(o.Address == AddressSlice[i]) {
+				continue
+			}
+
+			rel.R.EmailContacts = append(rel.R.EmailContacts, o)
+
+			o.R.Organizations = append(o.R.Organizations, rel)
+		}
+	}
+
+	return nil
+}
+
 // commsEmailContactC is where relationship counts are stored.
 type commsEmailContactC struct {
 	DestinationEmailLogs *int64
+	Organizations        *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -653,12 +856,15 @@ func (o *CommsEmailContact) PreloadCount(name string, count int64) error {
 	switch name {
 	case "DestinationEmailLogs":
 		o.C.DestinationEmailLogs = &count
+	case "Organizations":
+		o.C.Organizations = &count
 	}
 	return nil
 }
 
 type commsEmailContactCountPreloader struct {
 	DestinationEmailLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Organizations        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsEmailContactCountPreloader() commsEmailContactCountPreloader {
@@ -680,16 +886,40 @@ func buildCommsEmailContactCountPreloader() commsEmailContactCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Organizations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsEmailContact]("Organizations", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsEmailContacts.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(DistrictSubscriptionEmails.Name()),
+					sm.Where(psql.Quote(DistrictSubscriptionEmails.Alias(), "email_contact_address").EQ(psql.Quote(parent, "address"))),
+					sm.InnerJoin(Organizations.Name()).On(
+						psql.Quote(Organizations.Alias(), "id").EQ(psql.Quote(DistrictSubscriptionEmails.Alias(), "organization_id")),
+					),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
 type commsEmailContactCountThenLoader[Q orm.Loadable] struct {
 	DestinationEmailLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organizations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsEmailContactCountThenLoader[Q orm.Loadable]() commsEmailContactCountThenLoader[Q] {
 	type DestinationEmailLogsCountInterface interface {
 		LoadCountDestinationEmailLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type OrganizationsCountInterface interface {
+		LoadCountOrganizations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsEmailContactCountThenLoader[Q]{
@@ -697,6 +927,12 @@ func buildCommsEmailContactCountThenLoader[Q orm.Loadable]() commsEmailContactCo
 			"DestinationEmailLogs",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationEmailLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountDestinationEmailLogs(ctx, exec, mods...)
+			},
+		),
+		Organizations: countThenLoadBuilder[Q](
+			"Organizations",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountOrganizations(ctx, exec, mods...)
 			},
 		),
 	}
@@ -732,9 +968,40 @@ func (os CommsEmailContactSlice) LoadCountDestinationEmailLogs(ctx context.Conte
 	return nil
 }
 
+// LoadCountOrganizations loads the count of Organizations into the C struct
+func (o *CommsEmailContact) LoadCountOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Organizations(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Organizations = &count
+	return nil
+}
+
+// LoadCountOrganizations loads the count of Organizations for a slice
+func (os CommsEmailContactSlice) LoadCountOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountOrganizations(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type commsEmailContactJoins[Q dialect.Joinable] struct {
 	typ                  string
 	DestinationEmailLogs modAs[Q, commsEmailLogColumns]
+	Organizations        modAs[Q, organizationColumns]
 }
 
 func (j commsEmailContactJoins[Q]) aliasedAs(alias string) commsEmailContactJoins[Q] {
@@ -752,6 +1019,28 @@ func buildCommsEmailContactJoins[Q dialect.Joinable](cols commsEmailContactColum
 				{
 					mods = append(mods, dialect.Join[Q](typ, CommsEmailLogs.Name().As(to.Alias())).On(
 						to.Destination.EQ(cols.Address),
+					))
+				}
+
+				return mods
+			},
+		},
+		Organizations: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
+
+				{
+					to := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, DistrictSubscriptionEmails.Name().As(to.Alias())).On(
+						to.EmailContactAddress.EQ(cols.Address),
+					))
+				}
+				{
+					cols := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.OrganizationID),
 					))
 				}
 

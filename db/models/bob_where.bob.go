@@ -25,6 +25,8 @@ func Where[Q psql.Filterable]() struct {
 	CommsPhones                        commsPhoneWhere[Q]
 	CommsTextJobs                      commsTextJobWhere[Q]
 	CommsTextLogs                      commsTextLogWhere[Q]
+	DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
+	DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -90,6 +92,8 @@ func Where[Q psql.Filterable]() struct {
 		CommsPhones                        commsPhoneWhere[Q]
 		CommsTextJobs                      commsTextJobWhere[Q]
 		CommsTextLogs                      commsTextLogWhere[Q]
+		DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
+		DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -154,6 +158,8 @@ func Where[Q psql.Filterable]() struct {
 		CommsPhones:                        buildCommsPhoneWhere[Q](CommsPhones.Columns),
 		CommsTextJobs:                      buildCommsTextJobWhere[Q](CommsTextJobs.Columns),
 		CommsTextLogs:                      buildCommsTextLogWhere[Q](CommsTextLogs.Columns),
+		DistrictSubscriptionEmails:         buildDistrictSubscriptionEmailWhere[Q](DistrictSubscriptionEmails.Columns),
+		DistrictSubscriptionPhones:         buildDistrictSubscriptionPhoneWhere[Q](DistrictSubscriptionPhones.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),

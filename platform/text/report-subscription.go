@@ -52,11 +52,12 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	sub, err := isSubscribed(ctx, job.destination())
+	status, err := phoneStatus(ctx, job.destination())
 	if err != nil {
 		return fmt.Errorf("Failed to check if subscribed: %w", err)
 	}
-	if sub == nil {
+	switch status {
+	case enums.CommsPhonestatustypeUnconfirmed:
 		err = delayMessage(ctx, enums.CommsTextjobsourceRmo, j.destination(), j.content(), enums.CommsTextjobtypeReportConfirmation)
 		if err != nil {
 			return fmt.Errorf("Failed to delay report subscription message: %w", err)
@@ -66,13 +67,12 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 			return fmt.Errorf("Failed to ensure initial text has been sent: %w", err)
 		}
 		return nil
-	}
-	if *sub {
+	case enums.CommsPhonestatustypeOkToSend:
 		err = sendText(ctx, j.source(), j.destination(), j.content(), enums.CommsTextoriginWebsiteAction, false, true)
 		if err != nil {
 			return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
 		}
-	} else {
+	case enums.CommsPhonestatustypeStopped:
 		resendInitialText(ctx, j.source(), j.destination())
 	}
 	return nil

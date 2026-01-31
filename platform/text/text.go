@@ -31,17 +31,17 @@ func HandleTextMessage(src string, dst string, body string) {
 		log.Error().Err(err).Str("dst", dst).Msg("Failed to add text message log")
 		return
 	}
-	subscribed, err := isSubscribed(ctx, src)
+	status, err := phoneStatus(ctx, src)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to handle message")
+		log.Error().Err(err).Msg("Failed to get phone status")
 		return
 	}
 	body_l := strings.TrimSpace(strings.ToLower(body))
 	// We don't know if they're subscribed or not.
-	if subscribed == nil {
+	if status == enums.CommsPhonestatustypeUnconfirmed {
 		switch body_l {
 		case "yes":
-			setSubscribed(ctx, src, true)
+			setPhoneStatus(ctx, src, enums.CommsPhonestatustypeOkToSend)
 			handleWaitingTextJobs(ctx, src)
 		default:
 			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
@@ -59,7 +59,7 @@ func HandleTextMessage(src string, dst string, body string) {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to send unsubscribe acknowledgement.")
 		}
-		setSubscribed(ctx, src, false)
+		setPhoneStatus(ctx, src, enums.CommsPhonestatustypeStopped)
 		return
 	case "reset conversation":
 		handleResetConversation(ctx, src, dst)
@@ -145,7 +145,7 @@ func resendInitialText(ctx context.Context, src string, dst string) error {
 		return fmt.Errorf("Failed to find phone %s: %w", dst, err)
 	}
 	err = phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
-		IsSubscribed: omitnull.FromPtr[bool](nil),
+		Status: omit.From(enums.CommsPhonestatustypeUnconfirmed),
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to clear subscription on phone %s: %w", dst, err)
@@ -185,7 +185,8 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 		if err.Error() == "sql: no rows in result set" {
 			_, err = models.CommsPhones.Insert(&models.CommsPhoneSetter{
 				E164:         omit.From(destination),
-				IsSubscribed: omitnull.FromPtr[bool](nil),
+				IsSubscribed: omit.From(false),
+				Status:       omit.From(enums.CommsPhonestatustypeUnconfirmed),
 			}).One(ctx, db.PGInstance.BobDB)
 			if err != nil {
 				return fmt.Errorf("Failed to insert new phone contact: %w", err)
@@ -282,16 +283,12 @@ func insertTextLog(ctx context.Context, content string, destination string, sour
 	return log, err
 }
 
-func isSubscribed(ctx context.Context, src string) (*bool, error) {
+func phoneStatus(ctx context.Context, src string) (enums.CommsPhonestatustype, error) {
 	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
+		return enums.CommsPhonestatustypeUnconfirmed, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
-	if phone.IsSubscribed.IsNull() {
-		return nil, nil
-	}
-	result := phone.IsSubscribed.MustGet()
-	return &result, nil
+	return phone.Status, nil
 }
 
 func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Message, error) {
@@ -337,15 +334,15 @@ func sendText(ctx context.Context, source string, destination string, message st
 	return nil
 }
 
-func setSubscribed(ctx context.Context, src string, is_subscribed bool) error {
+func setPhoneStatus(ctx context.Context, src string, status enums.CommsPhonestatustype) error {
 	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
 	if err != nil {
 		return fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
 	phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
-		IsSubscribed: omitnull.From(is_subscribed),
+		Status: omit.From(status),
 	})
-	log.Info().Str("src", src).Bool("is_subscribed", is_subscribed).Msg("Set number subscribed")
+	log.Info().Str("src", src).Str("status", string(status)).Msg("Set number subscribed")
 	return nil
 }
 

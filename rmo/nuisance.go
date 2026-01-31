@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -84,7 +85,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	source_description := r.PostFormValue("source-description")
 	additional_info := r.PostFormValue("additional-info")
 
-	public_id, err := GenerateReportID()
+	public_id, err := report.GenerateReportID()
 	if err != nil {
 		respondError(w, "Failed to create quick report public ID", err, http.StatusInternalServerError)
 		return

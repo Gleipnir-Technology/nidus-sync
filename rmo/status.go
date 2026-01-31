@@ -16,7 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -96,27 +96,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	report_id := sanitizeReportID(report_id_str)
 	report_id_str = formatReportID(report_id)
-	results, err := sql.PublicreportIDTable(report_id).All(r.Context(), db.PGInstance.BobDB)
-	if err != nil {
-		respondError(w, "Failed to query for report", err, http.StatusInternalServerError)
-		return
-	}
-	if len(results) != 1 {
-		log.Error().Int("count", len(results)).Str("report_id", report_id_str).Msg("Got too many results for report id. This is a programmer error.")
-		html.RenderOrError(
-			w,
-			Status,
-			ContentStatus{
-				Error:    "Sorry, server's confused",
-				ReportID: report_id_str,
-			},
-		)
-	}
-	result := results[0]
-	if result.ExistsSomewhere {
-		http.Redirect(w, r, fmt.Sprintf("/status/%s", report_id), http.StatusFound)
-		return
-	}
+	//some_report, e := report.FindSomeReport(r.Context(), report_id)
 	html.RenderOrError(
 		w,
 		Status,

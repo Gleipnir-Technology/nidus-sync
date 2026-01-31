@@ -272,6 +272,82 @@ func (e *CommsMessagetypeemail) Scan(value any) error {
 	return nil
 }
 
+// Enum values for CommsPhonestatustype
+const (
+	CommsPhonestatustypeUnconfirmed CommsPhonestatustype = "unconfirmed"
+	CommsPhonestatustypeOkToSend    CommsPhonestatustype = "ok-to-send"
+	CommsPhonestatustypeStopped     CommsPhonestatustype = "stopped"
+)
+
+func AllCommsPhonestatustype() []CommsPhonestatustype {
+	return []CommsPhonestatustype{
+		CommsPhonestatustypeUnconfirmed,
+		CommsPhonestatustypeOkToSend,
+		CommsPhonestatustypeStopped,
+	}
+}
+
+type CommsPhonestatustype string
+
+func (e CommsPhonestatustype) String() string {
+	return string(e)
+}
+
+func (e CommsPhonestatustype) Valid() bool {
+	switch e {
+	case CommsPhonestatustypeUnconfirmed,
+		CommsPhonestatustypeOkToSend,
+		CommsPhonestatustypeStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e CommsPhonestatustype) All() []CommsPhonestatustype {
+	return AllCommsPhonestatustype()
+}
+
+func (e CommsPhonestatustype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsPhonestatustype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e CommsPhonestatustype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsPhonestatustype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e CommsPhonestatustype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *CommsPhonestatustype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = CommsPhonestatustype(x)
+	case []byte:
+		*e = CommsPhonestatustype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into CommsPhonestatustype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid CommsPhonestatustype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for CommsTextjobsource
 const (
 	CommsTextjobsourceRmo   CommsTextjobsource = "rmo"

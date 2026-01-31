@@ -10,7 +10,6 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -18,7 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -38,9 +37,8 @@ type District struct {
 }
 
 var (
-	quickT                         = buildTemplate("quick", "base")
-	quickSubmitCompleteT           = buildTemplate("quick-submit-complete", "base")
-	registerNotificationsCompleteT = buildTemplate("register-notifications-complete", "base")
+	quickT               = buildTemplate("quick", "base")
+	quickSubmitCompleteT = buildTemplate("quick-submit-complete", "base")
 )
 
 func getQuick(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +144,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to create parse longitude", err, http.StatusBadRequest)
 		return
 	}
-	u, err := GenerateReportID()
+	u, err := report.GenerateReportID()
 	if err != nil {
 		respondError(w, "Failed to create quick report public ID", err, http.StatusInternalServerError)
 		return
@@ -222,50 +220,4 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", u), http.StatusFound)
-}
-func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
-		return
-	}
-	consent := r.PostFormValue("consent")
-	email := r.PostFormValue("email")
-	phone_str := r.PostFormValue("phone")
-	report_id := r.PostFormValue("report_id")
-	if consent != "on" {
-		respondError(w, "You must consent", nil, http.StatusBadRequest)
-		return
-	}
-	if email == "" && phone_str == "" {
-		http.Redirect(w, r, fmt.Sprintf("/quick-submit-complete?report=%s", report_id), http.StatusFound)
-		return
-	}
-	phone, err := text.ParsePhoneNumber(phone_str)
-	result, err := psql.Update(
-		um.Table("publicreport.quick"),
-		um.SetCol("reporter_email").ToArg(email),
-		um.SetCol("reporter_phone").ToArg(phone),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	).Exec(r.Context(), db.PGInstance.BobDB)
-	if err != nil {
-		respondError(w, "Failed to update report", err, http.StatusInternalServerError)
-		return
-	}
-	rowcount, err := result.RowsAffected()
-	if err != nil {
-		respondError(w, "Failed to get rows affected", err, http.StatusInternalServerError)
-		return
-	}
-	if email != "" {
-		background.ReportSubscriptionConfirmationEmail(email, report_id)
-	}
-	if phone_str != "" {
-		background.ReportSubscriptionConfirmationText(*phone, report_id)
-	}
-	if rowcount == 0 {
-		http.Redirect(w, r, fmt.Sprintf("/error?code=no-rows-affected&report=%s", report_id), http.StatusFound)
-	} else {
-		http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
-	}
 }

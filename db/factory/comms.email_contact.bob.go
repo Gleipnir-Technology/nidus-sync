@@ -47,11 +47,16 @@ type CommsEmailContactTemplate struct {
 
 type commsEmailContactR struct {
 	DestinationEmailLogs []*commsEmailContactRDestinationEmailLogsR
+	Organizations        []*commsEmailContactROrganizationsR
 }
 
 type commsEmailContactRDestinationEmailLogsR struct {
 	number int
 	o      *CommsEmailLogTemplate
+}
+type commsEmailContactROrganizationsR struct {
+	number int
+	o      *OrganizationTemplate
 }
 
 // Apply mods to the CommsEmailContactTemplate
@@ -75,6 +80,18 @@ func (t CommsEmailContactTemplate) setModelRels(o *models.CommsEmailContact) {
 			rel = append(rel, related...)
 		}
 		o.R.DestinationEmailLogs = rel
+	}
+
+	if t.r.Organizations != nil {
+		rel := models.OrganizationSlice{}
+		for _, r := range t.r.Organizations {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.EmailContacts = append(rel.R.EmailContacts, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Organizations = rel
 	}
 }
 
@@ -190,6 +207,26 @@ func (o *CommsEmailContactTemplate) insertOptRels(ctx context.Context, exec bob.
 				}
 
 				err = m.AttachDestinationEmailLogs(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isOrganizationsDone, _ := commsEmailContactRelOrganizationsCtx.Value(ctx)
+	if !isOrganizationsDone && o.r.Organizations != nil {
+		ctx = commsEmailContactRelOrganizationsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Organizations {
+			if r.o.alreadyPersisted {
+				m.R.Organizations = append(m.R.Organizations, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachOrganizations(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -474,5 +511,53 @@ func (m commsEmailContactMods) AddExistingDestinationEmailLogs(existingModels ..
 func (m commsEmailContactMods) WithoutDestinationEmailLogs() CommsEmailContactMod {
 	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
 		o.r.DestinationEmailLogs = nil
+	})
+}
+
+func (m commsEmailContactMods) WithOrganizations(number int, related *OrganizationTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.Organizations = []*commsEmailContactROrganizationsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsEmailContactMods) WithNewOrganizations(number int, mods ...OrganizationMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+		m.WithOrganizations(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddOrganizations(number int, related *OrganizationTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.Organizations = append(o.r.Organizations, &commsEmailContactROrganizationsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsEmailContactMods) AddNewOrganizations(number int, mods ...OrganizationMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+		m.AddOrganizations(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddExistingOrganizations(existingModels ...*models.Organization) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		for _, em := range existingModels {
+			o.r.Organizations = append(o.r.Organizations, &commsEmailContactROrganizationsR{
+				o: o.f.FromExistingOrganization(em),
+			})
+		}
+	})
+}
+
+func (m commsEmailContactMods) WithoutOrganizations() CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.Organizations = nil
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -22,6 +23,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
+	"github.com/stephenafamo/scan"
 )
 
 // Organization is an object representing the database table.
@@ -53,6 +55,8 @@ type OrganizationsQuery = *psql.ViewQuery[*Organization, OrganizationSlice]
 
 // organizationR is where relationships are stored.
 type organizationR struct {
+	EmailContacts             CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
+	Phones                    CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
 	Containerrelates          FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
 	Fieldscoutinglogs         FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
 	Habitatrelates            FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
@@ -567,6 +571,64 @@ func (o OrganizationSlice) ReloadAll(ctx context.Context, exec bob.Executor) err
 	o.copyMatchingRows(o2...)
 
 	return nil
+}
+
+// EmailContacts starts a query for related objects on comms.email_contact
+func (o *Organization) EmailContacts(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailContactsQuery {
+	return CommsEmailContacts.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionEmails.NameAs()).On(
+			CommsEmailContacts.Columns.Address.EQ(DistrictSubscriptionEmails.Columns.EmailContactAddress)),
+		sm.Where(DistrictSubscriptionEmails.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) EmailContacts(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailContactsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return CommsEmailContacts.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionEmails.NameAs()).On(
+			CommsEmailContacts.Columns.Address.EQ(DistrictSubscriptionEmails.Columns.EmailContactAddress),
+		),
+		sm.Where(psql.Group(DistrictSubscriptionEmails.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Phones starts a query for related objects on comms.phone
+func (o *Organization) Phones(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+	return CommsPhones.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionPhones.NameAs()).On(
+			CommsPhones.Columns.E164.EQ(DistrictSubscriptionPhones.Columns.PhoneE164)),
+		sm.Where(DistrictSubscriptionPhones.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Phones(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return CommsPhones.Query(append(mods,
+		sm.InnerJoin(DistrictSubscriptionPhones.NameAs()).On(
+			CommsPhones.Columns.E164.EQ(DistrictSubscriptionPhones.Columns.PhoneE164),
+		),
+		sm.Where(psql.Group(DistrictSubscriptionPhones.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
 }
 
 // Containerrelates starts a query for related objects on fieldseeker.containerrelate
@@ -1431,6 +1493,136 @@ func (os OrganizationSlice) User(mods ...bob.Mod[*dialect.SelectQuery]) UsersQue
 	return Users.Query(append(mods,
 		sm.Where(psql.Group(Users.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func attachOrganizationEmailContacts0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, commsEmailContacts2 CommsEmailContactSlice) (DistrictSubscriptionEmailSlice, error) {
+	setters := make([]*DistrictSubscriptionEmailSetter, count)
+	for i := range count {
+		setters[i] = &DistrictSubscriptionEmailSetter{
+			OrganizationID:      omit.From(organization0.ID),
+			EmailContactAddress: omit.From(commsEmailContacts2[i].Address),
+		}
+	}
+
+	districtSubscriptionEmails1, err := DistrictSubscriptionEmails.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationEmailContacts0: %w", err)
+	}
+
+	return districtSubscriptionEmails1, nil
+}
+
+func (organization0 *Organization) InsertEmailContacts(ctx context.Context, exec bob.Executor, related ...*CommsEmailContactSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	inserted, err := CommsEmailContacts.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	commsEmailContacts2 := CommsEmailContactSlice(inserted)
+
+	_, err = attachOrganizationEmailContacts0(ctx, exec, len(related), organization0, commsEmailContacts2)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.EmailContacts = append(organization0.R.EmailContacts, commsEmailContacts2...)
+
+	for _, rel := range commsEmailContacts2 {
+		rel.R.Organizations = append(rel.R.Organizations, organization0)
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachEmailContacts(ctx context.Context, exec bob.Executor, related ...*CommsEmailContact) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	commsEmailContacts2 := CommsEmailContactSlice(related)
+
+	_, err = attachOrganizationEmailContacts0(ctx, exec, len(related), organization0, commsEmailContacts2)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.EmailContacts = append(organization0.R.EmailContacts, commsEmailContacts2...)
+
+	for _, rel := range related {
+		rel.R.Organizations = append(rel.R.Organizations, organization0)
+	}
+
+	return nil
+}
+
+func attachOrganizationPhones0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, commsPhones2 CommsPhoneSlice) (DistrictSubscriptionPhoneSlice, error) {
+	setters := make([]*DistrictSubscriptionPhoneSetter, count)
+	for i := range count {
+		setters[i] = &DistrictSubscriptionPhoneSetter{
+			OrganizationID: omit.From(organization0.ID),
+			PhoneE164:      omit.From(commsPhones2[i].E164),
+		}
+	}
+
+	districtSubscriptionPhones1, err := DistrictSubscriptionPhones.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationPhones0: %w", err)
+	}
+
+	return districtSubscriptionPhones1, nil
+}
+
+func (organization0 *Organization) InsertPhones(ctx context.Context, exec bob.Executor, related ...*CommsPhoneSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	inserted, err := CommsPhones.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	commsPhones2 := CommsPhoneSlice(inserted)
+
+	_, err = attachOrganizationPhones0(ctx, exec, len(related), organization0, commsPhones2)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Phones = append(organization0.R.Phones, commsPhones2...)
+
+	for _, rel := range commsPhones2 {
+		rel.R.Organizations = append(rel.R.Organizations, organization0)
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachPhones(ctx context.Context, exec bob.Executor, related ...*CommsPhone) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	commsPhones2 := CommsPhoneSlice(related)
+
+	_, err = attachOrganizationPhones0(ctx, exec, len(related), organization0, commsPhones2)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Phones = append(organization0.R.Phones, commsPhones2...)
+
+	for _, rel := range related {
+		rel.R.Organizations = append(rel.R.Organizations, organization0)
+	}
+
+	return nil
 }
 
 func insertOrganizationContainerrelates0(ctx context.Context, exec bob.Executor, fieldseekerContainerrelates1 []*FieldseekerContainerrelateSetter, organization0 *Organization) (FieldseekerContainerrelateSlice, error) {
@@ -3897,6 +4089,34 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "EmailContacts":
+		rels, ok := retrieved.(CommsEmailContactSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.EmailContacts = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organizations = OrganizationSlice{o}
+			}
+		}
+		return nil
+	case "Phones":
+		rels, ok := retrieved.(CommsPhoneSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Phones = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organizations = OrganizationSlice{o}
+			}
+		}
+		return nil
 	case "Containerrelates":
 		rels, ok := retrieved.(FieldseekerContainerrelateSlice)
 		if !ok {
@@ -4427,6 +4647,8 @@ func buildOrganizationPreloader() organizationPreloader {
 }
 
 type organizationThenLoader[Q orm.Loadable] struct {
+	EmailContacts             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Phones                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Containerrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Fieldscoutinglogs         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Habitatrelates            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -4466,6 +4688,12 @@ type organizationThenLoader[Q orm.Loadable] struct {
 }
 
 func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
+	type EmailContactsLoadInterface interface {
+		LoadEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhonesLoadInterface interface {
+		LoadPhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ContainerrelatesLoadInterface interface {
 		LoadContainerrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -4576,6 +4804,18 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 
 	return organizationThenLoader[Q]{
+		EmailContacts: thenLoadBuilder[Q](
+			"EmailContacts",
+			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadEmailContacts(ctx, exec, mods...)
+			},
+		),
+		Phones: thenLoadBuilder[Q](
+			"Phones",
+			func(ctx context.Context, exec bob.Executor, retrieved PhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhones(ctx, exec, mods...)
+			},
+		),
 		Containerrelates: thenLoadBuilder[Q](
 			"Containerrelates",
 			func(ctx context.Context, exec bob.Executor, retrieved ContainerrelatesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -4793,6 +5033,168 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadEmailContacts loads the organization's EmailContacts into the .R struct
+func (o *Organization) LoadEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.EmailContacts = nil
+
+	related, err := o.EmailContacts(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organizations = OrganizationSlice{o}
+	}
+
+	o.R.EmailContacts = related
+	return nil
+}
+
+// LoadEmailContacts loads the organization's EmailContacts into the .R struct
+func (os OrganizationSlice) LoadEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(CommsEmailContacts.Columns))
+	}
+
+	q := os.EmailContacts(append(
+		mods,
+		sm.Columns(DistrictSubscriptionEmails.Columns.OrganizationID.As("related_organization.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*CommsEmailContact](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_organization.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	commsEmailContacts, err := bob.Allx[bob.SliceTransformer[*CommsEmailContact, CommsEmailContactSlice]](ctx, exec, q, mapper)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		o.R.EmailContacts = nil
+	}
+
+	for _, o := range os {
+		for i, rel := range commsEmailContacts {
+			if !(o.ID == IDSlice[i]) {
+				continue
+			}
+
+			rel.R.Organizations = append(rel.R.Organizations, o)
+
+			o.R.EmailContacts = append(o.R.EmailContacts, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPhones loads the organization's Phones into the .R struct
+func (o *Organization) LoadPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Phones = nil
+
+	related, err := o.Phones(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organizations = OrganizationSlice{o}
+	}
+
+	o.R.Phones = related
+	return nil
+}
+
+// LoadPhones loads the organization's Phones into the .R struct
+func (os OrganizationSlice) LoadPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(CommsPhones.Columns))
+	}
+
+	q := os.Phones(append(
+		mods,
+		sm.Columns(DistrictSubscriptionPhones.Columns.OrganizationID.As("related_organization.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*CommsPhone](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_organization.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	commsPhones, err := bob.Allx[bob.SliceTransformer[*CommsPhone, CommsPhoneSlice]](ctx, exec, q, mapper)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		o.R.Phones = nil
+	}
+
+	for _, o := range os {
+		for i, rel := range commsPhones {
+			if !(o.ID == IDSlice[i]) {
+				continue
+			}
+
+			rel.R.Organizations = append(rel.R.Organizations, o)
+
+			o.R.Phones = append(o.R.Phones, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadContainerrelates loads the organization's Containerrelates into the .R struct
@@ -6996,6 +7398,8 @@ func (os OrganizationSlice) LoadUser(ctx context.Context, exec bob.Executor, mod
 
 // organizationC is where relationship counts are stored.
 type organizationC struct {
+	EmailContacts           *int64
+	Phones                  *int64
 	Containerrelates        *int64
 	Fieldscoutinglogs       *int64
 	Habitatrelates          *int64
@@ -7040,6 +7444,10 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "EmailContacts":
+		o.C.EmailContacts = &count
+	case "Phones":
+		o.C.Phones = &count
 	case "Containerrelates":
 		o.C.Containerrelates = &count
 	case "Fieldscoutinglogs":
@@ -7115,6 +7523,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 }
 
 type organizationCountPreloader struct {
+	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Phones                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -7154,6 +7564,46 @@ type organizationCountPreloader struct {
 
 func buildOrganizationCountPreloader() organizationCountPreloader {
 	return organizationCountPreloader{
+		EmailContacts: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("EmailContacts", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(DistrictSubscriptionEmails.Name()),
+					sm.Where(psql.Quote(DistrictSubscriptionEmails.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+					sm.InnerJoin(CommsEmailContacts.Name()).On(
+						psql.Quote(CommsEmailContacts.Alias(), "address").EQ(psql.Quote(DistrictSubscriptionEmails.Alias(), "email_contact_address")),
+					),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		Phones: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Phones", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(DistrictSubscriptionPhones.Name()),
+					sm.Where(psql.Quote(DistrictSubscriptionPhones.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+					sm.InnerJoin(CommsPhones.Name()).On(
+						psql.Quote(CommsPhones.Alias(), "e164").EQ(psql.Quote(DistrictSubscriptionPhones.Alias(), "phone_e164")),
+					),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		Containerrelates: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("Containerrelates", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -7753,6 +8203,8 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 }
 
 type organizationCountThenLoader[Q orm.Loadable] struct {
+	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -7791,6 +8243,12 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 }
 
 func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoader[Q] {
+	type EmailContactsCountInterface interface {
+		LoadCountEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhonesCountInterface interface {
+		LoadCountPhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ContainerrelatesCountInterface interface {
 		LoadCountContainerrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -7898,6 +8356,18 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 
 	return organizationCountThenLoader[Q]{
+		EmailContacts: countThenLoadBuilder[Q](
+			"EmailContacts",
+			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountEmailContacts(ctx, exec, mods...)
+			},
+		),
+		Phones: countThenLoadBuilder[Q](
+			"Phones",
+			func(ctx context.Context, exec bob.Executor, retrieved PhonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPhones(ctx, exec, mods...)
+			},
+		),
 		Containerrelates: countThenLoadBuilder[Q](
 			"Containerrelates",
 			func(ctx context.Context, exec bob.Executor, retrieved ContainerrelatesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -8109,6 +8579,66 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			},
 		),
 	}
+}
+
+// LoadCountEmailContacts loads the count of EmailContacts into the C struct
+func (o *Organization) LoadCountEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.EmailContacts(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.EmailContacts = &count
+	return nil
+}
+
+// LoadCountEmailContacts loads the count of EmailContacts for a slice
+func (os OrganizationSlice) LoadCountEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountEmailContacts(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountPhones loads the count of Phones into the C struct
+func (o *Organization) LoadCountPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Phones(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Phones = &count
+	return nil
+}
+
+// LoadCountPhones loads the count of Phones for a slice
+func (os OrganizationSlice) LoadCountPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPhones(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountContainerrelates loads the count of Containerrelates into the C struct
@@ -9163,6 +9693,8 @@ func (os OrganizationSlice) LoadCountUser(ctx context.Context, exec bob.Executor
 
 type organizationJoins[Q dialect.Joinable] struct {
 	typ                       string
+	EmailContacts             modAs[Q, commsEmailContactColumns]
+	Phones                    modAs[Q, commsPhoneColumns]
 	Containerrelates          modAs[Q, fieldseekerContainerrelateColumns]
 	Fieldscoutinglogs         modAs[Q, fieldseekerFieldscoutinglogColumns]
 	Habitatrelates            modAs[Q, fieldseekerHabitatrelateColumns]
@@ -9208,6 +9740,50 @@ func (j organizationJoins[Q]) aliasedAs(alias string) organizationJoins[Q] {
 func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ string) organizationJoins[Q] {
 	return organizationJoins[Q]{
 		typ: typ,
+		EmailContacts: modAs[Q, commsEmailContactColumns]{
+			c: CommsEmailContacts.Columns,
+			f: func(to commsEmailContactColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
+
+				{
+					to := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, DistrictSubscriptionEmails.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+				{
+					cols := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
+						to.Address.EQ(cols.EmailContactAddress),
+					))
+				}
+
+				return mods
+			},
+		},
+		Phones: modAs[Q, commsPhoneColumns]{
+			c: CommsPhones.Columns,
+			f: func(to commsPhoneColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
+
+				{
+					to := DistrictSubscriptionPhones.Columns.AliasedAs(DistrictSubscriptionPhones.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, DistrictSubscriptionPhones.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+				{
+					cols := DistrictSubscriptionPhones.Columns.AliasedAs(DistrictSubscriptionPhones.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
+						to.E164.EQ(cols.PhoneE164),
+					))
+				}
+
+				return mods
+			},
+		},
 		Containerrelates: modAs[Q, fieldseekerContainerrelateColumns]{
 			c: FieldseekerContainerrelates.Columns,
 			f: func(to fieldseekerContainerrelateColumns) bob.Mod[Q] {

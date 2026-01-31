@@ -27,6 +27,8 @@ type Factory struct {
 	baseCommsPhoneMods                        CommsPhoneModSlice
 	baseCommsTextJobMods                      CommsTextJobModSlice
 	baseCommsTextLogMods                      CommsTextLogModSlice
+	baseDistrictSubscriptionEmailMods         DistrictSubscriptionEmailModSlice
+	baseDistrictSubscriptionPhoneMods         DistrictSubscriptionPhoneModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
 	baseFieldseekerFieldscoutinglogMods       FieldseekerFieldscoutinglogModSlice
 	baseFieldseekerHabitatrelateMods          FieldseekerHabitatrelateModSlice
@@ -191,6 +193,9 @@ func (f *Factory) FromExistingCommsEmailContact(m *models.CommsEmailContact) *Co
 	if len(m.R.DestinationEmailLogs) > 0 {
 		CommsEmailContactMods.AddExistingDestinationEmailLogs(m.R.DestinationEmailLogs...).Apply(ctx, o)
 	}
+	if len(m.R.Organizations) > 0 {
+		CommsEmailContactMods.AddExistingOrganizations(m.R.Organizations...).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -293,7 +298,8 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	o := &CommsPhoneTemplate{f: f, alreadyPersisted: true}
 
 	o.E164 = func() string { return m.E164 }
-	o.IsSubscribed = func() null.Val[bool] { return m.IsSubscribed }
+	o.IsSubscribed = func() bool { return m.IsSubscribed }
+	o.Status = func() enums.CommsPhonestatustype { return m.Status }
 
 	ctx := context.Background()
 	if len(m.R.DestinationTextJobs) > 0 {
@@ -304,6 +310,9 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	}
 	if len(m.R.SourceTextLogs) > 0 {
 		CommsPhoneMods.AddExistingSourceTextLogs(m.R.SourceTextLogs...).Apply(ctx, o)
+	}
+	if len(m.R.Organizations) > 0 {
+		CommsPhoneMods.AddExistingOrganizations(m.R.Organizations...).Apply(ctx, o)
 	}
 
 	return o
@@ -380,6 +389,72 @@ func (f *Factory) FromExistingCommsTextLog(m *models.CommsTextLog) *CommsTextLog
 	}
 	if m.R.SourcePhone != nil {
 		CommsTextLogMods.WithExistingSourcePhone(m.R.SourcePhone).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewDistrictSubscriptionEmail(mods ...DistrictSubscriptionEmailMod) *DistrictSubscriptionEmailTemplate {
+	return f.NewDistrictSubscriptionEmailWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewDistrictSubscriptionEmailWithContext(ctx context.Context, mods ...DistrictSubscriptionEmailMod) *DistrictSubscriptionEmailTemplate {
+	o := &DistrictSubscriptionEmailTemplate{f: f}
+
+	if f != nil {
+		f.baseDistrictSubscriptionEmailMods.Apply(ctx, o)
+	}
+
+	DistrictSubscriptionEmailModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingDistrictSubscriptionEmail(m *models.DistrictSubscriptionEmail) *DistrictSubscriptionEmailTemplate {
+	o := &DistrictSubscriptionEmailTemplate{f: f, alreadyPersisted: true}
+
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.EmailContactAddress = func() string { return m.EmailContactAddress }
+
+	ctx := context.Background()
+	if m.R.EmailContactAddressEmailContact != nil {
+		DistrictSubscriptionEmailMods.WithExistingEmailContactAddressEmailContact(m.R.EmailContactAddressEmailContact).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		DistrictSubscriptionEmailMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewDistrictSubscriptionPhone(mods ...DistrictSubscriptionPhoneMod) *DistrictSubscriptionPhoneTemplate {
+	return f.NewDistrictSubscriptionPhoneWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewDistrictSubscriptionPhoneWithContext(ctx context.Context, mods ...DistrictSubscriptionPhoneMod) *DistrictSubscriptionPhoneTemplate {
+	o := &DistrictSubscriptionPhoneTemplate{f: f}
+
+	if f != nil {
+		f.baseDistrictSubscriptionPhoneMods.Apply(ctx, o)
+	}
+
+	DistrictSubscriptionPhoneModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingDistrictSubscriptionPhone(m *models.DistrictSubscriptionPhone) *DistrictSubscriptionPhoneTemplate {
+	o := &DistrictSubscriptionPhoneTemplate{f: f, alreadyPersisted: true}
+
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.PhoneE164 = func() string { return m.PhoneE164 }
+
+	ctx := context.Background()
+	if m.R.Organization != nil {
+		DistrictSubscriptionPhoneMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+	if m.R.PhoneE164Phone != nil {
+		DistrictSubscriptionPhoneMods.WithExistingPhoneE164Phone(m.R.PhoneE164Phone).Apply(ctx, o)
 	}
 
 	return o
@@ -2641,6 +2716,12 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.Slug = func() null.Val[string] { return m.Slug }
 
 	ctx := context.Background()
+	if len(m.R.EmailContacts) > 0 {
+		OrganizationMods.AddExistingEmailContacts(m.R.EmailContacts...).Apply(ctx, o)
+	}
+	if len(m.R.Phones) > 0 {
+		OrganizationMods.AddExistingPhones(m.R.Phones...).Apply(ctx, o)
+	}
 	if len(m.R.Containerrelates) > 0 {
 		OrganizationMods.AddExistingContainerrelates(m.R.Containerrelates...).Apply(ctx, o)
 	}
@@ -3321,6 +3402,22 @@ func (f *Factory) ClearBaseCommsTextLogMods() {
 
 func (f *Factory) AddBaseCommsTextLogMod(mods ...CommsTextLogMod) {
 	f.baseCommsTextLogMods = append(f.baseCommsTextLogMods, mods...)
+}
+
+func (f *Factory) ClearBaseDistrictSubscriptionEmailMods() {
+	f.baseDistrictSubscriptionEmailMods = nil
+}
+
+func (f *Factory) AddBaseDistrictSubscriptionEmailMod(mods ...DistrictSubscriptionEmailMod) {
+	f.baseDistrictSubscriptionEmailMods = append(f.baseDistrictSubscriptionEmailMods, mods...)
+}
+
+func (f *Factory) ClearBaseDistrictSubscriptionPhoneMods() {
+	f.baseDistrictSubscriptionPhoneMods = nil
+}
+
+func (f *Factory) AddBaseDistrictSubscriptionPhoneMod(mods ...DistrictSubscriptionPhoneMod) {
+	f.baseDistrictSubscriptionPhoneMods = append(f.baseDistrictSubscriptionPhoneMods, mods...)
 }
 
 func (f *Factory) ClearBaseFieldseekerContainerrelateMods() {

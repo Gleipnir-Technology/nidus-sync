@@ -20,6 +20,7 @@ var (
 	// Relationship Contexts for comms.email_contact
 	commsEmailContactWithParentsCascadingCtx    = newContextual[bool]("commsEmailContactWithParentsCascading")
 	commsEmailContactRelDestinationEmailLogsCtx = newContextual[bool]("comms.email_contact.comms.email_log.comms.email_log.email_log_destination_fkey")
+	commsEmailContactRelOrganizationsCtx        = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
 
 	// Relationship Contexts for comms.email_log
 	commsEmailLogWithParentsCascadingCtx       = newContextual[bool]("commsEmailLogWithParentsCascading")
@@ -35,6 +36,7 @@ var (
 	commsPhoneRelDestinationTextJobsCtx = newContextual[bool]("comms.phone.comms.text_job.comms.text_job.text_job_destination_fkey")
 	commsPhoneRelDestinationTextLogsCtx = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsPhoneRelSourceTextLogsCtx      = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
+	commsPhoneRelOrganizationsCtx       = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
 
 	// Relationship Contexts for comms.text_job
 	commsTextJobWithParentsCascadingCtx = newContextual[bool]("commsTextJobWithParentsCascading")
@@ -44,6 +46,16 @@ var (
 	commsTextLogWithParentsCascadingCtx = newContextual[bool]("commsTextLogWithParentsCascading")
 	commsTextLogRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsTextLogRelSourcePhoneCtx       = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
+
+	// Relationship Contexts for district_subscription_email
+	districtSubscriptionEmailWithParentsCascadingCtx               = newContextual[bool]("districtSubscriptionEmailWithParentsCascading")
+	districtSubscriptionEmailRelEmailContactAddressEmailContactCtx = newContextual[bool]("comms.email_contact.district_subscription_email.district_subscription_email.district_subscription_email_email_contact_address_fkey")
+	districtSubscriptionEmailRelOrganizationCtx                    = newContextual[bool]("district_subscription_email.organization.district_subscription_email.district_subscription_email_organization_id_fkey")
+
+	// Relationship Contexts for district_subscription_phone
+	districtSubscriptionPhoneWithParentsCascadingCtx = newContextual[bool]("districtSubscriptionPhoneWithParentsCascading")
+	districtSubscriptionPhoneRelOrganizationCtx      = newContextual[bool]("district_subscription_phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkey")
+	districtSubscriptionPhoneRelPhoneE164PhoneCtx    = newContextual[bool]("comms.phone.district_subscription_phone.district_subscription_phone.district_subscription_phone_phone_e164_fkey")
 
 	// Relationship Contexts for fieldseeker.containerrelate
 	fieldseekerContainerrelateWithParentsCascadingCtx = newContextual[bool]("fieldseekerContainerrelateWithParentsCascading")
@@ -216,6 +228,8 @@ var (
 
 	// Relationship Contexts for organization
 	organizationWithParentsCascadingCtx         = newContextual[bool]("organizationWithParentsCascading")
+	organizationRelEmailContactsCtx             = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
+	organizationRelPhonesCtx                    = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
 	organizationRelContainerrelatesCtx          = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")
 	organizationRelFieldscoutinglogsCtx         = newContextual[bool]("fieldseeker.fieldscoutinglog.organization.fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey")
 	organizationRelHabitatrelatesCtx            = newContextual[bool]("fieldseeker.habitatrelate.organization.fieldseeker.habitatrelate.habitatrelate_organization_id_fkey")

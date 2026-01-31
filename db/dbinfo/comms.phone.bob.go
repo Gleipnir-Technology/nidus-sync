@@ -27,9 +27,18 @@ var CommsPhones = Table[
 		IsSubscribed: column{
 			Name:      "is_subscribed",
 			DBType:    "boolean",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Status: column{
+			Name:      "status",
+			DBType:    "comms.phonestatustype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -65,11 +74,12 @@ var CommsPhones = Table[
 type commsPhoneColumns struct {
 	E164         column
 	IsSubscribed column
+	Status       column
 }
 
 func (c commsPhoneColumns) AsSlice() []column {
 	return []column{
-		c.E164, c.IsSubscribed,
+		c.E164, c.IsSubscribed, c.Status,
 	}
 }
 

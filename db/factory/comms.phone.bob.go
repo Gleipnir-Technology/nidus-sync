@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/Gleipnir-Technology/bob"
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -37,7 +36,8 @@ func (mods CommsPhoneModSlice) Apply(ctx context.Context, n *CommsPhoneTemplate)
 // all columns are optional and should be set by mods
 type CommsPhoneTemplate struct {
 	E164         func() string
-	IsSubscribed func() null.Val[bool]
+	IsSubscribed func() bool
+	Status       func() enums.CommsPhonestatustype
 
 	r commsPhoneR
 	f *Factory
@@ -49,6 +49,7 @@ type commsPhoneR struct {
 	DestinationTextJobs []*commsPhoneRDestinationTextJobsR
 	DestinationTextLogs []*commsPhoneRDestinationTextLogsR
 	SourceTextLogs      []*commsPhoneRSourceTextLogsR
+	Organizations       []*commsPhoneROrganizationsR
 }
 
 type commsPhoneRDestinationTextJobsR struct {
@@ -62,6 +63,10 @@ type commsPhoneRDestinationTextLogsR struct {
 type commsPhoneRSourceTextLogsR struct {
 	number int
 	o      *CommsTextLogTemplate
+}
+type commsPhoneROrganizationsR struct {
+	number int
+	o      *OrganizationTemplate
 }
 
 // Apply mods to the CommsPhoneTemplate
@@ -112,6 +117,18 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 		}
 		o.R.SourceTextLogs = rel
 	}
+
+	if t.r.Organizations != nil {
+		rel := models.OrganizationSlice{}
+		for _, r := range t.r.Organizations {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.Phones = append(rel.R.Phones, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Organizations = rel
+	}
 }
 
 // BuildSetter returns an *models.CommsPhoneSetter
@@ -125,7 +142,11 @@ func (o CommsPhoneTemplate) BuildSetter() *models.CommsPhoneSetter {
 	}
 	if o.IsSubscribed != nil {
 		val := o.IsSubscribed()
-		m.IsSubscribed = omitnull.FromNull(val)
+		m.IsSubscribed = omit.From(val)
+	}
+	if o.Status != nil {
+		val := o.Status()
+		m.Status = omit.From(val)
 	}
 
 	return m
@@ -155,6 +176,9 @@ func (o CommsPhoneTemplate) Build() *models.CommsPhone {
 	if o.IsSubscribed != nil {
 		m.IsSubscribed = o.IsSubscribed()
 	}
+	if o.Status != nil {
+		m.Status = o.Status()
+	}
 
 	o.setModelRels(m)
 
@@ -178,6 +202,14 @@ func ensureCreatableCommsPhone(m *models.CommsPhoneSetter) {
 	if !(m.E164.IsValue()) {
 		val := random_string(nil)
 		m.E164 = omit.From(val)
+	}
+	if !(m.IsSubscribed.IsValue()) {
+		val := random_bool(nil)
+		m.IsSubscribed = omit.From(val)
+	}
+	if !(m.Status.IsValue()) {
+		val := random_enums_CommsPhonestatustype(nil)
+		m.Status = omit.From(val)
 	}
 }
 
@@ -240,6 +272,26 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 				}
 
 				err = m.AttachSourceTextLogs(ctx, exec, rel2...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isOrganizationsDone, _ := commsPhoneRelOrganizationsCtx.Value(ctx)
+	if !isOrganizationsDone && o.r.Organizations != nil {
+		ctx = commsPhoneRelOrganizationsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Organizations {
+			if r.o.alreadyPersisted {
+				m.R.Organizations = append(m.R.Organizations, r.o.Build())
+			} else {
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachOrganizations(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -341,6 +393,7 @@ func (m commsPhoneMods) RandomizeAllColumns(f *faker.Faker) CommsPhoneMod {
 	return CommsPhoneModSlice{
 		CommsPhoneMods.RandomE164(f),
 		CommsPhoneMods.RandomIsSubscribed(f),
+		CommsPhoneMods.RandomStatus(f),
 	}
 }
 
@@ -376,14 +429,14 @@ func (m commsPhoneMods) RandomE164(f *faker.Faker) CommsPhoneMod {
 }
 
 // Set the model columns to this value
-func (m commsPhoneMods) IsSubscribed(val null.Val[bool]) CommsPhoneMod {
+func (m commsPhoneMods) IsSubscribed(val bool) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
-		o.IsSubscribed = func() null.Val[bool] { return val }
+		o.IsSubscribed = func() bool { return val }
 	})
 }
 
 // Set the Column from the function
-func (m commsPhoneMods) IsSubscribedFunc(f func() null.Val[bool]) CommsPhoneMod {
+func (m commsPhoneMods) IsSubscribedFunc(f func() bool) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
 		o.IsSubscribed = f
 	})
@@ -398,32 +451,41 @@ func (m commsPhoneMods) UnsetIsSubscribed() CommsPhoneMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m commsPhoneMods) RandomIsSubscribed(f *faker.Faker) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
-		o.IsSubscribed = func() null.Val[bool] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_bool(f)
-			return null.From(val)
+		o.IsSubscribed = func() bool {
+			return random_bool(f)
 		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsPhoneMods) Status(val enums.CommsPhonestatustype) CommsPhoneMod {
+	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
+		o.Status = func() enums.CommsPhonestatustype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsPhoneMods) StatusFunc(f func() enums.CommsPhonestatustype) CommsPhoneMod {
+	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
+		o.Status = f
+	})
+}
+
+// Clear any values for the column
+func (m commsPhoneMods) UnsetStatus() CommsPhoneMod {
+	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
+		o.Status = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is never null
-func (m commsPhoneMods) RandomIsSubscribedNotNull(f *faker.Faker) CommsPhoneMod {
+func (m commsPhoneMods) RandomStatus(f *faker.Faker) CommsPhoneMod {
 	return CommsPhoneModFunc(func(_ context.Context, o *CommsPhoneTemplate) {
-		o.IsSubscribed = func() null.Val[bool] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_bool(f)
-			return null.From(val)
+		o.Status = func() enums.CommsPhonestatustype {
+			return random_enums_CommsPhonestatustype(f)
 		}
 	})
 }
@@ -578,5 +640,53 @@ func (m commsPhoneMods) AddExistingSourceTextLogs(existingModels ...*models.Comm
 func (m commsPhoneMods) WithoutSourceTextLogs() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		o.r.SourceTextLogs = nil
+	})
+}
+
+func (m commsPhoneMods) WithOrganizations(number int, related *OrganizationTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.Organizations = []*commsPhoneROrganizationsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewOrganizations(number int, mods ...OrganizationMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+		m.WithOrganizations(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddOrganizations(number int, related *OrganizationTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.Organizations = append(o.r.Organizations, &commsPhoneROrganizationsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewOrganizations(number int, mods ...OrganizationMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+		m.AddOrganizations(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingOrganizations(existingModels ...*models.Organization) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.Organizations = append(o.r.Organizations, &commsPhoneROrganizationsR{
+				o: o.f.FromExistingOrganization(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutOrganizations() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.Organizations = nil
 	})
 }

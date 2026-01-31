@@ -95,13 +95,6 @@ func makeContentURL() ContentURL {
 func makeURL(p string) string {
 	return config.MakeURLReport("/%s", p)
 }
-func postFormValueOrNone(r *http.Request, k string) string {
-	v := r.PostFormValue(k)
-	if v == "" {
-		return "none"
-	}
-	return v
-}
 
 // Respond with an error that is visible to the user
 func respondError(w http.ResponseWriter, m string, e error, s int) {
