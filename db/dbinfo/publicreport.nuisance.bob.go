@@ -51,63 +51,9 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Email: column{
-			Name:      "email",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		InspectionType: column{
-			Name:      "inspection_type",
-			DBType:    "publicreport.nuisanceinspectiontype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		SourceLocation: column{
 			Name:      "source_location",
 			DBType:    "publicreport.nuisancelocationtype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		PreferredDateRange: column{
-			Name:      "preferred_date_range",
-			DBType:    "publicreport.nuisancepreferreddaterangetype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		PreferredTime: column{
-			Name:      "preferred_time",
-			DBType:    "publicreport.nuisancepreferredtimetype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		RequestCall: column{
-			Name:      "request_call",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Severity: column{
-			Name:      "severity",
-			DBType:    "smallint",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -132,53 +78,8 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SourceRoof: column{
-			Name:      "source_roof",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		SourceStagnant: column{
 			Name:      "source_stagnant",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		TimeOfDayDay: column{
-			Name:      "time_of_day_day",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		TimeOfDayEarly: column{
-			Name:      "time_of_day_early",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		TimeOfDayEvening: column{
-			Name:      "time_of_day_evening",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		TimeOfDayNight: column{
-			Name:      "time_of_day_night",
 			DBType:    "boolean",
 			Default:   "",
 			Comment:   "",
@@ -267,6 +168,15 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		SourceGutter: column{
+			Name:      "source_gutter",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -332,39 +242,29 @@ var PublicreportNuisances = Table[
 }
 
 type publicreportNuisanceColumns struct {
-	ID                 column
-	AdditionalInfo     column
-	Created            column
-	Duration           column
-	Email              column
-	InspectionType     column
-	SourceLocation     column
-	PreferredDateRange column
-	PreferredTime      column
-	RequestCall        column
-	Severity           column
-	SourceContainer    column
-	SourceDescription  column
-	SourceRoof         column
-	SourceStagnant     column
-	TimeOfDayDay       column
-	TimeOfDayEarly     column
-	TimeOfDayEvening   column
-	TimeOfDayNight     column
-	PublicID           column
-	ReporterAddress    column
-	ReporterEmail      column
-	ReporterName       column
-	ReporterPhone      column
-	Address            column
-	Location           column
-	Status             column
-	OrganizationID     column
+	ID                column
+	AdditionalInfo    column
+	Created           column
+	Duration          column
+	SourceLocation    column
+	SourceContainer   column
+	SourceDescription column
+	SourceStagnant    column
+	PublicID          column
+	ReporterAddress   column
+	ReporterEmail     column
+	ReporterName      column
+	ReporterPhone     column
+	Address           column
+	Location          column
+	Status            column
+	OrganizationID    column
+	SourceGutter      column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.Email, c.InspectionType, c.SourceLocation, c.PreferredDateRange, c.PreferredTime, c.RequestCall, c.Severity, c.SourceContainer, c.SourceDescription, c.SourceRoof, c.SourceStagnant, c.TimeOfDayDay, c.TimeOfDayEarly, c.TimeOfDayEvening, c.TimeOfDayNight, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter,
 	}
 }
 

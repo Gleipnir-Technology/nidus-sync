@@ -38,34 +38,24 @@ func (mods PublicreportNuisanceModSlice) Apply(ctx context.Context, n *Publicrep
 // PublicreportNuisanceTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportNuisanceTemplate struct {
-	ID                 func() int32
-	AdditionalInfo     func() string
-	Created            func() time.Time
-	Duration           func() enums.PublicreportNuisancedurationtype
-	Email              func() string
-	InspectionType     func() enums.PublicreportNuisanceinspectiontype
-	SourceLocation     func() enums.PublicreportNuisancelocationtype
-	PreferredDateRange func() enums.PublicreportNuisancepreferreddaterangetype
-	PreferredTime      func() enums.PublicreportNuisancepreferredtimetype
-	RequestCall        func() bool
-	Severity           func() int16
-	SourceContainer    func() bool
-	SourceDescription  func() string
-	SourceRoof         func() bool
-	SourceStagnant     func() bool
-	TimeOfDayDay       func() bool
-	TimeOfDayEarly     func() bool
-	TimeOfDayEvening   func() bool
-	TimeOfDayNight     func() bool
-	PublicID           func() string
-	ReporterAddress    func() string
-	ReporterEmail      func() string
-	ReporterName       func() string
-	ReporterPhone      func() string
-	Address            func() string
-	Location           func() null.Val[string]
-	Status             func() enums.PublicreportReportstatustype
-	OrganizationID     func() null.Val[int32]
+	ID                func() int32
+	AdditionalInfo    func() string
+	Created           func() time.Time
+	Duration          func() enums.PublicreportNuisancedurationtype
+	SourceLocation    func() enums.PublicreportNuisancelocationtype
+	SourceContainer   func() bool
+	SourceDescription func() string
+	SourceStagnant    func() bool
+	PublicID          func() string
+	ReporterAddress   func() string
+	ReporterEmail     func() string
+	ReporterName      func() string
+	ReporterPhone     func() string
+	Address           func() string
+	Location          func() null.Val[string]
+	Status            func() enums.PublicreportReportstatustype
+	OrganizationID    func() null.Val[int32]
+	SourceGutter      func() bool
 
 	r publicreportNuisanceR
 	f *Factory
@@ -120,33 +110,9 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.Duration()
 		m.Duration = omit.From(val)
 	}
-	if o.Email != nil {
-		val := o.Email()
-		m.Email = omit.From(val)
-	}
-	if o.InspectionType != nil {
-		val := o.InspectionType()
-		m.InspectionType = omit.From(val)
-	}
 	if o.SourceLocation != nil {
 		val := o.SourceLocation()
 		m.SourceLocation = omit.From(val)
-	}
-	if o.PreferredDateRange != nil {
-		val := o.PreferredDateRange()
-		m.PreferredDateRange = omit.From(val)
-	}
-	if o.PreferredTime != nil {
-		val := o.PreferredTime()
-		m.PreferredTime = omit.From(val)
-	}
-	if o.RequestCall != nil {
-		val := o.RequestCall()
-		m.RequestCall = omit.From(val)
-	}
-	if o.Severity != nil {
-		val := o.Severity()
-		m.Severity = omit.From(val)
 	}
 	if o.SourceContainer != nil {
 		val := o.SourceContainer()
@@ -156,29 +122,9 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.SourceDescription()
 		m.SourceDescription = omit.From(val)
 	}
-	if o.SourceRoof != nil {
-		val := o.SourceRoof()
-		m.SourceRoof = omit.From(val)
-	}
 	if o.SourceStagnant != nil {
 		val := o.SourceStagnant()
 		m.SourceStagnant = omit.From(val)
-	}
-	if o.TimeOfDayDay != nil {
-		val := o.TimeOfDayDay()
-		m.TimeOfDayDay = omit.From(val)
-	}
-	if o.TimeOfDayEarly != nil {
-		val := o.TimeOfDayEarly()
-		m.TimeOfDayEarly = omit.From(val)
-	}
-	if o.TimeOfDayEvening != nil {
-		val := o.TimeOfDayEvening()
-		m.TimeOfDayEvening = omit.From(val)
-	}
-	if o.TimeOfDayNight != nil {
-		val := o.TimeOfDayNight()
-		m.TimeOfDayNight = omit.From(val)
 	}
 	if o.PublicID != nil {
 		val := o.PublicID()
@@ -216,6 +162,10 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.OrganizationID()
 		m.OrganizationID = omitnull.FromNull(val)
 	}
+	if o.SourceGutter != nil {
+		val := o.SourceGutter()
+		m.SourceGutter = omit.From(val)
+	}
 
 	return m
 }
@@ -250,26 +200,8 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	if o.Duration != nil {
 		m.Duration = o.Duration()
 	}
-	if o.Email != nil {
-		m.Email = o.Email()
-	}
-	if o.InspectionType != nil {
-		m.InspectionType = o.InspectionType()
-	}
 	if o.SourceLocation != nil {
 		m.SourceLocation = o.SourceLocation()
-	}
-	if o.PreferredDateRange != nil {
-		m.PreferredDateRange = o.PreferredDateRange()
-	}
-	if o.PreferredTime != nil {
-		m.PreferredTime = o.PreferredTime()
-	}
-	if o.RequestCall != nil {
-		m.RequestCall = o.RequestCall()
-	}
-	if o.Severity != nil {
-		m.Severity = o.Severity()
 	}
 	if o.SourceContainer != nil {
 		m.SourceContainer = o.SourceContainer()
@@ -277,23 +209,8 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	if o.SourceDescription != nil {
 		m.SourceDescription = o.SourceDescription()
 	}
-	if o.SourceRoof != nil {
-		m.SourceRoof = o.SourceRoof()
-	}
 	if o.SourceStagnant != nil {
 		m.SourceStagnant = o.SourceStagnant()
-	}
-	if o.TimeOfDayDay != nil {
-		m.TimeOfDayDay = o.TimeOfDayDay()
-	}
-	if o.TimeOfDayEarly != nil {
-		m.TimeOfDayEarly = o.TimeOfDayEarly()
-	}
-	if o.TimeOfDayEvening != nil {
-		m.TimeOfDayEvening = o.TimeOfDayEvening()
-	}
-	if o.TimeOfDayNight != nil {
-		m.TimeOfDayNight = o.TimeOfDayNight()
 	}
 	if o.PublicID != nil {
 		m.PublicID = o.PublicID()
@@ -321,6 +238,9 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	}
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
+	}
+	if o.SourceGutter != nil {
+		m.SourceGutter = o.SourceGutter()
 	}
 
 	o.setModelRels(m)
@@ -354,33 +274,9 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 		val := random_enums_PublicreportNuisancedurationtype(nil)
 		m.Duration = omit.From(val)
 	}
-	if !(m.Email.IsValue()) {
-		val := random_string(nil)
-		m.Email = omit.From(val)
-	}
-	if !(m.InspectionType.IsValue()) {
-		val := random_enums_PublicreportNuisanceinspectiontype(nil)
-		m.InspectionType = omit.From(val)
-	}
 	if !(m.SourceLocation.IsValue()) {
 		val := random_enums_PublicreportNuisancelocationtype(nil)
 		m.SourceLocation = omit.From(val)
-	}
-	if !(m.PreferredDateRange.IsValue()) {
-		val := random_enums_PublicreportNuisancepreferreddaterangetype(nil)
-		m.PreferredDateRange = omit.From(val)
-	}
-	if !(m.PreferredTime.IsValue()) {
-		val := random_enums_PublicreportNuisancepreferredtimetype(nil)
-		m.PreferredTime = omit.From(val)
-	}
-	if !(m.RequestCall.IsValue()) {
-		val := random_bool(nil)
-		m.RequestCall = omit.From(val)
-	}
-	if !(m.Severity.IsValue()) {
-		val := random_int16(nil)
-		m.Severity = omit.From(val)
 	}
 	if !(m.SourceContainer.IsValue()) {
 		val := random_bool(nil)
@@ -390,29 +286,9 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 		val := random_string(nil)
 		m.SourceDescription = omit.From(val)
 	}
-	if !(m.SourceRoof.IsValue()) {
-		val := random_bool(nil)
-		m.SourceRoof = omit.From(val)
-	}
 	if !(m.SourceStagnant.IsValue()) {
 		val := random_bool(nil)
 		m.SourceStagnant = omit.From(val)
-	}
-	if !(m.TimeOfDayDay.IsValue()) {
-		val := random_bool(nil)
-		m.TimeOfDayDay = omit.From(val)
-	}
-	if !(m.TimeOfDayEarly.IsValue()) {
-		val := random_bool(nil)
-		m.TimeOfDayEarly = omit.From(val)
-	}
-	if !(m.TimeOfDayEvening.IsValue()) {
-		val := random_bool(nil)
-		m.TimeOfDayEvening = omit.From(val)
-	}
-	if !(m.TimeOfDayNight.IsValue()) {
-		val := random_bool(nil)
-		m.TimeOfDayNight = omit.From(val)
 	}
 	if !(m.PublicID.IsValue()) {
 		val := random_string(nil)
@@ -441,6 +317,10 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 	if !(m.Status.IsValue()) {
 		val := random_enums_PublicreportReportstatustype(nil)
 		m.Status = omit.From(val)
+	}
+	if !(m.SourceGutter.IsValue()) {
+		val := random_bool(nil)
+		m.SourceGutter = omit.From(val)
 	}
 }
 
@@ -565,21 +445,10 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomAdditionalInfo(f),
 		PublicreportNuisanceMods.RandomCreated(f),
 		PublicreportNuisanceMods.RandomDuration(f),
-		PublicreportNuisanceMods.RandomEmail(f),
-		PublicreportNuisanceMods.RandomInspectionType(f),
 		PublicreportNuisanceMods.RandomSourceLocation(f),
-		PublicreportNuisanceMods.RandomPreferredDateRange(f),
-		PublicreportNuisanceMods.RandomPreferredTime(f),
-		PublicreportNuisanceMods.RandomRequestCall(f),
-		PublicreportNuisanceMods.RandomSeverity(f),
 		PublicreportNuisanceMods.RandomSourceContainer(f),
 		PublicreportNuisanceMods.RandomSourceDescription(f),
-		PublicreportNuisanceMods.RandomSourceRoof(f),
 		PublicreportNuisanceMods.RandomSourceStagnant(f),
-		PublicreportNuisanceMods.RandomTimeOfDayDay(f),
-		PublicreportNuisanceMods.RandomTimeOfDayEarly(f),
-		PublicreportNuisanceMods.RandomTimeOfDayEvening(f),
-		PublicreportNuisanceMods.RandomTimeOfDayNight(f),
 		PublicreportNuisanceMods.RandomPublicID(f),
 		PublicreportNuisanceMods.RandomReporterAddress(f),
 		PublicreportNuisanceMods.RandomReporterEmail(f),
@@ -589,6 +458,7 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomLocation(f),
 		PublicreportNuisanceMods.RandomStatus(f),
 		PublicreportNuisanceMods.RandomOrganizationID(f),
+		PublicreportNuisanceMods.RandomSourceGutter(f),
 	}
 }
 
@@ -717,68 +587,6 @@ func (m publicreportNuisanceMods) RandomDuration(f *faker.Faker) PublicreportNui
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) Email(val string) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Email = func() string { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) EmailFunc(f func() string) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Email = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetEmail() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Email = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomEmail(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Email = func() string {
-			return random_string(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) InspectionType(val enums.PublicreportNuisanceinspectiontype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.InspectionType = func() enums.PublicreportNuisanceinspectiontype { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) InspectionTypeFunc(f func() enums.PublicreportNuisanceinspectiontype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.InspectionType = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetInspectionType() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.InspectionType = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomInspectionType(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.InspectionType = func() enums.PublicreportNuisanceinspectiontype {
-			return random_enums_PublicreportNuisanceinspectiontype(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m publicreportNuisanceMods) SourceLocation(val enums.PublicreportNuisancelocationtype) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.SourceLocation = func() enums.PublicreportNuisancelocationtype { return val }
@@ -805,130 +613,6 @@ func (m publicreportNuisanceMods) RandomSourceLocation(f *faker.Faker) Publicrep
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.SourceLocation = func() enums.PublicreportNuisancelocationtype {
 			return random_enums_PublicreportNuisancelocationtype(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) PreferredDateRange(val enums.PublicreportNuisancepreferreddaterangetype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredDateRange = func() enums.PublicreportNuisancepreferreddaterangetype { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) PreferredDateRangeFunc(f func() enums.PublicreportNuisancepreferreddaterangetype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredDateRange = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetPreferredDateRange() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredDateRange = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomPreferredDateRange(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredDateRange = func() enums.PublicreportNuisancepreferreddaterangetype {
-			return random_enums_PublicreportNuisancepreferreddaterangetype(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) PreferredTime(val enums.PublicreportNuisancepreferredtimetype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredTime = func() enums.PublicreportNuisancepreferredtimetype { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) PreferredTimeFunc(f func() enums.PublicreportNuisancepreferredtimetype) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredTime = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetPreferredTime() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredTime = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomPreferredTime(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.PreferredTime = func() enums.PublicreportNuisancepreferredtimetype {
-			return random_enums_PublicreportNuisancepreferredtimetype(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) RequestCall(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.RequestCall = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) RequestCallFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.RequestCall = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetRequestCall() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.RequestCall = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomRequestCall(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.RequestCall = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) Severity(val int16) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Severity = func() int16 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) SeverityFunc(f func() int16) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Severity = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetSeverity() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Severity = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomSeverity(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.Severity = func() int16 {
-			return random_int16(f)
 		}
 	})
 }
@@ -996,37 +680,6 @@ func (m publicreportNuisanceMods) RandomSourceDescription(f *faker.Faker) Public
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) SourceRoof(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.SourceRoof = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) SourceRoofFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.SourceRoof = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetSourceRoof() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.SourceRoof = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomSourceRoof(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.SourceRoof = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m publicreportNuisanceMods) SourceStagnant(val bool) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.SourceStagnant = func() bool { return val }
@@ -1052,130 +705,6 @@ func (m publicreportNuisanceMods) UnsetSourceStagnant() PublicreportNuisanceMod 
 func (m publicreportNuisanceMods) RandomSourceStagnant(f *faker.Faker) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.SourceStagnant = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) TimeOfDayDay(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayDay = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) TimeOfDayDayFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayDay = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetTimeOfDayDay() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayDay = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomTimeOfDayDay(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayDay = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) TimeOfDayEarly(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEarly = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) TimeOfDayEarlyFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEarly = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetTimeOfDayEarly() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEarly = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomTimeOfDayEarly(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEarly = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) TimeOfDayEvening(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEvening = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) TimeOfDayEveningFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEvening = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetTimeOfDayEvening() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEvening = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomTimeOfDayEvening(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayEvening = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) TimeOfDayNight(val bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayNight = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) TimeOfDayNightFunc(f func() bool) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayNight = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetTimeOfDayNight() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayNight = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomTimeOfDayNight(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.TimeOfDayNight = func() bool {
 			return random_bool(f)
 		}
 	})
@@ -1500,6 +1029,37 @@ func (m publicreportNuisanceMods) RandomOrganizationIDNotNull(f *faker.Faker) Pu
 
 			val := random_int32(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportNuisanceMods) SourceGutter(val bool) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.SourceGutter = func() bool { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) SourceGutterFunc(f func() bool) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.SourceGutter = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetSourceGutter() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.SourceGutter = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportNuisanceMods) RandomSourceGutter(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.SourceGutter = func() bool {
+			return random_bool(f)
 		}
 	})
 }

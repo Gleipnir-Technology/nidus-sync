@@ -27,34 +27,24 @@ import (
 
 // PublicreportNuisance is an object representing the database table.
 type PublicreportNuisance struct {
-	ID                 int32                                            `db:"id,pk" `
-	AdditionalInfo     string                                           `db:"additional_info" `
-	Created            time.Time                                        `db:"created" `
-	Duration           enums.PublicreportNuisancedurationtype           `db:"duration" `
-	Email              string                                           `db:"email" `
-	InspectionType     enums.PublicreportNuisanceinspectiontype         `db:"inspection_type" `
-	SourceLocation     enums.PublicreportNuisancelocationtype           `db:"source_location" `
-	PreferredDateRange enums.PublicreportNuisancepreferreddaterangetype `db:"preferred_date_range" `
-	PreferredTime      enums.PublicreportNuisancepreferredtimetype      `db:"preferred_time" `
-	RequestCall        bool                                             `db:"request_call" `
-	Severity           int16                                            `db:"severity" `
-	SourceContainer    bool                                             `db:"source_container" `
-	SourceDescription  string                                           `db:"source_description" `
-	SourceRoof         bool                                             `db:"source_roof" `
-	SourceStagnant     bool                                             `db:"source_stagnant" `
-	TimeOfDayDay       bool                                             `db:"time_of_day_day" `
-	TimeOfDayEarly     bool                                             `db:"time_of_day_early" `
-	TimeOfDayEvening   bool                                             `db:"time_of_day_evening" `
-	TimeOfDayNight     bool                                             `db:"time_of_day_night" `
-	PublicID           string                                           `db:"public_id" `
-	ReporterAddress    string                                           `db:"reporter_address" `
-	ReporterEmail      string                                           `db:"reporter_email" `
-	ReporterName       string                                           `db:"reporter_name" `
-	ReporterPhone      string                                           `db:"reporter_phone" `
-	Address            string                                           `db:"address" `
-	Location           null.Val[string]                                 `db:"location" `
-	Status             enums.PublicreportReportstatustype               `db:"status" `
-	OrganizationID     null.Val[int32]                                  `db:"organization_id" `
+	ID                int32                                  `db:"id,pk" `
+	AdditionalInfo    string                                 `db:"additional_info" `
+	Created           time.Time                              `db:"created" `
+	Duration          enums.PublicreportNuisancedurationtype `db:"duration" `
+	SourceLocation    enums.PublicreportNuisancelocationtype `db:"source_location" `
+	SourceContainer   bool                                   `db:"source_container" `
+	SourceDescription string                                 `db:"source_description" `
+	SourceStagnant    bool                                   `db:"source_stagnant" `
+	PublicID          string                                 `db:"public_id" `
+	ReporterAddress   string                                 `db:"reporter_address" `
+	ReporterEmail     string                                 `db:"reporter_email" `
+	ReporterName      string                                 `db:"reporter_name" `
+	ReporterPhone     string                                 `db:"reporter_phone" `
+	Address           string                                 `db:"address" `
+	Location          null.Val[string]                       `db:"location" `
+	Status            enums.PublicreportReportstatustype     `db:"status" `
+	OrganizationID    null.Val[int32]                        `db:"organization_id" `
+	SourceGutter      bool                                   `db:"source_gutter" `
 
 	R publicreportNuisanceR `db:"-" `
 }
@@ -77,71 +67,51 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "email", "inspection_type", "source_location", "preferred_date_range", "preferred_time", "request_call", "severity", "source_container", "source_description", "source_roof", "source_stagnant", "time_of_day_day", "time_of_day_early", "time_of_day_evening", "time_of_day_night", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id",
+			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter",
 		).WithParent("publicreport.nuisance"),
-		tableAlias:         alias,
-		ID:                 psql.Quote(alias, "id"),
-		AdditionalInfo:     psql.Quote(alias, "additional_info"),
-		Created:            psql.Quote(alias, "created"),
-		Duration:           psql.Quote(alias, "duration"),
-		Email:              psql.Quote(alias, "email"),
-		InspectionType:     psql.Quote(alias, "inspection_type"),
-		SourceLocation:     psql.Quote(alias, "source_location"),
-		PreferredDateRange: psql.Quote(alias, "preferred_date_range"),
-		PreferredTime:      psql.Quote(alias, "preferred_time"),
-		RequestCall:        psql.Quote(alias, "request_call"),
-		Severity:           psql.Quote(alias, "severity"),
-		SourceContainer:    psql.Quote(alias, "source_container"),
-		SourceDescription:  psql.Quote(alias, "source_description"),
-		SourceRoof:         psql.Quote(alias, "source_roof"),
-		SourceStagnant:     psql.Quote(alias, "source_stagnant"),
-		TimeOfDayDay:       psql.Quote(alias, "time_of_day_day"),
-		TimeOfDayEarly:     psql.Quote(alias, "time_of_day_early"),
-		TimeOfDayEvening:   psql.Quote(alias, "time_of_day_evening"),
-		TimeOfDayNight:     psql.Quote(alias, "time_of_day_night"),
-		PublicID:           psql.Quote(alias, "public_id"),
-		ReporterAddress:    psql.Quote(alias, "reporter_address"),
-		ReporterEmail:      psql.Quote(alias, "reporter_email"),
-		ReporterName:       psql.Quote(alias, "reporter_name"),
-		ReporterPhone:      psql.Quote(alias, "reporter_phone"),
-		Address:            psql.Quote(alias, "address"),
-		Location:           psql.Quote(alias, "location"),
-		Status:             psql.Quote(alias, "status"),
-		OrganizationID:     psql.Quote(alias, "organization_id"),
+		tableAlias:        alias,
+		ID:                psql.Quote(alias, "id"),
+		AdditionalInfo:    psql.Quote(alias, "additional_info"),
+		Created:           psql.Quote(alias, "created"),
+		Duration:          psql.Quote(alias, "duration"),
+		SourceLocation:    psql.Quote(alias, "source_location"),
+		SourceContainer:   psql.Quote(alias, "source_container"),
+		SourceDescription: psql.Quote(alias, "source_description"),
+		SourceStagnant:    psql.Quote(alias, "source_stagnant"),
+		PublicID:          psql.Quote(alias, "public_id"),
+		ReporterAddress:   psql.Quote(alias, "reporter_address"),
+		ReporterEmail:     psql.Quote(alias, "reporter_email"),
+		ReporterName:      psql.Quote(alias, "reporter_name"),
+		ReporterPhone:     psql.Quote(alias, "reporter_phone"),
+		Address:           psql.Quote(alias, "address"),
+		Location:          psql.Quote(alias, "location"),
+		Status:            psql.Quote(alias, "status"),
+		OrganizationID:    psql.Quote(alias, "organization_id"),
+		SourceGutter:      psql.Quote(alias, "source_gutter"),
 	}
 }
 
 type publicreportNuisanceColumns struct {
 	expr.ColumnsExpr
-	tableAlias         string
-	ID                 psql.Expression
-	AdditionalInfo     psql.Expression
-	Created            psql.Expression
-	Duration           psql.Expression
-	Email              psql.Expression
-	InspectionType     psql.Expression
-	SourceLocation     psql.Expression
-	PreferredDateRange psql.Expression
-	PreferredTime      psql.Expression
-	RequestCall        psql.Expression
-	Severity           psql.Expression
-	SourceContainer    psql.Expression
-	SourceDescription  psql.Expression
-	SourceRoof         psql.Expression
-	SourceStagnant     psql.Expression
-	TimeOfDayDay       psql.Expression
-	TimeOfDayEarly     psql.Expression
-	TimeOfDayEvening   psql.Expression
-	TimeOfDayNight     psql.Expression
-	PublicID           psql.Expression
-	ReporterAddress    psql.Expression
-	ReporterEmail      psql.Expression
-	ReporterName       psql.Expression
-	ReporterPhone      psql.Expression
-	Address            psql.Expression
-	Location           psql.Expression
-	Status             psql.Expression
-	OrganizationID     psql.Expression
+	tableAlias        string
+	ID                psql.Expression
+	AdditionalInfo    psql.Expression
+	Created           psql.Expression
+	Duration          psql.Expression
+	SourceLocation    psql.Expression
+	SourceContainer   psql.Expression
+	SourceDescription psql.Expression
+	SourceStagnant    psql.Expression
+	PublicID          psql.Expression
+	ReporterAddress   psql.Expression
+	ReporterEmail     psql.Expression
+	ReporterName      psql.Expression
+	ReporterPhone     psql.Expression
+	Address           psql.Expression
+	Location          psql.Expression
+	Status            psql.Expression
+	OrganizationID    psql.Expression
+	SourceGutter      psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -156,38 +126,28 @@ func (publicreportNuisanceColumns) AliasedAs(alias string) publicreportNuisanceC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportNuisanceSetter struct {
-	ID                 omit.Val[int32]                                            `db:"id,pk" `
-	AdditionalInfo     omit.Val[string]                                           `db:"additional_info" `
-	Created            omit.Val[time.Time]                                        `db:"created" `
-	Duration           omit.Val[enums.PublicreportNuisancedurationtype]           `db:"duration" `
-	Email              omit.Val[string]                                           `db:"email" `
-	InspectionType     omit.Val[enums.PublicreportNuisanceinspectiontype]         `db:"inspection_type" `
-	SourceLocation     omit.Val[enums.PublicreportNuisancelocationtype]           `db:"source_location" `
-	PreferredDateRange omit.Val[enums.PublicreportNuisancepreferreddaterangetype] `db:"preferred_date_range" `
-	PreferredTime      omit.Val[enums.PublicreportNuisancepreferredtimetype]      `db:"preferred_time" `
-	RequestCall        omit.Val[bool]                                             `db:"request_call" `
-	Severity           omit.Val[int16]                                            `db:"severity" `
-	SourceContainer    omit.Val[bool]                                             `db:"source_container" `
-	SourceDescription  omit.Val[string]                                           `db:"source_description" `
-	SourceRoof         omit.Val[bool]                                             `db:"source_roof" `
-	SourceStagnant     omit.Val[bool]                                             `db:"source_stagnant" `
-	TimeOfDayDay       omit.Val[bool]                                             `db:"time_of_day_day" `
-	TimeOfDayEarly     omit.Val[bool]                                             `db:"time_of_day_early" `
-	TimeOfDayEvening   omit.Val[bool]                                             `db:"time_of_day_evening" `
-	TimeOfDayNight     omit.Val[bool]                                             `db:"time_of_day_night" `
-	PublicID           omit.Val[string]                                           `db:"public_id" `
-	ReporterAddress    omit.Val[string]                                           `db:"reporter_address" `
-	ReporterEmail      omit.Val[string]                                           `db:"reporter_email" `
-	ReporterName       omit.Val[string]                                           `db:"reporter_name" `
-	ReporterPhone      omit.Val[string]                                           `db:"reporter_phone" `
-	Address            omit.Val[string]                                           `db:"address" `
-	Location           omitnull.Val[string]                                       `db:"location" `
-	Status             omit.Val[enums.PublicreportReportstatustype]               `db:"status" `
-	OrganizationID     omitnull.Val[int32]                                        `db:"organization_id" `
+	ID                omit.Val[int32]                                  `db:"id,pk" `
+	AdditionalInfo    omit.Val[string]                                 `db:"additional_info" `
+	Created           omit.Val[time.Time]                              `db:"created" `
+	Duration          omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
+	SourceLocation    omit.Val[enums.PublicreportNuisancelocationtype] `db:"source_location" `
+	SourceContainer   omit.Val[bool]                                   `db:"source_container" `
+	SourceDescription omit.Val[string]                                 `db:"source_description" `
+	SourceStagnant    omit.Val[bool]                                   `db:"source_stagnant" `
+	PublicID          omit.Val[string]                                 `db:"public_id" `
+	ReporterAddress   omit.Val[string]                                 `db:"reporter_address" `
+	ReporterEmail     omit.Val[string]                                 `db:"reporter_email" `
+	ReporterName      omit.Val[string]                                 `db:"reporter_name" `
+	ReporterPhone     omit.Val[string]                                 `db:"reporter_phone" `
+	Address           omit.Val[string]                                 `db:"address" `
+	Location          omitnull.Val[string]                             `db:"location" `
+	Status            omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
+	OrganizationID    omitnull.Val[int32]                              `db:"organization_id" `
+	SourceGutter      omit.Val[bool]                                   `db:"source_gutter" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 28)
+	vals := make([]string, 0, 18)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -200,26 +160,8 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.Duration.IsValue() {
 		vals = append(vals, "duration")
 	}
-	if s.Email.IsValue() {
-		vals = append(vals, "email")
-	}
-	if s.InspectionType.IsValue() {
-		vals = append(vals, "inspection_type")
-	}
 	if s.SourceLocation.IsValue() {
 		vals = append(vals, "source_location")
-	}
-	if s.PreferredDateRange.IsValue() {
-		vals = append(vals, "preferred_date_range")
-	}
-	if s.PreferredTime.IsValue() {
-		vals = append(vals, "preferred_time")
-	}
-	if s.RequestCall.IsValue() {
-		vals = append(vals, "request_call")
-	}
-	if s.Severity.IsValue() {
-		vals = append(vals, "severity")
 	}
 	if s.SourceContainer.IsValue() {
 		vals = append(vals, "source_container")
@@ -227,23 +169,8 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.SourceDescription.IsValue() {
 		vals = append(vals, "source_description")
 	}
-	if s.SourceRoof.IsValue() {
-		vals = append(vals, "source_roof")
-	}
 	if s.SourceStagnant.IsValue() {
 		vals = append(vals, "source_stagnant")
-	}
-	if s.TimeOfDayDay.IsValue() {
-		vals = append(vals, "time_of_day_day")
-	}
-	if s.TimeOfDayEarly.IsValue() {
-		vals = append(vals, "time_of_day_early")
-	}
-	if s.TimeOfDayEvening.IsValue() {
-		vals = append(vals, "time_of_day_evening")
-	}
-	if s.TimeOfDayNight.IsValue() {
-		vals = append(vals, "time_of_day_night")
 	}
 	if s.PublicID.IsValue() {
 		vals = append(vals, "public_id")
@@ -272,6 +199,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if !s.OrganizationID.IsUnset() {
 		vals = append(vals, "organization_id")
 	}
+	if s.SourceGutter.IsValue() {
+		vals = append(vals, "source_gutter")
+	}
 	return vals
 }
 
@@ -288,26 +218,8 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.Duration.IsValue() {
 		t.Duration = s.Duration.MustGet()
 	}
-	if s.Email.IsValue() {
-		t.Email = s.Email.MustGet()
-	}
-	if s.InspectionType.IsValue() {
-		t.InspectionType = s.InspectionType.MustGet()
-	}
 	if s.SourceLocation.IsValue() {
 		t.SourceLocation = s.SourceLocation.MustGet()
-	}
-	if s.PreferredDateRange.IsValue() {
-		t.PreferredDateRange = s.PreferredDateRange.MustGet()
-	}
-	if s.PreferredTime.IsValue() {
-		t.PreferredTime = s.PreferredTime.MustGet()
-	}
-	if s.RequestCall.IsValue() {
-		t.RequestCall = s.RequestCall.MustGet()
-	}
-	if s.Severity.IsValue() {
-		t.Severity = s.Severity.MustGet()
 	}
 	if s.SourceContainer.IsValue() {
 		t.SourceContainer = s.SourceContainer.MustGet()
@@ -315,23 +227,8 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.SourceDescription.IsValue() {
 		t.SourceDescription = s.SourceDescription.MustGet()
 	}
-	if s.SourceRoof.IsValue() {
-		t.SourceRoof = s.SourceRoof.MustGet()
-	}
 	if s.SourceStagnant.IsValue() {
 		t.SourceStagnant = s.SourceStagnant.MustGet()
-	}
-	if s.TimeOfDayDay.IsValue() {
-		t.TimeOfDayDay = s.TimeOfDayDay.MustGet()
-	}
-	if s.TimeOfDayEarly.IsValue() {
-		t.TimeOfDayEarly = s.TimeOfDayEarly.MustGet()
-	}
-	if s.TimeOfDayEvening.IsValue() {
-		t.TimeOfDayEvening = s.TimeOfDayEvening.MustGet()
-	}
-	if s.TimeOfDayNight.IsValue() {
-		t.TimeOfDayNight = s.TimeOfDayNight.MustGet()
 	}
 	if s.PublicID.IsValue() {
 		t.PublicID = s.PublicID.MustGet()
@@ -360,6 +257,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if !s.OrganizationID.IsUnset() {
 		t.OrganizationID = s.OrganizationID.MustGetNull()
 	}
+	if s.SourceGutter.IsValue() {
+		t.SourceGutter = s.SourceGutter.MustGet()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -368,7 +268,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 28)
+		vals := make([]bob.Expression, 18)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -393,148 +293,88 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.Email.IsValue() {
-			vals[4] = psql.Arg(s.Email.MustGet())
+		if s.SourceLocation.IsValue() {
+			vals[4] = psql.Arg(s.SourceLocation.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.InspectionType.IsValue() {
-			vals[5] = psql.Arg(s.InspectionType.MustGet())
+		if s.SourceContainer.IsValue() {
+			vals[5] = psql.Arg(s.SourceContainer.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceLocation.IsValue() {
-			vals[6] = psql.Arg(s.SourceLocation.MustGet())
+		if s.SourceDescription.IsValue() {
+			vals[6] = psql.Arg(s.SourceDescription.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.PreferredDateRange.IsValue() {
-			vals[7] = psql.Arg(s.PreferredDateRange.MustGet())
+		if s.SourceStagnant.IsValue() {
+			vals[7] = psql.Arg(s.SourceStagnant.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.PreferredTime.IsValue() {
-			vals[8] = psql.Arg(s.PreferredTime.MustGet())
+		if s.PublicID.IsValue() {
+			vals[8] = psql.Arg(s.PublicID.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.RequestCall.IsValue() {
-			vals[9] = psql.Arg(s.RequestCall.MustGet())
+		if s.ReporterAddress.IsValue() {
+			vals[9] = psql.Arg(s.ReporterAddress.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.Severity.IsValue() {
-			vals[10] = psql.Arg(s.Severity.MustGet())
+		if s.ReporterEmail.IsValue() {
+			vals[10] = psql.Arg(s.ReporterEmail.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceContainer.IsValue() {
-			vals[11] = psql.Arg(s.SourceContainer.MustGet())
+		if s.ReporterName.IsValue() {
+			vals[11] = psql.Arg(s.ReporterName.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceDescription.IsValue() {
-			vals[12] = psql.Arg(s.SourceDescription.MustGet())
+		if s.ReporterPhone.IsValue() {
+			vals[12] = psql.Arg(s.ReporterPhone.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceRoof.IsValue() {
-			vals[13] = psql.Arg(s.SourceRoof.MustGet())
+		if s.Address.IsValue() {
+			vals[13] = psql.Arg(s.Address.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceStagnant.IsValue() {
-			vals[14] = psql.Arg(s.SourceStagnant.MustGet())
+		if !s.Location.IsUnset() {
+			vals[14] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.TimeOfDayDay.IsValue() {
-			vals[15] = psql.Arg(s.TimeOfDayDay.MustGet())
+		if s.Status.IsValue() {
+			vals[15] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if s.TimeOfDayEarly.IsValue() {
-			vals[16] = psql.Arg(s.TimeOfDayEarly.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[16] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.TimeOfDayEvening.IsValue() {
-			vals[17] = psql.Arg(s.TimeOfDayEvening.MustGet())
+		if s.SourceGutter.IsValue() {
+			vals[17] = psql.Arg(s.SourceGutter.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
-		}
-
-		if s.TimeOfDayNight.IsValue() {
-			vals[18] = psql.Arg(s.TimeOfDayNight.MustGet())
-		} else {
-			vals[18] = psql.Raw("DEFAULT")
-		}
-
-		if s.PublicID.IsValue() {
-			vals[19] = psql.Arg(s.PublicID.MustGet())
-		} else {
-			vals[19] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterAddress.IsValue() {
-			vals[20] = psql.Arg(s.ReporterAddress.MustGet())
-		} else {
-			vals[20] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterEmail.IsValue() {
-			vals[21] = psql.Arg(s.ReporterEmail.MustGet())
-		} else {
-			vals[21] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterName.IsValue() {
-			vals[22] = psql.Arg(s.ReporterName.MustGet())
-		} else {
-			vals[22] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterPhone.IsValue() {
-			vals[23] = psql.Arg(s.ReporterPhone.MustGet())
-		} else {
-			vals[23] = psql.Raw("DEFAULT")
-		}
-
-		if s.Address.IsValue() {
-			vals[24] = psql.Arg(s.Address.MustGet())
-		} else {
-			vals[24] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Location.IsUnset() {
-			vals[25] = psql.Arg(s.Location.MustGetNull())
-		} else {
-			vals[25] = psql.Raw("DEFAULT")
-		}
-
-		if s.Status.IsValue() {
-			vals[26] = psql.Arg(s.Status.MustGet())
-		} else {
-			vals[26] = psql.Raw("DEFAULT")
-		}
-
-		if !s.OrganizationID.IsUnset() {
-			vals[27] = psql.Arg(s.OrganizationID.MustGetNull())
-		} else {
-			vals[27] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -546,7 +386,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 28)
+	exprs := make([]bob.Expression, 0, 18)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -576,52 +416,10 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.Email.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "email")...),
-			psql.Arg(s.Email),
-		}})
-	}
-
-	if s.InspectionType.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "inspection_type")...),
-			psql.Arg(s.InspectionType),
-		}})
-	}
-
 	if s.SourceLocation.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source_location")...),
 			psql.Arg(s.SourceLocation),
-		}})
-	}
-
-	if s.PreferredDateRange.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "preferred_date_range")...),
-			psql.Arg(s.PreferredDateRange),
-		}})
-	}
-
-	if s.PreferredTime.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "preferred_time")...),
-			psql.Arg(s.PreferredTime),
-		}})
-	}
-
-	if s.RequestCall.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "request_call")...),
-			psql.Arg(s.RequestCall),
-		}})
-	}
-
-	if s.Severity.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "severity")...),
-			psql.Arg(s.Severity),
 		}})
 	}
 
@@ -639,45 +437,10 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.SourceRoof.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_roof")...),
-			psql.Arg(s.SourceRoof),
-		}})
-	}
-
 	if s.SourceStagnant.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source_stagnant")...),
 			psql.Arg(s.SourceStagnant),
-		}})
-	}
-
-	if s.TimeOfDayDay.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "time_of_day_day")...),
-			psql.Arg(s.TimeOfDayDay),
-		}})
-	}
-
-	if s.TimeOfDayEarly.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "time_of_day_early")...),
-			psql.Arg(s.TimeOfDayEarly),
-		}})
-	}
-
-	if s.TimeOfDayEvening.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "time_of_day_evening")...),
-			psql.Arg(s.TimeOfDayEvening),
-		}})
-	}
-
-	if s.TimeOfDayNight.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "time_of_day_night")...),
-			psql.Arg(s.TimeOfDayNight),
 		}})
 	}
 
@@ -741,6 +504,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
+		}})
+	}
+
+	if s.SourceGutter.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source_gutter")...),
+			psql.Arg(s.SourceGutter),
 		}})
 	}
 
@@ -1043,34 +813,24 @@ func (publicreportNuisance0 *PublicreportNuisance) AttachOrganization(ctx contex
 }
 
 type publicreportNuisanceWhere[Q psql.Filterable] struct {
-	ID                 psql.WhereMod[Q, int32]
-	AdditionalInfo     psql.WhereMod[Q, string]
-	Created            psql.WhereMod[Q, time.Time]
-	Duration           psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
-	Email              psql.WhereMod[Q, string]
-	InspectionType     psql.WhereMod[Q, enums.PublicreportNuisanceinspectiontype]
-	SourceLocation     psql.WhereMod[Q, enums.PublicreportNuisancelocationtype]
-	PreferredDateRange psql.WhereMod[Q, enums.PublicreportNuisancepreferreddaterangetype]
-	PreferredTime      psql.WhereMod[Q, enums.PublicreportNuisancepreferredtimetype]
-	RequestCall        psql.WhereMod[Q, bool]
-	Severity           psql.WhereMod[Q, int16]
-	SourceContainer    psql.WhereMod[Q, bool]
-	SourceDescription  psql.WhereMod[Q, string]
-	SourceRoof         psql.WhereMod[Q, bool]
-	SourceStagnant     psql.WhereMod[Q, bool]
-	TimeOfDayDay       psql.WhereMod[Q, bool]
-	TimeOfDayEarly     psql.WhereMod[Q, bool]
-	TimeOfDayEvening   psql.WhereMod[Q, bool]
-	TimeOfDayNight     psql.WhereMod[Q, bool]
-	PublicID           psql.WhereMod[Q, string]
-	ReporterAddress    psql.WhereMod[Q, string]
-	ReporterEmail      psql.WhereMod[Q, string]
-	ReporterName       psql.WhereMod[Q, string]
-	ReporterPhone      psql.WhereMod[Q, string]
-	Address            psql.WhereMod[Q, string]
-	Location           psql.WhereNullMod[Q, string]
-	Status             psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID     psql.WhereNullMod[Q, int32]
+	ID                psql.WhereMod[Q, int32]
+	AdditionalInfo    psql.WhereMod[Q, string]
+	Created           psql.WhereMod[Q, time.Time]
+	Duration          psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
+	SourceLocation    psql.WhereMod[Q, enums.PublicreportNuisancelocationtype]
+	SourceContainer   psql.WhereMod[Q, bool]
+	SourceDescription psql.WhereMod[Q, string]
+	SourceStagnant    psql.WhereMod[Q, bool]
+	PublicID          psql.WhereMod[Q, string]
+	ReporterAddress   psql.WhereMod[Q, string]
+	ReporterEmail     psql.WhereMod[Q, string]
+	ReporterName      psql.WhereMod[Q, string]
+	ReporterPhone     psql.WhereMod[Q, string]
+	Address           psql.WhereMod[Q, string]
+	Location          psql.WhereNullMod[Q, string]
+	Status            psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID    psql.WhereNullMod[Q, int32]
+	SourceGutter      psql.WhereMod[Q, bool]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -1079,34 +839,24 @@ func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisance
 
 func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisanceColumns) publicreportNuisanceWhere[Q] {
 	return publicreportNuisanceWhere[Q]{
-		ID:                 psql.Where[Q, int32](cols.ID),
-		AdditionalInfo:     psql.Where[Q, string](cols.AdditionalInfo),
-		Created:            psql.Where[Q, time.Time](cols.Created),
-		Duration:           psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
-		Email:              psql.Where[Q, string](cols.Email),
-		InspectionType:     psql.Where[Q, enums.PublicreportNuisanceinspectiontype](cols.InspectionType),
-		SourceLocation:     psql.Where[Q, enums.PublicreportNuisancelocationtype](cols.SourceLocation),
-		PreferredDateRange: psql.Where[Q, enums.PublicreportNuisancepreferreddaterangetype](cols.PreferredDateRange),
-		PreferredTime:      psql.Where[Q, enums.PublicreportNuisancepreferredtimetype](cols.PreferredTime),
-		RequestCall:        psql.Where[Q, bool](cols.RequestCall),
-		Severity:           psql.Where[Q, int16](cols.Severity),
-		SourceContainer:    psql.Where[Q, bool](cols.SourceContainer),
-		SourceDescription:  psql.Where[Q, string](cols.SourceDescription),
-		SourceRoof:         psql.Where[Q, bool](cols.SourceRoof),
-		SourceStagnant:     psql.Where[Q, bool](cols.SourceStagnant),
-		TimeOfDayDay:       psql.Where[Q, bool](cols.TimeOfDayDay),
-		TimeOfDayEarly:     psql.Where[Q, bool](cols.TimeOfDayEarly),
-		TimeOfDayEvening:   psql.Where[Q, bool](cols.TimeOfDayEvening),
-		TimeOfDayNight:     psql.Where[Q, bool](cols.TimeOfDayNight),
-		PublicID:           psql.Where[Q, string](cols.PublicID),
-		ReporterAddress:    psql.Where[Q, string](cols.ReporterAddress),
-		ReporterEmail:      psql.Where[Q, string](cols.ReporterEmail),
-		ReporterName:       psql.Where[Q, string](cols.ReporterName),
-		ReporterPhone:      psql.Where[Q, string](cols.ReporterPhone),
-		Address:            psql.Where[Q, string](cols.Address),
-		Location:           psql.WhereNull[Q, string](cols.Location),
-		Status:             psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:     psql.WhereNull[Q, int32](cols.OrganizationID),
+		ID:                psql.Where[Q, int32](cols.ID),
+		AdditionalInfo:    psql.Where[Q, string](cols.AdditionalInfo),
+		Created:           psql.Where[Q, time.Time](cols.Created),
+		Duration:          psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
+		SourceLocation:    psql.Where[Q, enums.PublicreportNuisancelocationtype](cols.SourceLocation),
+		SourceContainer:   psql.Where[Q, bool](cols.SourceContainer),
+		SourceDescription: psql.Where[Q, string](cols.SourceDescription),
+		SourceStagnant:    psql.Where[Q, bool](cols.SourceStagnant),
+		PublicID:          psql.Where[Q, string](cols.PublicID),
+		ReporterAddress:   psql.Where[Q, string](cols.ReporterAddress),
+		ReporterEmail:     psql.Where[Q, string](cols.ReporterEmail),
+		ReporterName:      psql.Where[Q, string](cols.ReporterName),
+		ReporterPhone:     psql.Where[Q, string](cols.ReporterPhone),
+		Address:           psql.Where[Q, string](cols.Address),
+		Location:          psql.WhereNull[Q, string](cols.Location),
+		Status:            psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
+		SourceGutter:      psql.Where[Q, bool](cols.SourceGutter),
 	}
 }
 

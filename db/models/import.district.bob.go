@@ -48,7 +48,6 @@ type ImportDistrict struct {
 	ShapeLe1  null.Val[decimal.Decimal] `db:"shape_le_1" `
 	ShapeArea null.Val[decimal.Decimal] `db:"shape_area" `
 	Geom      null.Val[string]          `db:"geom" `
-	Geom4326  null.Val[string]          `db:"geom_4326,generated" `
 
 	R importDistrictR `db:"-" `
 }
@@ -71,7 +70,7 @@ type importDistrictR struct {
 func buildImportDistrictColumns(alias string) importDistrictColumns {
 	return importDistrictColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326",
+			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom",
 		).WithParent("import.district"),
 		tableAlias: alias,
 		Gid:        psql.Quote(alias, "gid"),
@@ -96,7 +95,6 @@ func buildImportDistrictColumns(alias string) importDistrictColumns {
 		ShapeLe1:   psql.Quote(alias, "shape_le_1"),
 		ShapeArea:  psql.Quote(alias, "shape_area"),
 		Geom:       psql.Quote(alias, "geom"),
-		Geom4326:   psql.Quote(alias, "geom_4326"),
 	}
 }
 
@@ -125,7 +123,6 @@ type importDistrictColumns struct {
 	ShapeLe1   psql.Expression
 	ShapeArea  psql.Expression
 	Geom       psql.Expression
-	Geom4326   psql.Expression
 }
 
 func (c importDistrictColumns) Alias() string {
@@ -935,7 +932,6 @@ type importDistrictWhere[Q psql.Filterable] struct {
 	ShapeLe1  psql.WhereNullMod[Q, decimal.Decimal]
 	ShapeArea psql.WhereNullMod[Q, decimal.Decimal]
 	Geom      psql.WhereNullMod[Q, string]
-	Geom4326  psql.WhereNullMod[Q, string]
 }
 
 func (importDistrictWhere[Q]) AliasedAs(alias string) importDistrictWhere[Q] {
@@ -966,7 +962,6 @@ func buildImportDistrictWhere[Q psql.Filterable](cols importDistrictColumns) imp
 		ShapeLe1:  psql.WhereNull[Q, decimal.Decimal](cols.ShapeLe1),
 		ShapeArea: psql.WhereNull[Q, decimal.Decimal](cols.ShapeArea),
 		Geom:      psql.WhereNull[Q, string](cols.Geom),
-		Geom4326:  psql.WhereNull[Q, string](cols.Geom4326),
 	}
 }
 

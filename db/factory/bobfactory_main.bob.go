@@ -2300,7 +2300,6 @@ func (f *Factory) FromExistingImportDistrict(m *models.ImportDistrict) *ImportDi
 	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
 	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
 	o.Geom = func() null.Val[string] { return m.Geom }
-	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
 
 	ctx := context.Background()
 	if m.R.ImportDistrictGidOrganization != nil {
@@ -2851,21 +2850,10 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.AdditionalInfo = func() string { return m.AdditionalInfo }
 	o.Created = func() time.Time { return m.Created }
 	o.Duration = func() enums.PublicreportNuisancedurationtype { return m.Duration }
-	o.Email = func() string { return m.Email }
-	o.InspectionType = func() enums.PublicreportNuisanceinspectiontype { return m.InspectionType }
 	o.SourceLocation = func() enums.PublicreportNuisancelocationtype { return m.SourceLocation }
-	o.PreferredDateRange = func() enums.PublicreportNuisancepreferreddaterangetype { return m.PreferredDateRange }
-	o.PreferredTime = func() enums.PublicreportNuisancepreferredtimetype { return m.PreferredTime }
-	o.RequestCall = func() bool { return m.RequestCall }
-	o.Severity = func() int16 { return m.Severity }
 	o.SourceContainer = func() bool { return m.SourceContainer }
 	o.SourceDescription = func() string { return m.SourceDescription }
-	o.SourceRoof = func() bool { return m.SourceRoof }
 	o.SourceStagnant = func() bool { return m.SourceStagnant }
-	o.TimeOfDayDay = func() bool { return m.TimeOfDayDay }
-	o.TimeOfDayEarly = func() bool { return m.TimeOfDayEarly }
-	o.TimeOfDayEvening = func() bool { return m.TimeOfDayEvening }
-	o.TimeOfDayNight = func() bool { return m.TimeOfDayNight }
 	o.PublicID = func() string { return m.PublicID }
 	o.ReporterAddress = func() string { return m.ReporterAddress }
 	o.ReporterEmail = func() string { return m.ReporterEmail }
@@ -2875,6 +2863,7 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.Location = func() null.Val[string] { return m.Location }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.SourceGutter = func() bool { return m.SourceGutter }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
