@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				position.coords.longitude,
 				position.coords.latitude,
 			]);
-			geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+			handleMarkerDrag({
 				lat: position.coords.latitude,
 				lng: position.coords.longitude,
 			});
