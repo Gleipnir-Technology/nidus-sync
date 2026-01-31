@@ -56,6 +56,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
+	address := r.PostFormValue("address")
 	source_stagnant := boolFromForm(r, "source-stagnant")
 	source_container := boolFromForm(r, "source-container")
 	source_gutters := boolFromForm(r, "source-gutters")
@@ -87,6 +88,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 
 	setter := models.PublicreportNuisanceSetter{
 		AdditionalInfo:    omit.From(additional_info),
+		Address:           omit.From(address),
 		Created:           omit.From(time.Now()),
 		Duration:          omit.From(duration),
 		Location:          omitnull.FromPtr[string](nil),
@@ -97,10 +99,9 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		SourceLocation:    omit.From(source_location),
 		SourceStagnant:    omit.From(source_stagnant),
 		Status:            omit.From(enums.PublicreportReportstatustypeReported),
-		ReporterAddress:   omit.FromPtr[string](nil),
-		ReporterEmail:     omit.FromPtr[string](nil),
-		ReporterName:      omit.FromPtr[string](nil),
-		ReporterPhone:     omit.FromPtr[string](nil),
+		ReporterEmail:     omitnull.FromPtr[string](nil),
+		ReporterName:      omitnull.FromPtr[string](nil),
+		ReporterPhone:     omitnull.FromPtr[string](nil),
 	}
 	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(r.Context(), db.PGInstance.BobDB)
 	if err != nil {

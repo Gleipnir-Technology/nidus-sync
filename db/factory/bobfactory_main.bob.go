@@ -2855,10 +2855,9 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.SourceDescription = func() string { return m.SourceDescription }
 	o.SourceStagnant = func() bool { return m.SourceStagnant }
 	o.PublicID = func() string { return m.PublicID }
-	o.ReporterAddress = func() string { return m.ReporterAddress }
-	o.ReporterEmail = func() string { return m.ReporterEmail }
-	o.ReporterName = func() string { return m.ReporterName }
-	o.ReporterPhone = func() string { return m.ReporterPhone }
+	o.ReporterEmail = func() null.Val[string] { return m.ReporterEmail }
+	o.ReporterName = func() null.Val[string] { return m.ReporterName }
+	o.ReporterPhone = func() null.Val[string] { return m.ReporterPhone }
 	o.Address = func() string { return m.Address }
 	o.Location = func() null.Val[string] { return m.Location }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }

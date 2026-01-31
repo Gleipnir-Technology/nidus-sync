@@ -96,39 +96,30 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ReporterAddress: column{
-			Name:      "reporter_address",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		ReporterEmail: column{
 			Name:      "reporter_email",
 			DBType:    "text",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
 		ReporterName: column{
 			Name:      "reporter_name",
 			DBType:    "text",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
 		ReporterPhone: column{
 			Name:      "reporter_phone",
 			DBType:    "text",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -251,7 +242,6 @@ type publicreportNuisanceColumns struct {
 	SourceDescription column
 	SourceStagnant    column
 	PublicID          column
-	ReporterAddress   column
 	ReporterEmail     column
 	ReporterName      column
 	ReporterPhone     column
@@ -264,7 +254,7 @@ type publicreportNuisanceColumns struct {
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterAddress, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter,
 	}
 }
 

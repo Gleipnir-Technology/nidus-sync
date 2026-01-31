@@ -47,10 +47,9 @@ type PublicreportNuisanceTemplate struct {
 	SourceDescription func() string
 	SourceStagnant    func() bool
 	PublicID          func() string
-	ReporterAddress   func() string
-	ReporterEmail     func() string
-	ReporterName      func() string
-	ReporterPhone     func() string
+	ReporterEmail     func() null.Val[string]
+	ReporterName      func() null.Val[string]
+	ReporterPhone     func() null.Val[string]
 	Address           func() string
 	Location          func() null.Val[string]
 	Status            func() enums.PublicreportReportstatustype
@@ -130,21 +129,17 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.PublicID()
 		m.PublicID = omit.From(val)
 	}
-	if o.ReporterAddress != nil {
-		val := o.ReporterAddress()
-		m.ReporterAddress = omit.From(val)
-	}
 	if o.ReporterEmail != nil {
 		val := o.ReporterEmail()
-		m.ReporterEmail = omit.From(val)
+		m.ReporterEmail = omitnull.FromNull(val)
 	}
 	if o.ReporterName != nil {
 		val := o.ReporterName()
-		m.ReporterName = omit.From(val)
+		m.ReporterName = omitnull.FromNull(val)
 	}
 	if o.ReporterPhone != nil {
 		val := o.ReporterPhone()
-		m.ReporterPhone = omit.From(val)
+		m.ReporterPhone = omitnull.FromNull(val)
 	}
 	if o.Address != nil {
 		val := o.Address()
@@ -214,9 +209,6 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	}
 	if o.PublicID != nil {
 		m.PublicID = o.PublicID()
-	}
-	if o.ReporterAddress != nil {
-		m.ReporterAddress = o.ReporterAddress()
 	}
 	if o.ReporterEmail != nil {
 		m.ReporterEmail = o.ReporterEmail()
@@ -293,22 +285,6 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 	if !(m.PublicID.IsValue()) {
 		val := random_string(nil)
 		m.PublicID = omit.From(val)
-	}
-	if !(m.ReporterAddress.IsValue()) {
-		val := random_string(nil)
-		m.ReporterAddress = omit.From(val)
-	}
-	if !(m.ReporterEmail.IsValue()) {
-		val := random_string(nil)
-		m.ReporterEmail = omit.From(val)
-	}
-	if !(m.ReporterName.IsValue()) {
-		val := random_string(nil)
-		m.ReporterName = omit.From(val)
-	}
-	if !(m.ReporterPhone.IsValue()) {
-		val := random_string(nil)
-		m.ReporterPhone = omit.From(val)
 	}
 	if !(m.Address.IsValue()) {
 		val := random_string(nil)
@@ -450,7 +426,6 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomSourceDescription(f),
 		PublicreportNuisanceMods.RandomSourceStagnant(f),
 		PublicreportNuisanceMods.RandomPublicID(f),
-		PublicreportNuisanceMods.RandomReporterAddress(f),
 		PublicreportNuisanceMods.RandomReporterEmail(f),
 		PublicreportNuisanceMods.RandomReporterName(f),
 		PublicreportNuisanceMods.RandomReporterPhone(f),
@@ -742,45 +717,14 @@ func (m publicreportNuisanceMods) RandomPublicID(f *faker.Faker) PublicreportNui
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) ReporterAddress(val string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterEmail(val null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterAddress = func() string { return val }
+		o.ReporterEmail = func() null.Val[string] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportNuisanceMods) ReporterAddressFunc(f func() string) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterAddress = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportNuisanceMods) UnsetReporterAddress() PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterAddress = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportNuisanceMods) RandomReporterAddress(f *faker.Faker) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterAddress = func() string {
-			return random_string(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m publicreportNuisanceMods) ReporterEmail(val string) PublicreportNuisanceMod {
-	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterEmail = func() string { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportNuisanceMods) ReporterEmailFunc(f func() string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterEmailFunc(f func() null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.ReporterEmail = f
 	})
@@ -795,23 +739,45 @@ func (m publicreportNuisanceMods) UnsetReporterEmail() PublicreportNuisanceMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m publicreportNuisanceMods) RandomReporterEmail(f *faker.Faker) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterEmail = func() string {
-			return random_string(f)
+		o.ReporterEmail = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomReporterEmailNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterEmail = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) ReporterName(val string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterName(val null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterName = func() string { return val }
+		o.ReporterName = func() null.Val[string] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportNuisanceMods) ReporterNameFunc(f func() string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterNameFunc(f func() null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.ReporterName = f
 	})
@@ -826,23 +792,45 @@ func (m publicreportNuisanceMods) UnsetReporterName() PublicreportNuisanceMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m publicreportNuisanceMods) RandomReporterName(f *faker.Faker) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterName = func() string {
-			return random_string(f)
+		o.ReporterName = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomReporterNameNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterName = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m publicreportNuisanceMods) ReporterPhone(val string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterPhone(val null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterPhone = func() string { return val }
+		o.ReporterPhone = func() null.Val[string] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportNuisanceMods) ReporterPhoneFunc(f func() string) PublicreportNuisanceMod {
+func (m publicreportNuisanceMods) ReporterPhoneFunc(f func() null.Val[string]) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
 		o.ReporterPhone = f
 	})
@@ -857,10 +845,32 @@ func (m publicreportNuisanceMods) UnsetReporterPhone() PublicreportNuisanceMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m publicreportNuisanceMods) RandomReporterPhone(f *faker.Faker) PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
-		o.ReporterPhone = func() string {
-			return random_string(f)
+		o.ReporterPhone = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomReporterPhoneNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterPhone = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

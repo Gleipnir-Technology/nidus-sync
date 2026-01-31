@@ -136,9 +136,9 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
-	result.Report.Reporter.Email = nuisance.ReporterEmail
-	result.Report.Reporter.Name = nuisance.ReporterName
-	result.Report.Reporter.Phone = nuisance.ReporterPhone
+	result.Report.Reporter.Email = nuisance.ReporterEmail.GetOr("")
+	result.Report.Reporter.Name = nuisance.ReporterName.GetOr("")
+	result.Report.Reporter.Phone = nuisance.ReporterPhone.GetOr("")
 
 	type LocationGeoJSON struct {
 		Location string

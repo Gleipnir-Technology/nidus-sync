@@ -36,10 +36,9 @@ type PublicreportNuisance struct {
 	SourceDescription string                                 `db:"source_description" `
 	SourceStagnant    bool                                   `db:"source_stagnant" `
 	PublicID          string                                 `db:"public_id" `
-	ReporterAddress   string                                 `db:"reporter_address" `
-	ReporterEmail     string                                 `db:"reporter_email" `
-	ReporterName      string                                 `db:"reporter_name" `
-	ReporterPhone     string                                 `db:"reporter_phone" `
+	ReporterEmail     null.Val[string]                       `db:"reporter_email" `
+	ReporterName      null.Val[string]                       `db:"reporter_name" `
+	ReporterPhone     null.Val[string]                       `db:"reporter_phone" `
 	Address           string                                 `db:"address" `
 	Location          null.Val[string]                       `db:"location" `
 	Status            enums.PublicreportReportstatustype     `db:"status" `
@@ -67,7 +66,7 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_address", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter",
+			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:        alias,
 		ID:                psql.Quote(alias, "id"),
@@ -79,7 +78,6 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		SourceDescription: psql.Quote(alias, "source_description"),
 		SourceStagnant:    psql.Quote(alias, "source_stagnant"),
 		PublicID:          psql.Quote(alias, "public_id"),
-		ReporterAddress:   psql.Quote(alias, "reporter_address"),
 		ReporterEmail:     psql.Quote(alias, "reporter_email"),
 		ReporterName:      psql.Quote(alias, "reporter_name"),
 		ReporterPhone:     psql.Quote(alias, "reporter_phone"),
@@ -103,7 +101,6 @@ type publicreportNuisanceColumns struct {
 	SourceDescription psql.Expression
 	SourceStagnant    psql.Expression
 	PublicID          psql.Expression
-	ReporterAddress   psql.Expression
 	ReporterEmail     psql.Expression
 	ReporterName      psql.Expression
 	ReporterPhone     psql.Expression
@@ -135,10 +132,9 @@ type PublicreportNuisanceSetter struct {
 	SourceDescription omit.Val[string]                                 `db:"source_description" `
 	SourceStagnant    omit.Val[bool]                                   `db:"source_stagnant" `
 	PublicID          omit.Val[string]                                 `db:"public_id" `
-	ReporterAddress   omit.Val[string]                                 `db:"reporter_address" `
-	ReporterEmail     omit.Val[string]                                 `db:"reporter_email" `
-	ReporterName      omit.Val[string]                                 `db:"reporter_name" `
-	ReporterPhone     omit.Val[string]                                 `db:"reporter_phone" `
+	ReporterEmail     omitnull.Val[string]                             `db:"reporter_email" `
+	ReporterName      omitnull.Val[string]                             `db:"reporter_name" `
+	ReporterPhone     omitnull.Val[string]                             `db:"reporter_phone" `
 	Address           omit.Val[string]                                 `db:"address" `
 	Location          omitnull.Val[string]                             `db:"location" `
 	Status            omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
@@ -147,7 +143,7 @@ type PublicreportNuisanceSetter struct {
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 18)
+	vals := make([]string, 0, 17)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -175,16 +171,13 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.PublicID.IsValue() {
 		vals = append(vals, "public_id")
 	}
-	if s.ReporterAddress.IsValue() {
-		vals = append(vals, "reporter_address")
-	}
-	if s.ReporterEmail.IsValue() {
+	if !s.ReporterEmail.IsUnset() {
 		vals = append(vals, "reporter_email")
 	}
-	if s.ReporterName.IsValue() {
+	if !s.ReporterName.IsUnset() {
 		vals = append(vals, "reporter_name")
 	}
-	if s.ReporterPhone.IsValue() {
+	if !s.ReporterPhone.IsUnset() {
 		vals = append(vals, "reporter_phone")
 	}
 	if s.Address.IsValue() {
@@ -233,17 +226,14 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.PublicID.IsValue() {
 		t.PublicID = s.PublicID.MustGet()
 	}
-	if s.ReporterAddress.IsValue() {
-		t.ReporterAddress = s.ReporterAddress.MustGet()
+	if !s.ReporterEmail.IsUnset() {
+		t.ReporterEmail = s.ReporterEmail.MustGetNull()
 	}
-	if s.ReporterEmail.IsValue() {
-		t.ReporterEmail = s.ReporterEmail.MustGet()
+	if !s.ReporterName.IsUnset() {
+		t.ReporterName = s.ReporterName.MustGetNull()
 	}
-	if s.ReporterName.IsValue() {
-		t.ReporterName = s.ReporterName.MustGet()
-	}
-	if s.ReporterPhone.IsValue() {
-		t.ReporterPhone = s.ReporterPhone.MustGet()
+	if !s.ReporterPhone.IsUnset() {
+		t.ReporterPhone = s.ReporterPhone.MustGetNull()
 	}
 	if s.Address.IsValue() {
 		t.Address = s.Address.MustGet()
@@ -268,7 +258,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 18)
+		vals := make([]bob.Expression, 17)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -323,58 +313,52 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterAddress.IsValue() {
-			vals[9] = psql.Arg(s.ReporterAddress.MustGet())
+		if !s.ReporterEmail.IsUnset() {
+			vals[9] = psql.Arg(s.ReporterEmail.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterEmail.IsValue() {
-			vals[10] = psql.Arg(s.ReporterEmail.MustGet())
+		if !s.ReporterName.IsUnset() {
+			vals[10] = psql.Arg(s.ReporterName.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterName.IsValue() {
-			vals[11] = psql.Arg(s.ReporterName.MustGet())
+		if !s.ReporterPhone.IsUnset() {
+			vals[11] = psql.Arg(s.ReporterPhone.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterPhone.IsValue() {
-			vals[12] = psql.Arg(s.ReporterPhone.MustGet())
+		if s.Address.IsValue() {
+			vals[12] = psql.Arg(s.Address.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.Address.IsValue() {
-			vals[13] = psql.Arg(s.Address.MustGet())
+		if !s.Location.IsUnset() {
+			vals[13] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Location.IsUnset() {
-			vals[14] = psql.Arg(s.Location.MustGetNull())
+		if s.Status.IsValue() {
+			vals[14] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[15] = psql.Arg(s.Status.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[15] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[16] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.SourceGutter.IsValue() {
+			vals[16] = psql.Arg(s.SourceGutter.MustGet())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
-		}
-
-		if s.SourceGutter.IsValue() {
-			vals[17] = psql.Arg(s.SourceGutter.MustGet())
-		} else {
-			vals[17] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -386,7 +370,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 18)
+	exprs := make([]bob.Expression, 0, 17)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -451,28 +435,21 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.ReporterAddress.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_address")...),
-			psql.Arg(s.ReporterAddress),
-		}})
-	}
-
-	if s.ReporterEmail.IsValue() {
+	if !s.ReporterEmail.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_email")...),
 			psql.Arg(s.ReporterEmail),
 		}})
 	}
 
-	if s.ReporterName.IsValue() {
+	if !s.ReporterName.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_name")...),
 			psql.Arg(s.ReporterName),
 		}})
 	}
 
-	if s.ReporterPhone.IsValue() {
+	if !s.ReporterPhone.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_phone")...),
 			psql.Arg(s.ReporterPhone),
@@ -822,10 +799,9 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	SourceDescription psql.WhereMod[Q, string]
 	SourceStagnant    psql.WhereMod[Q, bool]
 	PublicID          psql.WhereMod[Q, string]
-	ReporterAddress   psql.WhereMod[Q, string]
-	ReporterEmail     psql.WhereMod[Q, string]
-	ReporterName      psql.WhereMod[Q, string]
-	ReporterPhone     psql.WhereMod[Q, string]
+	ReporterEmail     psql.WhereNullMod[Q, string]
+	ReporterName      psql.WhereNullMod[Q, string]
+	ReporterPhone     psql.WhereNullMod[Q, string]
 	Address           psql.WhereMod[Q, string]
 	Location          psql.WhereNullMod[Q, string]
 	Status            psql.WhereMod[Q, enums.PublicreportReportstatustype]
@@ -848,10 +824,9 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		SourceDescription: psql.Where[Q, string](cols.SourceDescription),
 		SourceStagnant:    psql.Where[Q, bool](cols.SourceStagnant),
 		PublicID:          psql.Where[Q, string](cols.PublicID),
-		ReporterAddress:   psql.Where[Q, string](cols.ReporterAddress),
-		ReporterEmail:     psql.Where[Q, string](cols.ReporterEmail),
-		ReporterName:      psql.Where[Q, string](cols.ReporterName),
-		ReporterPhone:     psql.Where[Q, string](cols.ReporterPhone),
+		ReporterEmail:     psql.WhereNull[Q, string](cols.ReporterEmail),
+		ReporterName:      psql.WhereNull[Q, string](cols.ReporterName),
+		ReporterPhone:     psql.WhereNull[Q, string](cols.ReporterPhone),
 		Address:           psql.Where[Q, string](cols.Address),
 		Location:          psql.WhereNull[Q, string](cols.Location),
 		Status:            psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
