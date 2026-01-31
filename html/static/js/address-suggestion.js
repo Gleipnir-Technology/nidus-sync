@@ -1,16 +1,23 @@
 class AddressInput extends HTMLElement {
+	// make element form-associated
+	static formAssociated = true;
+
 	constructor() {
 		super();
 
-		// Create a shadow DOM
 		this.attachShadow({mode: "open" });
-
-		// Initial render
+		this.internals = this.attachInternals();
 		this.render();
 
 		// Element references
-		this._input = this.shadowRoot.querySelector('input');
-		this._suggestions = this.shadowRoot.querySelector('.suggestions-container');
+		this._input = this.shadowRoot.querySelector("input");
+		this._input.addEventListener("input", (event) => {
+			let value = event.target.value;
+			const entries = new FormData();
+			entries.append("address", value);
+			this.internals.setFormValue(entries);
+		});
+		this._suggestions = this.shadowRoot.querySelector(".suggestions-container");
 		
 		// Bind methods
 		this._handleInput = this._handleInput.bind(this);
