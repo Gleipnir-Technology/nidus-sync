@@ -23,6 +23,10 @@ import (
 
 type E164 = phonenumbers.PhoneNumber
 
+func PhoneString(p E164) string {
+	return phonenumbers.Format(&p, phonenumbers.E164)
+}
+
 func HandleTextMessage(src string, dst string, body string) {
 	ctx := context.Background()
 

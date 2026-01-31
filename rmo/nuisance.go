@@ -114,5 +114,5 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Info().Str("public_id", public_id).Int32("id", nuisance.ID).Msg("Created nuisance report")
-	http.Redirect(w, r, fmt.Sprintf("/nuisance-submit-complete?report=%s", public_id), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
 }

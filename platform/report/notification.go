@@ -12,11 +12,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/nyaruka/phonenumbers"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 )
-
-type E164 = phonenumbers.PhoneNumber
 
 type ErrorWithCode struct {
 	code    string
@@ -32,8 +30,63 @@ func (e *ErrorWithCode) Error() string {
 }
 
 type SomeReport struct {
-	report_id string
-	type_     string
+	reportID  string
+	tableName string
+}
+
+func (sr SomeReport) updateReporterEmail(ctx context.Context, email string) *ErrorWithCode {
+	table := um.Table("so-such-table")
+	switch sr.tableName {
+	case "nuisance":
+		table = um.Table("publicreport.nuisance")
+	case "pool":
+		table = um.Table("publicreport.pool")
+	default:
+		return newErrorWithCode("internal-error", "Programmer error: unrecognized table")
+	}
+	result, err := psql.Update(
+		table,
+		um.SetCol("reporter_email").ToArg(email),
+		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.reportID))),
+	).Exec(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
+	}
+	rowcount, err := result.RowsAffected()
+	if err != nil {
+		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
+	}
+	if rowcount != 1 {
+		log.Warn().Str("report_id", sr.reportID).Msg("updated more than one row, which is a programmer error")
+	}
+	return nil
+}
+func (sr SomeReport) updateReporterPhone(ctx context.Context, phone text.E164) *ErrorWithCode {
+	table := um.Table("so-such-table")
+	switch sr.tableName {
+	case "nuisance":
+		table = um.Table("publicreport.nuisance")
+	case "pool":
+		table = um.Table("publicreport.pool")
+	default:
+		return newErrorWithCode("internal-error", "Programmer error: unrecognized table")
+	}
+	result, err := psql.Update(
+		table,
+		um.SetCol("reporter_phone").ToArg(text.PhoneString(phone)),
+		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.reportID))),
+	).Exec(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
+	}
+	rowcount, err := result.RowsAffected()
+	if err != nil {
+		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
+	}
+	if rowcount != 1 {
+		log.Warn().Str("report_id", sr.reportID).Msg("updated more than one row, which is a programmer error")
+	}
+	return nil
 }
 
 // GenerateReportID creates a 12-character random string using only unambiguous
@@ -61,29 +114,29 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func RegisterNotifications(ctx context.Context, report_id string, email string, phone *E164) *ErrorWithCode {
-	result, err := psql.Update(
-		um.Table("publicreport.quick"),
-		um.SetCol("reporter_email").ToArg(email),
-		um.SetCol("reporter_phone").ToArg(phone),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	).Exec(ctx, db.PGInstance.BobDB)
+func RegisterNotificationEmail(ctx context.Context, report_id string, email string) *ErrorWithCode {
+	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
+		return err
 	}
-	rowcount, err := result.RowsAffected()
+	err = some_report.updateReporterEmail(ctx, email)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
+		return err
 	}
-	if rowcount != 1 {
-		log.Warn().Str("report_id", report_id).Msg("updated more than one row, which is a programmer error")
+	background.ReportSubscriptionConfirmationEmail(email, report_id)
+	return nil
+}
+
+func RegisterNotificationPhone(ctx context.Context, report_id string, phone text.E164) *ErrorWithCode {
+	some_report, err := findSomeReport(ctx, report_id)
+	if err != nil {
+		return err
 	}
-	if email != "" {
-		background.ReportSubscriptionConfirmationEmail(email, report_id)
+	err = some_report.updateReporterPhone(ctx, phone)
+	if err != nil {
+		return err
 	}
-	if phone != nil {
-		background.ReportSubscriptionConfirmationText(*phone, report_id)
-	}
+	background.ReportSubscriptionConfirmationText(phone, report_id)
 	return nil
 }
 
@@ -91,7 +144,7 @@ func RegisterSubscriptionEmail(ctx context.Context, email string) *ErrorWithCode
 	log.Warn().Msg("RegisterSubscription not implemented yet")
 	return nil
 }
-func RegisterSubscriptionPhone(ctx context.Context, phone *E164) *ErrorWithCode {
+func RegisterSubscriptionPhone(ctx context.Context, phone text.E164) *ErrorWithCode {
 	log.Warn().Msg("RegisterSubscription not implemented yet")
 	return nil
 }
@@ -109,6 +162,9 @@ func findSomeReport(ctx context.Context, report_id string) (result SomeReport, e
 	default:
 		return result, newErrorWithCode("internal-error", "More than one report with the provided ID, which shouldn't happen")
 	}
+	row := rows[0]
+	result.reportID = report_id
+	result.tableName = row.FoundInTables[0]
 	return result, nil
 }
 
