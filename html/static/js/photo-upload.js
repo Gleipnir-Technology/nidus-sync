@@ -1,8 +1,13 @@
 class PhotoUpload extends HTMLElement {
+	// make element form-associated
+	static formAssociated = true;
+
 	constructor() {
 		super();
 		this.attachShadow({ mode: 'open' });
 		this.render();
+		this.fileInput = this.shadowRoot.getElementById("photos");
+		this.internals = this.attachInternals();
 	}
 
 	connectedCallback() {
@@ -15,7 +20,17 @@ class PhotoUpload extends HTMLElement {
 
 		// Handle photo selection
 		photoInput.addEventListener('change', () => {this._handlePhotoSelection()});
-
+		photoInput.addEventListener("input", (event) => {
+			let value = event.textContent;
+			const n = "photos";
+			let i = 0
+			const entries = new FormData();
+			for (const file of event.target.files) {
+				entries.append(n + i, file);
+				i = i + 1
+			}
+			this.internals.setFormValue(entries);
+		});
 		// Handle drag and drop
 		const photoDropArea = this.shadowRoot.querySelector('#photoDropArea');
 		
