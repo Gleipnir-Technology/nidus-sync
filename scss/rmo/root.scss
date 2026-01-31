@@ -1,3 +1,16 @@
+.banner {
+	display: block;
+}
+@include media-breakpoint-up(xs) {
+  .banner {
+    width: 100%;
+  }
+}
+@include media-breakpoint-up(xl) {
+  .banner {
+    height: 100%;
+  }
+}
 .service-card {
 	transition: transform 0.3s;
 	height: 100%;
@@ -24,9 +37,3 @@
   background-color: #F76436;
   overflow: hidden;
 }
-
-.banner-image {
-  display: block;
-  /* width as needed */
-}
-
