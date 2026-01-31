@@ -11,12 +11,6 @@ class AddressInput extends HTMLElement {
 
 		// Element references
 		this._input = this.shadowRoot.querySelector("input");
-		this._input.addEventListener("input", (event) => {
-			let value = event.target.value;
-			const entries = new FormData();
-			entries.append("address", value);
-			this.internals.setFormValue(entries);
-		});
 		this._suggestions = this.shadowRoot.querySelector(".suggestions-container");
 		
 		// Bind methods
@@ -63,6 +57,9 @@ class AddressInput extends HTMLElement {
 	set value(val) {
 		if (this._input) {
 			this._input.value = val;
+			const entries = new FormData();
+			entries.append("address", val);
+			this.internals.setFormValue(entries);
 		}
 	}
 
