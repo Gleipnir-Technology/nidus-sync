@@ -55,6 +55,7 @@ type PublicreportNuisanceTemplate struct {
 	Status            func() enums.PublicreportReportstatustype
 	OrganizationID    func() null.Val[int32]
 	SourceGutter      func() bool
+	H3cell            func() null.Val[string]
 
 	r publicreportNuisanceR
 	f *Factory
@@ -64,10 +65,15 @@ type PublicreportNuisanceTemplate struct {
 
 type publicreportNuisanceR struct {
 	Organization *publicreportNuisanceROrganizationR
+	Images       []*publicreportNuisanceRImagesR
 }
 
 type publicreportNuisanceROrganizationR struct {
 	o *OrganizationTemplate
+}
+type publicreportNuisanceRImagesR struct {
+	number int
+	o      *PublicreportImageTemplate
 }
 
 // Apply mods to the PublicreportNuisanceTemplate
@@ -85,6 +91,18 @@ func (t PublicreportNuisanceTemplate) setModelRels(o *models.PublicreportNuisanc
 		rel.R.Nuisances = append(rel.R.Nuisances, o)
 		o.OrganizationID = null.From(rel.ID) // h2
 		o.R.Organization = rel
+	}
+
+	if t.r.Images != nil {
+		rel := models.PublicreportImageSlice{}
+		for _, r := range t.r.Images {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.Nuisances = append(rel.R.Nuisances, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Images = rel
 	}
 }
 
@@ -161,6 +179,10 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.SourceGutter()
 		m.SourceGutter = omit.From(val)
 	}
+	if o.H3cell != nil {
+		val := o.H3cell()
+		m.H3cell = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -233,6 +255,9 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	}
 	if o.SourceGutter != nil {
 		m.SourceGutter = o.SourceGutter()
+	}
+	if o.H3cell != nil {
+		m.H3cell = o.H3cell()
 	}
 
 	o.setModelRels(m)
@@ -323,6 +348,26 @@ func (o *PublicreportNuisanceTemplate) insertOptRels(ctx context.Context, exec b
 			}
 		}
 
+	}
+
+	isImagesDone, _ := publicreportNuisanceRelImagesCtx.Value(ctx)
+	if !isImagesDone && o.r.Images != nil {
+		ctx = publicreportNuisanceRelImagesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Images {
+			if r.o.alreadyPersisted {
+				m.R.Images = append(m.R.Images, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachImages(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return err
@@ -434,6 +479,7 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomStatus(f),
 		PublicreportNuisanceMods.RandomOrganizationID(f),
 		PublicreportNuisanceMods.RandomSourceGutter(f),
+		PublicreportNuisanceMods.RandomH3cell(f),
 	}
 }
 
@@ -1074,6 +1120,59 @@ func (m publicreportNuisanceMods) RandomSourceGutter(f *faker.Faker) Publicrepor
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportNuisanceMods) H3cell(val null.Val[string]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.H3cell = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) H3cellFunc(f func() null.Val[string]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.H3cell = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetH3cell() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.H3cell = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportNuisanceMods) RandomH3cell(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomH3cellNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.H3cell = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportNuisanceMods) WithParentsCascading() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
 		if isDone, _ := publicreportNuisanceWithParentsCascadingCtx.Value(ctx); isDone {
@@ -1115,5 +1214,53 @@ func (m publicreportNuisanceMods) WithExistingOrganization(em *models.Organizati
 func (m publicreportNuisanceMods) WithoutOrganization() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m publicreportNuisanceMods) WithImages(number int, related *PublicreportImageTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Images = []*publicreportNuisanceRImagesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportNuisanceMods) WithNewImages(number int, mods ...PublicreportImageMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.WithImages(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddImages(number int, related *PublicreportImageTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Images = append(o.r.Images, &publicreportNuisanceRImagesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportNuisanceMods) AddNewImages(number int, mods ...PublicreportImageMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportImageWithContext(ctx, mods...)
+		m.AddImages(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddExistingImages(existingModels ...*models.PublicreportImage) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		for _, em := range existingModels {
+			o.r.Images = append(o.r.Images, &publicreportNuisanceRImagesR{
+				o: o.f.FromExistingPublicreportImage(em),
+			})
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithoutImages() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.Images = nil
 	})
 }

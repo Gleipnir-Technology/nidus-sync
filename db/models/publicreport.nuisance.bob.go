@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -23,6 +24,7 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/stephenafamo/scan"
 )
 
 // PublicreportNuisance is an object representing the database table.
@@ -44,8 +46,11 @@ type PublicreportNuisance struct {
 	Status            enums.PublicreportReportstatustype     `db:"status" `
 	OrganizationID    null.Val[int32]                        `db:"organization_id" `
 	SourceGutter      bool                                   `db:"source_gutter" `
+	H3cell            null.Val[string]                       `db:"h3cell" `
 
 	R publicreportNuisanceR `db:"-" `
+
+	C publicreportNuisanceC `db:"-" `
 }
 
 // PublicreportNuisanceSlice is an alias for a slice of pointers to PublicreportNuisance.
@@ -60,13 +65,14 @@ type PublicreportNuisancesQuery = *psql.ViewQuery[*PublicreportNuisance, Publicr
 
 // publicreportNuisanceR is where relationships are stored.
 type publicreportNuisanceR struct {
-	Organization *Organization // publicreport.nuisance.nuisance_organization_id_fkey
+	Organization *Organization          // publicreport.nuisance.nuisance_organization_id_fkey
+	Images       PublicreportImageSlice // publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey
 }
 
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter",
+			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter", "h3cell",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:        alias,
 		ID:                psql.Quote(alias, "id"),
@@ -86,6 +92,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		Status:            psql.Quote(alias, "status"),
 		OrganizationID:    psql.Quote(alias, "organization_id"),
 		SourceGutter:      psql.Quote(alias, "source_gutter"),
+		H3cell:            psql.Quote(alias, "h3cell"),
 	}
 }
 
@@ -109,6 +116,7 @@ type publicreportNuisanceColumns struct {
 	Status            psql.Expression
 	OrganizationID    psql.Expression
 	SourceGutter      psql.Expression
+	H3cell            psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -140,10 +148,11 @@ type PublicreportNuisanceSetter struct {
 	Status            omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
 	OrganizationID    omitnull.Val[int32]                              `db:"organization_id" `
 	SourceGutter      omit.Val[bool]                                   `db:"source_gutter" `
+	H3cell            omitnull.Val[string]                             `db:"h3cell" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 17)
+	vals := make([]string, 0, 18)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -194,6 +203,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	}
 	if s.SourceGutter.IsValue() {
 		vals = append(vals, "source_gutter")
+	}
+	if !s.H3cell.IsUnset() {
+		vals = append(vals, "h3cell")
 	}
 	return vals
 }
@@ -250,6 +262,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.SourceGutter.IsValue() {
 		t.SourceGutter = s.SourceGutter.MustGet()
 	}
+	if !s.H3cell.IsUnset() {
+		t.H3cell = s.H3cell.MustGetNull()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -258,7 +273,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 17)
+		vals := make([]bob.Expression, 18)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -361,6 +376,12 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
+		if !s.H3cell.IsUnset() {
+			vals[17] = psql.Arg(s.H3cell.MustGetNull())
+		} else {
+			vals[17] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -370,7 +391,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 17)
+	exprs := make([]bob.Expression, 0, 18)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -488,6 +509,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source_gutter")...),
 			psql.Arg(s.SourceGutter),
+		}})
+	}
+
+	if !s.H3cell.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "h3cell")...),
+			psql.Arg(s.H3cell),
 		}})
 	}
 
@@ -741,6 +769,35 @@ func (os PublicreportNuisanceSlice) Organization(mods ...bob.Mod[*dialect.Select
 	)...)
 }
 
+// Images starts a query for related objects on publicreport.image
+func (o *PublicreportNuisance) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportNuisanceImages.Columns.ImageID)),
+		sm.Where(PublicreportNuisanceImages.Columns.NuisanceID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportNuisanceSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportImages.Query(append(mods,
+		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportNuisanceImages.Columns.ImageID),
+		),
+		sm.Where(psql.Group(PublicreportNuisanceImages.Columns.NuisanceID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachPublicreportNuisanceOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, organization1 *Organization) (*PublicreportNuisance, error) {
 	setter := &PublicreportNuisanceSetter{
 		OrganizationID: omitnull.From(organization1.ID),
@@ -789,6 +846,71 @@ func (publicreportNuisance0 *PublicreportNuisance) AttachOrganization(ctx contex
 	return nil
 }
 
+func attachPublicreportNuisanceImages0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, publicreportImages2 PublicreportImageSlice) (PublicreportNuisanceImageSlice, error) {
+	setters := make([]*PublicreportNuisanceImageSetter, count)
+	for i := range count {
+		setters[i] = &PublicreportNuisanceImageSetter{
+			NuisanceID: omit.From(publicreportNuisance0.ID),
+			ImageID:    omit.From(publicreportImages2[i].ID),
+		}
+	}
+
+	publicreportNuisanceImages1, err := PublicreportNuisanceImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportNuisanceImages0: %w", err)
+	}
+
+	return publicreportNuisanceImages1, nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	inserted, err := PublicreportImages.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	publicreportImages2 := PublicreportImageSlice(inserted)
+
+	_, err = attachPublicreportNuisanceImages0(ctx, exec, len(related), publicreportNuisance0, publicreportImages2)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Images = append(publicreportNuisance0.R.Images, publicreportImages2...)
+
+	for _, rel := range publicreportImages2 {
+		rel.R.Nuisances = append(rel.R.Nuisances, publicreportNuisance0)
+	}
+	return nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportImages2 := PublicreportImageSlice(related)
+
+	_, err = attachPublicreportNuisanceImages0(ctx, exec, len(related), publicreportNuisance0, publicreportImages2)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Images = append(publicreportNuisance0.R.Images, publicreportImages2...)
+
+	for _, rel := range related {
+		rel.R.Nuisances = append(rel.R.Nuisances, publicreportNuisance0)
+	}
+
+	return nil
+}
+
 type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ID                psql.WhereMod[Q, int32]
 	AdditionalInfo    psql.WhereMod[Q, string]
@@ -807,6 +929,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	Status            psql.WhereMod[Q, enums.PublicreportReportstatustype]
 	OrganizationID    psql.WhereNullMod[Q, int32]
 	SourceGutter      psql.WhereMod[Q, bool]
+	H3cell            psql.WhereNullMod[Q, string]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -832,6 +955,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		Status:            psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
 		SourceGutter:      psql.Where[Q, bool](cols.SourceGutter),
+		H3cell:            psql.WhereNull[Q, string](cols.H3cell),
 	}
 }
 
@@ -851,6 +975,20 @@ func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
 
 		if rel != nil {
 			rel.R.Nuisances = PublicreportNuisanceSlice{o}
+		}
+		return nil
+	case "Images":
+		rels, ok := retrieved.(PublicreportImageSlice)
+		if !ok {
+			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Images = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Nuisances = PublicreportNuisanceSlice{o}
+			}
 		}
 		return nil
 	default:
@@ -882,11 +1020,15 @@ func buildPublicreportNuisancePreloader() publicreportNuisancePreloader {
 
 type publicreportNuisanceThenLoader[Q orm.Loadable] struct {
 	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceThenLoader[Q] {
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ImagesLoadInterface interface {
+		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportNuisanceThenLoader[Q]{
@@ -894,6 +1036,12 @@ func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceT
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+		Images: thenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadImages(ctx, exec, mods...)
 			},
 		),
 	}
@@ -954,9 +1102,187 @@ func (os PublicreportNuisanceSlice) LoadOrganization(ctx context.Context, exec b
 	return nil
 }
 
+// LoadImages loads the publicreportNuisance's Images into the .R struct
+func (o *PublicreportNuisance) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Images = nil
+
+	related, err := o.Images(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Nuisances = PublicreportNuisanceSlice{o}
+	}
+
+	o.R.Images = related
+	return nil
+}
+
+// LoadImages loads the publicreportNuisance's Images into the .R struct
+func (os PublicreportNuisanceSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(PublicreportImages.Columns))
+	}
+
+	q := os.Images(append(
+		mods,
+		sm.Columns(PublicreportNuisanceImages.Columns.NuisanceID.As("related_publicreport.nuisance.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_publicreport.nuisance.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	publicreportImages, err := bob.Allx[bob.SliceTransformer[*PublicreportImage, PublicreportImageSlice]](ctx, exec, q, mapper)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		o.R.Images = nil
+	}
+
+	for _, o := range os {
+		for i, rel := range publicreportImages {
+			if !(o.ID == IDSlice[i]) {
+				continue
+			}
+
+			rel.R.Nuisances = append(rel.R.Nuisances, o)
+
+			o.R.Images = append(o.R.Images, rel)
+		}
+	}
+
+	return nil
+}
+
+// publicreportNuisanceC is where relationship counts are stored.
+type publicreportNuisanceC struct {
+	Images *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *PublicreportNuisance) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "Images":
+		o.C.Images = &count
+	}
+	return nil
+}
+
+type publicreportNuisanceCountPreloader struct {
+	Images func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildPublicreportNuisanceCountPreloader() publicreportNuisanceCountPreloader {
+	return publicreportNuisanceCountPreloader{
+		Images: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*PublicreportNuisance]("Images", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = PublicreportNuisances.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNuisanceImages.Name()),
+					sm.Where(psql.Quote(PublicreportNuisanceImages.Alias(), "nuisance_id").EQ(psql.Quote(parent, "id"))),
+					sm.InnerJoin(PublicreportImages.Name()).On(
+						psql.Quote(PublicreportImages.Alias(), "id").EQ(psql.Quote(PublicreportNuisanceImages.Alias(), "image_id")),
+					),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type publicreportNuisanceCountThenLoader[Q orm.Loadable] struct {
+	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildPublicreportNuisanceCountThenLoader[Q orm.Loadable]() publicreportNuisanceCountThenLoader[Q] {
+	type ImagesCountInterface interface {
+		LoadCountImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return publicreportNuisanceCountThenLoader[Q]{
+		Images: countThenLoadBuilder[Q](
+			"Images",
+			func(ctx context.Context, exec bob.Executor, retrieved ImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountImages(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountImages loads the count of Images into the C struct
+func (o *PublicreportNuisance) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Images(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Images = &count
+	return nil
+}
+
+// LoadCountImages loads the count of Images for a slice
+func (os PublicreportNuisanceSlice) LoadCountImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountImages(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type publicreportNuisanceJoins[Q dialect.Joinable] struct {
 	typ          string
 	Organization modAs[Q, organizationColumns]
+	Images       modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportNuisanceJoins[Q]) aliasedAs(alias string) publicreportNuisanceJoins[Q] {
@@ -974,6 +1300,28 @@ func buildPublicreportNuisanceJoins[Q dialect.Joinable](cols publicreportNuisanc
 				{
 					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Images: modAs[Q, publicreportImageColumns]{
+			c: PublicreportImages.Columns,
+			f: func(to publicreportImageColumns) bob.Mod[Q] {
+				random := strconv.FormatInt(randInt(), 10)
+				mods := make(mods.QueryMods[Q], 0, 2)
+
+				{
+					to := PublicreportNuisanceImages.Columns.AliasedAs(PublicreportNuisanceImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNuisanceImages.Name().As(to.Alias())).On(
+						to.NuisanceID.EQ(cols.ID),
+					))
+				}
+				{
+					cols := PublicreportNuisanceImages.Columns.AliasedAs(PublicreportNuisanceImages.Columns.Alias() + random)
+					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.ImageID),
 					))
 				}
 

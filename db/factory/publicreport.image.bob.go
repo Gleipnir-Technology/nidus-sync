@@ -56,6 +56,7 @@ type PublicreportImageTemplate struct {
 
 type publicreportImageR struct {
 	ImageExifs []*publicreportImageRImageExifsR
+	Nuisances  []*publicreportImageRNuisancesR
 	Pools      []*publicreportImageRPoolsR
 	Quicks     []*publicreportImageRQuicksR
 }
@@ -63,6 +64,10 @@ type publicreportImageR struct {
 type publicreportImageRImageExifsR struct {
 	number int
 	o      *PublicreportImageExifTemplate
+}
+type publicreportImageRNuisancesR struct {
+	number int
+	o      *PublicreportNuisanceTemplate
 }
 type publicreportImageRPoolsR struct {
 	number int
@@ -94,6 +99,18 @@ func (t PublicreportImageTemplate) setModelRels(o *models.PublicreportImage) {
 			rel = append(rel, related...)
 		}
 		o.R.ImageExifs = rel
+	}
+
+	if t.r.Nuisances != nil {
+		rel := models.PublicreportNuisanceSlice{}
+		for _, r := range t.r.Nuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.Images = append(rel.R.Images, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Nuisances = rel
 	}
 
 	if t.r.Pools != nil {
@@ -287,6 +304,26 @@ func (o *PublicreportImageTemplate) insertOptRels(ctx context.Context, exec bob.
 		}
 	}
 
+	isNuisancesDone, _ := publicreportImageRelNuisancesCtx.Value(ctx)
+	if !isNuisancesDone && o.r.Nuisances != nil {
+		ctx = publicreportImageRelNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Nuisances {
+			if r.o.alreadyPersisted {
+				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNuisances(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isPoolsDone, _ := publicreportImageRelPoolsCtx.Value(ctx)
 	if !isPoolsDone && o.r.Pools != nil {
 		ctx = publicreportImageRelPoolsCtx.WithValue(ctx, true)
@@ -294,12 +331,12 @@ func (o *PublicreportImageTemplate) insertOptRels(ctx context.Context, exec bob.
 			if r.o.alreadyPersisted {
 				m.R.Pools = append(m.R.Pools, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPools(ctx, exec, rel1...)
+				err = m.AttachPools(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -314,12 +351,12 @@ func (o *PublicreportImageTemplate) insertOptRels(ctx context.Context, exec bob.
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel2...)
+				err = m.AttachQuicks(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -786,6 +823,54 @@ func (m publicreportImageMods) AddExistingImageExifs(existingModels ...*models.P
 func (m publicreportImageMods) WithoutImageExifs() PublicreportImageMod {
 	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
 		o.r.ImageExifs = nil
+	})
+}
+
+func (m publicreportImageMods) WithNuisances(number int, related *PublicreportNuisanceTemplate) PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		o.r.Nuisances = []*publicreportImageRNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportImageMods) WithNewNuisances(number int, mods ...PublicreportNuisanceMod) PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		related := o.f.NewPublicreportNuisanceWithContext(ctx, mods...)
+		m.WithNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportImageMods) AddNuisances(number int, related *PublicreportNuisanceTemplate) PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		o.r.Nuisances = append(o.r.Nuisances, &publicreportImageRNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportImageMods) AddNewNuisances(number int, mods ...PublicreportNuisanceMod) PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		related := o.f.NewPublicreportNuisanceWithContext(ctx, mods...)
+		m.AddNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportImageMods) AddExistingNuisances(existingModels ...*models.PublicreportNuisance) PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		for _, em := range existingModels {
+			o.r.Nuisances = append(o.r.Nuisances, &publicreportImageRNuisancesR{
+				o: o.f.FromExistingPublicreportNuisance(em),
+			})
+		}
+	})
+}
+
+func (m publicreportImageMods) WithoutNuisances() PublicreportImageMod {
+	return PublicreportImageModFunc(func(ctx context.Context, o *PublicreportImageTemplate) {
+		o.r.Nuisances = nil
 	})
 }
 

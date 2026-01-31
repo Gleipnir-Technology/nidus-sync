@@ -72,6 +72,7 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNuisances              publicreportNuisanceWhere[Q]
+	PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 	PublicreportPools                  publicreportPoolWhere[Q]
 	PublicreportPoolImages             publicreportPoolImageWhere[Q]
 	PublicreportQuicks                 publicreportQuickWhere[Q]
@@ -139,6 +140,7 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNuisances              publicreportNuisanceWhere[Q]
+		PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 		PublicreportPools                  publicreportPoolWhere[Q]
 		PublicreportPoolImages             publicreportPoolImageWhere[Q]
 		PublicreportQuicks                 publicreportQuickWhere[Q]
@@ -205,6 +207,7 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNuisances:              buildPublicreportNuisanceWhere[Q](PublicreportNuisances.Columns),
+		PublicreportNuisanceImages:         buildPublicreportNuisanceImageWhere[Q](PublicreportNuisanceImages.Columns),
 		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),
 		PublicreportPoolImages:             buildPublicreportPoolImageWhere[Q](PublicreportPoolImages.Columns),
 		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),

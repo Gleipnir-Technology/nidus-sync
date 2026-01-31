@@ -270,6 +270,7 @@ var (
 	// Relationship Contexts for publicreport.image
 	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
 	publicreportImageRelImageExifsCtx        = newContextual[bool]("publicreport.image.publicreport.image_exif.publicreport.image_exif.image_exif_image_id_fkey")
+	publicreportImageRelNuisancesCtx         = newContextual[bool]("publicreport.image.publicreport.nuisance.publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey")
 	publicreportImageRelPoolsCtx             = newContextual[bool]("publicreport.image.publicreport.pool.publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey")
 	publicreportImageRelQuicksCtx            = newContextual[bool]("publicreport.image.publicreport.quick.publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey")
 
@@ -280,6 +281,12 @@ var (
 	// Relationship Contexts for publicreport.nuisance
 	publicreportNuisanceWithParentsCascadingCtx = newContextual[bool]("publicreportNuisanceWithParentsCascading")
 	publicreportNuisanceRelOrganizationCtx      = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
+	publicreportNuisanceRelImagesCtx            = newContextual[bool]("publicreport.image.publicreport.nuisance.publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey")
+
+	// Relationship Contexts for publicreport.nuisance_image
+	publicreportNuisanceImageWithParentsCascadingCtx = newContextual[bool]("publicreportNuisanceImageWithParentsCascading")
+	publicreportNuisanceImageRelImageCtx             = newContextual[bool]("publicreport.image.publicreport.nuisance_image.publicreport.nuisance_image.nuisance_image_image_id_fkey")
+	publicreportNuisanceImageRelNuisanceCtx          = newContextual[bool]("publicreport.nuisance.publicreport.nuisance_image.publicreport.nuisance_image.nuisance_image_nuisance_id_fkey")
 
 	// Relationship Contexts for publicreport.pool
 	publicreportPoolWithParentsCascadingCtx = newContextual[bool]("publicreportPoolWithParentsCascading")

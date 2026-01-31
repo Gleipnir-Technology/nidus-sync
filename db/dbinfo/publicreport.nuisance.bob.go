@@ -168,6 +168,15 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -250,11 +259,12 @@ type publicreportNuisanceColumns struct {
 	Status            column
 	OrganizationID    column
 	SourceGutter      column
+	H3cell            column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell,
 	}
 }
 

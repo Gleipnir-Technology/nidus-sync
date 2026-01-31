@@ -176,6 +176,9 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Int("len", len(images)).Msg("saved uploads")
 	c, err := h3utils.GetCell(longitude, latitude, 15)
+	if err != nil {
+		respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
+	}
 	setter := models.PublicreportQuickSetter{
 		Address:        omit.From(""),
 		Created:        omit.From(time.Now()),

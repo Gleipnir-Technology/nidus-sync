@@ -21,62 +21,66 @@ var (
 )
 
 type preloadCounts struct {
-	ArcgisUser         arcgisuserCountPreloader
-	CommsEmailContact  commsEmailContactCountPreloader
-	CommsEmailTemplate commsEmailTemplateCountPreloader
-	CommsPhone         commsPhoneCountPreloader
-	NoteAudio          noteAudioCountPreloader
-	NoteImage          noteImageCountPreloader
-	Organization       organizationCountPreloader
-	PublicreportImage  publicreportImageCountPreloader
-	PublicreportPool   publicreportPoolCountPreloader
-	PublicreportQuick  publicreportQuickCountPreloader
-	User               userCountPreloader
+	ArcgisUser           arcgisuserCountPreloader
+	CommsEmailContact    commsEmailContactCountPreloader
+	CommsEmailTemplate   commsEmailTemplateCountPreloader
+	CommsPhone           commsPhoneCountPreloader
+	NoteAudio            noteAudioCountPreloader
+	NoteImage            noteImageCountPreloader
+	Organization         organizationCountPreloader
+	PublicreportImage    publicreportImageCountPreloader
+	PublicreportNuisance publicreportNuisanceCountPreloader
+	PublicreportPool     publicreportPoolCountPreloader
+	PublicreportQuick    publicreportQuickCountPreloader
+	User                 userCountPreloader
 }
 
 func getPreloadCount() preloadCounts {
 	return preloadCounts{
-		ArcgisUser:         buildArcgisUserCountPreloader(),
-		CommsEmailContact:  buildCommsEmailContactCountPreloader(),
-		CommsEmailTemplate: buildCommsEmailTemplateCountPreloader(),
-		CommsPhone:         buildCommsPhoneCountPreloader(),
-		NoteAudio:          buildNoteAudioCountPreloader(),
-		NoteImage:          buildNoteImageCountPreloader(),
-		Organization:       buildOrganizationCountPreloader(),
-		PublicreportImage:  buildPublicreportImageCountPreloader(),
-		PublicreportPool:   buildPublicreportPoolCountPreloader(),
-		PublicreportQuick:  buildPublicreportQuickCountPreloader(),
-		User:               buildUserCountPreloader(),
+		ArcgisUser:           buildArcgisUserCountPreloader(),
+		CommsEmailContact:    buildCommsEmailContactCountPreloader(),
+		CommsEmailTemplate:   buildCommsEmailTemplateCountPreloader(),
+		CommsPhone:           buildCommsPhoneCountPreloader(),
+		NoteAudio:            buildNoteAudioCountPreloader(),
+		NoteImage:            buildNoteImageCountPreloader(),
+		Organization:         buildOrganizationCountPreloader(),
+		PublicreportImage:    buildPublicreportImageCountPreloader(),
+		PublicreportNuisance: buildPublicreportNuisanceCountPreloader(),
+		PublicreportPool:     buildPublicreportPoolCountPreloader(),
+		PublicreportQuick:    buildPublicreportQuickCountPreloader(),
+		User:                 buildUserCountPreloader(),
 	}
 }
 
 type thenLoadCounts[Q orm.Loadable] struct {
-	ArcgisUser         arcgisuserCountThenLoader[Q]
-	CommsEmailContact  commsEmailContactCountThenLoader[Q]
-	CommsEmailTemplate commsEmailTemplateCountThenLoader[Q]
-	CommsPhone         commsPhoneCountThenLoader[Q]
-	NoteAudio          noteAudioCountThenLoader[Q]
-	NoteImage          noteImageCountThenLoader[Q]
-	Organization       organizationCountThenLoader[Q]
-	PublicreportImage  publicreportImageCountThenLoader[Q]
-	PublicreportPool   publicreportPoolCountThenLoader[Q]
-	PublicreportQuick  publicreportQuickCountThenLoader[Q]
-	User               userCountThenLoader[Q]
+	ArcgisUser           arcgisuserCountThenLoader[Q]
+	CommsEmailContact    commsEmailContactCountThenLoader[Q]
+	CommsEmailTemplate   commsEmailTemplateCountThenLoader[Q]
+	CommsPhone           commsPhoneCountThenLoader[Q]
+	NoteAudio            noteAudioCountThenLoader[Q]
+	NoteImage            noteImageCountThenLoader[Q]
+	Organization         organizationCountThenLoader[Q]
+	PublicreportImage    publicreportImageCountThenLoader[Q]
+	PublicreportNuisance publicreportNuisanceCountThenLoader[Q]
+	PublicreportPool     publicreportPoolCountThenLoader[Q]
+	PublicreportQuick    publicreportQuickCountThenLoader[Q]
+	User                 userCountThenLoader[Q]
 }
 
 func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 	return thenLoadCounts[Q]{
-		ArcgisUser:         buildArcgisUserCountThenLoader[Q](),
-		CommsEmailContact:  buildCommsEmailContactCountThenLoader[Q](),
-		CommsEmailTemplate: buildCommsEmailTemplateCountThenLoader[Q](),
-		CommsPhone:         buildCommsPhoneCountThenLoader[Q](),
-		NoteAudio:          buildNoteAudioCountThenLoader[Q](),
-		NoteImage:          buildNoteImageCountThenLoader[Q](),
-		Organization:       buildOrganizationCountThenLoader[Q](),
-		PublicreportImage:  buildPublicreportImageCountThenLoader[Q](),
-		PublicreportPool:   buildPublicreportPoolCountThenLoader[Q](),
-		PublicreportQuick:  buildPublicreportQuickCountThenLoader[Q](),
-		User:               buildUserCountThenLoader[Q](),
+		ArcgisUser:           buildArcgisUserCountThenLoader[Q](),
+		CommsEmailContact:    buildCommsEmailContactCountThenLoader[Q](),
+		CommsEmailTemplate:   buildCommsEmailTemplateCountThenLoader[Q](),
+		CommsPhone:           buildCommsPhoneCountThenLoader[Q](),
+		NoteAudio:            buildNoteAudioCountThenLoader[Q](),
+		NoteImage:            buildNoteImageCountThenLoader[Q](),
+		Organization:         buildOrganizationCountThenLoader[Q](),
+		PublicreportImage:    buildPublicreportImageCountThenLoader[Q](),
+		PublicreportNuisance: buildPublicreportNuisanceCountThenLoader[Q](),
+		PublicreportPool:     buildPublicreportPoolCountThenLoader[Q](),
+		PublicreportQuick:    buildPublicreportQuickCountThenLoader[Q](),
+		User:                 buildUserCountThenLoader[Q](),
 	}
 }
 

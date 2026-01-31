@@ -74,6 +74,7 @@ type Factory struct {
 	basePublicreportImageMods                 PublicreportImageModSlice
 	basePublicreportImageExifMods             PublicreportImageExifModSlice
 	basePublicreportNuisanceMods              PublicreportNuisanceModSlice
+	basePublicreportNuisanceImageMods         PublicreportNuisanceImageModSlice
 	basePublicreportPoolMods                  PublicreportPoolModSlice
 	basePublicreportPoolImageMods             PublicreportPoolImageModSlice
 	basePublicreportQuickMods                 PublicreportQuickModSlice
@@ -2867,6 +2868,9 @@ func (f *Factory) FromExistingPublicreportImage(m *models.PublicreportImage) *Pu
 	if len(m.R.ImageExifs) > 0 {
 		PublicreportImageMods.AddExistingImageExifs(m.R.ImageExifs...).Apply(ctx, o)
 	}
+	if len(m.R.Nuisances) > 0 {
+		PublicreportImageMods.AddExistingNuisances(m.R.Nuisances...).Apply(ctx, o)
+	}
 	if len(m.R.Pools) > 0 {
 		PublicreportImageMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
 	}
@@ -2944,10 +2948,47 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 	o.SourceGutter = func() bool { return m.SourceGutter }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {
 		PublicreportNuisanceMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+	if len(m.R.Images) > 0 {
+		PublicreportNuisanceMods.AddExistingImages(m.R.Images...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportNuisanceImage(mods ...PublicreportNuisanceImageMod) *PublicreportNuisanceImageTemplate {
+	return f.NewPublicreportNuisanceImageWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNuisanceImageWithContext(ctx context.Context, mods ...PublicreportNuisanceImageMod) *PublicreportNuisanceImageTemplate {
+	o := &PublicreportNuisanceImageTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNuisanceImageMods.Apply(ctx, o)
+	}
+
+	PublicreportNuisanceImageModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNuisanceImage(m *models.PublicreportNuisanceImage) *PublicreportNuisanceImageTemplate {
+	o := &PublicreportNuisanceImageTemplate{f: f, alreadyPersisted: true}
+
+	o.ImageID = func() int32 { return m.ImageID }
+	o.NuisanceID = func() int32 { return m.NuisanceID }
+
+	ctx := context.Background()
+	if m.R.Image != nil {
+		PublicreportNuisanceImageMods.WithExistingImage(m.R.Image).Apply(ctx, o)
+	}
+	if m.R.Nuisance != nil {
+		PublicreportNuisanceImageMods.WithExistingNuisance(m.R.Nuisance).Apply(ctx, o)
 	}
 
 	return o
@@ -3778,6 +3819,14 @@ func (f *Factory) ClearBasePublicreportNuisanceMods() {
 
 func (f *Factory) AddBasePublicreportNuisanceMod(mods ...PublicreportNuisanceMod) {
 	f.basePublicreportNuisanceMods = append(f.basePublicreportNuisanceMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNuisanceImageMods() {
+	f.basePublicreportNuisanceImageMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNuisanceImageMod(mods ...PublicreportNuisanceImageMod) {
+	f.basePublicreportNuisanceImageMods = append(f.basePublicreportNuisanceImageMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportPoolMods() {
