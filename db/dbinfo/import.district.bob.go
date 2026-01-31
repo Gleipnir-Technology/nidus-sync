@@ -213,6 +213,15 @@ var ImportDistricts = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom4326: column{
+			Name:      "geom_4326",
+			DBType:    "geometry",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: importDistrictIndexes{
 		DistrictPkey: index{
@@ -282,11 +291,12 @@ type importDistrictColumns struct {
 	ShapeLe1  column
 	ShapeArea column
 	Geom      column
+	Geom4326  column
 }
 
 func (c importDistrictColumns) AsSlice() []column {
 	return []column{
-		c.Gid, c.ID, c.Website, c.Contact, c.Address, c.Regionid, c.PostalCod, c.Phone1, c.Fax1, c.Agency, c.Code1, c.City1, c.ShapeLeng, c.Address2, c.GeneralMG, c.City2, c.PostalC1, c.Fax2, c.Phone2, c.ShapeLe1, c.ShapeArea, c.Geom,
+		c.Gid, c.ID, c.Website, c.Contact, c.Address, c.Regionid, c.PostalCod, c.Phone1, c.Fax1, c.Agency, c.Code1, c.City1, c.ShapeLeng, c.Address2, c.GeneralMG, c.City2, c.PostalC1, c.Fax2, c.Phone2, c.ShapeLe1, c.ShapeArea, c.Geom, c.Geom4326,
 	}
 }
 

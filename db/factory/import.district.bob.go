@@ -59,6 +59,7 @@ type ImportDistrictTemplate struct {
 	ShapeLe1  func() null.Val[decimal.Decimal]
 	ShapeArea func() null.Val[decimal.Decimal]
 	Geom      func() null.Val[string]
+	Geom4326  func() null.Val[string]
 
 	r importDistrictR
 	f *Factory
@@ -273,6 +274,9 @@ func (o ImportDistrictTemplate) Build() *models.ImportDistrict {
 	if o.Geom != nil {
 		m.Geom = o.Geom()
 	}
+	if o.Geom4326 != nil {
+		m.Geom4326 = o.Geom4326()
+	}
 
 	o.setModelRels(m)
 
@@ -434,6 +438,7 @@ func (m importDistrictMods) RandomizeAllColumns(f *faker.Faker) ImportDistrictMo
 		ImportDistrictMods.RandomShapeLe1(f),
 		ImportDistrictMods.RandomShapeArea(f),
 		ImportDistrictMods.RandomGeom(f),
+		ImportDistrictMods.RandomGeom4326(f),
 	}
 }
 
@@ -1571,6 +1576,59 @@ func (m importDistrictMods) RandomGeom(f *faker.Faker) ImportDistrictMod {
 func (m importDistrictMods) RandomGeomNotNull(f *faker.Faker) ImportDistrictMod {
 	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
 		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m importDistrictMods) Geom4326(val null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Geom4326 = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m importDistrictMods) Geom4326Func(f func() null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Geom4326 = f
+	})
+}
+
+// Clear any values for the column
+func (m importDistrictMods) UnsetGeom4326() ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Geom4326 = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m importDistrictMods) RandomGeom4326(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Geom4326 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m importDistrictMods) RandomGeom4326NotNull(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Geom4326 = func() null.Val[string] {
 			if f == nil {
 				f = &defaultFaker
 			}
