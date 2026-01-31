@@ -42,6 +42,11 @@ func HandleTextMessage(src string, dst string, body string) {
 		switch body_l {
 		case "yes":
 			setPhoneStatus(ctx, src, enums.CommsPhonestatustypeOkToSend)
+			content := "Thanks, we've confirmed your phone number. You can text STOP at any time if you change your mind"
+			err := sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to send confirmation response")
+			}
 			handleWaitingTextJobs(ctx, src)
 		default:
 			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
