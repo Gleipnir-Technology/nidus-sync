@@ -1,121 +1,48 @@
 {{template "base.html" .}}
 
-{{define "title"}}Green Pool{{end}}
+{{define "title"}}Report Standing Water{{end}}
 {{define "extraheader"}}
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<script src="/static/js/address-display.js"></script>
 <script src="/static/js/address-suggestion.js"></script>
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map-locator.js"></script>
 <script src="/static/js/photo-upload.js"></script>
-{{template "photo-upload-header"}}
-<style>
-.district-logo {
-	max-height: 80px;
-	width: auto;
-}
-.form-section {
-	margin-bottom: 2.5rem;
-	padding-bottom: 2rem;
-	border-bottom: 1px solid #dee2e6;
-}
-.form-section:last-child {
-	border-bottom: none;
-	margin-bottom: 1rem;
-	padding-bottom: 0;
-}
-
-.section-heading {
-	margin-bottom: 1.5rem;
-	display: flex;
-	align-items: center;
-}
-.section-heading i {
-	margin-right: 10px;
-	font-size: 1.5rem;
-	color: #0d6efd;
-}
-.submit-container {
-	background-color: #f8f9fa;
-	padding: 20px;
-	border-radius: 5px;
-	margin-top: 2rem;
-}
-</style>
 <script>
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
-function handlePhotoSelection() {
-	const photoInput = document.getElementById('photos');
-	const photoPreviewContainer = document.getElementById('photoPreviewContainer');
-
-	// Clear previous previews
-	photoPreviewContainer.innerHTML = '';
-
-	// Check if files were selected
-	if (photoInput.files && photoInput.files.length > 0) {
-		// Loop through selected files
-		Array.from(photoInput.files).forEach((file, index) => {
-			console.log("Handling", index, file);
-			if (!file.type.match('image.*')) {
-				console.log("Skipping non-image file", file.type);
-				return; // Skip non-image files
-			}
-			
-			// Create preview container
-			const previewContainer = document.createElement('div');
-			previewContainer.className = 'position-relative m-1';
-			
-			// Create image preview
-			const img = document.createElement('img');
-			img.className = 'img-thumbnail';
-			img.style.width = '100px';
-			img.style.height = '100px';
-			img.style.objectFit = 'cover';
-			
-			// Read file and set preview
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				img.src = e.target.result;
-			};
-			reader.readAsDataURL(file);
-			
-			// Create remove button
-			const removeBtn = document.createElement('button');
-			removeBtn.type = 'button';
-			removeBtn.className = 'btn btn-sm btn-danger position-absolute top-0 end-0';
-			removeBtn.innerHTML = '&times;';
-			removeBtn.style.fontSize = '10px';
-			removeBtn.style.padding = '0 5px';
-			
-			// Handle remove button click
-			removeBtn.addEventListener('click', function() {
-				// Create a new FileList without this file
-				// Since FileList is immutable, we need to reset the input
-				// This is a bit tricky and requires recreating the input
-				previewContainer.remove();
-				
-				// If this was the last image, clear the input entirely
-				if (photoPreviewContainer.children.length === 0) {
-				photoInput.value = '';
-				}
-				// Note: Unfortunately, selectively removing files from a FileList isn't straightforward
-				// In a real implementation, we might track selected files in an array and recreate the input
-			});
-			
-			// Add elements to the preview container
-			previewContainer.appendChild(img);
-			previewContainer.appendChild(removeBtn);
-			photoPreviewContainer.appendChild(previewContainer);
-		});
+async function handleMarkerDrag(lngLat) {
+	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+		lat: lngLat.lat,
+		lng: lngLat.lng,
+	})
+	console.log("marker drag reverse geocode", response);
+	if (response !== undefined && response.features.length > 0) {
+		const addressInput = document.querySelector("address-input");
+		addressInput.SetValue(response.features[0]);
 	}
 }
-
+function selectInspectionType(type) {
+	// Remove selected class from both cards
+	document.getElementById('propertyInspection').classList.remove('selected');
+	document.getElementById('neighborhoodInspection').classList.remove('selected');
+	
+	// Add selected class to chosen card
+	if (type === 'property') {
+		document.getElementById('propertyInspection').classList.add('selected');
+		document.getElementById('inspectionTypeProperty').checked = true;
+		document.getElementById('schedulingSection').style.display = 'block';
+	} else {
+		document.getElementById('neighborhoodInspection').classList.add('selected');
+		document.getElementById('inspectionTypeNeighborhood').checked = true;
+		document.getElementById('schedulingSection').style.display = 'none';
+	}
+}
 function setLocationInputs(location) {
        let country = document.getElementById('address-country');
        let latitude = document.getElementById('latitude');
        let longitude = document.getElementById('longitude');
        let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+       let latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
        let postcode = document.getElementById('address-postcode');
        let place = document.getElementById('address-place');
        let region = document.getElementById('address-region');
@@ -130,39 +57,30 @@ function setLocationInputs(location) {
        latitude.value = props.coordinates.latitude;
        longitude.value = props.coordinates.longitude;
        latlngAccuracyType.value = props.coordinates.accuracy;
+       latlngAccuracyValue.value = "0";
        postcode.value = context.postcode.name;
        place.value = context.place.name;
        region.value = context.region.name;
        street.value = context.country.name;
 }
+function toggleCollapse(something) {
+	el = document.getElementById(something)
+	if (el.classList.contains('collapse')) {
+		el.classList.remove('collapse');
+	} else {
+		el.classList.add('collapse');
+	}
+	document.getElementById("toggle-additional").classList.add("visually-hidden");
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 	// Elements
-	const photoInput = document.getElementById('photos');
-
-	// Handle photo selection
-	photoInput.addEventListener('change', handlePhotoSelection);
-
-	// Handle drag and drop
-	const photoDropArea = document.getElementById('photoDropArea');
+	const addressInput = document.querySelector("address-input");
+	const latitudeInput = document.getElementById('latitude');
+	const longitudeInput = document.getElementById('longitude');
+        const latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+        const latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
 	
-	photoDropArea.addEventListener('dragover', function(e) {
-		e.preventDefault();
-		photoDropArea.style.backgroundColor = '#e9ecef';
-	});
-	
-	photoDropArea.addEventListener('dragleave', function() {
-		photoDropArea.style.backgroundColor = '#f8f9fa';
-	});
-	
-	photoDropArea.addEventListener('drop', function(e) {
-		e.preventDefault();
-		photoDropArea.style.backgroundColor = '#f8f9fa';
-		
-		if (e.dataTransfer.files.length) {
-			handleFiles(e.dataTransfer.files);
-		}
-	});
 	const mapLocator = document.querySelector("map-locator");
 	mapLocator.addEventListener("load", (event) => {
 		getGeolocation({
@@ -170,18 +88,23 @@ document.addEventListener('DOMContentLoaded', function() {
 			timeout: 10000,
 			maximumAge: 0
 		}).then(position => {
-			mapLocator.jumpTo({
+			console.log("Got location", position);
+			latitudeInput.value = position.coords.latitude;
+			longitudeInput.value = position.coords.longitude;
+			latlngAccuracyType.value = 'browser';
+			latlngAccuracyValue.value = position.coords.accuracy;
+			mapLocator.JumpTo({
 				center: {
 					lng: position.coords.longitude,
 					lat: position.coords.latitude,
 				},
 				zoom: 14,
 			});
-			mapLocator.setMarker([
+			mapLocator.SetMarker([
 				position.coords.longitude,
 				position.coords.latitude,
 			]);
-			geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+			handleMarkerDrag({
 				lat: position.coords.latitude,
 				lng: position.coords.longitude,
 			});
@@ -189,39 +112,30 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log("location error", error);
 		})
 	})
-	mapLocator.addEventListener("markerdragend", 
 	let mapZoom = document.getElementById('map-zoom');
 	mapLocator.addEventListener("zoomend", function(e) {
-		mapZoom.value = e.target.getZoom();
+		mapZoom.value = e.target.GetZoom();
 	});
 	mapLocator.addEventListener("markerdragend", (e) => {
+		const marker = event.detail.marker;
 		const lngLat = marker.getLngLat();
-		//displaySelectedCoordinates(lngLat);
-		geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat);
+		handleMarkerDrag(lngLat);
 	});
 
 	const addressDisplay = document.querySelector("address-display");
-	const addressInput = document.querySelector("address-input");
 	addressInput.addEventListener("address-selected", (event) => {
 		const l = event.detail.location;
 		console.log("Address selected", l);
 		// Center map on selected address
-		mapSetMarker(l.geometry.coordinates);
-		mapJumpTo({
+		mapLocator.SetMarker(l.geometry.coordinates);
+		mapLocator.JumpTo({
 			center: l.geometry.coordinates,
 			zoom: 14,
 		});
 
-		addressDisplay.show(l);
 		setLocationInputs(l);
 	});
 });
-function displaySelectedCoordinates(lngLat) {
-	const gpsDisplay = document.getElementById("gps-display");
-	gpsDisplay.classList.remove('d-none');
-	longitude.textContent = lngLat.lng;
-	latitude.textContent = lngLat.lat;
-}
 </script>
 {{end}}
 {{define "content"}}

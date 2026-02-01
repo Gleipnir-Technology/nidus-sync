@@ -1,9 +1,8 @@
 {{template "base.html" .}}
 
-{{define "title"}}Nuisance{{end}}
+{{define "title"}}Report Nuisance{{end}}
 {{define "extraheader"}}
 <script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<script src="/static/js/address-display.js"></script>
 <script src="/static/js/address-suggestion.js"></script>
 <script src="/static/js/geocode.js"></script>
 <script src="/static/js/location.js"></script>
@@ -11,7 +10,6 @@
 <script src="/static/js/photo-upload.js"></script>
 <script>
 const MAPBOX_ACCESS_TOKEN = "{{.MapboxToken}}";
-// Handle inspection type selection
 async function handleMarkerDrag(lngLat) {
 	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
 		lat: lngLat.lat,
