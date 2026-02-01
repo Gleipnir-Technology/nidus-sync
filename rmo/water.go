@@ -188,10 +188,12 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 			PoolID:  omit.From(int32(pool.ID)),
 		})
 	}
-	_, err = models.PublicreportPoolImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
-	if err != nil {
-		respondError(w, "Failed to save upload relationships", err, http.StatusInternalServerError)
-		return
+	if len(setters) > 0 {
+		_, err = models.PublicreportPoolImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
+		if err != nil {
+			respondError(w, "Failed to save upload relationships", err, http.StatusInternalServerError)
+			return
+		}
 	}
 	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/pool-submit-complete?report=%s", public_id), http.StatusFound)
