@@ -27,6 +27,7 @@ type ContentURL struct {
 	Status         string
 	Tegola         string
 	Water          string
+	WaterSubmit    string
 }
 
 var (
@@ -102,15 +103,17 @@ func makeContentURL(district *models.Organization) ContentURL {
 			Status:         makeURL("/status"),
 			Tegola:         config.MakeURLTegola("/"),
 			Water:          makeURL("/water"),
+			WaterSubmit:    makeURL("/water"),
 		}
 	} else {
 		slug := district.Slug.MustGet()
 		return ContentURL{
 			Nuisance:       makeURL("/district/%s/nuisance", slug),
-			NuisanceSubmit: makeURL("/district/%s/nuisance", slug),
+			NuisanceSubmit: makeURL("/nuisance", slug),
 			Status:         makeURL("/status"),
 			Tegola:         config.MakeURLTegola("/"),
 			Water:          makeURL("/district/%s/water", slug),
+			WaterSubmit:    makeURL("/water"),
 		}
 	}
 }

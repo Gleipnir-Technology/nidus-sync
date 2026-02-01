@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		</div>
 
 		<!-- Report Form -->
-		<form id="standingWater" action="/water-submit" method="POST" enctype="multipart/form-data">
+		<form id="standingWater" action="{{ .URL.WaterSubmit }}" method="POST" enctype="multipart/form-data">
 			<!-- Photo Upload Section -->
 			<div class="form-section">
 				<div class="section-heading">
@@ -377,9 +377,9 @@ document.addEventListener('DOMContentLoaded', function() {
 						<p class="mb-0 small text-muted">After submission, you will receive a confirmation with a report ID for tracking purposes.</p>
 					</div>
 					<div class="col-md-4 text-md-end mt-3 mt-md-0">
-						<a  class="btn btn-primary btn-lg" href="{{.URL.SubmitComplete}}">
+						<button type="submit" class="btn btn-primary btn-lg">
 							Submit Report
-						</a>
+						</button>
 					</div>
 				</div>
 			</div>

@@ -38,7 +38,9 @@ func getWater(w http.ResponseWriter, r *http.Request) {
 		w,
 		WaterT,
 		ContentPool{
+			District:    nil,
 			MapboxToken: config.MapboxToken,
+			URL:         makeContentURL(nil),
 		},
 	)
 }
@@ -54,6 +56,7 @@ func getWaterDistrict(w http.ResponseWriter, r *http.Request) {
 		ContentPool{
 			District:    newContentDistrict(district),
 			MapboxToken: config.MapboxToken,
+			URL:         makeContentURL(district),
 		},
 	)
 }
@@ -67,7 +70,7 @@ func getPoolSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
-func postPool(w http.ResponseWriter, r *http.Request) {
+func postWater(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 	if err != nil {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
@@ -192,4 +195,6 @@ func postPool(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/pool-submit-complete?report=%s", public_id), http.StatusFound)
+}
+func postWaterDistrict(w http.ResponseWriter, r *http.Request) {
 }
