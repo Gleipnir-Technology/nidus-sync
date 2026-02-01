@@ -11,7 +11,8 @@ func Router() chi.Router {
 	r.Get("/nuisance", getNuisance)
 	r.Post("/nuisance", postNuisance)
 	r.Get("/submit-complete", getSubmitComplete)
-	//r.Get("/district/{slug}", renderMock(mockDistrictRootT))
+
+	r.Get("/district/{slug}", getRootDistrict)
 	//r.Get("/district/{slug}/nuisance", renderMock(mockNuisanceT))
 	//r.Get("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
 	//r.Get("/district/{slug}/status", renderMock(mockStatusT))

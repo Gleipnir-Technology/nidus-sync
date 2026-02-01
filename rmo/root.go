@@ -5,7 +5,10 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,7 +19,8 @@ type ContentPrivacy struct {
 	URLReport string
 }
 type ContentRoot struct {
-	URL ContentURL
+	District *ContentDistrict
+	URL      ContentURL
 }
 type ContentURL struct {
 	Nuisance               string
@@ -59,6 +63,24 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		RootT,
 		ContentRoot{
 			URL: makeContentURL(),
+		},
+	)
+}
+func getRootDistrict(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	district, err := models.Organizations.Query(
+		models.SelectWhere.Organizations.Slug.EQ(slug),
+	).One(r.Context(), db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		RootT,
+		ContentRoot{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(),
 		},
 	)
 }
