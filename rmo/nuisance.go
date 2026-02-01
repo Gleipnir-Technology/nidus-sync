@@ -49,13 +49,18 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 	)
 }
 func getSubmitComplete(w http.ResponseWriter, r *http.Request) {
-	report := r.URL.Query().Get("report")
+	report_id := r.URL.Query().Get("report")
+	district, err := report.DistrictForReport(r.Context(), report_id)
+	if err != nil {
+		respondError(w, fmt.Sprintf("Failed to get district for report '%s'", report_id, err), err, http.StatusInternalServerError)
+		return
+	}
 	html.RenderOrError(
 		w,
 		SubmitCompleteT,
 		ContentNuisanceSubmitComplete{
-			District: nil,
-			ReportID: report,
+			District: newContentDistrict(district),
+			ReportID: report_id,
 			URL:      makeContentURL(),
 		},
 	)

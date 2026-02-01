@@ -9,11 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContentDistrict struct {
-	Name       string
-	URLLogo    string
-	URLWebsite string
-}
 type ContentPrivacy struct {
 	Address   string
 	Company   string

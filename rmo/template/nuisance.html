@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log("Got location", position);
 			latitudeInput.value = position.coords.latitude;
 			longitudeInput.value = position.coords.longitude;
-			latLngAccuracyType.value = 'browser';
-			latLngAccuracyValue.value = position.coords.accuracy;
+			latlngAccuracyType.value = 'browser';
+			latlngAccuracyValue.value = position.coords.accuracy;
 			mapLocator.JumpTo({
 				center: {
 					lng: position.coords.longitude,
