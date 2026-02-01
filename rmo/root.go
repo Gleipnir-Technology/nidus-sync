@@ -21,12 +21,12 @@ type ContentRoot struct {
 	URL      ContentURL
 }
 type ContentURL struct {
-	Nuisance               string
-	NuisanceSubmit         string
-	NuisanceSubmitComplete string
-	Status                 string
-	Tegola                 string
-	Water                  string
+	Nuisance       string
+	NuisanceSubmit string
+	SubmitComplete string
+	Status         string
+	Tegola         string
+	Water          string
 }
 
 var (

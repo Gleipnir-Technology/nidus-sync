@@ -38,11 +38,11 @@ func addMockRoutes(r chi.Router) {
 
 func makeContentURLMock(slug string) ContentURL {
 	return ContentURL{
-		Nuisance:               makeURLMock(slug, "nuisance"),
-		NuisanceSubmitComplete: makeURLMock(slug, "nuisance-submit-complete"),
-		Status:                 makeURLMock(slug, "status"),
-		Tegola:                 config.MakeURLTegola("/"),
-		Water:                  makeURLMock(slug, "water"),
+		Nuisance:       makeURLMock(slug, "nuisance"),
+		Status:         makeURLMock(slug, "status"),
+		SubmitComplete: makeURLMock(slug, "nuisance-submit-complete"),
+		Tegola:         config.MakeURLTegola("/"),
+		Water:          makeURLMock(slug, "water"),
 	}
 }
 func makeURLMock(slug, p string) string {

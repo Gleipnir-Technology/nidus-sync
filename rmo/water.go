@@ -19,23 +19,40 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContextPool struct {
+type ContentPool struct {
+	District    *ContentDistrict
 	MapboxToken string
+	URL         ContentURL
 }
-type ContextPoolSubmitComplete struct {
+type ContentPoolSubmitComplete struct {
 	ReportID string
 }
 
 var (
-	Pool               = buildTemplate("pool", "base")
 	PoolSubmitComplete = buildTemplate("pool-submit-complete", "base")
+	WaterT             = buildTemplate("water", "base")
 )
 
-func getPool(w http.ResponseWriter, r *http.Request) {
+func getWater(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		Pool,
-		ContextPool{
+		WaterT,
+		ContentPool{
+			MapboxToken: config.MapboxToken,
+		},
+	)
+}
+func getWaterDistrict(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		WaterT,
+		ContentPool{
+			District:    newContentDistrict(district),
 			MapboxToken: config.MapboxToken,
 		},
 	)
@@ -45,7 +62,7 @@ func getPoolSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		PoolSubmitComplete,
-		ContextPoolSubmitComplete{
+		ContentPoolSubmitComplete{
 			ReportID: report,
 		},
 	)
