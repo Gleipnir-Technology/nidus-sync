@@ -147,7 +147,7 @@ func addSVGTemplates(fsys fs.FS, templ *template.Template) error {
 		if err != nil {
 			return fmt.Errorf("Failed to add svg '%s' to embedded template: %v", svg, err)
 		}
-		log.Debug().Str("name", svg_name).Msg("add svg template")
+		//log.Debug().Str("name", svg_name).Msg("add svg template")
 	}
 	return nil
 }
