@@ -44,7 +44,7 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 		ContentNuisance{
 			District:    nil,
 			MapboxToken: config.MapboxToken,
-			URL:         makeContentURL(),
+			URL:         makeContentURL(nil),
 		},
 	)
 }
@@ -61,7 +61,7 @@ func getSubmitComplete(w http.ResponseWriter, r *http.Request) {
 		ContentNuisanceSubmitComplete{
 			District: newContentDistrict(district),
 			ReportID: report_id,
-			URL:      makeContentURL(),
+			URL:      makeContentURL(nil),
 		},
 	)
 }

@@ -62,7 +62,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		w,
 		RootT,
 		ContentRoot{
-			URL: makeContentURL(),
+			URL: makeContentURL(nil),
 		},
 	)
 }
@@ -80,7 +80,7 @@ func getRootDistrict(w http.ResponseWriter, r *http.Request) {
 		RootT,
 		ContentRoot{
 			District: newContentDistrict(district),
-			URL:      makeContentURL(),
+			URL:      makeContentURL(district),
 		},
 	)
 }
@@ -94,23 +94,34 @@ func getTerms(w http.ResponseWriter, r *http.Request) {
 		w,
 		TermsT,
 		ContentRoot{
-			URL: makeContentURL(),
+			URL: makeContentURL(nil),
 		},
 	)
 }
 
-func makeContentURL() ContentURL {
-	return ContentURL{
-		Nuisance:       makeURL("nuisance"),
-		NuisanceSubmit: makeURL("nuisance"),
-		Status:         makeURL("status"),
-		Tegola:         config.MakeURLTegola("/"),
-		Water:          makeURL("water"),
+func makeContentURL(district *models.Organization) ContentURL {
+	if district == nil || district.Slug.IsNull() {
+		return ContentURL{
+			Nuisance:       makeURL("/nuisance"),
+			NuisanceSubmit: makeURL("/nuisance"),
+			Status:         makeURL("/status"),
+			Tegola:         config.MakeURLTegola("/"),
+			Water:          makeURL("/water"),
+		}
+	} else {
+		slug := district.Slug.MustGet()
+		return ContentURL{
+			Nuisance:       makeURL("/district/%s/nuisance", slug),
+			NuisanceSubmit: makeURL("/district/%s/nuisance", slug),
+			Status:         makeURL("/status"),
+			Tegola:         config.MakeURLTegola("/"),
+			Water:          makeURL("/district/%s/water", slug),
+		}
 	}
 }
 
-func makeURL(p string) string {
-	return config.MakeURLReport("/%s", p)
+func makeURL(f string, args ...string) string {
+	return config.MakeURLReport(f, args...)
 }
 
 // Respond with an error that is visible to the user
