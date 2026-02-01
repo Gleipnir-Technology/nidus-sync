@@ -5,10 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -67,10 +65,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	)
 }
 func getRootDistrict(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	district, err := models.Organizations.Query(
-		models.SelectWhere.Organizations.Slug.EQ(slug),
-	).One(r.Context(), db.PGInstance.BobDB)
+	district, err := districtBySlug(r)
 	if err != nil {
 		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
 		return

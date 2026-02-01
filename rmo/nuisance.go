@@ -48,6 +48,22 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
+func getNuisanceDistrict(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		NuisanceT,
+		ContentNuisance{
+			District:    newContentDistrict(district),
+			MapboxToken: config.MapboxToken,
+			URL:         makeContentURL(nil),
+		},
+	)
+}
 func getSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	report_id := r.URL.Query().Get("report")
 	district, err := report.DistrictForReport(r.Context(), report_id)
