@@ -35,7 +35,7 @@ type CommsEmailLog struct {
 	SentAt         null.Val[time.Time]         `db:"sent_at" `
 	Source         string                      `db:"source" `
 	Subject        string                      `db:"subject" `
-	TemplateID     null.Val[int32]             `db:"template_id" `
+	TemplateID     int32                       `db:"template_id" `
 	TemplateData   pgtypes.HStore              `db:"template_data" `
 	Type           enums.CommsMessagetypeemail `db:"type" `
 
@@ -114,7 +114,7 @@ type CommsEmailLogSetter struct {
 	SentAt         omitnull.Val[time.Time]               `db:"sent_at" `
 	Source         omit.Val[string]                      `db:"source" `
 	Subject        omit.Val[string]                      `db:"subject" `
-	TemplateID     omitnull.Val[int32]                   `db:"template_id" `
+	TemplateID     omit.Val[int32]                       `db:"template_id" `
 	TemplateData   omit.Val[pgtypes.HStore]              `db:"template_data" `
 	Type           omit.Val[enums.CommsMessagetypeemail] `db:"type" `
 }
@@ -145,7 +145,7 @@ func (s CommsEmailLogSetter) SetColumns() []string {
 	if s.Subject.IsValue() {
 		vals = append(vals, "subject")
 	}
-	if !s.TemplateID.IsUnset() {
+	if s.TemplateID.IsValue() {
 		vals = append(vals, "template_id")
 	}
 	if s.TemplateData.IsValue() {
@@ -182,8 +182,8 @@ func (s CommsEmailLogSetter) Overwrite(t *CommsEmailLog) {
 	if s.Subject.IsValue() {
 		t.Subject = s.Subject.MustGet()
 	}
-	if !s.TemplateID.IsUnset() {
-		t.TemplateID = s.TemplateID.MustGetNull()
+	if s.TemplateID.IsValue() {
+		t.TemplateID = s.TemplateID.MustGet()
 	}
 	if s.TemplateData.IsValue() {
 		t.TemplateData = s.TemplateData.MustGet()
@@ -248,8 +248,8 @@ func (s *CommsEmailLogSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.TemplateID.IsUnset() {
-			vals[8] = psql.Arg(s.TemplateID.MustGetNull())
+		if s.TemplateID.IsValue() {
+			vals[8] = psql.Arg(s.TemplateID.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
@@ -333,7 +333,7 @@ func (s CommsEmailLogSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.TemplateID.IsUnset() {
+	if s.TemplateID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "template_id")...),
 			psql.Arg(s.TemplateID),
@@ -612,7 +612,7 @@ func (o *CommsEmailLog) TemplateEmailTemplate(mods ...bob.Mod[*dialect.SelectQue
 }
 
 func (os CommsEmailLogSlice) TemplateEmailTemplate(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailTemplatesQuery {
-	pkTemplateID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkTemplateID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -678,7 +678,7 @@ func (commsEmailLog0 *CommsEmailLog) AttachDestinationEmailContact(ctx context.C
 
 func attachCommsEmailLogTemplateEmailTemplate0(ctx context.Context, exec bob.Executor, count int, commsEmailLog0 *CommsEmailLog, commsEmailTemplate1 *CommsEmailTemplate) (*CommsEmailLog, error) {
 	setter := &CommsEmailLogSetter{
-		TemplateID: omitnull.From(commsEmailTemplate1.ID),
+		TemplateID: omit.From(commsEmailTemplate1.ID),
 	}
 
 	err := commsEmailLog0.Update(ctx, exec, setter)
@@ -733,7 +733,7 @@ type commsEmailLogWhere[Q psql.Filterable] struct {
 	SentAt         psql.WhereNullMod[Q, time.Time]
 	Source         psql.WhereMod[Q, string]
 	Subject        psql.WhereMod[Q, string]
-	TemplateID     psql.WhereNullMod[Q, int32]
+	TemplateID     psql.WhereMod[Q, int32]
 	TemplateData   psql.WhereMod[Q, pgtypes.HStore]
 	Type           psql.WhereMod[Q, enums.CommsMessagetypeemail]
 }
@@ -752,7 +752,7 @@ func buildCommsEmailLogWhere[Q psql.Filterable](cols commsEmailLogColumns) comms
 		SentAt:         psql.WhereNull[Q, time.Time](cols.SentAt),
 		Source:         psql.Where[Q, string](cols.Source),
 		Subject:        psql.Where[Q, string](cols.Subject),
-		TemplateID:     psql.WhereNull[Q, int32](cols.TemplateID),
+		TemplateID:     psql.Where[Q, int32](cols.TemplateID),
 		TemplateData:   psql.Where[Q, pgtypes.HStore](cols.TemplateData),
 		Type:           psql.Where[Q, enums.CommsMessagetypeemail](cols.Type),
 	}
@@ -947,11 +947,8 @@ func (os CommsEmailLogSlice) LoadTemplateEmailTemplate(ctx context.Context, exec
 		}
 
 		for _, rel := range commsEmailTemplates {
-			if !o.TemplateID.IsValue() {
-				continue
-			}
 
-			if !(o.TemplateID.IsValue() && o.TemplateID.MustGet() == rel.ID) {
+			if !(o.TemplateID == rel.ID) {
 				continue
 			}
 

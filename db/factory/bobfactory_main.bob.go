@@ -228,7 +228,7 @@ func (f *Factory) FromExistingCommsEmailLog(m *models.CommsEmailLog) *CommsEmail
 	o.SentAt = func() null.Val[time.Time] { return m.SentAt }
 	o.Source = func() string { return m.Source }
 	o.Subject = func() string { return m.Subject }
-	o.TemplateID = func() null.Val[int32] { return m.TemplateID }
+	o.TemplateID = func() int32 { return m.TemplateID }
 	o.TemplateData = func() pgtypes.HStore { return m.TemplateData }
 	o.Type = func() enums.CommsMessagetypeemail { return m.Type }
 

@@ -538,7 +538,7 @@ func (os CommsEmailTemplateSlice) TemplateEmailLogs(mods ...bob.Mod[*dialect.Sel
 
 func insertCommsEmailTemplateTemplateEmailLogs0(ctx context.Context, exec bob.Executor, commsEmailLogs1 []*CommsEmailLogSetter, commsEmailTemplate0 *CommsEmailTemplate) (CommsEmailLogSlice, error) {
 	for i := range commsEmailLogs1 {
-		commsEmailLogs1[i].TemplateID = omitnull.From(commsEmailTemplate0.ID)
+		commsEmailLogs1[i].TemplateID = omit.From(commsEmailTemplate0.ID)
 	}
 
 	ret, err := CommsEmailLogs.Insert(bob.ToMods(commsEmailLogs1...)).All(ctx, exec)
@@ -551,7 +551,7 @@ func insertCommsEmailTemplateTemplateEmailLogs0(ctx context.Context, exec bob.Ex
 
 func attachCommsEmailTemplateTemplateEmailLogs0(ctx context.Context, exec bob.Executor, count int, commsEmailLogs1 CommsEmailLogSlice, commsEmailTemplate0 *CommsEmailTemplate) (CommsEmailLogSlice, error) {
 	setter := &CommsEmailLogSetter{
-		TemplateID: omitnull.From(commsEmailTemplate0.ID),
+		TemplateID: omit.From(commsEmailTemplate0.ID),
 	}
 
 	err := commsEmailLogs1.UpdateAll(ctx, exec, *setter)
@@ -730,10 +730,7 @@ func (os CommsEmailTemplateSlice) LoadTemplateEmailLogs(ctx context.Context, exe
 
 		for _, rel := range commsEmailLogs {
 
-			if !rel.TemplateID.IsValue() {
-				continue
-			}
-			if !(rel.TemplateID.IsValue() && o.ID == rel.TemplateID.MustGet()) {
+			if !(o.ID == rel.TemplateID) {
 				continue
 			}
 

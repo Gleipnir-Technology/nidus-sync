@@ -46,7 +46,7 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 	data["url_subscribe"] = config.MakeURLReport("/email/subscribe?email=%s", destination)
 	data["url_unsubscribe"] = config.MakeURLReport("/email/unsubscribe")
 	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
-	data["url_browser"] = config.MakeURLReport("/email?id=%s", public_id)
+	data["url_browser"] = config.MakeURLReport("/email/%s", public_id)
 
 	text, html, err := renderEmailTemplates(templateInitialID, data)
 	if err != nil {

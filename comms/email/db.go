@@ -27,6 +27,20 @@ func convertToPGData(data map[string]string) pgtypes.HStore {
 	return result
 }
 
+func convertFromPGData(d pgtypes.HStore) map[string]string {
+	result := make(map[string]string, 0)
+	for k, v := range d {
+		var s string
+		err := v.Scan(&s)
+		if err != nil {
+			log.Warn().Str("key", k).Msg("Failed to convert from HSTORE")
+			continue
+		}
+		result[k] = s
+	}
+	return result
+}
+
 func ensureInDB(ctx context.Context, destination string) (err error) {
 	_, err = models.FindCommsEmailContact(ctx, db.PGInstance.BobDB, destination)
 	if err != nil {
@@ -61,7 +75,7 @@ func insertEmailLog(ctx context.Context, data map[string]string, destination str
 		SentAt:         omitnull.FromPtr[time.Time](nil),
 		Source:         omit.From(source),
 		Subject:        omit.From(subject),
-		TemplateID:     omitnull.From(templateInitialID),
+		TemplateID:     omit.From(templateInitialID),
 		TemplateData:   omit.From(data_for_insert),
 		Type:           omit.From(enums.CommsMessagetypeemailInitialContact),
 	}).One(ctx, db.PGInstance.BobDB)

@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
+	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -88,6 +89,20 @@ func LoadTemplates() error {
 	}
 	tx.Commit(ctx)
 	return nil
+}
+
+func RenderHTML(template_id int32, s pgtypes.HStore) (html []byte, err error) {
+	data := convertFromPGData(s)
+	t, ok := templateByID[template_id]
+	if !ok {
+		return []byte{}, fmt.Errorf("Failed to lookup template %d", template_id)
+	}
+	buf_html := &bytes.Buffer{}
+	err = t.executeTemplateHTML(buf_html, data)
+	if err != nil {
+		return []byte{}, fmt.Errorf("Failed to render HTML template: %w", err)
+	}
+	return buf_html.Bytes(), nil
 }
 
 func loadTemplateID(ctx context.Context, tx bob.Tx, t enums.CommsMessagetypeemail) (int32, error) {

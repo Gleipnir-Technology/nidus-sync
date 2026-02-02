@@ -90,9 +90,9 @@ var CommsEmailLogs = Table[
 		TemplateID: column{
 			Name:      "template_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},

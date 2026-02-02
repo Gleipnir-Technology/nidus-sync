@@ -77,7 +77,7 @@ func (t CommsEmailTemplateTemplate) setModelRels(o *models.CommsEmailTemplate) {
 		for _, r := range t.r.TemplateEmailLogs {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.TemplateID = null.From(o.ID) // h2
+				rel.TemplateID = o.ID // h2
 				rel.R.TemplateEmailTemplate = o
 			}
 			rel = append(rel, related...)
