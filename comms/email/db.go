@@ -69,6 +69,15 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 
 func insertEmailLog(ctx context.Context, data map[string]string, destination string, public_id string, source string, subject string, template_id int32) (err error) {
 	data_for_insert := convertToPGData(data)
+	var type_ enums.CommsMessagetypeemail
+	switch template_id {
+	case templateReportNotificationConfirmationID:
+		type_ = enums.CommsMessagetypeemailReportNotificationConfirmation
+	case templateInitialID:
+		type_ = enums.CommsMessagetypeemailInitialContact
+	default:
+		return fmt.Errorf("Unrecognized template ID %d", template_id)
+	}
 	_, err = models.CommsEmailLogs.Insert(&models.CommsEmailLogSetter{
 		//ID:
 		Created:        omit.From(time.Now()),
@@ -78,9 +87,9 @@ func insertEmailLog(ctx context.Context, data map[string]string, destination str
 		SentAt:         omitnull.FromPtr[time.Time](nil),
 		Source:         omit.From(source),
 		Subject:        omit.From(subject),
-		TemplateID:     omit.From(templateInitialID),
+		TemplateID:     omit.From(template_id),
 		TemplateData:   omit.From(data_for_insert),
-		Type:           omit.From(enums.CommsMessagetypeemailInitialContact),
+		Type:           omit.From(type_),
 	}).One(ctx, db.PGInstance.BobDB)
 
 	return err
