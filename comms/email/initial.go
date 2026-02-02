@@ -39,6 +39,9 @@ func maybeSendInitialEmail(ctx context.Context, destination string) error {
 func urlEmailInBrowser(public_id string) string {
 	return config.MakeURLReport("/email/render/%s", public_id)
 }
+func urlUnsubscribe(address string) string {
+	return config.MakeURLReport("/email/unsubscribe?email=%s")
+}
 func sendEmailInitialContact(ctx context.Context, destination string) error {
 	//data := pgtypes.HStore{}
 	data := make(map[string]string, 0)
@@ -49,7 +52,7 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 	data["URLBrowser"] = urlEmailInBrowser(public_id)
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
 	data["URLSubscribe"] = config.MakeURLReport("/email/subscribe?email=%s", destination)
-	data["URLUnsubscribe"] = config.MakeURLReport("/email/unsubscribe")
+	data["URLUnsubscribe"] = urlUnsubscribe(destination)
 
 	text, html, err := renderEmailTemplates(templateInitialID, data)
 	if err != nil {

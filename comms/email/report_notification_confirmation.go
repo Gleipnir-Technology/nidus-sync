@@ -54,7 +54,8 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 	data["ReportIDStr"] = report_id_str
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
 	data["URLReportStatus"] = config.MakeURLReport("/foo")
-	data["URLReportUnsubscribe"] = config.MakeURLReport("/email/unsubscribe")
+	data["URLReportUnsubscribe"] = config.MakeURLReport("/email/unsubscribe/report/%s", j.reportID)
+	data["URLUnsubscribe"] = urlUnsubscribe(j.destination())
 	data["URLViewInBrowser"] = urlEmailInBrowser(public_id)
 	text, html, err := renderEmailTemplates(templateReportNotificationConfirmationID, data)
 	if err != nil {

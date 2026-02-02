@@ -11,12 +11,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type ContentEmailSubscribe struct {
+type ContentEmail struct {
 	Email string
 }
 
 var (
-	EmailSubscribeT = buildTemplate("email-subscribe", "base")
+	EmailConfirmT         = buildTemplate("email-confirm", "base")
+	EmailConfirmCompleteT = buildTemplate("email-confirm-complete", "base")
+	EmailUnsubscribeT     = buildTemplate("email-unsubscribe", "base")
 )
 
 func getEmailByCode(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +43,67 @@ func getEmailByCode(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(html)
 }
-func getEmailSubscribe(w http.ResponseWriter, r *http.Request) {
+func getEmailReportUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
+	html.RenderOrError(
+		w,
+		EmailConfirmT,
+		ContentEmail{
+			Email: email,
+		},
+	)
+}
+func getEmailConfirm(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	if email == "" {
+		respondError(w, "Not sure what to do with an empty email", nil, http.StatusBadRequest)
+		return
+	}
+
+	html.RenderOrError(
+		w,
+		EmailConfirmT,
+		ContentEmail{
+			Email: email,
+		},
+	)
+}
+func getEmailConfirmComplete(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(
+		w,
+		EmailConfirmCompleteT,
+		map[string]string{},
+	)
+}
+func getEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	html.RenderOrError(
+		w,
+		EmailUnsubscribeT,
+		ContentEmail{
+			Email: email,
+		},
+	)
+}
+func postEmailConfirm(w http.ResponseWriter, r *http.Request) {
+	email := r.PostFormValue("email")
+	if email == "" {
+		respondError(w, "Not sure what to do with an empty email", nil, http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	email_contact, err := models.FindCommsEmailContact(ctx, db.PGInstance.BobDB, email)
+	if err != nil {
+		respondError(w, "Email not in the database", err, http.StatusNotFound)
+		return
+	}
+	err = email_contact.Update(ctx, db.PGInstance.BobDB, &models.CommsEmailContactSetter{
+		Confirmed: omit.From(true),
+	})
+	http.Redirect(w, r, "/email/confirm/complete", http.StatusFound)
+}
+func postEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
+	email := r.PostFormValue("email")
 	if email == "" {
 		respondError(w, "Not sure what to do with an empty email", nil, http.StatusBadRequest)
 		return
@@ -58,8 +119,8 @@ func getEmailSubscribe(w http.ResponseWriter, r *http.Request) {
 	})
 	html.RenderOrError(
 		w,
-		EmailSubscribeT,
-		ContentEmailSubscribe{
+		EmailConfirmCompleteT,
+		ContentEmail{
 			Email: email,
 		},
 	)
