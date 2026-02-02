@@ -16,9 +16,10 @@ type ContentEmail struct {
 }
 
 var (
-	EmailConfirmT         = buildTemplate("email-confirm", "base")
-	EmailConfirmCompleteT = buildTemplate("email-confirm-complete", "base")
-	EmailUnsubscribeT     = buildTemplate("email-unsubscribe", "base")
+	EmailConfirmT             = buildTemplate("email-confirm", "base")
+	EmailConfirmCompleteT     = buildTemplate("email-confirm-complete", "base")
+	EmailUnsubscribeT         = buildTemplate("email-unsubscribe", "base")
+	EmailUnsubscribeCompleteT = buildTemplate("email-unsubscribe-complete", "base")
 )
 
 func getEmailByCode(w http.ResponseWriter, r *http.Request) {
@@ -85,6 +86,13 @@ func getEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
+func getEmailUnsubscribeComplete(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(
+		w,
+		EmailUnsubscribeCompleteT,
+		map[string]string{},
+	)
+}
 func postEmailConfirm(w http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	if email == "" {
@@ -115,13 +123,7 @@ func postEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = email_contact.Update(ctx, db.PGInstance.BobDB, &models.CommsEmailContactSetter{
-		Confirmed: omit.From(true),
+		IsSubscribed: omit.From(false),
 	})
-	html.RenderOrError(
-		w,
-		EmailConfirmCompleteT,
-		ContentEmail{
-			Email: email,
-		},
-	)
+	http.Redirect(w, r, "/email/unsubscribe/complete", http.StatusFound)
 }

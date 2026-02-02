@@ -39,8 +39,8 @@ func maybeSendInitialEmail(ctx context.Context, destination string) error {
 func urlEmailInBrowser(public_id string) string {
 	return config.MakeURLReport("/email/render/%s", public_id)
 }
-func urlUnsubscribe(address string) string {
-	return config.MakeURLReport("/email/unsubscribe?email=%s")
+func urlUnsubscribe(email string) string {
+	return config.MakeURLReport("/email/unsubscribe?email=%s", email)
 }
 func sendEmailInitialContact(ctx context.Context, destination string) error {
 	//data := pgtypes.HStore{}
