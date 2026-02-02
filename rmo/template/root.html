@@ -21,8 +21,12 @@
 				<div class="col-lg-10">
 					<h2 class="text-center mb-4">Report a Mosquito Problem</h2>
 					<p class="lead text-center">Submit a report to help reduce mosquito activity in your neighborhood.</p>
-					<p class="lead text-center">Report Mosquitoes Online works with local mosquito control agencies to receive public reports. For this area, mosquito control services are provided by Delta Mosquito and Vector Control District.</p>
-					<img class="district-logo" src="{{.District.URLLogo}}" />
+					<p class="lead text-center">Report Mosquitoes Online works with local mosquito control agencies to receive public reports.</p>
+					{{ if not (eq .District nil) }}
+						<p class="lead text-center">For this area, mosquito control services are provided by</p>
+						<h3 class="text-center">{{.District.Name}}</h3>
+						<img class="district-logo" src="{{.District.URLLogo}}" />
+					{{ end }}
 				</div>
 			</div>
 		</div>
