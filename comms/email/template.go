@@ -37,6 +37,11 @@ var (
 	templateReportNotificationConfirmationID int32
 )
 
+type ContentEmailRender struct {
+	IsBrowser bool
+	C         any
+}
+
 type templatePair struct {
 	baseName    string
 	messageType enums.CommsMessagetypeemail
@@ -98,7 +103,11 @@ func RenderHTML(template_id int32, s pgtypes.HStore) (html []byte, err error) {
 		return []byte{}, fmt.Errorf("Failed to lookup template %d", template_id)
 	}
 	buf_html := &bytes.Buffer{}
-	err = t.executeTemplateHTML(buf_html, data)
+	content := ContentEmailRender{
+		C:         data,
+		IsBrowser: true,
+	}
+	err = t.executeTemplateHTML(buf_html, content)
 	if err != nil {
 		return []byte{}, fmt.Errorf("Failed to render HTML template: %w", err)
 	}
@@ -320,11 +329,15 @@ func publicReportID(s string) string {
 	return s[0:4] + "-" + s[4:8] + "-" + s[8:12]
 }
 
-func renderEmailTemplates(template_id int32, content map[string]string) (text string, html string, err error) {
+func renderEmailTemplates(template_id int32, data map[string]string) (text string, html string, err error) {
 	buf_txt := &bytes.Buffer{}
 	t, ok := templateByID[template_id]
 	if !ok {
 		return "", "", fmt.Errorf("Failed to lookup template %d", template_id)
+	}
+	content := ContentEmailRender{
+		C:         data,
+		IsBrowser: false,
 	}
 	err = t.executeTemplateTXT(buf_txt, content)
 	if err != nil {

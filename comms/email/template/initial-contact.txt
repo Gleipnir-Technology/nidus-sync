@@ -1,6 +1,6 @@
-We're sending you this email because it's the first time we've gotten this email address ({{.Destination}}).
+We're sending you this email because it's the first time we've gotten this email address ({{.C.Destination}}).
 If you'd rather not receive emails from us you can reply with "Unsubscribe" in the subject or body of the email. You can also use the "Unsubscribe" feature of your mail client, if it supports list unsubscribes.
-If instead you'd like to confirm that you're willing to receive emails at this address, you can do so by openining the following URL in a web browser: {{.URLSubscribe}}. You can also confirm your willingness by replying to this email with 'Confirm' in the subject on the body of the email.
+If instead you'd like to confirm that you're willing to receive emails at this address, you can do so by openining the following URL in a web browser: {{.C.URLSubscribe}}. You can also confirm your willingness by replying to this email with 'Confirm' in the subject on the body of the email.
 
 Thank you,
 Report Mosquitoes Online

@@ -51,7 +51,7 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 	data["Source"] = source
 	data["URLBrowser"] = urlEmailInBrowser(public_id)
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
-	data["URLSubscribe"] = config.MakeURLReport("/email/subscribe?email=%s", destination)
+	data["URLSubscribe"] = config.MakeURLReport("/email/confirm?email=%s", destination)
 	data["URLUnsubscribe"] = urlUnsubscribe(destination)
 
 	text, html, err := renderEmailTemplates(templateInitialID, data)

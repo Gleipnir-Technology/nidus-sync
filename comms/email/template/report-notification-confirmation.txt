@@ -1,9 +1,9 @@
 We've received your mosquito report. Thanks! We appreciate you taking the time to submit it.
 
-You can check the current status of your report at any time at {{.URLReportStatus}}
+You can check the current status of your report at any time at {{.C.URLReportStatus}}
 
 We'll send you additional updates as work is scheduled and completed.
 			
 If you have any questions or need further assistance, please don't hesitate to contact us by replying to this email.
 
-If you no longer wish to receive these updates, navigate your browser to {{.URLReportUnsubscribe}} to unsubscribe.
+If you no longer wish to receive these updates, navigate your browser to {{.C.URLReportUnsubscribe}} to unsubscribe.

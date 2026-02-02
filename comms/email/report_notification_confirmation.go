@@ -53,7 +53,7 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 	report_id_str := publicReportID(j.reportID)
 	data["ReportIDStr"] = report_id_str
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
-	data["URLReportStatus"] = config.MakeURLReport("/foo")
+	data["URLReportStatus"] = config.MakeURLReport("/status/%s", j.reportID)
 	data["URLReportUnsubscribe"] = config.MakeURLReport("/email/unsubscribe/report/%s", j.reportID)
 	data["URLUnsubscribe"] = urlUnsubscribe(j.destination())
 	data["URLViewInBrowser"] = urlEmailInBrowser(public_id)
