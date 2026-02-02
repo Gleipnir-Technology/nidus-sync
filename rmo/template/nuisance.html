@@ -19,6 +19,7 @@ async function handleMarkerDrag(lngLat) {
 	if (response !== undefined && response.features.length > 0) {
 		const addressInput = document.querySelector("address-input");
 		addressInput.SetValue(response.features[0]);
+		setLocationInputs(response.features[0]);
 	}
 }
 function selectInspectionType(type) {
