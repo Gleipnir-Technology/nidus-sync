@@ -31,8 +31,9 @@ import (
 var embeddedFiles embed.FS
 
 var (
-	templateByID      map[int32]*builtTemplate
-	templateInitialID int32
+	templateByID                             map[int32]*builtTemplate
+	templateInitialID                        int32
+	templateReportNotificationConfirmationID int32
 )
 
 type templatePair struct {
@@ -80,6 +81,10 @@ func LoadTemplates() error {
 	templateInitialID, err = loadTemplateID(ctx, tx, enums.CommsMessagetypeemailInitialContact)
 	if err != nil {
 		return fmt.Errorf("Failed to load template ID: %s", err)
+	}
+	templateReportNotificationConfirmationID, err = loadTemplateID(ctx, tx, enums.CommsMessagetypeemailReportNotificationConfirmation)
+	if err != nil {
+		return fmt.Errorf("Failed to load report-notification-confirmation template ID: %s", err)
 	}
 	tx.Commit(ctx)
 	return nil

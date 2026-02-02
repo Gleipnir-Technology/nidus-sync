@@ -199,6 +199,7 @@ const (
 	CommsMessagetypeemailReportSubscriptionConfirmation CommsMessagetypeemail = "report-subscription-confirmation"
 	CommsMessagetypeemailReportStatusScheduled          CommsMessagetypeemail = "report-status-scheduled"
 	CommsMessagetypeemailReportStatusComplete           CommsMessagetypeemail = "report-status-complete"
+	CommsMessagetypeemailReportNotificationConfirmation CommsMessagetypeemail = "report-notification-confirmation"
 )
 
 func AllCommsMessagetypeemail() []CommsMessagetypeemail {
@@ -207,6 +208,7 @@ func AllCommsMessagetypeemail() []CommsMessagetypeemail {
 		CommsMessagetypeemailReportSubscriptionConfirmation,
 		CommsMessagetypeemailReportStatusScheduled,
 		CommsMessagetypeemailReportStatusComplete,
+		CommsMessagetypeemailReportNotificationConfirmation,
 	}
 }
 
@@ -221,7 +223,8 @@ func (e CommsMessagetypeemail) Valid() bool {
 	case CommsMessagetypeemailInitialContact,
 		CommsMessagetypeemailReportSubscriptionConfirmation,
 		CommsMessagetypeemailReportStatusScheduled,
-		CommsMessagetypeemailReportStatusComplete:
+		CommsMessagetypeemailReportStatusComplete,
+		CommsMessagetypeemailReportNotificationConfirmation:
 		return true
 	default:
 		return false

@@ -24,8 +24,11 @@ type jobEmailBase struct {
 
 func Handle(ctx context.Context, job Job) error {
 	var err error
+	log.Debug().Str("dest", job.destination()).Str("type", string(job.messageType())).Msg("Handling email job")
 	switch job.messageType() {
 	case enums.CommsMessagetypeemailReportSubscriptionConfirmation:
+		return errors.New("ReportSubscription has been deprecated.")
+	case enums.CommsMessagetypeemailReportNotificationConfirmation:
 		err = sendEmailReportConfirmation(ctx, job)
 	default:
 		return errors.New("not implemented")
@@ -35,10 +38,4 @@ func Handle(ctx context.Context, job Job) error {
 		return fmt.Errorf("Failed to handle email: %w", err)
 	}
 	return nil
-	/*
-		case enums.CommsMessagetypeemailReportStatusScheduled:
-		case enums.CommsMessagetypeemailReportStatusComplete:
-
-		}
-	*/
 }

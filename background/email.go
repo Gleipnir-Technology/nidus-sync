@@ -10,7 +10,7 @@ import (
 var channelJobEmail chan email.Job
 
 func ReportSubscriptionConfirmationEmail(destination, report_id string) {
-	enqueueJobEmail(email.NewJobReportSubscriptionConfirmation(
+	enqueueJobEmail(email.NewJobReportNotificationConfirmation(
 		destination,
 		report_id,
 	))
@@ -36,6 +36,7 @@ func startWorkerEmail(ctx context.Context, channel chan email.Job) {
 			case job := <-channel:
 				err := email.Handle(ctx, job)
 				if err != nil {
+					log.Error().Err(err).Msg("Failed to handle email message")
 				}
 			}
 		}
