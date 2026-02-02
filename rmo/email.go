@@ -6,7 +6,16 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
+)
+
+type ContentEmailSubscribe struct {
+	Email string
+}
+
+var (
+	EmailSubscribeT = buildTemplate("email-subscribe", "base")
 )
 
 func getEmailByCode(w http.ResponseWriter, r *http.Request) {
@@ -30,4 +39,14 @@ func getEmailByCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(html)
+}
+func getEmailSubscribe(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	html.RenderOrError(
+		w,
+		EmailSubscribeT,
+		ContentEmailSubscribe{
+			Email: email,
+		},
+	)
 }

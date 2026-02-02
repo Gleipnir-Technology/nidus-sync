@@ -55,7 +55,7 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
 	data["URLReportStatus"] = config.MakeURLReport("/foo")
 	data["URLReportUnsubscribe"] = config.MakeURLReport("/email/unsubscribe")
-	data["URLViewInBrowser"] = config.MakeURLReport("/email/%s", public_id)
+	data["URLViewInBrowser"] = urlEmailInBrowser(public_id)
 	text, html, err := renderEmailTemplates(templateReportNotificationConfirmationID, data)
 	if err != nil {
 		return fmt.Errorf("Failed to render email report notification template: %w", err)

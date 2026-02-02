@@ -24,7 +24,8 @@ func Router() chi.Router {
 
 	r.Get("/privacy", getPrivacy)
 	r.Get("/robots.txt", getRobots)
-	r.Get("/email/{code}", getEmailByCode)
+	r.Get("/email/render/{code}", getEmailByCode)
+	r.Get("/email/subscribe", getEmailSubscribe)
 	r.Get("/image/{uuid}", getImageByUUID)
 	r.Route("/mock", addMockRoutes)
 	r.Get("/pool-submit-complete", getPoolSubmitComplete)

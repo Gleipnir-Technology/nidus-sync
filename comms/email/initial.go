@@ -36,17 +36,20 @@ func maybeSendInitialEmail(ctx context.Context, destination string) error {
 
 	return sendEmailInitialContact(ctx, destination)
 }
+func urlEmailInBrowser(public_id string) string {
+	return config.MakeURLReport("/email/render/%s", public_id)
+}
 func sendEmailInitialContact(ctx context.Context, destination string) error {
 	//data := pgtypes.HStore{}
 	data := make(map[string]string, 0)
-	source := config.ForwardEmailReportAddress
-	data["destination"] = destination
-	data["source"] = source
-	data["url_logo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
-	data["url_subscribe"] = config.MakeURLReport("/email/subscribe?email=%s", destination)
-	data["url_unsubscribe"] = config.MakeURLReport("/email/unsubscribe")
 	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
-	data["url_browser"] = config.MakeURLReport("/email/%s", public_id)
+	source := config.ForwardEmailReportAddress
+	data["Destination"] = destination
+	data["Source"] = source
+	data["URLBrowser"] = urlEmailInBrowser(public_id)
+	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
+	data["URLSubscribe"] = config.MakeURLReport("/email/subscribe?email=%s", destination)
+	data["URLUnsubscribe"] = config.MakeURLReport("/email/unsubscribe")
 
 	text, html, err := renderEmailTemplates(templateInitialID, data)
 	if err != nil {
