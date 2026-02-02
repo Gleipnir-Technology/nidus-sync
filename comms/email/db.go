@@ -30,13 +30,16 @@ func convertToPGData(data map[string]string) pgtypes.HStore {
 func convertFromPGData(d pgtypes.HStore) map[string]string {
 	result := make(map[string]string, 0)
 	for k, v := range d {
-		var s string
-		err := v.Scan(&s)
+		value, err := v.Value()
 		if err != nil {
-			log.Warn().Str("key", k).Msg("Failed to convert from HSTORE")
+			log.Warn().Err(err).Str("key", k).Msg("Failed to convert from HSTORE")
 			continue
 		}
-		result[k] = s
+		value_str, ok := value.(string)
+		if !ok {
+			log.Warn().Msg("Failed to convert to string")
+		}
+		result[k] = value_str
 	}
 	return result
 }
