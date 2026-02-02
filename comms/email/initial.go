@@ -45,14 +45,15 @@ func urlUnsubscribe(email string) string {
 func sendEmailInitialContact(ctx context.Context, destination string) error {
 	//data := pgtypes.HStore{}
 	data := make(map[string]string, 0)
-	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
 	source := config.ForwardEmailReportAddress
 	data["Destination"] = destination
 	data["Source"] = source
-	data["URLBrowser"] = urlEmailInBrowser(public_id)
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
 	data["URLSubscribe"] = config.MakeURLReport("/email/confirm?email=%s", destination)
 	data["URLUnsubscribe"] = urlUnsubscribe(destination)
+
+	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
+	data["URLBrowser"] = urlEmailInBrowser(public_id)
 
 	text, html, err := renderEmailTemplates(templateInitialID, data)
 	if err != nil {

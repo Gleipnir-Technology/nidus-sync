@@ -48,7 +48,6 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 		return fmt.Errorf("Failed to handle initial email: %w", err)
 	}
 	data := make(map[string]string, 0)
-	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
 	data["report_id"] = j.reportID
 	report_id_str := publicReportID(j.reportID)
 	data["ReportIDStr"] = report_id_str
@@ -56,7 +55,10 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 	data["URLReportStatus"] = config.MakeURLReport("/status/%s", j.reportID)
 	data["URLReportUnsubscribe"] = config.MakeURLReport("/email/unsubscribe/report/%s", j.reportID)
 	data["URLUnsubscribe"] = urlUnsubscribe(j.destination())
+
+	public_id := generatePublicId(enums.CommsMessagetypeemailReportNotificationConfirmation, data)
 	data["URLViewInBrowser"] = urlEmailInBrowser(public_id)
+
 	text, html, err := renderEmailTemplates(templateReportNotificationConfirmationID, data)
 	if err != nil {
 		return fmt.Errorf("Failed to render email report notification template: %w", err)
