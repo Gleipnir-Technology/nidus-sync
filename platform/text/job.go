@@ -27,7 +27,7 @@ func Handle(ctx context.Context, job Job) {
 		err = sendReportSubscription(ctx, job)
 	}
 	if err != nil {
-		log.Error().Err(err).Str("dest", job.destination()).Str("type", string(job.messageTypeName())).Msg("Error processing email")
+		log.Error().Err(err).Str("dest", job.destination()).Str("type", string(job.messageTypeName())).Msg("Error processing text")
 		return
 	}
 	/*
