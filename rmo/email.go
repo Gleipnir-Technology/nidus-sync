@@ -7,6 +7,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/aarondl/opt/omit"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -42,6 +43,19 @@ func getEmailByCode(w http.ResponseWriter, r *http.Request) {
 }
 func getEmailSubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
+	if email == "" {
+		respondError(w, "Not sure what to do with an empty email", nil, http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	email_contact, err := models.FindCommsEmailContact(ctx, db.PGInstance.BobDB, email)
+	if err != nil {
+		respondError(w, "Email not in the database", err, http.StatusNotFound)
+		return
+	}
+	err = email_contact.Update(ctx, db.PGInstance.BobDB, &models.CommsEmailContactSetter{
+		Confirmed: omit.From(true),
+	})
 	html.RenderOrError(
 		w,
 		EmailSubscribeT,
