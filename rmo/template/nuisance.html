@@ -10,6 +10,19 @@
 <script src="/static/js/photo-upload.js"></script>
 <script>
 const MAPBOX_ACCESS_TOKEN = "{{.MapboxToken}}";
+async function handleMapClick(mapLocator, lngLat) {
+	mapLocator.SetMarker(lngLat);
+	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+		lat: lngLat.lat,
+		lng: lngLat.lng,
+	});
+	console.log("click reverse geocode", response);
+	if (response !== undefined && response.features.length > 0) {
+		const addressInput = document.querySelector("address-input");
+		addressInput.SetValue(response.features[0]);
+		setLocationInputs(response.features[0]);
+	}
+}
 async function handleMarkerDrag(lngLat) {
 	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
 		lat: lngLat.lat,
@@ -117,6 +130,12 @@ document.addEventListener('DOMContentLoaded', function() {
 	let mapZoom = document.getElementById('map-zoom');
 	mapLocator.addEventListener("zoomend", function(e) {
 		mapZoom.value = e.target.GetZoom();
+	});
+	mapLocator.addEventListener("click", (e) => {
+		// We get some events without the lngLat
+		if (e.detail !== undefined && e.detail.lngLat !== undefined) {
+			handleMapClick(mapLocator, e.detail.lngLat);
+		}
 	});
 	mapLocator.addEventListener("markerdragend", (e) => {
 		const marker = event.detail.marker;

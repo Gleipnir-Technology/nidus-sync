@@ -1,4 +1,3 @@
-var map = null;
 // A map that can be used to locate a single point by setting its location explicitly
 // or by allowing the user to move a marker.
 class MapLocator extends HTMLElement {
@@ -55,22 +54,33 @@ class MapLocator extends HTMLElement {
 		}));
 		map.addControl(new mapboxgl.NavigationControl());
 		*/
+		this._map.on("click", (e) => {
+			e.preventDefault();
+			console.log("internal click", e);
+			this.dispatchEvent(new CustomEvent("click", {
+				bubbles: true,
+				composed: true, // Allows event to cross shadow DOM boundary
+				detail: { 
+					lngLat: e.lngLat,
+				},
+			}));
+		});
 		this._map.on("load", () => {
 			console.log("map loaded");
-			this.dispatchEvent(new CustomEvent("load"), {
+			this.dispatchEvent(new CustomEvent("load", {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
 				detail: {
 					map: this
 				}
-			});
+			}));
 		});
 		this._map.on("zoomend", (e) => {
-			this.dispatchEvent(new CustomEvent("zoomend"), {
+			this.dispatchEvent(new CustomEvent("zoomend", {
 				bubbles: true,
 				composed: true,
 				detail: e,
-			});
+			}));
 		});
 	}
 
