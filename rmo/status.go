@@ -30,6 +30,18 @@ type Contact struct {
 	Name  string
 	Phone string
 }
+type ContentStatus struct {
+	Error       string
+	MapboxToken string
+	ReportID    string
+	URL         ContentURL
+}
+type ContentStatusByID struct {
+	MapboxToken string
+	Report      Report
+	URL         ContentURL
+}
+
 type Image struct {
 	Location string
 	URL      string
@@ -45,15 +57,6 @@ type Report struct {
 	Reporter  Contact
 	SiteOwner Contact
 	Type      string
-}
-
-type ContentStatus struct {
-	Error    string
-	ReportID string
-}
-type ContentStatusByID struct {
-	MapboxToken string
-	Report      Report
 }
 
 var (
@@ -83,28 +86,21 @@ func formatReportID(s string) string {
 
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	report_id_str := r.URL.Query().Get("report")
+	content := ContentStatus{
+		Error:       "",
+		MapboxToken: config.MapboxToken,
+		ReportID:    "",
+		URL:         makeContentURL(nil),
+	}
 	if report_id_str == "" {
-		html.RenderOrError(
-			w,
-			Status,
-			ContentStatus{
-				Error:    "",
-				ReportID: "",
-			},
-		)
+		html.RenderOrError(w, Status, content)
 		return
 	}
 	report_id := sanitizeReportID(report_id_str)
 	report_id_str = formatReportID(report_id)
 	//some_report, e := report.FindSomeReport(r.Context(), report_id)
-	html.RenderOrError(
-		w,
-		Status,
-		ContentStatus{
-			Error:    "Sorry, we can't find that report",
-			ReportID: report_id_str,
-		},
-	)
+	content.Error = "Sorry, we can't find that report"
+	html.RenderOrError(w, Status, content)
 }
 func contentFromNuisance(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
 	nuisance, err := models.PublicreportNuisances.Query(
@@ -206,6 +202,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		content, err = contentFromQuick(ctx, report_id)
 	}
 	content.MapboxToken = config.MapboxToken
+	content.URL = makeContentURL(nil)
 	html.RenderOrError(
 		w,
 		StatusByID,
