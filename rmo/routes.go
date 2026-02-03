@@ -39,6 +39,7 @@ func Router() chi.Router {
 	r.Post("/register-notifications", postRegisterNotifications)
 	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)
 	r.Get("/search", getSearch)
+	r.Get("/scss/*", getScssDebug)
 	r.Get("/status", getStatus)
 	r.Get("/status/{report_id}", getStatusByID)
 	r.Get("/terms-of-service", getTerms)
