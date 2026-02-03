@@ -16,6 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {{end}}
 {{define "content"}}
+{{if (eq .District nil)}}
+	{{template "header-rmo" .}}
+{{else}}
+	{{template "header-district" .District}}
+{{end}}
 <div class="container my-4">
 	<!-- Search Box -->
 	<div class="card search-box mb-4">

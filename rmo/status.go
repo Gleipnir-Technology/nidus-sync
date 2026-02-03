@@ -31,6 +31,7 @@ type Contact struct {
 	Phone string
 }
 type ContentStatus struct {
+	District    *ContentDistrict
 	Error       string
 	MapboxToken string
 	ReportID    string
