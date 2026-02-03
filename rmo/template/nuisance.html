@@ -12,6 +12,7 @@
 const MAPBOX_ACCESS_TOKEN = "{{.MapboxToken}}";
 async function handleMapClick(mapLocator, lngLat) {
 	mapLocator.SetMarker(lngLat);
+	mapLocator.PanTo(lngLat, {duration: 2000});
 	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
 		lat: lngLat.lat,
 		lng: lngLat.lng,
@@ -115,10 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
 				},
 				zoom: 14,
 			});
-			mapLocator.SetMarker([
+			const coords = [
 				position.coords.longitude,
 				position.coords.latitude,
-			]);
+			];
+			mapLocator.SetMarker(coords);
+			mapLocator.JumpTo({center: coords, zoom: 14});
 			handleMarkerDrag({
 				lat: position.coords.latitude,
 				lng: position.coords.longitude,

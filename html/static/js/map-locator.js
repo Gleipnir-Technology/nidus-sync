@@ -125,12 +125,12 @@ class MapLocator extends HTMLElement {
 		this._map.jumpTo(args);
 	}
 
+	PanTo(coords, options) {
+		this._map.panTo(coords, options);
+	}
+
 	SetMarker(coords) {
 		console.log("Setting map marker", coords);
-		this._map.jumpTo({
-			center: coords,
-			zoom: 14,
-		});
 		this._markers.forEach((marker) => marker.remove());
 
 		const marker = new mapboxgl.Marker({
