@@ -24,13 +24,9 @@ type ContentPool struct {
 	MapboxToken string
 	URL         ContentURL
 }
-type ContentPoolSubmitComplete struct {
-	ReportID string
-}
 
 var (
-	PoolSubmitComplete = buildTemplate("pool-submit-complete", "base")
-	WaterT             = buildTemplate("water", "base")
+	WaterT = buildTemplate("water", "base")
 )
 
 func getWater(w http.ResponseWriter, r *http.Request) {
@@ -57,16 +53,6 @@ func getWaterDistrict(w http.ResponseWriter, r *http.Request) {
 			District:    newContentDistrict(district),
 			MapboxToken: config.MapboxToken,
 			URL:         makeContentURL(district),
-		},
-	)
-}
-func getPoolSubmitComplete(w http.ResponseWriter, r *http.Request) {
-	report := r.URL.Query().Get("report")
-	html.RenderOrError(
-		w,
-		PoolSubmitComplete,
-		ContentPoolSubmitComplete{
-			ReportID: report,
 		},
 	)
 }

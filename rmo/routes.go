@@ -32,7 +32,6 @@ func Router() chi.Router {
 	r.Get("/email/unsubscribe/report/{report_id}", getEmailReportUnsubscribe)
 	r.Get("/image/{uuid}", getImageByUUID)
 	r.Route("/mock", addMockRoutes)
-	r.Get("/pool-submit-complete", getPoolSubmitComplete)
 	r.Get("/quick", getQuick)
 	r.Post("/quick-submit", postQuick)
 	r.Get("/quick-submit-complete", getQuickSubmitComplete)
