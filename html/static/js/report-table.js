@@ -70,11 +70,11 @@ class ReportTable extends HTMLElement {
 	 */
 	getTypeClass(type) {
 		switch(type) {
-			case 'Nuisance':
+			case 'nuisance':
 				return 'bg-danger';
-			case 'Quick':
+			case 'quick':
 				return 'bg-primary';
-			case 'Green Pool':
+			case 'pool':
 				return 'bg-success';
 			default:
 				return 'bg-secondary';

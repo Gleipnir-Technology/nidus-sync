@@ -27,4 +27,40 @@
 		height: 300px;
 	}
 }
+/* Base styles for circular checkboxes */
+.custom-circle-checkbox .form-check-input {
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	margin-top: 0.25rem;
+	background-image: none; /* Remove Bootstrap's default checkmark */
+	position: relative;
+}
 
+/* Style for when checked */
+.custom-circle-checkbox .form-check-input:checked {
+	background-color: currentColor;
+	border-color: currentColor;
+}
+
+/* Style for when unchecked - just an outline */
+.custom-circle-checkbox .form-check-input:not(:checked) {
+	background-color: transparent;
+}
+
+/* Colors based on data attribute */
+.custom-circle-checkbox .form-check-input[data-color="danger"] {
+	border-color: $red;
+	color: $red;
+}
+
+.custom-circle-checkbox .form-check-input[data-color="success"] {
+	border-color: $blue;
+	color: $blue;
+}
+
+.custom-circle-checkbox .form-check-input[data-color="info"] {
+	border-color: $green;
+	color: $green;
+}

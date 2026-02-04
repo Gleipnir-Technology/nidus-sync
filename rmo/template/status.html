@@ -8,22 +8,31 @@
 <script src="/static/js/location.js"></script>
 <script src="/static/js/map-multipoint.js"></script>
 <script src="/static/js/report-table.js"></script>
-<style>
-</style>
 <script>
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 var markers = [];
 // Because features come from tiled vector data, feature geometries may be split
 // or duplicated across tile boundaries. As a result, features may appear
 // multiple times in query results.
-function getUniqueFeatures(features, comparatorProperty) {
+function getUniqueFeatures(nuisances, pools, comparatorProperty) {
 	const uniqueIds = new Set();
 	const uniqueFeatures = [];
-	for (const feature of features) {
+	for (const feature of nuisances) {
 		const id = feature.properties[comparatorProperty];
 		if (!uniqueIds.has(id)) {
-		uniqueIds.add(id);
-		uniqueFeatures.push(feature);
+			uniqueIds.add(id);
+			let f = structuredClone(feature);
+			f.type = "nuisance";
+			uniqueFeatures.push(f);
+		}
+	}
+	for (const feature of pools) {
+		const id = feature.properties[comparatorProperty];
+		if (!uniqueIds.has(id)) {
+			uniqueIds.add(id);
+			let f = structuredClone(feature);
+			f.type = "pool";
+			uniqueFeatures.push(f);
 		}
 	}
 	return uniqueFeatures;
@@ -40,7 +49,7 @@ function renderReports(features) {
 			created: feature.properties.created,
 			id: feature.properties.public_id,
 			status: feature.properties.status,
-			type: feature.properties.table_name
+			type: feature.type,
 		});
 	}
 	report_table.reports = reports;
@@ -55,25 +64,36 @@ function onLoad() {
 			]
 		});
 		map.addLayer({
-			'id': 'mosquito',
+			'id': 'nuisance',
 			'source': 'tegola-mosquito',
-			'source-layer': 'report_location',
+			'source-layer': 'nuisance_location',
 			'type': 'circle',
 			'paint': {
-				'circle-color': '#4264fb',
+				'circle-color': "#DC4535",
 				'circle-radius': 7,
 				'circle-stroke-width': 2,
-				'circle-stroke-color': '#ffffff'
+				'circle-stroke-color': "#9C1C28"
+			}
+		});
+		map.addLayer({
+			'id': 'pool',
+			'source': 'tegola-mosquito',
+			'source-layer': 'pool_location',
+			'type': 'circle',
+			'paint': {
+				'circle-color': "#0D6EfD",
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': "#024AB6"
 			}
 		});
 		map.on('render', () => {
-			const features = map.queryRenderedFeatures({target: {layerId: 'mosquito'}});
+			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
+			const pools = map.queryRenderedFeatures({target: {layerId: 'pool'}});
 
-			if (features) {
-				const uniqueFeatures = getUniqueFeatures(features, 'public_id');
-				// Populate features for the listing overlay.
-				renderReports(uniqueFeatures);
-			}
+			const uniqueFeatures = getUniqueFeatures(nuisances, pools, 'public_id');
+			// Populate features for the listing overlay.
+			renderReports(uniqueFeatures);
 		});
 		getGeolocation({
 			enableHighAccuracy: true,
@@ -116,13 +136,14 @@ document.addEventListener('DOMContentLoaded', onLoad);
 					<button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
 				</div>
 				<div class="col-12">
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="mosquitoNuisance" checked>
-						<label class="form-check-label" for="mosquitoNuisance">Mosquito Nuisance</label>
+					<div class="form-check custom-circle-checkbox">
+						<input class="form-check-input" type="checkbox" id="poiRestaurants" data-color="danger">
+						<label class="form-check-label" for="poiRestaurants">Mosquito Nuisance</label>
 					</div>
-					<div class="form-check form-check-inline">
-						<input class="form-check-input" type="checkbox" id="stagnantWater" checked>
-						<label class="form-check-label" for="gWaterreenPool">Stagnant Water</label>
+
+					<div class="form-check custom-circle-checkbox">
+						<input class="form-check-input" type="checkbox" id="poiParks" data-color="success">
+						<label class="form-check-label" for="poiParks">Standing Water</label>
 					</div>
 				</div>
 			</form>
