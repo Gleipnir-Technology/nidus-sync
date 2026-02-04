@@ -11,8 +11,89 @@
 <style>
 </style>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-});
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+var markers = [];
+// Because features come from tiled vector data, feature geometries may be split
+// or duplicated across tile boundaries. As a result, features may appear
+// multiple times in query results.
+function getUniqueFeatures(features, comparatorProperty) {
+	const uniqueIds = new Set();
+	const uniqueFeatures = [];
+	for (const feature of features) {
+		const id = feature.properties[comparatorProperty];
+		if (!uniqueIds.has(id)) {
+		uniqueIds.add(id);
+		uniqueFeatures.push(feature);
+		}
+	}
+	return uniqueFeatures;
+}
+
+function renderReports(features) {
+	console.log("render reports", features);
+	
+	const report_table = document.querySelector('report-table');
+	let reports = [];
+	for (const feature of features) {
+		reports.push({
+			address: feature.properties.address,
+			created: feature.properties.created,
+			id: feature.properties.public_id,
+			status: feature.properties.status,
+			type: feature.properties.table_name
+		});
+	}
+	report_table.reports = reports;
+}
+function onLoad() {
+	const map = document.querySelector("map-multipoint");
+	map.addEventListener("load", (event) => {
+		map.addSource('tegola-mosquito', {
+			'type': 'vector',
+			'tiles': [
+				'{{.URL.Tegola}}maps/mosquito/{z}/{x}/{y}'
+			]
+		});
+		map.addLayer({
+			'id': 'mosquito',
+			'source': 'tegola-mosquito',
+			'source-layer': 'report_location',
+			'type': 'circle',
+			'paint': {
+				'circle-color': '#4264fb',
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': '#ffffff'
+			}
+		});
+		map.on('render', () => {
+			const features = map.queryRenderedFeatures({target: {layerId: 'mosquito'}});
+
+			if (features) {
+				const uniqueFeatures = getUniqueFeatures(features, 'public_id');
+				// Populate features for the listing overlay.
+				renderReports(uniqueFeatures);
+			}
+		});
+		getGeolocation({
+			enableHighAccuracy: true,
+			timeout: 10000,
+			maximumAge: 0
+		}).then(position => {
+			map.jumpTo({
+				center: {
+					lng: position.coords.longitude,
+					lat: position.coords.latitude,
+				},
+				zoom: 14,
+			});
+		}).catch(error => {
+			console.log("location error", error);
+		})
+	});
+}
+
+document.addEventListener('DOMContentLoaded', onLoad);
 </script>
 {{end}}
 {{define "content"}}
