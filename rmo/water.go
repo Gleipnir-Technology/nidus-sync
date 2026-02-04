@@ -182,7 +182,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	tx.Commit(ctx)
-	http.Redirect(w, r, fmt.Sprintf("/pool-submit-complete?report=%s", public_id), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
 }
 func postWaterDistrict(w http.ResponseWriter, r *http.Request) {
 }
