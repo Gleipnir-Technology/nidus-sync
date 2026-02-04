@@ -215,6 +215,11 @@ class MapMultipoint extends HTMLElement {
 		});
 		this._markers = [marker];
 	}
+
+	SetLayoutProperty(layout, property, value) {
+		return this._map.setLayoutProperty(layout, property, value);
+	}
+
 }
 
 customElements.define('map-multipoint', MapMultipoint);

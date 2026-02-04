@@ -56,6 +56,8 @@ function renderReports(features) {
 }
 function onLoad() {
 	const map = document.querySelector("map-multipoint");
+	const checkboxNuisance = document.getElementById("checkboxNuisance");
+	const checkboxWater = document.getElementById("checkboxWater");
 	map.addEventListener("load", (event) => {
 		map.addSource('tegola-mosquito', {
 			'type': 'vector',
@@ -86,6 +88,21 @@ function onLoad() {
 				'circle-stroke-width': 2,
 				'circle-stroke-color': "#024AB6"
 			}
+		});
+		map.on("idle", () => {
+			function _addCheckboxClick(checkbox, layer_id) {
+				checkbox.onclick = function(e) {
+					if (checkbox.checked) {
+						map.SetLayoutProperty(layer_id, "visibility", "visible");
+					} else {
+						map.SetLayoutProperty(layer_id, "visibility", "none");
+					}
+				}
+			}
+			_addCheckboxClick(checkboxNuisance, "nuisance");
+			_addCheckboxClick(checkboxWater, "pool");
+			checkboxNuisance.onclick()
+			checkboxWater.onclick()
 		});
 		map.on('render', () => {
 			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
@@ -137,13 +154,13 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				</div>
 				<div class="col-12">
 					<div class="form-check custom-circle-checkbox">
-						<input class="form-check-input" type="checkbox" id="poiRestaurants" data-color="danger">
-						<label class="form-check-label" for="poiRestaurants">Mosquito Nuisance</label>
+						<input class="form-check-input" type="checkbox" id="checkboxNuisance" data-color="danger">
+						<label class="form-check-label" for="checkboxNuisance">Mosquito Nuisance</label>
 					</div>
 
 					<div class="form-check custom-circle-checkbox">
-						<input class="form-check-input" type="checkbox" id="poiParks" data-color="success">
-						<label class="form-check-label" for="poiParks">Standing Water</label>
+						<input class="form-check-input" type="checkbox" id="checkboxWater" data-color="success">
+						<label class="form-check-label" for="checkboxWater">Standing Water</label>
 					</div>
 				</div>
 			</form>
