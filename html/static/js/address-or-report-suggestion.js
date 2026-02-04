@@ -10,8 +10,10 @@ class AddressOrReportInput extends HTMLElement {
 		this.render();
 
 		// Element references
+		this._addresses = [];
 		this._input = this.shadowRoot.querySelector("input");
-		this._suggestions = this.shadowRoot.querySelector(".suggestions-container");
+		this._reports = [];
+		this._suggestionsContainer = this.shadowRoot.querySelector(".suggestions-container");
 		
 		// Bind methods
 		this._handleInput = this._handleInput.bind(this);
@@ -72,16 +74,13 @@ class AddressOrReportInput extends HTMLElement {
 		
 		// Clear suggestions if input is less than 3 characters
 		if (searchText.length < 3) {
-			this._suggestions.innerHTML = '';
+			this._suggestionsContainer.innerHTML = '';
 			return;
 		}
 		
 		// Debounce API calls (wait 300ms after typing stops)
 		this._debounceTimer = setTimeout(() => {
-			this._fetchAddressSuggestions(searchText)
-				.then(response => {
-					this._renderSuggestions(response.features);
-				});
+			this._handleSuggestions(searchText);
 		}, 300);
 		
 	}
@@ -92,21 +91,57 @@ class AddressOrReportInput extends HTMLElement {
 			
 			const response = await fetch(url);
 			const data = await response.json();
-			return data;
+			return data.features;
 		} catch (error) {
 			console.error('Error fetching geocoding suggestions:', error);
 		}
 	}
 
-	_renderSuggestions(suggestions) {
-		console.log("Rendering suggestions", suggestions);
-		this._suggestions.innerHTML = suggestions.map((item, index) => {
+	async _fetchReportSuggestions(text) {
+		try {
+			const url = `/report/suggest?r=${text}`
+			const response = await fetch(url);
+			const data = await response.json();
+			return data.reports;
+		} catch (error) {
+			console.error("Error fetching report suggestions:", error);
+		}
+	}
+
+	async _handleSuggestions(text) {
+		await Promise.all([
+			(async() => {
+				this._addresses = await this._fetchAddressSuggestions(text);
+			})(),
+			(async() => {
+				this._reports = await this._fetchReportSuggestions(text);
+			})(),
+		]);
+		this._renderSuggestions(this._addresses, this._reports);
+	}
+
+	_renderSuggestions(addresses, reports) {
+		console.log("Rendering suggestions", addresses, reports);
+		const reportElements = reports.map((item, index) => {
+			const formatted_id = _formatReportID(item.id);
+			const type_display = _formatReportType(item.type);
+			return `
+				<div class="suggestion-item list-group-item"
+					data-index="${index}"
+					data-report-id="${item.id}"
+					data-type="report">
+						<div class="report-id">${formatted_id}</div>
+						<div class="report-type">${type_display}</div>
+				</div>`
+		}).join("");
+		const addressElements = addresses.map((item, index) => {
 			if (item.properties.place_formatted != "") {
 				return `
 					<div class="suggestion-item list-group-item"
 						data-index="${index}"
 						data-lat="${item.geometry.coordinates[1]}"
-						data-lng="${item.geometry.coordinates[0]}">
+						data-lng="${item.geometry.coordinates[0]}"
+						data-type="address">
 							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
 							<div class="place-info">${item.properties.place_formatted}</div>
 					</div>`
@@ -115,27 +150,36 @@ class AddressOrReportInput extends HTMLElement {
 					<div class="suggestion-item list-group-item"
 						data-index="${index}"
 						data-lat="${item.coordinates.lat}"
-						data-lng="${item.coordinates.lng}">
+						data-lng="${item.coordinates.lng}"
+						data-type="address">
 							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
 							<div class="place-info">${item.properties.place_formatted}</div>
 					</div>`
 			}
-		}).join('');
-		
+		}).join("");
+		this._suggestionsContainer.innerHTML = reportElements + addressElements;
 		// Add click listeners to suggestions
 		this.shadowRoot.querySelectorAll('.suggestion-item').forEach(el => {
 			el.addEventListener('click', e => {
-				const index = parseInt(el.dataset.index);
-				const suggestion = suggestions[index];
-				this.SetValue(suggestion);
-				// Dispatch custom event
-				this.dispatchEvent(new CustomEvent('address-selected', {
-					bubbles: true,
-					composed: true, // Allows event to cross shadow DOM boundary
-					detail: {
-						location: suggestion
-					}
-				}));
+				const type = el.dataset.type;
+				if (type == "report") {
+					const index = parseInt(el.dataset.index);
+					const report = this._reports[index];
+					this.value = _formatReportID(report.id);
+					this._suggestionsContainer.innerHTML = "";
+				} else if (type == "address") {
+					const index = parseInt(el.dataset.index);
+					const address = this._addresses[index];
+					this.SetValue(suggestion);
+					// Dispatch custom event
+					this.dispatchEvent(new CustomEvent('address-selected', {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							location: suggestion
+						}
+					}));
+				}
 			});
 		});
 	}
@@ -197,13 +241,30 @@ class AddressOrReportInput extends HTMLElement {
 	clear() {
 		if (this._input) {
 			this._input.value = '';
-			this._suggestions.innerHTML = '';
+			this._suggestionsContainer.innerHTML = '';
 		}
 	}
 
 	SetValue(suggestion) {
 		this.value = suggestion.properties.full_address;
-		this._suggestions.innerHTML = '';
+		this._suggestionsContainer.innerHTML = '';
+	}
+}
+
+function _formatReportID(id) {
+	if (id.length === 12) {
+		return `${id.substring(0, 4)}-${id.substring(4, 8)}-${id.substring(8)}`;
+	}
+	return id;
+}
+
+function _formatReportType(type) {
+	if (type == "nuisance") {
+		return "Mosquito Nuisance Report";
+	} else if (type == "pool") {
+		return "Standing Water Report";
+	} else {
+		return "Unknown Report Type";
 	}
 }
 
