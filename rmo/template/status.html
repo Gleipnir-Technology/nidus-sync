@@ -38,25 +38,24 @@ function getUniqueFeatures(nuisances, pools, comparatorProperty) {
 	return uniqueFeatures;
 }
 
-function renderReports(features) {
-	//console.log("render reports", features);
-	
-	const report_table = document.querySelector('report-table');
-	let reports = [];
-	for (const feature of features) {
-		reports.push({
-			address: feature.properties.address,
-			created: feature.properties.created,
-			id: feature.properties.public_id,
-			status: feature.properties.status,
-			type: feature.type,
-		});
-	}
-	report_table.reports = reports;
-
-	const report_count = document.getElementById("report-count");
-	report_count.innerHTML = reports.length + " Reports Found";
+function handleLookupFormSubmit(e) {
+	const report_id = e.target.elements["address-or-report"].value.replace(/-/g, "");
+	window.location = "/status/" + report_id;
+	return false;
 }
+
+function maybeEnableLookupButton(e) {
+	const lookupButton = document.getElementById("lookup");
+	const reportId = e.target.value.replace(/-/g, "");
+	if (reportId.length == 12) {
+		lookupButton.disabled = true;
+		lookupButton.classList.add("disabled");
+	} else {
+		lookupButton.disabled = false;
+		lookupButton.classList.remove("disabled");
+	}
+}
+
 function onLoad() {
 	const map = document.querySelector("map-multipoint");
 	const checkboxNuisance = document.getElementById("checkboxNuisance");
@@ -137,8 +136,29 @@ function onLoad() {
 	report_table.addEventListener("row-clicked", (e) => {
 		window.location = "/status/" + e.detail.reportId;
 	})
-}
 
+	document.querySelector("address-or-report-input").addEventListener("input", maybeEnableLookupButton);
+	document.getElementById("lookup-form").addEventListener("submit", handleLookupFormSubmit);
+}
+function renderReports(features) {
+	//console.log("render reports", features);
+	
+	const report_table = document.querySelector('report-table');
+	let reports = [];
+	for (const feature of features) {
+		reports.push({
+			address: feature.properties.address,
+			created: feature.properties.created,
+			id: feature.properties.public_id,
+			status: feature.properties.status,
+			type: feature.type,
+		});
+	}
+	report_table.reports = reports;
+
+	const report_count = document.getElementById("report-count");
+	report_count.innerHTML = reports.length + " Reports Found";
+}
 document.addEventListener('DOMContentLoaded', onLoad);
 </script>
 {{end}}
@@ -152,14 +172,16 @@ document.addEventListener('DOMContentLoaded', onLoad);
 	<!-- Search Box -->
 	<div class="card search-box mb-4">
 		<div class="card-body">
-			<form class="row g-3 align-items-center">
+			<form class="row g-3 align-items-center" action="#" id="lookup-form"/>
 				<div class="col-md-9">
 					<address-or-report-input
+							api-key="{{ .MapboxToken }}"
+							name="address-or-report"
 							placeholder="Enter a report ID, address, neighborhood, or zip code"
-							api-key="{{ .MapboxToken }}"/>
+							/>
 				</div>
 				<div class="col-md-3">
-					<button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
+					<button type="submit" class="btn btn-primary btn-lg w-100 disabled" disabled id="lookup">Lookup</button>
 				</div>
 				<div class="col-12">
 					<div class="form-check custom-circle-checkbox">
