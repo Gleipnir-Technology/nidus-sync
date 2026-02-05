@@ -29,24 +29,40 @@ import (
 
 // PublicreportNuisance is an object representing the database table.
 type PublicreportNuisance struct {
-	ID                int32                                  `db:"id,pk" `
-	AdditionalInfo    string                                 `db:"additional_info" `
-	Created           time.Time                              `db:"created" `
-	Duration          enums.PublicreportNuisancedurationtype `db:"duration" `
-	SourceLocation    enums.PublicreportNuisancelocationtype `db:"source_location" `
-	SourceContainer   bool                                   `db:"source_container" `
-	SourceDescription string                                 `db:"source_description" `
-	SourceStagnant    bool                                   `db:"source_stagnant" `
-	PublicID          string                                 `db:"public_id" `
-	ReporterEmail     null.Val[string]                       `db:"reporter_email" `
-	ReporterName      null.Val[string]                       `db:"reporter_name" `
-	ReporterPhone     null.Val[string]                       `db:"reporter_phone" `
-	Address           string                                 `db:"address" `
-	Location          null.Val[string]                       `db:"location" `
-	Status            enums.PublicreportReportstatustype     `db:"status" `
-	OrganizationID    null.Val[int32]                        `db:"organization_id" `
-	SourceGutter      bool                                   `db:"source_gutter" `
-	H3cell            null.Val[string]                       `db:"h3cell" `
+	ID                  int32                                  `db:"id,pk" `
+	AdditionalInfo      string                                 `db:"additional_info" `
+	Created             time.Time                              `db:"created" `
+	Duration            enums.PublicreportNuisancedurationtype `db:"duration" `
+	SourceContainer     bool                                   `db:"source_container" `
+	SourceDescription   string                                 `db:"source_description" `
+	SourceStagnant      bool                                   `db:"source_stagnant" `
+	PublicID            string                                 `db:"public_id" `
+	ReporterEmail       null.Val[string]                       `db:"reporter_email" `
+	ReporterName        null.Val[string]                       `db:"reporter_name" `
+	ReporterPhone       null.Val[string]                       `db:"reporter_phone" `
+	Address             string                                 `db:"address" `
+	Location            null.Val[string]                       `db:"location" `
+	Status              enums.PublicreportReportstatustype     `db:"status" `
+	OrganizationID      null.Val[int32]                        `db:"organization_id" `
+	SourceGutter        bool                                   `db:"source_gutter" `
+	H3cell              null.Val[string]                       `db:"h3cell" `
+	AddressCountry      string                                 `db:"address_country" `
+	AddressPlace        string                                 `db:"address_place" `
+	AddressPostcode     string                                 `db:"address_postcode" `
+	AddressRegion       string                                 `db:"address_region" `
+	AddressStreet       string                                 `db:"address_street" `
+	IsLocationBackyard  bool                                   `db:"is_location_backyard" `
+	IsLocationFrontyard bool                                   `db:"is_location_frontyard" `
+	IsLocationGarden    bool                                   `db:"is_location_garden" `
+	IsLocationOther     bool                                   `db:"is_location_other" `
+	IsLocationPool      bool                                   `db:"is_location_pool" `
+	MapZoom             float32                                `db:"map_zoom" `
+	TodEarly            bool                                   `db:"tod_early" `
+	TodDay              bool                                   `db:"tod_day" `
+	TodEvening          bool                                   `db:"tod_evening" `
+	TodNight            bool                                   `db:"tod_night" `
+	LatlngAccuracyType  enums.PublicreportAccuracytype         `db:"latlng_accuracy_type" `
+	LatlngAccuracyValue float32                                `db:"latlng_accuracy_value" `
 
 	R publicreportNuisanceR `db:"-" `
 
@@ -72,51 +88,83 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_location", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter", "h3cell",
+			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value",
 		).WithParent("publicreport.nuisance"),
-		tableAlias:        alias,
-		ID:                psql.Quote(alias, "id"),
-		AdditionalInfo:    psql.Quote(alias, "additional_info"),
-		Created:           psql.Quote(alias, "created"),
-		Duration:          psql.Quote(alias, "duration"),
-		SourceLocation:    psql.Quote(alias, "source_location"),
-		SourceContainer:   psql.Quote(alias, "source_container"),
-		SourceDescription: psql.Quote(alias, "source_description"),
-		SourceStagnant:    psql.Quote(alias, "source_stagnant"),
-		PublicID:          psql.Quote(alias, "public_id"),
-		ReporterEmail:     psql.Quote(alias, "reporter_email"),
-		ReporterName:      psql.Quote(alias, "reporter_name"),
-		ReporterPhone:     psql.Quote(alias, "reporter_phone"),
-		Address:           psql.Quote(alias, "address"),
-		Location:          psql.Quote(alias, "location"),
-		Status:            psql.Quote(alias, "status"),
-		OrganizationID:    psql.Quote(alias, "organization_id"),
-		SourceGutter:      psql.Quote(alias, "source_gutter"),
-		H3cell:            psql.Quote(alias, "h3cell"),
+		tableAlias:          alias,
+		ID:                  psql.Quote(alias, "id"),
+		AdditionalInfo:      psql.Quote(alias, "additional_info"),
+		Created:             psql.Quote(alias, "created"),
+		Duration:            psql.Quote(alias, "duration"),
+		SourceContainer:     psql.Quote(alias, "source_container"),
+		SourceDescription:   psql.Quote(alias, "source_description"),
+		SourceStagnant:      psql.Quote(alias, "source_stagnant"),
+		PublicID:            psql.Quote(alias, "public_id"),
+		ReporterEmail:       psql.Quote(alias, "reporter_email"),
+		ReporterName:        psql.Quote(alias, "reporter_name"),
+		ReporterPhone:       psql.Quote(alias, "reporter_phone"),
+		Address:             psql.Quote(alias, "address"),
+		Location:            psql.Quote(alias, "location"),
+		Status:              psql.Quote(alias, "status"),
+		OrganizationID:      psql.Quote(alias, "organization_id"),
+		SourceGutter:        psql.Quote(alias, "source_gutter"),
+		H3cell:              psql.Quote(alias, "h3cell"),
+		AddressCountry:      psql.Quote(alias, "address_country"),
+		AddressPlace:        psql.Quote(alias, "address_place"),
+		AddressPostcode:     psql.Quote(alias, "address_postcode"),
+		AddressRegion:       psql.Quote(alias, "address_region"),
+		AddressStreet:       psql.Quote(alias, "address_street"),
+		IsLocationBackyard:  psql.Quote(alias, "is_location_backyard"),
+		IsLocationFrontyard: psql.Quote(alias, "is_location_frontyard"),
+		IsLocationGarden:    psql.Quote(alias, "is_location_garden"),
+		IsLocationOther:     psql.Quote(alias, "is_location_other"),
+		IsLocationPool:      psql.Quote(alias, "is_location_pool"),
+		MapZoom:             psql.Quote(alias, "map_zoom"),
+		TodEarly:            psql.Quote(alias, "tod_early"),
+		TodDay:              psql.Quote(alias, "tod_day"),
+		TodEvening:          psql.Quote(alias, "tod_evening"),
+		TodNight:            psql.Quote(alias, "tod_night"),
+		LatlngAccuracyType:  psql.Quote(alias, "latlng_accuracy_type"),
+		LatlngAccuracyValue: psql.Quote(alias, "latlng_accuracy_value"),
 	}
 }
 
 type publicreportNuisanceColumns struct {
 	expr.ColumnsExpr
-	tableAlias        string
-	ID                psql.Expression
-	AdditionalInfo    psql.Expression
-	Created           psql.Expression
-	Duration          psql.Expression
-	SourceLocation    psql.Expression
-	SourceContainer   psql.Expression
-	SourceDescription psql.Expression
-	SourceStagnant    psql.Expression
-	PublicID          psql.Expression
-	ReporterEmail     psql.Expression
-	ReporterName      psql.Expression
-	ReporterPhone     psql.Expression
-	Address           psql.Expression
-	Location          psql.Expression
-	Status            psql.Expression
-	OrganizationID    psql.Expression
-	SourceGutter      psql.Expression
-	H3cell            psql.Expression
+	tableAlias          string
+	ID                  psql.Expression
+	AdditionalInfo      psql.Expression
+	Created             psql.Expression
+	Duration            psql.Expression
+	SourceContainer     psql.Expression
+	SourceDescription   psql.Expression
+	SourceStagnant      psql.Expression
+	PublicID            psql.Expression
+	ReporterEmail       psql.Expression
+	ReporterName        psql.Expression
+	ReporterPhone       psql.Expression
+	Address             psql.Expression
+	Location            psql.Expression
+	Status              psql.Expression
+	OrganizationID      psql.Expression
+	SourceGutter        psql.Expression
+	H3cell              psql.Expression
+	AddressCountry      psql.Expression
+	AddressPlace        psql.Expression
+	AddressPostcode     psql.Expression
+	AddressRegion       psql.Expression
+	AddressStreet       psql.Expression
+	IsLocationBackyard  psql.Expression
+	IsLocationFrontyard psql.Expression
+	IsLocationGarden    psql.Expression
+	IsLocationOther     psql.Expression
+	IsLocationPool      psql.Expression
+	MapZoom             psql.Expression
+	TodEarly            psql.Expression
+	TodDay              psql.Expression
+	TodEvening          psql.Expression
+	TodNight            psql.Expression
+	LatlngAccuracyType  psql.Expression
+	LatlngAccuracyValue psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -131,28 +179,44 @@ func (publicreportNuisanceColumns) AliasedAs(alias string) publicreportNuisanceC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportNuisanceSetter struct {
-	ID                omit.Val[int32]                                  `db:"id,pk" `
-	AdditionalInfo    omit.Val[string]                                 `db:"additional_info" `
-	Created           omit.Val[time.Time]                              `db:"created" `
-	Duration          omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
-	SourceLocation    omit.Val[enums.PublicreportNuisancelocationtype] `db:"source_location" `
-	SourceContainer   omit.Val[bool]                                   `db:"source_container" `
-	SourceDescription omit.Val[string]                                 `db:"source_description" `
-	SourceStagnant    omit.Val[bool]                                   `db:"source_stagnant" `
-	PublicID          omit.Val[string]                                 `db:"public_id" `
-	ReporterEmail     omitnull.Val[string]                             `db:"reporter_email" `
-	ReporterName      omitnull.Val[string]                             `db:"reporter_name" `
-	ReporterPhone     omitnull.Val[string]                             `db:"reporter_phone" `
-	Address           omit.Val[string]                                 `db:"address" `
-	Location          omitnull.Val[string]                             `db:"location" `
-	Status            omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
-	OrganizationID    omitnull.Val[int32]                              `db:"organization_id" `
-	SourceGutter      omit.Val[bool]                                   `db:"source_gutter" `
-	H3cell            omitnull.Val[string]                             `db:"h3cell" `
+	ID                  omit.Val[int32]                                  `db:"id,pk" `
+	AdditionalInfo      omit.Val[string]                                 `db:"additional_info" `
+	Created             omit.Val[time.Time]                              `db:"created" `
+	Duration            omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
+	SourceContainer     omit.Val[bool]                                   `db:"source_container" `
+	SourceDescription   omit.Val[string]                                 `db:"source_description" `
+	SourceStagnant      omit.Val[bool]                                   `db:"source_stagnant" `
+	PublicID            omit.Val[string]                                 `db:"public_id" `
+	ReporterEmail       omitnull.Val[string]                             `db:"reporter_email" `
+	ReporterName        omitnull.Val[string]                             `db:"reporter_name" `
+	ReporterPhone       omitnull.Val[string]                             `db:"reporter_phone" `
+	Address             omit.Val[string]                                 `db:"address" `
+	Location            omitnull.Val[string]                             `db:"location" `
+	Status              omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
+	OrganizationID      omitnull.Val[int32]                              `db:"organization_id" `
+	SourceGutter        omit.Val[bool]                                   `db:"source_gutter" `
+	H3cell              omitnull.Val[string]                             `db:"h3cell" `
+	AddressCountry      omit.Val[string]                                 `db:"address_country" `
+	AddressPlace        omit.Val[string]                                 `db:"address_place" `
+	AddressPostcode     omit.Val[string]                                 `db:"address_postcode" `
+	AddressRegion       omit.Val[string]                                 `db:"address_region" `
+	AddressStreet       omit.Val[string]                                 `db:"address_street" `
+	IsLocationBackyard  omit.Val[bool]                                   `db:"is_location_backyard" `
+	IsLocationFrontyard omit.Val[bool]                                   `db:"is_location_frontyard" `
+	IsLocationGarden    omit.Val[bool]                                   `db:"is_location_garden" `
+	IsLocationOther     omit.Val[bool]                                   `db:"is_location_other" `
+	IsLocationPool      omit.Val[bool]                                   `db:"is_location_pool" `
+	MapZoom             omit.Val[float32]                                `db:"map_zoom" `
+	TodEarly            omit.Val[bool]                                   `db:"tod_early" `
+	TodDay              omit.Val[bool]                                   `db:"tod_day" `
+	TodEvening          omit.Val[bool]                                   `db:"tod_evening" `
+	TodNight            omit.Val[bool]                                   `db:"tod_night" `
+	LatlngAccuracyType  omit.Val[enums.PublicreportAccuracytype]         `db:"latlng_accuracy_type" `
+	LatlngAccuracyValue omit.Val[float32]                                `db:"latlng_accuracy_value" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 18)
+	vals := make([]string, 0, 34)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -164,9 +228,6 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	}
 	if s.Duration.IsValue() {
 		vals = append(vals, "duration")
-	}
-	if s.SourceLocation.IsValue() {
-		vals = append(vals, "source_location")
 	}
 	if s.SourceContainer.IsValue() {
 		vals = append(vals, "source_container")
@@ -207,6 +268,57 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if !s.H3cell.IsUnset() {
 		vals = append(vals, "h3cell")
 	}
+	if s.AddressCountry.IsValue() {
+		vals = append(vals, "address_country")
+	}
+	if s.AddressPlace.IsValue() {
+		vals = append(vals, "address_place")
+	}
+	if s.AddressPostcode.IsValue() {
+		vals = append(vals, "address_postcode")
+	}
+	if s.AddressRegion.IsValue() {
+		vals = append(vals, "address_region")
+	}
+	if s.AddressStreet.IsValue() {
+		vals = append(vals, "address_street")
+	}
+	if s.IsLocationBackyard.IsValue() {
+		vals = append(vals, "is_location_backyard")
+	}
+	if s.IsLocationFrontyard.IsValue() {
+		vals = append(vals, "is_location_frontyard")
+	}
+	if s.IsLocationGarden.IsValue() {
+		vals = append(vals, "is_location_garden")
+	}
+	if s.IsLocationOther.IsValue() {
+		vals = append(vals, "is_location_other")
+	}
+	if s.IsLocationPool.IsValue() {
+		vals = append(vals, "is_location_pool")
+	}
+	if s.MapZoom.IsValue() {
+		vals = append(vals, "map_zoom")
+	}
+	if s.TodEarly.IsValue() {
+		vals = append(vals, "tod_early")
+	}
+	if s.TodDay.IsValue() {
+		vals = append(vals, "tod_day")
+	}
+	if s.TodEvening.IsValue() {
+		vals = append(vals, "tod_evening")
+	}
+	if s.TodNight.IsValue() {
+		vals = append(vals, "tod_night")
+	}
+	if s.LatlngAccuracyType.IsValue() {
+		vals = append(vals, "latlng_accuracy_type")
+	}
+	if s.LatlngAccuracyValue.IsValue() {
+		vals = append(vals, "latlng_accuracy_value")
+	}
 	return vals
 }
 
@@ -222,9 +334,6 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	}
 	if s.Duration.IsValue() {
 		t.Duration = s.Duration.MustGet()
-	}
-	if s.SourceLocation.IsValue() {
-		t.SourceLocation = s.SourceLocation.MustGet()
 	}
 	if s.SourceContainer.IsValue() {
 		t.SourceContainer = s.SourceContainer.MustGet()
@@ -265,6 +374,57 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if !s.H3cell.IsUnset() {
 		t.H3cell = s.H3cell.MustGetNull()
 	}
+	if s.AddressCountry.IsValue() {
+		t.AddressCountry = s.AddressCountry.MustGet()
+	}
+	if s.AddressPlace.IsValue() {
+		t.AddressPlace = s.AddressPlace.MustGet()
+	}
+	if s.AddressPostcode.IsValue() {
+		t.AddressPostcode = s.AddressPostcode.MustGet()
+	}
+	if s.AddressRegion.IsValue() {
+		t.AddressRegion = s.AddressRegion.MustGet()
+	}
+	if s.AddressStreet.IsValue() {
+		t.AddressStreet = s.AddressStreet.MustGet()
+	}
+	if s.IsLocationBackyard.IsValue() {
+		t.IsLocationBackyard = s.IsLocationBackyard.MustGet()
+	}
+	if s.IsLocationFrontyard.IsValue() {
+		t.IsLocationFrontyard = s.IsLocationFrontyard.MustGet()
+	}
+	if s.IsLocationGarden.IsValue() {
+		t.IsLocationGarden = s.IsLocationGarden.MustGet()
+	}
+	if s.IsLocationOther.IsValue() {
+		t.IsLocationOther = s.IsLocationOther.MustGet()
+	}
+	if s.IsLocationPool.IsValue() {
+		t.IsLocationPool = s.IsLocationPool.MustGet()
+	}
+	if s.MapZoom.IsValue() {
+		t.MapZoom = s.MapZoom.MustGet()
+	}
+	if s.TodEarly.IsValue() {
+		t.TodEarly = s.TodEarly.MustGet()
+	}
+	if s.TodDay.IsValue() {
+		t.TodDay = s.TodDay.MustGet()
+	}
+	if s.TodEvening.IsValue() {
+		t.TodEvening = s.TodEvening.MustGet()
+	}
+	if s.TodNight.IsValue() {
+		t.TodNight = s.TodNight.MustGet()
+	}
+	if s.LatlngAccuracyType.IsValue() {
+		t.LatlngAccuracyType = s.LatlngAccuracyType.MustGet()
+	}
+	if s.LatlngAccuracyValue.IsValue() {
+		t.LatlngAccuracyValue = s.LatlngAccuracyValue.MustGet()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -273,7 +433,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 18)
+		vals := make([]bob.Expression, 34)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -298,88 +458,184 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceLocation.IsValue() {
-			vals[4] = psql.Arg(s.SourceLocation.MustGet())
+		if s.SourceContainer.IsValue() {
+			vals[4] = psql.Arg(s.SourceContainer.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceContainer.IsValue() {
-			vals[5] = psql.Arg(s.SourceContainer.MustGet())
+		if s.SourceDescription.IsValue() {
+			vals[5] = psql.Arg(s.SourceDescription.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceDescription.IsValue() {
-			vals[6] = psql.Arg(s.SourceDescription.MustGet())
+		if s.SourceStagnant.IsValue() {
+			vals[6] = psql.Arg(s.SourceStagnant.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceStagnant.IsValue() {
-			vals[7] = psql.Arg(s.SourceStagnant.MustGet())
+		if s.PublicID.IsValue() {
+			vals[7] = psql.Arg(s.PublicID.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.PublicID.IsValue() {
-			vals[8] = psql.Arg(s.PublicID.MustGet())
+		if !s.ReporterEmail.IsUnset() {
+			vals[8] = psql.Arg(s.ReporterEmail.MustGetNull())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterEmail.IsUnset() {
-			vals[9] = psql.Arg(s.ReporterEmail.MustGetNull())
+		if !s.ReporterName.IsUnset() {
+			vals[9] = psql.Arg(s.ReporterName.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterName.IsUnset() {
-			vals[10] = psql.Arg(s.ReporterName.MustGetNull())
+		if !s.ReporterPhone.IsUnset() {
+			vals[10] = psql.Arg(s.ReporterPhone.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterPhone.IsUnset() {
-			vals[11] = psql.Arg(s.ReporterPhone.MustGetNull())
+		if s.Address.IsValue() {
+			vals[11] = psql.Arg(s.Address.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.Address.IsValue() {
-			vals[12] = psql.Arg(s.Address.MustGet())
+		if !s.Location.IsUnset() {
+			vals[12] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Location.IsUnset() {
-			vals[13] = psql.Arg(s.Location.MustGetNull())
+		if s.Status.IsValue() {
+			vals[13] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[14] = psql.Arg(s.Status.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[14] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[15] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.SourceGutter.IsValue() {
+			vals[15] = psql.Arg(s.SourceGutter.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceGutter.IsValue() {
-			vals[16] = psql.Arg(s.SourceGutter.MustGet())
+		if !s.H3cell.IsUnset() {
+			vals[16] = psql.Arg(s.H3cell.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[17] = psql.Arg(s.H3cell.MustGetNull())
+		if s.AddressCountry.IsValue() {
+			vals[17] = psql.Arg(s.AddressCountry.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
+		}
+
+		if s.AddressPlace.IsValue() {
+			vals[18] = psql.Arg(s.AddressPlace.MustGet())
+		} else {
+			vals[18] = psql.Raw("DEFAULT")
+		}
+
+		if s.AddressPostcode.IsValue() {
+			vals[19] = psql.Arg(s.AddressPostcode.MustGet())
+		} else {
+			vals[19] = psql.Raw("DEFAULT")
+		}
+
+		if s.AddressRegion.IsValue() {
+			vals[20] = psql.Arg(s.AddressRegion.MustGet())
+		} else {
+			vals[20] = psql.Raw("DEFAULT")
+		}
+
+		if s.AddressStreet.IsValue() {
+			vals[21] = psql.Arg(s.AddressStreet.MustGet())
+		} else {
+			vals[21] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsLocationBackyard.IsValue() {
+			vals[22] = psql.Arg(s.IsLocationBackyard.MustGet())
+		} else {
+			vals[22] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsLocationFrontyard.IsValue() {
+			vals[23] = psql.Arg(s.IsLocationFrontyard.MustGet())
+		} else {
+			vals[23] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsLocationGarden.IsValue() {
+			vals[24] = psql.Arg(s.IsLocationGarden.MustGet())
+		} else {
+			vals[24] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsLocationOther.IsValue() {
+			vals[25] = psql.Arg(s.IsLocationOther.MustGet())
+		} else {
+			vals[25] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsLocationPool.IsValue() {
+			vals[26] = psql.Arg(s.IsLocationPool.MustGet())
+		} else {
+			vals[26] = psql.Raw("DEFAULT")
+		}
+
+		if s.MapZoom.IsValue() {
+			vals[27] = psql.Arg(s.MapZoom.MustGet())
+		} else {
+			vals[27] = psql.Raw("DEFAULT")
+		}
+
+		if s.TodEarly.IsValue() {
+			vals[28] = psql.Arg(s.TodEarly.MustGet())
+		} else {
+			vals[28] = psql.Raw("DEFAULT")
+		}
+
+		if s.TodDay.IsValue() {
+			vals[29] = psql.Arg(s.TodDay.MustGet())
+		} else {
+			vals[29] = psql.Raw("DEFAULT")
+		}
+
+		if s.TodEvening.IsValue() {
+			vals[30] = psql.Arg(s.TodEvening.MustGet())
+		} else {
+			vals[30] = psql.Raw("DEFAULT")
+		}
+
+		if s.TodNight.IsValue() {
+			vals[31] = psql.Arg(s.TodNight.MustGet())
+		} else {
+			vals[31] = psql.Raw("DEFAULT")
+		}
+
+		if s.LatlngAccuracyType.IsValue() {
+			vals[32] = psql.Arg(s.LatlngAccuracyType.MustGet())
+		} else {
+			vals[32] = psql.Raw("DEFAULT")
+		}
+
+		if s.LatlngAccuracyValue.IsValue() {
+			vals[33] = psql.Arg(s.LatlngAccuracyValue.MustGet())
+		} else {
+			vals[33] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -391,7 +647,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 18)
+	exprs := make([]bob.Expression, 0, 34)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -418,13 +674,6 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "duration")...),
 			psql.Arg(s.Duration),
-		}})
-	}
-
-	if s.SourceLocation.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_location")...),
-			psql.Arg(s.SourceLocation),
 		}})
 	}
 
@@ -516,6 +765,125 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "h3cell")...),
 			psql.Arg(s.H3cell),
+		}})
+	}
+
+	if s.AddressCountry.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_country")...),
+			psql.Arg(s.AddressCountry),
+		}})
+	}
+
+	if s.AddressPlace.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_place")...),
+			psql.Arg(s.AddressPlace),
+		}})
+	}
+
+	if s.AddressPostcode.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_postcode")...),
+			psql.Arg(s.AddressPostcode),
+		}})
+	}
+
+	if s.AddressRegion.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_region")...),
+			psql.Arg(s.AddressRegion),
+		}})
+	}
+
+	if s.AddressStreet.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_street")...),
+			psql.Arg(s.AddressStreet),
+		}})
+	}
+
+	if s.IsLocationBackyard.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_location_backyard")...),
+			psql.Arg(s.IsLocationBackyard),
+		}})
+	}
+
+	if s.IsLocationFrontyard.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_location_frontyard")...),
+			psql.Arg(s.IsLocationFrontyard),
+		}})
+	}
+
+	if s.IsLocationGarden.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_location_garden")...),
+			psql.Arg(s.IsLocationGarden),
+		}})
+	}
+
+	if s.IsLocationOther.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_location_other")...),
+			psql.Arg(s.IsLocationOther),
+		}})
+	}
+
+	if s.IsLocationPool.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_location_pool")...),
+			psql.Arg(s.IsLocationPool),
+		}})
+	}
+
+	if s.MapZoom.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "map_zoom")...),
+			psql.Arg(s.MapZoom),
+		}})
+	}
+
+	if s.TodEarly.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "tod_early")...),
+			psql.Arg(s.TodEarly),
+		}})
+	}
+
+	if s.TodDay.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "tod_day")...),
+			psql.Arg(s.TodDay),
+		}})
+	}
+
+	if s.TodEvening.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "tod_evening")...),
+			psql.Arg(s.TodEvening),
+		}})
+	}
+
+	if s.TodNight.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "tod_night")...),
+			psql.Arg(s.TodNight),
+		}})
+	}
+
+	if s.LatlngAccuracyType.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "latlng_accuracy_type")...),
+			psql.Arg(s.LatlngAccuracyType),
+		}})
+	}
+
+	if s.LatlngAccuracyValue.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "latlng_accuracy_value")...),
+			psql.Arg(s.LatlngAccuracyValue),
 		}})
 	}
 
@@ -912,24 +1280,40 @@ func (publicreportNuisance0 *PublicreportNuisance) AttachImages(ctx context.Cont
 }
 
 type publicreportNuisanceWhere[Q psql.Filterable] struct {
-	ID                psql.WhereMod[Q, int32]
-	AdditionalInfo    psql.WhereMod[Q, string]
-	Created           psql.WhereMod[Q, time.Time]
-	Duration          psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
-	SourceLocation    psql.WhereMod[Q, enums.PublicreportNuisancelocationtype]
-	SourceContainer   psql.WhereMod[Q, bool]
-	SourceDescription psql.WhereMod[Q, string]
-	SourceStagnant    psql.WhereMod[Q, bool]
-	PublicID          psql.WhereMod[Q, string]
-	ReporterEmail     psql.WhereNullMod[Q, string]
-	ReporterName      psql.WhereNullMod[Q, string]
-	ReporterPhone     psql.WhereNullMod[Q, string]
-	Address           psql.WhereMod[Q, string]
-	Location          psql.WhereNullMod[Q, string]
-	Status            psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID    psql.WhereNullMod[Q, int32]
-	SourceGutter      psql.WhereMod[Q, bool]
-	H3cell            psql.WhereNullMod[Q, string]
+	ID                  psql.WhereMod[Q, int32]
+	AdditionalInfo      psql.WhereMod[Q, string]
+	Created             psql.WhereMod[Q, time.Time]
+	Duration            psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
+	SourceContainer     psql.WhereMod[Q, bool]
+	SourceDescription   psql.WhereMod[Q, string]
+	SourceStagnant      psql.WhereMod[Q, bool]
+	PublicID            psql.WhereMod[Q, string]
+	ReporterEmail       psql.WhereNullMod[Q, string]
+	ReporterName        psql.WhereNullMod[Q, string]
+	ReporterPhone       psql.WhereNullMod[Q, string]
+	Address             psql.WhereMod[Q, string]
+	Location            psql.WhereNullMod[Q, string]
+	Status              psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID      psql.WhereNullMod[Q, int32]
+	SourceGutter        psql.WhereMod[Q, bool]
+	H3cell              psql.WhereNullMod[Q, string]
+	AddressCountry      psql.WhereMod[Q, string]
+	AddressPlace        psql.WhereMod[Q, string]
+	AddressPostcode     psql.WhereMod[Q, string]
+	AddressRegion       psql.WhereMod[Q, string]
+	AddressStreet       psql.WhereMod[Q, string]
+	IsLocationBackyard  psql.WhereMod[Q, bool]
+	IsLocationFrontyard psql.WhereMod[Q, bool]
+	IsLocationGarden    psql.WhereMod[Q, bool]
+	IsLocationOther     psql.WhereMod[Q, bool]
+	IsLocationPool      psql.WhereMod[Q, bool]
+	MapZoom             psql.WhereMod[Q, float32]
+	TodEarly            psql.WhereMod[Q, bool]
+	TodDay              psql.WhereMod[Q, bool]
+	TodEvening          psql.WhereMod[Q, bool]
+	TodNight            psql.WhereMod[Q, bool]
+	LatlngAccuracyType  psql.WhereMod[Q, enums.PublicreportAccuracytype]
+	LatlngAccuracyValue psql.WhereMod[Q, float32]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -938,24 +1322,40 @@ func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisance
 
 func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisanceColumns) publicreportNuisanceWhere[Q] {
 	return publicreportNuisanceWhere[Q]{
-		ID:                psql.Where[Q, int32](cols.ID),
-		AdditionalInfo:    psql.Where[Q, string](cols.AdditionalInfo),
-		Created:           psql.Where[Q, time.Time](cols.Created),
-		Duration:          psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
-		SourceLocation:    psql.Where[Q, enums.PublicreportNuisancelocationtype](cols.SourceLocation),
-		SourceContainer:   psql.Where[Q, bool](cols.SourceContainer),
-		SourceDescription: psql.Where[Q, string](cols.SourceDescription),
-		SourceStagnant:    psql.Where[Q, bool](cols.SourceStagnant),
-		PublicID:          psql.Where[Q, string](cols.PublicID),
-		ReporterEmail:     psql.WhereNull[Q, string](cols.ReporterEmail),
-		ReporterName:      psql.WhereNull[Q, string](cols.ReporterName),
-		ReporterPhone:     psql.WhereNull[Q, string](cols.ReporterPhone),
-		Address:           psql.Where[Q, string](cols.Address),
-		Location:          psql.WhereNull[Q, string](cols.Location),
-		Status:            psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
-		SourceGutter:      psql.Where[Q, bool](cols.SourceGutter),
-		H3cell:            psql.WhereNull[Q, string](cols.H3cell),
+		ID:                  psql.Where[Q, int32](cols.ID),
+		AdditionalInfo:      psql.Where[Q, string](cols.AdditionalInfo),
+		Created:             psql.Where[Q, time.Time](cols.Created),
+		Duration:            psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
+		SourceContainer:     psql.Where[Q, bool](cols.SourceContainer),
+		SourceDescription:   psql.Where[Q, string](cols.SourceDescription),
+		SourceStagnant:      psql.Where[Q, bool](cols.SourceStagnant),
+		PublicID:            psql.Where[Q, string](cols.PublicID),
+		ReporterEmail:       psql.WhereNull[Q, string](cols.ReporterEmail),
+		ReporterName:        psql.WhereNull[Q, string](cols.ReporterName),
+		ReporterPhone:       psql.WhereNull[Q, string](cols.ReporterPhone),
+		Address:             psql.Where[Q, string](cols.Address),
+		Location:            psql.WhereNull[Q, string](cols.Location),
+		Status:              psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID:      psql.WhereNull[Q, int32](cols.OrganizationID),
+		SourceGutter:        psql.Where[Q, bool](cols.SourceGutter),
+		H3cell:              psql.WhereNull[Q, string](cols.H3cell),
+		AddressCountry:      psql.Where[Q, string](cols.AddressCountry),
+		AddressPlace:        psql.Where[Q, string](cols.AddressPlace),
+		AddressPostcode:     psql.Where[Q, string](cols.AddressPostcode),
+		AddressRegion:       psql.Where[Q, string](cols.AddressRegion),
+		AddressStreet:       psql.Where[Q, string](cols.AddressStreet),
+		IsLocationBackyard:  psql.Where[Q, bool](cols.IsLocationBackyard),
+		IsLocationFrontyard: psql.Where[Q, bool](cols.IsLocationFrontyard),
+		IsLocationGarden:    psql.Where[Q, bool](cols.IsLocationGarden),
+		IsLocationOther:     psql.Where[Q, bool](cols.IsLocationOther),
+		IsLocationPool:      psql.Where[Q, bool](cols.IsLocationPool),
+		MapZoom:             psql.Where[Q, float32](cols.MapZoom),
+		TodEarly:            psql.Where[Q, bool](cols.TodEarly),
+		TodDay:              psql.Where[Q, bool](cols.TodDay),
+		TodEvening:          psql.Where[Q, bool](cols.TodEvening),
+		TodNight:            psql.Where[Q, bool](cols.TodNight),
+		LatlngAccuracyType:  psql.Where[Q, enums.PublicreportAccuracytype](cols.LatlngAccuracyType),
+		LatlngAccuracyValue: psql.Where[Q, float32](cols.LatlngAccuracyValue),
 	}
 }
 

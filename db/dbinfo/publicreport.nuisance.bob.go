@@ -51,15 +51,6 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SourceLocation: column{
-			Name:      "source_location",
-			DBType:    "publicreport.nuisancelocationtype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		SourceContainer: column{
 			Name:      "source_container",
 			DBType:    "boolean",
@@ -177,6 +168,159 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressCountry: column{
+			Name:      "address_country",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressPlace: column{
+			Name:      "address_place",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressPostcode: column{
+			Name:      "address_postcode",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressRegion: column{
+			Name:      "address_region",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressStreet: column{
+			Name:      "address_street",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsLocationBackyard: column{
+			Name:      "is_location_backyard",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsLocationFrontyard: column{
+			Name:      "is_location_frontyard",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsLocationGarden: column{
+			Name:      "is_location_garden",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsLocationOther: column{
+			Name:      "is_location_other",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsLocationPool: column{
+			Name:      "is_location_pool",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		MapZoom: column{
+			Name:      "map_zoom",
+			DBType:    "real",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TodEarly: column{
+			Name:      "tod_early",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TodDay: column{
+			Name:      "tod_day",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TodEvening: column{
+			Name:      "tod_evening",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		TodNight: column{
+			Name:      "tod_night",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		LatlngAccuracyType: column{
+			Name:      "latlng_accuracy_type",
+			DBType:    "publicreport.accuracytype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		LatlngAccuracyValue: column{
+			Name:      "latlng_accuracy_value",
+			DBType:    "real",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -242,29 +386,45 @@ var PublicreportNuisances = Table[
 }
 
 type publicreportNuisanceColumns struct {
-	ID                column
-	AdditionalInfo    column
-	Created           column
-	Duration          column
-	SourceLocation    column
-	SourceContainer   column
-	SourceDescription column
-	SourceStagnant    column
-	PublicID          column
-	ReporterEmail     column
-	ReporterName      column
-	ReporterPhone     column
-	Address           column
-	Location          column
-	Status            column
-	OrganizationID    column
-	SourceGutter      column
-	H3cell            column
+	ID                  column
+	AdditionalInfo      column
+	Created             column
+	Duration            column
+	SourceContainer     column
+	SourceDescription   column
+	SourceStagnant      column
+	PublicID            column
+	ReporterEmail       column
+	ReporterName        column
+	ReporterPhone       column
+	Address             column
+	Location            column
+	Status              column
+	OrganizationID      column
+	SourceGutter        column
+	H3cell              column
+	AddressCountry      column
+	AddressPlace        column
+	AddressPostcode     column
+	AddressRegion       column
+	AddressStreet       column
+	IsLocationBackyard  column
+	IsLocationFrontyard column
+	IsLocationGarden    column
+	IsLocationOther     column
+	IsLocationPool      column
+	MapZoom             column
+	TodEarly            column
+	TodDay              column
+	TodEvening          column
+	TodNight            column
+	LatlngAccuracyType  column
+	LatlngAccuracyValue column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceLocation, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Location, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressPlace, c.AddressPostcode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue,
 	}
 }
 

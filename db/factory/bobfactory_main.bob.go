@@ -2936,7 +2936,6 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.AdditionalInfo = func() string { return m.AdditionalInfo }
 	o.Created = func() time.Time { return m.Created }
 	o.Duration = func() enums.PublicreportNuisancedurationtype { return m.Duration }
-	o.SourceLocation = func() enums.PublicreportNuisancelocationtype { return m.SourceLocation }
 	o.SourceContainer = func() bool { return m.SourceContainer }
 	o.SourceDescription = func() string { return m.SourceDescription }
 	o.SourceStagnant = func() bool { return m.SourceStagnant }
@@ -2950,6 +2949,23 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
 	o.SourceGutter = func() bool { return m.SourceGutter }
 	o.H3cell = func() null.Val[string] { return m.H3cell }
+	o.AddressCountry = func() string { return m.AddressCountry }
+	o.AddressPlace = func() string { return m.AddressPlace }
+	o.AddressPostcode = func() string { return m.AddressPostcode }
+	o.AddressRegion = func() string { return m.AddressRegion }
+	o.AddressStreet = func() string { return m.AddressStreet }
+	o.IsLocationBackyard = func() bool { return m.IsLocationBackyard }
+	o.IsLocationFrontyard = func() bool { return m.IsLocationFrontyard }
+	o.IsLocationGarden = func() bool { return m.IsLocationGarden }
+	o.IsLocationOther = func() bool { return m.IsLocationOther }
+	o.IsLocationPool = func() bool { return m.IsLocationPool }
+	o.MapZoom = func() float32 { return m.MapZoom }
+	o.TodEarly = func() bool { return m.TodEarly }
+	o.TodDay = func() bool { return m.TodDay }
+	o.TodEvening = func() bool { return m.TodEvening }
+	o.TodNight = func() bool { return m.TodNight }
+	o.LatlngAccuracyType = func() enums.PublicreportAccuracytype { return m.LatlngAccuracyType }
+	o.LatlngAccuracyValue = func() float32 { return m.LatlngAccuracyValue }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

@@ -98,8 +98,10 @@ document.addEventListener("DOMContentLoaded", onLoad);
 			</div>
 			{{range .Report.Details}}
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-md-3">
 						<strong>{{.Name}}</strong>
+					</div>
+					<div class="col-md-6">
 						<span>{{.Value}}</span>
 					</div>
 				</div>

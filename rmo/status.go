@@ -125,12 +125,44 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	result.Report.Type = "Mosquito Nuisance"
 	result.Report.Details = []DetailEntry{
 		DetailEntry{
-			Name:  "Active early morning?",
-			Value: "nah",
+			Name:  "Active early morning (5a-8a)?",
+			Value: strconv.FormatBool(nuisance.TodEarly),
+		},
+		DetailEntry{
+			Name:  "Active daytime (8a-5p)?",
+			Value: strconv.FormatBool(nuisance.TodDay),
+		},
+		DetailEntry{
+			Name:  "Active evening (5p-9p)?",
+			Value: strconv.FormatBool(nuisance.TodEvening),
+		},
+		DetailEntry{
+			Name:  "Active night (9p-5a)?",
+			Value: strconv.FormatBool(nuisance.TodNight),
 		},
 		DetailEntry{
 			Name:  "Duration",
 			Value: nuisance.Duration.String(),
+		},
+		DetailEntry{
+			Name:  "Active in backyard?",
+			Value: strconv.FormatBool(nuisance.IsLocationBackyard),
+		},
+		DetailEntry{
+			Name:  "Active in frontyard?",
+			Value: strconv.FormatBool(nuisance.IsLocationFrontyard),
+		},
+		DetailEntry{
+			Name:  "Active in garden?",
+			Value: strconv.FormatBool(nuisance.IsLocationGarden),
+		},
+		DetailEntry{
+			Name:  "Active in other location?",
+			Value: strconv.FormatBool(nuisance.IsLocationOther),
+		},
+		DetailEntry{
+			Name:  "Active in pool area?",
+			Value: strconv.FormatBool(nuisance.IsLocationPool),
 		},
 		DetailEntry{
 			Name:  "Stagnant Water",
@@ -142,7 +174,7 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		},
 		DetailEntry{
 			Name:  "Sprinklers & Gutters",
-			Value: "guess not",
+			Value: strconv.FormatBool(nuisance.SourceGutter),
 		},
 	}
 	result.Timeline = []TimelineEntry{

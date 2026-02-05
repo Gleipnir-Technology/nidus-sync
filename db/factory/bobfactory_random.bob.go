@@ -171,22 +171,22 @@ func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notif
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_PublicreportAccuracytype(f *faker.Faker, limits ...string) enums.PublicreportAccuracytype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.PublicreportAccuracytype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_PublicreportNuisancedurationtype(f *faker.Faker, limits ...string) enums.PublicreportNuisancedurationtype {
 	if f == nil {
 		f = &defaultFaker
 	}
 
 	var e enums.PublicreportNuisancedurationtype
-	all := e.All()
-	return all[f.IntBetween(0, len(all)-1)]
-}
-
-func random_enums_PublicreportNuisancelocationtype(f *faker.Faker, limits ...string) enums.PublicreportNuisancelocationtype {
-	if f == nil {
-		f = &defaultFaker
-	}
-
-	var e enums.PublicreportNuisancelocationtype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

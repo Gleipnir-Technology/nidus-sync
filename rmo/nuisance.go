@@ -3,6 +3,7 @@ package rmo
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
@@ -88,45 +89,94 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
+	additional_info := r.PostFormValue("additional-info")
 	address := r.PostFormValue("address")
+	address_country := r.PostFormValue("address-country")
+	address_place := r.PostFormValue("address-place")
+	address_postcode := r.PostFormValue("address-postcode")
+	address_region := r.PostFormValue("address-region")
+	address_street := r.PostFormValue("address-street")
+	duration_str := postFormValueOrNone(r, "duration")
 	lat := r.FormValue("latitude")
 	lng := r.FormValue("longitude")
+	latlng_accuracy_type_str := r.PostFormValue("latlng-accuracy-type")
+	latlng_accuracy_value_str := r.PostFormValue("latlng-accuracy-value")
+	map_zoom_str := r.PostFormValue("map-zoom")
 	source_stagnant := boolFromForm(r, "source-stagnant")
 	source_container := boolFromForm(r, "source-container")
+	source_description := r.PostFormValue("source-description")
 	source_gutters := boolFromForm(r, "source-gutters")
+	source_locations := r.Form["source-location"]
+	tod_early := boolFromForm(r, "tod-early")
+	tod_day := boolFromForm(r, "tod-day")
+	tod_evening := boolFromForm(r, "tod-evening")
+	tod_night := boolFromForm(r, "tod-night")
 
-	duration_str := postFormValueOrNone(r, "duration")
-	var duration enums.PublicreportNuisancedurationtype
+	duration := enums.PublicreportNuisancedurationtypeNone
+	is_location_frontyard := false
+	is_location_backyard := false
+	is_location_garden := false
+	is_location_pool := false
+	is_location_other := false
+	latlng_accuracy_value := float32(0.0)
+	map_zoom := float32(0.0)
+
 	err = duration.Scan(duration_str)
 	if err != nil {
-		respondError(w, fmt.Sprintf("Failed to interpret 'duration' of '%s'", duration_str), err, http.StatusBadRequest)
-		return
+		log.Warn().Err(err).Str("duration_str", duration_str).Msg("Failed to interpret 'duration'")
 	}
 
-	source_location_str := postFormValueOrNone(r, "source-location")
-	var source_location enums.PublicreportNuisancelocationtype
-	err = source_location.Scan(source_location_str)
+	latlng_accuracy_type := enums.PublicreportAccuracytypeNone
+	err = latlng_accuracy_type.Scan(latlng_accuracy_type_str)
 	if err != nil {
-		respondError(w, fmt.Sprintf("Failed to interpret 'source-location' of '%s'", source_location_str), err, http.StatusBadRequest)
-		return
+		log.Warn().Err(err).Str("latlng_accuracy_type_str", latlng_accuracy_type_str).Msg("Failed to parse accuracy type")
 	}
 
-	source_description := r.PostFormValue("source-description")
-	additional_info := r.PostFormValue("additional-info")
+	log.Debug().Strs("source_locations", source_locations).Msg("parsing")
+	if slices.Contains(source_locations, "backyard") {
+		is_location_backyard = true
+	}
+	if slices.Contains(source_locations, "frontyard") {
+		is_location_frontyard = true
+	}
+	if slices.Contains(source_locations, "garden") {
+		is_location_garden = true
+	}
+	if slices.Contains(source_locations, "other") {
+		is_location_other = true
+	}
+	if slices.Contains(source_locations, "pool-area") {
+		is_location_pool = true
+	}
+	log.Debug().Bool("is_location_backyard", is_location_backyard).Bool("is_location_frontyard", is_location_frontyard).Bool("is_location_garden", is_location_garden).Bool("is_location_other", is_location_other).Bool("is_location_pool", is_location_pool).Msg("parsed")
+
+	var temp float64
+	temp, err = strconv.ParseFloat(latlng_accuracy_value_str, 32)
+	if err != nil {
+		log.Warn().Err(err).Str("latlng_accuracy_value_str", latlng_accuracy_value_str).Msg("Failed to parse latlng_accuracy_value")
+	} else {
+		latlng_accuracy_value = float32(temp)
+	}
 
 	latitude, err := strconv.ParseFloat(lat, 64)
 	if err != nil {
-		respondError(w, "Failed to create parse latitude", err, http.StatusBadRequest)
-		return
+		log.Warn().Err(err).Str("lat", lat).Msg("Failed to parse lat")
 	}
 	longitude, err := strconv.ParseFloat(lng, 64)
 	if err != nil {
-		respondError(w, "Failed to create parse longitude", err, http.StatusBadRequest)
-		return
+		log.Warn().Err(err).Str("lng", lng).Msg("Failed to parse lng")
 	}
+
+	temp, err = strconv.ParseFloat(map_zoom_str, 32)
+	if err != nil {
+		log.Warn().Err(err).Str("map_zoom_str", map_zoom_str).Msg("Failed to parse map_zoom_str")
+	} else {
+		map_zoom = float32(temp)
+	}
+
 	public_id, err := report.GenerateReportID()
 	if err != nil {
-		respondError(w, "Failed to create quick report public ID", err, http.StatusInternalServerError)
+		respondError(w, "Failed to create report public ID", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -158,13 +208,26 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setter := models.PublicreportNuisanceSetter{
-		AdditionalInfo: omit.From(additional_info),
-		Address:        omit.From(address),
-		Created:        omit.From(time.Now()),
-		Duration:       omit.From(duration),
-		H3cell:         omitnull.From(c.String()),
+		AdditionalInfo:      omit.From(additional_info),
+		Address:             omit.From(address),
+		AddressCountry:      omit.From(address_country),
+		AddressPlace:        omit.From(address_place),
+		AddressPostcode:     omit.From(address_postcode),
+		AddressRegion:       omit.From(address_region),
+		AddressStreet:       omit.From(address_street),
+		Created:             omit.From(time.Now()),
+		Duration:            omit.From(duration),
+		H3cell:              omitnull.From(c.String()),
+		IsLocationBackyard:  omit.From(is_location_backyard),
+		IsLocationFrontyard: omit.From(is_location_frontyard),
+		IsLocationGarden:    omit.From(is_location_garden),
+		IsLocationOther:     omit.From(is_location_other),
+		IsLocationPool:      omit.From(is_location_pool),
+		LatlngAccuracyType:  omit.From(latlng_accuracy_type),
+		LatlngAccuracyValue: omit.From(latlng_accuracy_value),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
 		Location:          omitnull.FromPtr[string](nil),
+		MapZoom:           omit.From(map_zoom),
 		OrganizationID:    omitnull.FromPtr(organization_id),
 		PublicID:          omit.From(public_id),
 		ReporterEmail:     omitnull.FromPtr[string](nil),
@@ -173,9 +236,12 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		SourceContainer:   omit.From(source_container),
 		SourceDescription: omit.From(source_description),
 		SourceGutter:      omit.From(source_gutters),
-		SourceLocation:    omit.From(source_location),
 		SourceStagnant:    omit.From(source_stagnant),
 		Status:            omit.From(enums.PublicreportReportstatustypeReported),
+		TodEarly:          omit.From(tod_early),
+		TodDay:            omit.From(tod_day),
+		TodEvening:        omit.From(tod_evening),
+		TodNight:          omit.From(tod_night),
 	}
 	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(ctx, txn)
 	if err != nil {
