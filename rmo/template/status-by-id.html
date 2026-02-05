@@ -64,12 +64,17 @@ document.addEventListener("DOMContentLoaded", onLoad);
 </script>
 {{end}}
 {{define "content"}}
+{{if (eq .District nil)}}
+	{{template "header-rmo" .}}
+{{else}}
+	{{template "header-district" .District}}
+{{end}}
 <div class="container my-4">
 	<!-- Report ID and Status Section -->
 	<div class="card mb-4">
 		<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
 			<h5 class="mb-0">Report {{.Report.ID|publicReportID}}</h5>
-			<span class="badge bg-warning text-dark status-badge">Scheduled</span>
+			<span class="badge bg-warning text-dark status-badge">Reported</span>
 		</div>
 		<div class="card-body">
 			<div class="row">
@@ -83,50 +88,30 @@ document.addEventListener("DOMContentLoaded", onLoad);
 				</div>
 				<div class="col-md-4 mb-3">
 					<strong><i class="fas fa-hourglass-half me-2"></i>District:</strong> 
-					<span>{{.Report.District}}</span>
+					<span>{{if (eq .District nil)}}Unknown{{else}}{{.District.Name}}{{end}}</span>
 				</div>
 			</div>
-		</div>
-	</div>
-
-	<!-- Contact Information -->
-	<div class="row mb-4">
-		<div class="col-md-6 mb-3 mb-md-0">
-			<div class="card h-100">
-				<div class="card-header bg-secondary text-white">
-					<h5 class="mb-0"><i class="fas fa-user me-2"></i>Reporter Information</h5>
-				</div>
-				<div class="card-body">
-					<p><strong>Name:</strong>{{.Report.Reporter.Name}}</p>
-					<p><strong>Phone:</strong>{{.Report.Reporter.Phone}}</p>
-					<p><strong>Email:</strong>{{.Report.Reporter.Email}}</p>
+			<div class="row">
+				<div class="col-md-12">
+					<strong><i class="fas fa-map-marked-alt me-2"></i>Location:</strong> 
+					<span>{{.Report.Address}}</span>
 				</div>
 			</div>
-		</div>
-		<div class="col-md-6">
-			<div class="card h-100">
-				<div class="card-header bg-secondary text-white">
-					<h5 class="mb-0"><i class="fas fa-home me-2"></i>Reported Location</h5>
-				</div>
-				<div class="card-body">
-					<p><strong>Site Contact Name:</strong>{{.Report.SiteOwner.Name}}</p>
-					<p><strong>Site Contact Phone:</strong>{{.Report.SiteOwner.Phone}}</p>
-					<p><strong>Site Contact Email:</strong>{{.Report.SiteOwner.Email}}</p>
-					<p><strong>Address:</strong>{{.Report.Address}}</p>
+			<div class="row">
+				<div class="col-md-12">
+					<strong><i class="fas fa-images me-2"></i>Images:</strong> 
+					
+					<span>{{ if gt (len .Report.Images) 0 }}{{len .Report.Images}}{{else}}None provided{{end}}</span>
 				</div>
 			</div>
-		</div>
-	</div>
-
-	<!-- Report Information -->
-	<div class="card mb-4">
-		<div class="card-header bg-success text-white">
-			<h5 class="mb-0"><i class="fas fa-history me-2"></i>Report Detail</h5>
-		</div>
-		<div class="card-body">
-			{{ if not (eq .Report.Comments "") }}
-			<p><strong>Comments:</strong>{{ .Report.Comments }}</p>
-			{{ end }}
+			{{range .Report.Details}}
+				<div class="row">
+					<div class="col-md-12">
+						<strong>{{.Name}}</strong>
+						<span>{{.Value}}</span>
+					</div>
+				</div>
+			{{end}}
 		</div>
 	</div>
 

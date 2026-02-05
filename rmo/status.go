@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,11 +26,6 @@ import (
 		"github.com/aarondl/opt/omitnull"
 	*/)
 
-type Contact struct {
-	Email string
-	Name  string
-	Phone string
-}
 type ContentStatus struct {
 	District    *ContentDistrict
 	Error       string
@@ -38,26 +34,29 @@ type ContentStatus struct {
 	URL         ContentURL
 }
 type ContentStatusByID struct {
+	District    *ContentDistrict
 	MapboxToken string
 	Report      Report
 	URL         ContentURL
 }
-
+type DetailEntry struct {
+	Name  string
+	Value string
+}
 type Image struct {
 	Location string
 	URL      string
 }
 type Report struct {
-	Address   string
-	Comments  string
-	Created   time.Time
-	District  string
-	ID        string
-	Images    []Image
-	Location  string // GeoJSON
-	Reporter  Contact
-	SiteOwner Contact
-	Type      string
+	Address  string
+	Comments string
+	Created  time.Time
+	Details  []DetailEntry
+	ID       string
+	Images   []Image
+	Location string // GeoJSON
+	Status   string
+	Type     string
 }
 
 var (
@@ -113,23 +112,45 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
-	result.Report.Reporter.Email = nuisance.ReporterEmail.GetOr("")
-	result.Report.Reporter.Name = nuisance.ReporterName.GetOr("")
-	result.Report.Reporter.Phone = nuisance.ReporterPhone.GetOr("")
+	result.Report.Status = nuisance.Status.String()
+	result.Report.Type = nuisance.Status.String()
+	result.Report.Details = []DetailEntry{
+		DetailEntry{
+			Name:  "Active early morning?",
+			Value: "nah",
+		},
+		DetailEntry{
+			Name:  "Duration",
+			Value: nuisance.Duration.String(),
+		},
+		DetailEntry{
+			Name:  "Stagnant Water",
+			Value: strconv.FormatBool(nuisance.SourceStagnant),
+		},
+		DetailEntry{
+			Name:  "Container",
+			Value: strconv.FormatBool(nuisance.SourceContainer),
+		},
+		DetailEntry{
+			Name:  "Sprinklers & Gutters",
+			Value: "guess not",
+		},
+	}
 
 	type LocationGeoJSON struct {
 		Location string
 	}
-	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.From(
+	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
 			psql.F("ST_AsGeoJSON", "location"),
-		).As("location"),
+		),
+		sm.From("publicreport.quick"),
 		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	), scan.StructMapper[LocationGeoJSON]())
+	), scan.SingleColumnMapper[string])
 	if err != nil {
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
-	result.Report.Location = row.Location
+	result.Report.Location = location
 
 	return result, err
 }
@@ -153,10 +174,6 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 	result.Report.Address = quick.Address
 	result.Report.Comments = quick.Comments
 	result.Report.Created = quick.Created
-	result.Report.District = "Unknown"
-	result.Report.Reporter.Email = quick.ReporterEmail
-	result.Report.Reporter.Name = "-"
-	result.Report.Reporter.Phone = quick.ReporterPhone
 	result.Report.Type = "Quick"
 
 	for _, image := range images {
@@ -199,8 +216,6 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		content, err = contentFromNuisance(ctx, report_id)
 	case "pool":
 		content, err = contentFromPool(ctx, report_id)
-	case "quick":
-		content, err = contentFromQuick(ctx, report_id)
 	}
 	content.MapboxToken = config.MapboxToken
 	content.URL = makeContentURL(nil)
@@ -212,25 +227,6 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-	func getQuick(w http.ResponseWriter, r *http.Request) {
-		html.RenderOrError(
-			w,
-			Quick,
-			ContentQuick{},
-		)
-	}
-
-	func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
-		report := r.URL.Query().Get("report")
-		html.RenderOrError(
-			w,
-			QuickSubmitComplete,
-			ContentQuickSubmitComplete{
-				ReportID: report,
-			},
-		)
-	}
-
 	func postQuick(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 		if err != nil {
