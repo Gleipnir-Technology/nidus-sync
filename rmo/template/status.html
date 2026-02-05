@@ -133,6 +133,10 @@ function onLoad() {
 			console.log("location error", error);
 		})
 	});
+	const report_table = document.querySelector('report-table');
+	report_table.addEventListener("row-clicked", (e) => {
+		window.location = "/status/" + e.detail.reportId;
+	})
 }
 
 document.addEventListener('DOMContentLoaded', onLoad);

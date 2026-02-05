@@ -202,7 +202,7 @@ class ReportTable extends HTMLElement {
 				const relativeTime = this.formatRelativeTime(report.created);
 
 				tableHTML += `
-					<tr class="clickable-row" onclick="window.location='/status/${report.id}'">
+					<tr class="clickable-row" data-report-id="${report.id}">
 						<td><strong>${formattedId}</strong></td>
 						<td>${relativeTime}</td>
 						<td><span class="badge ${typeClass} report-type-badge">${report.type}</span></td>
@@ -224,6 +224,22 @@ class ReportTable extends HTMLElement {
 
 		// Set the shadow DOM content
 		this.shadowRoot.innerHTML = style + tableHTML;
+		// Add click handlers for the rows
+		this.shadowRoot.querySelectorAll("tr.clickable-row").forEach(el => {
+			el.addEventListener("click", e => {
+				let element = e.target
+				while (element.nodeName != "TR" ) {
+					element = element.parentElement;
+				}
+				this.dispatchEvent(new CustomEvent("row-clicked", {
+					bubbles: true,
+					composed: true, // Allows event to cross shadow DOM boundary
+					detail: {
+						reportId: element.dataset.reportId
+					}
+				}));
+			});
+		})
 	}
 }
 
