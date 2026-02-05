@@ -172,13 +172,13 @@ class AddressOrReportInput extends HTMLElement {
 				} else if (type == "address") {
 					const index = parseInt(el.dataset.index);
 					const address = this._addresses[index];
-					this.SetValue(suggestion);
+					this.SetValue(address);
 					// Dispatch custom event
 					this.dispatchEvent(new CustomEvent('address-selected', {
 						bubbles: true,
 						composed: true, // Allows event to cross shadow DOM boundary
 						detail: {
-							location: suggestion
+							location: address
 						}
 					}));
 				}
