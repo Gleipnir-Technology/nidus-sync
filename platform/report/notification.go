@@ -40,7 +40,7 @@ type SomeReport struct {
 
 func (sr SomeReport) districtID(ctx context.Context) *int32 {
 	type _Row struct {
-		OrganizationID int32
+		OrganizationID *int32
 	}
 
 	from := sm.From("no-such-table")
@@ -61,7 +61,7 @@ func (sr SomeReport) districtID(ctx context.Context) *int32 {
 		log.Warn().Err(err).Msg("Failed to query for organization_id")
 		return nil
 	}
-	return &row.OrganizationID
+	return row.OrganizationID
 }
 func (sr SomeReport) updateReporterEmail(ctx context.Context, email string) *ErrorWithCode {
 	table := um.Table("so-such-table")
