@@ -121,8 +121,8 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
 	result.Report.ImageCount = len(images)
-	result.Report.Status = nuisance.Status.String()
-	result.Report.Type = nuisance.Status.String()
+	result.Report.Status = strings.Title(nuisance.Status.String())
+	result.Report.Type = "Mosquito Nuisance"
 	result.Report.Details = []DetailEntry{
 		DetailEntry{
 			Name:  "Active early morning?",
