@@ -94,6 +94,7 @@ class AddressOrReportInput extends HTMLElement {
 			return data.features;
 		} catch (error) {
 			console.error('Error fetching geocoding suggestions:', error);
+			return [];
 		}
 	}
 
@@ -105,6 +106,7 @@ class AddressOrReportInput extends HTMLElement {
 			return data.reports;
 		} catch (error) {
 			console.error("Error fetching report suggestions:", error);
+			return [];
 		}
 	}
 
