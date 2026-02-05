@@ -91,7 +91,7 @@ class AddressOrReportInput extends HTMLElement {
 			
 			const response = await fetch(url);
 			const data = await response.json();
-			return data.features;
+			return data.features || [];
 		} catch (error) {
 			console.error('Error fetching geocoding suggestions:', error);
 			return [];
@@ -103,7 +103,7 @@ class AddressOrReportInput extends HTMLElement {
 			const url = `/report/suggest?r=${text}`
 			const response = await fetch(url);
 			const data = await response.json();
-			return data.reports;
+			return data.reports || [];
 		} catch (error) {
 			console.error("Error fetching report suggestions:", error);
 			return [];
