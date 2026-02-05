@@ -17,7 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -160,7 +160,7 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		sm.Columns(
 			psql.F("ST_AsGeoJSON", "location"),
 		),
-		sm.From("publicreport.quick"),
+		sm.From("publicreport.nuisance"),
 		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
 	), scan.SingleColumnMapper[string])
 	if err != nil {
