@@ -193,6 +193,9 @@ class MapMultipoint extends HTMLElement {
 	on(a, b) {
 		return this._map.on(a, b);
 	}
+	once(a, b) {
+		return this._map.once(a, b);
+	}
 	queryRenderedFeatures(a) {
 		return this._map.queryRenderedFeatures(a);
 	}

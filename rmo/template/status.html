@@ -107,14 +107,16 @@ function onLoad() {
 			checkboxNuisance.onclick()
 			checkboxWater.onclick()
 		});
-		map.on('render', () => {
+		function _updateReports() {
 			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
 			const pools = map.queryRenderedFeatures({target: {layerId: 'pool'}});
 
 			const uniqueFeatures = getUniqueFeatures(nuisances, pools, 'public_id');
 			// Populate features for the listing overlay.
 			renderReports(uniqueFeatures);
-		});
+		}
+		map.once("idle", _updateReports);
+		map.on('moveend', _updateReports);
 		getGeolocation({
 			enableHighAccuracy: true,
 			timeout: 10000,
