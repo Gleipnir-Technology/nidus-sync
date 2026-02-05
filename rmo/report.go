@@ -3,6 +3,7 @@ package rmo
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -26,7 +27,7 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "You need at least a bit of an 'r'", nil, http.StatusBadRequest)
 		return
 	}
-	p := partial_report_id + "%"
+	p := strings.ToUpper(partial_report_id) + "%"
 	ctx := r.Context()
 	rows, err := sql.PublicreportPublicIDSuggestion(p).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
