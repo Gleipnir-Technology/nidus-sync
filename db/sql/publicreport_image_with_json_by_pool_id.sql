@@ -1,4 +1,4 @@
--- PublicreportImageWithJSONByNuisanceID
+-- PublicreportImageWithJSONByPoolID
 SELECT 
 	"publicreport.image"."id" AS "id",
 	"publicreport.image"."content_type" AS "content_type",
@@ -11,5 +11,5 @@ SELECT
 	"publicreport.image"."storage_size" AS "storage_size",
 	"publicreport.image"."uploaded_filename" AS "uploaded_filename"
 FROM "publicreport"."image" AS "publicreport.image"
-INNER JOIN "publicreport"."nuisance_image" AS "publicreport.nuisance_image" ON ("publicreport.image"."id" = "publicreport.nuisance_image"."image_id")
-WHERE ("publicreport.nuisance_image"."nuisance_id" = $1)
+INNER JOIN "publicreport"."pool_image" AS "publicreport.pool_image" ON ("publicreport.image"."id" = "publicreport.pool_image"."image_id")
+WHERE ("publicreport.pool_image"."pool_id" = $1)

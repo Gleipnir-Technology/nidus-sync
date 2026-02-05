@@ -40,7 +40,7 @@ type ExifCollection struct {
 type ImageUpload struct {
 	Bounds      image.Rectangle
 	ContentType string
-	Exif        ExifCollection
+	Exif        *ExifCollection
 	Format      string
 
 	UploadFilesize int
@@ -48,7 +48,7 @@ type ImageUpload struct {
 	UUID           uuid.UUID
 }
 
-func extractExif(content_type string, file_bytes []byte) (result ExifCollection, err error) {
+func extractExif(content_type string, file_bytes []byte) (result *ExifCollection, err error) {
 	/*
 		Using "github.com/evanoberholster/imagemeta"
 		meta, err := imagemeta.Decode(bytes.NewReader(file_bytes))
@@ -64,7 +64,10 @@ func extractExif(content_type string, file_bytes []byte) (result ExifCollection,
 
 	exif, err := exif.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
-		return result, fmt.Errorf("Failed to decode image meta: %w", err)
+		if err.Error() == "exif: failed to find exif intro marker" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Failed to decode image meta: %w", err)
 	}
 	lat, lng, _ := exif.LatLong()
 	result.GPS = &GPS{
@@ -86,11 +89,8 @@ func extractImageUpload(headers *multipart.FileHeader) (upload ImageUpload, err 
 
 	exif, err := extractExif(content_type, file_bytes)
 	if err != nil {
-		//return upload, fmt.Errorf("Failed to extract EXIF data: %w", err)
-		log.Warn().Err(err).Msg("Failed to extract EXIF data")
+		return upload, fmt.Errorf("Failed to extract EXIF data: %w", err)
 	}
-	log.Debug().Float64("lat", exif.GPS.Latitude).Float64("lng", exif.GPS.Longitude).Msg("extracted GPS from exif")
-
 	i, format, err := image.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
 		return upload, fmt.Errorf("Failed to decode image file: %w", err)
@@ -150,30 +150,34 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 		}
 
 		// TODO: figure out how to do this via the setter...?
-		if u.Exif.GPS != nil {
-			_, err = psql.Update(
-				um.Table("publicreport.image"),
-				um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
-				um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
-			).Exec(ctx, tx)
-		}
-
-		exif_setters := make([]*models.PublicreportImageExifSetter, 0)
-		for k, v := range u.Exif.Tags {
-			exif_setters = append(exif_setters, &models.PublicreportImageExifSetter{
-				ImageID: omit.From(image.ID),
-				Name:    omit.From(k),
-				Value:   omit.From(v),
-			})
-		}
-		if len(exif_setters) > 0 {
-			_, err = models.PublicreportImageExifs.Insert(bob.ToMods(exif_setters...)).Exec(ctx, tx)
-			if err != nil {
-				return images, fmt.Errorf("Failed to create photo exif records: %w", err)
+		if u.Exif != nil {
+			if u.Exif.GPS != nil {
+				_, err = psql.Update(
+					um.Table("publicreport.image"),
+					um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
+					um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
+				).Exec(ctx, tx)
 			}
+
+			exif_setters := make([]*models.PublicreportImageExifSetter, 0)
+			for k, v := range u.Exif.Tags {
+				exif_setters = append(exif_setters, &models.PublicreportImageExifSetter{
+					ImageID: omit.From(image.ID),
+					Name:    omit.From(k),
+					Value:   omit.From(v),
+				})
+			}
+			if len(exif_setters) > 0 {
+				_, err = models.PublicreportImageExifs.Insert(bob.ToMods(exif_setters...)).Exec(ctx, tx)
+				if err != nil {
+					return images, fmt.Errorf("Failed to create photo exif records: %w", err)
+				}
+			}
+			log.Info().Int32("id", image.ID).Int("tags", len(u.Exif.Tags)).Msg("Saved an uploaded file to the database")
+		} else {
+			log.Info().Int32("id", image.ID).Int("tags", 0).Msg("Saved an uploaded file without EXIF data")
 		}
 		images = append(images, image)
-		log.Info().Int32("id", image.ID).Int("tags", len(u.Exif.Tags)).Msg("Saved an uploaded file to the database")
 	}
 	return images, nil
 }

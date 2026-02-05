@@ -197,7 +197,7 @@ var PublicreportPools = Table[
 		},
 		MapZoom: column{
 			Name:      "map_zoom",
-			DBType:    "double precision",
+			DBType:    "real",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -267,15 +267,6 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Subscribe: column{
-			Name:      "subscribe",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Status: column{
 			Name:      "status",
 			DBType:    "publicreport.reportstatustype",
@@ -291,6 +282,33 @@ var PublicreportPools = Table[
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		HasBackyardPermission: column{
+			Name:      "has_backyard_permission",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsReporterConfidential: column{
+			Name:      "is_reporter_confidential",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsReporterOwner: column{
+			Name:      "is_reporter_owner",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -359,42 +377,44 @@ var PublicreportPools = Table[
 }
 
 type publicreportPoolColumns struct {
-	ID              column
-	AccessComments  column
-	AccessGate      column
-	AccessFence     column
-	AccessLocked    column
-	AccessDog       column
-	AccessOther     column
-	Address         column
-	AddressCountry  column
-	AddressPostCode column
-	AddressPlace    column
-	AddressStreet   column
-	AddressRegion   column
-	Comments        column
-	Created         column
-	H3cell          column
-	HasAdult        column
-	HasLarvae       column
-	HasPupae        column
-	Location        column
-	MapZoom         column
-	OwnerEmail      column
-	OwnerName       column
-	OwnerPhone      column
-	PublicID        column
-	ReporterEmail   column
-	ReporterName    column
-	ReporterPhone   column
-	Subscribe       column
-	Status          column
-	OrganizationID  column
+	ID                     column
+	AccessComments         column
+	AccessGate             column
+	AccessFence            column
+	AccessLocked           column
+	AccessDog              column
+	AccessOther            column
+	Address                column
+	AddressCountry         column
+	AddressPostCode        column
+	AddressPlace           column
+	AddressStreet          column
+	AddressRegion          column
+	Comments               column
+	Created                column
+	H3cell                 column
+	HasAdult               column
+	HasLarvae              column
+	HasPupae               column
+	Location               column
+	MapZoom                column
+	OwnerEmail             column
+	OwnerName              column
+	OwnerPhone             column
+	PublicID               column
+	ReporterEmail          column
+	ReporterName           column
+	ReporterPhone          column
+	Status                 column
+	OrganizationID         column
+	HasBackyardPermission  column
+	IsReporterConfidential column
+	IsReporterOwner        column
 }
 
 func (c publicreportPoolColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Subscribe, c.Status, c.OrganizationID,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner,
 	}
 }
 

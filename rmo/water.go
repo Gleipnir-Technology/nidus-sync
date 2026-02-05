@@ -3,7 +3,6 @@ package rmo
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -62,11 +61,12 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
+
 	access_comments := r.FormValue("access-comments")
-	access_gate := boolFromForm(r, "access-gate")
-	access_fence := boolFromForm(r, "access-fence")
-	access_locked := boolFromForm(r, "access-locked")
 	access_dog := boolFromForm(r, "access-dog")
+	access_fence := boolFromForm(r, "access-fence")
+	access_gate := boolFromForm(r, "access-gate")
+	access_locked := boolFromForm(r, "access-locked")
 	access_other := boolFromForm(r, "access-other")
 	address := r.FormValue("address")
 	address_country := r.FormValue("address-country")
@@ -76,20 +76,18 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 	address_street := r.FormValue("address-street")
 	comments := r.FormValue("comments")
 	has_adult := boolFromForm(r, "has-adult")
+	has_backyard_permission := boolFromForm(r, "backyard-permission")
 	has_larvae := boolFromForm(r, "has-larvae")
 	has_pupae := boolFromForm(r, "has-pupae")
-	map_zoom_str := r.FormValue("map-zoom")
+	is_reporter_confidential := boolFromForm(r, "reporter-confidential")
+	is_reporter_owner := boolFromForm(r, "property-ownership")
 	owner_email := r.FormValue("owner-email")
 	owner_name := r.FormValue("owner-name")
 	owner_phone := r.FormValue("owner-phone")
-	reporter_email := r.FormValue("reporter-email")
-	reporter_name := r.FormValue("reporter-name")
-	reporter_phone := r.FormValue("reporter-phone")
-	subscribe := boolFromForm(r, "subscribe")
 
-	map_zoom, err := strconv.ParseFloat(map_zoom_str, 32)
+	latlng, err := parseLatLng(r)
 	if err != nil {
-		respondError(w, "Failed to parse zoom level", err, http.StatusBadRequest)
+		respondError(w, "Failed to parse lat lng for pool report", err, http.StatusInternalServerError)
 		return
 	}
 	public_id, err := report.GenerateReportID()
@@ -108,10 +106,10 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 
 	setter := models.PublicreportPoolSetter{
 		AccessComments:  omit.From(access_comments),
-		AccessGate:      omit.From(access_gate),
-		AccessFence:     omit.From(access_fence),
-		AccessLocked:    omit.From(access_locked),
 		AccessDog:       omit.From(access_dog),
+		AccessFence:     omit.From(access_fence),
+		AccessGate:      omit.From(access_gate),
+		AccessLocked:    omit.From(access_locked),
 		AccessOther:     omit.From(access_other),
 		Address:         omit.From(address),
 		AddressCountry:  omit.From(address_country),
@@ -122,20 +120,22 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		Comments:        omit.From(comments),
 		Created:         omit.From(time.Now()),
 		//H3cell: add later
-		HasAdult:  omit.From(has_adult),
-		HasLarvae: omit.From(has_larvae),
-		HasPupae:  omit.From(has_pupae),
+		HasAdult:               omit.From(has_adult),
+		HasBackyardPermission:  omit.From(has_backyard_permission),
+		HasLarvae:              omit.From(has_larvae),
+		HasPupae:               omit.From(has_pupae),
+		IsReporterConfidential: omit.From(is_reporter_confidential),
+		IsReporterOwner:        omit.From(is_reporter_owner),
 		//Location: add later
-		MapZoom:       omit.From(map_zoom),
+		MapZoom:       omit.From(latlng.MapZoom),
 		OwnerEmail:    omit.From(owner_email),
 		OwnerName:     omit.From(owner_name),
 		OwnerPhone:    omit.From(owner_phone),
 		PublicID:      omit.From(public_id),
-		ReporterEmail: omit.From(reporter_email),
-		ReporterName:  omit.From(reporter_name),
-		ReporterPhone: omit.From(reporter_phone),
+		ReporterEmail: omit.From(""),
+		ReporterName:  omit.From(""),
+		ReporterPhone: omit.From(""),
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
-		Subscribe:     omit.From(subscribe),
 	}
 	pool, err := models.PublicreportPools.Insert(&setter).One(ctx, tx)
 	if err != nil {

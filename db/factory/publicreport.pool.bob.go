@@ -38,37 +38,39 @@ func (mods PublicreportPoolModSlice) Apply(ctx context.Context, n *PublicreportP
 // PublicreportPoolTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportPoolTemplate struct {
-	ID              func() int32
-	AccessComments  func() string
-	AccessGate      func() bool
-	AccessFence     func() bool
-	AccessLocked    func() bool
-	AccessDog       func() bool
-	AccessOther     func() bool
-	Address         func() string
-	AddressCountry  func() string
-	AddressPostCode func() string
-	AddressPlace    func() string
-	AddressStreet   func() string
-	AddressRegion   func() string
-	Comments        func() string
-	Created         func() time.Time
-	H3cell          func() null.Val[string]
-	HasAdult        func() bool
-	HasLarvae       func() bool
-	HasPupae        func() bool
-	Location        func() null.Val[string]
-	MapZoom         func() float64
-	OwnerEmail      func() string
-	OwnerName       func() string
-	OwnerPhone      func() string
-	PublicID        func() string
-	ReporterEmail   func() string
-	ReporterName    func() string
-	ReporterPhone   func() string
-	Subscribe       func() bool
-	Status          func() enums.PublicreportReportstatustype
-	OrganizationID  func() null.Val[int32]
+	ID                     func() int32
+	AccessComments         func() string
+	AccessGate             func() bool
+	AccessFence            func() bool
+	AccessLocked           func() bool
+	AccessDog              func() bool
+	AccessOther            func() bool
+	Address                func() string
+	AddressCountry         func() string
+	AddressPostCode        func() string
+	AddressPlace           func() string
+	AddressStreet          func() string
+	AddressRegion          func() string
+	Comments               func() string
+	Created                func() time.Time
+	H3cell                 func() null.Val[string]
+	HasAdult               func() bool
+	HasLarvae              func() bool
+	HasPupae               func() bool
+	Location               func() null.Val[string]
+	MapZoom                func() float32
+	OwnerEmail             func() string
+	OwnerName              func() string
+	OwnerPhone             func() string
+	PublicID               func() string
+	ReporterEmail          func() string
+	ReporterName           func() string
+	ReporterPhone          func() string
+	Status                 func() enums.PublicreportReportstatustype
+	OrganizationID         func() null.Val[int32]
+	HasBackyardPermission  func() bool
+	IsReporterConfidential func() bool
+	IsReporterOwner        func() bool
 
 	r publicreportPoolR
 	f *Factory
@@ -236,10 +238,6 @@ func (o PublicreportPoolTemplate) BuildSetter() *models.PublicreportPoolSetter {
 		val := o.ReporterPhone()
 		m.ReporterPhone = omit.From(val)
 	}
-	if o.Subscribe != nil {
-		val := o.Subscribe()
-		m.Subscribe = omit.From(val)
-	}
 	if o.Status != nil {
 		val := o.Status()
 		m.Status = omit.From(val)
@@ -247,6 +245,18 @@ func (o PublicreportPoolTemplate) BuildSetter() *models.PublicreportPoolSetter {
 	if o.OrganizationID != nil {
 		val := o.OrganizationID()
 		m.OrganizationID = omitnull.FromNull(val)
+	}
+	if o.HasBackyardPermission != nil {
+		val := o.HasBackyardPermission()
+		m.HasBackyardPermission = omit.From(val)
+	}
+	if o.IsReporterConfidential != nil {
+		val := o.IsReporterConfidential()
+		m.IsReporterConfidential = omit.From(val)
+	}
+	if o.IsReporterOwner != nil {
+		val := o.IsReporterOwner()
+		m.IsReporterOwner = omit.From(val)
 	}
 
 	return m
@@ -354,14 +364,20 @@ func (o PublicreportPoolTemplate) Build() *models.PublicreportPool {
 	if o.ReporterPhone != nil {
 		m.ReporterPhone = o.ReporterPhone()
 	}
-	if o.Subscribe != nil {
-		m.Subscribe = o.Subscribe()
-	}
 	if o.Status != nil {
 		m.Status = o.Status()
 	}
 	if o.OrganizationID != nil {
 		m.OrganizationID = o.OrganizationID()
+	}
+	if o.HasBackyardPermission != nil {
+		m.HasBackyardPermission = o.HasBackyardPermission()
+	}
+	if o.IsReporterConfidential != nil {
+		m.IsReporterConfidential = o.IsReporterConfidential()
+	}
+	if o.IsReporterOwner != nil {
+		m.IsReporterOwner = o.IsReporterOwner()
 	}
 
 	o.setModelRels(m)
@@ -452,7 +468,7 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 		m.HasPupae = omit.From(val)
 	}
 	if !(m.MapZoom.IsValue()) {
-		val := random_float64(nil)
+		val := random_float32(nil)
 		m.MapZoom = omit.From(val)
 	}
 	if !(m.OwnerEmail.IsValue()) {
@@ -483,13 +499,21 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 		val := random_string(nil)
 		m.ReporterPhone = omit.From(val)
 	}
-	if !(m.Subscribe.IsValue()) {
-		val := random_bool(nil)
-		m.Subscribe = omit.From(val)
-	}
 	if !(m.Status.IsValue()) {
 		val := random_enums_PublicreportReportstatustype(nil)
 		m.Status = omit.From(val)
+	}
+	if !(m.HasBackyardPermission.IsValue()) {
+		val := random_bool(nil)
+		m.HasBackyardPermission = omit.From(val)
+	}
+	if !(m.IsReporterConfidential.IsValue()) {
+		val := random_bool(nil)
+		m.IsReporterConfidential = omit.From(val)
+	}
+	if !(m.IsReporterOwner.IsValue()) {
+		val := random_bool(nil)
+		m.IsReporterOwner = omit.From(val)
 	}
 }
 
@@ -658,9 +682,11 @@ func (m publicreportPoolMods) RandomizeAllColumns(f *faker.Faker) PublicreportPo
 		PublicreportPoolMods.RandomReporterEmail(f),
 		PublicreportPoolMods.RandomReporterName(f),
 		PublicreportPoolMods.RandomReporterPhone(f),
-		PublicreportPoolMods.RandomSubscribe(f),
 		PublicreportPoolMods.RandomStatus(f),
 		PublicreportPoolMods.RandomOrganizationID(f),
+		PublicreportPoolMods.RandomHasBackyardPermission(f),
+		PublicreportPoolMods.RandomIsReporterConfidential(f),
+		PublicreportPoolMods.RandomIsReporterOwner(f),
 	}
 }
 
@@ -1329,14 +1355,14 @@ func (m publicreportPoolMods) RandomLocationNotNull(f *faker.Faker) Publicreport
 }
 
 // Set the model columns to this value
-func (m publicreportPoolMods) MapZoom(val float64) PublicreportPoolMod {
+func (m publicreportPoolMods) MapZoom(val float32) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.MapZoom = func() float64 { return val }
+		o.MapZoom = func() float32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m publicreportPoolMods) MapZoomFunc(f func() float64) PublicreportPoolMod {
+func (m publicreportPoolMods) MapZoomFunc(f func() float32) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
 		o.MapZoom = f
 	})
@@ -1353,8 +1379,8 @@ func (m publicreportPoolMods) UnsetMapZoom() PublicreportPoolMod {
 // if faker is nil, a default faker is used
 func (m publicreportPoolMods) RandomMapZoom(f *faker.Faker) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.MapZoom = func() float64 {
-			return random_float64(f)
+		o.MapZoom = func() float32 {
+			return random_float32(f)
 		}
 	})
 }
@@ -1577,37 +1603,6 @@ func (m publicreportPoolMods) RandomReporterPhone(f *faker.Faker) PublicreportPo
 }
 
 // Set the model columns to this value
-func (m publicreportPoolMods) Subscribe(val bool) PublicreportPoolMod {
-	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.Subscribe = func() bool { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportPoolMods) SubscribeFunc(f func() bool) PublicreportPoolMod {
-	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.Subscribe = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportPoolMods) UnsetSubscribe() PublicreportPoolMod {
-	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.Subscribe = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportPoolMods) RandomSubscribe(f *faker.Faker) PublicreportPoolMod {
-	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
-		o.Subscribe = func() bool {
-			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m publicreportPoolMods) Status(val enums.PublicreportReportstatustype) PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
 		o.Status = func() enums.PublicreportReportstatustype { return val }
@@ -1687,6 +1682,99 @@ func (m publicreportPoolMods) RandomOrganizationIDNotNull(f *faker.Faker) Public
 
 			val := random_int32(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportPoolMods) HasBackyardPermission(val bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.HasBackyardPermission = func() bool { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) HasBackyardPermissionFunc(f func() bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.HasBackyardPermission = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetHasBackyardPermission() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.HasBackyardPermission = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportPoolMods) RandomHasBackyardPermission(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.HasBackyardPermission = func() bool {
+			return random_bool(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportPoolMods) IsReporterConfidential(val bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterConfidential = func() bool { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) IsReporterConfidentialFunc(f func() bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterConfidential = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetIsReporterConfidential() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterConfidential = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportPoolMods) RandomIsReporterConfidential(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterConfidential = func() bool {
+			return random_bool(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportPoolMods) IsReporterOwner(val bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterOwner = func() bool { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) IsReporterOwnerFunc(f func() bool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterOwner = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetIsReporterOwner() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterOwner = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportPoolMods) RandomIsReporterOwner(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.IsReporterOwner = func() bool {
+			return random_bool(f)
 		}
 	})
 }

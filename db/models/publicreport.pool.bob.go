@@ -29,37 +29,39 @@ import (
 
 // PublicreportPool is an object representing the database table.
 type PublicreportPool struct {
-	ID              int32                              `db:"id,pk" `
-	AccessComments  string                             `db:"access_comments" `
-	AccessGate      bool                               `db:"access_gate" `
-	AccessFence     bool                               `db:"access_fence" `
-	AccessLocked    bool                               `db:"access_locked" `
-	AccessDog       bool                               `db:"access_dog" `
-	AccessOther     bool                               `db:"access_other" `
-	Address         string                             `db:"address" `
-	AddressCountry  string                             `db:"address_country" `
-	AddressPostCode string                             `db:"address_post_code" `
-	AddressPlace    string                             `db:"address_place" `
-	AddressStreet   string                             `db:"address_street" `
-	AddressRegion   string                             `db:"address_region" `
-	Comments        string                             `db:"comments" `
-	Created         time.Time                          `db:"created" `
-	H3cell          null.Val[string]                   `db:"h3cell" `
-	HasAdult        bool                               `db:"has_adult" `
-	HasLarvae       bool                               `db:"has_larvae" `
-	HasPupae        bool                               `db:"has_pupae" `
-	Location        null.Val[string]                   `db:"location" `
-	MapZoom         float64                            `db:"map_zoom" `
-	OwnerEmail      string                             `db:"owner_email" `
-	OwnerName       string                             `db:"owner_name" `
-	OwnerPhone      string                             `db:"owner_phone" `
-	PublicID        string                             `db:"public_id" `
-	ReporterEmail   string                             `db:"reporter_email" `
-	ReporterName    string                             `db:"reporter_name" `
-	ReporterPhone   string                             `db:"reporter_phone" `
-	Subscribe       bool                               `db:"subscribe" `
-	Status          enums.PublicreportReportstatustype `db:"status" `
-	OrganizationID  null.Val[int32]                    `db:"organization_id" `
+	ID                     int32                              `db:"id,pk" `
+	AccessComments         string                             `db:"access_comments" `
+	AccessGate             bool                               `db:"access_gate" `
+	AccessFence            bool                               `db:"access_fence" `
+	AccessLocked           bool                               `db:"access_locked" `
+	AccessDog              bool                               `db:"access_dog" `
+	AccessOther            bool                               `db:"access_other" `
+	Address                string                             `db:"address" `
+	AddressCountry         string                             `db:"address_country" `
+	AddressPostCode        string                             `db:"address_post_code" `
+	AddressPlace           string                             `db:"address_place" `
+	AddressStreet          string                             `db:"address_street" `
+	AddressRegion          string                             `db:"address_region" `
+	Comments               string                             `db:"comments" `
+	Created                time.Time                          `db:"created" `
+	H3cell                 null.Val[string]                   `db:"h3cell" `
+	HasAdult               bool                               `db:"has_adult" `
+	HasLarvae              bool                               `db:"has_larvae" `
+	HasPupae               bool                               `db:"has_pupae" `
+	Location               null.Val[string]                   `db:"location" `
+	MapZoom                float32                            `db:"map_zoom" `
+	OwnerEmail             string                             `db:"owner_email" `
+	OwnerName              string                             `db:"owner_name" `
+	OwnerPhone             string                             `db:"owner_phone" `
+	PublicID               string                             `db:"public_id" `
+	ReporterEmail          string                             `db:"reporter_email" `
+	ReporterName           string                             `db:"reporter_name" `
+	ReporterPhone          string                             `db:"reporter_phone" `
+	Status                 enums.PublicreportReportstatustype `db:"status" `
+	OrganizationID         null.Val[int32]                    `db:"organization_id" `
+	HasBackyardPermission  bool                               `db:"has_backyard_permission" `
+	IsReporterConfidential bool                               `db:"is_reporter_confidential" `
+	IsReporterOwner        bool                               `db:"is_reporter_owner" `
 
 	R publicreportPoolR `db:"-" `
 
@@ -85,77 +87,81 @@ type publicreportPoolR struct {
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "subscribe", "status", "organization_id",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner",
 		).WithParent("publicreport.pool"),
-		tableAlias:      alias,
-		ID:              psql.Quote(alias, "id"),
-		AccessComments:  psql.Quote(alias, "access_comments"),
-		AccessGate:      psql.Quote(alias, "access_gate"),
-		AccessFence:     psql.Quote(alias, "access_fence"),
-		AccessLocked:    psql.Quote(alias, "access_locked"),
-		AccessDog:       psql.Quote(alias, "access_dog"),
-		AccessOther:     psql.Quote(alias, "access_other"),
-		Address:         psql.Quote(alias, "address"),
-		AddressCountry:  psql.Quote(alias, "address_country"),
-		AddressPostCode: psql.Quote(alias, "address_post_code"),
-		AddressPlace:    psql.Quote(alias, "address_place"),
-		AddressStreet:   psql.Quote(alias, "address_street"),
-		AddressRegion:   psql.Quote(alias, "address_region"),
-		Comments:        psql.Quote(alias, "comments"),
-		Created:         psql.Quote(alias, "created"),
-		H3cell:          psql.Quote(alias, "h3cell"),
-		HasAdult:        psql.Quote(alias, "has_adult"),
-		HasLarvae:       psql.Quote(alias, "has_larvae"),
-		HasPupae:        psql.Quote(alias, "has_pupae"),
-		Location:        psql.Quote(alias, "location"),
-		MapZoom:         psql.Quote(alias, "map_zoom"),
-		OwnerEmail:      psql.Quote(alias, "owner_email"),
-		OwnerName:       psql.Quote(alias, "owner_name"),
-		OwnerPhone:      psql.Quote(alias, "owner_phone"),
-		PublicID:        psql.Quote(alias, "public_id"),
-		ReporterEmail:   psql.Quote(alias, "reporter_email"),
-		ReporterName:    psql.Quote(alias, "reporter_name"),
-		ReporterPhone:   psql.Quote(alias, "reporter_phone"),
-		Subscribe:       psql.Quote(alias, "subscribe"),
-		Status:          psql.Quote(alias, "status"),
-		OrganizationID:  psql.Quote(alias, "organization_id"),
+		tableAlias:             alias,
+		ID:                     psql.Quote(alias, "id"),
+		AccessComments:         psql.Quote(alias, "access_comments"),
+		AccessGate:             psql.Quote(alias, "access_gate"),
+		AccessFence:            psql.Quote(alias, "access_fence"),
+		AccessLocked:           psql.Quote(alias, "access_locked"),
+		AccessDog:              psql.Quote(alias, "access_dog"),
+		AccessOther:            psql.Quote(alias, "access_other"),
+		Address:                psql.Quote(alias, "address"),
+		AddressCountry:         psql.Quote(alias, "address_country"),
+		AddressPostCode:        psql.Quote(alias, "address_post_code"),
+		AddressPlace:           psql.Quote(alias, "address_place"),
+		AddressStreet:          psql.Quote(alias, "address_street"),
+		AddressRegion:          psql.Quote(alias, "address_region"),
+		Comments:               psql.Quote(alias, "comments"),
+		Created:                psql.Quote(alias, "created"),
+		H3cell:                 psql.Quote(alias, "h3cell"),
+		HasAdult:               psql.Quote(alias, "has_adult"),
+		HasLarvae:              psql.Quote(alias, "has_larvae"),
+		HasPupae:               psql.Quote(alias, "has_pupae"),
+		Location:               psql.Quote(alias, "location"),
+		MapZoom:                psql.Quote(alias, "map_zoom"),
+		OwnerEmail:             psql.Quote(alias, "owner_email"),
+		OwnerName:              psql.Quote(alias, "owner_name"),
+		OwnerPhone:             psql.Quote(alias, "owner_phone"),
+		PublicID:               psql.Quote(alias, "public_id"),
+		ReporterEmail:          psql.Quote(alias, "reporter_email"),
+		ReporterName:           psql.Quote(alias, "reporter_name"),
+		ReporterPhone:          psql.Quote(alias, "reporter_phone"),
+		Status:                 psql.Quote(alias, "status"),
+		OrganizationID:         psql.Quote(alias, "organization_id"),
+		HasBackyardPermission:  psql.Quote(alias, "has_backyard_permission"),
+		IsReporterConfidential: psql.Quote(alias, "is_reporter_confidential"),
+		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
 	}
 }
 
 type publicreportPoolColumns struct {
 	expr.ColumnsExpr
-	tableAlias      string
-	ID              psql.Expression
-	AccessComments  psql.Expression
-	AccessGate      psql.Expression
-	AccessFence     psql.Expression
-	AccessLocked    psql.Expression
-	AccessDog       psql.Expression
-	AccessOther     psql.Expression
-	Address         psql.Expression
-	AddressCountry  psql.Expression
-	AddressPostCode psql.Expression
-	AddressPlace    psql.Expression
-	AddressStreet   psql.Expression
-	AddressRegion   psql.Expression
-	Comments        psql.Expression
-	Created         psql.Expression
-	H3cell          psql.Expression
-	HasAdult        psql.Expression
-	HasLarvae       psql.Expression
-	HasPupae        psql.Expression
-	Location        psql.Expression
-	MapZoom         psql.Expression
-	OwnerEmail      psql.Expression
-	OwnerName       psql.Expression
-	OwnerPhone      psql.Expression
-	PublicID        psql.Expression
-	ReporterEmail   psql.Expression
-	ReporterName    psql.Expression
-	ReporterPhone   psql.Expression
-	Subscribe       psql.Expression
-	Status          psql.Expression
-	OrganizationID  psql.Expression
+	tableAlias             string
+	ID                     psql.Expression
+	AccessComments         psql.Expression
+	AccessGate             psql.Expression
+	AccessFence            psql.Expression
+	AccessLocked           psql.Expression
+	AccessDog              psql.Expression
+	AccessOther            psql.Expression
+	Address                psql.Expression
+	AddressCountry         psql.Expression
+	AddressPostCode        psql.Expression
+	AddressPlace           psql.Expression
+	AddressStreet          psql.Expression
+	AddressRegion          psql.Expression
+	Comments               psql.Expression
+	Created                psql.Expression
+	H3cell                 psql.Expression
+	HasAdult               psql.Expression
+	HasLarvae              psql.Expression
+	HasPupae               psql.Expression
+	Location               psql.Expression
+	MapZoom                psql.Expression
+	OwnerEmail             psql.Expression
+	OwnerName              psql.Expression
+	OwnerPhone             psql.Expression
+	PublicID               psql.Expression
+	ReporterEmail          psql.Expression
+	ReporterName           psql.Expression
+	ReporterPhone          psql.Expression
+	Status                 psql.Expression
+	OrganizationID         psql.Expression
+	HasBackyardPermission  psql.Expression
+	IsReporterConfidential psql.Expression
+	IsReporterOwner        psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -170,41 +176,43 @@ func (publicreportPoolColumns) AliasedAs(alias string) publicreportPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportPoolSetter struct {
-	ID              omit.Val[int32]                              `db:"id,pk" `
-	AccessComments  omit.Val[string]                             `db:"access_comments" `
-	AccessGate      omit.Val[bool]                               `db:"access_gate" `
-	AccessFence     omit.Val[bool]                               `db:"access_fence" `
-	AccessLocked    omit.Val[bool]                               `db:"access_locked" `
-	AccessDog       omit.Val[bool]                               `db:"access_dog" `
-	AccessOther     omit.Val[bool]                               `db:"access_other" `
-	Address         omit.Val[string]                             `db:"address" `
-	AddressCountry  omit.Val[string]                             `db:"address_country" `
-	AddressPostCode omit.Val[string]                             `db:"address_post_code" `
-	AddressPlace    omit.Val[string]                             `db:"address_place" `
-	AddressStreet   omit.Val[string]                             `db:"address_street" `
-	AddressRegion   omit.Val[string]                             `db:"address_region" `
-	Comments        omit.Val[string]                             `db:"comments" `
-	Created         omit.Val[time.Time]                          `db:"created" `
-	H3cell          omitnull.Val[string]                         `db:"h3cell" `
-	HasAdult        omit.Val[bool]                               `db:"has_adult" `
-	HasLarvae       omit.Val[bool]                               `db:"has_larvae" `
-	HasPupae        omit.Val[bool]                               `db:"has_pupae" `
-	Location        omitnull.Val[string]                         `db:"location" `
-	MapZoom         omit.Val[float64]                            `db:"map_zoom" `
-	OwnerEmail      omit.Val[string]                             `db:"owner_email" `
-	OwnerName       omit.Val[string]                             `db:"owner_name" `
-	OwnerPhone      omit.Val[string]                             `db:"owner_phone" `
-	PublicID        omit.Val[string]                             `db:"public_id" `
-	ReporterEmail   omit.Val[string]                             `db:"reporter_email" `
-	ReporterName    omit.Val[string]                             `db:"reporter_name" `
-	ReporterPhone   omit.Val[string]                             `db:"reporter_phone" `
-	Subscribe       omit.Val[bool]                               `db:"subscribe" `
-	Status          omit.Val[enums.PublicreportReportstatustype] `db:"status" `
-	OrganizationID  omitnull.Val[int32]                          `db:"organization_id" `
+	ID                     omit.Val[int32]                              `db:"id,pk" `
+	AccessComments         omit.Val[string]                             `db:"access_comments" `
+	AccessGate             omit.Val[bool]                               `db:"access_gate" `
+	AccessFence            omit.Val[bool]                               `db:"access_fence" `
+	AccessLocked           omit.Val[bool]                               `db:"access_locked" `
+	AccessDog              omit.Val[bool]                               `db:"access_dog" `
+	AccessOther            omit.Val[bool]                               `db:"access_other" `
+	Address                omit.Val[string]                             `db:"address" `
+	AddressCountry         omit.Val[string]                             `db:"address_country" `
+	AddressPostCode        omit.Val[string]                             `db:"address_post_code" `
+	AddressPlace           omit.Val[string]                             `db:"address_place" `
+	AddressStreet          omit.Val[string]                             `db:"address_street" `
+	AddressRegion          omit.Val[string]                             `db:"address_region" `
+	Comments               omit.Val[string]                             `db:"comments" `
+	Created                omit.Val[time.Time]                          `db:"created" `
+	H3cell                 omitnull.Val[string]                         `db:"h3cell" `
+	HasAdult               omit.Val[bool]                               `db:"has_adult" `
+	HasLarvae              omit.Val[bool]                               `db:"has_larvae" `
+	HasPupae               omit.Val[bool]                               `db:"has_pupae" `
+	Location               omitnull.Val[string]                         `db:"location" `
+	MapZoom                omit.Val[float32]                            `db:"map_zoom" `
+	OwnerEmail             omit.Val[string]                             `db:"owner_email" `
+	OwnerName              omit.Val[string]                             `db:"owner_name" `
+	OwnerPhone             omit.Val[string]                             `db:"owner_phone" `
+	PublicID               omit.Val[string]                             `db:"public_id" `
+	ReporterEmail          omit.Val[string]                             `db:"reporter_email" `
+	ReporterName           omit.Val[string]                             `db:"reporter_name" `
+	ReporterPhone          omit.Val[string]                             `db:"reporter_phone" `
+	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
+	OrganizationID         omitnull.Val[int32]                          `db:"organization_id" `
+	HasBackyardPermission  omit.Val[bool]                               `db:"has_backyard_permission" `
+	IsReporterConfidential omit.Val[bool]                               `db:"is_reporter_confidential" `
+	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 31)
+	vals := make([]string, 0, 33)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -289,14 +297,20 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	if s.ReporterPhone.IsValue() {
 		vals = append(vals, "reporter_phone")
 	}
-	if s.Subscribe.IsValue() {
-		vals = append(vals, "subscribe")
-	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
 	}
 	if !s.OrganizationID.IsUnset() {
 		vals = append(vals, "organization_id")
+	}
+	if s.HasBackyardPermission.IsValue() {
+		vals = append(vals, "has_backyard_permission")
+	}
+	if s.IsReporterConfidential.IsValue() {
+		vals = append(vals, "is_reporter_confidential")
+	}
+	if s.IsReporterOwner.IsValue() {
+		vals = append(vals, "is_reporter_owner")
 	}
 	return vals
 }
@@ -386,14 +400,20 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.ReporterPhone.IsValue() {
 		t.ReporterPhone = s.ReporterPhone.MustGet()
 	}
-	if s.Subscribe.IsValue() {
-		t.Subscribe = s.Subscribe.MustGet()
-	}
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
 	if !s.OrganizationID.IsUnset() {
 		t.OrganizationID = s.OrganizationID.MustGetNull()
+	}
+	if s.HasBackyardPermission.IsValue() {
+		t.HasBackyardPermission = s.HasBackyardPermission.MustGet()
+	}
+	if s.IsReporterConfidential.IsValue() {
+		t.IsReporterConfidential = s.IsReporterConfidential.MustGet()
+	}
+	if s.IsReporterOwner.IsValue() {
+		t.IsReporterOwner = s.IsReporterOwner.MustGet()
 	}
 }
 
@@ -403,7 +423,7 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 31)
+		vals := make([]bob.Expression, 33)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -572,22 +592,34 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if s.Subscribe.IsValue() {
-			vals[28] = psql.Arg(s.Subscribe.MustGet())
+		if s.Status.IsValue() {
+			vals[28] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[29] = psql.Arg(s.Status.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[29] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[30] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.HasBackyardPermission.IsValue() {
+			vals[30] = psql.Arg(s.HasBackyardPermission.MustGet())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsReporterConfidential.IsValue() {
+			vals[31] = psql.Arg(s.IsReporterConfidential.MustGet())
+		} else {
+			vals[31] = psql.Raw("DEFAULT")
+		}
+
+		if s.IsReporterOwner.IsValue() {
+			vals[32] = psql.Arg(s.IsReporterOwner.MustGet())
+		} else {
+			vals[32] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -599,7 +631,7 @@ func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 31)
+	exprs := make([]bob.Expression, 0, 33)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -797,13 +829,6 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Subscribe.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "subscribe")...),
-			psql.Arg(s.Subscribe),
-		}})
-	}
-
 	if s.Status.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
@@ -815,6 +840,27 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
+		}})
+	}
+
+	if s.HasBackyardPermission.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "has_backyard_permission")...),
+			psql.Arg(s.HasBackyardPermission),
+		}})
+	}
+
+	if s.IsReporterConfidential.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_reporter_confidential")...),
+			psql.Arg(s.IsReporterConfidential),
+		}})
+	}
+
+	if s.IsReporterOwner.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_reporter_owner")...),
+			psql.Arg(s.IsReporterOwner),
 		}})
 	}
 
@@ -1211,37 +1257,39 @@ func (publicreportPool0 *PublicreportPool) AttachImages(ctx context.Context, exe
 }
 
 type publicreportPoolWhere[Q psql.Filterable] struct {
-	ID              psql.WhereMod[Q, int32]
-	AccessComments  psql.WhereMod[Q, string]
-	AccessGate      psql.WhereMod[Q, bool]
-	AccessFence     psql.WhereMod[Q, bool]
-	AccessLocked    psql.WhereMod[Q, bool]
-	AccessDog       psql.WhereMod[Q, bool]
-	AccessOther     psql.WhereMod[Q, bool]
-	Address         psql.WhereMod[Q, string]
-	AddressCountry  psql.WhereMod[Q, string]
-	AddressPostCode psql.WhereMod[Q, string]
-	AddressPlace    psql.WhereMod[Q, string]
-	AddressStreet   psql.WhereMod[Q, string]
-	AddressRegion   psql.WhereMod[Q, string]
-	Comments        psql.WhereMod[Q, string]
-	Created         psql.WhereMod[Q, time.Time]
-	H3cell          psql.WhereNullMod[Q, string]
-	HasAdult        psql.WhereMod[Q, bool]
-	HasLarvae       psql.WhereMod[Q, bool]
-	HasPupae        psql.WhereMod[Q, bool]
-	Location        psql.WhereNullMod[Q, string]
-	MapZoom         psql.WhereMod[Q, float64]
-	OwnerEmail      psql.WhereMod[Q, string]
-	OwnerName       psql.WhereMod[Q, string]
-	OwnerPhone      psql.WhereMod[Q, string]
-	PublicID        psql.WhereMod[Q, string]
-	ReporterEmail   psql.WhereMod[Q, string]
-	ReporterName    psql.WhereMod[Q, string]
-	ReporterPhone   psql.WhereMod[Q, string]
-	Subscribe       psql.WhereMod[Q, bool]
-	Status          psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID  psql.WhereNullMod[Q, int32]
+	ID                     psql.WhereMod[Q, int32]
+	AccessComments         psql.WhereMod[Q, string]
+	AccessGate             psql.WhereMod[Q, bool]
+	AccessFence            psql.WhereMod[Q, bool]
+	AccessLocked           psql.WhereMod[Q, bool]
+	AccessDog              psql.WhereMod[Q, bool]
+	AccessOther            psql.WhereMod[Q, bool]
+	Address                psql.WhereMod[Q, string]
+	AddressCountry         psql.WhereMod[Q, string]
+	AddressPostCode        psql.WhereMod[Q, string]
+	AddressPlace           psql.WhereMod[Q, string]
+	AddressStreet          psql.WhereMod[Q, string]
+	AddressRegion          psql.WhereMod[Q, string]
+	Comments               psql.WhereMod[Q, string]
+	Created                psql.WhereMod[Q, time.Time]
+	H3cell                 psql.WhereNullMod[Q, string]
+	HasAdult               psql.WhereMod[Q, bool]
+	HasLarvae              psql.WhereMod[Q, bool]
+	HasPupae               psql.WhereMod[Q, bool]
+	Location               psql.WhereNullMod[Q, string]
+	MapZoom                psql.WhereMod[Q, float32]
+	OwnerEmail             psql.WhereMod[Q, string]
+	OwnerName              psql.WhereMod[Q, string]
+	OwnerPhone             psql.WhereMod[Q, string]
+	PublicID               psql.WhereMod[Q, string]
+	ReporterEmail          psql.WhereMod[Q, string]
+	ReporterName           psql.WhereMod[Q, string]
+	ReporterPhone          psql.WhereMod[Q, string]
+	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
+	OrganizationID         psql.WhereNullMod[Q, int32]
+	HasBackyardPermission  psql.WhereMod[Q, bool]
+	IsReporterConfidential psql.WhereMod[Q, bool]
+	IsReporterOwner        psql.WhereMod[Q, bool]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1250,37 +1298,39 @@ func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q]
 
 func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns) publicreportPoolWhere[Q] {
 	return publicreportPoolWhere[Q]{
-		ID:              psql.Where[Q, int32](cols.ID),
-		AccessComments:  psql.Where[Q, string](cols.AccessComments),
-		AccessGate:      psql.Where[Q, bool](cols.AccessGate),
-		AccessFence:     psql.Where[Q, bool](cols.AccessFence),
-		AccessLocked:    psql.Where[Q, bool](cols.AccessLocked),
-		AccessDog:       psql.Where[Q, bool](cols.AccessDog),
-		AccessOther:     psql.Where[Q, bool](cols.AccessOther),
-		Address:         psql.Where[Q, string](cols.Address),
-		AddressCountry:  psql.Where[Q, string](cols.AddressCountry),
-		AddressPostCode: psql.Where[Q, string](cols.AddressPostCode),
-		AddressPlace:    psql.Where[Q, string](cols.AddressPlace),
-		AddressStreet:   psql.Where[Q, string](cols.AddressStreet),
-		AddressRegion:   psql.Where[Q, string](cols.AddressRegion),
-		Comments:        psql.Where[Q, string](cols.Comments),
-		Created:         psql.Where[Q, time.Time](cols.Created),
-		H3cell:          psql.WhereNull[Q, string](cols.H3cell),
-		HasAdult:        psql.Where[Q, bool](cols.HasAdult),
-		HasLarvae:       psql.Where[Q, bool](cols.HasLarvae),
-		HasPupae:        psql.Where[Q, bool](cols.HasPupae),
-		Location:        psql.WhereNull[Q, string](cols.Location),
-		MapZoom:         psql.Where[Q, float64](cols.MapZoom),
-		OwnerEmail:      psql.Where[Q, string](cols.OwnerEmail),
-		OwnerName:       psql.Where[Q, string](cols.OwnerName),
-		OwnerPhone:      psql.Where[Q, string](cols.OwnerPhone),
-		PublicID:        psql.Where[Q, string](cols.PublicID),
-		ReporterEmail:   psql.Where[Q, string](cols.ReporterEmail),
-		ReporterName:    psql.Where[Q, string](cols.ReporterName),
-		ReporterPhone:   psql.Where[Q, string](cols.ReporterPhone),
-		Subscribe:       psql.Where[Q, bool](cols.Subscribe),
-		Status:          psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:  psql.WhereNull[Q, int32](cols.OrganizationID),
+		ID:                     psql.Where[Q, int32](cols.ID),
+		AccessComments:         psql.Where[Q, string](cols.AccessComments),
+		AccessGate:             psql.Where[Q, bool](cols.AccessGate),
+		AccessFence:            psql.Where[Q, bool](cols.AccessFence),
+		AccessLocked:           psql.Where[Q, bool](cols.AccessLocked),
+		AccessDog:              psql.Where[Q, bool](cols.AccessDog),
+		AccessOther:            psql.Where[Q, bool](cols.AccessOther),
+		Address:                psql.Where[Q, string](cols.Address),
+		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
+		AddressPostCode:        psql.Where[Q, string](cols.AddressPostCode),
+		AddressPlace:           psql.Where[Q, string](cols.AddressPlace),
+		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
+		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
+		Comments:               psql.Where[Q, string](cols.Comments),
+		Created:                psql.Where[Q, time.Time](cols.Created),
+		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
+		HasAdult:               psql.Where[Q, bool](cols.HasAdult),
+		HasLarvae:              psql.Where[Q, bool](cols.HasLarvae),
+		HasPupae:               psql.Where[Q, bool](cols.HasPupae),
+		Location:               psql.WhereNull[Q, string](cols.Location),
+		MapZoom:                psql.Where[Q, float32](cols.MapZoom),
+		OwnerEmail:             psql.Where[Q, string](cols.OwnerEmail),
+		OwnerName:              psql.Where[Q, string](cols.OwnerName),
+		OwnerPhone:             psql.Where[Q, string](cols.OwnerPhone),
+		PublicID:               psql.Where[Q, string](cols.PublicID),
+		ReporterEmail:          psql.Where[Q, string](cols.ReporterEmail),
+		ReporterName:           psql.Where[Q, string](cols.ReporterName),
+		ReporterPhone:          psql.Where[Q, string](cols.ReporterPhone),
+		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
+		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		HasBackyardPermission:  psql.Where[Q, bool](cols.HasBackyardPermission),
+		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
+		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
 	}
 }
 

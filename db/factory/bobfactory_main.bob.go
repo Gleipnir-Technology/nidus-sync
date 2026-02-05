@@ -3050,7 +3050,7 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.HasLarvae = func() bool { return m.HasLarvae }
 	o.HasPupae = func() bool { return m.HasPupae }
 	o.Location = func() null.Val[string] { return m.Location }
-	o.MapZoom = func() float64 { return m.MapZoom }
+	o.MapZoom = func() float32 { return m.MapZoom }
 	o.OwnerEmail = func() string { return m.OwnerEmail }
 	o.OwnerName = func() string { return m.OwnerName }
 	o.OwnerPhone = func() string { return m.OwnerPhone }
@@ -3058,9 +3058,11 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.ReporterEmail = func() string { return m.ReporterEmail }
 	o.ReporterName = func() string { return m.ReporterName }
 	o.ReporterPhone = func() string { return m.ReporterPhone }
-	o.Subscribe = func() bool { return m.Subscribe }
 	o.Status = func() enums.PublicreportReportstatustype { return m.Status }
 	o.OrganizationID = func() null.Val[int32] { return m.OrganizationID }
+	o.HasBackyardPermission = func() bool { return m.HasBackyardPermission }
+	o.IsReporterConfidential = func() bool { return m.IsReporterConfidential }
+	o.IsReporterOwner = func() bool { return m.IsReporterOwner }
 
 	ctx := context.Background()
 	if m.R.Organization != nil {

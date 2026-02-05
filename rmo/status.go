@@ -17,7 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -203,8 +203,79 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	return result, err
 }
 func contentFromPool(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
+	pool, err := models.PublicreportPools.Query(
+		models.SelectWhere.PublicreportPools.PublicID.EQ(report_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to query pool %s: %w", report_id, err)
+	}
+
+	images, err := sql.PublicreportImageWithJSONByPoolID(pool.ID).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
+	}
+
+	result.Report.ID = report_id
+	result.Report.Address = pool.Address
+	result.Report.Created = pool.Created
+	result.Report.ImageCount = len(images)
+	result.Report.Status = strings.Title(pool.Status.String())
+	result.Report.Type = "Mosquito Nuisance"
+	result.Report.Details = []DetailEntry{
+		DetailEntry{
+			Name:  "Has a gate that affects access?",
+			Value: strconv.FormatBool(pool.AccessGate),
+		},
+		DetailEntry{
+			Name:  "Has dog that affects access?",
+			Value: strconv.FormatBool(pool.AccessDog),
+		},
+		DetailEntry{
+			Name:  "Has a fence that affects access?",
+			Value: strconv.FormatBool(pool.AccessFence),
+		},
+		DetailEntry{
+			Name:  "Has a locked entrace that affects access?",
+			Value: strconv.FormatBool(pool.AccessLocked),
+		},
+		DetailEntry{
+			Name:  "Reporter observed larvae (wigglers)?",
+			Value: strconv.FormatBool(pool.HasLarvae),
+		},
+		DetailEntry{
+			Name:  "Reporter observed pupae (tumblers)?",
+			Value: strconv.FormatBool(pool.HasPupae),
+		},
+		DetailEntry{
+			Name:  "Reporter observed adult mosquitoes?",
+			Value: strconv.FormatBool(pool.HasAdult),
+		},
+	}
+	result.Timeline = []TimelineEntry{
+		TimelineEntry{
+			At:     pool.Created,
+			Detail: "Initial report was submitted",
+			Title:  "Created",
+		},
+	}
+	type LocationGeoJSON struct {
+		Location string
+	}
+	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			psql.F("ST_AsGeoJSON", "location"),
+		),
+		sm.From("publicreport.pool"),
+		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
+	), scan.SingleColumnMapper[string])
+	if err != nil {
+		return result, fmt.Errorf("Failed to query pool %s: %w", report_id, err)
+	}
+	result.Report.Location = location
+
 	return result, err
 }
+
 func contentFromQuick(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
 	quick, err := models.PublicreportQuicks.Query(
 		models.SelectWhere.PublicreportQuicks.PublicID.EQ(report_id),
@@ -253,6 +324,10 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		content, err = contentFromNuisance(ctx, report_id)
 	case "pool":
 		content, err = contentFromPool(ctx, report_id)
+	}
+	if err != nil {
+		respondError(w, "Failed to generate report content", err, http.StatusInternalServerError)
+		return
 	}
 	content.MapboxToken = config.MapboxToken
 	content.URL = makeContentURL(nil)

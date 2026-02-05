@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -20,6 +19,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
+	"github.com/uber/h3-go/v4"
 )
 
 type ContentNuisance struct {
@@ -97,11 +97,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	address_region := r.PostFormValue("address-region")
 	address_street := r.PostFormValue("address-street")
 	duration_str := postFormValueOrNone(r, "duration")
-	lat := r.FormValue("latitude")
-	lng := r.FormValue("longitude")
-	latlng_accuracy_type_str := r.PostFormValue("latlng-accuracy-type")
-	latlng_accuracy_value_str := r.PostFormValue("latlng-accuracy-value")
-	map_zoom_str := r.PostFormValue("map-zoom")
 	source_stagnant := boolFromForm(r, "source-stagnant")
 	source_container := boolFromForm(r, "source-container")
 	source_description := r.PostFormValue("source-description")
@@ -118,18 +113,12 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	is_location_garden := false
 	is_location_pool := false
 	is_location_other := false
-	latlng_accuracy_value := float32(0.0)
-	map_zoom := float32(0.0)
+
+	latlng, err := parseLatLng(r)
 
 	err = duration.Scan(duration_str)
 	if err != nil {
 		log.Warn().Err(err).Str("duration_str", duration_str).Msg("Failed to interpret 'duration'")
-	}
-
-	latlng_accuracy_type := enums.PublicreportAccuracytypeNone
-	err = latlng_accuracy_type.Scan(latlng_accuracy_type_str)
-	if err != nil {
-		log.Warn().Err(err).Str("latlng_accuracy_type_str", latlng_accuracy_type_str).Msg("Failed to parse accuracy type")
 	}
 
 	log.Debug().Strs("source_locations", source_locations).Msg("parsing")
@@ -148,31 +137,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	if slices.Contains(source_locations, "pool-area") {
 		is_location_pool = true
 	}
-	log.Debug().Bool("is_location_backyard", is_location_backyard).Bool("is_location_frontyard", is_location_frontyard).Bool("is_location_garden", is_location_garden).Bool("is_location_other", is_location_other).Bool("is_location_pool", is_location_pool).Msg("parsed")
-
-	var temp float64
-	temp, err = strconv.ParseFloat(latlng_accuracy_value_str, 32)
-	if err != nil {
-		log.Warn().Err(err).Str("latlng_accuracy_value_str", latlng_accuracy_value_str).Msg("Failed to parse latlng_accuracy_value")
-	} else {
-		latlng_accuracy_value = float32(temp)
-	}
-
-	latitude, err := strconv.ParseFloat(lat, 64)
-	if err != nil {
-		log.Warn().Err(err).Str("lat", lat).Msg("Failed to parse lat")
-	}
-	longitude, err := strconv.ParseFloat(lng, 64)
-	if err != nil {
-		log.Warn().Err(err).Str("lng", lng).Msg("Failed to parse lng")
-	}
-
-	temp, err = strconv.ParseFloat(map_zoom_str, 32)
-	if err != nil {
-		log.Warn().Err(err).Str("map_zoom_str", map_zoom_str).Msg("Failed to parse map_zoom_str")
-	} else {
-		map_zoom = float32(temp)
-	}
+	//log.Debug().Bool("is_location_backyard", is_location_backyard).Bool("is_location_frontyard", is_location_frontyard).Bool("is_location_garden", is_location_garden).Bool("is_location_other", is_location_other).Bool("is_location_pool", is_location_pool).Msg("parsed")
 
 	public_id, err := report.GenerateReportID()
 	if err != nil {
@@ -198,13 +163,17 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to save image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	organization_id, err := matchDistrict(ctx, longitude, latitude, uploads)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to match district")
-	}
-	c, err := h3utils.GetCell(longitude, latitude, 15)
-	if err != nil {
-		respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
+	var organization_id *int32
+	var h3cell h3.Cell
+	if latlng.Latitude != nil && latlng.Longitude != nil {
+		organization_id, err = matchDistrict(ctx, *latlng.Longitude, *latlng.Latitude, uploads)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to match district")
+		}
+		h3cell, err = h3utils.GetCell(*latlng.Longitude, *latlng.Latitude, 15)
+		if err != nil {
+			respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
+		}
 	}
 
 	setter := models.PublicreportNuisanceSetter{
@@ -217,17 +186,17 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		AddressStreet:       omit.From(address_street),
 		Created:             omit.From(time.Now()),
 		Duration:            omit.From(duration),
-		H3cell:              omitnull.From(c.String()),
+		H3cell:              omitnull.From(h3cell.String()),
 		IsLocationBackyard:  omit.From(is_location_backyard),
 		IsLocationFrontyard: omit.From(is_location_frontyard),
 		IsLocationGarden:    omit.From(is_location_garden),
 		IsLocationOther:     omit.From(is_location_other),
 		IsLocationPool:      omit.From(is_location_pool),
-		LatlngAccuracyType:  omit.From(latlng_accuracy_type),
-		LatlngAccuracyValue: omit.From(latlng_accuracy_value),
+		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
+		LatlngAccuracyValue: omit.From(latlng.AccuracyValue),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
 		Location:          omitnull.FromPtr[string](nil),
-		MapZoom:           omit.From(map_zoom),
+		MapZoom:           omit.From(latlng.MapZoom),
 		OrganizationID:    omitnull.FromPtr(organization_id),
 		PublicID:          omit.From(public_id),
 		ReporterEmail:     omitnull.FromPtr[string](nil),
@@ -248,14 +217,16 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
 	}
-	_, err = psql.Update(
-		um.Table("publicreport.nuisance"),
-		um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", longitude, latitude)),
-		um.Where(psql.Quote("id").EQ(psql.Arg(nuisance.ID))),
-	).Exec(ctx, txn)
-	if err != nil {
-		respondError(w, "Failed to insert publicreport", err, http.StatusInternalServerError)
-		return
+	if latlng.Latitude != nil && latlng.Longitude != nil {
+		_, err = psql.Update(
+			um.Table("publicreport.nuisance"),
+			um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", *latlng.Longitude, *latlng.Latitude)),
+			um.Where(psql.Quote("id").EQ(psql.Arg(nuisance.ID))),
+		).Exec(ctx, txn)
+		if err != nil {
+			respondError(w, "Failed to insert publicreport", err, http.StatusInternalServerError)
+			return
+		}
 	}
 	log.Info().Str("public_id", public_id).Int32("id", nuisance.ID).Msg("Created nuisance report")
 	if len(images) > 0 {
