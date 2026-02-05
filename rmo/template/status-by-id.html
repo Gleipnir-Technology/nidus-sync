@@ -42,11 +42,6 @@
 </style>
 <script>
 const GEOJSON_LOCATION = {{.Report.Location|json}};
-const GEOJSON_IMAGE_LOCATIONS = [
-	{{ range .Report.Images }}
-	{{ .Location|json }},
-	{{ end }}
-];
 function onLoad() {
 	const map = document.querySelector("map-with-markers");
 	map.addEventListener("load", (event) => {
@@ -101,7 +96,7 @@ document.addEventListener("DOMContentLoaded", onLoad);
 				<div class="col-md-12">
 					<strong><i class="fas fa-images me-2"></i>Images:</strong> 
 					
-					<span>{{ if gt (len .Report.Images) 0 }}{{len .Report.Images}}{{else}}None provided{{end}}</span>
+					<span>{{ if gt .Report.ImageCount 0 }}{{.Report.ImageCount}}{{else}}None provided{{end}}</span>
 				</div>
 			</div>
 			{{range .Report.Details}}
@@ -127,52 +122,22 @@ document.addEventListener("DOMContentLoaded", onLoad);
 		</div>
 	</div>
 
-	<div class="card mb-4">
-		<div class="card-header bg-info text-white">
-			<h5 class="mb-0"><i class="fas fa-photo me-2"></i>Images</h5>
-		</div>
-		<div class="card-body p-0">
-			{{ if gt (len .Report.Images) 0 }}
-				{{ range .Report.Images }}
-				<img src="{{ .URL }}" width="256"/>
-				{{ end }}
-			{{ else }}
-				<p>None</p>
-			{{ end }}
-		</div>
-	</div>
-
 	<!-- History Timeline -->
-	<!--
 	<div class="card">
 		<div class="card-header bg-success text-white">
 			<h5 class="mb-0"><i class="fas fa-history me-2"></i>Request History</h5>
 		</div>
 		<div class="card-body">
 			<div class="timeline">
+				{{range .Timeline}}
 				<div class="timeline-item">
-					<div class="timeline-date">July 17, 2023 - 2:45 PM</div>
-					<h5 class="mb-1">Scheduled for Treatment</h5>
-					<p class="mb-0">Site visit scheduled for July 19. Technician: Michael Johnson</p>
+					<div class="timeline-date">{{.At|timeSince}}</div>
+					<h5 class="mb-1">{{.Title}}</h5>
+					<p class="mb-0">{{.Detail}}</p>
 				</div>
-				<div class="timeline-item">
-					<div class="timeline-date">July 16, 2023 - 10:30 AM</div>
-					<h5 class="mb-1">Assessment Complete</h5>
-					<p class="mb-0">Initial assessment completed. Property requires treatment for mosquito larvae.</p>
-				</div>
-				<div class="timeline-item">
-					<div class="timeline-date">July 15, 2023 - 1:15 PM</div>
-					<h5 class="mb-1">In Review</h5>
-					<p class="mb-0">Report assigned to field supervisor for initial assessment.</p>
-				</div>
-				<div class="timeline-item">
-					<div class="timeline-date">July 15, 2023 - 9:30 AM</div>
-					<h5 class="mb-1">Report Created</h5>
-					<p class="mb-0">New mosquito nuisance report submitted by Jane Doe.</p>
-				</div>
+				{{end}}
 			</div>
 		</div>
 	</div>
-	-->
 </div>
 {{end}}

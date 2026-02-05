@@ -37,26 +37,28 @@ type ContentStatusByID struct {
 	District    *ContentDistrict
 	MapboxToken string
 	Report      Report
+	Timeline    []TimelineEntry
 	URL         ContentURL
 }
 type DetailEntry struct {
 	Name  string
 	Value string
 }
-type Image struct {
-	Location string
-	URL      string
-}
 type Report struct {
-	Address  string
-	Comments string
-	Created  time.Time
-	Details  []DetailEntry
-	ID       string
-	Images   []Image
-	Location string // GeoJSON
-	Status   string
-	Type     string
+	Address    string
+	Comments   string
+	Created    time.Time
+	Details    []DetailEntry
+	ID         string
+	ImageCount int
+	Location   string // GeoJSON
+	Status     string
+	Type       string
+}
+type TimelineEntry struct {
+	At     time.Time
+	Detail string
+	Title  string
 }
 
 var (
@@ -109,9 +111,16 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	if err != nil {
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
+
+	images, err := sql.PublicreportImageWithJSONByNuisanceID(nuisance.ID).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
+	}
+
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
+	result.Report.ImageCount = len(images)
 	result.Report.Status = nuisance.Status.String()
 	result.Report.Type = nuisance.Status.String()
 	result.Report.Details = []DetailEntry{
@@ -134,6 +143,13 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		DetailEntry{
 			Name:  "Sprinklers & Gutters",
 			Value: "guess not",
+		},
+	}
+	result.Timeline = []TimelineEntry{
+		TimelineEntry{
+			At:     nuisance.Created,
+			Detail: "Initial report was submitted",
+			Title:  "Created",
 		},
 	}
 
@@ -165,23 +181,12 @@ func contentFromQuick(ctx context.Context, report_id string) (result ContentStat
 		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
 	}
 
-	images, err := sql.PublicreportImageWithJSONByQuickID(quick.ID).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
-	}
-
 	result.Report.ID = report_id
 	result.Report.Address = quick.Address
 	result.Report.Comments = quick.Comments
 	result.Report.Created = quick.Created
 	result.Report.Type = "Quick"
 
-	for _, image := range images {
-		result.Report.Images = append(result.Report.Images, Image{
-			Location: image.LocationJSON,
-			URL:      config.MakeURLReport("/image/%s", image.StorageUUID.String()),
-		})
-	}
 	type LocationGeoJSON struct {
 		Location string
 	}
