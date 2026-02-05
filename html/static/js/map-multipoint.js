@@ -70,7 +70,7 @@ class MapMultipoint extends HTMLElement {
 			style: 'mapbox://styles/mapbox/streets-v12', // style URL
 			zoom: zoom,
 		});
-		this._map.addControl(new mapboxgl.GeolocateControl({
+		/*this._map.addControl(new mapboxgl.GeolocateControl({
 			positionOptions: {
 				enableHighAccuracy: true
 			},
@@ -78,6 +78,7 @@ class MapMultipoint extends HTMLElement {
 			showUserHeading: true
 		}));
 		this._map.addControl(new mapboxgl.NavigationControl());
+		*/
 		this._map.on("load", () => {
 			this.dispatchEvent(new CustomEvent('load'), {
 				bubbles: true,
@@ -149,6 +150,9 @@ class MapMultipoint extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 			<style>
+				.mapboxgl-ctrl-bottom-right {
+					display: none;
+				}
 				.map-container {
 					background-color: #e9ecef;
 					border-radius: 10px;
