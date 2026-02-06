@@ -35,22 +35,6 @@ async function handleMarkerDrag(lngLat) {
 		addressInput.SetValue(response.features[0]);
 	}
 }
-function selectInspectionType(type) {
-	// Remove selected class from both cards
-	document.getElementById('propertyInspection').classList.remove('selected');
-	document.getElementById('neighborhoodInspection').classList.remove('selected');
-	
-	// Add selected class to chosen card
-	if (type === 'property') {
-		document.getElementById('propertyInspection').classList.add('selected');
-		document.getElementById('inspectionTypeProperty').checked = true;
-		document.getElementById('schedulingSection').style.display = 'block';
-	} else {
-		document.getElementById('neighborhoodInspection').classList.add('selected');
-		document.getElementById('inspectionTypeNeighborhood').checked = true;
-		document.getElementById('schedulingSection').style.display = 'none';
-	}
-}
 function setLocationInputs(location) {
        let country = document.getElementById('address-country');
        let latitude = document.getElementById('latitude');
