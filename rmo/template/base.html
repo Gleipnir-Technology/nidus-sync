@@ -15,6 +15,7 @@
 		<link rel="icon" href="/static/favicon-rmo.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
 		<script>
+			var tooltipByElementId = {};
 			document.addEventListener("DOMContentLoaded", function () {
 				var popoverTriggerList = [].slice.call(
 					document.querySelectorAll('[data-bs-toggle="popover"]'),
@@ -28,7 +29,12 @@
 					document.querySelectorAll('[data-bs-toggle="tooltip"]'),
 				);
 				var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-					return new bootstrap.Tooltip(tooltipTriggerEl);
+					let t = new bootstrap.Tooltip(tooltipTriggerEl);
+					if (tooltipTriggerEl.id != "") {
+						tooltipByElementId[tooltipTriggerEl.id] = t;
+						console.log("added tooltip to", tooltipTriggerEl.id);
+					}
+					return t;
 				});
 				console.log("Initialized ", tooltipTriggerList.length, " tooltips");
 			});

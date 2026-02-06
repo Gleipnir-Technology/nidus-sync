@@ -164,24 +164,23 @@ class AddressOrReportInput extends HTMLElement {
 		this.shadowRoot.querySelectorAll('.suggestion-item').forEach(el => {
 			el.addEventListener('click', e => {
 				const type = el.dataset.type;
+				let detail = null;
 				if (type == "report") {
 					const index = parseInt(el.dataset.index);
-					const report = this._reports[index];
-					this.value = _formatReportID(report.id);
+					detail = this._reports[index];
+					this.value = _formatReportID(detail.id);
 					this._suggestionsContainer.innerHTML = "";
 				} else if (type == "address") {
 					const index = parseInt(el.dataset.index);
-					const address = this._addresses[index];
-					this.SetValue(address);
+					detail = this._addresses[index];
+					this.SetValue(detail);
 					// Dispatch custom event
-					this.dispatchEvent(new CustomEvent('address-selected', {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: {
-							location: address
-						}
-					}));
 				}
+				this.dispatchEvent(new CustomEvent('suggestion-selected', {
+					bubbles: true,
+					composed: true, // Allows event to cross shadow DOM boundary
+					detail: detail,
+				}));
 			});
 		});
 	}
