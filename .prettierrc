@@ -8,5 +8,11 @@
 	"useTabs": true,
       },
     },
+    {
+      "files": ["*.js"],
+      "options": {
+	"useTabs": true,
+      },
+    },
   ],
 }

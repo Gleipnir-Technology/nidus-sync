@@ -16,3 +16,7 @@ pre-commit:
       glob: "*.html"
       run: prettier -w {staged_files}
       stage_fixed: true
+    jsfmt:
+      glob: "*.js"
+      run: prettier -w {staged_files}
+      stage_fixed: true
