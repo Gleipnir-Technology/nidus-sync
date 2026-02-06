@@ -184,7 +184,7 @@ class AddressInput extends HTMLElement {
 			</style>
 			
 			<label for="addressInput" class="form-label">Enter address</label>
-			<input type="text" class="form-control" id="address" name="address" placeholder="${placeholder}">
+			<input class="form-control" id="address" maxlength="200" name="address" placeholder="${placeholder}" type="text">
 			<div id="suggestions" class="suggestions-container list-group"></div>
 		`;
 	}

@@ -232,7 +232,7 @@ class AddressOrReportInput extends HTMLElement {
 			
 			<div class="input-group">
 				<span class="input-group-text"><i class="fas fa-search"></i></span>
-				<input type="text" class="form-control form-control-lg" id="addressSearch" name="address" placeholder="${placeholder}">
+				<input type="text" class="form-control form-control-lg" id="addressSearch" maxlength="200" name="address" placeholder="${placeholder}">
 				<div id="suggestions" class="suggestions-container list-group"></div>
 			</div>
 		`;
