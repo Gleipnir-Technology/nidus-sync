@@ -71,27 +71,27 @@ document.addEventListener("DOMContentLoaded", onLoad);
 		<div class="card-body">
 			<div class="row">
 				<div class="col-md-4 mb-3">
-					<strong><i class="fas fa-sync me-2"></i>Type:</strong> 
+					<strong><i class="bi bi-tag me-2"></i>Type:</strong> 
 					<span>{{.Report.Type}}</span>
 				</div>
 				<div class="col-md-4 mb-3">
-					<strong><i class="fas fa-calendar-plus me-2"></i>Created:</strong> 
+					<strong><i class="bi bi-calendar me-2"></i>Created:</strong> 
 					<span>{{.Report.Created|timeSince}}</span>
 				</div>
 				<div class="col-md-4 mb-3">
-					<strong><i class="fas fa-hourglass-half me-2"></i>District:</strong> 
+					<strong><i class="bi bi-crosshair me-2"></i>District:</strong> 
 					<span>{{if (eq .District nil)}}Unknown{{else}}{{.District.Name}}{{end}}</span>
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-12">
-					<strong><i class="fas fa-map-marked-alt me-2"></i>Location:</strong> 
+					<strong><i class="bi bi-pin-map me-2"></i>Location:</strong> 
 					<span>{{.Report.Address}}</span>
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-12">
-					<strong><i class="fas fa-images me-2"></i>Images:</strong> 
+					<strong><i class="bi bi-images me-2"></i>Images:</strong> 
 					
 					<span>{{ if gt .Report.ImageCount 0 }}{{.Report.ImageCount}}{{else}}None provided{{end}}</span>
 				</div>
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", onLoad);
 	<!-- Map Section -->
 	<div class="card mb-4">
 		<div class="card-header bg-info text-white">
-			<h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Location Map</h5>
+			<h5 class="mb-0"><i class="bi bi-pin-map-fill me-2"></i>Location Map</h5>
 		</div>
 		<div class="card-body p-0">
 			<map-with-markers
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", onLoad);
 	<!-- History Timeline -->
 	<div class="card">
 		<div class="card-header bg-success text-white">
-			<h5 class="mb-0"><i class="fas fa-history me-2"></i>Request History</h5>
+			<h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Request History</h5>
 		</div>
 		<div class="card-body">
 			<div class="timeline">

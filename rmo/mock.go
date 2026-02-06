@@ -13,7 +13,6 @@ var (
 	mockNuisanceT               = buildTemplate("mock/nuisance", "base")
 	mockNuisanceSubmitCompleteT = buildTemplate("mock/nuisance-submit-complete", "base")
 	mockRootT                   = buildTemplate("mock/root", "base")
-	mockStatusT                 = buildTemplate("mock/status", "base")
 	mockWaterT                  = buildTemplate("mock/water", "base")
 )
 
@@ -29,17 +28,14 @@ func addMockRoutes(r chi.Router) {
 	r.Get("/district/{slug}", renderMock(mockDistrictRootT))
 	r.Get("/district/{slug}/nuisance", renderMock(mockNuisanceT))
 	r.Get("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
-	r.Get("/district/{slug}/status", renderMock(mockStatusT))
 	r.Get("/district/{slug}/water", renderMock(mockWaterT))
 	r.Get("/nuisance", renderMock(mockNuisanceT))
 	r.Get("/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
-	r.Get("/status", renderMock(mockStatusT))
 }
 
 func makeContentURLMock(slug string) ContentURL {
 	return ContentURL{
 		Nuisance:       makeURLMock(slug, "nuisance"),
-		Status:         makeURLMock(slug, "status"),
 		SubmitComplete: makeURLMock(slug, "nuisance-submit-complete"),
 		Tegola:         config.MakeURLTegola("/"),
 		Water:          makeURLMock(slug, "water"),
