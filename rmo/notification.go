@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -18,19 +20,14 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
-	consent := r.PostFormValue("consent")
+	has_consent := boolFromForm(r, "consent")
+	has_notification := boolFromForm(r, "notification")
+	has_subscribe := boolFromForm(r, "subscribe")
 	email := r.PostFormValue("email")
+	name := r.PostFormValue("name")
 	phone_str := r.PostFormValue("phone")
 	report_id := r.PostFormValue("report_id")
-	subscribe := postFormBool(r, "subscribe")
-	if consent != "on" {
-		respondError(w, "You must consent", nil, http.StatusBadRequest)
-		return
-	}
-	if email == "" && phone_str == "" {
-		http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", report_id), http.StatusFound)
-		return
-	}
+
 	var phone *text.E164
 	if phone_str != "" {
 		phone, err = text.ParsePhoneNumber(phone_str)
@@ -41,28 +38,43 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to begin transaction")
+		http.Redirect(w, r, fmt.Sprintf("/error?code=transaction-failed&report=%s", report_id), http.StatusFound)
+		return
+	}
+	e := report.SaveReporter(ctx, txn, report_id, name, email, phone, has_consent)
+	if e != nil {
+		http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
+		return
+	}
 	if email != "" {
-		if subscribe != nil && *subscribe {
-			e := report.RegisterSubscriptionEmail(ctx, email)
+		if has_subscribe {
+			e := report.RegisterSubscriptionEmail(ctx, txn, email)
 			if e != nil {
-				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", report_id, e.Code()), http.StatusFound)
+				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}
-		e := report.RegisterNotificationEmail(ctx, report_id, email)
-		if e != nil {
-			http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", report_id, e.Code()), http.StatusFound)
+		if has_notification {
+			e := report.RegisterNotificationEmail(ctx, txn, report_id, email)
+			if e != nil {
+				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
+			}
 		}
 	}
 	if phone != nil {
-		if subscribe != nil && *subscribe {
-			e := report.RegisterSubscriptionPhone(ctx, *phone)
+		if has_subscribe {
+			e := report.RegisterSubscriptionPhone(ctx, txn, *phone)
 			if e != nil {
-				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", report_id, e.Code()), http.StatusFound)
+				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}
-		e := report.RegisterNotificationPhone(ctx, report_id, *phone)
-		if e != nil {
-			http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", report_id, e.Code()), http.StatusFound)
+		if has_notification {
+			e := report.RegisterNotificationPhone(ctx, txn, report_id, *phone)
+			if e != nil {
+				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
+			}
 		}
 	}
 	http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)

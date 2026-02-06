@@ -68,6 +68,10 @@ type preloaders struct {
 	Organization                      organizationPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
+	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisancePreloader
+	PublicreportNotifyEmailPool       publicreportNotifyEmailPoolPreloader
+	PublicreportNotifyPhoneNuisance   publicreportNotifyPhoneNuisancePreloader
+	PublicreportNotifyPhonePool       publicreportNotifyPhonePoolPreloader
 	PublicreportNuisance              publicreportNuisancePreloader
 	PublicreportNuisanceImage         publicreportNuisanceImagePreloader
 	PublicreportPool                  publicreportPoolPreloader
@@ -130,6 +134,10 @@ func getPreloaders() preloaders {
 		Organization:                      buildOrganizationPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
+		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisancePreloader(),
+		PublicreportNotifyEmailPool:       buildPublicreportNotifyEmailPoolPreloader(),
+		PublicreportNotifyPhoneNuisance:   buildPublicreportNotifyPhoneNuisancePreloader(),
+		PublicreportNotifyPhonePool:       buildPublicreportNotifyPhonePoolPreloader(),
 		PublicreportNuisance:              buildPublicreportNuisancePreloader(),
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImagePreloader(),
 		PublicreportPool:                  buildPublicreportPoolPreloader(),
@@ -198,6 +206,10 @@ type thenLoaders[Q orm.Loadable] struct {
 	Organization                      organizationThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
+	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisanceThenLoader[Q]
+	PublicreportNotifyEmailPool       publicreportNotifyEmailPoolThenLoader[Q]
+	PublicreportNotifyPhoneNuisance   publicreportNotifyPhoneNuisanceThenLoader[Q]
+	PublicreportNotifyPhonePool       publicreportNotifyPhonePoolThenLoader[Q]
 	PublicreportNuisance              publicreportNuisanceThenLoader[Q]
 	PublicreportNuisanceImage         publicreportNuisanceImageThenLoader[Q]
 	PublicreportPool                  publicreportPoolThenLoader[Q]
@@ -260,6 +272,10 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Organization:                      buildOrganizationThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
+		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisanceThenLoader[Q](),
+		PublicreportNotifyEmailPool:       buildPublicreportNotifyEmailPoolThenLoader[Q](),
+		PublicreportNotifyPhoneNuisance:   buildPublicreportNotifyPhoneNuisanceThenLoader[Q](),
+		PublicreportNotifyPhonePool:       buildPublicreportNotifyPhonePoolThenLoader[Q](),
 		PublicreportNuisance:              buildPublicreportNuisanceThenLoader[Q](),
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImageThenLoader[Q](),
 		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),

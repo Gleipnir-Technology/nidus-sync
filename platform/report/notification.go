@@ -5,118 +5,24 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
+	//"time"
 
+	//"github.com/aarondl/opt/omit"
+	//"github.com/aarondl/opt/omitnull"
 	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
+	//"github.com/Gleipnir-Technology/bob/dialect/psql"
+	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	//"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/scan"
+	//"github.com/stephenafamo/scan"
 )
-
-type ErrorWithCode struct {
-	code    string
-	err     error
-	message string
-}
-
-func (e *ErrorWithCode) Code() string {
-	return e.code
-}
-func (e *ErrorWithCode) Error() string {
-	return e.message
-}
-
-type SomeReport struct {
-	reportID  string
-	tableName string
-}
-
-func (sr SomeReport) districtID(ctx context.Context) *int32 {
-	type _Row struct {
-		OrganizationID *int32
-	}
-
-	from := sm.From("no-such-table")
-	switch sr.tableName {
-	case "nuisance":
-		from = sm.From("publicreport.nuisance")
-	case "pool":
-		from = sm.From("publicreport.pool")
-	default:
-		log.Error().Str("table-name", sr.tableName).Msg("Programmer error, non-exhaustive switch statement in SomeReport.districtID")
-	}
-	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		from,
-		sm.Columns("organization_id"),
-		sm.Where(psql.Quote("public_id").EQ(psql.Arg(sr.reportID))),
-	), scan.StructMapper[_Row]())
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to query for organization_id")
-		return nil
-	}
-	return row.OrganizationID
-}
-func (sr SomeReport) updateReporterEmail(ctx context.Context, email string) *ErrorWithCode {
-	table := um.Table("so-such-table")
-	switch sr.tableName {
-	case "nuisance":
-		table = um.Table("publicreport.nuisance")
-	case "pool":
-		table = um.Table("publicreport.pool")
-	default:
-		return newErrorWithCode("internal-error", "Programmer error: unrecognized table")
-	}
-	result, err := psql.Update(
-		table,
-		um.SetCol("reporter_email").ToArg(email),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.reportID))),
-	).Exec(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
-	}
-	rowcount, err := result.RowsAffected()
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
-	}
-	if rowcount != 1 {
-		log.Warn().Str("report_id", sr.reportID).Msg("updated more than one row, which is a programmer error")
-	}
-	return nil
-}
-func (sr SomeReport) updateReporterPhone(ctx context.Context, phone text.E164) *ErrorWithCode {
-	table := um.Table("so-such-table")
-	switch sr.tableName {
-	case "nuisance":
-		table = um.Table("publicreport.nuisance")
-	case "pool":
-		table = um.Table("publicreport.pool")
-	default:
-		return newErrorWithCode("internal-error", "Programmer error: unrecognized table")
-	}
-	result, err := psql.Update(
-		table,
-		um.SetCol("reporter_phone").ToArg(text.PhoneString(phone)),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.reportID))),
-	).Exec(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
-	}
-	rowcount, err := result.RowsAffected()
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
-	}
-	if rowcount != 1 {
-		log.Warn().Str("report_id", sr.reportID).Msg("updated more than one row, which is a programmer error")
-	}
-	return nil
-}
 
 func DistrictForReport(ctx context.Context, report_id string) (*models.Organization, error) {
 	some_report, err := findSomeReport(ctx, report_id)
@@ -159,12 +65,12 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func RegisterNotificationEmail(ctx context.Context, report_id string, email string) *ErrorWithCode {
+func RegisterNotificationEmail(ctx context.Context, txn bob.Tx, report_id string, email string) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
 	}
-	err = some_report.updateReporterEmail(ctx, email)
+	err = some_report.addNotificationEmail(ctx, txn, email)
 	if err != nil {
 		return err
 	}
@@ -172,12 +78,12 @@ func RegisterNotificationEmail(ctx context.Context, report_id string, email stri
 	return nil
 }
 
-func RegisterNotificationPhone(ctx context.Context, report_id string, phone text.E164) *ErrorWithCode {
+func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string, phone text.E164) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
 	}
-	err = some_report.updateReporterPhone(ctx, phone)
+	err = some_report.addNotificationPhone(ctx, txn, phone)
 	if err != nil {
 		return err
 	}
@@ -185,18 +91,48 @@ func RegisterNotificationPhone(ctx context.Context, report_id string, phone text
 	return nil
 }
 
-func RegisterSubscriptionEmail(ctx context.Context, email string) *ErrorWithCode {
+func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
 	log.Warn().Msg("RegisterSubscription not implemented yet")
 	return nil
 }
-func RegisterSubscriptionPhone(ctx context.Context, phone text.E164) *ErrorWithCode {
+func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
 	log.Warn().Msg("RegisterSubscription not implemented yet")
 	return nil
 }
 
+func SaveReporter(ctx context.Context, txn bob.Tx, report_id string, name string, email string, phone *text.E164, has_consent bool) *ErrorWithCode {
+	some_report, err := findSomeReport(ctx, report_id)
+	if err != nil {
+		return err
+	}
+	if name != "" {
+		err = some_report.updateReporterName(ctx, txn, name)
+		if err != nil {
+			return err
+		}
+	}
+	if phone != nil {
+		err = some_report.updateReporterPhone(ctx, txn, *phone)
+		if err != nil {
+			return err
+		}
+	}
+	if email != "" {
+		err = some_report.updateReporterEmail(ctx, txn, email)
+		if err != nil {
+			return err
+		}
+	}
+	err = some_report.updateReporterConsent(ctx, txn, has_consent)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func findSomeReport(ctx context.Context, report_id string) (result SomeReport, err *ErrorWithCode) {
 	rows, e := sql.PublicreportIDTable(report_id).All(ctx, db.PGInstance.BobDB)
 	if e != nil {
+		log.Error().Err(e).Str("report_id", report_id).Msg("failed to query report ID table")
 		return result, newErrorWithCode("internal-error", "Failed to query report ID table: %w", e)
 	}
 	switch len(rows) {
@@ -205,25 +141,24 @@ func findSomeReport(ctx context.Context, report_id string) (result SomeReport, e
 	case 1:
 		break
 	default:
+		log.Error().Err(e).Str("report_id", report_id).Msg("More than one report with the provided ID, which shouldn't happen")
 		return result, newErrorWithCode("internal-error", "More than one report with the provided ID, which shouldn't happen")
 	}
 	row := rows[0]
-	result.reportID = report_id
-	result.tableName = row.FoundInTables[0]
-	return result, nil
-}
+	report_id_str := row.ReportIds[0]
+	t, e := strconv.ParseInt(report_id_str, 10, 32)
+	if e != nil {
+		log.Error().Err(e).Str("report_id_str", report_id_str).Msg("Unable to parse integer reponse from database")
+		return result, newErrorWithCode("internal-error", "Unable to parse integer response from database")
+	}
 
-func newErrorWithCode(code string, format string, args ...any) *ErrorWithCode {
-	if len(args) > 0 {
-		return &ErrorWithCode{
-			err:  fmt.Errorf(format, args...),
-			code: code,
-		}
-	} else {
-		return &ErrorWithCode{
-			code:    code,
-			err:     nil,
-			message: format,
-		}
+	switch row.FoundInTables[0] {
+	case "nuisance":
+		return newNuisance(ctx, report_id, int32(t))
+	case "pool":
+		return newPool(ctx, report_id, int32(t))
+	default:
+		log.Error().Err(e).Str("table_name", row.FoundInTables[0]).Msg("Unrecognized table")
+		return Nuisance{}, newErrorWithCode("internal-error", fmt.Sprintf("Unrecognized table '%s'", row.FoundInTables[0]))
 	}
 }

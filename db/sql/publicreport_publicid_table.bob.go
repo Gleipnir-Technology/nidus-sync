@@ -20,7 +20,7 @@ import (
 //go:embed publicreport_publicid_table.bob.sql
 var formattedQueries_publicreport_publicid_table string
 
-var publicreportIDTableSQL = formattedQueries_publicreport_publicid_table[157:624]
+var publicreportIDTableSQL = formattedQueries_publicreport_publicid_table[157:638]
 
 type PublicreportIDTableQuery = orm.ModQuery[*dialect.SelectQuery, publicreportIDTable, PublicreportIDTableRow, []PublicreportIDTableRow, publicreportIDTableTransformer]
 
@@ -43,6 +43,7 @@ func PublicreportIDTable(PublicID string) *PublicreportIDTableQuery {
 						var t PublicreportIDTableRow
 						row.ScheduleScanByIndex(0, &t.ExistsSomewhere)
 						row.ScheduleScanByIndex(1, &t.FoundInTables)
+						row.ScheduleScanByIndex(2, &t.ReportIds)
 						return &t, nil
 					}, func(v any) (PublicreportIDTableRow, error) {
 						return *(v.(*PublicreportIDTableRow)), nil
@@ -50,9 +51,9 @@ func PublicreportIDTable(PublicID string) *PublicreportIDTableQuery {
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendCTE(expressionTypArgs.subExpr(5, 335))
-			q.AppendSelect(expressionTypArgs.subExpr(348, 449))
-			q.SetTable(expressionTypArgs.subExpr(455, 467))
+			q.AppendCTE(expressionTypArgs.subExpr(5, 325))
+			q.AppendSelect(expressionTypArgs.subExpr(335, 463))
+			q.SetTable(expressionTypArgs.subExpr(469, 481))
 		}),
 	}
 }
@@ -60,6 +61,7 @@ func PublicreportIDTable(PublicID string) *PublicreportIDTableQuery {
 type PublicreportIDTableRow = struct {
 	ExistsSomewhere bool           `db:"exists_somewhere"`
 	FoundInTables   pq.StringArray `db:"found_in_tables"`
+	ReportIds       pq.StringArray `db:"report_ids"`
 }
 
 type publicreportIDTableTransformer = bob.SliceTransformer[PublicreportIDTableRow, []PublicreportIDTableRow]
@@ -81,8 +83,8 @@ func (o publicreportIDTable) args() iter.Seq[orm.ArgWithPosition] {
 
 		if !yield(orm.ArgWithPosition{
 			Name:       "publicID",
-			Start:      221,
-			Stop:       223,
+			Start:      217,
+			Stop:       219,
 			Expression: o.PublicID,
 		}) {
 			return
@@ -90,8 +92,8 @@ func (o publicreportIDTable) args() iter.Seq[orm.ArgWithPosition] {
 
 		if !yield(orm.ArgWithPosition{
 			Name:       "publicID",
-			Start:      331,
-			Stop:       333,
+			Start:      321,
+			Stop:       323,
 			Expression: o.PublicID,
 		}) {
 			return

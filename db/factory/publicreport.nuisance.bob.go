@@ -38,40 +38,41 @@ func (mods PublicreportNuisanceModSlice) Apply(ctx context.Context, n *Publicrep
 // PublicreportNuisanceTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportNuisanceTemplate struct {
-	ID                  func() int32
-	AdditionalInfo      func() string
-	Created             func() time.Time
-	Duration            func() enums.PublicreportNuisancedurationtype
-	SourceContainer     func() bool
-	SourceDescription   func() string
-	SourceStagnant      func() bool
-	PublicID            func() string
-	ReporterEmail       func() null.Val[string]
-	ReporterName        func() null.Val[string]
-	ReporterPhone       func() null.Val[string]
-	Address             func() string
-	Location            func() null.Val[string]
-	Status              func() enums.PublicreportReportstatustype
-	OrganizationID      func() null.Val[int32]
-	SourceGutter        func() bool
-	H3cell              func() null.Val[string]
-	AddressCountry      func() string
-	AddressPlace        func() string
-	AddressPostcode     func() string
-	AddressRegion       func() string
-	AddressStreet       func() string
-	IsLocationBackyard  func() bool
-	IsLocationFrontyard func() bool
-	IsLocationGarden    func() bool
-	IsLocationOther     func() bool
-	IsLocationPool      func() bool
-	MapZoom             func() float32
-	TodEarly            func() bool
-	TodDay              func() bool
-	TodEvening          func() bool
-	TodNight            func() bool
-	LatlngAccuracyType  func() enums.PublicreportAccuracytype
-	LatlngAccuracyValue func() float32
+	ID                     func() int32
+	AdditionalInfo         func() string
+	Created                func() time.Time
+	Duration               func() enums.PublicreportNuisancedurationtype
+	SourceContainer        func() bool
+	SourceDescription      func() string
+	SourceStagnant         func() bool
+	PublicID               func() string
+	ReporterEmail          func() null.Val[string]
+	ReporterName           func() null.Val[string]
+	ReporterPhone          func() null.Val[string]
+	Address                func() string
+	Location               func() null.Val[string]
+	Status                 func() enums.PublicreportReportstatustype
+	OrganizationID         func() null.Val[int32]
+	SourceGutter           func() bool
+	H3cell                 func() null.Val[string]
+	AddressCountry         func() string
+	AddressPlace           func() string
+	AddressPostcode        func() string
+	AddressRegion          func() string
+	AddressStreet          func() string
+	IsLocationBackyard     func() bool
+	IsLocationFrontyard    func() bool
+	IsLocationGarden       func() bool
+	IsLocationOther        func() bool
+	IsLocationPool         func() bool
+	MapZoom                func() float32
+	TodEarly               func() bool
+	TodDay                 func() bool
+	TodEvening             func() bool
+	TodNight               func() bool
+	LatlngAccuracyType     func() enums.PublicreportAccuracytype
+	LatlngAccuracyValue    func() float32
+	ReporterContactConsent func() null.Val[bool]
 
 	r publicreportNuisanceR
 	f *Factory
@@ -80,10 +81,20 @@ type PublicreportNuisanceTemplate struct {
 }
 
 type publicreportNuisanceR struct {
-	Organization *publicreportNuisanceROrganizationR
-	Images       []*publicreportNuisanceRImagesR
+	NotifyEmailNuisances []*publicreportNuisanceRNotifyEmailNuisancesR
+	NotifyPhoneNuisances []*publicreportNuisanceRNotifyPhoneNuisancesR
+	Organization         *publicreportNuisanceROrganizationR
+	Images               []*publicreportNuisanceRImagesR
 }
 
+type publicreportNuisanceRNotifyEmailNuisancesR struct {
+	number int
+	o      *PublicreportNotifyEmailNuisanceTemplate
+}
+type publicreportNuisanceRNotifyPhoneNuisancesR struct {
+	number int
+	o      *PublicreportNotifyPhoneNuisanceTemplate
+}
 type publicreportNuisanceROrganizationR struct {
 	o *OrganizationTemplate
 }
@@ -102,6 +113,32 @@ func (o *PublicreportNuisanceTemplate) Apply(ctx context.Context, mods ...Public
 // setModelRels creates and sets the relationships on *models.PublicreportNuisance
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportNuisanceTemplate) setModelRels(o *models.PublicreportNuisance) {
+	if t.r.NotifyEmailNuisances != nil {
+		rel := models.PublicreportNotifyEmailNuisanceSlice{}
+		for _, r := range t.r.NotifyEmailNuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.NuisanceID = o.ID // h2
+				rel.R.Nuisance = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.NotifyEmailNuisances = rel
+	}
+
+	if t.r.NotifyPhoneNuisances != nil {
+		rel := models.PublicreportNotifyPhoneNuisanceSlice{}
+		for _, r := range t.r.NotifyPhoneNuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.NuisanceID = o.ID // h2
+				rel.R.Nuisance = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.NotifyPhoneNuisances = rel
+	}
+
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.Nuisances = append(rel.R.Nuisances, o)
@@ -263,6 +300,10 @@ func (o PublicreportNuisanceTemplate) BuildSetter() *models.PublicreportNuisance
 		val := o.LatlngAccuracyValue()
 		m.LatlngAccuracyValue = omit.From(val)
 	}
+	if o.ReporterContactConsent != nil {
+		val := o.ReporterContactConsent()
+		m.ReporterContactConsent = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -386,6 +427,9 @@ func (o PublicreportNuisanceTemplate) Build() *models.PublicreportNuisance {
 	}
 	if o.LatlngAccuracyValue != nil {
 		m.LatlngAccuracyValue = o.LatlngAccuracyValue()
+	}
+	if o.ReporterContactConsent != nil {
+		m.ReporterContactConsent = o.ReporterContactConsent()
 	}
 
 	o.setModelRels(m)
@@ -523,18 +567,58 @@ func ensureCreatablePublicreportNuisance(m *models.PublicreportNuisanceSetter) {
 func (o *PublicreportNuisanceTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportNuisance) error {
 	var err error
 
+	isNotifyEmailNuisancesDone, _ := publicreportNuisanceRelNotifyEmailNuisancesCtx.Value(ctx)
+	if !isNotifyEmailNuisancesDone && o.r.NotifyEmailNuisances != nil {
+		ctx = publicreportNuisanceRelNotifyEmailNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.NotifyEmailNuisances {
+			if r.o.alreadyPersisted {
+				m.R.NotifyEmailNuisances = append(m.R.NotifyEmailNuisances, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNotifyEmailNuisances(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isNotifyPhoneNuisancesDone, _ := publicreportNuisanceRelNotifyPhoneNuisancesCtx.Value(ctx)
+	if !isNotifyPhoneNuisancesDone && o.r.NotifyPhoneNuisances != nil {
+		ctx = publicreportNuisanceRelNotifyPhoneNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.NotifyPhoneNuisances {
+			if r.o.alreadyPersisted {
+				m.R.NotifyPhoneNuisances = append(m.R.NotifyPhoneNuisances, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNotifyPhoneNuisances(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isOrganizationDone, _ := publicreportNuisanceRelOrganizationCtx.Value(ctx)
 	if !isOrganizationDone && o.r.Organization != nil {
 		ctx = publicreportNuisanceRelOrganizationCtx.WithValue(ctx, true)
 		if o.r.Organization.o.alreadyPersisted {
 			m.R.Organization = o.r.Organization.o.Build()
 		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			var rel2 *models.Organization
+			rel2, err = o.r.Organization.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachOrganization(ctx, exec, rel0)
+			err = m.AttachOrganization(ctx, exec, rel2)
 			if err != nil {
 				return err
 			}
@@ -549,12 +633,12 @@ func (o *PublicreportNuisanceTemplate) insertOptRels(ctx context.Context, exec b
 			if r.o.alreadyPersisted {
 				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachImages(ctx, exec, rel1...)
+				err = m.AttachImages(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -688,6 +772,7 @@ func (m publicreportNuisanceMods) RandomizeAllColumns(f *faker.Faker) Publicrepo
 		PublicreportNuisanceMods.RandomTodNight(f),
 		PublicreportNuisanceMods.RandomLatlngAccuracyType(f),
 		PublicreportNuisanceMods.RandomLatlngAccuracyValue(f),
+		PublicreportNuisanceMods.RandomReporterContactConsent(f),
 	}
 }
 
@@ -1877,6 +1962,59 @@ func (m publicreportNuisanceMods) RandomLatlngAccuracyValue(f *faker.Faker) Publ
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportNuisanceMods) ReporterContactConsent(val null.Val[bool]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportNuisanceMods) ReporterContactConsentFunc(f func() null.Val[bool]) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterContactConsent = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportNuisanceMods) UnsetReporterContactConsent() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterContactConsent = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportNuisanceMods) RandomReporterContactConsent(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportNuisanceMods) RandomReporterContactConsentNotNull(f *faker.Faker) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(_ context.Context, o *PublicreportNuisanceTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportNuisanceMods) WithParentsCascading() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
 		if isDone, _ := publicreportNuisanceWithParentsCascadingCtx.Value(ctx); isDone {
@@ -1918,6 +2056,102 @@ func (m publicreportNuisanceMods) WithExistingOrganization(em *models.Organizati
 func (m publicreportNuisanceMods) WithoutOrganization() PublicreportNuisanceMod {
 	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m publicreportNuisanceMods) WithNotifyEmailNuisances(number int, related *PublicreportNotifyEmailNuisanceTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyEmailNuisances = []*publicreportNuisanceRNotifyEmailNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportNuisanceMods) WithNewNotifyEmailNuisances(number int, mods ...PublicreportNotifyEmailNuisanceMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportNotifyEmailNuisanceWithContext(ctx, mods...)
+		m.WithNotifyEmailNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddNotifyEmailNuisances(number int, related *PublicreportNotifyEmailNuisanceTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyEmailNuisances = append(o.r.NotifyEmailNuisances, &publicreportNuisanceRNotifyEmailNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportNuisanceMods) AddNewNotifyEmailNuisances(number int, mods ...PublicreportNotifyEmailNuisanceMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportNotifyEmailNuisanceWithContext(ctx, mods...)
+		m.AddNotifyEmailNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddExistingNotifyEmailNuisances(existingModels ...*models.PublicreportNotifyEmailNuisance) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		for _, em := range existingModels {
+			o.r.NotifyEmailNuisances = append(o.r.NotifyEmailNuisances, &publicreportNuisanceRNotifyEmailNuisancesR{
+				o: o.f.FromExistingPublicreportNotifyEmailNuisance(em),
+			})
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithoutNotifyEmailNuisances() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyEmailNuisances = nil
+	})
+}
+
+func (m publicreportNuisanceMods) WithNotifyPhoneNuisances(number int, related *PublicreportNotifyPhoneNuisanceTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyPhoneNuisances = []*publicreportNuisanceRNotifyPhoneNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportNuisanceMods) WithNewNotifyPhoneNuisances(number int, mods ...PublicreportNotifyPhoneNuisanceMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportNotifyPhoneNuisanceWithContext(ctx, mods...)
+		m.WithNotifyPhoneNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddNotifyPhoneNuisances(number int, related *PublicreportNotifyPhoneNuisanceTemplate) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyPhoneNuisances = append(o.r.NotifyPhoneNuisances, &publicreportNuisanceRNotifyPhoneNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportNuisanceMods) AddNewNotifyPhoneNuisances(number int, mods ...PublicreportNotifyPhoneNuisanceMod) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		related := o.f.NewPublicreportNotifyPhoneNuisanceWithContext(ctx, mods...)
+		m.AddNotifyPhoneNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportNuisanceMods) AddExistingNotifyPhoneNuisances(existingModels ...*models.PublicreportNotifyPhoneNuisance) PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		for _, em := range existingModels {
+			o.r.NotifyPhoneNuisances = append(o.r.NotifyPhoneNuisances, &publicreportNuisanceRNotifyPhoneNuisancesR{
+				o: o.f.FromExistingPublicreportNotifyPhoneNuisance(em),
+			})
+		}
+	})
+}
+
+func (m publicreportNuisanceMods) WithoutNotifyPhoneNuisances() PublicreportNuisanceMod {
+	return PublicreportNuisanceModFunc(func(ctx context.Context, o *PublicreportNuisanceTemplate) {
+		o.r.NotifyPhoneNuisances = nil
 	})
 }
 

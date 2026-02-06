@@ -83,6 +83,10 @@ type joins[Q dialect.Joinable] struct {
 	Organizations                      joinSet[organizationJoins[Q]]
 	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
 	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
+	PublicreportNotifyEmailNuisances   joinSet[publicreportNotifyEmailNuisanceJoins[Q]]
+	PublicreportNotifyEmailPools       joinSet[publicreportNotifyEmailPoolJoins[Q]]
+	PublicreportNotifyPhoneNuisances   joinSet[publicreportNotifyPhoneNuisanceJoins[Q]]
+	PublicreportNotifyPhonePools       joinSet[publicreportNotifyPhonePoolJoins[Q]]
 	PublicreportNuisances              joinSet[publicreportNuisanceJoins[Q]]
 	PublicreportNuisanceImages         joinSet[publicreportNuisanceImageJoins[Q]]
 	PublicreportPools                  joinSet[publicreportPoolJoins[Q]]
@@ -153,6 +157,10 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
 		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
 		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
+		PublicreportNotifyEmailNuisances:   buildJoinSet[publicreportNotifyEmailNuisanceJoins[Q]](PublicreportNotifyEmailNuisances.Columns, buildPublicreportNotifyEmailNuisanceJoins),
+		PublicreportNotifyEmailPools:       buildJoinSet[publicreportNotifyEmailPoolJoins[Q]](PublicreportNotifyEmailPools.Columns, buildPublicreportNotifyEmailPoolJoins),
+		PublicreportNotifyPhoneNuisances:   buildJoinSet[publicreportNotifyPhoneNuisanceJoins[Q]](PublicreportNotifyPhoneNuisances.Columns, buildPublicreportNotifyPhoneNuisanceJoins),
+		PublicreportNotifyPhonePools:       buildJoinSet[publicreportNotifyPhonePoolJoins[Q]](PublicreportNotifyPhonePools.Columns, buildPublicreportNotifyPhonePoolJoins),
 		PublicreportNuisances:              buildJoinSet[publicreportNuisanceJoins[Q]](PublicreportNuisances.Columns, buildPublicreportNuisanceJoins),
 		PublicreportNuisanceImages:         buildJoinSet[publicreportNuisanceImageJoins[Q]](PublicreportNuisanceImages.Columns, buildPublicreportNuisanceImageJoins),
 		PublicreportPools:                  buildJoinSet[publicreportPoolJoins[Q]](PublicreportPools.Columns, buildPublicreportPoolJoins),

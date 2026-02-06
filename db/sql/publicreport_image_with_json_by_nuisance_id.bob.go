@@ -22,7 +22,7 @@ import (
 //go:embed publicreport_image_with_json_by_nuisance_id.bob.sql
 var formattedQueries_publicreport_image_with_json_by_nuisance_id string
 
-var publicreportImageWithJSONByNuisanceIDSQL = formattedQueries_publicreport_image_with_json_by_nuisance_id[175:983]
+var publicreportImageWithJSONByNuisanceIDSQL = formattedQueries_publicreport_image_with_json_by_nuisance_id[175:999]
 
 type PublicreportImageWithJSONByNuisanceIDQuery = orm.ModQuery[*dialect.SelectQuery, publicreportImageWithJSONByNuisanceID, PublicreportImageWithJSONByNuisanceIDRow, []PublicreportImageWithJSONByNuisanceIDRow, publicreportImageWithJSONByNuisanceIDTransformer]
 
@@ -60,9 +60,9 @@ func PublicreportImageWithJSONByNuisanceID(NuisanceID int32) *PublicreportImageW
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendSelect(expressionTypArgs.subExpr(9, 549))
-			q.SetTable(expressionTypArgs.subExpr(555, 751))
-			q.AppendWhere(expressionTypArgs.subExpr(759, 807))
+			q.AppendSelect(expressionTypArgs.subExpr(9, 565))
+			q.SetTable(expressionTypArgs.subExpr(571, 767))
+			q.AppendWhere(expressionTypArgs.subExpr(775, 823))
 		}),
 	}
 }
@@ -90,8 +90,8 @@ func (o publicreportImageWithJSONByNuisanceID) args() iter.Seq[orm.ArgWithPositi
 	return func(yield func(arg orm.ArgWithPosition) bool) {
 		if !yield(orm.ArgWithPosition{
 			Name:       "nuisanceID",
-			Start:      805,
-			Stop:       807,
+			Start:      821,
+			Stop:       823,
 			Expression: o.NuisanceID,
 		}) {
 			return

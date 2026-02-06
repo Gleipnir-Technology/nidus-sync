@@ -71,6 +71,10 @@ func Where[Q psql.Filterable]() struct {
 	Organizations                      organizationWhere[Q]
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
+	PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
+	PublicreportNotifyEmailPools       publicreportNotifyEmailPoolWhere[Q]
+	PublicreportNotifyPhoneNuisances   publicreportNotifyPhoneNuisanceWhere[Q]
+	PublicreportNotifyPhonePools       publicreportNotifyPhonePoolWhere[Q]
 	PublicreportNuisances              publicreportNuisanceWhere[Q]
 	PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 	PublicreportPools                  publicreportPoolWhere[Q]
@@ -139,6 +143,10 @@ func Where[Q psql.Filterable]() struct {
 		Organizations                      organizationWhere[Q]
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
+		PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
+		PublicreportNotifyEmailPools       publicreportNotifyEmailPoolWhere[Q]
+		PublicreportNotifyPhoneNuisances   publicreportNotifyPhoneNuisanceWhere[Q]
+		PublicreportNotifyPhonePools       publicreportNotifyPhonePoolWhere[Q]
 		PublicreportNuisances              publicreportNuisanceWhere[Q]
 		PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 		PublicreportPools                  publicreportPoolWhere[Q]
@@ -206,6 +214,10 @@ func Where[Q psql.Filterable]() struct {
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
+		PublicreportNotifyEmailNuisances:   buildPublicreportNotifyEmailNuisanceWhere[Q](PublicreportNotifyEmailNuisances.Columns),
+		PublicreportNotifyEmailPools:       buildPublicreportNotifyEmailPoolWhere[Q](PublicreportNotifyEmailPools.Columns),
+		PublicreportNotifyPhoneNuisances:   buildPublicreportNotifyPhoneNuisanceWhere[Q](PublicreportNotifyPhoneNuisances.Columns),
+		PublicreportNotifyPhonePools:       buildPublicreportNotifyPhonePoolWhere[Q](PublicreportNotifyPhonePools.Columns),
 		PublicreportNuisances:              buildPublicreportNuisanceWhere[Q](PublicreportNuisances.Columns),
 		PublicreportNuisanceImages:         buildPublicreportNuisanceImageWhere[Q](PublicreportNuisanceImages.Columns),
 		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),

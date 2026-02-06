@@ -62,6 +62,7 @@ type PublicreportPool struct {
 	HasBackyardPermission  bool                               `db:"has_backyard_permission" `
 	IsReporterConfidential bool                               `db:"is_reporter_confidential" `
 	IsReporterOwner        bool                               `db:"is_reporter_owner" `
+	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
 
 	R publicreportPoolR `db:"-" `
 
@@ -80,14 +81,16 @@ type PublicreportPoolsQuery = *psql.ViewQuery[*PublicreportPool, PublicreportPoo
 
 // publicreportPoolR is where relationships are stored.
 type publicreportPoolR struct {
-	Organization *Organization          // publicreport.pool.pool_organization_id_fkey
-	Images       PublicreportImageSlice // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
+	NotifyEmailPools PublicreportNotifyEmailPoolSlice // publicreport.notify_email_pool.notify_email_pool_pool_id_fkey
+	NotifyPhonePools PublicreportNotifyPhonePoolSlice // publicreport.notify_phone_pool.notify_phone_pool_pool_id_fkey
+	Organization     *Organization                    // publicreport.pool.pool_organization_id_fkey
+	Images           PublicreportImageSlice           // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
 }
 
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent",
 		).WithParent("publicreport.pool"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -123,6 +126,7 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		HasBackyardPermission:  psql.Quote(alias, "has_backyard_permission"),
 		IsReporterConfidential: psql.Quote(alias, "is_reporter_confidential"),
 		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
+		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
 	}
 }
 
@@ -162,6 +166,7 @@ type publicreportPoolColumns struct {
 	HasBackyardPermission  psql.Expression
 	IsReporterConfidential psql.Expression
 	IsReporterOwner        psql.Expression
+	ReporterContactConsent psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -209,10 +214,11 @@ type PublicreportPoolSetter struct {
 	HasBackyardPermission  omit.Val[bool]                               `db:"has_backyard_permission" `
 	IsReporterConfidential omit.Val[bool]                               `db:"is_reporter_confidential" `
 	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
+	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 33)
+	vals := make([]string, 0, 34)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -311,6 +317,9 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	}
 	if s.IsReporterOwner.IsValue() {
 		vals = append(vals, "is_reporter_owner")
+	}
+	if !s.ReporterContactConsent.IsUnset() {
+		vals = append(vals, "reporter_contact_consent")
 	}
 	return vals
 }
@@ -415,6 +424,9 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.IsReporterOwner.IsValue() {
 		t.IsReporterOwner = s.IsReporterOwner.MustGet()
 	}
+	if !s.ReporterContactConsent.IsUnset() {
+		t.ReporterContactConsent = s.ReporterContactConsent.MustGetNull()
+	}
 }
 
 func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -423,7 +435,7 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 33)
+		vals := make([]bob.Expression, 34)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -622,6 +634,12 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
+		if !s.ReporterContactConsent.IsUnset() {
+			vals[33] = psql.Arg(s.ReporterContactConsent.MustGetNull())
+		} else {
+			vals[33] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -631,7 +649,7 @@ func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 33)
+	exprs := make([]bob.Expression, 0, 34)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -864,6 +882,13 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if !s.ReporterContactConsent.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "reporter_contact_consent")...),
+			psql.Arg(s.ReporterContactConsent),
+		}})
+	}
+
 	return exprs
 }
 
@@ -1090,6 +1115,54 @@ func (o PublicreportPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor)
 	return nil
 }
 
+// NotifyEmailPools starts a query for related objects on publicreport.notify_email_pool
+func (o *PublicreportPool) NotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
+	return PublicreportNotifyEmailPools.Query(append(mods,
+		sm.Where(PublicreportNotifyEmailPools.Columns.PoolID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportPoolSlice) NotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportNotifyEmailPools.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyEmailPools.Columns.PoolID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// NotifyPhonePools starts a query for related objects on publicreport.notify_phone_pool
+func (o *PublicreportPool) NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
+	return PublicreportNotifyPhonePools.Query(append(mods,
+		sm.Where(PublicreportNotifyPhonePools.Columns.PoolID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportPoolSlice) NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportNotifyPhonePools.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhonePools.Columns.PoolID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Organization starts a query for related objects on organization
 func (o *PublicreportPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
@@ -1141,6 +1214,142 @@ func (os PublicreportPoolSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) Pu
 		),
 		sm.Where(psql.Group(PublicreportPoolImages.Columns.PoolID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertPublicreportPoolNotifyEmailPools0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailPools1 []*PublicreportNotifyEmailPoolSetter, publicreportPool0 *PublicreportPool) (PublicreportNotifyEmailPoolSlice, error) {
+	for i := range publicreportNotifyEmailPools1 {
+		publicreportNotifyEmailPools1[i].PoolID = omit.From(publicreportPool0.ID)
+	}
+
+	ret, err := PublicreportNotifyEmailPools.Insert(bob.ToMods(publicreportNotifyEmailPools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportPoolNotifyEmailPools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportPoolNotifyEmailPools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailPools1 PublicreportNotifyEmailPoolSlice, publicreportPool0 *PublicreportPool) (PublicreportNotifyEmailPoolSlice, error) {
+	setter := &PublicreportNotifyEmailPoolSetter{
+		PoolID: omit.From(publicreportPool0.ID),
+	}
+
+	err := publicreportNotifyEmailPools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportPoolNotifyEmailPools0: %w", err)
+	}
+
+	return publicreportNotifyEmailPools1, nil
+}
+
+func (publicreportPool0 *PublicreportPool) InsertNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNotifyEmailPools1, err := insertPublicreportPoolNotifyEmailPools0(ctx, exec, related, publicreportPool0)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.NotifyEmailPools = append(publicreportPool0.R.NotifyEmailPools, publicreportNotifyEmailPools1...)
+
+	for _, rel := range publicreportNotifyEmailPools1 {
+		rel.R.Pool = publicreportPool0
+	}
+	return nil
+}
+
+func (publicreportPool0 *PublicreportPool) AttachNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNotifyEmailPools1 := PublicreportNotifyEmailPoolSlice(related)
+
+	_, err = attachPublicreportPoolNotifyEmailPools0(ctx, exec, len(related), publicreportNotifyEmailPools1, publicreportPool0)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.NotifyEmailPools = append(publicreportPool0.R.NotifyEmailPools, publicreportNotifyEmailPools1...)
+
+	for _, rel := range related {
+		rel.R.Pool = publicreportPool0
+	}
+
+	return nil
+}
+
+func insertPublicreportPoolNotifyPhonePools0(ctx context.Context, exec bob.Executor, publicreportNotifyPhonePools1 []*PublicreportNotifyPhonePoolSetter, publicreportPool0 *PublicreportPool) (PublicreportNotifyPhonePoolSlice, error) {
+	for i := range publicreportNotifyPhonePools1 {
+		publicreportNotifyPhonePools1[i].PoolID = omit.From(publicreportPool0.ID)
+	}
+
+	ret, err := PublicreportNotifyPhonePools.Insert(bob.ToMods(publicreportNotifyPhonePools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportPoolNotifyPhonePools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportPoolNotifyPhonePools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhonePools1 PublicreportNotifyPhonePoolSlice, publicreportPool0 *PublicreportPool) (PublicreportNotifyPhonePoolSlice, error) {
+	setter := &PublicreportNotifyPhonePoolSetter{
+		PoolID: omit.From(publicreportPool0.ID),
+	}
+
+	err := publicreportNotifyPhonePools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportPoolNotifyPhonePools0: %w", err)
+	}
+
+	return publicreportNotifyPhonePools1, nil
+}
+
+func (publicreportPool0 *PublicreportPool) InsertNotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNotifyPhonePools1, err := insertPublicreportPoolNotifyPhonePools0(ctx, exec, related, publicreportPool0)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.NotifyPhonePools = append(publicreportPool0.R.NotifyPhonePools, publicreportNotifyPhonePools1...)
+
+	for _, rel := range publicreportNotifyPhonePools1 {
+		rel.R.Pool = publicreportPool0
+	}
+	return nil
+}
+
+func (publicreportPool0 *PublicreportPool) AttachNotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNotifyPhonePools1 := PublicreportNotifyPhonePoolSlice(related)
+
+	_, err = attachPublicreportPoolNotifyPhonePools0(ctx, exec, len(related), publicreportNotifyPhonePools1, publicreportPool0)
+	if err != nil {
+		return err
+	}
+
+	publicreportPool0.R.NotifyPhonePools = append(publicreportPool0.R.NotifyPhonePools, publicreportNotifyPhonePools1...)
+
+	for _, rel := range related {
+		rel.R.Pool = publicreportPool0
+	}
+
+	return nil
 }
 
 func attachPublicreportPoolOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, organization1 *Organization) (*PublicreportPool, error) {
@@ -1290,6 +1499,7 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	HasBackyardPermission  psql.WhereMod[Q, bool]
 	IsReporterConfidential psql.WhereMod[Q, bool]
 	IsReporterOwner        psql.WhereMod[Q, bool]
+	ReporterContactConsent psql.WhereNullMod[Q, bool]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1331,6 +1541,7 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		HasBackyardPermission:  psql.Where[Q, bool](cols.HasBackyardPermission),
 		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
 		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
+		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
 	}
 }
 
@@ -1340,6 +1551,34 @@ func (o *PublicreportPool) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "NotifyEmailPools":
+		rels, ok := retrieved.(PublicreportNotifyEmailPoolSlice)
+		if !ok {
+			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.NotifyEmailPools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Pool = o
+			}
+		}
+		return nil
+	case "NotifyPhonePools":
+		rels, ok := retrieved.(PublicreportNotifyPhonePoolSlice)
+		if !ok {
+			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.NotifyPhonePools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Pool = o
+			}
+		}
+		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
@@ -1394,11 +1633,19 @@ func buildPublicreportPoolPreloader() publicreportPoolPreloader {
 }
 
 type publicreportPoolThenLoader[Q orm.Loadable] struct {
-	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyEmailPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyPhonePools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoader[Q] {
+	type NotifyEmailPoolsLoadInterface interface {
+		LoadNotifyEmailPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type NotifyPhonePoolsLoadInterface interface {
+		LoadNotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -1407,6 +1654,18 @@ func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoade
 	}
 
 	return publicreportPoolThenLoader[Q]{
+		NotifyEmailPools: thenLoadBuilder[Q](
+			"NotifyEmailPools",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNotifyEmailPools(ctx, exec, mods...)
+			},
+		),
+		NotifyPhonePools: thenLoadBuilder[Q](
+			"NotifyPhonePools",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhonePoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNotifyPhonePools(ctx, exec, mods...)
+			},
+		),
 		Organization: thenLoadBuilder[Q](
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1420,6 +1679,128 @@ func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoade
 			},
 		),
 	}
+}
+
+// LoadNotifyEmailPools loads the publicreportPool's NotifyEmailPools into the .R struct
+func (o *PublicreportPool) LoadNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.NotifyEmailPools = nil
+
+	related, err := o.NotifyEmailPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Pool = o
+	}
+
+	o.R.NotifyEmailPools = related
+	return nil
+}
+
+// LoadNotifyEmailPools loads the publicreportPool's NotifyEmailPools into the .R struct
+func (os PublicreportPoolSlice) LoadNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNotifyEmailPools, err := os.NotifyEmailPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.NotifyEmailPools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNotifyEmailPools {
+
+			if !(o.ID == rel.PoolID) {
+				continue
+			}
+
+			rel.R.Pool = o
+
+			o.R.NotifyEmailPools = append(o.R.NotifyEmailPools, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadNotifyPhonePools loads the publicreportPool's NotifyPhonePools into the .R struct
+func (o *PublicreportPool) LoadNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.NotifyPhonePools = nil
+
+	related, err := o.NotifyPhonePools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Pool = o
+	}
+
+	o.R.NotifyPhonePools = related
+	return nil
+}
+
+// LoadNotifyPhonePools loads the publicreportPool's NotifyPhonePools into the .R struct
+func (os PublicreportPoolSlice) LoadNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNotifyPhonePools, err := os.NotifyPhonePools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.NotifyPhonePools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNotifyPhonePools {
+
+			if !(o.ID == rel.PoolID) {
+				continue
+			}
+
+			rel.R.Pool = o
+
+			o.R.NotifyPhonePools = append(o.R.NotifyPhonePools, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadOrganization loads the publicreportPool's Organization into the .R struct
@@ -1560,7 +1941,9 @@ func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executo
 
 // publicreportPoolC is where relationship counts are stored.
 type publicreportPoolC struct {
-	Images *int64
+	NotifyEmailPools *int64
+	NotifyPhonePools *int64
+	Images           *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1570,6 +1953,10 @@ func (o *PublicreportPool) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "NotifyEmailPools":
+		o.C.NotifyEmailPools = &count
+	case "NotifyPhonePools":
+		o.C.NotifyPhonePools = &count
 	case "Images":
 		o.C.Images = &count
 	}
@@ -1577,11 +1964,47 @@ func (o *PublicreportPool) PreloadCount(name string, count int64) error {
 }
 
 type publicreportPoolCountPreloader struct {
-	Images func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	NotifyEmailPools func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	NotifyPhonePools func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Images           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildPublicreportPoolCountPreloader() publicreportPoolCountPreloader {
 	return publicreportPoolCountPreloader{
+		NotifyEmailPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*PublicreportPool]("NotifyEmailPools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = PublicreportPools.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNotifyEmailPools.Name()),
+					sm.Where(psql.Quote(PublicreportNotifyEmailPools.Alias(), "pool_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		NotifyPhonePools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*PublicreportPool]("NotifyPhonePools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = PublicreportPools.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNotifyPhonePools.Name()),
+					sm.Where(psql.Quote(PublicreportNotifyPhonePools.Alias(), "pool_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		Images: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*PublicreportPool]("Images", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -1606,15 +2029,35 @@ func buildPublicreportPoolCountPreloader() publicreportPoolCountPreloader {
 }
 
 type publicreportPoolCountThenLoader[Q orm.Loadable] struct {
-	Images func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyEmailPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyPhonePools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportPoolCountThenLoader[Q orm.Loadable]() publicreportPoolCountThenLoader[Q] {
+	type NotifyEmailPoolsCountInterface interface {
+		LoadCountNotifyEmailPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type NotifyPhonePoolsCountInterface interface {
+		LoadCountNotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ImagesCountInterface interface {
 		LoadCountImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportPoolCountThenLoader[Q]{
+		NotifyEmailPools: countThenLoadBuilder[Q](
+			"NotifyEmailPools",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountNotifyEmailPools(ctx, exec, mods...)
+			},
+		),
+		NotifyPhonePools: countThenLoadBuilder[Q](
+			"NotifyPhonePools",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhonePoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountNotifyPhonePools(ctx, exec, mods...)
+			},
+		),
 		Images: countThenLoadBuilder[Q](
 			"Images",
 			func(ctx context.Context, exec bob.Executor, retrieved ImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1622,6 +2065,66 @@ func buildPublicreportPoolCountThenLoader[Q orm.Loadable]() publicreportPoolCoun
 			},
 		),
 	}
+}
+
+// LoadCountNotifyEmailPools loads the count of NotifyEmailPools into the C struct
+func (o *PublicreportPool) LoadCountNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.NotifyEmailPools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.NotifyEmailPools = &count
+	return nil
+}
+
+// LoadCountNotifyEmailPools loads the count of NotifyEmailPools for a slice
+func (os PublicreportPoolSlice) LoadCountNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountNotifyEmailPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountNotifyPhonePools loads the count of NotifyPhonePools into the C struct
+func (o *PublicreportPool) LoadCountNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.NotifyPhonePools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.NotifyPhonePools = &count
+	return nil
+}
+
+// LoadCountNotifyPhonePools loads the count of NotifyPhonePools for a slice
+func (os PublicreportPoolSlice) LoadCountNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountNotifyPhonePools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountImages loads the count of Images into the C struct
@@ -1655,9 +2158,11 @@ func (os PublicreportPoolSlice) LoadCountImages(ctx context.Context, exec bob.Ex
 }
 
 type publicreportPoolJoins[Q dialect.Joinable] struct {
-	typ          string
-	Organization modAs[Q, organizationColumns]
-	Images       modAs[Q, publicreportImageColumns]
+	typ              string
+	NotifyEmailPools modAs[Q, publicreportNotifyEmailPoolColumns]
+	NotifyPhonePools modAs[Q, publicreportNotifyPhonePoolColumns]
+	Organization     modAs[Q, organizationColumns]
+	Images           modAs[Q, publicreportImageColumns]
 }
 
 func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[Q] {
@@ -1667,6 +2172,34 @@ func (j publicreportPoolJoins[Q]) aliasedAs(alias string) publicreportPoolJoins[
 func buildPublicreportPoolJoins[Q dialect.Joinable](cols publicreportPoolColumns, typ string) publicreportPoolJoins[Q] {
 	return publicreportPoolJoins[Q]{
 		typ: typ,
+		NotifyEmailPools: modAs[Q, publicreportNotifyEmailPoolColumns]{
+			c: PublicreportNotifyEmailPools.Columns,
+			f: func(to publicreportNotifyEmailPoolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNotifyEmailPools.Name().As(to.Alias())).On(
+						to.PoolID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		NotifyPhonePools: modAs[Q, publicreportNotifyPhonePoolColumns]{
+			c: PublicreportNotifyPhonePools.Columns,
+			f: func(to publicreportNotifyPhonePoolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNotifyPhonePools.Name().As(to.Alias())).On(
+						to.PoolID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Organization: modAs[Q, organizationColumns]{
 			c: Organizations.Columns,
 			f: func(to organizationColumns) bob.Mod[Q] {

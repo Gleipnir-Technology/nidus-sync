@@ -47,10 +47,12 @@ type CommsPhonesQuery = *psql.ViewQuery[*CommsPhone, CommsPhoneSlice]
 
 // commsPhoneR is where relationships are stored.
 type commsPhoneR struct {
-	DestinationTextJobs CommsTextJobSlice // comms.text_job.text_job_destination_fkey
-	DestinationTextLogs CommsTextLogSlice // comms.text_log.text_log_destination_fkey
-	SourceTextLogs      CommsTextLogSlice // comms.text_log.text_log_source_fkey
-	Organizations       OrganizationSlice // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	DestinationTextJobs           CommsTextJobSlice                    // comms.text_job.text_job_destination_fkey
+	DestinationTextLogs           CommsTextLogSlice                    // comms.text_log.text_log_destination_fkey
+	SourceTextLogs                CommsTextLogSlice                    // comms.text_log.text_log_source_fkey
+	Organizations                 OrganizationSlice                    // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	PhoneE164NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey
+	PhoneE164NotifyPhonePools     PublicreportNotifyPhonePoolSlice     // publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey
 }
 
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
@@ -500,6 +502,54 @@ func (os CommsPhoneSlice) Organizations(mods ...bob.Mod[*dialect.SelectQuery]) O
 	)...)
 }
 
+// PhoneE164NotifyPhoneNuisances starts a query for related objects on publicreport.notify_phone_nuisance
+func (o *CommsPhone) PhoneE164NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
+	return PublicreportNotifyPhoneNuisances.Query(append(mods,
+		sm.Where(PublicreportNotifyPhoneNuisances.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) PhoneE164NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return PublicreportNotifyPhoneNuisances.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhoneNuisances.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// PhoneE164NotifyPhonePools starts a query for related objects on publicreport.notify_phone_pool
+func (o *CommsPhone) PhoneE164NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
+	return PublicreportNotifyPhonePools.Query(append(mods,
+		sm.Where(PublicreportNotifyPhonePools.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) PhoneE164NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return PublicreportNotifyPhonePools.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhonePools.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertCommsPhoneDestinationTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, commsPhone0 *CommsPhone) (CommsTextJobSlice, error) {
 	for i := range commsTextJobs1 {
 		commsTextJobs1[i].Destination = omit.From(commsPhone0.E164)
@@ -769,6 +819,142 @@ func (commsPhone0 *CommsPhone) AttachOrganizations(ctx context.Context, exec bob
 	return nil
 }
 
+func insertCommsPhonePhoneE164NotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneNuisances1 []*PublicreportNotifyPhoneNuisanceSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceSlice, error) {
+	for i := range publicreportNotifyPhoneNuisances1 {
+		publicreportNotifyPhoneNuisances1[i].PhoneE164 = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := PublicreportNotifyPhoneNuisances.Insert(bob.ToMods(publicreportNotifyPhoneNuisances1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhoneNuisances0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneE164NotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneNuisances1 PublicreportNotifyPhoneNuisanceSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceSlice, error) {
+	setter := &PublicreportNotifyPhoneNuisanceSetter{
+		PhoneE164: omit.From(commsPhone0.E164),
+	}
+
+	err := publicreportNotifyPhoneNuisances1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhoneNuisances0: %w", err)
+	}
+
+	return publicreportNotifyPhoneNuisances1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisanceSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNotifyPhoneNuisances1, err := insertCommsPhonePhoneE164NotifyPhoneNuisances0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhoneNuisances = append(commsPhone0.R.PhoneE164NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
+
+	for _, rel := range publicreportNotifyPhoneNuisances1 {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisance) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNotifyPhoneNuisances1 := PublicreportNotifyPhoneNuisanceSlice(related)
+
+	_, err = attachCommsPhonePhoneE164NotifyPhoneNuisances0(ctx, exec, len(related), publicreportNotifyPhoneNuisances1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhoneNuisances = append(commsPhone0.R.PhoneE164NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+
+	return nil
+}
+
+func insertCommsPhonePhoneE164NotifyPhonePools0(ctx context.Context, exec bob.Executor, publicreportNotifyPhonePools1 []*PublicreportNotifyPhonePoolSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhonePoolSlice, error) {
+	for i := range publicreportNotifyPhonePools1 {
+		publicreportNotifyPhonePools1[i].PhoneE164 = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := PublicreportNotifyPhonePools.Insert(bob.ToMods(publicreportNotifyPhonePools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhonePools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneE164NotifyPhonePools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhonePools1 PublicreportNotifyPhonePoolSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhonePoolSlice, error) {
+	setter := &PublicreportNotifyPhonePoolSetter{
+		PhoneE164: omit.From(commsPhone0.E164),
+	}
+
+	err := publicreportNotifyPhonePools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhonePools0: %w", err)
+	}
+
+	return publicreportNotifyPhonePools1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNotifyPhonePools1, err := insertCommsPhonePhoneE164NotifyPhonePools0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhonePools = append(commsPhone0.R.PhoneE164NotifyPhonePools, publicreportNotifyPhonePools1...)
+
+	for _, rel := range publicreportNotifyPhonePools1 {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNotifyPhonePools1 := PublicreportNotifyPhonePoolSlice(related)
+
+	_, err = attachCommsPhonePhoneE164NotifyPhonePools0(ctx, exec, len(related), publicreportNotifyPhonePools1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhonePools = append(commsPhone0.R.PhoneE164NotifyPhonePools, publicreportNotifyPhonePools1...)
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+
+	return nil
+}
+
 type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
 	IsSubscribed psql.WhereMod[Q, bool]
@@ -849,6 +1035,34 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "PhoneE164NotifyPhoneNuisances":
+		rels, ok := retrieved.(PublicreportNotifyPhoneNuisanceSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PhoneE164NotifyPhoneNuisances = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.PhoneE164Phone = o
+			}
+		}
+		return nil
+	case "PhoneE164NotifyPhonePools":
+		rels, ok := retrieved.(PublicreportNotifyPhonePoolSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PhoneE164NotifyPhonePools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.PhoneE164Phone = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("commsPhone has no relationship %q", name)
 	}
@@ -861,10 +1075,12 @@ func buildCommsPhonePreloader() commsPhonePreloader {
 }
 
 type commsPhoneThenLoader[Q orm.Loadable] struct {
-	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organizations       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextJobs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextLogs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogs                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
@@ -879,6 +1095,12 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	}
 	type OrganizationsLoadInterface interface {
 		LoadOrganizations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164NotifyPhoneNuisancesLoadInterface interface {
+		LoadPhoneE164NotifyPhoneNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164NotifyPhonePoolsLoadInterface interface {
+		LoadPhoneE164NotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneThenLoader[Q]{
@@ -904,6 +1126,18 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 			"Organizations",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganizations(ctx, exec, mods...)
+			},
+		),
+		PhoneE164NotifyPhoneNuisances: thenLoadBuilder[Q](
+			"PhoneE164NotifyPhoneNuisances",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164NotifyPhoneNuisances(ctx, exec, mods...)
+			},
+		),
+		PhoneE164NotifyPhonePools: thenLoadBuilder[Q](
+			"PhoneE164NotifyPhonePools",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhonePoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164NotifyPhonePools(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1173,12 +1407,136 @@ func (os CommsPhoneSlice) LoadOrganizations(ctx context.Context, exec bob.Execut
 	return nil
 }
 
+// LoadPhoneE164NotifyPhoneNuisances loads the commsPhone's PhoneE164NotifyPhoneNuisances into the .R struct
+func (o *CommsPhone) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PhoneE164NotifyPhoneNuisances = nil
+
+	related, err := o.PhoneE164NotifyPhoneNuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = o
+	}
+
+	o.R.PhoneE164NotifyPhoneNuisances = related
+	return nil
+}
+
+// LoadPhoneE164NotifyPhoneNuisances loads the commsPhone's PhoneE164NotifyPhoneNuisances into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNotifyPhoneNuisances, err := os.PhoneE164NotifyPhoneNuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PhoneE164NotifyPhoneNuisances = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNotifyPhoneNuisances {
+
+			if !(o.E164 == rel.PhoneE164) {
+				continue
+			}
+
+			rel.R.PhoneE164Phone = o
+
+			o.R.PhoneE164NotifyPhoneNuisances = append(o.R.PhoneE164NotifyPhoneNuisances, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPhoneE164NotifyPhonePools loads the commsPhone's PhoneE164NotifyPhonePools into the .R struct
+func (o *CommsPhone) LoadPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PhoneE164NotifyPhonePools = nil
+
+	related, err := o.PhoneE164NotifyPhonePools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = o
+	}
+
+	o.R.PhoneE164NotifyPhonePools = related
+	return nil
+}
+
+// LoadPhoneE164NotifyPhonePools loads the commsPhone's PhoneE164NotifyPhonePools into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNotifyPhonePools, err := os.PhoneE164NotifyPhonePools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PhoneE164NotifyPhonePools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNotifyPhonePools {
+
+			if !(o.E164 == rel.PhoneE164) {
+				continue
+			}
+
+			rel.R.PhoneE164Phone = o
+
+			o.R.PhoneE164NotifyPhonePools = append(o.R.PhoneE164NotifyPhonePools, rel)
+		}
+	}
+
+	return nil
+}
+
 // commsPhoneC is where relationship counts are stored.
 type commsPhoneC struct {
-	DestinationTextJobs *int64
-	DestinationTextLogs *int64
-	SourceTextLogs      *int64
-	Organizations       *int64
+	DestinationTextJobs           *int64
+	DestinationTextLogs           *int64
+	SourceTextLogs                *int64
+	Organizations                 *int64
+	PhoneE164NotifyPhoneNuisances *int64
+	PhoneE164NotifyPhonePools     *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1196,15 +1554,21 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 		o.C.SourceTextLogs = &count
 	case "Organizations":
 		o.C.Organizations = &count
+	case "PhoneE164NotifyPhoneNuisances":
+		o.C.PhoneE164NotifyPhoneNuisances = &count
+	case "PhoneE164NotifyPhonePools":
+		o.C.PhoneE164NotifyPhonePools = &count
 	}
 	return nil
 }
 
 type commsPhoneCountPreloader struct {
-	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Organizations       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DestinationTextJobs           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DestinationTextLogs           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	SourceTextLogs                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
@@ -1280,14 +1644,50 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		PhoneE164NotifyPhoneNuisances: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("PhoneE164NotifyPhoneNuisances", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsPhones.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNotifyPhoneNuisances.Name()),
+					sm.Where(psql.Quote(PublicreportNotifyPhoneNuisances.Alias(), "phone_e164").EQ(psql.Quote(parent, "e164"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		PhoneE164NotifyPhonePools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("PhoneE164NotifyPhonePools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsPhones.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportNotifyPhonePools.Name()),
+					sm.Where(psql.Quote(PublicreportNotifyPhonePools.Alias(), "phone_e164").EQ(psql.Quote(parent, "e164"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
 type commsPhoneCountThenLoader[Q orm.Loadable] struct {
-	DestinationTextJobs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DestinationTextLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceTextLogs      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organizations       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextJobs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextLogs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogs                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[Q] {
@@ -1302,6 +1702,12 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 	}
 	type OrganizationsCountInterface interface {
 		LoadCountOrganizations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164NotifyPhoneNuisancesCountInterface interface {
+		LoadCountPhoneE164NotifyPhoneNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164NotifyPhonePoolsCountInterface interface {
+		LoadCountPhoneE164NotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneCountThenLoader[Q]{
@@ -1327,6 +1733,18 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 			"Organizations",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountOrganizations(ctx, exec, mods...)
+			},
+		),
+		PhoneE164NotifyPhoneNuisances: countThenLoadBuilder[Q](
+			"PhoneE164NotifyPhoneNuisances",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneNuisancesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPhoneE164NotifyPhoneNuisances(ctx, exec, mods...)
+			},
+		),
+		PhoneE164NotifyPhonePools: countThenLoadBuilder[Q](
+			"PhoneE164NotifyPhonePools",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhonePoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPhoneE164NotifyPhonePools(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1452,12 +1870,74 @@ func (os CommsPhoneSlice) LoadCountOrganizations(ctx context.Context, exec bob.E
 	return nil
 }
 
+// LoadCountPhoneE164NotifyPhoneNuisances loads the count of PhoneE164NotifyPhoneNuisances into the C struct
+func (o *CommsPhone) LoadCountPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.PhoneE164NotifyPhoneNuisances(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.PhoneE164NotifyPhoneNuisances = &count
+	return nil
+}
+
+// LoadCountPhoneE164NotifyPhoneNuisances loads the count of PhoneE164NotifyPhoneNuisances for a slice
+func (os CommsPhoneSlice) LoadCountPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPhoneE164NotifyPhoneNuisances(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountPhoneE164NotifyPhonePools loads the count of PhoneE164NotifyPhonePools into the C struct
+func (o *CommsPhone) LoadCountPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.PhoneE164NotifyPhonePools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.PhoneE164NotifyPhonePools = &count
+	return nil
+}
+
+// LoadCountPhoneE164NotifyPhonePools loads the count of PhoneE164NotifyPhonePools for a slice
+func (os CommsPhoneSlice) LoadCountPhoneE164NotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPhoneE164NotifyPhonePools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type commsPhoneJoins[Q dialect.Joinable] struct {
-	typ                 string
-	DestinationTextJobs modAs[Q, commsTextJobColumns]
-	DestinationTextLogs modAs[Q, commsTextLogColumns]
-	SourceTextLogs      modAs[Q, commsTextLogColumns]
-	Organizations       modAs[Q, organizationColumns]
+	typ                           string
+	DestinationTextJobs           modAs[Q, commsTextJobColumns]
+	DestinationTextLogs           modAs[Q, commsTextLogColumns]
+	SourceTextLogs                modAs[Q, commsTextLogColumns]
+	Organizations                 modAs[Q, organizationColumns]
+	PhoneE164NotifyPhoneNuisances modAs[Q, publicreportNotifyPhoneNuisanceColumns]
+	PhoneE164NotifyPhonePools     modAs[Q, publicreportNotifyPhonePoolColumns]
 }
 
 func (j commsPhoneJoins[Q]) aliasedAs(alias string) commsPhoneJoins[Q] {
@@ -1525,6 +2005,34 @@ func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string
 					cols := DistrictSubscriptionPhones.Columns.AliasedAs(DistrictSubscriptionPhones.Columns.Alias() + random)
 					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
+		PhoneE164NotifyPhoneNuisances: modAs[Q, publicreportNotifyPhoneNuisanceColumns]{
+			c: PublicreportNotifyPhoneNuisances.Columns,
+			f: func(to publicreportNotifyPhoneNuisanceColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNotifyPhoneNuisances.Name().As(to.Alias())).On(
+						to.PhoneE164.EQ(cols.E164),
+					))
+				}
+
+				return mods
+			},
+		},
+		PhoneE164NotifyPhonePools: modAs[Q, publicreportNotifyPhonePoolColumns]{
+			c: PublicreportNotifyPhonePools.Columns,
+			f: func(to publicreportNotifyPhonePoolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportNotifyPhonePools.Name().As(to.Alias())).On(
+						to.PhoneE164.EQ(cols.E164),
 					))
 				}
 

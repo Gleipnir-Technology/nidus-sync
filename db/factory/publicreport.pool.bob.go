@@ -71,6 +71,7 @@ type PublicreportPoolTemplate struct {
 	HasBackyardPermission  func() bool
 	IsReporterConfidential func() bool
 	IsReporterOwner        func() bool
+	ReporterContactConsent func() null.Val[bool]
 
 	r publicreportPoolR
 	f *Factory
@@ -79,10 +80,20 @@ type PublicreportPoolTemplate struct {
 }
 
 type publicreportPoolR struct {
-	Organization *publicreportPoolROrganizationR
-	Images       []*publicreportPoolRImagesR
+	NotifyEmailPools []*publicreportPoolRNotifyEmailPoolsR
+	NotifyPhonePools []*publicreportPoolRNotifyPhonePoolsR
+	Organization     *publicreportPoolROrganizationR
+	Images           []*publicreportPoolRImagesR
 }
 
+type publicreportPoolRNotifyEmailPoolsR struct {
+	number int
+	o      *PublicreportNotifyEmailPoolTemplate
+}
+type publicreportPoolRNotifyPhonePoolsR struct {
+	number int
+	o      *PublicreportNotifyPhonePoolTemplate
+}
 type publicreportPoolROrganizationR struct {
 	o *OrganizationTemplate
 }
@@ -101,6 +112,32 @@ func (o *PublicreportPoolTemplate) Apply(ctx context.Context, mods ...Publicrepo
 // setModelRels creates and sets the relationships on *models.PublicreportPool
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportPoolTemplate) setModelRels(o *models.PublicreportPool) {
+	if t.r.NotifyEmailPools != nil {
+		rel := models.PublicreportNotifyEmailPoolSlice{}
+		for _, r := range t.r.NotifyEmailPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PoolID = o.ID // h2
+				rel.R.Pool = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.NotifyEmailPools = rel
+	}
+
+	if t.r.NotifyPhonePools != nil {
+		rel := models.PublicreportNotifyPhonePoolSlice{}
+		for _, r := range t.r.NotifyPhonePools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PoolID = o.ID // h2
+				rel.R.Pool = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.NotifyPhonePools = rel
+	}
+
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
 		rel.R.PublicreportPool = append(rel.R.PublicreportPool, o)
@@ -258,6 +295,10 @@ func (o PublicreportPoolTemplate) BuildSetter() *models.PublicreportPoolSetter {
 		val := o.IsReporterOwner()
 		m.IsReporterOwner = omit.From(val)
 	}
+	if o.ReporterContactConsent != nil {
+		val := o.ReporterContactConsent()
+		m.ReporterContactConsent = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -378,6 +419,9 @@ func (o PublicreportPoolTemplate) Build() *models.PublicreportPool {
 	}
 	if o.IsReporterOwner != nil {
 		m.IsReporterOwner = o.IsReporterOwner()
+	}
+	if o.ReporterContactConsent != nil {
+		m.ReporterContactConsent = o.ReporterContactConsent()
 	}
 
 	o.setModelRels(m)
@@ -523,18 +567,58 @@ func ensureCreatablePublicreportPool(m *models.PublicreportPoolSetter) {
 func (o *PublicreportPoolTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportPool) error {
 	var err error
 
+	isNotifyEmailPoolsDone, _ := publicreportPoolRelNotifyEmailPoolsCtx.Value(ctx)
+	if !isNotifyEmailPoolsDone && o.r.NotifyEmailPools != nil {
+		ctx = publicreportPoolRelNotifyEmailPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.NotifyEmailPools {
+			if r.o.alreadyPersisted {
+				m.R.NotifyEmailPools = append(m.R.NotifyEmailPools, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNotifyEmailPools(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isNotifyPhonePoolsDone, _ := publicreportPoolRelNotifyPhonePoolsCtx.Value(ctx)
+	if !isNotifyPhonePoolsDone && o.r.NotifyPhonePools != nil {
+		ctx = publicreportPoolRelNotifyPhonePoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.NotifyPhonePools {
+			if r.o.alreadyPersisted {
+				m.R.NotifyPhonePools = append(m.R.NotifyPhonePools, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachNotifyPhonePools(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isOrganizationDone, _ := publicreportPoolRelOrganizationCtx.Value(ctx)
 	if !isOrganizationDone && o.r.Organization != nil {
 		ctx = publicreportPoolRelOrganizationCtx.WithValue(ctx, true)
 		if o.r.Organization.o.alreadyPersisted {
 			m.R.Organization = o.r.Organization.o.Build()
 		} else {
-			var rel0 *models.Organization
-			rel0, err = o.r.Organization.o.Create(ctx, exec)
+			var rel2 *models.Organization
+			rel2, err = o.r.Organization.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachOrganization(ctx, exec, rel0)
+			err = m.AttachOrganization(ctx, exec, rel2)
 			if err != nil {
 				return err
 			}
@@ -549,12 +633,12 @@ func (o *PublicreportPoolTemplate) insertOptRels(ctx context.Context, exec bob.E
 			if r.o.alreadyPersisted {
 				m.R.Images = append(m.R.Images, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachImages(ctx, exec, rel1...)
+				err = m.AttachImages(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -687,6 +771,7 @@ func (m publicreportPoolMods) RandomizeAllColumns(f *faker.Faker) PublicreportPo
 		PublicreportPoolMods.RandomHasBackyardPermission(f),
 		PublicreportPoolMods.RandomIsReporterConfidential(f),
 		PublicreportPoolMods.RandomIsReporterOwner(f),
+		PublicreportPoolMods.RandomReporterContactConsent(f),
 	}
 }
 
@@ -1779,6 +1864,59 @@ func (m publicreportPoolMods) RandomIsReporterOwner(f *faker.Faker) Publicreport
 	})
 }
 
+// Set the model columns to this value
+func (m publicreportPoolMods) ReporterContactConsent(val null.Val[bool]) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportPoolMods) ReporterContactConsentFunc(f func() null.Val[bool]) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.ReporterContactConsent = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportPoolMods) UnsetReporterContactConsent() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.ReporterContactConsent = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m publicreportPoolMods) RandomReporterContactConsent(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m publicreportPoolMods) RandomReporterContactConsentNotNull(f *faker.Faker) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(_ context.Context, o *PublicreportPoolTemplate) {
+		o.ReporterContactConsent = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m publicreportPoolMods) WithParentsCascading() PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
 		if isDone, _ := publicreportPoolWithParentsCascadingCtx.Value(ctx); isDone {
@@ -1820,6 +1958,102 @@ func (m publicreportPoolMods) WithExistingOrganization(em *models.Organization) 
 func (m publicreportPoolMods) WithoutOrganization() PublicreportPoolMod {
 	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m publicreportPoolMods) WithNotifyEmailPools(number int, related *PublicreportNotifyEmailPoolTemplate) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyEmailPools = []*publicreportPoolRNotifyEmailPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportPoolMods) WithNewNotifyEmailPools(number int, mods ...PublicreportNotifyEmailPoolMod) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		related := o.f.NewPublicreportNotifyEmailPoolWithContext(ctx, mods...)
+		m.WithNotifyEmailPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportPoolMods) AddNotifyEmailPools(number int, related *PublicreportNotifyEmailPoolTemplate) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyEmailPools = append(o.r.NotifyEmailPools, &publicreportPoolRNotifyEmailPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportPoolMods) AddNewNotifyEmailPools(number int, mods ...PublicreportNotifyEmailPoolMod) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		related := o.f.NewPublicreportNotifyEmailPoolWithContext(ctx, mods...)
+		m.AddNotifyEmailPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportPoolMods) AddExistingNotifyEmailPools(existingModels ...*models.PublicreportNotifyEmailPool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		for _, em := range existingModels {
+			o.r.NotifyEmailPools = append(o.r.NotifyEmailPools, &publicreportPoolRNotifyEmailPoolsR{
+				o: o.f.FromExistingPublicreportNotifyEmailPool(em),
+			})
+		}
+	})
+}
+
+func (m publicreportPoolMods) WithoutNotifyEmailPools() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyEmailPools = nil
+	})
+}
+
+func (m publicreportPoolMods) WithNotifyPhonePools(number int, related *PublicreportNotifyPhonePoolTemplate) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyPhonePools = []*publicreportPoolRNotifyPhonePoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m publicreportPoolMods) WithNewNotifyPhonePools(number int, mods ...PublicreportNotifyPhonePoolMod) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		related := o.f.NewPublicreportNotifyPhonePoolWithContext(ctx, mods...)
+		m.WithNotifyPhonePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportPoolMods) AddNotifyPhonePools(number int, related *PublicreportNotifyPhonePoolTemplate) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyPhonePools = append(o.r.NotifyPhonePools, &publicreportPoolRNotifyPhonePoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m publicreportPoolMods) AddNewNotifyPhonePools(number int, mods ...PublicreportNotifyPhonePoolMod) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		related := o.f.NewPublicreportNotifyPhonePoolWithContext(ctx, mods...)
+		m.AddNotifyPhonePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m publicreportPoolMods) AddExistingNotifyPhonePools(existingModels ...*models.PublicreportNotifyPhonePool) PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		for _, em := range existingModels {
+			o.r.NotifyPhonePools = append(o.r.NotifyPhonePools, &publicreportPoolRNotifyPhonePoolsR{
+				o: o.f.FromExistingPublicreportNotifyPhonePool(em),
+			})
+		}
+	})
+}
+
+func (m publicreportPoolMods) WithoutNotifyPhonePools() PublicreportPoolMod {
+	return PublicreportPoolModFunc(func(ctx context.Context, o *PublicreportPoolTemplate) {
+		o.r.NotifyPhonePools = nil
 	})
 }
 

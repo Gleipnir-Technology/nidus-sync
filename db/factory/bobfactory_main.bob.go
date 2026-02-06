@@ -73,6 +73,10 @@ type Factory struct {
 	baseOrganizationMods                      OrganizationModSlice
 	basePublicreportImageMods                 PublicreportImageModSlice
 	basePublicreportImageExifMods             PublicreportImageExifModSlice
+	basePublicreportNotifyEmailNuisanceMods   PublicreportNotifyEmailNuisanceModSlice
+	basePublicreportNotifyEmailPoolMods       PublicreportNotifyEmailPoolModSlice
+	basePublicreportNotifyPhoneNuisanceMods   PublicreportNotifyPhoneNuisanceModSlice
+	basePublicreportNotifyPhonePoolMods       PublicreportNotifyPhonePoolModSlice
 	basePublicreportNuisanceMods              PublicreportNuisanceModSlice
 	basePublicreportNuisanceImageMods         PublicreportNuisanceImageModSlice
 	basePublicreportPoolMods                  PublicreportPoolModSlice
@@ -197,6 +201,12 @@ func (f *Factory) FromExistingCommsEmailContact(m *models.CommsEmailContact) *Co
 	if len(m.R.Organizations) > 0 {
 		CommsEmailContactMods.AddExistingOrganizations(m.R.Organizations...).Apply(ctx, o)
 	}
+	if len(m.R.EmailAddressNotifyEmailNuisances) > 0 {
+		CommsEmailContactMods.AddExistingEmailAddressNotifyEmailNuisances(m.R.EmailAddressNotifyEmailNuisances...).Apply(ctx, o)
+	}
+	if len(m.R.EmailAddressNotifyEmailPools) > 0 {
+		CommsEmailContactMods.AddExistingEmailAddressNotifyEmailPools(m.R.EmailAddressNotifyEmailPools...).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -314,6 +324,12 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	}
 	if len(m.R.Organizations) > 0 {
 		CommsPhoneMods.AddExistingOrganizations(m.R.Organizations...).Apply(ctx, o)
+	}
+	if len(m.R.PhoneE164NotifyPhoneNuisances) > 0 {
+		CommsPhoneMods.AddExistingPhoneE164NotifyPhoneNuisances(m.R.PhoneE164NotifyPhoneNuisances...).Apply(ctx, o)
+	}
+	if len(m.R.PhoneE164NotifyPhonePools) > 0 {
+		CommsPhoneMods.AddExistingPhoneE164NotifyPhonePools(m.R.PhoneE164NotifyPhonePools...).Apply(ctx, o)
 	}
 
 	return o
@@ -2913,6 +2929,146 @@ func (f *Factory) FromExistingPublicreportImageExif(m *models.PublicreportImageE
 	return o
 }
 
+func (f *Factory) NewPublicreportNotifyEmailNuisance(mods ...PublicreportNotifyEmailNuisanceMod) *PublicreportNotifyEmailNuisanceTemplate {
+	return f.NewPublicreportNotifyEmailNuisanceWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNotifyEmailNuisanceWithContext(ctx context.Context, mods ...PublicreportNotifyEmailNuisanceMod) *PublicreportNotifyEmailNuisanceTemplate {
+	o := &PublicreportNotifyEmailNuisanceTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNotifyEmailNuisanceMods.Apply(ctx, o)
+	}
+
+	PublicreportNotifyEmailNuisanceModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNotifyEmailNuisance(m *models.PublicreportNotifyEmailNuisance) *PublicreportNotifyEmailNuisanceTemplate {
+	o := &PublicreportNotifyEmailNuisanceTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.NuisanceID = func() int32 { return m.NuisanceID }
+	o.EmailAddress = func() string { return m.EmailAddress }
+
+	ctx := context.Background()
+	if m.R.EmailAddressEmailContact != nil {
+		PublicreportNotifyEmailNuisanceMods.WithExistingEmailAddressEmailContact(m.R.EmailAddressEmailContact).Apply(ctx, o)
+	}
+	if m.R.Nuisance != nil {
+		PublicreportNotifyEmailNuisanceMods.WithExistingNuisance(m.R.Nuisance).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportNotifyEmailPool(mods ...PublicreportNotifyEmailPoolMod) *PublicreportNotifyEmailPoolTemplate {
+	return f.NewPublicreportNotifyEmailPoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNotifyEmailPoolWithContext(ctx context.Context, mods ...PublicreportNotifyEmailPoolMod) *PublicreportNotifyEmailPoolTemplate {
+	o := &PublicreportNotifyEmailPoolTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNotifyEmailPoolMods.Apply(ctx, o)
+	}
+
+	PublicreportNotifyEmailPoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNotifyEmailPool(m *models.PublicreportNotifyEmailPool) *PublicreportNotifyEmailPoolTemplate {
+	o := &PublicreportNotifyEmailPoolTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.PoolID = func() int32 { return m.PoolID }
+	o.EmailAddress = func() string { return m.EmailAddress }
+
+	ctx := context.Background()
+	if m.R.EmailAddressEmailContact != nil {
+		PublicreportNotifyEmailPoolMods.WithExistingEmailAddressEmailContact(m.R.EmailAddressEmailContact).Apply(ctx, o)
+	}
+	if m.R.Pool != nil {
+		PublicreportNotifyEmailPoolMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportNotifyPhoneNuisance(mods ...PublicreportNotifyPhoneNuisanceMod) *PublicreportNotifyPhoneNuisanceTemplate {
+	return f.NewPublicreportNotifyPhoneNuisanceWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNotifyPhoneNuisanceWithContext(ctx context.Context, mods ...PublicreportNotifyPhoneNuisanceMod) *PublicreportNotifyPhoneNuisanceTemplate {
+	o := &PublicreportNotifyPhoneNuisanceTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNotifyPhoneNuisanceMods.Apply(ctx, o)
+	}
+
+	PublicreportNotifyPhoneNuisanceModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNotifyPhoneNuisance(m *models.PublicreportNotifyPhoneNuisance) *PublicreportNotifyPhoneNuisanceTemplate {
+	o := &PublicreportNotifyPhoneNuisanceTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.NuisanceID = func() int32 { return m.NuisanceID }
+	o.PhoneE164 = func() string { return m.PhoneE164 }
+
+	ctx := context.Background()
+	if m.R.Nuisance != nil {
+		PublicreportNotifyPhoneNuisanceMods.WithExistingNuisance(m.R.Nuisance).Apply(ctx, o)
+	}
+	if m.R.PhoneE164Phone != nil {
+		PublicreportNotifyPhoneNuisanceMods.WithExistingPhoneE164Phone(m.R.PhoneE164Phone).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportNotifyPhonePool(mods ...PublicreportNotifyPhonePoolMod) *PublicreportNotifyPhonePoolTemplate {
+	return f.NewPublicreportNotifyPhonePoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportNotifyPhonePoolWithContext(ctx context.Context, mods ...PublicreportNotifyPhonePoolMod) *PublicreportNotifyPhonePoolTemplate {
+	o := &PublicreportNotifyPhonePoolTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportNotifyPhonePoolMods.Apply(ctx, o)
+	}
+
+	PublicreportNotifyPhonePoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportNotifyPhonePool(m *models.PublicreportNotifyPhonePool) *PublicreportNotifyPhonePoolTemplate {
+	o := &PublicreportNotifyPhonePoolTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.PhoneE164 = func() string { return m.PhoneE164 }
+	o.PoolID = func() int32 { return m.PoolID }
+
+	ctx := context.Background()
+	if m.R.PhoneE164Phone != nil {
+		PublicreportNotifyPhonePoolMods.WithExistingPhoneE164Phone(m.R.PhoneE164Phone).Apply(ctx, o)
+	}
+	if m.R.Pool != nil {
+		PublicreportNotifyPhonePoolMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewPublicreportNuisance(mods ...PublicreportNuisanceMod) *PublicreportNuisanceTemplate {
 	return f.NewPublicreportNuisanceWithContext(context.Background(), mods...)
 }
@@ -2966,8 +3122,15 @@ func (f *Factory) FromExistingPublicreportNuisance(m *models.PublicreportNuisanc
 	o.TodNight = func() bool { return m.TodNight }
 	o.LatlngAccuracyType = func() enums.PublicreportAccuracytype { return m.LatlngAccuracyType }
 	o.LatlngAccuracyValue = func() float32 { return m.LatlngAccuracyValue }
+	o.ReporterContactConsent = func() null.Val[bool] { return m.ReporterContactConsent }
 
 	ctx := context.Background()
+	if len(m.R.NotifyEmailNuisances) > 0 {
+		PublicreportNuisanceMods.AddExistingNotifyEmailNuisances(m.R.NotifyEmailNuisances...).Apply(ctx, o)
+	}
+	if len(m.R.NotifyPhoneNuisances) > 0 {
+		PublicreportNuisanceMods.AddExistingNotifyPhoneNuisances(m.R.NotifyPhoneNuisances...).Apply(ctx, o)
+	}
 	if m.R.Organization != nil {
 		PublicreportNuisanceMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
@@ -3063,8 +3226,15 @@ func (f *Factory) FromExistingPublicreportPool(m *models.PublicreportPool) *Publ
 	o.HasBackyardPermission = func() bool { return m.HasBackyardPermission }
 	o.IsReporterConfidential = func() bool { return m.IsReporterConfidential }
 	o.IsReporterOwner = func() bool { return m.IsReporterOwner }
+	o.ReporterContactConsent = func() null.Val[bool] { return m.ReporterContactConsent }
 
 	ctx := context.Background()
+	if len(m.R.NotifyEmailPools) > 0 {
+		PublicreportPoolMods.AddExistingNotifyEmailPools(m.R.NotifyEmailPools...).Apply(ctx, o)
+	}
+	if len(m.R.NotifyPhonePools) > 0 {
+		PublicreportPoolMods.AddExistingNotifyPhonePools(m.R.NotifyPhonePools...).Apply(ctx, o)
+	}
 	if m.R.Organization != nil {
 		PublicreportPoolMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
@@ -3830,6 +4000,38 @@ func (f *Factory) ClearBasePublicreportImageExifMods() {
 
 func (f *Factory) AddBasePublicreportImageExifMod(mods ...PublicreportImageExifMod) {
 	f.basePublicreportImageExifMods = append(f.basePublicreportImageExifMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNotifyEmailNuisanceMods() {
+	f.basePublicreportNotifyEmailNuisanceMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNotifyEmailNuisanceMod(mods ...PublicreportNotifyEmailNuisanceMod) {
+	f.basePublicreportNotifyEmailNuisanceMods = append(f.basePublicreportNotifyEmailNuisanceMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNotifyEmailPoolMods() {
+	f.basePublicreportNotifyEmailPoolMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNotifyEmailPoolMod(mods ...PublicreportNotifyEmailPoolMod) {
+	f.basePublicreportNotifyEmailPoolMods = append(f.basePublicreportNotifyEmailPoolMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNotifyPhoneNuisanceMods() {
+	f.basePublicreportNotifyPhoneNuisanceMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNotifyPhoneNuisanceMod(mods ...PublicreportNotifyPhoneNuisanceMod) {
+	f.basePublicreportNotifyPhoneNuisanceMods = append(f.basePublicreportNotifyPhoneNuisanceMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportNotifyPhonePoolMods() {
+	f.basePublicreportNotifyPhonePoolMods = nil
+}
+
+func (f *Factory) AddBasePublicreportNotifyPhonePoolMod(mods ...PublicreportNotifyPhonePoolMod) {
+	f.basePublicreportNotifyPhonePoolMods = append(f.basePublicreportNotifyPhonePoolMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportNuisanceMods() {

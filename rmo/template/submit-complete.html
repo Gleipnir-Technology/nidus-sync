@@ -33,16 +33,22 @@
 
 					<div>
 						<h4 class="mb-3">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell me-2" viewBox="0 0 16 16">
-								<path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
-							</svg>
-							Get Updates
+							<i class="bi bi-person-rolodex"></i>
+							Follow-up
 						</h4>
-						<p>Provide your contact information to receive updates about your report.</p>
-						
+						<p>Please provide your contact information in case the district has any follow-up questions.</p>
 						<form id="notificationForm" action="/register-notifications" method="post" class="needs-validation">
 							<input type="hidden" name="report_id" value="{{.ReportID}}">
 							
+							<div class="mb-3">
+								<label class="form-label" for="name">Name</label>
+								<div class="input-group">
+									<span class="input-group-text">
+										<i class="bi bi-person-lines-fill"></i>
+									</span>
+									<input type="text" class="form-control" id="name" name="name" placeholder="Adam Smith">
+								</div>
+							</div>
 							<div class="mb-3">
 								<label for="email" class="form-label">Email Address</label>
 								<div class="input-group">
@@ -56,7 +62,7 @@
 							</div>
 							
 							<div class="mb-3">
-								<label for="phone" class="form-label">Phone Number (for SMS updates)</label>
+								<label for="phone" class="form-label">Phone Number</label>
 								<div class="input-group">
 									<span class="input-group-text">
 										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-phone" viewBox="0 0 16 16">
@@ -69,16 +75,23 @@
 							</div>
 							
 							<div class="form-check mb-3 form-check">
-								<input class="form-check-input" type="checkbox" name="consent" required>
+								<input class="form-check-input" id="consent" type="checkbox" name="consent" checked>
 								<label class="form-check-label" for="consent">
-									I consent to receiving updates about this report
+									I consent to being contacted at my email address or phone number above just for the purposes of this report.
+									<i class="bi bi-info-circle-fill text-primary ms-1" 
+										data-bs-toggle="tooltip" 
+										data-bs-placement="top" 
+										title="We will never sell your information. We'll send you notifications, but only if you ask us to. We'll share your information with the district that is in change of mosquito control in the area you've reported, but not with anybody else."></i>
 								</label>
-								<div class="invalid-feedback">
-									You must consent to receive notifications.
-								</div>
 							</div>
 							<div class="form-check mb-3 form-check">
-								<input class="form-check-input" type="checkbox" name="subscribe"/>
+								<input class="form-check-input" id="notification" type="checkbox" name="notification"/>
+								<label class="form-check-label" for="notification">
+									I'd like to get updates about my report as it gets handled.
+								</label>
+							</div>
+							<div class="form-check mb-3 form-check">
+								<input class="form-check-input" id="subscribe" type="checkbox" name="subscribe"/>
 								<label class="form-check-label" for="subscribe">
 									{{ if eq .District nil }}
 									I'd like to subscribe to periodic updates from my mosquito control district.
@@ -88,7 +101,7 @@
 								</label>
 							</div>
 							
-							<button type="submit" class="btn btn-primary">Register for Updates</button>
+							<button type="submit" class="btn btn-primary">Update report</button>
 						</form>
 					</div>
 

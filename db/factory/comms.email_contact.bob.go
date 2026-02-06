@@ -46,8 +46,10 @@ type CommsEmailContactTemplate struct {
 }
 
 type commsEmailContactR struct {
-	DestinationEmailLogs []*commsEmailContactRDestinationEmailLogsR
-	Organizations        []*commsEmailContactROrganizationsR
+	DestinationEmailLogs             []*commsEmailContactRDestinationEmailLogsR
+	Organizations                    []*commsEmailContactROrganizationsR
+	EmailAddressNotifyEmailNuisances []*commsEmailContactREmailAddressNotifyEmailNuisancesR
+	EmailAddressNotifyEmailPools     []*commsEmailContactREmailAddressNotifyEmailPoolsR
 }
 
 type commsEmailContactRDestinationEmailLogsR struct {
@@ -57,6 +59,14 @@ type commsEmailContactRDestinationEmailLogsR struct {
 type commsEmailContactROrganizationsR struct {
 	number int
 	o      *OrganizationTemplate
+}
+type commsEmailContactREmailAddressNotifyEmailNuisancesR struct {
+	number int
+	o      *PublicreportNotifyEmailNuisanceTemplate
+}
+type commsEmailContactREmailAddressNotifyEmailPoolsR struct {
+	number int
+	o      *PublicreportNotifyEmailPoolTemplate
 }
 
 // Apply mods to the CommsEmailContactTemplate
@@ -92,6 +102,32 @@ func (t CommsEmailContactTemplate) setModelRels(o *models.CommsEmailContact) {
 			rel = append(rel, related...)
 		}
 		o.R.Organizations = rel
+	}
+
+	if t.r.EmailAddressNotifyEmailNuisances != nil {
+		rel := models.PublicreportNotifyEmailNuisanceSlice{}
+		for _, r := range t.r.EmailAddressNotifyEmailNuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.EmailAddress = o.Address // h2
+				rel.R.EmailAddressEmailContact = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.EmailAddressNotifyEmailNuisances = rel
+	}
+
+	if t.r.EmailAddressNotifyEmailPools != nil {
+		rel := models.PublicreportNotifyEmailPoolSlice{}
+		for _, r := range t.r.EmailAddressNotifyEmailPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.EmailAddress = o.Address // h2
+				rel.R.EmailAddressEmailContact = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.EmailAddressNotifyEmailPools = rel
 	}
 }
 
@@ -227,6 +263,46 @@ func (o *CommsEmailContactTemplate) insertOptRels(ctx context.Context, exec bob.
 				}
 
 				err = m.AttachOrganizations(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isEmailAddressNotifyEmailNuisancesDone, _ := commsEmailContactRelEmailAddressNotifyEmailNuisancesCtx.Value(ctx)
+	if !isEmailAddressNotifyEmailNuisancesDone && o.r.EmailAddressNotifyEmailNuisances != nil {
+		ctx = commsEmailContactRelEmailAddressNotifyEmailNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.EmailAddressNotifyEmailNuisances {
+			if r.o.alreadyPersisted {
+				m.R.EmailAddressNotifyEmailNuisances = append(m.R.EmailAddressNotifyEmailNuisances, r.o.Build())
+			} else {
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachEmailAddressNotifyEmailNuisances(ctx, exec, rel2...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isEmailAddressNotifyEmailPoolsDone, _ := commsEmailContactRelEmailAddressNotifyEmailPoolsCtx.Value(ctx)
+	if !isEmailAddressNotifyEmailPoolsDone && o.r.EmailAddressNotifyEmailPools != nil {
+		ctx = commsEmailContactRelEmailAddressNotifyEmailPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.EmailAddressNotifyEmailPools {
+			if r.o.alreadyPersisted {
+				m.R.EmailAddressNotifyEmailPools = append(m.R.EmailAddressNotifyEmailPools, r.o.Build())
+			} else {
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachEmailAddressNotifyEmailPools(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -559,5 +635,101 @@ func (m commsEmailContactMods) AddExistingOrganizations(existingModels ...*model
 func (m commsEmailContactMods) WithoutOrganizations() CommsEmailContactMod {
 	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
 		o.r.Organizations = nil
+	})
+}
+
+func (m commsEmailContactMods) WithEmailAddressNotifyEmailNuisances(number int, related *PublicreportNotifyEmailNuisanceTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailNuisances = []*commsEmailContactREmailAddressNotifyEmailNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsEmailContactMods) WithNewEmailAddressNotifyEmailNuisances(number int, mods ...PublicreportNotifyEmailNuisanceMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportNotifyEmailNuisanceWithContext(ctx, mods...)
+		m.WithEmailAddressNotifyEmailNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddEmailAddressNotifyEmailNuisances(number int, related *PublicreportNotifyEmailNuisanceTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailNuisances = append(o.r.EmailAddressNotifyEmailNuisances, &commsEmailContactREmailAddressNotifyEmailNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsEmailContactMods) AddNewEmailAddressNotifyEmailNuisances(number int, mods ...PublicreportNotifyEmailNuisanceMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportNotifyEmailNuisanceWithContext(ctx, mods...)
+		m.AddEmailAddressNotifyEmailNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddExistingEmailAddressNotifyEmailNuisances(existingModels ...*models.PublicreportNotifyEmailNuisance) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		for _, em := range existingModels {
+			o.r.EmailAddressNotifyEmailNuisances = append(o.r.EmailAddressNotifyEmailNuisances, &commsEmailContactREmailAddressNotifyEmailNuisancesR{
+				o: o.f.FromExistingPublicreportNotifyEmailNuisance(em),
+			})
+		}
+	})
+}
+
+func (m commsEmailContactMods) WithoutEmailAddressNotifyEmailNuisances() CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailNuisances = nil
+	})
+}
+
+func (m commsEmailContactMods) WithEmailAddressNotifyEmailPools(number int, related *PublicreportNotifyEmailPoolTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailPools = []*commsEmailContactREmailAddressNotifyEmailPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsEmailContactMods) WithNewEmailAddressNotifyEmailPools(number int, mods ...PublicreportNotifyEmailPoolMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportNotifyEmailPoolWithContext(ctx, mods...)
+		m.WithEmailAddressNotifyEmailPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddEmailAddressNotifyEmailPools(number int, related *PublicreportNotifyEmailPoolTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailPools = append(o.r.EmailAddressNotifyEmailPools, &commsEmailContactREmailAddressNotifyEmailPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsEmailContactMods) AddNewEmailAddressNotifyEmailPools(number int, mods ...PublicreportNotifyEmailPoolMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportNotifyEmailPoolWithContext(ctx, mods...)
+		m.AddEmailAddressNotifyEmailPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddExistingEmailAddressNotifyEmailPools(existingModels ...*models.PublicreportNotifyEmailPool) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		for _, em := range existingModels {
+			o.r.EmailAddressNotifyEmailPools = append(o.r.EmailAddressNotifyEmailPools, &commsEmailContactREmailAddressNotifyEmailPoolsR{
+				o: o.f.FromExistingPublicreportNotifyEmailPool(em),
+			})
+		}
+	})
+}
+
+func (m commsEmailContactMods) WithoutEmailAddressNotifyEmailPools() CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressNotifyEmailPools = nil
 	})
 }

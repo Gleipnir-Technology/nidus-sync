@@ -46,10 +46,12 @@ type CommsPhoneTemplate struct {
 }
 
 type commsPhoneR struct {
-	DestinationTextJobs []*commsPhoneRDestinationTextJobsR
-	DestinationTextLogs []*commsPhoneRDestinationTextLogsR
-	SourceTextLogs      []*commsPhoneRSourceTextLogsR
-	Organizations       []*commsPhoneROrganizationsR
+	DestinationTextJobs           []*commsPhoneRDestinationTextJobsR
+	DestinationTextLogs           []*commsPhoneRDestinationTextLogsR
+	SourceTextLogs                []*commsPhoneRSourceTextLogsR
+	Organizations                 []*commsPhoneROrganizationsR
+	PhoneE164NotifyPhoneNuisances []*commsPhoneRPhoneE164NotifyPhoneNuisancesR
+	PhoneE164NotifyPhonePools     []*commsPhoneRPhoneE164NotifyPhonePoolsR
 }
 
 type commsPhoneRDestinationTextJobsR struct {
@@ -67,6 +69,14 @@ type commsPhoneRSourceTextLogsR struct {
 type commsPhoneROrganizationsR struct {
 	number int
 	o      *OrganizationTemplate
+}
+type commsPhoneRPhoneE164NotifyPhoneNuisancesR struct {
+	number int
+	o      *PublicreportNotifyPhoneNuisanceTemplate
+}
+type commsPhoneRPhoneE164NotifyPhonePoolsR struct {
+	number int
+	o      *PublicreportNotifyPhonePoolTemplate
 }
 
 // Apply mods to the CommsPhoneTemplate
@@ -128,6 +138,32 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			rel = append(rel, related...)
 		}
 		o.R.Organizations = rel
+	}
+
+	if t.r.PhoneE164NotifyPhoneNuisances != nil {
+		rel := models.PublicreportNotifyPhoneNuisanceSlice{}
+		for _, r := range t.r.PhoneE164NotifyPhoneNuisances {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PhoneE164 = o.E164 // h2
+				rel.R.PhoneE164Phone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PhoneE164NotifyPhoneNuisances = rel
+	}
+
+	if t.r.PhoneE164NotifyPhonePools != nil {
+		rel := models.PublicreportNotifyPhonePoolSlice{}
+		for _, r := range t.r.PhoneE164NotifyPhonePools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PhoneE164 = o.E164 // h2
+				rel.R.PhoneE164Phone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PhoneE164NotifyPhonePools = rel
 	}
 }
 
@@ -292,6 +328,46 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 				}
 
 				err = m.AttachOrganizations(ctx, exec, rel3...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPhoneE164NotifyPhoneNuisancesDone, _ := commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx.Value(ctx)
+	if !isPhoneE164NotifyPhoneNuisancesDone && o.r.PhoneE164NotifyPhoneNuisances != nil {
+		ctx = commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx.WithValue(ctx, true)
+		for _, r := range o.r.PhoneE164NotifyPhoneNuisances {
+			if r.o.alreadyPersisted {
+				m.R.PhoneE164NotifyPhoneNuisances = append(m.R.PhoneE164NotifyPhoneNuisances, r.o.Build())
+			} else {
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPhoneE164NotifyPhoneNuisances(ctx, exec, rel4...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPhoneE164NotifyPhonePoolsDone, _ := commsPhoneRelPhoneE164NotifyPhonePoolsCtx.Value(ctx)
+	if !isPhoneE164NotifyPhonePoolsDone && o.r.PhoneE164NotifyPhonePools != nil {
+		ctx = commsPhoneRelPhoneE164NotifyPhonePoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.PhoneE164NotifyPhonePools {
+			if r.o.alreadyPersisted {
+				m.R.PhoneE164NotifyPhonePools = append(m.R.PhoneE164NotifyPhonePools, r.o.Build())
+			} else {
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPhoneE164NotifyPhonePools(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -688,5 +764,101 @@ func (m commsPhoneMods) AddExistingOrganizations(existingModels ...*models.Organ
 func (m commsPhoneMods) WithoutOrganizations() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		o.r.Organizations = nil
+	})
+}
+
+func (m commsPhoneMods) WithPhoneE164NotifyPhoneNuisances(number int, related *PublicreportNotifyPhoneNuisanceTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhoneNuisances = []*commsPhoneRPhoneE164NotifyPhoneNuisancesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewPhoneE164NotifyPhoneNuisances(number int, mods ...PublicreportNotifyPhoneNuisanceMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportNotifyPhoneNuisanceWithContext(ctx, mods...)
+		m.WithPhoneE164NotifyPhoneNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddPhoneE164NotifyPhoneNuisances(number int, related *PublicreportNotifyPhoneNuisanceTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhoneNuisances = append(o.r.PhoneE164NotifyPhoneNuisances, &commsPhoneRPhoneE164NotifyPhoneNuisancesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewPhoneE164NotifyPhoneNuisances(number int, mods ...PublicreportNotifyPhoneNuisanceMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportNotifyPhoneNuisanceWithContext(ctx, mods...)
+		m.AddPhoneE164NotifyPhoneNuisances(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingPhoneE164NotifyPhoneNuisances(existingModels ...*models.PublicreportNotifyPhoneNuisance) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.PhoneE164NotifyPhoneNuisances = append(o.r.PhoneE164NotifyPhoneNuisances, &commsPhoneRPhoneE164NotifyPhoneNuisancesR{
+				o: o.f.FromExistingPublicreportNotifyPhoneNuisance(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutPhoneE164NotifyPhoneNuisances() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhoneNuisances = nil
+	})
+}
+
+func (m commsPhoneMods) WithPhoneE164NotifyPhonePools(number int, related *PublicreportNotifyPhonePoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhonePools = []*commsPhoneRPhoneE164NotifyPhonePoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewPhoneE164NotifyPhonePools(number int, mods ...PublicreportNotifyPhonePoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportNotifyPhonePoolWithContext(ctx, mods...)
+		m.WithPhoneE164NotifyPhonePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddPhoneE164NotifyPhonePools(number int, related *PublicreportNotifyPhonePoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhonePools = append(o.r.PhoneE164NotifyPhonePools, &commsPhoneRPhoneE164NotifyPhonePoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewPhoneE164NotifyPhonePools(number int, mods ...PublicreportNotifyPhonePoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportNotifyPhonePoolWithContext(ctx, mods...)
+		m.AddPhoneE164NotifyPhonePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingPhoneE164NotifyPhonePools(existingModels ...*models.PublicreportNotifyPhonePool) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.PhoneE164NotifyPhonePools = append(o.r.PhoneE164NotifyPhonePools, &commsPhoneRPhoneE164NotifyPhonePoolsR{
+				o: o.f.FromExistingPublicreportNotifyPhonePool(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutPhoneE164NotifyPhonePools() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164NotifyPhonePools = nil
 	})
 }
