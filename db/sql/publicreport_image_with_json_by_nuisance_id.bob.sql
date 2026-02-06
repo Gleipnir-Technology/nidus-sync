@@ -7,7 +7,7 @@ SELECT
 	"publicreport.image"."content_type" AS "content_type",
 	"publicreport.image"."created" AS "created",
 	"publicreport.image"."location" AS "location",
-	ST_AsGeoJSON("publicreport.image"."location") AS "location_json",
+	COALESCE(ST_AsGeoJSON("publicreport.image"."location"), '{}') AS "location_json",
 	"publicreport.image"."resolution_x" AS "resolution_x",
 	"publicreport.image"."resolution_y" AS "resolution_y",
 	"publicreport.image"."storage_uuid" AS "storage_uuid",
