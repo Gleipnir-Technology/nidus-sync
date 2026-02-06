@@ -158,7 +158,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				err := periodicallyExportFieldseeker(workerCtx, org)
 				if err != nil {
 					if errors.Is(err, &NoOAuthForOrg{}) {
-						log.Info().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
+						//log.Debug().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
 						return
 					}
 					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
