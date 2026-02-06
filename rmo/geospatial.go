@@ -51,6 +51,7 @@ func geospatialFromForm(r *http.Request) (GeospatialData, error) {
 		resolution = 10
 	// This is a special indicator that we got our location from the browser measurements
 	case "meters":
+	case "browser":
 		accuracy_in_meters, err := strconv.ParseFloat(accuracy_value, 64)
 		if err != nil {
 			return GeospatialData{Populated: false}, fmt.Errorf("Failed to parse '%s' as an accuracy in meters: %v", accuracy_value, err)
