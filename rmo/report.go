@@ -30,7 +30,7 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "You need at least a bit of an 'r'", nil, http.StatusBadRequest)
 		return
 	}
-	p := strings.ToUpper(partial_report_id) + "%"
+	p := partialSearchParam(partial_report_id)
 	ctx := r.Context()
 	rows, err := sql.PublicreportPublicIDSuggestion(p).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -132,4 +132,10 @@ func parseLatLng(r *http.Request) (LatLngForm, error) {
 		}
 	}
 	return result, nil
+}
+
+func partialSearchParam(p string) string {
+	result := strings.ReplaceAll(p, "-", "")
+	result = strings.ToUpper(result)
+	return result + "%"
 }
