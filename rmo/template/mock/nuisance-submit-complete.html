@@ -1,132 +1,225 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "title"}}Quick Report Complete{{end}}
-{{define "extraheader"}}
-<style>
-</style>
-<script>
-</script>
-{{end}}
-{{define "content"}}
-<div class="container py-5">
-	<div class="row justify-content-center">
-		<div class="col-lg-8">
-			<!-- Success Card -->
-			<div class="card shadow-sm border-success mb-4">
-				<div class="card-header bg-success text-white">
-					<h3 class="my-2">
-						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16">
-							<path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+{{ define "title" }}Quick Report Complete{{ end }}
+{{ define "extraheader" }}
+	<style></style>
+	<script></script>
+{{ end }}
+{{ define "content" }}
+	<div class="container py-5">
+		<div class="row justify-content-center">
+			<div class="col-lg-8">
+				<!-- Success Card -->
+				<div class="card shadow-sm border-success mb-4">
+					<div class="card-header bg-success text-white">
+						<h3 class="my-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="24"
+								height="24"
+								fill="currentColor"
+								class="bi bi-check-circle-fill me-2"
+								viewBox="0 0 16 16"
+							>
+								<path
+									d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
+								/>
+							</svg>
+							Report Successfully Submitted
+						</h3>
+					</div>
+					<div class="card-body p-4">
+						<div class="text-center mb-4">
+							<div class="alert alert-info py-3">
+								<strong>Your Report ID:</strong>
+								<span class="fs-4 fw-bold">{{ .ReportID|publicReportID }}</span>
+							</div>
+						</div>
+
+						<hr class="my-4" />
+
+						<div>
+							<h4 class="mb-3">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="20"
+									height="20"
+									fill="currentColor"
+									class="bi bi-bell me-2"
+									viewBox="0 0 16 16"
+								>
+									<path
+										d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"
+									/>
+								</svg>
+								Get Updates
+							</h4>
+							<p>
+								Provide your contact information to receive updates about your
+								report.
+							</p>
+
+							<form
+								id="notificationForm"
+								action="/register-notifications"
+								method="post"
+								class="needs-validation"
+							>
+								<input type="hidden" name="report_id" value="{{ .ReportID }}" />
+
+								<div class="mb-3">
+									<label for="email" class="form-label">Email Address</label>
+									<div class="input-group">
+										<span class="input-group-text">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="16"
+												height="16"
+												fill="currentColor"
+												class="bi bi-envelope"
+												viewBox="0 0 16 16"
+											>
+												<path
+													d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"
+												/>
+											</svg>
+										</span>
+										<input
+											type="email"
+											class="form-control"
+											id="email"
+											name="email"
+											placeholder="your@email.com"
+										/>
+									</div>
+								</div>
+
+								<div class="mb-3">
+									<label for="phone" class="form-label"
+										>Phone Number (for SMS updates)</label
+									>
+									<div class="input-group">
+										<span class="input-group-text">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												width="16"
+												height="16"
+												fill="currentColor"
+												class="bi bi-phone"
+												viewBox="0 0 16 16"
+											>
+												<path
+													d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H5z"
+												/>
+												<path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+											</svg>
+										</span>
+										<input
+											type="tel"
+											class="form-control"
+											id="phone"
+											name="phone"
+											placeholder="(123) 456-7890"
+										/>
+									</div>
+								</div>
+
+								<div class="form-check mb-3 form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										name="consent"
+										required
+									/>
+									<label class="form-check-label" for="consent">
+										I consent to receiving updates about this report
+									</label>
+									<div class="invalid-feedback">
+										You must consent to receive notifications.
+									</div>
+								</div>
+								<div class="form-check mb-3 form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										name="subscribe"
+									/>
+									<label class="form-check-label" for="subscribe">
+										I'd like to subscribe to periodic updates from
+										{{ .District.Name }}
+									</label>
+								</div>
+
+								<button type="submit" class="btn btn-primary">
+									Register for Updates
+								</button>
+							</form>
+						</div>
+
+						<hr class="my-4" />
+
+						<!-- Status Check Section -->
+						<div class="mb-4">
+							<h4 class="mb-3">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="20"
+									height="20"
+									fill="currentColor"
+									class="bi bi-search me-2"
+									viewBox="0 0 16 16"
+								>
+									<path
+										d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"
+									/>
+								</svg>
+								Check Your Report Status
+							</h4>
+							<p>
+								You can check the status of your report at any time using your
+								Report ID.
+							</p>
+							<a href="/status/{{ .ReportID }}" class="btn btn-outline-primary">
+								Check Status
+							</a>
+						</div>
+
+						<div class="row">
+							<div class="mb-4 text-center">
+								{{ if not (eq .District nil) }}
+									<p>Your report will be handled by</p>
+									<p><b>{{ .District.Name }}</b></p>
+									<a href="{{ .District.URLWebsite }}"
+										><img class="logo" src="{{ .District.URLLogo }}"
+									/></a>
+								{{ end }}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Navigation Links -->
+				<div class="text-center">
+					<a href="{{ .URL.Nuisance }}" class="btn btn-outline-success">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							fill="currentColor"
+							class="bi bi-plus-circle me-1"
+							viewBox="0 0 16 16"
+						>
+							<path
+								d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
+							/>
+							<path
+								d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"
+							/>
 						</svg>
-						Report Successfully Submitted
-					</h3>
+						Submit Another Report
+					</a>
 				</div>
-				<div class="card-body p-4">
-					<div class="text-center mb-4">
-						<div class="alert alert-info py-3">
-							<strong>Your Report ID:</strong> 
-							<span class="fs-4 fw-bold">{{.ReportID|publicReportID}}</span>
-						</div>
-					</div>
-					
-					<hr class="my-4">
-
-					<div>
-						<h4 class="mb-3">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bell me-2" viewBox="0 0 16 16">
-								<path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
-							</svg>
-							Get Updates
-						</h4>
-						<p>Provide your contact information to receive updates about your report.</p>
-						
-						<form id="notificationForm" action="/register-notifications" method="post" class="needs-validation">
-							<input type="hidden" name="report_id" value="{{.ReportID}}">
-							
-							<div class="mb-3">
-								<label for="email" class="form-label">Email Address</label>
-								<div class="input-group">
-									<span class="input-group-text">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope" viewBox="0 0 16 16">
-											<path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
-										</svg>
-									</span>
-									<input type="email" class="form-control" id="email" name="email" placeholder="your@email.com">
-								</div>
-							</div>
-							
-							<div class="mb-3">
-								<label for="phone" class="form-label">Phone Number (for SMS updates)</label>
-								<div class="input-group">
-									<span class="input-group-text">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-phone" viewBox="0 0 16 16">
-											<path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h6zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H5z"/>
-											<path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-										</svg>
-									</span>
-									<input type="tel" class="form-control" id="phone" name="phone" placeholder="(123) 456-7890">
-								</div>
-							</div>
-							
-							<div class="form-check mb-3 form-check">
-								<input class="form-check-input" type="checkbox" name="consent" required>
-								<label class="form-check-label" for="consent">
-									I consent to receiving updates about this report
-								</label>
-								<div class="invalid-feedback">
-									You must consent to receive notifications.
-								</div>
-							</div>
-							<div class="form-check mb-3 form-check">
-								<input class="form-check-input" type="checkbox" name="subscribe"/>
-								<label class="form-check-label" for="subscribe">
-									I'd like to subscribe to periodic updates from {{ .District.Name }}
-								</label>
-							</div>
-							
-							<button type="submit" class="btn btn-primary">Register for Updates</button>
-						</form>
-					</div>
-
-					<hr class="my-4">
-					
-					<!-- Status Check Section -->
-					<div class="mb-4">
-						<h4 class="mb-3">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
-								<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-							</svg>
-							Check Your Report Status
-						</h4>
-						<p>You can check the status of your report at any time using your Report ID.</p>
-						<a href="/status/{{.ReportID}}" class="btn btn-outline-primary">
-							Check Status
-						</a>
-					</div>
-
-					<div class="row">
-						<div class="mb-4 text-center">
-							{{ if not (eq .District nil) }}
-								<p>Your report will be handled by</p>
-								<p><b>{{ .District.Name }}</b></p>
-								<a href="{{ .District.URLWebsite }}"><img class="logo" src="{{ .District.URLLogo }}" /></a>
-							{{ end }}
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<!-- Navigation Links -->
-			<div class="text-center">
-				<a href="{{ .URL.Nuisance }}" class="btn btn-outline-success">
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle me-1" viewBox="0 0 16 16">
-						<path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-						<path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-					</svg>
-					Submit Another Report
-				</a>
 			</div>
 		</div>
 	</div>
-</div>
-{{end}}
+{{ end }}

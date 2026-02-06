@@ -1,6 +1,9 @@
-{{define "map"}}
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet' />
+{{ define "map" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<link
+		href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
+		rel="stylesheet"
+	/>
 <script>
 const geojson = JSON.parse({{.GeoJSON}})
 function addMarkers(map, markers) {
@@ -59,26 +62,26 @@ function onLoad() {
 }
 window.addEventListener("load", onLoad);
 </script>
-<style>
-.map-container {
-	background-color: #e9ecef;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-	height: 500px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-top: 20px;
-}
-#map {
-	height: 500px;
-	width:100%;
-	margin-bottom: 10px;
-}
-#map img {
-	max-width: none;
-	min-width: 0px;
-	height: auto;
-}
-</style>
-{{end}}
+	<style>
+		.map-container {
+			background-color: #e9ecef;
+			border-radius: 10px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+			height: 500px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 20px;
+		}
+		#map {
+			height: 500px;
+			width: 100%;
+			margin-bottom: 10px;
+		}
+		#map img {
+			max-width: none;
+			min-width: 0px;
+			height: auto;
+		}
+	</style>
+{{ end }}

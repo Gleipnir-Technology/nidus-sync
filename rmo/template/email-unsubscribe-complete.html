@@ -1,23 +1,27 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "title"}}Main{{end}}
-{{define "extraheader"}}
-{{end}}
-{{define "content"}}
-<!-- Main Content -->
-<main>
-	<section class="py-2 bg-primary text-white">
-		<div class="banner-container d-flex justify-content-center">
-			<img class="banner" src="/static/img/rmo/banner.jpg"/>
-		</div>
-	</section>
-	<section class="py-3 row text-center">
-		<div class="container">
-			<h1>Unsubscribed!</h1>
-			<p>You will not receive any further emails from Report Mosquitoes Online.</p>
-			<p>If this was an accident, or you changed your mind, you can <a href="/email/confirm">re-subscribe</a></p>
-		</div>
-	</section>
-</main>
-
-{{end}}
+{{ define "title" }}Main{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<!-- Main Content -->
+	<main>
+		<section class="py-2 bg-primary text-white">
+			<div class="banner-container d-flex justify-content-center">
+				<img class="banner" src="/static/img/rmo/banner.jpg" />
+			</div>
+		</section>
+		<section class="py-3 row text-center">
+			<div class="container">
+				<h1>Unsubscribed!</h1>
+				<p>
+					You will not receive any further emails from Report Mosquitoes Online.
+				</p>
+				<p>
+					If this was an accident, or you changed your mind, you can
+					<a href="/email/confirm">re-subscribe</a>
+				</p>
+			</div>
+		</section>
+	</main>
+{{ end }}

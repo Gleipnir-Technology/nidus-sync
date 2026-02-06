@@ -1,45 +1,45 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "title"}}Status of report {{.Report.ID|publicReportID}}{{end}}
-{{define "extraheader"}}
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<script src="/static/js/map-with-markers.js"></script>
-<style>
-.timeline {
-	border-left: 3px solid #dee2e6;
-	padding-left: 20px;
-	margin-left: 10px;
-}
-.timeline-item {
-	position: relative;
-	margin-bottom: 25px;
-}
-.timeline-item:before {
-	content: '';
-	position: absolute;
-	left: -29px;
-	top: 0;
-	width: 16px;
-	height: 16px;
-	border-radius: 50%;
-	background-color: #0d6efd;
-}
-.timeline-date {
-	font-size: 0.85rem;
-	color: #6c757d;
-}
-.map-container {
-	height: 300px;
-}
-@media (max-width: 768px) {
-	.map-container {
-		height: 200px;
-	}
-}
-.status-badge {
-	font-size: 1rem;
-}
-</style>
+{{ define "title" }}Status of report {{ .Report.ID|publicReportID }}{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<script src="/static/js/map-with-markers.js"></script>
+	<style>
+		.timeline {
+			border-left: 3px solid #dee2e6;
+			padding-left: 20px;
+			margin-left: 10px;
+		}
+		.timeline-item {
+			position: relative;
+			margin-bottom: 25px;
+		}
+		.timeline-item:before {
+			content: "";
+			position: absolute;
+			left: -29px;
+			top: 0;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background-color: #0d6efd;
+		}
+		.timeline-date {
+			font-size: 0.85rem;
+			color: #6c757d;
+		}
+		.map-container {
+			height: 300px;
+		}
+		@media (max-width: 768px) {
+			.map-container {
+				height: 200px;
+			}
+		}
+		.status-badge {
+			font-size: 1rem;
+		}
+	</style>
 <script>
 const GEOJSON_LOCATION = {{.Report.Location|json}};
 function onLoad() {
@@ -54,89 +54,107 @@ function onLoad() {
 }
 document.addEventListener("DOMContentLoaded", onLoad);
 </script>
-{{end}}
-{{define "content"}}
-{{if (eq .District nil)}}
-	{{template "header-rmo" .}}
-{{else}}
-	{{template "header-district" .District}}
-{{end}}
-<div class="container my-4">
-	<!-- Report ID and Status Section -->
-	<div class="card mb-4">
-		<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-			<h5 class="mb-0">Report {{.Report.ID|publicReportID}}</h5>
-			<span class="badge bg-warning text-dark status-badge">{{.Report.Status}}</span>
-		</div>
-		<div class="card-body">
-			<div class="row">
-				<div class="col-md-4 mb-3">
-					<strong><i class="bi bi-tag me-2"></i>Type:</strong> 
-					<span>{{.Report.Type}}</span>
-				</div>
-				<div class="col-md-4 mb-3">
-					<strong><i class="bi bi-calendar me-2"></i>Created:</strong> 
-					<span>{{.Report.Created|timeSince}}</span>
-				</div>
-				<div class="col-md-4 mb-3">
-					<strong><i class="bi bi-crosshair me-2"></i>District:</strong> 
-					<span>{{if (eq .District nil)}}Unknown{{else}}{{.District.Name}}{{end}}</span>
-				</div>
+{{ end }}
+{{ define "content" }}
+	{{ if (eq .District nil) }}
+		{{ template "header-rmo" . }}
+	{{ else }}
+		{{ template "header-district" .District }}
+	{{ end }}
+	<div class="container my-4">
+		<!-- Report ID and Status Section -->
+		<div class="card mb-4">
+			<div
+				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0">Report {{ .Report.ID|publicReportID }}</h5>
+				<span class="badge bg-warning text-dark status-badge"
+					>{{ .Report.Status }}</span
+				>
 			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<strong><i class="bi bi-pin-map me-2"></i>Location:</strong> 
-					<span>{{.Report.Address}}</span>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<strong><i class="bi bi-images me-2"></i>Images:</strong> 
-					
-					<span>{{ if gt .Report.ImageCount 0 }}{{.Report.ImageCount}}{{else}}None provided{{end}}</span>
-				</div>
-			</div>
-			{{range .Report.Details}}
+			<div class="card-body">
 				<div class="row">
-					<div class="col-md-4">
-						<strong>{{.Name}}</strong>
+					<div class="col-md-4 mb-3">
+						<strong><i class="bi bi-tag me-2"></i>Type:</strong>
+						<span>{{ .Report.Type }}</span>
 					</div>
-					<div class="col-md-6">
-						<span>{{.Value}}</span>
+					<div class="col-md-4 mb-3">
+						<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
+						<span>{{ .Report.Created|timeSince }}</span>
+					</div>
+					<div class="col-md-4 mb-3">
+						<strong><i class="bi bi-crosshair me-2"></i>District:</strong>
+						<span
+							>{{ if (eq .District nil) }}
+								Unknown
+							{{ else }}
+								{{ .District.Name }}
+							{{ end }}</span
+						>
 					</div>
 				</div>
-			{{end}}
-		</div>
-	</div>
-
-	<!-- Map Section -->
-	<div class="card mb-4">
-		<div class="card-header bg-info text-white">
-			<h5 class="mb-0"><i class="bi bi-pin-map-fill me-2"></i>Location Map</h5>
-		</div>
-		<div class="card-body p-0">
-			<map-with-markers
-				api-key="{{ .MapboxToken }}"
-				zoom="14"/>
-		</div>
-	</div>
-
-	<!-- History Timeline -->
-	<div class="card">
-		<div class="card-header bg-success text-white">
-			<h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Request History</h5>
-		</div>
-		<div class="card-body">
-			<div class="timeline">
-				{{range .Timeline}}
-				<div class="timeline-item">
-					<div class="timeline-date">{{.At|timeSince}}</div>
-					<h5 class="mb-1">{{.Title}}</h5>
-					<p class="mb-0">{{.Detail}}</p>
+				<div class="row">
+					<div class="col-md-12">
+						<strong><i class="bi bi-pin-map me-2"></i>Location:</strong>
+						<span>{{ .Report.Address }}</span>
+					</div>
 				</div>
-				{{end}}
+				<div class="row">
+					<div class="col-md-12">
+						<strong><i class="bi bi-images me-2"></i>Images:</strong>
+
+						<span
+							>{{ if gt .Report.ImageCount 0 }}
+								{{ .Report.ImageCount }}
+							{{ else }}
+								None provided
+							{{ end }}</span
+						>
+					</div>
+				</div>
+				{{ range .Report.Details }}
+					<div class="row">
+						<div class="col-md-4">
+							<strong>{{ .Name }}</strong>
+						</div>
+						<div class="col-md-6">
+							<span>{{ .Value }}</span>
+						</div>
+					</div>
+				{{ end }}
+			</div>
+		</div>
+
+		<!-- Map Section -->
+		<div class="card mb-4">
+			<div class="card-header bg-info text-white">
+				<h5 class="mb-0">
+					<i class="bi bi-pin-map-fill me-2"></i>Location Map
+				</h5>
+			</div>
+			<div class="card-body p-0">
+				<map-with-markers api-key="{{ .MapboxToken }}" zoom="14" />
+			</div>
+		</div>
+
+		<!-- History Timeline -->
+		<div class="card">
+			<div class="card-header bg-success text-white">
+				<h5 class="mb-0">
+					<i class="bi bi-clock-history me-2"></i>Request History
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="timeline">
+					{{ range .Timeline }}
+						<div class="timeline-item">
+							<div class="timeline-date">{{ .At|timeSince }}</div>
+							<h5 class="mb-1">{{ .Title }}</h5>
+							<p class="mb-0">{{ .Detail }}</p>
+						</div>
+					{{ end }}
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
-{{end}}
+{{ end }}

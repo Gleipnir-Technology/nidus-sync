@@ -26,6 +26,8 @@
                                                 pkgs.goose
                                                 pkgs.gotools
                                                 pkgs.lefthook
+						pkgs.prettier
+						pkgs.prettier-plugin-go-template
 						pkgs.watchexec
                                         ];
                                 };

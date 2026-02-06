@@ -1,68 +1,68 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "title"}}Standing Water{{end}}
-{{define "extraheader"}}
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js'></script>
-<script src="/static/js/address-display.js"></script>
-<script src="/static/js/address-suggestion.js"></script>
-<script src="/static/js/geocode.js"></script>
-<script src="/static/js/location.js"></script>
-<script src="/static/js/map-locator.js"></script>
-{{template "photo-upload-header"}}
-<style>
-.district-logo {
-	max-height: 80px;
-	width: auto;
-}
-.form-section {
-	margin-bottom: 2.5rem;
-	padding-bottom: 2rem;
-	border-bottom: 1px solid #dee2e6;
-}
-.form-section:last-child {
-	border-bottom: none;
-	margin-bottom: 1rem;
-	padding-bottom: 0;
-}
-.photo-upload-area {
-	border: 2px dashed #ccc;
-	border-radius: 8px;
-	padding: 20px;
-	text-align: center;
-	margin-bottom: 20px;
-	background-color: #f9f9f9;
-}
+{{ define "title" }}Standing Water{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<script src="/static/js/address-display.js"></script>
+	<script src="/static/js/address-suggestion.js"></script>
+	<script src="/static/js/geocode.js"></script>
+	<script src="/static/js/location.js"></script>
+	<script src="/static/js/map-locator.js"></script>
+	{{ template "photo-upload-header" }}
+	<style>
+		.district-logo {
+			max-height: 80px;
+			width: auto;
+		}
+		.form-section {
+			margin-bottom: 2.5rem;
+			padding-bottom: 2rem;
+			border-bottom: 1px solid #dee2e6;
+		}
+		.form-section:last-child {
+			border-bottom: none;
+			margin-bottom: 1rem;
+			padding-bottom: 0;
+		}
+		.photo-upload-area {
+			border: 2px dashed #ccc;
+			border-radius: 8px;
+			padding: 20px;
+			text-align: center;
+			margin-bottom: 20px;
+			background-color: #f9f9f9;
+		}
 
-.photo-preview {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px;
-	margin-top: 15px;
-}
+		.photo-preview {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 15px;
+		}
 
-.photo-preview img {
-	width: 80px;
-	height: 80px;
-	object-fit: cover;
-	border-radius: 4px;
-}
-.section-heading {
-	margin-bottom: 1.5rem;
-	display: flex;
-	align-items: center;
-}
-.section-heading i {
-	margin-right: 10px;
-	font-size: 1.5rem;
-	color: #0d6efd;
-}
-.submit-container {
-	background-color: #f8f9fa;
-	padding: 20px;
-	border-radius: 5px;
-	margin-top: 2rem;
-}
-</style>
+		.photo-preview img {
+			width: 80px;
+			height: 80px;
+			object-fit: cover;
+			border-radius: 4px;
+		}
+		.section-heading {
+			margin-bottom: 1.5rem;
+			display: flex;
+			align-items: center;
+		}
+		.section-heading i {
+			margin-right: 10px;
+			font-size: 1.5rem;
+			color: #0d6efd;
+		}
+		.submit-container {
+			background-color: #f8f9fa;
+			padding: 20px;
+			border-radius: 5px;
+			margin-top: 2rem;
+		}
+	</style>
 <script>
 const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
 function handlePhotoSelection() {
@@ -81,25 +81,25 @@ function handlePhotoSelection() {
 				console.log("Skipping non-image file", file.type);
 				return; // Skip non-image files
 			}
-			
+
 			// Create preview container
 			const previewContainer = document.createElement('div');
 			previewContainer.className = 'position-relative m-1';
-			
+
 			// Create image preview
 			const img = document.createElement('img');
 			img.className = 'img-thumbnail';
 			img.style.width = '100px';
 			img.style.height = '100px';
 			img.style.objectFit = 'cover';
-			
+
 			// Read file and set preview
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				img.src = e.target.result;
 			};
 			reader.readAsDataURL(file);
-			
+
 			// Create remove button
 			const removeBtn = document.createElement('button');
 			removeBtn.type = 'button';
@@ -107,14 +107,14 @@ function handlePhotoSelection() {
 			removeBtn.innerHTML = '&times;';
 			removeBtn.style.fontSize = '10px';
 			removeBtn.style.padding = '0 5px';
-			
+
 			// Handle remove button click
 			removeBtn.addEventListener('click', function() {
 				// Create a new FileList without this file
 				// Since FileList is immutable, we need to reset the input
 				// This is a bit tricky and requires recreating the input
 				previewContainer.remove();
-				
+
 				// If this was the last image, clear the input entirely
 				if (photoPreviewContainer.children.length === 0) {
 				photoInput.value = '';
@@ -122,7 +122,7 @@ function handlePhotoSelection() {
 				// Note: Unfortunately, selectively removing files from a FileList isn't straightforward
 				// In a real implementation, we might track selected files in an array and recreate the input
 			});
-			
+
 			// Add elements to the preview container
 			previewContainer.appendChild(img);
 			previewContainer.appendChild(removeBtn);
@@ -182,20 +182,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	// Handle drag and drop
 	const photoDropArea = document.getElementById('photoDropArea');
-	
+
 	photoDropArea.addEventListener('dragover', function(e) {
 		e.preventDefault();
 		photoDropArea.style.backgroundColor = '#e9ecef';
 	});
-	
+
 	photoDropArea.addEventListener('dragleave', function() {
 		photoDropArea.style.backgroundColor = '#f8f9fa';
 	});
-	
+
 	photoDropArea.addEventListener('drop', function(e) {
 		e.preventDefault();
 		photoDropArea.style.backgroundColor = '#f8f9fa';
-		
+
 		if (e.dataTransfer.files.length) {
 			handleFiles(e.dataTransfer.files);
 		}
@@ -259,305 +259,499 @@ function displaySelectedCoordinates(lngLat) {
 	latitude.textContent = lngLat.lat;
 }
 </script>
-{{end}}
-{{define "content"}}
-{{if .District}}
-	{{template "header" .}}
-{{end}}
-<!-- Main Content -->
-<main class="py-5">
-	<div class="container">
-		<!-- Page Title -->
-		<div class="row mb-4">
-			<div class="col-12">
-				<h2>Report Standing Water</h2>
-				<p class="lead">Help us locate and treat potential mosquito production sources in your area</p>
-			</div>
-		</div>
-
-		<!-- Report Form -->
-		<form id="standingWater" action="/water-submit" method="POST" enctype="multipart/form-data">
-			<!-- Photo Upload Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-camera"></i>
-					<h3>Photos</h3>
-				</div>
-				<p class="mb-3">Photos help us identify the severity of the issue and may contain location data that can help us find the production source.</p>
-				<div class="mb-4">
-					{{template "photo-upload"}}
+{{ end }}
+{{ define "content" }}
+	{{ if .District }}
+		{{ template "header" . }}
+	{{ end }}
+	<!-- Main Content -->
+	<main class="py-5">
+		<div class="container">
+			<!-- Page Title -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<h2>Report Standing Water</h2>
+					<p class="lead">
+						Help us locate and treat potential mosquito production sources in
+						your area
+					</p>
 				</div>
 			</div>
 
-			<!-- Additional Information Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-card-text"></i>
-					<h3>Additional Information</h3>
+			<!-- Report Form -->
+			<form
+				id="standingWater"
+				action="/water-submit"
+				method="POST"
+				enctype="multipart/form-data"
+			>
+				<!-- Photo Upload Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-camera"></i>
+						<h3>Photos</h3>
+					</div>
+					<p class="mb-3">
+						Photos help us identify the severity of the issue and may contain
+						location data that can help us find the production source.
+					</p>
+					<div class="mb-4">
+						{{ template "photo-upload" }}
+					</div>
 				</div>
-				<p class="mb-3">Please provide any other information that might help us address this mosquito production source.</p>
-				
-				<div class="row">
+
+				<!-- Additional Information Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-card-text"></i>
+						<h3>Additional Information</h3>
+					</div>
+					<p class="mb-3">
+						Please provide any other information that might help us address this
+						mosquito production source.
+					</p>
+
+					<div class="row">
+						<div class="col-md-12">
+							<label for="comments" class="form-label"
+								>Additional Details</label
+							>
+							<textarea
+								class="form-control"
+								id="comments"
+								name="comments"
+								rows="4"
+								placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."
+							></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Location Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-geo-alt"></i>
+						<h3>Location</h3>
+					</div>
+					<p class="mb-3">
+						Please provide the location of the potential mosquito production
+						source. We may be able to extract this information from your photos
+						if they contain location data.
+					</p>
 					<div class="col-md-12">
-						<label for="comments" class="form-label">Additional Details</label>
-						<textarea class="form-control" id="comments" name="comments" rows="4" placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."></textarea>
+						<div class="alert alert-info" role="info">
+							<p class="mb-0">
+								You can select the location by address or by moving the marker
+								on the map.
+							</p>
+						</div>
 					</div>
-				</div>
-			</div>
 
-
-			<!-- Location Section -->
-			<div class="form-section">
-				<div class="section-heading">
-					<i class="bi bi-geo-alt"></i>
-					<h3>Location</h3>
-				</div>
-				<p class="mb-3">Please provide the location of the potential mosquito production source. We may be able to extract this information from your photos if they contain location data.</p>
-				<div class="col-md-12">
-					<div class="alert alert-info" role="info">
-						<p class="mb-0">You can select the location by address or by moving the marker on the map.</p>
-					</div>
-				</div>
-				
-				<div class="row mb-3">
-					<!-- Hidden fields for location data -->
-					<input type="hidden" id="address-country" name="address-country"/>
-					<input type="hidden" id="address-postcode" name="address-postcode"/>
-					<input type="hidden" id="address-place" name="address-place"/>
-					<input type="hidden" id="address-region" name="address-region"/>
-					<input type="hidden" id="address-street" name="address-street"/>
-					<input type="hidden" id="latitude" name="latitude"/>
-					<input type="hidden" id="longitude" name="longitude"/>
-					<input type="hidden" id="latlng-accuracy-type" name="latlng-accuracy-type"/>
-					<input type="hidden" id="latlng-accuracy-value" name="latlng-accuracy-value"/>
-					<div class="col-md-6">
-						<div class="mb-3 position-relative">
-							<address-input
+					<div class="row mb-3">
+						<!-- Hidden fields for location data -->
+						<input type="hidden" id="address-country" name="address-country" />
+						<input
+							type="hidden"
+							id="address-postcode"
+							name="address-postcode"
+						/>
+						<input type="hidden" id="address-place" name="address-place" />
+						<input type="hidden" id="address-region" name="address-region" />
+						<input type="hidden" id="address-street" name="address-street" />
+						<input type="hidden" id="latitude" name="latitude" />
+						<input type="hidden" id="longitude" name="longitude" />
+						<input
+							type="hidden"
+							id="latlng-accuracy-type"
+							name="latlng-accuracy-type"
+						/>
+						<input
+							type="hidden"
+							id="latlng-accuracy-value"
+							name="latlng-accuracy-value"
+						/>
+						<div class="col-md-6">
+							<div class="mb-3 position-relative">
+								<address-input
 									placeholder="Start typing an address (min 3 characters)"
-									api-key="{{ .MapboxToken }}">
-							</address-input>
+									api-key="{{ .MapboxToken }}"
+								>
+								</address-input>
+							</div>
+						</div>
+					</div>
+
+					<p class="small text-muted mb-2">
+						You can also click on the map to mark the location precisely
+					</p>
+					<map-locator api-key="{{ .MapboxToken }}"></map-locator>
+					<input type="hidden" id="map-zoom" name="map-zoom" />
+				</div>
+
+				<button
+					id="toggle-additional"
+					class="btn btn-warning"
+					type="button"
+					onClick="toggleCollapse('collapse-additional-fields')"
+				>
+					Click here to answer a few more questions to better help us solve your
+					mosquito problem
+				</button>
+				<div class="collapse" id="collapse-additional-fields">
+					<!-- Source Details Section -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-water"></i>
+							<h3>Source Details</h3>
+						</div>
+
+						<div class="row mb-4">
+							<div class="col-md-6">
+								<label for="duration" class="form-label"
+									>How long has this production source been present?</label
+								>
+								<select
+									class="form-select"
+									id="duration"
+									name="source-duration"
+								>
+									<option value="none">I don't know</option>
+									<option value="less-than-week">Less than a week</option>
+									<option value="1-2-weeks">1-2 weeks</option>
+									<option value="2-4-weeks">2-4 weeks</option>
+									<option value="1-3-months">1-3 months</option>
+									<option value="more-than-3-months">More than 3 months</option>
+								</select>
+							</div>
+
+							<div class="col-md-6">
+								<label class="form-label d-block"
+									>Have you observed any of the following?
+									<a
+										href="#"
+										data-bs-toggle="modal"
+										data-bs-target="#larvaeInfoModal"
+										><i class="bi bi-question-circle small ms-1"></i></a
+								></label>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="larvae"
+										name="has-larvae"
+									/>
+									<label class="form-check-label" for="larvae">
+										Larvae (wigglers) in water
+									</label>
+								</div>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="pupae"
+										name="has-pupae"
+									/>
+									<label class="form-check-label" for="pupae">
+										Pupae (tumblers) in water
+									</label>
+								</div>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="adult"
+										name="has-adult"
+									/>
+									<label class="form-check-label" for="adult">
+										Adult mosquitoes near the source
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Access Information Section -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-unlock"></i>
+							<h3>Access Information</h3>
+						</div>
+						<p class="mb-3">
+							Please provide any details about how to access the mosquito
+							source. This helps our technicians when they visit the site.
+						</p>
+
+						<div class="row mb-3">
+							<div class="col-md-12">
+								<label for="access-comments" class="form-label"
+									>How can the source be accessed?</label
+								>
+								<textarea
+									class="form-control"
+									id="access-comments"
+									name="access-comments"
+									rows="3"
+									placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."
+								></textarea>
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-12">
+								<label class="form-label d-block"
+									>Access obstacles (check all that apply):</label
+								>
+								<div class="row">
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="gate"
+												name="access-gate"
+											/>
+											<label class="form-check-label" for="gate">Gate</label>
+										</div>
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="fence"
+												name="access-fence"
+											/>
+											<label class="form-check-label" for="fence">Fence</label>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="locked"
+												name="access-locked"
+											/>
+											<label class="form-check-label" for="locked"
+												>Locked entrance</label
+											>
+										</div>
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="dogs"
+												name="access-dog"
+											/>
+											<label class="form-check-label" for="dogs"
+												>Dogs/pets</label
+											>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="access-other"
+												name="access-other"
+											/>
+											<label class="form-check-label" for="access-other"
+												>Other obstacle</label
+											>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Contact Information Sections -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-person-lines-fill"></i>
+							<h3>Property Owner Information (if known)</h3>
+						</div>
+
+						<div class="row mb-4">
+							<div class="col-md-4 mb-3">
+								<label for="owner-name" class="form-label">Owner Name</label>
+								<input
+									type="text"
+									class="form-control"
+									id="owner-name"
+									name="owner-name"
+								/>
+							</div>
+							<div class="col-md-4 mb-3">
+								<label for="owner-phone" class="form-label">Owner Phone</label>
+								<input
+									type="tel"
+									class="form-control"
+									id="owner-phone"
+									name="owner-phone"
+								/>
+							</div>
+							<div class="col-md-4 mb-3">
+								<label for="owner-email" class="form-label">Owner Email</label>
+								<input
+									type="email"
+									class="form-control"
+									id="owner-email"
+									name="owner-email"
+								/>
+							</div>
+						</div>
+						<div class="row mb-4">
+							<div class="col-md-6 mb-3 row">
+								<div class="form-check mt-4">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										name="property-ownership"
+									/>
+									<label class="form-check-label" for="property-ownership"
+										>This is my property</label
+									>
+								</div>
+								<div class="form-check mt-4">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										name="backyard-permission"
+									/>
+									<label class="form-check-label" for="backyard-permission"
+										>I grant permission to enter the back yard of this
+										property.</label
+									>
+								</div>
+								<div class="form-check mt-4">
+									<input
+										type="checkbox"
+										class="form-check-input"
+										name="reporter-confidential"
+									/>
+									<label class="form-check-label" for="reporter-confidential">
+										<i
+											class="bi bi-info-circle-fill text-primary ms-1"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											title="We share your information with mosquito control districts so they can follow up with any questions they may have about your report. Check this box if you would like the district to be careful not to share your information outside of the district operations team."
+										></i>
+										I would like my personal information kept
+										confidential.</label
+									>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
-				
-				<p class="small text-muted mb-2">You can also click on the map to mark the location precisely</p>
-				<map-locator api-key="{{ .MapboxToken }}"></map-locator>
-				<input type="hidden" id="map-zoom" name="map-zoom"/>
-			</div>
 
-			<button id="toggle-additional" class="btn btn-warning" type="button" onClick="toggleCollapse('collapse-additional-fields')">
-				Click here to answer a few more questions to better help us solve your mosquito problem
-			</button>
-			<div class="collapse" id="collapse-additional-fields">
-
-				<!-- Source Details Section -->
-				<div class="form-section">
-					<div class="section-heading">
-						<i class="bi bi-water"></i>
-						<h3>Source Details</h3>
+				<!-- Submit Section -->
+				<div class="submit-container">
+					<div class="row align-items-center">
+						<div class="col-md-8">
+							<p class="mb-0">
+								<strong
+									>Thank you for helping us keep our community safe from
+									mosquito-borne illnesses.</strong
+								>
+							</p>
+							<p class="mb-0 small text-muted">
+								After submission, you will receive a confirmation with a report
+								ID for tracking purposes.
+							</p>
+						</div>
+						<div class="col-md-4 text-md-end mt-3 mt-md-0">
+							<a
+								class="btn btn-primary btn-lg"
+								href="{{ .URL.NuisanceSubmitComplete }}"
+							>
+								Submit Report
+							</a>
+						</div>
 					</div>
-					
+				</div>
+			</form>
+		</div>
+	</main>
+
+	<!-- Larvae Info Modal -->
+	<div
+		class="modal fade"
+		id="larvaeInfoModal"
+		tabindex="-1"
+		aria-labelledby="larvaeInfoModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="larvaeInfoModalLabel">
+						How to Identify Mosquito Larvae and Pupae
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
+				<div class="modal-body">
 					<div class="row mb-4">
 						<div class="col-md-6">
-							<label for="duration" class="form-label">How long has this production source been present?</label>
-							<select class="form-select" id="duration" name="source-duration">
-								<option value="none">I don't know</option>
-								<option value="less-than-week">Less than a week</option>
-								<option value="1-2-weeks">1-2 weeks</option>
-								<option value="2-4-weeks">2-4 weeks</option>
-								<option value="1-3-months">1-3 months</option>
-								<option value="more-than-3-months">More than 3 months</option>
-							</select>
+							<h6>Mosquito Larvae (Wigglers)</h6>
+							<p>Mosquito larvae, often called "wigglers," are:</p>
+							<ul>
+								<li>Small, worm-like aquatic organisms</li>
+								<li>Usually 1/4 to 1/2 inch long</li>
+								<li>Move with a wiggling motion in water</li>
+								<li>Hang upside-down at the water surface to breathe</li>
+								<li>Visible to the naked eye in standing water</li>
+							</ul>
 						</div>
-						
 						<div class="col-md-6">
-							<label class="form-label d-block">Have you observed any of the following? <a href="#" data-bs-toggle="modal" data-bs-target="#larvaeInfoModal"><i class="bi bi-question-circle small ms-1"></i></a></label>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="larvae" name="has-larvae">
-								<label class="form-check-label" for="larvae">
-									Larvae (wigglers) in water
-								</label>
-							</div>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="pupae" name="has-pupae">
-								<label class="form-check-label" for="pupae">
-									Pupae (tumblers) in water
-								</label>
-							</div>
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" id="adult" name="has-adult">
-								<label class="form-check-label" for="adult">
-									Adult mosquitoes near the source
-								</label>
-							</div>
+							<h6>Mosquito Pupae (Tumblers)</h6>
+							<p>Mosquito pupae, often called "tumblers," are:</p>
+							<ul>
+								<li>Comma-shaped organisms</li>
+								<li>Typically darker than larvae</li>
+								<li>Move with a tumbling motion when disturbed</li>
+								<li>Rest at the water surface</li>
+								<li>The stage just before adult mosquitoes emerge</li>
+							</ul>
 						</div>
+					</div>
+					<p>
+						When looking for mosquito larvae and pupae, check standing water
+						sources like:
+					</p>
+					<ul>
+						<li>Swimming pools</li>
+						<li>Bird baths</li>
+						<li>Buckets or containers</li>
+						<li>Drainage ditches</li>
+						<li>Plant saucers</li>
+						<li>Rain gutters</li>
+					</ul>
+					<p>
+						If you see small creatures moving in standing water, there's a good
+						chance they're mosquito larvae or pupae.
+					</p>
+					<div class="text-center">
+						<a href="#" class="btn btn-outline-primary"
+							>View Detailed Identification Guide</a
+						>
 					</div>
 				</div>
-
-				<!-- Access Information Section -->
-				<div class="form-section">
-					<div class="section-heading">
-						<i class="bi bi-unlock"></i>
-						<h3>Access Information</h3>
-					</div>
-					<p class="mb-3">Please provide any details about how to access the mosquito source. This helps our technicians when they visit the site.</p>
-					
-					<div class="row mb-3">
-						<div class="col-md-12">
-							<label for="access-comments" class="form-label">How can the source be accessed?</label>
-							<textarea class="form-control" id="access-comments" name="access-comments" rows="3" placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."></textarea>
-						</div>
-					</div>
-					
-					<div class="row mb-3">
-						<div class="col-md-12">
-							<label class="form-label d-block">Access obstacles (check all that apply):</label>
-							<div class="row">
-								<div class="col-md-4">
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="gate" name="access-gate">
-										<label class="form-check-label" for="gate">Gate</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="fence" name="access-fence">
-										<label class="form-check-label" for="fence">Fence</label>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="locked" name="access-locked">
-										<label class="form-check-label" for="locked">Locked entrance</label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="dogs" name="access-dog">
-										<label class="form-check-label" for="dogs">Dogs/pets</label>
-									</div>
-								</div>
-								<div class="col-md-4">
-									<div class="form-check">
-										<input class="form-check-input" type="checkbox" id="access-other" name="access-other">
-										<label class="form-check-label" for="access-other">Other obstacle</label>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Close
+					</button>
 				</div>
-
-				<!-- Contact Information Sections -->
-				<div class="form-section">
-					<div class="section-heading">
-						<i class="bi bi-person-lines-fill"></i>
-						<h3>Property Owner Information (if known)</h3>
-					</div>
-					
-					<div class="row mb-4">
-						<div class="col-md-4 mb-3">
-							<label for="owner-name" class="form-label">Owner Name</label>
-							<input type="text" class="form-control" id="owner-name" name="owner-name">
-						</div>
-						<div class="col-md-4 mb-3">
-							<label for="owner-phone" class="form-label">Owner Phone</label>
-							<input type="tel" class="form-control" id="owner-phone" name="owner-phone">
-						</div>
-						<div class="col-md-4 mb-3">
-							<label for="owner-email" class="form-label">Owner Email</label>
-							<input type="email" class="form-control" id="owner-email" name="owner-email">
-						</div>
-					</div>
-					<div class="row mb-4">
-						<div class="col-md-6 mb-3 row">
-							<div class="form-check mt-4">
-								<input type="checkbox" class="form-check-input" name="property-ownership">
-								<label class="form-check-label" for="property-ownership">This is my property</label>
-							</div>
-							<div class="form-check mt-4">
-								<input type="checkbox" class="form-check-input" name="backyard-permission">
-								<label class="form-check-label" for="backyard-permission">I grant permission to enter the back yard of this property.</label>
-							</div>
-							<div class="form-check mt-4">
-								<input type="checkbox" class="form-check-input" name="reporter-confidential">
-								<label class="form-check-label" for="reporter-confidential">
-									<i class="bi bi-info-circle-fill text-primary ms-1" 
-										data-bs-toggle="tooltip" 
-										data-bs-placement="top" 
-										title="We share your information with mosquito control districts so they can follow up with any questions they may have about your report. Check this box if you would like the district to be careful not to share your information outside of the district operations team."></i>
-									I would like my personal information kept confidential.</label>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Submit Section -->
-			<div class="submit-container">
-				<div class="row align-items-center">
-					<div class="col-md-8">
-						<p class="mb-0"><strong>Thank you for helping us keep our community safe from mosquito-borne illnesses.</strong></p>
-						<p class="mb-0 small text-muted">After submission, you will receive a confirmation with a report ID for tracking purposes.</p>
-					</div>
-					<div class="col-md-4 text-md-end mt-3 mt-md-0">
-						<a  class="btn btn-primary btn-lg" href="{{.URL.NuisanceSubmitComplete}}">
-							Submit Report
-						</a>
-					</div>
-				</div>
-			</div>
-		</form>
-	</div>
-</main>
-
-<!-- Larvae Info Modal -->
-<div class="modal fade" id="larvaeInfoModal" tabindex="-1" aria-labelledby="larvaeInfoModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="larvaeInfoModalLabel">How to Identify Mosquito Larvae and Pupae</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				<div class="row mb-4">
-					<div class="col-md-6">
-						<h6>Mosquito Larvae (Wigglers)</h6>
-						<p>Mosquito larvae, often called "wigglers," are:</p>
-						<ul>
-							<li>Small, worm-like aquatic organisms</li>
-							<li>Usually 1/4 to 1/2 inch long</li>
-							<li>Move with a wiggling motion in water</li>
-							<li>Hang upside-down at the water surface to breathe</li>
-							<li>Visible to the naked eye in standing water</li>
-						</ul>
-					</div>
-					<div class="col-md-6">
-						<h6>Mosquito Pupae (Tumblers)</h6>
-						<p>Mosquito pupae, often called "tumblers," are:</p>
-						<ul>
-							<li>Comma-shaped organisms</li>
-							<li>Typically darker than larvae</li>
-							<li>Move with a tumbling motion when disturbed</li>
-							<li>Rest at the water surface</li>
-							<li>The stage just before adult mosquitoes emerge</li>
-						</ul>
-					</div>
-				</div>
-				<p>When looking for mosquito larvae and pupae, check standing water sources like:</p>
-				<ul>
-					<li>Swimming pools</li>
-					<li>Bird baths</li>
-					<li>Buckets or containers</li>
-					<li>Drainage ditches</li>
-					<li>Plant saucers</li>
-					<li>Rain gutters</li>
-				</ul>
-				<p>If you see small creatures moving in standing water, there's a good chance they're mosquito larvae or pupae.</p>
-				<div class="text-center">
-					<a href="#" class="btn btn-outline-primary">View Detailed Identification Guide</a>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 			</div>
 		</div>
 	</div>
-</div>
-{{end}}
+{{ end }}
