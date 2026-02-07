@@ -1,0 +1,283 @@
+{{ template "rmo/base.html" . }}
+
+{{ define "title" }}Status{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<script src="/static/js/address-or-report-suggestion.js"></script>
+	<script src="/static/js/geocode.js"></script>
+	<script src="/static/js/location.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
+	<script src="/static/js/report-table.js"></script>
+<script>
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+var markers = [];
+// Because features come from tiled vector data, feature geometries may be split
+// or duplicated across tile boundaries. As a result, features may appear
+// multiple times in query results.
+function getUniqueFeatures(nuisances, pools, comparatorProperty) {
+	const uniqueIds = new Set();
+	const uniqueFeatures = [];
+	for (const feature of nuisances) {
+		const id = feature.properties[comparatorProperty];
+		if (!uniqueIds.has(id)) {
+			uniqueIds.add(id);
+			let f = structuredClone(feature);
+			f.type = "nuisance";
+			uniqueFeatures.push(f);
+		}
+	}
+	for (const feature of pools) {
+		const id = feature.properties[comparatorProperty];
+		if (!uniqueIds.has(id)) {
+			uniqueIds.add(id);
+			let f = structuredClone(feature);
+			f.type = "pool";
+			uniqueFeatures.push(f);
+		}
+	}
+	return uniqueFeatures;
+}
+
+function handleLookupFormSubmit(e) {
+	const report_id = e.target.elements["address-or-report"].value.replace(/-/g, "");
+	window.location = "/status/" + report_id;
+	return false;
+}
+
+function maybeEnableLookupButton(e) {
+	const lookupButton = document.getElementById("lookup");
+	const lookupButtonTooltip = tooltipByElementId["lookup-tooltip"];
+	const reportId = e.target.value.replace(/-/g, "");
+	if (reportId.length == 12) {
+		lookupButton.disabled = false;
+		lookupButton.classList.remove("disabled");
+		lookupButtonTooltip.disable()
+	} else {
+		lookupButton.disabled = true;
+		lookupButton.classList.add("disabled");
+		lookupButtonTooltip.enable()
+	}
+}
+
+function onLoad() {
+	const map = document.querySelector("map-multipoint");
+	const checkboxNuisance = document.getElementById("checkboxNuisance");
+	const checkboxWater = document.getElementById("checkboxWater");
+	map.addEventListener("load", (event) => {
+		map.addSource('tegola-mosquito', {
+			'type': 'vector',
+			'tiles': [
+				'{{.URL.Tegola}}maps/mosquito/{z}/{x}/{y}'
+			]
+		});
+		map.addLayer({
+			'id': 'nuisance',
+			'source': 'tegola-mosquito',
+			'source-layer': 'nuisance_location',
+			'type': 'circle',
+			'paint': {
+				'circle-color': "#DC4535",
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': "#9C1C28"
+			}
+		});
+		map.addLayer({
+			'id': 'pool',
+			'source': 'tegola-mosquito',
+			'source-layer': 'pool_location',
+			'type': 'circle',
+			'paint': {
+				'circle-color': "#0D6EfD",
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': "#024AB6"
+			}
+		});
+		map.on("idle", () => {
+			function _addCheckboxClick(checkbox, layer_id) {
+				checkbox.onclick = function(e) {
+					if (checkbox.checked) {
+						map.SetLayoutProperty(layer_id, "visibility", "visible");
+					} else {
+						map.SetLayoutProperty(layer_id, "visibility", "none");
+					}
+				}
+			}
+			_addCheckboxClick(checkboxNuisance, "nuisance");
+			_addCheckboxClick(checkboxWater, "pool");
+			checkboxNuisance.onclick()
+			checkboxWater.onclick()
+		});
+		function _updateReports() {
+			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
+			const pools = map.queryRenderedFeatures({target: {layerId: 'pool'}});
+
+			const uniqueFeatures = getUniqueFeatures(nuisances, pools, 'public_id');
+			// Populate features for the listing overlay.
+			renderReports(uniqueFeatures);
+		}
+		map.once("idle", _updateReports);
+		map.on('moveend', _updateReports);
+		getGeolocation({
+			enableHighAccuracy: true,
+			timeout: 10000,
+			maximumAge: 0
+		}).then(position => {
+			map.jumpTo({
+				center: {
+					lng: position.coords.longitude,
+					lat: position.coords.latitude,
+				},
+				zoom: 14,
+			});
+		}).catch(error => {
+			console.log("location error", error);
+		})
+	});
+	const report_table = document.querySelector('report-table');
+	report_table.addEventListener("row-clicked", (e) => {
+		window.location = "/status/" + e.detail.reportId;
+	})
+
+	document.querySelector("address-or-report-input").addEventListener("suggestion-selected", maybeEnableLookupButton);
+	document.querySelector("address-or-report-input").addEventListener("input", maybeEnableLookupButton);
+	document.getElementById("lookup-form").addEventListener("submit", handleLookupFormSubmit);
+}
+function renderReports(features) {
+	//console.log("render reports", features);
+
+	const report_table = document.querySelector('report-table');
+	let reports = [];
+	for (const feature of features) {
+		reports.push({
+			address: feature.properties.address,
+			created: feature.properties.created,
+			id: feature.properties.public_id,
+			status: feature.properties.status,
+			type: feature.type,
+		});
+	}
+	report_table.reports = reports;
+
+	const report_count = document.getElementById("report-count");
+	report_count.innerHTML = reports.length + " Reports Found";
+}
+document.addEventListener('DOMContentLoaded', onLoad);
+</script>
+{{ end }}
+{{ define "content" }}
+	{{ if (eq .District nil) }}
+		{{ template "rmo/component/header-rmo.html" . }}
+	{{ else }}
+		{{ template "rmo/component/header-district.html" .District }}
+	{{ end }}
+	<div class="container my-4">
+		<!-- Search Box -->
+		<div class="card search-box mb-4">
+			<div class="card-body">
+				<form class="row g-3 align-items-center" action="#" id="lookup-form">
+					<div class="col-md-9">
+						<address-or-report-input
+							api-key="{{ .MapboxToken }}"
+							name="address-or-report"
+							placeholder="Enter a report ID, address, neighborhood, or zip code"
+						></address-or-report-input>
+					</div>
+					<div class="col-md-3">
+						<span
+							data-bs-toggle="tooltip"
+							id="lookup-tooltip"
+							title="You can look up a report once you type in the full report ID. Start typing and I'll suggest complete IDs"
+						>
+							<button
+								type="submit"
+								class="btn btn-primary btn-lg w-100 disabled"
+								disabled
+								id="lookup"
+							>
+								Lookup Report by ID
+							</button>
+						</span>
+					</div>
+					<div class="col-12">
+						<div class="form-check custom-circle-checkbox">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								id="checkboxNuisance"
+								data-color="danger"
+							/>
+							<label class="form-check-label" for="checkboxNuisance"
+								>Mosquito Nuisance</label
+							>
+						</div>
+
+						<div class="form-check custom-circle-checkbox">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								id="checkboxWater"
+								data-color="success"
+							/>
+							<label class="form-check-label" for="checkboxWater"
+								>Standing Water</label
+							>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Map Section -->
+		<div class="card mb-4">
+			<div class="card-header bg-info text-white">
+				<h5 class="mb-0"><i class="bi bi-pin-map-fill me-2"></i>Reports Map</h5>
+			</div>
+			<div class="card-body p-0">
+				<map-multipoint
+					api-key="{{ .MapboxToken }}"
+					latitude="36.3"
+					longitude="-119.2"
+					tegola="{{ .URL.Tegola }}"
+					zoom="9"
+				></map-multipoint>
+			</div>
+		</div>
+
+		<!-- Results Section -->
+		<div class="card">
+			<div
+				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0">
+					<i class="bi bi-geo-fill me-2"></i>Reports Near You
+				</h5>
+				<span class="badge bg-light text-dark" id="report-count"
+					>- Reports Found</span
+				>
+			</div>
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<report-table />
+				</div>
+			</div>
+			<!--
+		<div class="card-footer">
+			<nav aria-label="Page navigation">
+				<ul class="pagination justify-content-center mb-0">
+					<li class="page-item disabled">
+						<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+					</li>
+					<li class="page-item active"><a class="page-link" href="#">1</a></li>
+					<li class="page-item"><a class="page-link" href="#">2</a></li>
+					<li class="page-item"><a class="page-link" href="#">3</a></li>
+					<li class="page-item">
+						<a class="page-link" href="#">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+		--></div>
+	</div>
+{{ end }}

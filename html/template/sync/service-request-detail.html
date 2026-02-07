@@ -1,0 +1,387 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.district-logo {
+			max-height: 80px;
+			width: auto;
+		}
+		.map-container {
+			height: 300px;
+			background-color: #e9ecef;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 5px;
+			border: 1px solid #dee2e6;
+		}
+		.progress-tracker {
+			display: flex;
+			justify-content: space-between;
+			margin: 20px 0;
+			position: relative;
+		}
+		.progress-tracker::before {
+			content: "";
+			position: absolute;
+			top: 25px;
+			left: 0;
+			width: 100%;
+			height: 2px;
+			background-color: #dee2e6;
+			z-index: 1;
+		}
+		.progress-step {
+			position: relative;
+			z-index: 2;
+			text-align: center;
+			width: 60px;
+		}
+		.progress-icon {
+			height: 50px;
+			width: 50px;
+			background-color: #fff;
+			border-radius: 50%;
+			border: 2px solid #dee2e6;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-bottom: 8px;
+		}
+		.progress-icon.active {
+			border-color: #0d6efd;
+			background-color: #0d6efd;
+			color: white;
+		}
+		.progress-icon.completed {
+			border-color: #198754;
+			background-color: #198754;
+			color: white;
+		}
+		.progress-label {
+			font-size: 0.8rem;
+			font-weight: 500;
+		}
+		.type-badge {
+			display: flex;
+			align-items: center;
+			font-size: 1.1rem;
+		}
+		.type-badge i {
+			margin-right: 8px;
+		}
+		.coordinates {
+			font-size: 0.85rem;
+			color: #6c757d;
+		}
+		.note-item {
+			border-left: 3px solid #0d6efd;
+			padding: 10px 15px;
+			background-color: rgba(13, 110, 253, 0.05);
+			margin-bottom: 10px;
+		}
+		.note-date {
+			font-size: 0.8rem;
+			color: #6c757d;
+			margin-bottom: 2px;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<!-- Header -->
+	<header class="bg-light py-3">
+		<div class="container">
+			<div class="row align-items-center">
+				<div class="col-md-6">
+					<h1 class="district-name">[District Name]</h1>
+				</div>
+				<div class="col-md-6 text-md-end">
+					<img
+						src="placeholder-logo.png"
+						alt="District Logo"
+						class="district-logo"
+					/>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- Main Content -->
+	<main class="py-5">
+		<div class="container">
+			<!-- Report Header -->
+			<div class="row mb-4">
+				<div class="col-md-8">
+					<h2>Report #MMD-2023-12345</h2>
+				</div>
+				<div class="col-md-4 text-md-end">
+					<span class="badge bg-primary type-badge">
+						<i class="bi bi-water"></i> Green Pool
+					</span>
+				</div>
+			</div>
+
+			<!-- Progress Tracker -->
+			<div class="progress-tracker mb-5">
+				<div class="progress-step">
+					<div class="progress-icon completed">
+						<i class="bi bi-check-lg"></i>
+					</div>
+					<div class="progress-label">Submitted</div>
+				</div>
+				<div class="progress-step">
+					<div class="progress-icon completed">
+						<i class="bi bi-check-lg"></i>
+					</div>
+					<div class="progress-label">Accepted</div>
+				</div>
+				<div class="progress-step">
+					<div class="progress-icon active">
+						<i class="bi bi-clock"></i>
+					</div>
+					<div class="progress-label">Scheduled</div>
+				</div>
+				<div class="progress-step">
+					<div class="progress-icon">
+						<i class="bi bi-flag"></i>
+					</div>
+					<div class="progress-label">Complete</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<!-- Map and Location Information -->
+				<div class="col-lg-5 mb-4">
+					<div class="card h-100">
+						<div class="card-header">
+							<h5 class="mb-0">Location</h5>
+						</div>
+						<div class="card-body">
+							<!-- Map Placeholder -->
+							<div class="map-container mb-3">
+								<div class="text-center">
+									<i class="bi bi-map fs-1 text-secondary"></i>
+									<p class="mb-0">Map of Report Location</p>
+								</div>
+							</div>
+
+							<!-- Address Information -->
+							<div>
+								<h6>Address</h6>
+								<p class="mb-2">123 Mosquito Ave, Lakeside, CA 92040</p>
+								<p class="coordinates mb-0">
+									<i class="bi bi-geo-alt"></i> 32.8573° N, 116.9222° W
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Report Details -->
+				<div class="col-lg-7 mb-4">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="mb-0">Report Details</h5>
+						</div>
+						<div class="card-body">
+							<div class="row mb-4">
+								<div class="col-md-6">
+									<h6>Report Source</h6>
+									<p><i class="bi bi-phone"></i> Phone Call</p>
+								</div>
+								<div class="col-md-6">
+									<h6>Report Date</h6>
+									<p>October 15, 2023 at 2:45 PM</p>
+								</div>
+							</div>
+
+							<div class="mb-4">
+								<h6>Description</h6>
+								<p>
+									I noticed my neighbor's backyard pool has turned green and
+									there's nobody living in the house currently. I'm concerned it
+									might be breeding mosquitoes as I've noticed more of them in
+									my yard recently. The house seems to be vacant for about 3
+									months now.
+								</p>
+							</div>
+
+							<div class="row mb-4">
+								<div class="col-md-6">
+									<h6>Pool Status</h6>
+									<p>
+										<span class="badge bg-warning text-dark"
+											><i class="bi bi-exclamation-triangle"></i>
+											Stagnant/Green</span
+										>
+									</p>
+								</div>
+								<div class="col-md-6">
+									<h6>Scheduled Appointment</h6>
+									<p>October 20, 2023, 9:00 AM - 11:00 AM</p>
+								</div>
+							</div>
+
+							<div class="mb-4">
+								<h6>Contact Information</h6>
+								<div class="row">
+									<div class="col-md-6">
+										<p class="mb-1"><strong>Reported By:</strong> John Smith</p>
+										<p class="mb-1"><strong>Phone:</strong> (555) 123-4567</p>
+									</div>
+									<div class="col-md-6">
+										<p class="mb-1">
+											<strong>Email:</strong> john.smith@example.com
+										</p>
+										<p class="mb-1">
+											<strong>Preferred Contact:</strong> Phone
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Technician Notes -->
+			<div class="row">
+				<div class="col-12 mb-4">
+					<div class="card">
+						<div
+							class="card-header d-flex justify-content-between align-items-center"
+						>
+							<h5 class="mb-0">Notes & Updates</h5>
+							<span class="badge bg-info">3 Notes</span>
+						</div>
+						<div class="card-body">
+							<div class="note-item">
+								<div class="note-date">
+									Added by System on Oct 15, 2023, 2:45 PM
+								</div>
+								<div class="note-content">
+									Report created via phone call to district office.
+								</div>
+							</div>
+							<div class="note-item">
+								<div class="note-date">
+									Added by Sarah Johnson (Office Staff) on Oct 16, 2023, 9:30 AM
+								</div>
+								<div class="note-content">
+									Verified location information. Property appears to be vacant
+									according to county records. Left voicemail with property
+									management company listed in county database.
+								</div>
+							</div>
+							<div class="note-item">
+								<div class="note-date">
+									Added by Mike Davis (Technician) on Oct 18, 2023, 11:15 AM
+								</div>
+								<div class="note-content">
+									Scheduled inspection for Oct 20. Will need access to backyard.
+									Contacted reporter to confirm they'll be available to provide
+									access information on day of service.
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Next Steps -->
+			<div class="row">
+				<div class="col-12 mb-4">
+					<div class="card bg-light">
+						<div class="card-body">
+							<h5><i class="bi bi-arrow-right-circle"></i> Next Steps</h5>
+							<p>
+								Technician scheduled to inspect the property on October 20,
+								2023, between 9:00 AM - 11:00 AM. If access to the property is
+								not possible, treatment may be conducted from outside the
+								property or additional follow-up may be required.
+							</p>
+							<p class="mb-0">
+								<strong>Note:</strong> You will receive a notification when the
+								status of this report changes.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Update Form -->
+			<div class="row mt-3">
+				<div class="col-12">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="mb-0">Add Information</h5>
+						</div>
+						<div class="card-body">
+							<p>
+								Do you have additional information about this report? Add it
+								below to update the technician.
+							</p>
+							<form>
+								<div class="mb-3">
+									<label for="updateMessage" class="form-label">Message</label>
+									<textarea
+										class="form-control"
+										id="updateMessage"
+										rows="3"
+										placeholder="Enter additional information here..."
+									></textarea>
+								</div>
+								<div class="mb-3">
+									<label for="contactPhone" class="form-label"
+										>Phone Number (optional)</label
+									>
+									<input
+										type="tel"
+										class="form-control"
+										id="contactPhone"
+										placeholder="(555) 123-4567"
+									/>
+									<div class="form-text">
+										Provide your phone number if you'd like to be contacted
+										about this update.
+									</div>
+								</div>
+								<button type="submit" class="btn btn-primary">
+									Submit Update
+								</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Back Button -->
+			<div class="row mt-4">
+				<div class="col-12">
+					<a href="/check-status" class="btn btn-outline-secondary">
+						<i class="bi bi-arrow-left"></i> Back to Status Check
+					</a>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<!-- Footer -->
+	<footer class="bg-dark text-white py-4">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<p class="mb-0">
+						&copy; 2023 [District Name] Mosquito Management District
+					</p>
+				</div>
+				<div class="col-md-6 text-md-end">
+					<p class="mb-0">
+						Contact: (555) 123-4567 | info@mosquitodistrict.gov
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+{{ end }}

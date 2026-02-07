@@ -1,0 +1,295 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Login{{ end }}
+{{ define "extraheader" }}
+	<style>
+		body {
+			background-color: #f8f9fa;
+		}
+		.page-container {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		.content-card {
+			background-color: white;
+			border-radius: 15px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			padding: 25px;
+			margin-bottom: 20px;
+		}
+		.logo-area {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		.logo-placeholder {
+			height: 50px;
+			max-width: 200px;
+			margin: 0 auto;
+		}
+		.progress-container {
+			margin: 30px 0 20px;
+		}
+		.progress {
+			height: 8px;
+		}
+		.upload-area {
+			border: 2px dashed #dee2e6;
+			border-radius: 10px;
+			padding: 30px;
+			text-align: center;
+			margin-bottom: 25px;
+			background-color: #f8f9fa;
+			transition: all 0.3s ease;
+		}
+		.upload-area:hover {
+			border-color: #0d6efd;
+			background-color: #f0f7ff;
+		}
+		.upload-icon {
+			font-size: 48px;
+			color: #6c757d;
+			margin-bottom: 15px;
+		}
+		.photo-example {
+			display: flex;
+			gap: 15px;
+			margin-bottom: 20px;
+			flex-wrap: wrap;
+		}
+		.example-item {
+			flex: 1;
+			min-width: 200px;
+			text-align: center;
+		}
+		.example-img {
+			width: 100%;
+			height: 150px;
+			object-fit: cover;
+			border-radius: 8px;
+			margin-bottom: 10px;
+			border: 2px solid #dee2e6;
+		}
+		.good-example {
+			border-color: #198754;
+		}
+		.poor-example {
+			border-color: #dc3545;
+		}
+		.upload-options {
+			display: flex;
+			gap: 10px;
+			margin-top: 20px;
+			flex-wrap: wrap;
+		}
+		.upload-options button {
+			flex: 1;
+			min-width: 150px;
+		}
+		.uploaded-photos {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+			gap: 15px;
+			margin-top: 20px;
+		}
+		.uploaded-photo {
+			position: relative;
+			height: 150px;
+			border-radius: 8px;
+			overflow: hidden;
+			border: 2px solid #dee2e6;
+		}
+		.uploaded-photo img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+		.remove-photo {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			background-color: rgba(255, 255, 255, 0.8);
+			color: #dc3545;
+			border: none;
+			border-radius: 50%;
+			width: 30px;
+			height: 30px;
+			font-size: 14px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.tips-section {
+			background-color: #e8f4f8;
+			border-left: 4px solid #0d6efd;
+			padding: 15px;
+			border-radius: 5px;
+			margin-bottom: 20px;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="page-container">
+		<!-- Logo -->
+		<div class="logo-area">
+			<img
+				src="https://placehold.co/200x50/e9ecef/adb5bd?text=County+Vector+Control"
+				alt="County Vector Control"
+				class="logo-placeholder"
+			/>
+		</div>
+
+		<!-- Progress Bar -->
+		<div class="progress-container">
+			<div class="d-flex justify-content-between mb-1">
+				<span class="text-muted small">Upload Photos</span>
+				<span class="text-muted small">3 of 4</span>
+			</div>
+			<div class="progress">
+				<div
+					class="progress-bar"
+					role="progressbar"
+					style="width: 75%"
+					aria-valuenow="75"
+					aria-valuemin="0"
+					aria-valuemax="100"
+				></div>
+			</div>
+		</div>
+
+		<!-- Main Content -->
+		<div class="content-card">
+			<h1 class="h4 mb-3">Upload Current Pool Photos</h1>
+			<p>
+				Please provide current photos of your pool to help us assess its
+				condition.
+			</p>
+
+			<!-- Photo Tips Section -->
+			<div class="tips-section">
+				<h5><i class="bi bi-lightbulb me-2"></i>Photo Tips</h5>
+				<ul class="mb-0">
+					<li>
+						<strong>Take photos from as high an angle as possible</strong>
+						(second story window, deck, etc.)
+					</li>
+					<li>Try to capture the <strong>entire pool</strong> in your photo</li>
+					<li>Ensure photos are <strong>clear and well-lit</strong></li>
+					<li>
+						You can add <strong>multiple photos</strong> from different angles
+					</li>
+				</ul>
+			</div>
+
+			<!-- Photo Examples -->
+			<h5 class="mb-3">Photo Examples:</h5>
+			<div class="photo-example">
+				<div class="example-item">
+					<img
+						src="https://placehold.co/400x300/198754/ffffff?text=Good+Example"
+						alt="Good photo example"
+						class="example-img good-example"
+					/>
+					<div class="text-success">
+						<i class="bi bi-check-circle me-1"></i>Good: High angle, full view
+					</div>
+				</div>
+
+				<div class="example-item">
+					<img
+						src="https://placehold.co/400x300/dc3545/ffffff?text=Poor+Example"
+						alt="Poor photo example"
+						class="example-img poor-example"
+					/>
+					<div class="text-danger">
+						<i class="bi bi-x-circle me-1"></i>Poor: Ground level, partial view
+					</div>
+				</div>
+			</div>
+
+			<!-- Upload Area -->
+			<div class="upload-area">
+				<div class="upload-icon">
+					<i class="bi bi-camera"></i>
+				</div>
+				<h5>Add Pool Photos</h5>
+				<p class="text-muted">Take a new photo or upload from your device</p>
+
+				<div class="upload-options">
+					<button type="button" class="btn btn-primary">
+						<i class="bi bi-camera-fill me-2"></i> Take Photo
+					</button>
+					<button type="button" class="btn btn-outline-primary">
+						<i class="bi bi-image me-2"></i> Upload from Device
+					</button>
+				</div>
+
+				<input
+					type="file"
+					id="photo-upload"
+					accept="image/*"
+					multiple
+					style="display: none;"
+				/>
+			</div>
+
+			<!-- Already Uploaded Photos Section -->
+			<div>
+				<h5 class="mb-3">Uploaded Photos (2)</h5>
+				<div class="uploaded-photos">
+					<div class="uploaded-photo">
+						<img
+							src="https://placehold.co/300x300/76b5c5/ffffff?text=Pool+Photo+1"
+							alt="Uploaded pool photo"
+						/>
+						<button
+							type="button"
+							class="remove-photo"
+							aria-label="Remove photo"
+						>
+							<i class="bi bi-x"></i>
+						</button>
+					</div>
+					<div class="uploaded-photo">
+						<img
+							src="https://placehold.co/300x300/3e8e7e/ffffff?text=Pool+Photo+2"
+							alt="Uploaded pool photo"
+						/>
+						<button
+							type="button"
+							class="remove-photo"
+							aria-label="Remove photo"
+						>
+							<i class="bi bi-x"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Information -->
+			<div class="alert alert-secondary mt-4">
+				<small
+					>You can add up to 5 photos to provide a complete view of your pool
+					area. We recommend taking photos from multiple angles.</small
+				>
+			</div>
+
+			<!-- Action Buttons -->
+			<div class="d-flex justify-content-between mt-4">
+				<a href="{{ .URLs.ReportEvidence }}" class="btn btn-outline-secondary">
+					<i class="bi bi-arrow-left me-2"></i> Back
+				</a>
+				<a href="{{ .URLs.ReportSchedule }}" class="btn btn-primary">
+					Next Step <i class="bi bi-arrow-right ms-2"></i>
+				</a>
+			</div>
+		</div>
+
+		<!-- Help Text -->
+		<div class="text-center text-muted small">
+			<p>
+				If you need assistance, please contact Vector Control at (555) 123-4567
+			</p>
+		</div>
+	</div>
+{{ end }}

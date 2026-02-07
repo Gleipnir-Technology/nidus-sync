@@ -1,0 +1,243 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Data Entry{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.results-container {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+		.summary-card {
+			transition: transform 0.2s;
+		}
+		.summary-card:hover {
+			transform: translateY(-5px);
+		}
+		.warning-row {
+			background-color: rgba(255, 193, 7, 0.15) !important;
+		}
+		.status-badge {
+			font-size: 0.85rem;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container mt-4 results-container">
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h2>Upload Results: pools-data-2023.csv</h2>
+			<span class="badge bg-success rounded-pill">
+				<i class="bi bi-check-circle me-1"></i> File Parsed Successfully
+			</span>
+		</div>
+
+		<div class="row mb-4">
+			<div class="col-md-4">
+				<div class="card summary-card h-100 border-primary">
+					<div class="card-body text-center">
+						<h1 class="display-4 text-primary">45</h1>
+						<h5>Existing Pools</h5>
+						<p class="text-muted">Matches found in previous records</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card summary-card h-100 border-success">
+					<div class="card-body text-center">
+						<h1 class="display-4 text-success">23</h1>
+						<h5>New Pools</h5>
+						<p class="text-muted">Not found in existing records</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="card summary-card h-100 border-warning">
+					<div class="card-body text-center">
+						<h1 class="display-4 text-warning">4</h1>
+						<h5>Outside District</h5>
+						<p class="text-muted">Potential geocoding errors</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div
+				class="card-header bg-light d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0">Data Preview</h5>
+				<div class="form-check form-switch">
+					<input class="form-check-input" type="checkbox" id="showIssuesOnly" />
+					<label class="form-check-label" for="showIssuesOnly"
+						>Show issues only</label
+					>
+				</div>
+			</div>
+			<div class="card-body">
+				<div class="alert alert-warning" role="alert">
+					<i class="bi bi-exclamation-triangle me-2"></i>
+					<strong>Warning:</strong> 4 entries appear to be outside district
+					boundaries. These are highlighted in yellow below.
+				</div>
+
+				<div class="table-responsive">
+					<table class="table table-hover table-striped">
+						<thead class="table-light">
+							<tr>
+								<th>Plat ID</th>
+								<th>Latitude</th>
+								<th>Longitude</th>
+								<th>Street Address</th>
+								<th>Status</th>
+								<th>In District</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>P12345</td>
+								<td>37.7749</td>
+								<td>-122.4194</td>
+								<td>123 Main St, Anytown, CA</td>
+								<td>
+									<span class="badge bg-primary status-badge">Existing</span>
+								</td>
+								<td>
+									<i class="bi bi-check-circle-fill text-success"></i> Yes
+								</td>
+							</tr>
+							<tr>
+								<td>P23456</td>
+								<td>37.3352</td>
+								<td>-121.8811</td>
+								<td>456 Oak Ave, Someville, CA</td>
+								<td>
+									<span class="badge bg-primary status-badge">Existing</span>
+								</td>
+								<td>
+									<i class="bi bi-check-circle-fill text-success"></i> Yes
+								</td>
+							</tr>
+							<tr class="warning-row">
+								<td>P34567</td>
+								<td>38.5816</td>
+								<td>-121.4944</td>
+								<td>789 Pine Rd, Outtown, CA</td>
+								<td><span class="badge bg-success status-badge">New</span></td>
+								<td>
+									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
+									<strong>No</strong> - Outside northern boundary
+								</td>
+							</tr>
+							<tr>
+								<td>P45678</td>
+								<td>37.4419</td>
+								<td>-122.1430</td>
+								<td>101 Elm St, Cityville, CA</td>
+								<td><span class="badge bg-success status-badge">New</span></td>
+								<td>
+									<i class="bi bi-check-circle-fill text-success"></i> Yes
+								</td>
+							</tr>
+							<tr>
+								<td>P56789</td>
+								<td>37.3541</td>
+								<td>-121.9552</td>
+								<td>202 Maple Dr, Townburg, CA</td>
+								<td>
+									<span class="badge bg-primary status-badge">Existing</span>
+								</td>
+								<td>
+									<i class="bi bi-check-circle-fill text-success"></i> Yes
+								</td>
+							</tr>
+							<tr class="warning-row">
+								<td>P67890</td>
+								<td>35.3733</td>
+								<td>-119.0187</td>
+								<td>303 Cedar Ln, Farville, CA</td>
+								<td><span class="badge bg-success status-badge">New</span></td>
+								<td>
+									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
+									<strong>No</strong> - Outside southern boundary
+								</td>
+							</tr>
+							<tr>
+								<td>P78901</td>
+								<td>37.8044</td>
+								<td>-122.2712</td>
+								<td>404 Birch Ave, Metroburg, CA</td>
+								<td>
+									<span class="badge bg-primary status-badge">Existing</span>
+								</td>
+								<td>
+									<i class="bi bi-check-circle-fill text-success"></i> Yes
+								</td>
+							</tr>
+							<tr class="warning-row">
+								<td>P89012</td>
+								<td>37.4032</td>
+								<td>-123.9612</td>
+								<td>505 Walnut St, Edgetown, CA</td>
+								<td><span class="badge bg-success status-badge">New</span></td>
+								<td>
+									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
+									<strong>No</strong> - Outside western boundary
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<nav aria-label="Table navigation">
+					<ul class="pagination justify-content-center mt-3">
+						<li class="page-item disabled">
+							<a class="page-link" href="#" tabindex="-1" aria-disabled="true"
+								>Previous</a
+							>
+						</li>
+						<li class="page-item active">
+							<a class="page-link" href="#">1</a>
+						</li>
+						<li class="page-item"><a class="page-link" href="#">2</a></li>
+						<li class="page-item"><a class="page-link" href="#">3</a></li>
+						<li class="page-item">
+							<a class="page-link" href="#">Next</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header bg-light">
+				<h5 class="mb-0">Notes & Recommendations</h5>
+			</div>
+			<div class="card-body">
+				<div class="mb-3">
+					<p><strong>Issues detected:</strong></p>
+					<ul>
+						<li>
+							4 pools appear to be outside district boundaries (possible
+							geocoding errors)
+						</li>
+						<li>All required fields are present and properly formatted</li>
+					</ul>
+				</div>
+
+				<div class="alert alert-info" role="alert">
+					<i class="bi bi-info-circle me-2"></i>
+					<strong>Note:</strong> You may proceed with this upload or edit your
+					CSV file to fix the issues identified.
+				</div>
+			</div>
+		</div>
+
+		<div class="d-flex justify-content-between mt-4 mb-5">
+			<a href="#" class="btn btn-outline-secondary">
+				<i class="bi bi-arrow-left me-1"></i> Upload Edited File
+			</a>
+			<button class="btn btn-primary" id="confirmUploadBtn">
+				<i class="bi bi-check2 me-1"></i> Confirm and Submit Data
+			</button>
+		</div>
+	</div>
+{{ end }}

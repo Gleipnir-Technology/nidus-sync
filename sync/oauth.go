@@ -13,10 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	oauthPromptT = buildTemplate("oauth-prompt", "authenticated")
-)
-
 type ContextOauthPrompt struct {
 	User User
 }
@@ -89,5 +85,5 @@ func oauthPrompt(w http.ResponseWriter, r *http.Request, user *models.User) {
 	data := ContextOauthPrompt{
 		User: userContent,
 	}
-	html.RenderOrError(w, oauthPromptT, data)
+	html.RenderOrError(w, "sync/oauth-prompt.html", data)
 }

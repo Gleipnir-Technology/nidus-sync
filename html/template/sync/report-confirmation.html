@@ -1,0 +1,250 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Login{{ end }}
+{{ define "extraheader" }}
+	<style>
+		body {
+			background-color: #f8f9fa;
+		}
+		.page-container {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		.content-card {
+			background-color: white;
+			border-radius: 15px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			padding: 25px;
+			margin-bottom: 20px;
+		}
+		.logo-area {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+		.logo-placeholder {
+			height: 50px;
+			max-width: 200px;
+			margin: 0 auto;
+		}
+		.success-icon {
+			font-size: 70px;
+			color: #198754;
+			margin-bottom: 20px;
+			display: block;
+			text-align: center;
+		}
+		.confirmation-title {
+			text-align: center;
+			margin-bottom: 30px;
+		}
+		.appointment-summary {
+			background-color: #e8f4f8;
+			border-left: 4px solid #0d6efd;
+			padding: 20px;
+			border-radius: 8px;
+			margin-bottom: 25px;
+		}
+		.appointment-details {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			margin-top: 15px;
+		}
+		.appointment-detail {
+			flex: 1;
+			min-width: 150px;
+			padding: 10px;
+			background-color: #fff;
+			border-radius: 6px;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+		.detail-label {
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			color: #6c757d;
+			font-weight: 600;
+			margin-bottom: 5px;
+		}
+		.detail-value {
+			font-weight: 600;
+		}
+		.contact-info {
+			background-color: #f8f9fa;
+			padding: 20px;
+			border-radius: 8px;
+			margin-top: 25px;
+			margin-bottom: 25px;
+		}
+		.contact-method {
+			display: flex;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+		.contact-method i {
+			font-size: 1.2rem;
+			margin-right: 10px;
+			color: #0d6efd;
+			width: 25px;
+			text-align: center;
+		}
+		.tracking-link {
+			background-color: #e9f7ef;
+			border: 1px solid #d1e7dd;
+			border-left: 4px solid #198754;
+			padding: 15px;
+			border-radius: 8px;
+			margin-top: 20px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			text-decoration: none;
+			color: inherit;
+			transition: all 0.2s;
+		}
+		.tracking-link:hover {
+			background-color: #d1e7dd;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+		.confirmation-number {
+			background-color: #f8f9fa;
+			padding: 10px 15px;
+			border-radius: 6px;
+			font-family: monospace;
+			font-size: 1.2rem;
+			font-weight: 600;
+			letter-spacing: 1px;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="page-container">
+		<!-- Logo -->
+		<div class="logo-area">
+			<img
+				src="https://placehold.co/200x50/e9ecef/adb5bd?text=County+Vector+Control"
+				alt="County Vector Control"
+				class="logo-placeholder"
+			/>
+		</div>
+
+		<!-- Main Content -->
+		<div class="content-card">
+			<span class="success-icon">
+				<i class="bi bi-check-circle-fill"></i>
+			</span>
+
+			<div class="confirmation-title">
+				<h1 class="h3">Thank You for Your Submission!</h1>
+				<p class="text-muted">
+					Your green pool report has been successfully submitted.
+				</p>
+			</div>
+
+			<!-- Appointment Summary -->
+			<div class="appointment-summary">
+				<h5><i class="bi bi-calendar-check me-2"></i>Appointment Confirmed</h5>
+				<p>Our inspector will visit your property at the scheduled time:</p>
+
+				<div class="appointment-details">
+					<div class="appointment-detail">
+						<div class="detail-label">Date</div>
+						<div class="detail-value">Thursday, June 22, 2023</div>
+					</div>
+					<div class="appointment-detail">
+						<div class="detail-label">Time</div>
+						<div class="detail-value">10:00 AM</div>
+					</div>
+					<div class="appointment-detail">
+						<div class="detail-label">Confirmation #</div>
+						<div class="detail-value">GP-23685</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- What's Next Section -->
+			<div>
+				<h5 class="mb-3">What Happens Next?</h5>
+				<ul class="mb-4">
+					<li>
+						A confirmation email has been sent to the email address you
+						provided.
+					</li>
+					<li>
+						You'll receive a reminder notification 24 hours before your
+						scheduled appointment.
+					</li>
+					<li>
+						Our team will review your report and contact you by the next
+						business day if any additional information is needed.
+					</li>
+					<li>
+						During the scheduled visit, our inspector will assess the pool
+						condition and discuss treatment options if necessary.
+					</li>
+				</ul>
+				<p>
+					You can use the link below to track your report status and view the
+					photos you've submitted.
+				</p>
+			</div>
+
+			<!-- Tracking Link -->
+			<a href="#" class="tracking-link">
+				<div>
+					<strong>Track Your Report Status</strong>
+					<p class="mb-0 text-muted">View photos and check for updates</p>
+				</div>
+				<i class="bi bi-arrow-right"></i>
+			</a>
+
+			<!-- Contact Information -->
+			<div class="contact-info">
+				<h5 class="mb-3">Questions or Concerns?</h5>
+				<p>
+					If you have any questions about your report or need to change your
+					appointment, please contact us:
+				</p>
+
+				<div class="contact-method">
+					<i class="bi bi-telephone-fill"></i>
+					<div>
+						<strong>(555) 123-4567</strong>
+						<div class="small text-muted">Monday-Friday, 8:00 AM - 5:00 PM</div>
+					</div>
+				</div>
+
+				<div class="contact-method">
+					<i class="bi bi-envelope-fill"></i>
+					<div>
+						<strong>greenpool@vectorcontrol.county.gov</strong>
+					</div>
+				</div>
+
+				<p class="mt-3 mb-0 small">
+					Please include your confirmation number (GP-23685) in all
+					correspondence.
+				</p>
+			</div>
+
+			<!-- Print Option -->
+			<div class="d-flex justify-content-center mt-4">
+				<button
+					type="button"
+					class="btn btn-outline-secondary"
+					onclick="window.print()"
+				>
+					<i class="bi bi-printer me-2"></i> Print Confirmation
+				</button>
+			</div>
+		</div>
+
+		<!-- Help Text -->
+		<div class="text-center text-muted small">
+			<p>
+				Thank you for helping keep our community safe from mosquito-borne
+				diseases.
+			</p>
+		</div>
+	</div>
+{{ end }}

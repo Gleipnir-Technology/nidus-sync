@@ -1,0 +1,253 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.section-heading {
+			font-size: 1.2rem;
+			font-weight: 600;
+			margin-bottom: 1rem;
+			padding-bottom: 0.5rem;
+			border-bottom: 1px solid #dee2e6;
+		}
+
+		.info-label {
+			font-weight: 600;
+			color: #495057;
+		}
+
+		.target-icon {
+			display: inline-block;
+			width: 30px;
+			height: 30px;
+			text-align: center;
+			line-height: 30px;
+			border-radius: 50%;
+			font-size: 14px;
+			font-weight: bold;
+			margin-right: 4px;
+			color: white;
+		}
+
+		.target-active {
+			background-color: #0d6efd;
+		}
+
+		.target-inactive {
+			background-color: #dee2e6;
+			color: #6c757d;
+		}
+
+		.tag {
+			display: inline-flex;
+			align-items: center;
+			padding: 0.4rem 0.8rem;
+			margin: 0.2rem;
+			border-radius: 30px;
+			background-color: #f8f9fa;
+			border: 1px solid #dee2e6;
+			font-size: 0.9rem;
+		}
+
+		.tag i {
+			margin-right: 0.5rem;
+		}
+
+		.tag-enabled {
+			background-color: #d1e7dd;
+			color: #0f5132;
+			border-color: #a3cfbb;
+		}
+
+		.tag-ppe {
+			background-color: #e2e3e5;
+			color: #41464b;
+			border-color: #d3d6d8;
+		}
+
+		.tag-equipment {
+			background-color: #cff4fc;
+			color: #055160;
+			border-color: #9eeaf9;
+		}
+
+		.tag-suitability {
+			background-color: #fff3cd;
+			color: #664d03;
+			border-color: #ffecb5;
+		}
+
+		.tag-optional {
+			background-color: #f8f9fa;
+			color: #6c757d;
+			border-color: #dee2e6;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container py-4">
+		<!-- Breadcrumb -->
+		<nav aria-label="breadcrumb" class="mb-4">
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="#">Settings</a></li>
+				<li class="breadcrumb-item">
+					<a href="pesticide-config.html">Pesticide</a>
+				</li>
+				<li class="breadcrumb-item active" aria-current="page">VectoMax FG</li>
+			</ol>
+		</nav>
+
+		<!-- Main Content -->
+		<div class="card shadow-sm mb-4">
+			<div class="card-body">
+				<!-- Product Header -->
+				<div class="d-flex justify-content-between align-items-start mb-4">
+					<div>
+						<h1 class="mb-2">VectoMax FG</h1>
+						<p class="text-muted mb-0">
+							Biological larvicide granules combining Bacillus thuringiensis
+							subspecies israelensis and Bacillus sphaericus for extended
+							residual control of mosquito larvae.
+						</p>
+					</div>
+					<span class="tag tag-enabled">
+						<i class="bi bi-check-circle-fill"></i> Enabled
+					</span>
+				</div>
+
+				<!-- General Information -->
+				<div class="mb-4">
+					<h2 class="section-heading">General Information</h2>
+					<div class="row g-3">
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">Formulation</div>
+							<div>Granule</div>
+						</div>
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">EPA Registration Number</div>
+							<div>73049-429</div>
+						</div>
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">Active Ingredients</div>
+							<div>
+								Bacillus thuringiensis subspecies israelensis (2.7%)<br />
+								Bacillus sphaericus (4.5%)
+							</div>
+						</div>
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">Biological Targeting</div>
+							<div class="mt-1">
+								<span class="target-icon target-active" title="Instar Stage 1"
+									>I1</span
+								>
+								<span class="target-icon target-active" title="Instar Stage 2"
+									>I2</span
+								>
+								<span class="target-icon target-active" title="Instar Stage 3"
+									>I3</span
+								>
+								<span class="target-icon target-active" title="Instar Stage 4"
+									>I4</span
+								>
+								<span class="target-icon target-inactive" title="Pupae">P</span>
+							</div>
+						</div>
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">Application Rates</div>
+							<div>
+								Low: 5 lbs/acre<br />
+								High: 20 lbs/acre
+							</div>
+						</div>
+						<div class="col-md-6 col-lg-4">
+							<div class="info-label">Residual</div>
+							<div>Up to 30 days (environmental conditions dependent)</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Usage Notes -->
+				<div class="alert alert-info mb-4">
+					<div class="d-flex">
+						<div class="me-3">
+							<i class="bi bi-info-circle-fill fs-4"></i>
+						</div>
+						<div>
+							<h5 class="alert-heading">Key Usage Notes</h5>
+							<p class="mb-0">
+								Apply evenly across water surface. Use higher rate when L4
+								present or when organic load is high. Avoid application in ponds
+								with fish unless approved by a supervisor.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- PPE Requirements -->
+				<div class="mb-4">
+					<h2 class="section-heading">PPE Requirements</h2>
+					<div>
+						<span class="tag tag-ppe">
+							<i class="bi bi-hand-thumbs-up"></i> Gloves
+						</span>
+						<span class="tag tag-ppe">
+							<i class="bi bi-eyeglasses"></i> Eye Protection
+						</span>
+						<span class="tag tag-optional">
+							<i class="bi bi-mask"></i> Respirator (Optional)
+						</span>
+					</div>
+				</div>
+
+				<!-- Equipment Supported -->
+				<div class="mb-4">
+					<h2 class="section-heading">Equipment Supported</h2>
+					<div>
+						<span class="tag tag-equipment">
+							<i class="bi bi-backpack"></i> Backpack Spreader
+						</span>
+						<span class="tag tag-equipment">
+							<i class="bi bi-hand-index-thumb"></i> Hand Spreader
+						</span>
+						<span class="tag tag-equipment">
+							<i class="bi bi-truck"></i> Truck Granule Unit
+						</span>
+					</div>
+				</div>
+
+				<!-- Suitability -->
+				<div class="mb-4">
+					<h2 class="section-heading">Suitability</h2>
+					<div class="row g-3">
+						<div class="col-md-6 col-lg-3">
+							<div class="info-label">Pools</div>
+							<div><span class="badge bg-success">Recommended</span></div>
+						</div>
+						<div class="col-md-6 col-lg-3">
+							<div class="info-label">Vegetation</div>
+							<div><span class="badge bg-info text-dark">OK</span></div>
+						</div>
+						<div class="col-md-6 col-lg-3">
+							<div class="info-label">High Organics</div>
+							<div><span class="badge bg-info text-dark">OK</span></div>
+						</div>
+						<div class="col-md-6 col-lg-3">
+							<div class="info-label">Organic Crop Restriction</div>
+							<div><span class="badge bg-secondary">None</span></div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Actions -->
+				<div class="d-flex justify-content-between mt-5 pt-3 border-top">
+					<button class="btn btn-outline-danger">
+						<i class="bi bi-trash me-2"></i> Remove from Inventory
+					</button>
+					<button class="btn btn-success">
+						<i class="bi bi-plus-circle me-2"></i> Add to Allowed Inventory
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

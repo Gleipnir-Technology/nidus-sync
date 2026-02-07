@@ -11,11 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	signinT = buildTemplate("signin", "base")
-	signupT = buildTemplate("signup", "base")
-)
-
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
 	signin(w, errorCode)
@@ -92,10 +87,10 @@ func signin(w http.ResponseWriter, errorCode string) {
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
 	}
-	html.RenderOrError(w, signinT, data)
+	html.RenderOrError(w, "sync/signin.html", data)
 }
 
 func signup(w http.ResponseWriter, path string) {
 	data := ContentSignup{}
-	html.RenderOrError(w, signupT, data)
+	html.RenderOrError(w, "sync/signup.html", data)
 }

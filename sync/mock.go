@@ -8,12 +8,12 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 	"github.com/skip2/go-qrcode"
 )
 
 // Unauthenticated pages
-var (
+/*
 	admin                           = buildTemplate("admin", "base")
 	dataEntry                       = buildTemplate("data-entry", "base")
 	dataEntryGood                   = buildTemplate("data-entry-good", "base")
@@ -42,7 +42,7 @@ var (
 	settingPesticideAdd             = buildTemplate("setting-pesticide-add", "base")
 	settingUsers                    = buildTemplate("setting-user", "base")
 	settingUsersAdd                 = buildTemplate("setting-user-add", "base")
-)
+*/
 
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
@@ -125,13 +125,7 @@ func mock(t string, w http.ResponseWriter, code string) {
 			SettingUserAdd:      "/mock/setting/user/add",
 		},
 	}
-	template, ok := html.TemplatesByFilename[t+".html"]
-	if !ok {
-		log.Error().Str("template", t).Msg("Failed to find template")
-		respondError(w, "Failed to render template", nil, http.StatusInternalServerError)
-		return
-	}
-	html.RenderOrError(w, &template, data)
+	html.RenderOrError(w, t, data)
 }
 
 func renderMock(templateName string) http.HandlerFunc {

@@ -1,0 +1,330 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Data Entry{{ end }}
+{{ define "extraheader" }}
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const checkboxes = document.querySelectorAll(".route-select");
+			const switchBtn = document.getElementById("switchRoutesBtn");
+
+			// Enable/disable switch button based on selection
+			checkboxes.forEach((checkbox) => {
+				checkbox.addEventListener("change", () => {
+					const checkedBoxes = document.querySelectorAll(
+						".route-select:checked",
+					);
+					switchBtn.disabled = checkedBoxes.length !== 2;
+				});
+			});
+
+			// For demonstration purposes
+			switchBtn.addEventListener("click", function () {
+				const selectedRoutes = Array.from(
+					document.querySelectorAll(".route-select:checked"),
+				).map((cb) => cb.value);
+				alert(`Switching routes ${selectedRoutes[0]} and ${selectedRoutes[1]}`);
+				// In a real application, this would trigger the route switching logic
+			});
+		});
+	</script>
+	<style>
+		.main-container {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+		.map-container {
+			height: 400px;
+			background-color: #e9ecef;
+			border: 1px solid #dee2e6;
+			border-radius: 5px;
+			position: relative;
+		}
+		.route-badge {
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: bold;
+			font-size: 1.2rem;
+			border-radius: 50%;
+		}
+		.tech-photo {
+			width: 40px;
+			height: 40px;
+			object-fit: cover;
+			border-radius: 50%;
+		}
+		.action-button {
+			padding: 10px 20px;
+		}
+		.completion-alert {
+			border-left: 5px solid #0d6efd;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h1>Route Calculation Results</h1>
+		<a href="{{ .URLs.Dispatch }}" class="btn btn-outline-primary">
+			<i class="bi bi-pencil-square me-1"></i> Edit Parameters
+		</a>
+	</div>
+
+	<!-- Map View -->
+	<div class="card mb-4">
+		<div class="card-header bg-primary text-white">
+			<h2 class="h4 mb-0">Route Map</h2>
+		</div>
+		<div class="card-body p-2">
+			<div
+				class="map-container d-flex align-items-center justify-content-center"
+			>
+				<div class="text-center">
+					<i class="bi bi-map fs-1 text-muted"></i>
+					<h3 class="text-muted">Interactive Map View</h3>
+					<p class="text-muted">
+						Routes are color-coded by technician assignment
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Completion Projection -->
+	<div class="alert alert-info mb-4 completion-alert">
+		<div class="d-flex align-items-center">
+			<i class="bi bi-calendar-check fs-4 me-3"></i>
+			<div>
+				<h4 class="h5 mb-1">Coverage Projection</h4>
+				<p class="mb-0">
+					If every day were like today, all pools would be complete on
+					<strong>October 27, 2023</strong>
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Route Summary Table -->
+	<div class="card mb-4">
+		<div
+			class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+		>
+			<h2 class="h4 mb-0">Route Summary</h2>
+			<button class="btn btn-sm btn-light" id="switchRoutesBtn" disabled>
+				<i class="bi bi-arrow-left-right me-1"></i> Switch Selected Routes
+			</button>
+		</div>
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-hover align-middle">
+					<thead class="table-light">
+						<tr>
+							<th width="40">Select</th>
+							<th width="50">Route</th>
+							<th>Technician</th>
+							<th>Cold Call Pools</th>
+							<th>Drone Inspections</th>
+							<th>Service Calls</th>
+							<th>Warrants</th>
+							<th>Est. Time</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<div class="form-check">
+									<input
+										class="form-check-input route-select"
+										type="checkbox"
+										value="A"
+										id="routeA"
+									/>
+								</div>
+							</td>
+							<td>
+								<div class="route-badge bg-primary text-white">A</div>
+							</td>
+							<td>
+								<div class="d-flex align-items-center">
+									<img
+										src="https://randomuser.me/api/portraits/men/32.jpg"
+										alt="John Davis"
+										class="tech-photo me-2"
+									/>
+									<span>John Davis</span>
+								</div>
+							</td>
+							<td>12</td>
+							<td>0</td>
+							<td>5</td>
+							<td>2</td>
+							<td>6h 15m</td>
+							<td>
+								<button class="btn btn-sm btn-outline-secondary">
+									<i class="bi bi-eye"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="form-check">
+									<input
+										class="form-check-input route-select"
+										type="checkbox"
+										value="B"
+										id="routeB"
+									/>
+								</div>
+							</td>
+							<td>
+								<div class="route-badge bg-success text-white">B</div>
+							</td>
+							<td>
+								<div class="d-flex align-items-center">
+									<img
+										src="https://randomuser.me/api/portraits/women/65.jpg"
+										alt="Sarah Johnson"
+										class="tech-photo me-2"
+									/>
+									<span>Sarah Johnson</span>
+								</div>
+							</td>
+							<td>8</td>
+							<td>3</td>
+							<td>4</td>
+							<td>1</td>
+							<td>7h 30m</td>
+							<td>
+								<button class="btn btn-sm btn-outline-secondary">
+									<i class="bi bi-eye"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="form-check">
+									<input
+										class="form-check-input route-select"
+										type="checkbox"
+										value="C"
+										id="routeC"
+									/>
+								</div>
+							</td>
+							<td>
+								<div class="route-badge bg-danger text-white">C</div>
+							</td>
+							<td>
+								<div class="d-flex align-items-center">
+									<img
+										src="https://randomuser.me/api/portraits/men/44.jpg"
+										alt="Michael Chen"
+										class="tech-photo me-2"
+									/>
+									<span>Michael Chen</span>
+								</div>
+							</td>
+							<td>10</td>
+							<td>4</td>
+							<td>3</td>
+							<td>0</td>
+							<td>7h 45m</td>
+							<td>
+								<button class="btn btn-sm btn-outline-secondary">
+									<i class="bi bi-eye"></i>
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<div class="form-check">
+									<input
+										class="form-check-input route-select"
+										type="checkbox"
+										value="D"
+										id="routeD"
+									/>
+								</div>
+							</td>
+							<td>
+								<div class="route-badge bg-warning text-dark">D</div>
+							</td>
+							<td>
+								<div class="d-flex align-items-center">
+									<img
+										src="https://randomuser.me/api/portraits/women/22.jpg"
+										alt="Jessica Martinez"
+										class="tech-photo me-2"
+									/>
+									<span>Jessica Martinez</span>
+								</div>
+							</td>
+							<td>14</td>
+							<td>2</td>
+							<td>6</td>
+							<td>3</td>
+							<td>8h 00m</td>
+							<td>
+								<button class="btn btn-sm btn-outline-secondary">
+									<i class="bi bi-eye"></i>
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- Action Buttons -->
+	<div class="d-flex justify-content-between">
+		<a
+			href="{{ .URLs.Dispatch }}"
+			class="btn btn-outline-secondary action-button"
+		>
+			<i class="bi bi-arrow-left me-2"></i>Back to Parameters
+		</a>
+		<a href="{{ .URLs.Root }}" class="btn btn-success action-button">
+			<i class="bi bi-check-circle me-2"></i>Approve & Dispatch
+		</a>
+	</div>
+
+	<!-- Modal for Route Details -->
+	<div
+		class="modal fade"
+		id="routeDetailsModal"
+		tabindex="-1"
+		aria-labelledby="routeDetailsModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="routeDetailsModalLabel">
+						Route A Details
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
+				<div class="modal-body">
+					<!-- Route details would go here -->
+				</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

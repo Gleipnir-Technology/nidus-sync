@@ -1,0 +1,246 @@
+{{ template "sync/authenticated.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<link
+		href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet"
+	/>
+	<script src="/static/js/map-aggregate.js"></script>
+	<style>
+		body {
+			background-color: #f8f9fa;
+		}
+		.dashboard-container {
+			padding: 20px 0;
+		}
+		.stats-card {
+			border-radius: 10px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+			transition: transform 0.2s;
+			height: 100%;
+		}
+		.stats-card:hover {
+			transform: translateY(-5px);
+		}
+		.section-title {
+			margin: 30px 0 20px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #dee2e6;
+		}
+		.last-refreshed {
+			color: #6c757d;
+		}
+		.logo-placeholder {
+			width: 100px;
+			height: 40px;
+			background-color: #e9ecef;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 4px;
+		}
+		.metric-icon {
+			font-size: 2rem;
+			margin-bottom: 10px;
+			display: inline-block;
+			width: 50px;
+			height: 50px;
+			line-height: 50px;
+			text-align: center;
+			border-radius: 50%;
+		}
+		.metric-value {
+			font-size: 2rem;
+			font-weight: bold;
+		}
+		.syncing {
+			color: #28a745;
+			animation: fa-spin 2s linear infinite;
+		}
+	</style>
+	<script>
+		function onLoad() {
+			const map = document.querySelector("map-aggregate");
+			map.addEventListener("cell-click", (event) => {
+				window.location.href = "/cell/" + event.detail.cell;
+			});
+		}
+		window.addEventListener("load", onLoad);
+	</script>
+{{ end }}
+{{ define "content" }}
+	<div class="container dashboard-container">
+		<!-- Dashboard Header -->
+		<div class="row mb-4">
+			<div class="col-md-6">
+				<h1>{{ .User.Organization.Name }} Dashboard</h1>
+				<p class="text-muted">
+					Overview of mosquito control activities in your district
+				</p>
+			</div>
+			<div
+				class="col-md-6 text-md-end d-flex align-items-center justify-content-md-end"
+			>
+				{{ if .IsSyncOngoing }}
+					<p class="last-refreshed mb-0">
+						<i class="fas fa-sync-alt me-2 syncing"></i>Syncing now...
+					</p>
+				{{ else }}
+					<p class="last-refreshed mb-0">
+						<i class="fas fa-sync-alt me-2"></i>Last updated:
+						<span id="last-refreshed-time">{{ .LastSync | timeSincePtr }}</span>
+						<button class="btn btn-sm btn-outline-primary ms-3">
+							Refresh Data
+						</button>
+					</p>
+				{{ end }}
+			</div>
+		</div>
+
+		<!-- Key Metrics -->
+		<div class="row g-4">
+			<!-- Last Refreshed -->
+			<div class="col-md-3">
+				<div class="card stats-card h-100">
+					<div class="card-body text-center">
+						<div class="metric-icon bg-success bg-opacity-10 text-white">
+							<i class="fas fa-clock"></i>
+						</div>
+						<h5 class="card-title">Last Data Refresh</h5>
+						<p class="metric-value">{{ .LastSync | timeSincePtr }}</p>
+						<!-- <p class="card-text text-muted">Last sync: 12:45 PM</p> -->
+					</div>
+				</div>
+			</div>
+
+			<!-- Service Requests -->
+			<div class="col-md-3">
+				<div class="card stats-card h-100">
+					<div class="card-body text-center">
+						<div class="metric-icon bg-warning bg-opacity-10 text-white">
+							<i class="fas fa-ticket-alt"></i>
+						</div>
+						<h5 class="card-title">Service Requests</h5>
+						{{ if .IsSyncOngoing }}
+							<p class="metric-value">
+								{{ .CountServiceRequests | bigNumber }}...?
+							</p>
+						{{ else }}
+							<p class="metric-value">
+								{{ .CountServiceRequests | bigNumber }}
+							</p>
+						{{ end }}
+						<!--<p class="card-text text-muted">
+						<span class="text-success">
+							<i class="fas fa-arrow-up"></i> 12%
+						</span> since last week
+					</p>-->
+					</div>
+				</div>
+			</div>
+
+			<!-- Mosquito Sources -->
+			<div class="col-md-3">
+				<div class="card stats-card h-100">
+					<div class="card-body text-center">
+						<div class="metric-icon bg-danger bg-opacity-10 text-white">
+							<i class="fas fa-bug"></i>
+						</div>
+						<h5 class="card-title">Mosquito Sources</h5>
+						{{ if .IsSyncOngoing }}
+							<p class="metric-value">
+								{{ .CountMosquitoSources | bigNumber }}..?
+							</p>
+						{{ else }}
+							<p class="metric-value">
+								{{ .CountMosquitoSources | bigNumber }}
+							</p>
+						{{ end }}
+						<!-- <p class="card-text text-muted">
+						<span class="text-danger">
+							<i class="fas fa-arrow-up"></i> 8%
+						</span> since last month
+					</p> -->
+					</div>
+				</div>
+			</div>
+
+			<!-- Inspections -->
+			<div class="col-md-3">
+				<div class="card stats-card h-100">
+					<div class="card-body text-center">
+						<div class="metric-icon bg-info bg-opacity-10 text-white">
+							<i class="fas fa-clipboard-check"></i>
+						</div>
+						<h5 class="card-title">Traps</h5>
+						{{ if .IsSyncOngoing }}
+							<p class="metric-value">{{ .CountTraps | bigNumber }}...?</p>
+						{{ else }}
+							<p class="metric-value">{{ .CountTraps | bigNumber }}</p>
+						{{ end }}
+						<!-- <p class="card-text text-muted">
+						<span class="text-success">
+							<i class="fas fa-arrow-up"></i> 15%
+						</span> since last week
+					</p> -->
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Map Section -->
+		<h3 class="section-title">Mosquito Activity Heatmap</h3>
+		<div class="row">
+			<div class="col-12">
+				<map-aggregate
+					api-key="{{ .MapData.MapboxToken }}"
+					latitude="36.3"
+					longitude="-119.2"
+					organization-id="{{ .User.Organization.ID }}"
+					tegola="{{ .Config.URLTegola }}"
+					zoom="9"
+				/>
+			</div>
+		</div>
+
+		<!-- Recent Activity Section -->
+		<h3 class="section-title">Recent Activity</h3>
+		<div class="row">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover">
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Type</th>
+										<th>Location</th>
+										<th>Status</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									{{ range $i, $sr := .RecentRequests }}
+										<tr>
+											<td>{{ $sr.Date | timeSincePtr }}</td>
+											<td>Service Request</td>
+											<td>{{ $sr.Location }}</td>
+											<td><span class="badge bg-success">Completed</span></td>
+											<td>
+												<a href="#" class="btn btn-sm btn-outline-primary"
+													>View</a
+												>
+											</td>
+										</tr>
+									{{ end }}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

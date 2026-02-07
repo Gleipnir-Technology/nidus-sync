@@ -8,14 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var (
-	mockDistrictRootT           = buildTemplate("mock/district-root", "base")
-	mockNuisanceT               = buildTemplate("mock/nuisance", "base")
-	mockNuisanceSubmitCompleteT = buildTemplate("mock/nuisance-submit-complete", "base")
-	mockRootT                   = buildTemplate("mock/root", "base")
-	mockWaterT                  = buildTemplate("mock/water", "base")
-)
-
 type ContentMock struct {
 	District    ContentDistrict
 	MapboxToken string
@@ -24,13 +16,13 @@ type ContentMock struct {
 }
 
 func addMockRoutes(r chi.Router) {
-	r.Get("/", renderMock(mockRootT))
-	r.Get("/district/{slug}", renderMock(mockDistrictRootT))
-	r.Get("/district/{slug}/nuisance", renderMock(mockNuisanceT))
-	r.Get("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
-	r.Get("/district/{slug}/water", renderMock(mockWaterT))
-	r.Get("/nuisance", renderMock(mockNuisanceT))
-	r.Get("/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT))
+	r.Get("/", renderMock("rmo/mock/root.html"))
+	r.Get("/district/{slug}", renderMock("rmo/mock/district-root.html"))
+	r.Get("/district/{slug}/nuisance", renderMock("rmo/mock/nuisance.html"))
+	r.Get("/district/{slug}/nuisance-submit-complete", renderMock("rmo/mock/nuisance-submit-complete.html"))
+	r.Get("/district/{slug}/water", renderMock("rmo/mock/water.html"))
+	r.Get("/nuisance", renderMock("rmo/mock/nuisance.html"))
+	r.Get("/nuisance-submit-complete", renderMock("rmo/mock/nuisance-submit-complete.html"))
 }
 
 func makeContentURLMock(slug string) ContentURL {
@@ -44,7 +36,7 @@ func makeContentURLMock(slug string) ContentURL {
 func makeURLMock(slug, p string) string {
 	return config.MakeURLReport("/mock/district/%s/%s", slug, p)
 }
-func renderMock(t *html.BuiltTemplate) func(http.ResponseWriter, *http.Request) {
+func renderMock(t string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slug := chi.URLParam(r, "slug")
 		if slug == "" {

@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
@@ -75,16 +76,21 @@ func main() {
 		os.Exit(3)
 	}
 
+	err = html.LoadTemplates()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to load html templates")
+		os.Exit(4)
+	}
 	err = email.LoadTemplates()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to load email templates")
-		os.Exit(4)
+		os.Exit(5)
 	}
 
 	err = text.StoreSources()
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to store text source phone numbers")
-		os.Exit(5)
+		os.Exit(6)
 	}
 
 	router_logger := log.With().Logger()
@@ -121,7 +127,7 @@ func main() {
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start openAI client")
-		os.Exit(6)
+		os.Exit(7)
 	}
 	background.Start(ctx)
 	server := &http.Server{

@@ -1,0 +1,265 @@
+{{ template "rmo/base.html" . }}
+
+{{ define "title" }}Status{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<link
+		href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
+		rel="stylesheet"
+	/>
+	<script src="/static/js/geocode.js"></script>
+	<script src="/static/js/location.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
+	<script src="/static/js/report-table.js"></script>
+	<style>
+		.map-container {
+			background-color: #e9ecef;
+			border-radius: 10px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+			height: 500px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 20px;
+		}
+		#map {
+			height: 500px;
+			width: 100%;
+			margin-bottom: 10px;
+		}
+		#map img {
+			max-width: none;
+			min-width: 0px;
+			height: auto;
+		}
+		.search-box {
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			border-radius: 8px;
+		}
+		@media (max-width: 768px) {
+			.map-container {
+				height: 300px;
+			}
+		}
+	</style>
+<script>
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+var markers = [];
+// Because features come from tiled vector data, feature geometries may be split
+// or duplicated across tile boundaries. As a result, features may appear
+// multiple times in query results.
+function getUniqueFeatures(features, comparatorProperty) {
+	const uniqueIds = new Set();
+	const uniqueFeatures = [];
+	for (const feature of features) {
+		const id = feature.properties[comparatorProperty];
+		if (!uniqueIds.has(id)) {
+		uniqueIds.add(id);
+		uniqueFeatures.push(feature);
+		}
+	}
+	return uniqueFeatures;
+}
+
+function renderReports(features) {
+	console.log("render reports", features);
+
+	const report_table = document.querySelector('report-table');
+	let reports = [];
+	for (const feature of features) {
+		reports.push({
+			address: feature.properties.address,
+			created: feature.properties.created,
+			id: feature.properties.public_id,
+			status: feature.properties.status,
+			type: feature.properties.table_name
+		});
+	}
+	report_table.reports = reports;
+}
+function onLoad() {
+	const map = document.querySelector("map-multipoint");
+	map.addEventListener("load", (event) => {
+		map.addSource('tegola-mosquito', {
+			'type': 'vector',
+			'tiles': [
+				'{{.URLTegola}}maps/mosquito/{z}/{x}/{y}'
+			]
+		});
+		map.addLayer({
+			'id': 'mosquito',
+			'source': 'tegola-mosquito',
+			'source-layer': 'report_location',
+			'type': 'circle',
+			'paint': {
+				'circle-color': '#4264fb',
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': '#ffffff'
+			}
+		});
+		map.on('render', () => {
+			const features = map.queryRenderedFeatures({target: {layerId: 'mosquito'}});
+
+			if (features) {
+				const uniqueFeatures = getUniqueFeatures(features, 'public_id');
+				// Populate features for the listing overlay.
+				renderReports(uniqueFeatures);
+			}
+		});
+		getGeolocation({
+			enableHighAccuracy: true,
+			timeout: 10000,
+			maximumAge: 0
+		}).then(position => {
+			map.jumpTo({
+				center: {
+					lng: position.coords.longitude,
+					lat: position.coords.latitude,
+				},
+				zoom: 14,
+			});
+		}).catch(error => {
+			console.log("location error", error);
+		})
+	});
+}
+
+document.addEventListener('DOMContentLoaded', onLoad);
+</script>
+{{ end }}
+{{ define "content" }}
+	<div class="container my-4">
+		<!-- Search Box -->
+		<div class="card search-box mb-4">
+			<div class="card-body">
+				<form class="row g-3 align-items-center">
+					<div class="col-md-9">
+						<label for="addressSearch" class="visually-hidden"
+							>Search by address</label
+						>
+						<div class="input-group">
+							<span class="input-group-text"><i class="bi bi-search"></i></span>
+							<input
+								type="text"
+								class="form-control form-control-lg"
+								id="addressSearch"
+								placeholder="Enter an address, neighborhood, or zip code"
+							/>
+						</div>
+					</div>
+					<div class="col-md-3">
+						<button type="submit" class="btn btn-primary btn-lg w-100">
+							Search
+						</button>
+					</div>
+					<div class="col-12">
+						<div class="form-check form-check-inline">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								id="mosquitoNuisance"
+								checked
+							/>
+							<label class="form-check-label" for="mosquitoNuisance"
+								>Mosquito Nuisance</label
+							>
+						</div>
+						<div class="form-check form-check-inline">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								id="greenPool"
+								checked
+							/>
+							<label class="form-check-label" for="greenPool">Green Pool</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								id="quickReport"
+								checked
+							/>
+							<label class="form-check-label" for="quickReport"
+								>Quick Report</label
+							>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Map Section -->
+		<div class="card mb-4">
+			<div class="card-header bg-info text-white">
+				<h5 class="mb-0"><i class="bi bi-pin-map-fill me-2"></i>Reports Map</h5>
+			</div>
+			<div class="card-body p-0">
+				<map-multipoint
+					api-key="{{ .MapboxToken }}"
+					latitude="36.3"
+					longitude="-119.2"
+					tegola="{{ .URLTegola }}"
+					zoom="9"
+				/>
+			</div>
+		</div>
+
+		<!-- Results Section -->
+		<div class="card">
+			<div
+				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0"><i class="bi bi-list-ol me-2"></i>Reports Near You</h5>
+				<span class="badge bg-light text-dark">15 Reports Found</span>
+			</div>
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<report-table />
+				</div>
+			</div>
+			<!--
+		<div class="card-footer">
+			<nav aria-label="Page navigation">
+				<ul class="pagination justify-content-center mb-0">
+					<li class="page-item disabled">
+						<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+					</li>
+					<li class="page-item active"><a class="page-link" href="#">1</a></li>
+					<li class="page-item"><a class="page-link" href="#">2</a></li>
+					<li class="page-item"><a class="page-link" href="#">3</a></li>
+					<li class="page-item">
+						<a class="page-link" href="#">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+		--></div>
+
+		<!-- Create Report Button (Fixed at bottom on mobile) -->
+		<div
+			class="d-md-none position-fixed bottom-0 start-0 end-0 p-3"
+			style="z-index: 1030;"
+		>
+			<button
+				class="btn btn-primary btn-lg w-100"
+				data-bs-toggle="modal"
+				data-bs-target="#reportModal"
+			>
+				<i class="bi bi-plus-circle-fill me-2"></i>Create New Report
+			</button>
+		</div>
+
+		<!-- Desktop Create Report Button -->
+		<div class="d-none d-md-block text-center mt-4">
+			<button
+				class="btn btn-primary btn-lg"
+				data-bs-toggle="modal"
+				data-bs-target="#reportModal"
+			>
+				<i class="bi bi-plus-circle-fill me-2"></i>Create New Report
+			</button>
+		</div>
+	</div>
+{{ end }}

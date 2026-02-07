@@ -15,13 +15,6 @@ type ContentEmail struct {
 	Email string
 }
 
-var (
-	EmailConfirmT             = buildTemplate("email-confirm", "base")
-	EmailConfirmCompleteT     = buildTemplate("email-confirm-complete", "base")
-	EmailUnsubscribeT         = buildTemplate("email-unsubscribe", "base")
-	EmailUnsubscribeCompleteT = buildTemplate("email-unsubscribe-complete", "base")
-)
-
 func getEmailByCode(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "code")
 	//id := r.FormValue("id")
@@ -48,7 +41,7 @@ func getEmailReportUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	html.RenderOrError(
 		w,
-		EmailConfirmT,
+		"rmo/email-unsubscribe.html",
 		ContentEmail{
 			Email: email,
 		},
@@ -63,7 +56,7 @@ func getEmailConfirm(w http.ResponseWriter, r *http.Request) {
 
 	html.RenderOrError(
 		w,
-		EmailConfirmT,
+		"rmo/email-confirm.html",
 		ContentEmail{
 			Email: email,
 		},
@@ -72,7 +65,7 @@ func getEmailConfirm(w http.ResponseWriter, r *http.Request) {
 func getEmailConfirmComplete(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		EmailConfirmCompleteT,
+		"rmo/email-confirm-complete.html",
 		map[string]string{},
 	)
 }
@@ -80,7 +73,7 @@ func getEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	html.RenderOrError(
 		w,
-		EmailUnsubscribeT,
+		"rmo/email-unsubscribe.html",
 		ContentEmail{
 			Email: email,
 		},
@@ -89,7 +82,7 @@ func getEmailUnsubscribe(w http.ResponseWriter, r *http.Request) {
 func getEmailUnsubscribeComplete(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		EmailUnsubscribeCompleteT,
+		"rmo/email-unsubscribe-complete.html",
 		map[string]string{},
 	)
 }

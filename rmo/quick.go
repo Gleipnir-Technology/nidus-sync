@@ -36,15 +36,10 @@ type District struct {
 	Name    string
 }
 
-var (
-	quickT               = buildTemplate("quick", "base")
-	quickSubmitCompleteT = buildTemplate("quick-submit-complete", "base")
-)
-
 func getQuick(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		quickT,
+		"rmo/quick.html",
 		ContentQuick{},
 	)
 }
@@ -80,7 +75,7 @@ func getQuickSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		quickSubmitCompleteT,
+		"rmo/quick-submit-complete.html",
 		ContentQuickSubmitComplete{
 			District: district,
 			ReportID: report.PublicID,
@@ -91,7 +86,7 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	html.RenderOrError(
 		w,
-		registerNotificationsCompleteT,
+		"rmo/register-notificition-complete.html",
 		ContentRegisterNotificationsComplete{
 			ReportID: report,
 		},

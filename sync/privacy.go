@@ -14,14 +14,10 @@ type ContentPrivacy struct {
 	URLSync string
 }
 
-var (
-	PrivacyT = buildTemplate("privacy", "base")
-)
-
 func getPrivacy(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		PrivacyT,
+		"sync/privacy.html",
 		ContentPrivacy{
 			Address: "2726 S Quinn Ave, Gilbert, AZ, USA",
 			Company: "Gleipnir LLC",

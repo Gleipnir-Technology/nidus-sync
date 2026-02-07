@@ -1,0 +1,57 @@
+{{ define "sync/component/sidebar.html" }}
+	<div id="sidebar">
+		<div class="sidebar-header">
+			<div class="logo-container">
+				<img class="logo" src="/static/img/nidus-logo-256-transparent.png" />
+			</div>
+		</div>
+		<button id="sidebarToggle" class="btn btn-sm p-0">
+			<i id="sidebarToggleIcon" class="bi bi-chevron-left"></i>
+		</button>
+
+		<ul class="sidebar-menu">
+			<li>
+				<a href="/" data-toggle="tooltip" data-placement="right" title="Home">
+					<div class="menu-icon"><i class="bi bi-house"></i></div>
+					<span class="menu-text ms-2">Home</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-graph-up"></i></div>
+					<span class="menu-text ms-2">Analytics</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-file-earmark"></i></div>
+					<span class="menu-text ms-2">Reports</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-people"></i></div>
+					<span class="menu-text ms-2">Users</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-chat-dots"></i></div>
+					<span class="menu-text ms-2">Messages</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-gear"></i></div>
+					<span class="menu-text ms-2">Settings</span>
+				</a>
+			</li>
+			<li>
+				<a href="#">
+					<div class="menu-icon"><i class="bi bi-question-circle"></i></div>
+					<span class="menu-text ms-2">Help</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+{{ end }}

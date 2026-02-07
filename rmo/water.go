@@ -24,14 +24,10 @@ type ContentPool struct {
 	URL         ContentURL
 }
 
-var (
-	WaterT = buildTemplate("water", "base")
-)
-
 func getWater(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		WaterT,
+		"rmo/water.html",
 		ContentPool{
 			District:    nil,
 			MapboxToken: config.MapboxToken,
@@ -47,7 +43,7 @@ func getWaterDistrict(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		WaterT,
+		"rmo/water.html",
 		ContentPool{
 			District:    newContentDistrict(district),
 			MapboxToken: config.MapboxToken,

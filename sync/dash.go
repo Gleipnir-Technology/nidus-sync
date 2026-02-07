@@ -21,15 +21,7 @@ import (
 )
 
 // Authenticated pages
-var (
-	cellT       = buildTemplate("cell", "authenticated")
-	dashboardT  = buildTemplate("dashboard", "authenticated")
-	districtT   = buildTemplate("district", "base")
-	layoutTestT = buildTemplate("layout-test", "authenticated")
-	settingsT   = buildTemplate("settings", "authenticated")
-	sourceT     = buildTemplate("source", "authenticated")
-	trapT       = buildTemplate("trap", "authenticated")
-)
+var ()
 
 type Config struct {
 	URLTegola string
@@ -97,7 +89,7 @@ func getDistrict(w http.ResponseWriter, r *http.Request) {
 	context := ContextDistrict{
 		MapboxToken: config.MapboxToken,
 	}
-	html.RenderOrError(w, districtT, &context)
+	html.RenderOrError(w, "sync/district.html", &context)
 }
 
 func getLayoutTest(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -106,7 +98,7 @@ func getLayoutTest(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
-	html.RenderOrError(w, layoutTestT, &ContentLayoutTest{User: userContent})
+	html.RenderOrError(w, "sync/layout-test.html", &ContentLayoutTest{User: userContent})
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -162,6 +154,9 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	source(w, r, u, globalid)
 }
 
+func getTemplateTest(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(w, "sync/template-test.html", nil)
+}
 func getTrap(w http.ResponseWriter, r *http.Request, u *models.User) {
 	globalid_s := chi.URLParam(r, "globalid")
 	if globalid_s == "" {
@@ -241,7 +236,7 @@ func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 		Treatments: treatments,
 		User:       userContent,
 	}
-	html.RenderOrError(w, cellT, &data)
+	html.RenderOrError(w, "sync/cell.html", &data)
 }
 
 func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
@@ -310,7 +305,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		RecentRequests: requests,
 		User:           userContent,
 	}
-	html.RenderOrError(w, dashboardT, data)
+	html.RenderOrError(w, "sync/dashboard.html", data)
 }
 
 func settings(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -322,7 +317,7 @@ func settings(w http.ResponseWriter, r *http.Request, user *models.User) {
 	data := ContentAuthenticatedPlaceholder{
 		User: userContent,
 	}
-	html.RenderOrError(w, settingsT, data)
+	html.RenderOrError(w, "sync/settings.html", data)
 }
 
 func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
@@ -383,7 +378,7 @@ func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.U
 		User:            userContent,
 	}
 
-	html.RenderOrError(w, sourceT, data)
+	html.RenderOrError(w, "sync/source.html", data)
 }
 
 func trap(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {
@@ -423,5 +418,5 @@ func trap(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUI
 		User: userContent,
 	}
 
-	html.RenderOrError(w, trapT, data)
+	html.RenderOrError(w, "sync/trap.html", data)
 }

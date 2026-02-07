@@ -33,15 +33,10 @@ type ContentNuisanceSubmitComplete struct {
 	URL      ContentURL
 }
 
-var (
-	NuisanceT       = buildTemplate("nuisance", "base")
-	SubmitCompleteT = buildTemplate("submit-complete", "base")
-)
-
 func getNuisance(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		NuisanceT,
+		"rmo/nuisance.html",
 		ContentNuisance{
 			District:    nil,
 			MapboxToken: config.MapboxToken,
@@ -57,7 +52,7 @@ func getNuisanceDistrict(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		NuisanceT,
+		"rmo/nuisance.html",
 		ContentNuisance{
 			District:    newContentDistrict(district),
 			MapboxToken: config.MapboxToken,
@@ -74,7 +69,7 @@ func getSubmitComplete(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		SubmitCompleteT,
+		"rmo/submit-complete.html",
 		ContentNuisanceSubmitComplete{
 			District: newContentDistrict(district),
 			ReportID: report_id,

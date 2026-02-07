@@ -1,0 +1,662 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const photoUpload = document.getElementById("photoUpload");
+			const imagePreview = document.getElementById("imagePreview");
+			const dropArea = document.getElementById("dropArea");
+
+			// Handle file selection
+			photoUpload.addEventListener("change", handleFileSelect);
+
+			// Handle drag and drop
+			dropArea.addEventListener("dragover", function (e) {
+				e.preventDefault();
+				dropArea.style.backgroundColor = "#e9ecef";
+			});
+
+			dropArea.addEventListener("dragleave", function () {
+				dropArea.style.backgroundColor = "#f8f9fa";
+			});
+
+			dropArea.addEventListener("drop", function (e) {
+				e.preventDefault();
+				dropArea.style.backgroundColor = "#f8f9fa";
+
+				if (e.dataTransfer.files.length) {
+					handleFiles(e.dataTransfer.files);
+				}
+			});
+
+			function handleFileSelect(e) {
+				const files = e.target.files;
+				handleFiles(files);
+			}
+
+			function handleFiles(files) {
+				const maxFiles = 5;
+				const currentFiles =
+					imagePreview.querySelectorAll(".preview-item").length;
+
+				for (let i = 0; i < files.length && currentFiles + i < maxFiles; i++) {
+					const file = files[i];
+
+					if (!file.type.match("image.*")) {
+						continue;
+					}
+
+					const reader = new FileReader();
+
+					reader.onload = (function (theFile) {
+						return function (e) {
+							const previewItem = document.createElement("div");
+							previewItem.className = "preview-item";
+
+							const img = document.createElement("img");
+							img.src = e.target.result;
+
+							const removeBtn = document.createElement("div");
+							removeBtn.className = "preview-remove";
+							removeBtn.innerHTML = "x";
+							removeBtn.addEventListener("click", function () {
+								imagePreview.removeChild(previewItem);
+							});
+
+							previewItem.appendChild(img);
+							previewItem.appendChild(removeBtn);
+							imagePreview.appendChild(previewItem);
+						};
+					})(file);
+
+					reader.readAsDataURL(file);
+				}
+
+				photoUpload.value = "";
+			}
+		});
+	</script>
+	<style>
+		.district-logo {
+			max-height: 80px;
+			width: auto;
+		}
+		.map-container {
+			height: 300px;
+			background-color: #e9ecef;
+			border-radius: 5px;
+			border: 1px solid #dee2e6;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 10px;
+		}
+		.file-upload-container {
+			border: 2px dashed #dee2e6;
+			border-radius: 5px;
+			padding: 20px;
+			text-align: center;
+			background-color: #f8f9fa;
+			transition: background-color 0.3s;
+		}
+		.file-upload-container:hover {
+			background-color: #e9ecef;
+			cursor: pointer;
+		}
+		.image-preview {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 15px;
+		}
+		.preview-item {
+			width: 100px;
+			height: 100px;
+			border-radius: 5px;
+			overflow: hidden;
+			position: relative;
+		}
+		.preview-item img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+		.preview-remove {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			background-color: rgba(0, 0, 0, 0.5);
+			color: white;
+			border-radius: 50%;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 10px;
+			cursor: pointer;
+		}
+		.form-section {
+			margin-bottom: 2.5rem;
+			padding-bottom: 2rem;
+			border-bottom: 1px solid #dee2e6;
+		}
+		.form-section:last-child {
+			border-bottom: none;
+			margin-bottom: 1rem;
+			padding-bottom: 0;
+		}
+		.section-heading {
+			margin-bottom: 1.5rem;
+			display: flex;
+			align-items: center;
+		}
+		.section-heading i {
+			margin-right: 10px;
+			font-size: 1.5rem;
+			color: #0d6efd;
+		}
+		.optional-label {
+			font-size: 0.875rem;
+			color: #6c757d;
+			font-weight: normal;
+			margin-left: 8px;
+		}
+		.submit-container {
+			background-color: #f8f9fa;
+			padding: 20px;
+			border-radius: 5px;
+			margin-top: 2rem;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<!-- Header -->
+	<header class="bg-light py-3">
+		<div class="container">
+			<div class="row align-items-center">
+				<div class="col-md-6">
+					<h1 class="district-name">{{ .DistrictName }}</h1>
+				</div>
+				<div class="col-md-6 text-md-end">
+					<img
+						src="placeholder-logo.png"
+						alt="District Logo"
+						class="district-logo"
+					/>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- Main Content -->
+	<main class="py-5">
+		<div class="container">
+			<!-- Page Title -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<h2>Report a Green Pool or Mosquito Source</h2>
+					<p class="lead">
+						Help us locate and treat potential mosquito breeding sources in your
+						area
+					</p>
+				</div>
+			</div>
+
+			<!-- Info Alert -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="alert alert-info" role="alert">
+						<h5 class="alert-heading">
+							<i class="bi bi-info-circle me-2"></i>All fields are optional
+						</h5>
+						<p class="mb-0">
+							We appreciate any information you can provide. The more details
+							you share, the better we can address the issue. Photos and
+							location information are especially helpful.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Report Form -->
+			<form id="greenPoolForm">
+				<!-- Photo Upload Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-camera"></i>
+						<h3>Photos</h3>
+						<span class="optional-label">optional</span>
+					</div>
+					<p class="mb-3">
+						Photos help us identify the severity of the issue and may contain
+						location data that can help us find the source.
+					</p>
+
+					<div class="file-upload-container" id="dropArea">
+						<input
+							type="file"
+							id="photoUpload"
+							multiple
+							accept="image/*"
+							class="d-none"
+						/>
+						<div class="mb-2">
+							<i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+						</div>
+						<p class="mb-1"><strong>Drag and drop photos here</strong></p>
+						<p class="mb-1">- or -</p>
+						<button
+							type="button"
+							class="btn btn-primary mt-2"
+							onclick="document.getElementById('photoUpload').click()"
+						>
+							Select Photos
+						</button>
+						<p class="small text-muted mt-2 mb-0">
+							You can upload multiple photos (maximum 5)
+						</p>
+					</div>
+
+					<!-- Image Preview Area -->
+					<div class="image-preview" id="imagePreview">
+						<!-- Preview items will be added here dynamically -->
+					</div>
+				</div>
+
+				<!-- Location Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-geo-alt"></i>
+						<h3>Location</h3>
+						<span class="optional-label">optional</span>
+					</div>
+					<p class="mb-3">
+						Please provide the location of the potential mosquito breeding
+						source. We may be able to extract this information from your photos
+						if they contain location data.
+					</p>
+
+					<div class="row mb-3">
+						<div class="col-md-12">
+							<label for="address" class="form-label"
+								>Address or Description of Location</label
+							>
+							<input
+								type="text"
+								class="form-control"
+								id="address"
+								placeholder="123 Main St, City, State or nearby landmark description"
+							/>
+						</div>
+					</div>
+
+					<p class="small text-muted mb-2">
+						You can also click on the map to mark the location precisely
+					</p>
+					<div class="map-container">
+						<div class="text-center">
+							<i class="bi bi-map fs-1 text-secondary"></i>
+							<p class="mb-0">Interactive Map</p>
+							<p class="text-muted small">
+								Click to set the location of the mosquito source
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Source Details Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-water"></i>
+						<h3>Source Details</h3>
+						<span class="optional-label">optional</span>
+					</div>
+
+					<div class="row mb-4">
+						<div class="col-md-6">
+							<label for="duration" class="form-label"
+								>How long has this source been present?</label
+							>
+							<select class="form-select" id="duration">
+								<option value="">I don't know</option>
+								<option value="less-than-week">Less than a week</option>
+								<option value="1-2-weeks">1-2 weeks</option>
+								<option value="2-4-weeks">2-4 weeks</option>
+								<option value="1-3-months">1-3 months</option>
+								<option value="more-than-3-months">More than 3 months</option>
+							</select>
+						</div>
+
+						<div class="col-md-6">
+							<label class="form-label d-block"
+								>Have you observed any of the following?
+								<a
+									href="#"
+									data-bs-toggle="modal"
+									data-bs-target="#larvaeInfoModal"
+									><i class="bi bi-question-circle small ms-1"></i></a
+							></label>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="larvae" />
+								<label class="form-check-label" for="larvae">
+									Larvae (wigglers) in water
+								</label>
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="pupae" />
+								<label class="form-check-label" for="pupae">
+									Pupae (tumblers) in water
+								</label>
+							</div>
+							<div class="form-check">
+								<input
+									class="form-check-input"
+									type="checkbox"
+									id="adultMosquitoes"
+								/>
+								<label class="form-check-label" for="adultMosquitoes">
+									Adult mosquitoes near the source
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Access Information Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-unlock"></i>
+						<h3>Access Information</h3>
+						<span class="optional-label">optional</span>
+					</div>
+					<p class="mb-3">
+						Please provide any details about how to access the mosquito source.
+						This helps our technicians when they visit the site.
+					</p>
+
+					<div class="row mb-3">
+						<div class="col-md-12">
+							<label for="accessInfo" class="form-label"
+								>How can the source be accessed?</label
+							>
+							<textarea
+								class="form-control"
+								id="accessInfo"
+								rows="3"
+								placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."
+							></textarea>
+						</div>
+					</div>
+
+					<div class="row mb-3">
+						<div class="col-md-12">
+							<label class="form-label d-block"
+								>Access obstacles (check all that apply):</label
+							>
+							<div class="row">
+								<div class="col-md-4">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="gate" />
+										<label class="form-check-label" for="gate">Gate</label>
+									</div>
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="fence"
+										/>
+										<label class="form-check-label" for="fence">Fence</label>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="lockedEntrance"
+										/>
+										<label class="form-check-label" for="lockedEntrance"
+											>Locked entrance</label
+										>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox" id="dogs" />
+										<label class="form-check-label" for="dogs">Dogs/pets</label>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="otherObstacle"
+										/>
+										<label class="form-check-label" for="otherObstacle"
+											>Other obstacle</label
+										>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Contact Information Sections -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-person-lines-fill"></i>
+						<h3>Contact Information</h3>
+						<span class="optional-label">optional</span>
+					</div>
+
+					<!-- Property Owner Information -->
+					<h5 class="mb-3">Property Owner Information (if known)</h5>
+					<div class="row mb-4">
+						<div class="col-md-6 mb-3">
+							<label for="ownerName" class="form-label">Owner Name</label>
+							<input type="text" class="form-control" id="ownerName" />
+						</div>
+						<div class="col-md-6 mb-3">
+							<label for="ownerPhone" class="form-label">Owner Phone</label>
+							<input type="tel" class="form-control" id="ownerPhone" />
+						</div>
+						<div class="col-md-12">
+							<label for="ownerEmail" class="form-label">Owner Email</label>
+							<input type="email" class="form-control" id="ownerEmail" />
+						</div>
+					</div>
+
+					<!-- Your Contact Information -->
+					<h5 class="mb-3">Your Contact Information (for updates)</h5>
+					<div class="row mb-3">
+						<div class="col-md-6 mb-3">
+							<label for="reporterName" class="form-label">Your Name</label>
+							<input type="text" class="form-control" id="reporterName" />
+						</div>
+						<div class="col-md-6 mb-3">
+							<label for="reporterPhone" class="form-label">Your Phone</label>
+							<input type="tel" class="form-control" id="reporterPhone" />
+						</div>
+						<div class="col-md-12 mb-3">
+							<label for="reporterEmail" class="form-label">Your Email</label>
+							<input type="email" class="form-control" id="reporterEmail" />
+						</div>
+						<div class="col-md-12">
+							<div class="form-check">
+								<input
+									class="form-check-input"
+									type="checkbox"
+									id="receiveUpdates"
+									checked
+								/>
+								<label class="form-check-label" for="receiveUpdates">
+									I would like to receive updates on this report
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Additional Information Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-card-text"></i>
+						<h3>Additional Information</h3>
+						<span class="optional-label">optional</span>
+					</div>
+					<p class="mb-3">
+						Please provide any other information that might help us address this
+						mosquito source.
+					</p>
+
+					<div class="row">
+						<div class="col-md-12">
+							<label for="additionalInfo" class="form-label"
+								>Additional Details</label
+							>
+							<textarea
+								class="form-control"
+								id="additionalInfo"
+								rows="4"
+								placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."
+							></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Submit Section -->
+				<div class="submit-container">
+					<div class="row align-items-center">
+						<div class="col-md-8">
+							<p class="mb-0">
+								<strong
+									>Thank you for helping us keep our community safe from
+									mosquito-borne illnesses.</strong
+								>
+							</p>
+							<p class="mb-0 small text-muted">
+								After submission, you will receive a confirmation with a report
+								ID for tracking purposes.
+							</p>
+						</div>
+						<div class="col-md-4 text-md-end mt-3 mt-md-0">
+							<button type="submit" class="btn btn-primary btn-lg">
+								Submit Report
+							</button>
+						</div>
+					</div>
+				</div>
+			</form>
+
+			<!-- Back Button -->
+			<div class="row mt-4">
+				<div class="col-12">
+					<a href="/" class="btn btn-outline-secondary">
+						<i class="bi bi-arrow-left"></i> Back to Home
+					</a>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<!-- Larvae Info Modal -->
+	<div
+		class="modal fade"
+		id="larvaeInfoModal"
+		tabindex="-1"
+		aria-labelledby="larvaeInfoModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="larvaeInfoModalLabel">
+						How to Identify Mosquito Larvae and Pupae
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
+				<div class="modal-body">
+					<div class="row mb-4">
+						<div class="col-md-6">
+							<h6>Mosquito Larvae (Wigglers)</h6>
+							<p>Mosquito larvae, often called "wigglers," are:</p>
+							<ul>
+								<li>Small, worm-like aquatic organisms</li>
+								<li>Usually 1/4 to 1/2 inch long</li>
+								<li>Move with a wiggling motion in water</li>
+								<li>Hang upside-down at the water surface to breathe</li>
+								<li>Visible to the naked eye in standing water</li>
+							</ul>
+						</div>
+						<div class="col-md-6">
+							<h6>Mosquito Pupae (Tumblers)</h6>
+							<p>Mosquito pupae, often called "tumblers," are:</p>
+							<ul>
+								<li>Comma-shaped organisms</li>
+								<li>Typically darker than larvae</li>
+								<li>Move with a tumbling motion when disturbed</li>
+								<li>Rest at the water surface</li>
+								<li>The stage just before adult mosquitoes emerge</li>
+							</ul>
+						</div>
+					</div>
+					<p>
+						When looking for mosquito larvae and pupae, check standing water
+						sources like:
+					</p>
+					<ul>
+						<li>Swimming pools</li>
+						<li>Bird baths</li>
+						<li>Buckets or containers</li>
+						<li>Drainage ditches</li>
+						<li>Plant saucers</li>
+						<li>Rain gutters</li>
+					</ul>
+					<p>
+						If you see small creatures moving in standing water, there's a good
+						chance they're mosquito larvae or pupae.
+					</p>
+					<div class="text-center">
+						<a href="#" class="btn btn-outline-primary"
+							>View Detailed Identification Guide</a
+						>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Footer -->
+	<footer class="bg-dark text-white py-4">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<p class="mb-0">
+						&copy; 2023 {{ .DistrictName }} Mosquito Management District
+					</p>
+				</div>
+				<div class="col-md-6 text-md-end">
+					<p class="mb-0">
+						Contact: (555) 123-4567 | info@mosquitodistrict.gov
+					</p>
+				</div>
+			</div>
+		</div>
+	</footer>
+{{ end }}

@@ -1,0 +1,29 @@
+{{ template "rmo/base.html" . }}
+
+{{ define "title" }}Districts{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<!-- Main Content -->
+	<main>
+		<h1>District List</h1>
+		<table>
+			<tbody>
+				<tr>
+					<th>Logo</th>
+					<th>Name</th>
+					<th>URL</th>
+				</tr>
+				{{ range .Districts }}
+					<tr>
+						<td>
+							<a href="{{ .URLWebsite }}"><img src="{{ .URLLogo }}" /></a>
+						</td>
+						<td>{{ .Name }}</td>
+						<td><a href="{{ .URLRMO }}">{{ .URLRMO }}</a></td>
+					</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</main>
+{{ end }}

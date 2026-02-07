@@ -11,10 +11,6 @@ type ContentTextMessages struct {
 	User User
 }
 
-var (
-	textMessagesT = buildTemplate("text-messages", "authenticated")
-)
-
 func getTextMessages(w http.ResponseWriter, r *http.Request, u *models.User) {
 	userContent, err := contentForUser(r.Context(), u)
 	if err != nil {
@@ -24,5 +20,5 @@ func getTextMessages(w http.ResponseWriter, r *http.Request, u *models.User) {
 	content := ContentTextMessages{
 		User: userContent,
 	}
-	html.RenderOrError(w, textMessagesT, content)
+	html.RenderOrError(w, "sync/text-messages.html", content)
 }

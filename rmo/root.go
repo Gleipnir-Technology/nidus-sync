@@ -30,12 +30,6 @@ type ContentURL struct {
 	WaterSubmit    string
 }
 
-var (
-	PrivacyT = buildTemplate("privacy", "base")
-	RootT    = buildTemplate("root", "base")
-	TermsT   = buildTemplate("terms", "base")
-)
-
 func boolFromForm(r *http.Request, k string) bool {
 	s := r.PostFormValue(k)
 	if s == "on" {
@@ -47,7 +41,7 @@ func boolFromForm(r *http.Request, k string) bool {
 func getPrivacy(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		PrivacyT,
+		"rmo/privacy.html",
 		ContentPrivacy{
 			Address:   "2726 S Quinn Ave, Gilbert, AZ, USA",
 			Company:   "Gleipnir LLC",
@@ -59,7 +53,7 @@ func getPrivacy(w http.ResponseWriter, r *http.Request) {
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		RootT,
+		"rmo/root.html",
 		ContentRoot{
 			URL: makeContentURL(nil),
 		},
@@ -73,7 +67,7 @@ func getRootDistrict(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		RootT,
+		"rmo/root.html",
 		ContentRoot{
 			District: newContentDistrict(district),
 			URL:      makeContentURL(district),
@@ -88,7 +82,7 @@ func getRobots(w http.ResponseWriter, r *http.Request) {
 func getTerms(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		TermsT,
+		"rmo/terms.html",
 		ContentRoot{
 			URL: makeContentURL(nil),
 		},

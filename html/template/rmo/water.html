@@ -1,0 +1,648 @@
+{{ template "rmo/base.html" . }}
+
+{{ define "title" }}Report Standing Water{{ end }}
+{{ define "extraheader" }}
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<script src="/static/js/address-suggestion.js"></script>
+	<script src="/static/js/geocode.js"></script>
+	<script src="/static/js/location.js"></script>
+	<script src="/static/js/map-locator.js"></script>
+	<script src="/static/js/photo-upload.js"></script>
+<script>
+const MAPBOX_ACCESS_TOKEN = '{{.MapboxToken}}';
+async function handleMapClick(mapLocator, lngLat) {
+	mapLocator.SetMarker(lngLat);
+	mapLocator.PanTo(lngLat, {duration: 2000});
+	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+		lat: lngLat.lat,
+		lng: lngLat.lng,
+	});
+	console.log("click reverse geocode", response);
+	if (response !== undefined && response.features.length > 0) {
+		const addressInput = document.querySelector("address-input");
+		addressInput.SetValue(response.features[0]);
+		setLocationInputs(response.features[0]);
+	}
+}
+async function handleMarkerDrag(lngLat) {
+	const response = await geocodeReverse(MAPBOX_ACCESS_TOKEN, {
+		lat: lngLat.lat,
+		lng: lngLat.lng,
+	})
+	console.log("marker drag reverse geocode", response);
+	if (response !== undefined && response.features.length > 0) {
+		const addressInput = document.querySelector("address-input");
+		addressInput.SetValue(response.features[0]);
+	}
+}
+function setLocationInputs(location) {
+       let country = document.getElementById('address-country');
+       let latitude = document.getElementById('latitude');
+       let longitude = document.getElementById('longitude');
+       let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+       let latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
+       let postcode = document.getElementById('address-postcode');
+       let place = document.getElementById('address-place');
+       let region = document.getElementById('address-region');
+       let street = document.getElementById('address-street');
+
+       // Extract context data from properties
+       const props = location.properties;
+       const context = props.context || {};
+
+       // Populate structured fields
+       country.value = context.country.name;
+       latitude.value = props.coordinates.latitude;
+       longitude.value = props.coordinates.longitude;
+       latlngAccuracyType.value = props.coordinates.accuracy;
+       latlngAccuracyValue.value = "0";
+       postcode.value = context.postcode.name;
+       place.value = context.place.name;
+       region.value = context.region.name;
+       street.value = context.country.name;
+}
+function toggleCollapse(something) {
+	el = document.getElementById(something)
+	if (el.classList.contains('collapse')) {
+		el.classList.remove('collapse');
+	} else {
+		el.classList.add('collapse');
+	}
+	document.getElementById("toggle-additional").classList.add("visually-hidden");
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+	// Elements
+	const addressInput = document.querySelector("address-input");
+	const latitudeInput = document.getElementById('latitude');
+	const longitudeInput = document.getElementById('longitude');
+        const latlngAccuracyType = document.getElementById('latlng-accuracy-type');
+        const latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
+
+	const mapLocator = document.querySelector("map-locator");
+	mapLocator.addEventListener("load", (event) => {
+		getGeolocation({
+			enableHighAccuracy: true,
+			timeout: 10000,
+			maximumAge: 0
+		}).then(position => {
+			console.log("Got location", position);
+			latitudeInput.value = position.coords.latitude;
+			longitudeInput.value = position.coords.longitude;
+			latlngAccuracyType.value = 'browser';
+			latlngAccuracyValue.value = position.coords.accuracy;
+			mapLocator.JumpTo({
+				center: {
+					lng: position.coords.longitude,
+					lat: position.coords.latitude,
+				},
+				zoom: 14,
+			});
+			const coords = [
+				position.coords.longitude,
+				position.coords.latitude,
+			];
+			mapLocator.SetMarker(coords);
+			mapLocator.JumpTo({center: coords, zoom: 14});
+			handleMarkerDrag({
+				lat: position.coords.latitude,
+				lng: position.coords.longitude,
+			});
+		}).catch(error => {
+			console.log("location error", error);
+		})
+	})
+	let mapZoom = document.getElementById('map-zoom');
+	mapLocator.addEventListener("zoomend", function(e) {
+		mapZoom.value = e.target.GetZoom();
+	});
+	mapLocator.addEventListener("click", (e) => {
+		// We get some events without the lngLat
+		if (e.detail !== undefined && e.detail.lngLat !== undefined) {
+			handleMapClick(mapLocator, e.detail.lngLat);
+		}
+	});
+	mapLocator.addEventListener("markerdragend", (e) => {
+		const marker = event.detail.marker;
+		const lngLat = marker.getLngLat();
+		handleMarkerDrag(lngLat);
+	});
+
+	const addressDisplay = document.querySelector("address-display");
+	addressInput.addEventListener("address-selected", (event) => {
+		const l = event.detail.location;
+		console.log("Address selected", l);
+		// Center map on selected address
+		mapLocator.SetMarker(l.geometry.coordinates);
+		mapLocator.JumpTo({
+			center: l.geometry.coordinates,
+			zoom: 14,
+		});
+
+		setLocationInputs(l);
+	});
+});
+</script>
+{{ end }}
+{{ define "content" }}
+	{{ if (eq .District nil) }}
+		{{ template "rmo/component/header-rmo.html" . }}
+	{{ else }}
+		{{ template "rmo/component/header-district.html" .District }}
+	{{ end }}
+	<!-- Main Content -->
+	<main class="py-5">
+		<div class="container">
+			<!-- Page Title -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<h2>Report Standing Water</h2>
+					<p class="lead">
+						Help us locate and treat potential mosquito production sources in
+						your area
+					</p>
+				</div>
+			</div>
+
+			<!-- Report Form -->
+			<form
+				id="standingWater"
+				action="{{ .URL.WaterSubmit }}"
+				method="POST"
+				enctype="multipart/form-data"
+			>
+				<!-- Photo Upload Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-camera"></i>
+						<h3>Photos</h3>
+					</div>
+					<p class="mb-3">
+						Photos help us identify the severity of the issue and may contain
+						location data that can help us find the production source.
+					</p>
+					<div class="mb-4">
+						<photo-upload />
+					</div>
+				</div>
+
+				<!-- Additional Information Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-card-text"></i>
+						<h3>Additional Information</h3>
+					</div>
+					<p class="mb-3">
+						Please provide any other information that might help us address this
+						mosquito production source.
+					</p>
+
+					<div class="row">
+						<div class="col-md-12">
+							<label for="comments" class="form-label"
+								>Additional Details</label
+							>
+							<textarea
+								class="form-control"
+								id="comments"
+								maxlength="2048"
+								name="comments"
+								rows="4"
+								placeholder="Example: The house appears to be vacant. There is algae growth in the pool. I've noticed increased mosquito activity in the evenings."
+							></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Location Section -->
+				<div class="form-section">
+					<div class="section-heading">
+						<i class="bi bi-geo-alt"></i>
+						<h3>Location</h3>
+					</div>
+					<p class="mb-3">
+						Please provide the location of the potential mosquito production
+						source. We may be able to extract this information from your photos
+						if they contain location data.
+					</p>
+					<div class="col-md-12">
+						<div class="alert alert-info" role="info">
+							<p class="mb-0">
+								You can select the location by address or by moving the marker
+								on the map.
+							</p>
+						</div>
+					</div>
+
+					<div class="row mb-3">
+						<!-- Hidden fields for location data -->
+						<input type="hidden" id="address-country" name="address-country" />
+						<input
+							type="hidden"
+							id="address-postcode"
+							name="address-postcode"
+						/>
+						<input type="hidden" id="address-place" name="address-place" />
+						<input type="hidden" id="address-region" name="address-region" />
+						<input type="hidden" id="address-street" name="address-street" />
+						<input type="hidden" id="latitude" name="latitude" />
+						<input type="hidden" id="longitude" name="longitude" />
+						<input
+							type="hidden"
+							id="latlng-accuracy-type"
+							name="latlng-accuracy-type"
+						/>
+						<input
+							type="hidden"
+							id="latlng-accuracy-value"
+							name="latlng-accuracy-value"
+						/>
+						<div class="col-md-6">
+							<div class="mb-3 position-relative">
+								<address-input
+									placeholder="Start typing an address (min 3 characters)"
+									api-key="{{ .MapboxToken }}"
+								>
+								</address-input>
+							</div>
+						</div>
+					</div>
+
+					<p class="small text-muted mb-2">
+						You can also click on the map to mark the location precisely
+					</p>
+					<map-locator api-key="{{ .MapboxToken }}"></map-locator>
+					<input type="hidden" id="map-zoom" name="map-zoom" />
+				</div>
+
+				<button
+					id="toggle-additional"
+					class="btn btn-warning"
+					type="button"
+					onClick="toggleCollapse('collapse-additional-fields')"
+				>
+					Click here to answer a few more questions to better help us solve your
+					mosquito problem
+				</button>
+				<div class="collapse" id="collapse-additional-fields">
+					<!-- Source Details Section -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-water"></i>
+							<h3>Source Details</h3>
+						</div>
+
+						<div class="row mb-4">
+							<div class="col-md-6">
+								<label for="duration" class="form-label"
+									>How long has this production source been present?</label
+								>
+								<select
+									class="form-select"
+									id="duration"
+									name="source-duration"
+								>
+									<option value="none">I don't know</option>
+									<option value="less-than-week">Less than a week</option>
+									<option value="1-2-weeks">1-2 weeks</option>
+									<option value="2-4-weeks">2-4 weeks</option>
+									<option value="1-3-months">1-3 months</option>
+									<option value="more-than-3-months">More than 3 months</option>
+								</select>
+							</div>
+
+							<div class="col-md-6">
+								<label class="form-label d-block"
+									>Have you observed any of the following?
+									<a
+										href="#"
+										data-bs-toggle="modal"
+										data-bs-target="#larvaeInfoModal"
+										><i class="bi bi-question-circle small ms-1"></i></a
+								></label>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="larvae"
+										name="has-larvae"
+									/>
+									<label class="form-check-label" for="larvae">
+										Larvae (wigglers) in water
+									</label>
+								</div>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="pupae"
+										name="has-pupae"
+									/>
+									<label class="form-check-label" for="pupae">
+										Pupae (tumblers) in water
+									</label>
+								</div>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="adult"
+										name="has-adult"
+									/>
+									<label class="form-check-label" for="adult">
+										Adult mosquitoes near the source
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Access Information Section -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-unlock"></i>
+							<h3>Access Information</h3>
+						</div>
+						<p class="mb-3">
+							Please provide any details about how to access the mosquito
+							source. This helps our technicians when they visit the site.
+						</p>
+
+						<div class="row mb-3">
+							<div class="col-md-12">
+								<label for="access-comments" class="form-label"
+									>How can the source be accessed?</label
+								>
+								<textarea
+									class="form-control"
+									id="access-comments"
+									maxlength="1024"
+									name="access-comments"
+									rows="3"
+									placeholder="Example: The pool is in the backyard, which can be accessed through a side gate on the right side of the house."
+								></textarea>
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-12">
+								<label class="form-label d-block"
+									>Access obstacles (check all that apply):</label
+								>
+								<div class="row">
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="gate"
+												name="access-gate"
+											/>
+											<label class="form-check-label" for="gate">Gate</label>
+										</div>
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="fence"
+												name="access-fence"
+											/>
+											<label class="form-check-label" for="fence">Fence</label>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="locked"
+												name="access-locked"
+											/>
+											<label class="form-check-label" for="locked"
+												>Locked entrance</label
+											>
+										</div>
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="dogs"
+												name="access-dog"
+											/>
+											<label class="form-check-label" for="dogs"
+												>Dogs/pets</label
+											>
+										</div>
+									</div>
+									<div class="col-md-4">
+										<div class="form-check">
+											<input
+												class="form-check-input"
+												type="checkbox"
+												id="access-other"
+												name="access-other"
+											/>
+											<label class="form-check-label" for="access-other"
+												>Other obstacle</label
+											>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Contact Information Sections -->
+					<div class="form-section">
+						<div class="section-heading">
+							<i class="bi bi-person-lines-fill"></i>
+							<h3>Property Owner Information (if known)</h3>
+						</div>
+
+						<div class="row mb-4">
+							<div class="col-md-4 mb-3">
+								<label for="owner-name" class="form-label">Owner Name</label>
+								<input
+									type="text"
+									class="form-control"
+									id="owner-name"
+									maxlength="100"
+									name="owner-name"
+								/>
+							</div>
+							<div class="col-md-4 mb-3">
+								<label for="owner-phone" class="form-label">Owner Phone</label>
+								<input
+									type="tel"
+									class="form-control"
+									id="owner-phone"
+									maxlength="50"
+									name="owner-phone"
+								/>
+							</div>
+							<div class="col-md-4 mb-3">
+								<label for="owner-email" class="form-label">Owner Email</label>
+								<input
+									type="email"
+									class="form-control"
+									id="owner-email"
+									maxlength="100"
+									name="owner-email"
+								/>
+							</div>
+						</div>
+						<div class="row mb-4">
+							<div class="col-md-6 mb-3 row">
+								<div class="form-check mt-4">
+									<input
+										class="form-check-input"
+										id="property-ownership"
+										name="property-ownership"
+										type="checkbox"
+									/>
+									<label class="form-check-label" for="property-ownership"
+										>This is my property</label
+									>
+								</div>
+								<div class="form-check mt-4">
+									<input
+										class="form-check-input"
+										id="backyard-permission"
+										name="backyard-permission"
+										type="checkbox"
+									/>
+									<label class="form-check-label" for="backyard-permission"
+										>I grant permission to enter the back yard of this
+										property.</label
+									>
+								</div>
+								<div class="form-check mt-4">
+									<input
+										class="form-check-input"
+										id="reporter-confidential"
+										name="reporter-confidential"
+										type="checkbox"
+									/>
+									<label class="form-check-label" for="reporter-confidential">
+										<i
+											class="bi bi-info-circle-fill text-primary ms-1"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											title="We share your information with mosquito control districts so they can follow up with any questions they may have about your report. Check this box if you would like the district to be careful not to share your information outside of the district operations team."
+										></i>
+										I would like my personal information kept
+										confidential.</label
+									>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Submit Section -->
+				<div class="submit-container">
+					<div class="row align-items-center">
+						<div class="col-md-8">
+							<p class="mb-0">
+								<strong
+									>Thank you for helping us keep our community safe from
+									mosquito-borne illnesses.</strong
+								>
+							</p>
+							<p class="mb-0 small text-muted">
+								After submission, you will receive a confirmation with a report
+								ID for tracking purposes.
+							</p>
+						</div>
+						<div class="col-md-4 text-md-end mt-3 mt-md-0">
+							<button type="submit" class="btn btn-primary btn-lg">
+								Submit Report
+							</button>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</main>
+
+	<!-- Larvae Info Modal -->
+	<div
+		class="modal fade"
+		id="larvaeInfoModal"
+		tabindex="-1"
+		aria-labelledby="larvaeInfoModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="larvaeInfoModalLabel">
+						How to Identify Mosquito Larvae and Pupae
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
+				<div class="modal-body">
+					<div class="row mb-4">
+						<div class="col-md-6">
+							<h6>Mosquito Larvae (Wigglers)</h6>
+							<p>Mosquito larvae, often called "wigglers," are:</p>
+							<ul>
+								<li>Small, worm-like aquatic organisms</li>
+								<li>Usually 1/4 to 1/2 inch long</li>
+								<li>Move with a wiggling motion in water</li>
+								<li>Hang upside-down at the water surface to breathe</li>
+								<li>Visible to the naked eye in standing water</li>
+							</ul>
+						</div>
+						<div class="col-md-6">
+							<h6>Mosquito Pupae (Tumblers)</h6>
+							<p>Mosquito pupae, often called "tumblers," are:</p>
+							<ul>
+								<li>Comma-shaped organisms</li>
+								<li>Typically darker than larvae</li>
+								<li>Move with a tumbling motion when disturbed</li>
+								<li>Rest at the water surface</li>
+								<li>The stage just before adult mosquitoes emerge</li>
+							</ul>
+						</div>
+					</div>
+					<p>
+						When looking for mosquito larvae and pupae, check standing water
+						sources like:
+					</p>
+					<ul>
+						<li>Swimming pools</li>
+						<li>Bird baths</li>
+						<li>Buckets or containers</li>
+						<li>Drainage ditches</li>
+						<li>Plant saucers</li>
+						<li>Rain gutters</li>
+					</ul>
+					<p>
+						If you see small creatures moving in standing water, there's a good
+						chance they're mosquito larvae or pupae.
+					</p>
+					<div class="text-center">
+						<a href="#" class="btn btn-outline-primary"
+							>View Detailed Identification Guide</a
+						>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

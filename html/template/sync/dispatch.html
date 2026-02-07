@@ -1,0 +1,308 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Data Entry{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.tech-photo {
+			width: 50px;
+			height: 50px;
+			object-fit: cover;
+			border-radius: 50%;
+		}
+		.main-container {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+		.action-button {
+			padding: 15px 30px;
+			font-size: 1.2rem;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container-fluid p-4 main-container">
+		<h1 class="mb-4">Technician Routing & Dispatch</h1>
+
+		<div class="card mb-4">
+			<div class="card-header bg-primary text-white">
+				<h2 class="h4 mb-0">Technician Roster</h2>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle">
+						<thead class="table-light">
+							<tr>
+								<th>Technician</th>
+								<th>Working Hours</th>
+								<th>Truck Assignment</th>
+								<th>Warrant Service</th>
+								<th>Drone Certified</th>
+								<th>Routing Options</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<img
+											src="https://randomuser.me/api/portraits/men/32.jpg"
+											alt="John Davis"
+											class="tech-photo me-3"
+										/>
+										<div>
+											<div class="fw-bold">John Davis</div>
+											<div class="small text-muted">ID: T-1001</div>
+										</div>
+									</div>
+								</td>
+								<td>7:00 AM - 3:30 PM</td>
+								<td>Truck #103</td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td><span class="badge bg-danger">No</span></td>
+								<td>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="warrant-partner1"
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Require second person for warrant service"
+										/>
+										<label class="form-check-label" for="warrant-partner1"
+											>Warrant Partner</label
+										>
+									</div>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="resident-history1"
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Route to previously visited residents"
+										/>
+										<label class="form-check-label" for="resident-history1"
+											>Prior Interactions</label
+										>
+									</div>
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="include-route1"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Include in route calculations"
+										/>
+										<label class="form-check-label" for="include-route1"
+											>Include in Routes</label
+										>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<img
+											src="https://randomuser.me/api/portraits/women/65.jpg"
+											alt="Sarah Johnson"
+											class="tech-photo me-3"
+										/>
+										<div>
+											<div class="fw-bold">Sarah Johnson</div>
+											<div class="small text-muted">ID: T-1042</div>
+										</div>
+									</div>
+								</td>
+								<td>8:00 AM - 4:30 PM</td>
+								<td>Truck #118</td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="warrant-partner2"
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Require second person for warrant service"
+										/>
+										<label class="form-check-label" for="warrant-partner2"
+											>Warrant Partner</label
+										>
+									</div>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="resident-history2"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Route to previously visited residents"
+										/>
+										<label class="form-check-label" for="resident-history2"
+											>Prior Interactions</label
+										>
+									</div>
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="include-route2"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Include in route calculations"
+										/>
+										<label class="form-check-label" for="include-route2"
+											>Include in Routes</label
+										>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<img
+											src="https://randomuser.me/api/portraits/men/44.jpg"
+											alt="Michael Chen"
+											class="tech-photo me-3"
+										/>
+										<div>
+											<div class="fw-bold">Michael Chen</div>
+											<div class="small text-muted">ID: T-1019</div>
+										</div>
+									</div>
+								</td>
+								<td>6:30 AM - 3:00 PM</td>
+								<td>Truck #107</td>
+								<td><span class="badge bg-danger">No</span></td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="warrant-partner3"
+											disabled
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Require second person for warrant service"
+										/>
+										<label class="form-check-label" for="warrant-partner3"
+											>Warrant Partner</label
+										>
+									</div>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="resident-history3"
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Route to previously visited residents"
+										/>
+										<label class="form-check-label" for="resident-history3"
+											>Prior Interactions</label
+										>
+									</div>
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="include-route3"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Include in route calculations"
+										/>
+										<label class="form-check-label" for="include-route3"
+											>Include in Routes</label
+										>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<img
+											src="https://randomuser.me/api/portraits/women/22.jpg"
+											alt="Jessica Martinez"
+											class="tech-photo me-3"
+										/>
+										<div>
+											<div class="fw-bold">Jessica Martinez</div>
+											<div class="small text-muted">ID: T-1055</div>
+										</div>
+									</div>
+								</td>
+								<td>7:30 AM - 4:00 PM</td>
+								<td>Truck #112</td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td><span class="badge bg-success">Yes</span></td>
+								<td>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="warrant-partner4"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Require second person for warrant service"
+										/>
+										<label class="form-check-label" for="warrant-partner4"
+											>Warrant Partner</label
+										>
+									</div>
+									<div class="form-check mb-2">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="resident-history4"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Route to previously visited residents"
+										/>
+										<label class="form-check-label" for="resident-history4"
+											>Prior Interactions</label
+										>
+									</div>
+									<div class="form-check">
+										<input
+											class="form-check-input"
+											type="checkbox"
+											id="include-route4"
+											checked
+											data-bs-toggle="tooltip"
+											data-bs-placement="left"
+											title="Include in route calculations"
+										/>
+										<label class="form-check-label" for="include-route4"
+											>Include in Routes</label
+										>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<div class="d-grid gap-2 col-md-6 mx-auto">
+			<a
+				href="{{ .URLs.DispatchResults }}"
+				class="btn btn-primary btn-lg action-button"
+				type="button"
+			>
+				<i class="bi bi-calculator me-2"></i>Calculate Routes
+			</a>
+		</div>
+	</div>
+{{ end }}

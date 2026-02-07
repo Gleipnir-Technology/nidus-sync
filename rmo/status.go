@@ -61,11 +61,6 @@ type TimelineEntry struct {
 	Title  string
 }
 
-var (
-	Status     = buildTemplate("status", "base")
-	StatusByID = buildTemplate("status-by-id", "base")
-)
-
 func formatReportID(s string) string {
 	// truncate down if too long
 	if len(s) > 12 {
@@ -95,14 +90,14 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		URL:         makeContentURL(nil),
 	}
 	if report_id_str == "" {
-		html.RenderOrError(w, Status, content)
+		html.RenderOrError(w, "rmo/status.html", content)
 		return
 	}
 	report_id := sanitizeReportID(report_id_str)
 	report_id_str = formatReportID(report_id)
 	//some_report, e := report.FindSomeReport(r.Context(), report_id)
 	content.Error = "Sorry, we can't find that report"
-	html.RenderOrError(w, Status, content)
+	html.RenderOrError(w, "rmo/status.html", content)
 }
 func contentFromNuisance(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
 	nuisance, err := models.PublicreportNuisances.Query(
@@ -333,7 +328,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	content.URL = makeContentURL(nil)
 	html.RenderOrError(
 		w,
-		StatusByID,
+		"rmo/status-by-id.html",
 		content,
 	)
 }

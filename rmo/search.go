@@ -12,14 +12,10 @@ type ContentSearch struct {
 	URLTegola   string
 }
 
-var (
-	Search = buildTemplate("search", "base")
-)
-
 func getSearch(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
-		Search,
+		"rmo/search.html",
 		ContentSearch{
 			MapboxToken: config.MapboxToken,
 			URLTegola:   config.MakeURLTegola("/"),

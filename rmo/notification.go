@@ -10,10 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	registerNotificationsCompleteT = buildTemplate("register-notifications-complete", "base")
-)
-
 func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {

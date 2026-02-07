@@ -22,10 +22,6 @@ type ContentDistrictList struct {
 	URL       ContentURL
 }
 
-var (
-	DistrictListT = buildTemplate("district-list", "base")
-)
-
 func districtBySlug(r *http.Request) (*models.Organization, error) {
 	slug := chi.URLParam(r, "slug")
 	district, err := models.Organizations.Query(
@@ -49,7 +45,7 @@ func getDistrictList(w http.ResponseWriter, r *http.Request) {
 	}
 	html.RenderOrError(
 		w,
-		DistrictListT,
+		"rmo/district-list.html",
 		ContentDistrictList{
 			Districts: districts,
 			URL:       makeContentURL(nil),

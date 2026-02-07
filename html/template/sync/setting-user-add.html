@@ -1,0 +1,161 @@
+{{ template "sync/base.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.form-check-input.switch-lg {
+			width: 3em;
+			height: 1.5em;
+		}
+		.required-field::after {
+			content: " *";
+			color: red;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container py-5">
+		<div class="row justify-content-center">
+			<div class="col-lg-8">
+				<div class="card shadow">
+					<div class="card-header bg-white">
+						<div class="d-flex justify-content-between align-items-center">
+							<h3 class="mb-0">Add New User</h3>
+							<a
+								href="user-management.html"
+								class="btn btn-outline-secondary btn-sm"
+							>
+								<i class="bi bi-arrow-left me-1"></i> Back to Users
+							</a>
+						</div>
+					</div>
+					<div class="card-body">
+						<form id="addUserForm" class="needs-validation" novalidate>
+							<!-- Full Name -->
+							<div class="mb-3">
+								<label for="fullName" class="form-label required-field"
+									>Full Name</label
+								>
+								<input
+									type="text"
+									class="form-control"
+									id="fullName"
+									required
+								/>
+								<div class="invalid-feedback">
+									Please provide the user's full name.
+								</div>
+							</div>
+
+							<!-- Email Address -->
+							<div class="mb-3">
+								<label for="emailAddress" class="form-label required-field"
+									>Email Address</label
+								>
+								<input
+									type="email"
+									class="form-control"
+									id="emailAddress"
+									required
+								/>
+								<div class="invalid-feedback">
+									Please provide a valid email address.
+								</div>
+								<div class="form-text">
+									An invitation will be sent to this email address.
+								</div>
+							</div>
+
+							<!-- Username -->
+							<div class="mb-3">
+								<label for="username" class="form-label required-field"
+									>Username</label
+								>
+								<input
+									type="text"
+									class="form-control"
+									id="username"
+									required
+								/>
+								<div class="invalid-feedback">Please provide a username.</div>
+								<div class="form-text">
+									Username must be unique and contain only letters, numbers, and
+									underscores.
+								</div>
+							</div>
+
+							<div class="row">
+								<!-- Role -->
+								<div class="col-md-6 mb-3">
+									<label for="userRole" class="form-label required-field"
+										>Role</label
+									>
+									<select class="form-select" id="userRole" required>
+										<option value="" selected disabled>Select a role</option>
+										<option value="lead">Lead</option>
+										<option value="technician">Technician</option>
+										<option value="administrator">Administrator</option>
+									</select>
+									<div class="invalid-feedback">Please select a role.</div>
+								</div>
+
+								<!-- Initial Status -->
+								<div class="col-md-6 mb-3">
+									<label for="initialStatus" class="form-label"
+										>Initial Status</label
+									>
+									<select class="form-select" id="initialStatus">
+										<option value="invited" selected>Invited</option>
+										<option value="active">Active</option>
+									</select>
+								</div>
+							</div>
+
+							<!-- Permissions -->
+							<div class="mb-4">
+								<label class="form-label d-block">Permissions</label>
+								<div class="form-check form-switch">
+									<input
+										class="form-check-input switch-lg"
+										type="checkbox"
+										id="serveWarrants"
+									/>
+									<label class="form-check-label" for="serveWarrants">
+										Can serve warrants
+									</label>
+								</div>
+							</div>
+
+							<!-- Send welcome email checkbox -->
+							<div class="mb-4">
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="sendWelcomeEmail"
+										checked
+									/>
+									<label class="form-check-label" for="sendWelcomeEmail">
+										Send welcome email with login instructions
+									</label>
+								</div>
+							</div>
+
+							<hr />
+
+							<!-- Form actions -->
+							<div class="d-flex justify-content-end gap-2">
+								<a href="user-management.html" class="btn btn-secondary">
+									Cancel
+								</a>
+								<button type="submit" class="btn btn-primary">
+									<i class="bi bi-person-plus me-1"></i> Add User
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
