@@ -36,16 +36,15 @@ type templateSystemDisk struct {
 
 func LoadTemplates() error {
 	_, err := os.Stat("html/template")
-	if err == nil {
+	if err != nil {
 		templates = templateSystemDisk{
 			sourceFS: os.DirFS("./html/template"),
 		}
 	} else {
-		templates = templateSystemEmbed{
-			allTemplates: template.New("all"),
-			sourceFS:     embeddedFiles,
+		templates, err = newTemplateSystemEmbed()
+		if err != nil {
+			return fmt.Errorf("Failed to load embedded templates: %w", err)
 		}
-		templates.loadAll()
 	}
 	return nil
 }

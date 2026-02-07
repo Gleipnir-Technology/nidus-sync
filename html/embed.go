@@ -25,62 +25,121 @@ import (
 var embeddedFiles embed.FS
 
 type templateSystemEmbed struct {
-	allTemplates   *template.Template
 	nameToTemplate map[string]*template.Template
 	sourceFS       fs.FS
 }
 
+func newTemplateSystemEmbed() (templateSystemEmbed, error) {
+	ts := templateSystemEmbed{
+		sourceFS:       embeddedFiles,
+		nameToTemplate: make(map[string]*template.Template),
+	}
+
+	// Load all templates
+	if err := ts.loadAll(); err != nil {
+		return ts, err
+	}
+
+	return ts, nil
+}
 func (ts templateSystemEmbed) loadAll() error {
-	ts.nameToTemplate = make(map[string]*template.Template, 0)
-	err := fs.WalkDir(ts.sourceFS, "template", func(path string, d fs.DirEntry, err error) error {
+	// Then, parse all remaining templates into their named slots, adding the shared stuff
+	page_subdirs := []string{"template/sync"}
+	for _, subdir := range page_subdirs {
+		err := ts.loadTemplateSubdir(subdir)
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to load subdir '%s': %w", subdir, err)
 		}
-
-		if d.IsDir() {
-			return nil
-		}
-		short_path := removeLeadingDir(path)
-
-		new_t, err := loadTemplateEmbedded(ts.sourceFS, short_path)
-		if err != nil {
-			return fmt.Errorf("Failed to add load template '%s': %w", short_path, err)
-		}
-		_, err = ts.allTemplates.AddParseTree(new_t.Name(), new_t.Tree)
-		if err != nil {
-			return fmt.Errorf("Failed to add parsed template '%s': %w", path, err)
-		}
-		ts.nameToTemplate[short_path] = new_t
-		log.Debug().Str("path", path).Str("short_path", short_path).Msg("Loaded template")
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to load embeded templates: %w", err)
 	}
 	return nil
 }
+
+func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
+	err := fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+
+		content, err := fs.ReadFile(ts.sourceFS, path)
+		if err != nil {
+			return fmt.Errorf("error reading template %s: %w", path, err)
+		}
+
+		new_t := template.New(path)
+		addFuncMap(new_t)
+		_, err = new_t.Parse(string(content))
+		if err != nil {
+			return fmt.Errorf("error parsing '%s': %w", path, err)
+		}
+		short_path := removeLeadingDir(path)
+		shared_template_holder := template.New("shared")
+		shared_subdirs := []string{"template/sync/component", "template/sync/layout"}
+		for _, shared_subdir := range shared_subdirs {
+			err := ts.addSubdirTemplates(shared_template_holder, shared_subdir)
+			if err != nil {
+				return fmt.Errorf("Failed to add subdir '%s' templates: %w", shared_subdir, err)
+			}
+		}
+		if shared_template_holder.Tree == nil {
+			return fmt.Errorf("shared template holder tree is nil")
+		}
+		_, err = new_t.AddParseTree(short_path, shared_template_holder.Tree)
+		if err != nil {
+			return fmt.Errorf("error adding shared parse tree to '%s': %w", path, err)
+		}
+		log.Debug().Str("path", short_path).Msg("Loaded page template")
+		return nil
+	})
+	return err
+}
+
+func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir string) error {
+	var err error
+	log.Debug().Msg("Adding subdir templates")
+	err = fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+
+		content, err := fs.ReadFile(ts.sourceFS, path)
+		if err != nil {
+			return fmt.Errorf("error reading template %s: %w", path, err)
+		}
+
+		new_t := template.New(path)
+		addFuncMap(new_t)
+		_, err = new_t.Parse(string(content))
+		if err != nil {
+			return fmt.Errorf("error parsing '%s': %w", path, err)
+		}
+		short_path := removeLeadingDir(path)
+		_, err = t.AddParseTree(short_path, new_t.Tree)
+		if err != nil {
+			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
+		}
+		ts.nameToTemplate[short_path] = new_t
+		//log.Debug().Str("path", short_path).Msg("Loaded shared component template")
+		return nil
+	})
+	return err
+}
+
 func (ts templateSystemEmbed) renderOrError(w http.ResponseWriter, template_name string, context interface{}) {
 	buf := &bytes.Buffer{}
-	t, err := loadTemplateEmbedded(ts.sourceFS, template_name)
-	if err != nil {
-		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to load embedded template")
-		RespondError(w, "Failed to load template", err, http.StatusInternalServerError)
-		return
+
+	// Execute the template directly from the pre-parsed set
+	templ, ok := ts.nameToTemplate[template_name]
+	if !ok {
+		log.Error().Str("template_name", template_name).Msg("Can't find template")
+		RespondError(w, "Failed to render template", nil, http.StatusInternalServerError)
 	}
-	for name, templ := range ts.nameToTemplate {
-		_, err := t.AddParseTree(name, templ.Tree)
-		if err != nil {
-			log.Error().Err(err).Str("name", name).Msg("Failed to add parse tree")
-			RespondError(w, "Failed to add template", err, http.StatusInternalServerError)
-			return
-		}
-	}
-	err = t.ExecuteTemplate(buf, template_name, context)
+	err := templ.Execute(buf, context)
 	if err != nil {
-		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to render embedded template")
+		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to render template")
 		RespondError(w, "Failed to render template", err, http.StatusInternalServerError)
 		return
 	}
+
 	buf.WriteTo(w)
 }
 func loadTemplateEmbedded(sourceFS fs.FS, path string) (*template.Template, error) {
