@@ -1,31 +1,10 @@
-{{ template "sync/layout/base.html" . }}
-
-{{ define "title" }}Data Entry{{ end }}
+{{ template "sync/layout/authenticated.html" . }}
+{{ define "title" }}Layout Test{{ end }}
 {{ define "extraheader" }}
-	<style>
-		.upload-container {
-			max-width: 800px;
-			margin: 0 auto;
-		}
-		.schema-table {
-			font-size: 0.9rem;
-		}
-		.upload-area {
-			border: 2px dashed #dee2e6;
-			padding: 2rem;
-			text-align: center;
-			margin: 1.5rem 0;
-			border-radius: 5px;
-			background-color: #f8f9fa;
-		}
-		.required-field::after {
-			content: "*";
-			color: red;
-			margin-left: 3px;
-		}
-	</style>
+	<style></style>
 {{ end }}
 {{ define "content" }}
+	<!-- Main Content -->
 	<div class="container mt-4 upload-container">
 		<h2 class="mb-4">Upload Pool Data</h2>
 
@@ -78,7 +57,12 @@
 
 				<div class="alert alert-info small">
 					<i class="bi bi-info-circle"></i> Need a template?
-					<a href="#" class="alert-link">Download sample CSV file</a>
+					<a
+						href="{{ .URL.SamplePoolCSV }}"
+						class="alert-link"
+						download="nidus-pool-sample.csv"
+						>Download sample CSV file</a
+					>
 				</div>
 			</div>
 		</div>

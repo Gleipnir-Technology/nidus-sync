@@ -63,6 +63,7 @@ func Router() chi.Router {
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/layout-test", auth.NewEnsureAuth(getLayoutTest))
 	r.Method("GET", "/pool", auth.NewEnsureAuth(getPoolList))
+	r.Method("GET", "/pool/upload", auth.NewEnsureAuth(getPoolUpload))
 	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))

@@ -1,0 +1,9 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Pool List{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<h1>Pool list</h1>
+	<a class="btn btn-primary" href="{{ .URL.PoolCSVUpload }}">Do an upload</a>
+{{ end }}

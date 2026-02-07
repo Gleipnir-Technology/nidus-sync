@@ -1,0 +1,20 @@
+.upload-container {
+	max-width: 800px;
+	margin: 0 auto;
+}
+.schema-table {
+	font-size: 0.9rem;
+}
+.upload-area {
+	border: 2px dashed #dee2e6;
+	padding: 2rem;
+	text-align: center;
+	margin: 1.5rem 0;
+	border-radius: 5px;
+	background-color: #f8f9fa;
+}
+.required-field::after {
+	content: "*";
+	color: red;
+	margin-left: 3px;
+}
