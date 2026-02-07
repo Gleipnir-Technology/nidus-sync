@@ -5,7 +5,7 @@ class AddressOrReportInput extends HTMLElement {
 	constructor() {
 		super();
 
-		this.attachShadow({mode: "open" });
+		this.attachShadow({ mode: "open" });
 		this.internals = this.attachInternals();
 		this.render();
 
@@ -13,8 +13,10 @@ class AddressOrReportInput extends HTMLElement {
 		this._addresses = [];
 		this._input = this.shadowRoot.querySelector("input");
 		this._reports = [];
-		this._suggestionsContainer = this.shadowRoot.querySelector(".suggestions-container");
-		
+		this._suggestionsContainer = this.shadowRoot.querySelector(
+			".suggestions-container",
+		);
+
 		// Bind methods
 		this._handleInput = this._handleInput.bind(this);
 
@@ -32,30 +34,30 @@ class AddressOrReportInput extends HTMLElement {
 
 	// Lifecycle: when element is removed from the DOM
 	disconnectedCallback() {
-		this._input.removeEventListener('input', this._handleInput);
+		this._input.removeEventListener("input", this._handleInput);
 	}
 
 	// Lifecycle: watch these attributes for changes
 	static get observedAttributes() {
-		return ['placeholder', 'api-key'];
+		return ["placeholder", "api-key"];
 	}
 
 	// Lifecycle: respond to attribute changes
 	attributeChangedCallback(name, oldValue, newValue) {
-		if (name === 'placeholder' && this._input) {
+		if (name === "placeholder" && this._input) {
 			this._input.placeholder = newValue;
 		}
-		
-		if (name === 'api-key') {
+
+		if (name === "api-key") {
 			this._apiKey = newValue;
 		}
 	}
-	
+
 	// Properties API
 	get value() {
-		return this._input ? this._input.value : '';
+		return this._input ? this._input.value : "";
 	}
-	
+
 	set value(val) {
 		if (this._input) {
 			this._input.value = val;
@@ -65,42 +67,41 @@ class AddressOrReportInput extends HTMLElement {
 		}
 	}
 
-	 // Private methods
+	// Private methods
 	_handleInput(event) {
 		const searchText = event.target.value.trim();
 
 		// Clear previous timer
 		clearTimeout(this._debounceTimer);
-		
+
 		// Clear suggestions if input is less than 3 characters
 		if (searchText.length < 3) {
-			this._suggestionsContainer.innerHTML = '';
+			this._suggestionsContainer.innerHTML = "";
 			return;
 		}
-		
+
 		// Debounce API calls (wait 300ms after typing stops)
 		this._debounceTimer = setTimeout(() => {
 			this._handleSuggestions(searchText);
 		}, 300);
-		
 	}
 
 	async _fetchAddressSuggestions(text) {
 		try {
 			const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&access_token=${this._apiKey}`;
-			
+
 			const response = await fetch(url);
 			const data = await response.json();
 			return data.features || [];
 		} catch (error) {
-			console.error('Error fetching geocoding suggestions:', error);
+			console.error("Error fetching geocoding suggestions:", error);
 			return [];
 		}
 	}
 
 	async _fetchReportSuggestions(text) {
 		try {
-			const url = `/report/suggest?r=${text}`
+			const url = `/report/suggest?r=${text}`;
 			const response = await fetch(url);
 			const data = await response.json();
 			return data.reports || [];
@@ -112,10 +113,10 @@ class AddressOrReportInput extends HTMLElement {
 
 	async _handleSuggestions(text) {
 		await Promise.all([
-			(async() => {
+			(async () => {
 				this._addresses = await this._fetchAddressSuggestions(text);
 			})(),
-			(async() => {
+			(async () => {
 				this._reports = await this._fetchReportSuggestions(text);
 			})(),
 		]);
@@ -124,21 +125,24 @@ class AddressOrReportInput extends HTMLElement {
 
 	_renderSuggestions(addresses, reports) {
 		console.log("Rendering suggestions", addresses, reports);
-		const reportElements = reports.map((item, index) => {
-			const formatted_id = _formatReportID(item.id);
-			const type_display = _formatReportType(item.type);
-			return `
+		const reportElements = reports
+			.map((item, index) => {
+				const formatted_id = _formatReportID(item.id);
+				const type_display = _formatReportType(item.type);
+				return `
 				<div class="suggestion-item list-group-item"
 					data-index="${index}"
 					data-report-id="${item.id}"
 					data-type="report">
 						<div class="report-id">${formatted_id}</div>
 						<div class="report-type">${type_display}</div>
-				</div>`
-		}).join("");
-		const addressElements = addresses.map((item, index) => {
-			if (item.properties.place_formatted != "") {
-				return `
+				</div>`;
+			})
+			.join("");
+		const addressElements = addresses
+			.map((item, index) => {
+				if (item.properties.place_formatted != "") {
+					return `
 					<div class="suggestion-item list-group-item"
 						data-index="${index}"
 						data-lat="${item.geometry.coordinates[1]}"
@@ -146,9 +150,9 @@ class AddressOrReportInput extends HTMLElement {
 						data-type="address">
 							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
 							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`
-			} else {
-				return `
+					</div>`;
+				} else {
+					return `
 					<div class="suggestion-item list-group-item"
 						data-index="${index}"
 						data-lat="${item.coordinates.lat}"
@@ -156,13 +160,14 @@ class AddressOrReportInput extends HTMLElement {
 						data-type="address">
 							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
 							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`
-			}
-		}).join("");
+					</div>`;
+				}
+			})
+			.join("");
 		this._suggestionsContainer.innerHTML = reportElements + addressElements;
 		// Add click listeners to suggestions
-		this.shadowRoot.querySelectorAll('.suggestion-item').forEach(el => {
-			el.addEventListener('click', e => {
+		this.shadowRoot.querySelectorAll(".suggestion-item").forEach((el) => {
+			el.addEventListener("click", (e) => {
 				const type = el.dataset.type;
 				let detail = null;
 				if (type == "report") {
@@ -176,23 +181,25 @@ class AddressOrReportInput extends HTMLElement {
 					this.SetValue(detail);
 					// Dispatch custom event
 				}
-				this.dispatchEvent(new CustomEvent('suggestion-selected', {
-					bubbles: true,
-					composed: true, // Allows event to cross shadow DOM boundary
-					detail: detail,
-				}));
+				this.dispatchEvent(
+					new CustomEvent("suggestion-selected", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: detail,
+					}),
+				);
 			});
 		});
 	}
 
 	// Initial render of component
 	render() {
-		const placeholder = this.getAttribute('placeholder') || 'Enter address';
-		
+		const placeholder = this.getAttribute("placeholder") || "Enter address";
+
 		this.shadowRoot.innerHTML = `
 			<style>
 				@import url('/static/css/bootstrap.css');
-				@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+				@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css');
 				.detail-label {
 					font-size: 0.8rem;
 					text-transform: uppercase;
@@ -231,7 +238,7 @@ class AddressOrReportInput extends HTMLElement {
 			</style>
 			
 			<div class="input-group">
-				<span class="input-group-text"><i class="fas fa-search"></i></span>
+				<span class="input-group-text"><i class="bi bi-magnifying-glass"></i></span>
 				<input type="text" class="form-control form-control-lg" id="addressSearch" maxlength="200" name="address" placeholder="${placeholder}">
 				<div id="suggestions" class="suggestions-container list-group"></div>
 			</div>
@@ -241,14 +248,14 @@ class AddressOrReportInput extends HTMLElement {
 	// Public methods
 	clear() {
 		if (this._input) {
-			this._input.value = '';
-			this._suggestionsContainer.innerHTML = '';
+			this._input.value = "";
+			this._suggestionsContainer.innerHTML = "";
 		}
 	}
 
 	SetValue(suggestion) {
 		this.value = suggestion.properties.full_address;
-		this._suggestionsContainer.innerHTML = '';
+		this._suggestionsContainer.innerHTML = "";
 	}
 }
 
@@ -269,4 +276,4 @@ function _formatReportType(type) {
 	}
 }
 
-customElements.define('address-or-report-input', AddressOrReportInput);
+customElements.define("address-or-report-input", AddressOrReportInput);

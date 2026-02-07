@@ -38,6 +38,11 @@ $theme-colors: map-merge(
 	$custom-colors
 );
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @import "./bootstrap/scss/bootstrap";
 
 @import "./sidebar.scss";
