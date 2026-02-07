@@ -49,3 +49,5 @@ $theme-colors: map-merge(
 @import "./rmo/nuisance.scss";
 @import "./rmo/root.scss";
 @import "./rmo/status.scss";
+@import "./sync/dashboard.scss";
+@import "./sync/pool-csv-upload.scss";

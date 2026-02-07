@@ -7,58 +7,7 @@
 		href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css' rel='stylesheet"
 	/>
 	<script src="/static/js/map-aggregate.js"></script>
-	<style>
-		body {
-			background-color: #f8f9fa;
-		}
-		.dashboard-container {
-			padding: 20px 0;
-		}
-		.stats-card {
-			border-radius: 10px;
-			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-			transition: transform 0.2s;
-			height: 100%;
-		}
-		.stats-card:hover {
-			transform: translateY(-5px);
-		}
-		.section-title {
-			margin: 30px 0 20px;
-			padding-bottom: 10px;
-			border-bottom: 1px solid #dee2e6;
-		}
-		.last-refreshed {
-			color: #6c757d;
-		}
-		.logo-placeholder {
-			width: 100px;
-			height: 40px;
-			background-color: #e9ecef;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			border-radius: 4px;
-		}
-		.metric-icon {
-			font-size: 2rem;
-			margin-bottom: 10px;
-			display: inline-block;
-			width: 50px;
-			height: 50px;
-			line-height: 50px;
-			text-align: center;
-			border-radius: 50%;
-		}
-		.metric-value {
-			font-size: 2rem;
-			font-weight: bold;
-		}
-		.syncing {
-			color: #28a745;
-			animation: fa-spin 2s linear infinite;
-		}
-	</style>
+	<style></style>
 	<script>
 		function onLoad() {
 			const map = document.querySelector("map-aggregate");
@@ -70,7 +19,7 @@
 	</script>
 {{ end }}
 {{ define "content" }}
-	<div class="container dashboard-container">
+	<div id="content">
 		<!-- Dashboard Header -->
 		<div class="row mb-4">
 			<div class="col-md-6">
