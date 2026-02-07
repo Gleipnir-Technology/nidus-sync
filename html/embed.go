@@ -72,21 +72,14 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 			return fmt.Errorf("error parsing '%s': %w", path, err)
 		}
 		short_path := removeLeadingDir(path)
-		shared_template_holder := template.New("shared")
 		shared_subdirs := []string{"template/sync/component", "template/sync/layout"}
 		for _, shared_subdir := range shared_subdirs {
-			err := ts.addSubdirTemplates(shared_template_holder, shared_subdir)
+			err := ts.addSubdirTemplates(new_t, shared_subdir)
 			if err != nil {
 				return fmt.Errorf("Failed to add subdir '%s' templates: %w", shared_subdir, err)
 			}
 		}
-		if shared_template_holder.Tree == nil {
-			return fmt.Errorf("shared template holder tree is nil")
-		}
-		_, err = new_t.AddParseTree(short_path, shared_template_holder.Tree)
-		if err != nil {
-			return fmt.Errorf("error adding shared parse tree to '%s': %w", path, err)
-		}
+		ts.nameToTemplate[short_path] = new_t
 		log.Debug().Str("path", short_path).Msg("Loaded page template")
 		return nil
 	})
@@ -95,7 +88,7 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 
 func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir string) error {
 	var err error
-	log.Debug().Msg("Adding subdir templates")
+	//log.Debug().Msg("Adding subdir templates")
 	err = fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
@@ -117,8 +110,8 @@ func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir st
 		if err != nil {
 			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
 		}
-		ts.nameToTemplate[short_path] = new_t
-		//log.Debug().Str("path", short_path).Msg("Loaded shared component template")
+		//ts.nameToTemplate[short_path] = new_t
+		log.Debug().Str("path", short_path).Msg("Loaded shared component template")
 		return nil
 	})
 	return err
@@ -131,7 +124,8 @@ func (ts templateSystemEmbed) renderOrError(w http.ResponseWriter, template_name
 	templ, ok := ts.nameToTemplate[template_name]
 	if !ok {
 		log.Error().Str("template_name", template_name).Msg("Can't find template")
-		RespondError(w, "Failed to render template", nil, http.StatusInternalServerError)
+		RespondError(w, "Failed to find template", nil, http.StatusInternalServerError)
+		return
 	}
 	err := templ.Execute(buf, context)
 	if err != nil {

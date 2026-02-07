@@ -36,7 +36,7 @@ type templateSystemDisk struct {
 
 func LoadTemplates() error {
 	_, err := os.Stat("html/template")
-	if err != nil {
+	if err == nil {
 		templates = templateSystemDisk{
 			sourceFS: os.DirFS("./html/template"),
 		}
