@@ -57,14 +57,15 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	PublicUserUser    ArcgisUserSlice   // arcgis.user_.user__public_user_id_fkey
-	CreatorNoteAudios NoteAudioSlice    // note_audio.note_audio_creator_id_fkey
-	DeletorNoteAudios NoteAudioSlice    // note_audio.note_audio_deletor_id_fkey
-	CreatorNoteImages NoteImageSlice    // note_image.note_image_creator_id_fkey
-	DeletorNoteImages NoteImageSlice    // note_image.note_image_deletor_id_fkey
-	UserNotifications NotificationSlice // notification.notification_user_id_fkey
-	UserOauthTokens   OauthTokenSlice   // oauth_token.oauth_token_user_id_fkey
-	Organization      *Organization     // user_.user__organization_id_fkey
+	PublicUserUser    ArcgisUserSlice     // arcgis.user_.user__public_user_id_fkey
+	CreatorFiles      FileuploadFileSlice // fileupload.file.file_creator_id_fkey
+	CreatorNoteAudios NoteAudioSlice      // note_audio.note_audio_creator_id_fkey
+	DeletorNoteAudios NoteAudioSlice      // note_audio.note_audio_deletor_id_fkey
+	CreatorNoteImages NoteImageSlice      // note_image.note_image_creator_id_fkey
+	DeletorNoteImages NoteImageSlice      // note_image.note_image_deletor_id_fkey
+	UserNotifications NotificationSlice   // notification.notification_user_id_fkey
+	UserOauthTokens   OauthTokenSlice     // oauth_token.oauth_token_user_id_fkey
+	Organization      *Organization       // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -635,6 +636,30 @@ func (os UserSlice) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) Arcgis
 	)...)
 }
 
+// CreatorFiles starts a query for related objects on fileupload.file
+func (o *User) CreatorFiles(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQuery {
+	return FileuploadFiles.Query(append(mods,
+		sm.Where(FileuploadFiles.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorFiles(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return FileuploadFiles.Query(append(mods,
+		sm.Where(psql.Group(FileuploadFiles.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // CreatorNoteAudios starts a query for related objects on note_audio
 func (o *User) CreatorNoteAudios(mods ...bob.Mod[*dialect.SelectQuery]) NoteAudiosQuery {
 	return NoteAudios.Query(append(mods,
@@ -866,6 +891,74 @@ func (user0 *User) AttachPublicUserUser(ctx context.Context, exec bob.Executor, 
 
 	for _, rel := range related {
 		rel.R.PublicUserUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorFiles0(ctx context.Context, exec bob.Executor, fileuploadFiles1 []*FileuploadFileSetter, user0 *User) (FileuploadFileSlice, error) {
+	for i := range fileuploadFiles1 {
+		fileuploadFiles1[i].CreatorID = omit.From(user0.ID)
+	}
+
+	ret, err := FileuploadFiles.Insert(bob.ToMods(fileuploadFiles1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorFiles0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorFiles0(ctx context.Context, exec bob.Executor, count int, fileuploadFiles1 FileuploadFileSlice, user0 *User) (FileuploadFileSlice, error) {
+	setter := &FileuploadFileSetter{
+		CreatorID: omit.From(user0.ID),
+	}
+
+	err := fileuploadFiles1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorFiles0: %w", err)
+	}
+
+	return fileuploadFiles1, nil
+}
+
+func (user0 *User) InsertCreatorFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadFileSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	fileuploadFiles1, err := insertUserCreatorFiles0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFiles = append(user0.R.CreatorFiles, fileuploadFiles1...)
+
+	for _, rel := range fileuploadFiles1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadFile) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	fileuploadFiles1 := FileuploadFileSlice(related)
+
+	_, err = attachUserCreatorFiles0(ctx, exec, len(related), fileuploadFiles1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFiles = append(user0.R.CreatorFiles, fileuploadFiles1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
 	}
 
 	return nil
@@ -1383,6 +1476,20 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "CreatorFiles":
+		rels, ok := retrieved.(FileuploadFileSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorFiles = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "CreatorNoteAudios":
 		rels, ok := retrieved.(NoteAudioSlice)
 		if !ok {
@@ -1508,6 +1615,7 @@ func buildUserPreloader() userPreloader {
 
 type userThenLoader[Q orm.Loadable] struct {
 	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -1520,6 +1628,9 @@ type userThenLoader[Q orm.Loadable] struct {
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	type PublicUserUserLoadInterface interface {
 		LoadPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorFilesLoadInterface interface {
+		LoadCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorNoteAudiosLoadInterface interface {
 		LoadCreatorNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1548,6 +1659,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"PublicUserUser",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPublicUserUser(ctx, exec, mods...)
+			},
+		),
+		CreatorFiles: thenLoadBuilder[Q](
+			"CreatorFiles",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorFilesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorFiles(ctx, exec, mods...)
 			},
 		),
 		CreatorNoteAudios: thenLoadBuilder[Q](
@@ -1650,6 +1767,67 @@ func (os UserSlice) LoadPublicUserUser(ctx context.Context, exec bob.Executor, m
 			rel.R.PublicUserUser = o
 
 			o.R.PublicUserUser = append(o.R.PublicUserUser, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorFiles loads the user's CreatorFiles into the .R struct
+func (o *User) LoadCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorFiles = nil
+
+	related, err := o.CreatorFiles(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorFiles = related
+	return nil
+}
+
+// LoadCreatorFiles loads the user's CreatorFiles into the .R struct
+func (os UserSlice) LoadCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	fileuploadFiles, err := os.CreatorFiles(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorFiles = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range fileuploadFiles {
+
+			if !(o.ID == rel.CreatorID) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorFiles = append(o.R.CreatorFiles, rel)
 		}
 	}
 
@@ -2083,6 +2261,7 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 // userC is where relationship counts are stored.
 type userC struct {
 	PublicUserUser    *int64
+	CreatorFiles      *int64
 	CreatorNoteAudios *int64
 	DeletorNoteAudios *int64
 	CreatorNoteImages *int64
@@ -2100,6 +2279,8 @@ func (o *User) PreloadCount(name string, count int64) error {
 	switch name {
 	case "PublicUserUser":
 		o.C.PublicUserUser = &count
+	case "CreatorFiles":
+		o.C.CreatorFiles = &count
 	case "CreatorNoteAudios":
 		o.C.CreatorNoteAudios = &count
 	case "DeletorNoteAudios":
@@ -2118,6 +2299,7 @@ func (o *User) PreloadCount(name string, count int64) error {
 
 type userCountPreloader struct {
 	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -2140,6 +2322,23 @@ func buildUserCountPreloader() userCountPreloader {
 
 					sm.From(ArcgisUsers.Name()),
 					sm.Where(psql.Quote(ArcgisUsers.Alias(), "public_user_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		CreatorFiles: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorFiles", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(FileuploadFiles.Name()),
+					sm.Where(psql.Quote(FileuploadFiles.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -2252,6 +2451,7 @@ func buildUserCountPreloader() userCountPreloader {
 
 type userCountThenLoader[Q orm.Loadable] struct {
 	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -2263,6 +2463,9 @@ type userCountThenLoader[Q orm.Loadable] struct {
 func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 	type PublicUserUserCountInterface interface {
 		LoadCountPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorFilesCountInterface interface {
+		LoadCountCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorNoteAudiosCountInterface interface {
 		LoadCountCreatorNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2288,6 +2491,12 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 			"PublicUserUser",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountPublicUserUser(ctx, exec, mods...)
+			},
+		),
+		CreatorFiles: countThenLoadBuilder[Q](
+			"CreatorFiles",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorFiles(ctx, exec, mods...)
 			},
 		),
 		CreatorNoteAudios: countThenLoadBuilder[Q](
@@ -2352,6 +2561,36 @@ func (os UserSlice) LoadCountPublicUserUser(ctx context.Context, exec bob.Execut
 
 	for _, o := range os {
 		if err := o.LoadCountPublicUserUser(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountCreatorFiles loads the count of CreatorFiles into the C struct
+func (o *User) LoadCountCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorFiles(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorFiles = &count
+	return nil
+}
+
+// LoadCountCreatorFiles loads the count of CreatorFiles for a slice
+func (os UserSlice) LoadCountCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorFiles(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -2542,6 +2781,7 @@ func (os UserSlice) LoadCountUserOauthTokens(ctx context.Context, exec bob.Execu
 type userJoins[Q dialect.Joinable] struct {
 	typ               string
 	PublicUserUser    modAs[Q, arcgisuserColumns]
+	CreatorFiles      modAs[Q, fileuploadFileColumns]
 	CreatorNoteAudios modAs[Q, noteAudioColumns]
 	DeletorNoteAudios modAs[Q, noteAudioColumns]
 	CreatorNoteImages modAs[Q, noteImageColumns]
@@ -2566,6 +2806,20 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, ArcgisUsers.Name().As(to.Alias())).On(
 						to.PublicUserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorFiles: modAs[Q, fileuploadFileColumns]{
+			c: FileuploadFiles.Columns,
+			f: func(to fileuploadFileColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
+						to.CreatorID.EQ(cols.ID),
 					))
 				}
 

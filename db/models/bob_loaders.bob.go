@@ -55,6 +55,9 @@ type preloaders struct {
 	FieldseekerZone                   fieldseekerZonePreloader
 	FieldseekerZones2                 fieldseekerZones2Preloader
 	FieldseekerSync                   fieldseekerSyncPreloader
+	FileuploadCSV                     fileuploadCSVPreloader
+	FileuploadError                   fileuploadErrorPreloader
+	FileuploadFile                    fileuploadFilePreloader
 	H3Aggregation                     h3AggregationPreloader
 	ImportDistrict                    importDistrictPreloader
 	NoteAudio                         noteAudioPreloader
@@ -121,6 +124,9 @@ func getPreloaders() preloaders {
 		FieldseekerZone:                   buildFieldseekerZonePreloader(),
 		FieldseekerZones2:                 buildFieldseekerZones2Preloader(),
 		FieldseekerSync:                   buildFieldseekerSyncPreloader(),
+		FileuploadCSV:                     buildFileuploadCSVPreloader(),
+		FileuploadError:                   buildFileuploadErrorPreloader(),
+		FileuploadFile:                    buildFileuploadFilePreloader(),
 		H3Aggregation:                     buildH3AggregationPreloader(),
 		ImportDistrict:                    buildImportDistrictPreloader(),
 		NoteAudio:                         buildNoteAudioPreloader(),
@@ -193,6 +199,9 @@ type thenLoaders[Q orm.Loadable] struct {
 	FieldseekerZone                   fieldseekerZoneThenLoader[Q]
 	FieldseekerZones2                 fieldseekerZones2ThenLoader[Q]
 	FieldseekerSync                   fieldseekerSyncThenLoader[Q]
+	FileuploadCSV                     fileuploadCSVThenLoader[Q]
+	FileuploadError                   fileuploadErrorThenLoader[Q]
+	FileuploadFile                    fileuploadFileThenLoader[Q]
 	H3Aggregation                     h3AggregationThenLoader[Q]
 	ImportDistrict                    importDistrictThenLoader[Q]
 	NoteAudio                         noteAudioThenLoader[Q]
@@ -259,6 +268,9 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FieldseekerZone:                   buildFieldseekerZoneThenLoader[Q](),
 		FieldseekerZones2:                 buildFieldseekerZones2ThenLoader[Q](),
 		FieldseekerSync:                   buildFieldseekerSyncThenLoader[Q](),
+		FileuploadCSV:                     buildFileuploadCSVThenLoader[Q](),
+		FileuploadError:                   buildFileuploadErrorThenLoader[Q](),
+		FileuploadFile:                    buildFileuploadFileThenLoader[Q](),
 		H3Aggregation:                     buildH3AggregationThenLoader[Q](),
 		ImportDistrict:                    buildImportDistrictThenLoader[Q](),
 		NoteAudio:                         buildNoteAudioThenLoader[Q](),

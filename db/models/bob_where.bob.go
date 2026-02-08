@@ -55,6 +55,9 @@ func Where[Q psql.Filterable]() struct {
 	FieldseekerZones                   fieldseekerZoneWhere[Q]
 	FieldseekerZones2s                 fieldseekerZones2Where[Q]
 	FieldseekerSyncs                   fieldseekerSyncWhere[Q]
+	FileuploadCSVS                     fileuploadCSVWhere[Q]
+	FileuploadErrors                   fileuploadErrorWhere[Q]
+	FileuploadFiles                    fileuploadFileWhere[Q]
 	GeographyColumns                   geographyColumnWhere[Q]
 	GeometryColumns                    geometryColumnWhere[Q]
 	GooseDBVersions                    gooseDBVersionWhere[Q]
@@ -127,6 +130,9 @@ func Where[Q psql.Filterable]() struct {
 		FieldseekerZones                   fieldseekerZoneWhere[Q]
 		FieldseekerZones2s                 fieldseekerZones2Where[Q]
 		FieldseekerSyncs                   fieldseekerSyncWhere[Q]
+		FileuploadCSVS                     fileuploadCSVWhere[Q]
+		FileuploadErrors                   fileuploadErrorWhere[Q]
+		FileuploadFiles                    fileuploadFileWhere[Q]
 		GeographyColumns                   geographyColumnWhere[Q]
 		GeometryColumns                    geometryColumnWhere[Q]
 		GooseDBVersions                    gooseDBVersionWhere[Q]
@@ -198,6 +204,9 @@ func Where[Q psql.Filterable]() struct {
 		FieldseekerZones:                   buildFieldseekerZoneWhere[Q](FieldseekerZones.Columns),
 		FieldseekerZones2s:                 buildFieldseekerZones2Where[Q](FieldseekerZones2s.Columns),
 		FieldseekerSyncs:                   buildFieldseekerSyncWhere[Q](FieldseekerSyncs.Columns),
+		FileuploadCSVS:                     buildFileuploadCSVWhere[Q](FileuploadCSVS.Columns),
+		FileuploadErrors:                   buildFileuploadErrorWhere[Q](FileuploadErrors.Columns),
+		FileuploadFiles:                    buildFileuploadFileWhere[Q](FileuploadFiles.Columns),
 		GeographyColumns:                   buildGeographyColumnWhere[Q](GeographyColumns.Columns),
 		GeometryColumns:                    buildGeometryColumnWhere[Q](GeometryColumns.Columns),
 		GooseDBVersions:                    buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),

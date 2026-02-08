@@ -17,6 +17,7 @@ psql:
   schemas:
     - "arcgis"
     - "comms"
+    - "fileupload"
     - "import"
     - "public"
     - "publicreport"

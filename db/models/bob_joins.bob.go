@@ -70,6 +70,9 @@ type joins[Q dialect.Joinable] struct {
 	FieldseekerZones                   joinSet[fieldseekerZoneJoins[Q]]
 	FieldseekerZones2s                 joinSet[fieldseekerZones2Joins[Q]]
 	FieldseekerSyncs                   joinSet[fieldseekerSyncJoins[Q]]
+	FileuploadCSVS                     joinSet[fileuploadCSVJoins[Q]]
+	FileuploadErrors                   joinSet[fileuploadErrorJoins[Q]]
+	FileuploadFiles                    joinSet[fileuploadFileJoins[Q]]
 	H3Aggregations                     joinSet[h3AggregationJoins[Q]]
 	ImportDistricts                    joinSet[importDistrictJoins[Q]]
 	NoteAudios                         joinSet[noteAudioJoins[Q]]
@@ -144,6 +147,9 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FieldseekerZones:                   buildJoinSet[fieldseekerZoneJoins[Q]](FieldseekerZones.Columns, buildFieldseekerZoneJoins),
 		FieldseekerZones2s:                 buildJoinSet[fieldseekerZones2Joins[Q]](FieldseekerZones2s.Columns, buildFieldseekerZones2Joins),
 		FieldseekerSyncs:                   buildJoinSet[fieldseekerSyncJoins[Q]](FieldseekerSyncs.Columns, buildFieldseekerSyncJoins),
+		FileuploadCSVS:                     buildJoinSet[fileuploadCSVJoins[Q]](FileuploadCSVS.Columns, buildFileuploadCSVJoins),
+		FileuploadErrors:                   buildJoinSet[fileuploadErrorJoins[Q]](FileuploadErrors.Columns, buildFileuploadErrorJoins),
+		FileuploadFiles:                    buildJoinSet[fileuploadFileJoins[Q]](FileuploadFiles.Columns, buildFileuploadFileJoins),
 		H3Aggregations:                     buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
 		ImportDistricts:                    buildJoinSet[importDistrictJoins[Q]](ImportDistricts.Columns, buildImportDistrictJoins),
 		NoteAudios:                         buildJoinSet[noteAudioJoins[Q]](NoteAudios.Columns, buildNoteAudioJoins),

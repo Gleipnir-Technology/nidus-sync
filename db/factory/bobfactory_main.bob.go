@@ -57,6 +57,9 @@ type Factory struct {
 	baseFieldseekerZoneMods                   FieldseekerZoneModSlice
 	baseFieldseekerZones2Mods                 FieldseekerZones2ModSlice
 	baseFieldseekerSyncMods                   FieldseekerSyncModSlice
+	baseFileuploadCSVMods                     FileuploadCSVModSlice
+	baseFileuploadErrorMods                   FileuploadErrorModSlice
+	baseFileuploadFileMods                    FileuploadFileModSlice
 	baseGeographyColumnMods                   GeographyColumnModSlice
 	baseGeometryColumnMods                    GeometryColumnModSlice
 	baseGooseDBVersionMods                    GooseDBVersionModSlice
@@ -2229,6 +2232,111 @@ func (f *Factory) FromExistingFieldseekerSync(m *models.FieldseekerSync) *Fields
 	return o
 }
 
+func (f *Factory) NewFileuploadCSV(mods ...FileuploadCSVMod) *FileuploadCSVTemplate {
+	return f.NewFileuploadCSVWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadCSVWithContext(ctx context.Context, mods ...FileuploadCSVMod) *FileuploadCSVTemplate {
+	o := &FileuploadCSVTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadCSVMods.Apply(ctx, o)
+	}
+
+	FileuploadCSVModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFileuploadCSV(m *models.FileuploadCSV) *FileuploadCSVTemplate {
+	o := &FileuploadCSVTemplate{f: f, alreadyPersisted: true}
+
+	o.FileID = func() int32 { return m.FileID }
+	o.Type = func() enums.FileuploadCsvtype { return m.Type }
+
+	ctx := context.Background()
+	if m.R.File != nil {
+		FileuploadCSVMods.WithExistingFile(m.R.File).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewFileuploadError(mods ...FileuploadErrorMod) *FileuploadErrorTemplate {
+	return f.NewFileuploadErrorWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadErrorWithContext(ctx context.Context, mods ...FileuploadErrorMod) *FileuploadErrorTemplate {
+	o := &FileuploadErrorTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadErrorMods.Apply(ctx, o)
+	}
+
+	FileuploadErrorModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFileuploadError(m *models.FileuploadError) *FileuploadErrorTemplate {
+	o := &FileuploadErrorTemplate{f: f, alreadyPersisted: true}
+
+	o.FileID = func() int32 { return m.FileID }
+	o.ID = func() int32 { return m.ID }
+	o.Line = func() int32 { return m.Line }
+	o.Message = func() string { return m.Message }
+
+	ctx := context.Background()
+	if m.R.File != nil {
+		FileuploadErrorMods.WithExistingFile(m.R.File).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewFileuploadFile(mods ...FileuploadFileMod) *FileuploadFileTemplate {
+	return f.NewFileuploadFileWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadFileWithContext(ctx context.Context, mods ...FileuploadFileMod) *FileuploadFileTemplate {
+	o := &FileuploadFileTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadFileMods.Apply(ctx, o)
+	}
+
+	FileuploadFileModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *FileuploadFileTemplate {
+	o := &FileuploadFileTemplate{f: f, alreadyPersisted: true}
+
+	o.ID = func() int32 { return m.ID }
+	o.ContentType = func() string { return m.ContentType }
+	o.Created = func() time.Time { return m.Created }
+	o.CreatorID = func() int32 { return m.CreatorID }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.Name = func() string { return m.Name }
+	o.Status = func() enums.FileuploadFilestatustype { return m.Status }
+	o.SizeBytes = func() int32 { return m.SizeBytes }
+	o.FileUUID = func() uuid.UUID { return m.FileUUID }
+
+	ctx := context.Background()
+	if m.R.CSV != nil {
+		FileuploadFileMods.WithExistingCSV(m.R.CSV).Apply(ctx, o)
+	}
+	if len(m.R.Errors) > 0 {
+		FileuploadFileMods.AddExistingErrors(m.R.Errors...).Apply(ctx, o)
+	}
+	if m.R.CreatorUser != nil {
+		FileuploadFileMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewGeographyColumn(mods ...GeographyColumnMod) *GeographyColumnTemplate {
 	return f.NewGeographyColumnWithContext(context.Background(), mods...)
 }
@@ -3545,6 +3653,9 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.PublicUserUser) > 0 {
 		UserMods.AddExistingPublicUserUser(m.R.PublicUserUser...).Apply(ctx, o)
 	}
+	if len(m.R.CreatorFiles) > 0 {
+		UserMods.AddExistingCreatorFiles(m.R.CreatorFiles...).Apply(ctx, o)
+	}
 	if len(m.R.CreatorNoteAudios) > 0 {
 		UserMods.AddExistingCreatorNoteAudios(m.R.CreatorNoteAudios...).Apply(ctx, o)
 	}
@@ -3872,6 +3983,30 @@ func (f *Factory) ClearBaseFieldseekerSyncMods() {
 
 func (f *Factory) AddBaseFieldseekerSyncMod(mods ...FieldseekerSyncMod) {
 	f.baseFieldseekerSyncMods = append(f.baseFieldseekerSyncMods, mods...)
+}
+
+func (f *Factory) ClearBaseFileuploadCSVMods() {
+	f.baseFileuploadCSVMods = nil
+}
+
+func (f *Factory) AddBaseFileuploadCSVMod(mods ...FileuploadCSVMod) {
+	f.baseFileuploadCSVMods = append(f.baseFileuploadCSVMods, mods...)
+}
+
+func (f *Factory) ClearBaseFileuploadErrorMods() {
+	f.baseFileuploadErrorMods = nil
+}
+
+func (f *Factory) AddBaseFileuploadErrorMod(mods ...FileuploadErrorMod) {
+	f.baseFileuploadErrorMods = append(f.baseFileuploadErrorMods, mods...)
+}
+
+func (f *Factory) ClearBaseFileuploadFileMods() {
+	f.baseFileuploadFileMods = nil
+}
+
+func (f *Factory) AddBaseFileuploadFileMod(mods ...FileuploadFileMod) {
+	f.baseFileuploadFileMods = append(f.baseFileuploadFileMods, mods...)
 }
 
 func (f *Factory) ClearBaseGeographyColumnMods() {

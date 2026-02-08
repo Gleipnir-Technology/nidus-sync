@@ -173,6 +173,20 @@ var (
 	fieldseekerSyncWithParentsCascadingCtx = newContextual[bool]("fieldseekerSyncWithParentsCascading")
 	fieldseekerSyncRelOrganizationCtx      = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
 
+	// Relationship Contexts for fileupload.csv
+	fileuploadCSVWithParentsCascadingCtx = newContextual[bool]("fileuploadCSVWithParentsCascading")
+	fileuploadCSVRelFileCtx              = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
+
+	// Relationship Contexts for fileupload.error
+	fileuploadErrorWithParentsCascadingCtx = newContextual[bool]("fileuploadErrorWithParentsCascading")
+	fileuploadErrorRelFileCtx              = newContextual[bool]("fileupload.error.fileupload.file.fileupload.error.error_file_id_fkey")
+
+	// Relationship Contexts for fileupload.file
+	fileuploadFileWithParentsCascadingCtx = newContextual[bool]("fileuploadFileWithParentsCascading")
+	fileuploadFileRelCSVCtx               = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
+	fileuploadFileRelErrorsCtx            = newContextual[bool]("fileupload.error.fileupload.file.fileupload.error.error_file_id_fkey")
+	fileuploadFileRelCreatorUserCtx       = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
+
 	// Relationship Contexts for geography_columns
 	geographyColumnWithParentsCascadingCtx = newContextual[bool]("geographyColumnWithParentsCascading")
 
@@ -354,6 +368,7 @@ var (
 	// Relationship Contexts for user_
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
 	userRelPublicUserUserCtx    = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
+	userRelCreatorFilesCtx      = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
 	userRelCreatorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_creator_id_fkey")
 	userRelDeletorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_deletor_id_fkey")
 	userRelCreatorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_creator_id_fkey")

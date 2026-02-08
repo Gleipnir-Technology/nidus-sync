@@ -59,6 +59,7 @@ type UserTemplate struct {
 
 type userR struct {
 	PublicUserUser    []*userRPublicUserUserR
+	CreatorFiles      []*userRCreatorFilesR
 	CreatorNoteAudios []*userRCreatorNoteAudiosR
 	DeletorNoteAudios []*userRDeletorNoteAudiosR
 	CreatorNoteImages []*userRCreatorNoteImagesR
@@ -71,6 +72,10 @@ type userR struct {
 type userRPublicUserUserR struct {
 	number int
 	o      *ArcgisUserTemplate
+}
+type userRCreatorFilesR struct {
+	number int
+	o      *FileuploadFileTemplate
 }
 type userRCreatorNoteAudiosR struct {
 	number int
@@ -121,6 +126,19 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.PublicUserUser = rel
+	}
+
+	if t.r.CreatorFiles != nil {
+		rel := models.FileuploadFileSlice{}
+		for _, r := range t.r.CreatorFiles {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CreatorID = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorFiles = rel
 	}
 
 	if t.r.CreatorNoteAudios != nil {
@@ -388,6 +406,26 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
+	isCreatorFilesDone, _ := userRelCreatorFilesCtx.Value(ctx)
+	if !isCreatorFilesDone && o.r.CreatorFiles != nil {
+		ctx = userRelCreatorFilesCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorFiles {
+			if r.o.alreadyPersisted {
+				m.R.CreatorFiles = append(m.R.CreatorFiles, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorFiles(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isCreatorNoteAudiosDone, _ := userRelCreatorNoteAudiosCtx.Value(ctx)
 	if !isCreatorNoteAudiosDone && o.r.CreatorNoteAudios != nil {
 		ctx = userRelCreatorNoteAudiosCtx.WithValue(ctx, true)
@@ -395,12 +433,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteAudios = append(m.R.CreatorNoteAudios, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteAudios(ctx, exec, rel1...)
+				err = m.AttachCreatorNoteAudios(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -415,12 +453,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteAudios = append(m.R.DeletorNoteAudios, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteAudios(ctx, exec, rel2...)
+				err = m.AttachDeletorNoteAudios(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -435,12 +473,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteImages = append(m.R.CreatorNoteImages, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteImages(ctx, exec, rel3...)
+				err = m.AttachCreatorNoteImages(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -455,12 +493,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteImages = append(m.R.DeletorNoteImages, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteImages(ctx, exec, rel4...)
+				err = m.AttachDeletorNoteImages(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -475,12 +513,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserNotifications = append(m.R.UserNotifications, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserNotifications(ctx, exec, rel5...)
+				err = m.AttachUserNotifications(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -495,12 +533,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserOauthTokens(ctx, exec, rel6...)
+				err = m.AttachUserOauthTokens(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -522,25 +560,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel7 *models.Organization
+	var rel8 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel7 = o.r.Organization.o.Build()
+		rel8 = o.r.Organization.o.Build()
 	} else {
-		rel7, err = o.r.Organization.o.Create(ctx, exec)
+		rel8, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel7.ID)
+	opt.OrganizationID = omit.From(rel8.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel7
+	m.R.Organization = rel8
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1227,6 +1265,54 @@ func (m userMods) AddExistingPublicUserUser(existingModels ...*models.ArcgisUser
 func (m userMods) WithoutPublicUserUser() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.PublicUserUser = nil
+	})
+}
+
+func (m userMods) WithCreatorFiles(number int, related *FileuploadFileTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorFiles = []*userRCreatorFilesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorFiles(number int, mods ...FileuploadFileMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewFileuploadFileWithContext(ctx, mods...)
+		m.WithCreatorFiles(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorFiles(number int, related *FileuploadFileTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorFiles = append(o.r.CreatorFiles, &userRCreatorFilesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorFiles(number int, mods ...FileuploadFileMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewFileuploadFileWithContext(ctx, mods...)
+		m.AddCreatorFiles(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorFiles(existingModels ...*models.FileuploadFile) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorFiles = append(o.r.CreatorFiles, &userRCreatorFilesR{
+				o: o.f.FromExistingFileuploadFile(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorFiles() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorFiles = nil
 	})
 }
 

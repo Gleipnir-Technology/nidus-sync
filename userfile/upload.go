@@ -13,10 +13,9 @@ import (
 
 type FileUpload struct {
 	ContentType string
-
-	UploadFilesize int
-	UploadFilename string
-	UUID           uuid.UUID
+	Name        string
+	SizeBytes   int
+	UUID        uuid.UUID
 }
 
 func SaveFileUpload(r *http.Request, name string, subdir string, extension string) ([]FileUpload, error) {
@@ -69,9 +68,9 @@ func saveFileUpload(headers *multipart.FileHeader, subdir string, extension stri
 	}
 	log.Info().Int("size", len(file_bytes)).Str("uploaded_filename", headers.Filename).Str("content-type", content_type).Str("uuid", u.String()).Msg("Saved an uploaded file to disk")
 	return FileUpload{
-		ContentType:    content_type,
-		UploadFilename: headers.Filename,
-		UploadFilesize: len(file_bytes),
-		UUID:           u,
+		ContentType: content_type,
+		Name:        headers.Filename,
+		SizeBytes:   len(file_bytes),
+		UUID:        u,
 	}, nil
 }

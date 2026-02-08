@@ -141,6 +141,26 @@ func random_enums_CommsTextorigin(f *faker.Faker, limits ...string) enums.CommsT
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_FileuploadCsvtype(f *faker.Faker, limits ...string) enums.FileuploadCsvtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.FileuploadCsvtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_FileuploadFilestatustype(f *faker.Faker, limits ...string) enums.FileuploadFilestatustype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.FileuploadFilestatustype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_H3aggregationtype(f *faker.Faker, limits ...string) enums.H3aggregationtype {
 	if f == nil {
 		f = &defaultFaker

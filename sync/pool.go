@@ -1,10 +1,13 @@
 package sync
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
-	"net/http"
 )
 
 type ContentPoolList struct {
@@ -52,5 +55,15 @@ func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	images, err := saveImageUploads(r.Context(), tx, uploads)
+	if len(uploads) == 0 {
+		respondError(w, "No upload found", nil, http.StatusBadRequest)
+		return
+	}
+	if len(uploads) != 1 {
+		respondError(w, "You must only submit one file at a time", nil, http.StatusBadRequest)
+		return
+	}
+	upload := uploads[0]
+	pool_upload, err := platform.NewPoolUpload(r.Context(), u, upload)
+	http.Redirect(w, r, fmt.Sprintf("/pool/upload/%d", pool_upload.ID), http.StatusFound)
 }

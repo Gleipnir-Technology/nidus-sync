@@ -579,6 +579,149 @@ func (e *CommsTextorigin) Scan(value any) error {
 	return nil
 }
 
+// Enum values for FileuploadCsvtype
+const (
+	FileuploadCsvtypePoollist FileuploadCsvtype = "PoolList"
+)
+
+func AllFileuploadCsvtype() []FileuploadCsvtype {
+	return []FileuploadCsvtype{
+		FileuploadCsvtypePoollist,
+	}
+}
+
+type FileuploadCsvtype string
+
+func (e FileuploadCsvtype) String() string {
+	return string(e)
+}
+
+func (e FileuploadCsvtype) Valid() bool {
+	switch e {
+	case FileuploadCsvtypePoollist:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e FileuploadCsvtype) All() []FileuploadCsvtype {
+	return AllFileuploadCsvtype()
+}
+
+func (e FileuploadCsvtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadCsvtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e FileuploadCsvtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadCsvtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e FileuploadCsvtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *FileuploadCsvtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = FileuploadCsvtype(x)
+	case []byte:
+		*e = FileuploadCsvtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into FileuploadCsvtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid FileuploadCsvtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for FileuploadFilestatustype
+const (
+	FileuploadFilestatustypeUploaded FileuploadFilestatustype = "uploaded"
+	FileuploadFilestatustypeParsed   FileuploadFilestatustype = "parsed"
+)
+
+func AllFileuploadFilestatustype() []FileuploadFilestatustype {
+	return []FileuploadFilestatustype{
+		FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeParsed,
+	}
+}
+
+type FileuploadFilestatustype string
+
+func (e FileuploadFilestatustype) String() string {
+	return string(e)
+}
+
+func (e FileuploadFilestatustype) Valid() bool {
+	switch e {
+	case FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeParsed:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e FileuploadFilestatustype) All() []FileuploadFilestatustype {
+	return AllFileuploadFilestatustype()
+}
+
+func (e FileuploadFilestatustype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadFilestatustype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e FileuploadFilestatustype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadFilestatustype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e FileuploadFilestatustype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *FileuploadFilestatustype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = FileuploadFilestatustype(x)
+	case []byte:
+		*e = FileuploadFilestatustype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into FileuploadFilestatustype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid FileuploadFilestatustype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for H3aggregationtype
 const (
 	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"
