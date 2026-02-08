@@ -20,12 +20,27 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 		return fmt.Errorf("Failed to get filereader for %d: %w", file_id, err)
 	}
 	reader := csv.NewReader(r)
-	records, err := reader.ReadAll()
+	header, err := reader.Read()
 	if err != nil {
-		return fmt.Errorf("Failed to read all CSV records for file %d: %w", file_id, err)
+		return fmt.Errorf("Failed to read header of CSV for file %d: %w", file_id, err)
 	}
-	for _, rec := range records {
-		log.Debug().Strs("rec", rec).Msg("Line")
+	err = validateHeader(header)
+	if err != nil {
+		addImportError(file, err)
 	}
+	for {
+		row, err := reader.Read()
+		if err != nil {
+			return fmt.Errorf("Failed to read all CSV records for file %d: %w", file_id, err)
+		}
+		log.Debug().Strs("row", row).Msg("Line")
+	}
+	return nil
+}
+
+func addImportError(file *models.FileuploadFile, err error) {
+	log.Debug().Err(err).Int32("file_id", file.ID).Msg("Fake add import error")
+}
+func validateHeader(row []string) error {
 	return nil
 }
