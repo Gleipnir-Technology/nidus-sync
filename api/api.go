@@ -68,7 +68,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 		return
 	}
-	err = userfile.AudioFileContentWrite(audioUUID, r.Body)
+	err = userfile.FileContentWrite(r.Body, userfile.CollectionAudioRaw, audioUUID)
 	if err != nil {
 		log.Printf("Failed to write content file: %v", err)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)

@@ -62,7 +62,7 @@ func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
 		return
 	}
-	uploads, err := userfile.SaveFileUpload(r, "csvfile", "pool", "csv")
+	uploads, err := userfile.SaveFileUpload(r, "csvfile", userfile.CollectionCSV)
 	if err != nil {
 		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return

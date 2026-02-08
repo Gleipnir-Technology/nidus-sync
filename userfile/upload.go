@@ -18,7 +18,7 @@ type FileUpload struct {
 	UUID        uuid.UUID
 }
 
-func SaveFileUpload(r *http.Request, name string, subdir string, extension string) ([]FileUpload, error) {
+func SaveFileUpload(r *http.Request, name string, collection Collection) ([]FileUpload, error) {
 	results := make([]FileUpload, 0)
 	for n, fheaders := range r.MultipartForm.File {
 		log.Debug().Str("n", n).Msg("looking at header")
@@ -26,7 +26,7 @@ func SaveFileUpload(r *http.Request, name string, subdir string, extension strin
 			continue
 		}
 		for _, headers := range fheaders {
-			f, err := saveFileUpload(headers, subdir, extension)
+			f, err := saveFileUpload(headers, collection)
 			if err != nil {
 				return results, fmt.Errorf("Failed to extract photo upload: %w", err)
 			}
@@ -35,11 +35,11 @@ func SaveFileUpload(r *http.Request, name string, subdir string, extension strin
 	}
 	return results, nil
 }
-func saveFileUploads(r *http.Request, subdir string, extension string) ([]FileUpload, error) {
+func saveFileUploads(r *http.Request, collection Collection) ([]FileUpload, error) {
 	results := make([]FileUpload, 0)
 	for name, fheaders := range r.MultipartForm.File {
 		for _, headers := range fheaders {
-			upload, err := saveFileUpload(headers, subdir, extension)
+			upload, err := saveFileUpload(headers, collection)
 			if err != nil {
 				return results, fmt.Errorf("Failed to save upload '%s': %w", name, err)
 			}
@@ -48,7 +48,7 @@ func saveFileUploads(r *http.Request, subdir string, extension string) ([]FileUp
 	}
 	return results, nil
 }
-func saveFileUpload(headers *multipart.FileHeader, subdir string, extension string) (upload FileUpload, err error) {
+func saveFileUpload(headers *multipart.FileHeader, collection Collection) (upload FileUpload, err error) {
 	file, err := headers.Open()
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
@@ -62,7 +62,7 @@ func saveFileUpload(headers *multipart.FileHeader, subdir string, extension stri
 	if err != nil {
 		return upload, fmt.Errorf("Failed to create uuid", err)
 	}
-	err = fileContentWrite(bytes.NewReader(file_bytes), subdir, u, extension)
+	err = FileContentWrite(bytes.NewReader(file_bytes), collection, u)
 	if err != nil {
 		return upload, fmt.Errorf("Failed to write file to disk: %w", err)
 	}

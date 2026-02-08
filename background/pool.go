@@ -4,6 +4,7 @@ import (
 	"context"
 	//"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/platform/csv"
 	//"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -16,10 +17,6 @@ type jobImportCSVPool struct {
 
 var channelJobImportCSVPool chan jobImportCSVPool
 
-func processCSVJob(file_id int32) error {
-	log.Debug().Int32("file_id", file_id).Msg("Fake processing CSV job")
-	return nil
-}
 func startWorkerCSV(ctx context.Context, channelJobImport chan jobImportCSVPool) {
 	go func() {
 		for {
@@ -29,7 +26,7 @@ func startWorkerCSV(ctx context.Context, channelJobImport chan jobImportCSVPool)
 				return
 			case job := <-channelJobImport:
 				log.Info().Int32("id", job.fileID).Msg("Processing CSV job")
-				err := processCSVJob(job.fileID)
+				err := csv.ProcessJob(job.fileID)
 				if err != nil {
 					log.Error().Err(err).Int32("id", job.fileID).Msg("Error processing CSV file")
 				}

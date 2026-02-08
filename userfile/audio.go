@@ -13,7 +13,7 @@ import (
 
 func NormalizeAudio(audioUUID uuid.UUID) error {
 	//source := AudioFileContentPathRaw(audioUUID.String())
-	source := fileContentPath("user", audioUUID, "m4a")
+	source := fileContentPath(CollectionAudioRaw, audioUUID)
 	_, err := os.Stat(source)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Warn().Str("source", source).Msg("file doesn't exist, skipping normalization")
@@ -47,7 +47,7 @@ func TranscodeToOgg(audioUUID uuid.UUID) error {
 	}
 	log.Info().Str("source", source).Msg("Transcoding to ogg")
 	//destination := userfile.AudioFileContentPathOgg(audioUUID.String())
-	destination := fileContentPath("user", audioUUID, "ogg")
+	destination := fileContentPath(CollectionAudioTranscoded, audioUUID)
 	// Use "ffmpeg" directly, assuming it's in the system PATH
 	cmd := exec.Command("ffmpeg", "-i", source, "-vn", "-acodec", "libvorbis", destination)
 	out, err := cmd.CombinedOutput()
@@ -65,5 +65,5 @@ func TranscodeToOgg(audioUUID uuid.UUID) error {
 
 func fileContentPathAudioNormalized(u uuid.UUID) string {
 	//destination := AudioFileContentPathNormalized(audioUUID.String())
-	return fileContentPath("user", u, "normalized.m4a")
+	return fileContentPath(CollectionAudioNormalized, u)
 }
