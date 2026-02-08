@@ -69,6 +69,15 @@ var FileuploadFiles = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Status: column{
 			Name:      "status",
 			DBType:    "fileupload.filestatustype",
@@ -131,26 +140,36 @@ var FileuploadFiles = Table[
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
+		FileuploadFileFileOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "fileupload.file.file_organization_id_fkey",
+				Columns: []string{"organization_id"},
+				Comment: "",
+			},
+			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
 	},
 
 	Comment: "",
 }
 
 type fileuploadFileColumns struct {
-	ID          column
-	ContentType column
-	Created     column
-	CreatorID   column
-	Deleted     column
-	Name        column
-	Status      column
-	SizeBytes   column
-	FileUUID    column
+	ID             column
+	ContentType    column
+	Created        column
+	CreatorID      column
+	Deleted        column
+	Name           column
+	OrganizationID column
+	Status         column
+	SizeBytes      column
+	FileUUID       column
 }
 
 func (c fileuploadFileColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.Status, c.SizeBytes, c.FileUUID,
+		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.OrganizationID, c.Status, c.SizeBytes, c.FileUUID,
 	}
 }
 
@@ -165,12 +184,13 @@ func (i fileuploadFileIndexes) AsSlice() []index {
 }
 
 type fileuploadFileForeignKeys struct {
-	FileuploadFileFileCreatorIDFkey foreignKey
+	FileuploadFileFileCreatorIDFkey      foreignKey
+	FileuploadFileFileOrganizationIDFkey foreignKey
 }
 
 func (f fileuploadFileForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.FileuploadFileFileCreatorIDFkey,
+		f.FileuploadFileFileCreatorIDFkey, f.FileuploadFileFileOrganizationIDFkey,
 	}
 }
 

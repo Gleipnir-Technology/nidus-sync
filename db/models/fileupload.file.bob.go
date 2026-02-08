@@ -28,15 +28,16 @@ import (
 
 // FileuploadFile is an object representing the database table.
 type FileuploadFile struct {
-	ID          int32                          `db:"id,pk" `
-	ContentType string                         `db:"content_type" `
-	Created     time.Time                      `db:"created" `
-	CreatorID   int32                          `db:"creator_id" `
-	Deleted     null.Val[time.Time]            `db:"deleted" `
-	Name        string                         `db:"name" `
-	Status      enums.FileuploadFilestatustype `db:"status" `
-	SizeBytes   int32                          `db:"size_bytes" `
-	FileUUID    uuid.UUID                      `db:"file_uuid" `
+	ID             int32                          `db:"id,pk" `
+	ContentType    string                         `db:"content_type" `
+	Created        time.Time                      `db:"created" `
+	CreatorID      int32                          `db:"creator_id" `
+	Deleted        null.Val[time.Time]            `db:"deleted" `
+	Name           string                         `db:"name" `
+	OrganizationID int32                          `db:"organization_id" `
+	Status         enums.FileuploadFilestatustype `db:"status" `
+	SizeBytes      int32                          `db:"size_bytes" `
+	FileUUID       uuid.UUID                      `db:"file_uuid" `
 
 	R fileuploadFileR `db:"-" `
 
@@ -55,41 +56,44 @@ type FileuploadFilesQuery = *psql.ViewQuery[*FileuploadFile, FileuploadFileSlice
 
 // fileuploadFileR is where relationships are stored.
 type fileuploadFileR struct {
-	CSV         *FileuploadCSV       // fileupload.csv.csv_file_id_fkey
-	Errors      FileuploadErrorSlice // fileupload.error.error_file_id_fkey
-	CreatorUser *User                // fileupload.file.file_creator_id_fkey
+	CSV          *FileuploadCSV       // fileupload.csv.csv_file_id_fkey
+	Errors       FileuploadErrorSlice // fileupload.error.error_file_id_fkey
+	CreatorUser  *User                // fileupload.file.file_creator_id_fkey
+	Organization *Organization        // fileupload.file.file_organization_id_fkey
 }
 
 func buildFileuploadFileColumns(alias string) fileuploadFileColumns {
 	return fileuploadFileColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "content_type", "created", "creator_id", "deleted", "name", "status", "size_bytes", "file_uuid",
+			"id", "content_type", "created", "creator_id", "deleted", "name", "organization_id", "status", "size_bytes", "file_uuid",
 		).WithParent("fileupload.file"),
-		tableAlias:  alias,
-		ID:          psql.Quote(alias, "id"),
-		ContentType: psql.Quote(alias, "content_type"),
-		Created:     psql.Quote(alias, "created"),
-		CreatorID:   psql.Quote(alias, "creator_id"),
-		Deleted:     psql.Quote(alias, "deleted"),
-		Name:        psql.Quote(alias, "name"),
-		Status:      psql.Quote(alias, "status"),
-		SizeBytes:   psql.Quote(alias, "size_bytes"),
-		FileUUID:    psql.Quote(alias, "file_uuid"),
+		tableAlias:     alias,
+		ID:             psql.Quote(alias, "id"),
+		ContentType:    psql.Quote(alias, "content_type"),
+		Created:        psql.Quote(alias, "created"),
+		CreatorID:      psql.Quote(alias, "creator_id"),
+		Deleted:        psql.Quote(alias, "deleted"),
+		Name:           psql.Quote(alias, "name"),
+		OrganizationID: psql.Quote(alias, "organization_id"),
+		Status:         psql.Quote(alias, "status"),
+		SizeBytes:      psql.Quote(alias, "size_bytes"),
+		FileUUID:       psql.Quote(alias, "file_uuid"),
 	}
 }
 
 type fileuploadFileColumns struct {
 	expr.ColumnsExpr
-	tableAlias  string
-	ID          psql.Expression
-	ContentType psql.Expression
-	Created     psql.Expression
-	CreatorID   psql.Expression
-	Deleted     psql.Expression
-	Name        psql.Expression
-	Status      psql.Expression
-	SizeBytes   psql.Expression
-	FileUUID    psql.Expression
+	tableAlias     string
+	ID             psql.Expression
+	ContentType    psql.Expression
+	Created        psql.Expression
+	CreatorID      psql.Expression
+	Deleted        psql.Expression
+	Name           psql.Expression
+	OrganizationID psql.Expression
+	Status         psql.Expression
+	SizeBytes      psql.Expression
+	FileUUID       psql.Expression
 }
 
 func (c fileuploadFileColumns) Alias() string {
@@ -104,19 +108,20 @@ func (fileuploadFileColumns) AliasedAs(alias string) fileuploadFileColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FileuploadFileSetter struct {
-	ID          omit.Val[int32]                          `db:"id,pk" `
-	ContentType omit.Val[string]                         `db:"content_type" `
-	Created     omit.Val[time.Time]                      `db:"created" `
-	CreatorID   omit.Val[int32]                          `db:"creator_id" `
-	Deleted     omitnull.Val[time.Time]                  `db:"deleted" `
-	Name        omit.Val[string]                         `db:"name" `
-	Status      omit.Val[enums.FileuploadFilestatustype] `db:"status" `
-	SizeBytes   omit.Val[int32]                          `db:"size_bytes" `
-	FileUUID    omit.Val[uuid.UUID]                      `db:"file_uuid" `
+	ID             omit.Val[int32]                          `db:"id,pk" `
+	ContentType    omit.Val[string]                         `db:"content_type" `
+	Created        omit.Val[time.Time]                      `db:"created" `
+	CreatorID      omit.Val[int32]                          `db:"creator_id" `
+	Deleted        omitnull.Val[time.Time]                  `db:"deleted" `
+	Name           omit.Val[string]                         `db:"name" `
+	OrganizationID omit.Val[int32]                          `db:"organization_id" `
+	Status         omit.Val[enums.FileuploadFilestatustype] `db:"status" `
+	SizeBytes      omit.Val[int32]                          `db:"size_bytes" `
+	FileUUID       omit.Val[uuid.UUID]                      `db:"file_uuid" `
 }
 
 func (s FileuploadFileSetter) SetColumns() []string {
-	vals := make([]string, 0, 9)
+	vals := make([]string, 0, 10)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -134,6 +139,9 @@ func (s FileuploadFileSetter) SetColumns() []string {
 	}
 	if s.Name.IsValue() {
 		vals = append(vals, "name")
+	}
+	if s.OrganizationID.IsValue() {
+		vals = append(vals, "organization_id")
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
@@ -166,6 +174,9 @@ func (s FileuploadFileSetter) Overwrite(t *FileuploadFile) {
 	if s.Name.IsValue() {
 		t.Name = s.Name.MustGet()
 	}
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
+	}
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
@@ -183,7 +194,7 @@ func (s *FileuploadFileSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 9)
+		vals := make([]bob.Expression, 10)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -220,22 +231,28 @@ func (s *FileuploadFileSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[6] = psql.Arg(s.Status.MustGet())
+		if s.OrganizationID.IsValue() {
+			vals[6] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.SizeBytes.IsValue() {
-			vals[7] = psql.Arg(s.SizeBytes.MustGet())
+		if s.Status.IsValue() {
+			vals[7] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.FileUUID.IsValue() {
-			vals[8] = psql.Arg(s.FileUUID.MustGet())
+		if s.SizeBytes.IsValue() {
+			vals[8] = psql.Arg(s.SizeBytes.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
+		}
+
+		if s.FileUUID.IsValue() {
+			vals[9] = psql.Arg(s.FileUUID.MustGet())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -247,7 +264,7 @@ func (s FileuploadFileSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FileuploadFileSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 9)
+	exprs := make([]bob.Expression, 0, 10)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -288,6 +305,13 @@ func (s FileuploadFileSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "name")...),
 			psql.Arg(s.Name),
+		}})
+	}
+
+	if s.OrganizationID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "organization_id")...),
+			psql.Arg(s.OrganizationID),
 		}})
 	}
 
@@ -610,6 +634,30 @@ func (os FileuploadFileSlice) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery])
 	)...)
 }
 
+// Organization starts a query for related objects on organization
+func (o *FileuploadFile) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
+	)...)
+}
+
+func (os FileuploadFileSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertFileuploadFileCSV0(ctx context.Context, exec bob.Executor, fileuploadCSV1 *FileuploadCSVSetter, fileuploadFile0 *FileuploadFile) (*FileuploadCSV, error) {
 	fileuploadCSV1.FileID = omit.From(fileuploadFile0.ID)
 
@@ -780,16 +828,65 @@ func (fileuploadFile0 *FileuploadFile) AttachCreatorUser(ctx context.Context, ex
 	return nil
 }
 
+func attachFileuploadFileOrganization0(ctx context.Context, exec bob.Executor, count int, fileuploadFile0 *FileuploadFile, organization1 *Organization) (*FileuploadFile, error) {
+	setter := &FileuploadFileSetter{
+		OrganizationID: omit.From(organization1.ID),
+	}
+
+	err := fileuploadFile0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachFileuploadFileOrganization0: %w", err)
+	}
+
+	return fileuploadFile0, nil
+}
+
+func (fileuploadFile0 *FileuploadFile) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := Organizations.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachFileuploadFileOrganization0(ctx, exec, 1, fileuploadFile0, organization1)
+	if err != nil {
+		return err
+	}
+
+	fileuploadFile0.R.Organization = organization1
+
+	organization1.R.Files = append(organization1.R.Files, fileuploadFile0)
+
+	return nil
+}
+
+func (fileuploadFile0 *FileuploadFile) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachFileuploadFileOrganization0(ctx, exec, 1, fileuploadFile0, organization1)
+	if err != nil {
+		return err
+	}
+
+	fileuploadFile0.R.Organization = organization1
+
+	organization1.R.Files = append(organization1.R.Files, fileuploadFile0)
+
+	return nil
+}
+
 type fileuploadFileWhere[Q psql.Filterable] struct {
-	ID          psql.WhereMod[Q, int32]
-	ContentType psql.WhereMod[Q, string]
-	Created     psql.WhereMod[Q, time.Time]
-	CreatorID   psql.WhereMod[Q, int32]
-	Deleted     psql.WhereNullMod[Q, time.Time]
-	Name        psql.WhereMod[Q, string]
-	Status      psql.WhereMod[Q, enums.FileuploadFilestatustype]
-	SizeBytes   psql.WhereMod[Q, int32]
-	FileUUID    psql.WhereMod[Q, uuid.UUID]
+	ID             psql.WhereMod[Q, int32]
+	ContentType    psql.WhereMod[Q, string]
+	Created        psql.WhereMod[Q, time.Time]
+	CreatorID      psql.WhereMod[Q, int32]
+	Deleted        psql.WhereNullMod[Q, time.Time]
+	Name           psql.WhereMod[Q, string]
+	OrganizationID psql.WhereMod[Q, int32]
+	Status         psql.WhereMod[Q, enums.FileuploadFilestatustype]
+	SizeBytes      psql.WhereMod[Q, int32]
+	FileUUID       psql.WhereMod[Q, uuid.UUID]
 }
 
 func (fileuploadFileWhere[Q]) AliasedAs(alias string) fileuploadFileWhere[Q] {
@@ -798,15 +895,16 @@ func (fileuploadFileWhere[Q]) AliasedAs(alias string) fileuploadFileWhere[Q] {
 
 func buildFileuploadFileWhere[Q psql.Filterable](cols fileuploadFileColumns) fileuploadFileWhere[Q] {
 	return fileuploadFileWhere[Q]{
-		ID:          psql.Where[Q, int32](cols.ID),
-		ContentType: psql.Where[Q, string](cols.ContentType),
-		Created:     psql.Where[Q, time.Time](cols.Created),
-		CreatorID:   psql.Where[Q, int32](cols.CreatorID),
-		Deleted:     psql.WhereNull[Q, time.Time](cols.Deleted),
-		Name:        psql.Where[Q, string](cols.Name),
-		Status:      psql.Where[Q, enums.FileuploadFilestatustype](cols.Status),
-		SizeBytes:   psql.Where[Q, int32](cols.SizeBytes),
-		FileUUID:    psql.Where[Q, uuid.UUID](cols.FileUUID),
+		ID:             psql.Where[Q, int32](cols.ID),
+		ContentType:    psql.Where[Q, string](cols.ContentType),
+		Created:        psql.Where[Q, time.Time](cols.Created),
+		CreatorID:      psql.Where[Q, int32](cols.CreatorID),
+		Deleted:        psql.WhereNull[Q, time.Time](cols.Deleted),
+		Name:           psql.Where[Q, string](cols.Name),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
+		Status:         psql.Where[Q, enums.FileuploadFilestatustype](cols.Status),
+		SizeBytes:      psql.Where[Q, int32](cols.SizeBytes),
+		FileUUID:       psql.Where[Q, uuid.UUID](cols.FileUUID),
 	}
 }
 
@@ -854,14 +952,27 @@ func (o *FileuploadFile) Preload(name string, retrieved any) error {
 			rel.R.CreatorFiles = FileuploadFileSlice{o}
 		}
 		return nil
+	case "Organization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("fileuploadFile cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.Files = FileuploadFileSlice{o}
+		}
+		return nil
 	default:
 		return fmt.Errorf("fileuploadFile has no relationship %q", name)
 	}
 }
 
 type fileuploadFilePreloader struct {
-	CSV         func(...psql.PreloadOption) psql.Preloader
-	CreatorUser func(...psql.PreloadOption) psql.Preloader
+	CSV          func(...psql.PreloadOption) psql.Preloader
+	CreatorUser  func(...psql.PreloadOption) psql.Preloader
+	Organization func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildFileuploadFilePreloader() fileuploadFilePreloader {
@@ -892,13 +1003,27 @@ func buildFileuploadFilePreloader() fileuploadFilePreloader {
 				},
 			}, Users.Columns.Names(), opts...)
 		},
+		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "Organization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        FileuploadFiles,
+						To:          Organizations,
+						FromColumns: []string{"organization_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
 	}
 }
 
 type fileuploadFileThenLoader[Q orm.Loadable] struct {
-	CSV         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Errors      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSV          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Errors       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorUser  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q] {
@@ -910,6 +1035,9 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 	}
 	type CreatorUserLoadInterface interface {
 		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type OrganizationLoadInterface interface {
+		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return fileuploadFileThenLoader[Q]{
@@ -929,6 +1057,12 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 			"CreatorUser",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorUser(ctx, exec, mods...)
+			},
+		),
+		Organization: thenLoadBuilder[Q](
+			"Organization",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganization(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1099,6 +1233,58 @@ func (os FileuploadFileSlice) LoadCreatorUser(ctx context.Context, exec bob.Exec
 	return nil
 }
 
+// LoadOrganization loads the fileuploadFile's Organization into the .R struct
+func (o *FileuploadFile) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organization = nil
+
+	related, err := o.Organization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Files = FileuploadFileSlice{o}
+
+	o.R.Organization = related
+	return nil
+}
+
+// LoadOrganization loads the fileuploadFile's Organization into the .R struct
+func (os FileuploadFileSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.Organization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+
+			if !(o.OrganizationID == rel.ID) {
+				continue
+			}
+
+			rel.R.Files = append(rel.R.Files, o)
+
+			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
 // fileuploadFileC is where relationship counts are stored.
 type fileuploadFileC struct {
 	Errors *int64
@@ -1193,10 +1379,11 @@ func (os FileuploadFileSlice) LoadCountErrors(ctx context.Context, exec bob.Exec
 }
 
 type fileuploadFileJoins[Q dialect.Joinable] struct {
-	typ         string
-	CSV         modAs[Q, fileuploadCSVColumns]
-	Errors      modAs[Q, fileuploadErrorColumns]
-	CreatorUser modAs[Q, userColumns]
+	typ          string
+	CSV          modAs[Q, fileuploadCSVColumns]
+	Errors       modAs[Q, fileuploadErrorColumns]
+	CreatorUser  modAs[Q, userColumns]
+	Organization modAs[Q, organizationColumns]
 }
 
 func (j fileuploadFileJoins[Q]) aliasedAs(alias string) fileuploadFileJoins[Q] {
@@ -1242,6 +1429,20 @@ func buildFileuploadFileJoins[Q dialect.Joinable](cols fileuploadFileColumns, ty
 				{
 					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.CreatorID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Organization: modAs[Q, organizationColumns]{
+			c: Organizations.Columns,
+			f: func(to organizationColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.OrganizationID),
 					))
 				}
 

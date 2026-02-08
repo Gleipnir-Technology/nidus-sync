@@ -85,6 +85,7 @@ type organizationR struct {
 	Zones                     FieldseekerZoneSlice                   // fieldseeker.zones.zones_organization_id_fkey
 	Zones2s                   FieldseekerZones2Slice                 // fieldseeker.zones2.zones2_organization_id_fkey
 	FieldseekerSyncs          FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
+	Files                     FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
 	H3Aggregations            H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
 	NoteAudios                NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
 	NoteImages                NoteImageSlice                         // note_image.note_image_organization_id_fkey
@@ -1300,6 +1301,30 @@ func (os OrganizationSlice) FieldseekerSyncs(mods ...bob.Mod[*dialect.SelectQuer
 
 	return FieldseekerSyncs.Query(append(mods,
 		sm.Where(psql.Group(FieldseekerSyncs.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Files starts a query for related objects on fileupload.file
+func (o *Organization) Files(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQuery {
+	return FileuploadFiles.Query(append(mods,
+		sm.Where(FileuploadFiles.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Files(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return FileuploadFiles.Query(append(mods,
+		sm.Where(psql.Group(FileuploadFiles.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -3529,6 +3554,74 @@ func (organization0 *Organization) AttachFieldseekerSyncs(ctx context.Context, e
 	return nil
 }
 
+func insertOrganizationFiles0(ctx context.Context, exec bob.Executor, fileuploadFiles1 []*FileuploadFileSetter, organization0 *Organization) (FileuploadFileSlice, error) {
+	for i := range fileuploadFiles1 {
+		fileuploadFiles1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := FileuploadFiles.Insert(bob.ToMods(fileuploadFiles1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationFiles0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationFiles0(ctx context.Context, exec bob.Executor, count int, fileuploadFiles1 FileuploadFileSlice, organization0 *Organization) (FileuploadFileSlice, error) {
+	setter := &FileuploadFileSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := fileuploadFiles1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationFiles0: %w", err)
+	}
+
+	return fileuploadFiles1, nil
+}
+
+func (organization0 *Organization) InsertFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadFileSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	fileuploadFiles1, err := insertOrganizationFiles0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Files = append(organization0.R.Files, fileuploadFiles1...)
+
+	for _, rel := range fileuploadFiles1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadFile) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	fileuploadFiles1 := FileuploadFileSlice(related)
+
+	_, err = attachOrganizationFiles0(ctx, exec, len(related), fileuploadFiles1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Files = append(organization0.R.Files, fileuploadFiles1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationH3Aggregations0(ctx context.Context, exec bob.Executor, h3Aggregations1 []*H3AggregationSetter, organization0 *Organization) (H3AggregationSlice, error) {
 	for i := range h3Aggregations1 {
 		h3Aggregations1[i].OrganizationID = omit.From(organization0.ID)
@@ -4509,6 +4602,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Files":
+		rels, ok := retrieved.(FileuploadFileSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Files = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "H3Aggregations":
 		rels, ok := retrieved.(H3AggregationSlice)
 		if !ok {
@@ -4677,6 +4784,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	Zones                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Zones2s                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FieldseekerSyncs          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Files                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	H3Aggregations            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -4777,6 +4885,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type FieldseekerSyncsLoadInterface interface {
 		LoadFieldseekerSyncs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type FilesLoadInterface interface {
+		LoadFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type H3AggregationsLoadInterface interface {
 		LoadH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -4982,6 +5093,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"FieldseekerSyncs",
 			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerSyncsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadFieldseekerSyncs(ctx, exec, mods...)
+			},
+		),
+		Files: thenLoadBuilder[Q](
+			"Files",
+			func(ctx context.Context, exec bob.Executor, retrieved FilesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFiles(ctx, exec, mods...)
 			},
 		),
 		H3Aggregations: thenLoadBuilder[Q](
@@ -6905,6 +7022,67 @@ func (os OrganizationSlice) LoadFieldseekerSyncs(ctx context.Context, exec bob.E
 	return nil
 }
 
+// LoadFiles loads the organization's Files into the .R struct
+func (o *Organization) LoadFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Files = nil
+
+	related, err := o.Files(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Files = related
+	return nil
+}
+
+// LoadFiles loads the organization's Files into the .R struct
+func (os OrganizationSlice) LoadFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	fileuploadFiles, err := os.Files(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Files = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range fileuploadFiles {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Files = append(o.R.Files, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadH3Aggregations loads the organization's H3Aggregations into the .R struct
 func (o *Organization) LoadH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -7428,6 +7606,7 @@ type organizationC struct {
 	Zones                   *int64
 	Zones2s                 *int64
 	FieldseekerSyncs        *int64
+	Files                   *int64
 	H3Aggregations          *int64
 	NoteAudios              *int64
 	NoteImages              *int64
@@ -7504,6 +7683,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.Zones2s = &count
 	case "FieldseekerSyncs":
 		o.C.FieldseekerSyncs = &count
+	case "Files":
+		o.C.Files = &count
 	case "H3Aggregations":
 		o.C.H3Aggregations = &count
 	case "NoteAudios":
@@ -7553,6 +7734,7 @@ type organizationCountPreloader struct {
 	Zones                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Files                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -8080,6 +8262,23 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Files: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Files", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(FileuploadFiles.Name()),
+					sm.Where(psql.Quote(FileuploadFiles.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		H3Aggregations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("H3Aggregations", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -8233,6 +8432,7 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	Zones                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Files                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -8332,6 +8532,9 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type FieldseekerSyncsCountInterface interface {
 		LoadCountFieldseekerSyncs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type FilesCountInterface interface {
+		LoadCountFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type H3AggregationsCountInterface interface {
 		LoadCountH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -8534,6 +8737,12 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"FieldseekerSyncs",
 			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerSyncsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountFieldseekerSyncs(ctx, exec, mods...)
+			},
+		),
+		Files: countThenLoadBuilder[Q](
+			"Files",
+			func(ctx context.Context, exec bob.Executor, retrieved FilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountFiles(ctx, exec, mods...)
 			},
 		),
 		H3Aggregations: countThenLoadBuilder[Q](
@@ -9481,6 +9690,36 @@ func (os OrganizationSlice) LoadCountFieldseekerSyncs(ctx context.Context, exec 
 	return nil
 }
 
+// LoadCountFiles loads the count of Files into the C struct
+func (o *Organization) LoadCountFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Files(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Files = &count
+	return nil
+}
+
+// LoadCountFiles loads the count of Files for a slice
+func (os OrganizationSlice) LoadCountFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountFiles(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountH3Aggregations loads the count of H3Aggregations into the C struct
 func (o *Organization) LoadCountH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -9723,6 +9962,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	Zones                     modAs[Q, fieldseekerZoneColumns]
 	Zones2s                   modAs[Q, fieldseekerZones2Columns]
 	FieldseekerSyncs          modAs[Q, fieldseekerSyncColumns]
+	Files                     modAs[Q, fileuploadFileColumns]
 	H3Aggregations            modAs[Q, h3AggregationColumns]
 	NoteAudios                modAs[Q, noteAudioColumns]
 	NoteImages                modAs[Q, noteImageColumns]
@@ -10169,6 +10409,20 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, FieldseekerSyncs.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Files: modAs[Q, fileuploadFileColumns]{
+			c: FileuploadFiles.Columns,
+			f: func(to fileuploadFileColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
 					))
 				}

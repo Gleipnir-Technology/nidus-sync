@@ -39,15 +39,16 @@ func (mods FileuploadFileModSlice) Apply(ctx context.Context, n *FileuploadFileT
 // FileuploadFileTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FileuploadFileTemplate struct {
-	ID          func() int32
-	ContentType func() string
-	Created     func() time.Time
-	CreatorID   func() int32
-	Deleted     func() null.Val[time.Time]
-	Name        func() string
-	Status      func() enums.FileuploadFilestatustype
-	SizeBytes   func() int32
-	FileUUID    func() uuid.UUID
+	ID             func() int32
+	ContentType    func() string
+	Created        func() time.Time
+	CreatorID      func() int32
+	Deleted        func() null.Val[time.Time]
+	Name           func() string
+	OrganizationID func() int32
+	Status         func() enums.FileuploadFilestatustype
+	SizeBytes      func() int32
+	FileUUID       func() uuid.UUID
 
 	r fileuploadFileR
 	f *Factory
@@ -56,9 +57,10 @@ type FileuploadFileTemplate struct {
 }
 
 type fileuploadFileR struct {
-	CSV         *fileuploadFileRCSVR
-	Errors      []*fileuploadFileRErrorsR
-	CreatorUser *fileuploadFileRCreatorUserR
+	CSV          *fileuploadFileRCSVR
+	Errors       []*fileuploadFileRErrorsR
+	CreatorUser  *fileuploadFileRCreatorUserR
+	Organization *fileuploadFileROrganizationR
 }
 
 type fileuploadFileRCSVR struct {
@@ -70,6 +72,9 @@ type fileuploadFileRErrorsR struct {
 }
 type fileuploadFileRCreatorUserR struct {
 	o *UserTemplate
+}
+type fileuploadFileROrganizationR struct {
+	o *OrganizationTemplate
 }
 
 // Apply mods to the FileuploadFileTemplate
@@ -108,6 +113,13 @@ func (t FileuploadFileTemplate) setModelRels(o *models.FileuploadFile) {
 		o.CreatorID = rel.ID // h2
 		o.R.CreatorUser = rel
 	}
+
+	if t.r.Organization != nil {
+		rel := t.r.Organization.o.Build()
+		rel.R.Files = append(rel.R.Files, o)
+		o.OrganizationID = rel.ID // h2
+		o.R.Organization = rel
+	}
 }
 
 // BuildSetter returns an *models.FileuploadFileSetter
@@ -138,6 +150,10 @@ func (o FileuploadFileTemplate) BuildSetter() *models.FileuploadFileSetter {
 	if o.Name != nil {
 		val := o.Name()
 		m.Name = omit.From(val)
+	}
+	if o.OrganizationID != nil {
+		val := o.OrganizationID()
+		m.OrganizationID = omit.From(val)
 	}
 	if o.Status != nil {
 		val := o.Status()
@@ -191,6 +207,9 @@ func (o FileuploadFileTemplate) Build() *models.FileuploadFile {
 	if o.Name != nil {
 		m.Name = o.Name()
 	}
+	if o.OrganizationID != nil {
+		m.OrganizationID = o.OrganizationID()
+	}
 	if o.Status != nil {
 		m.Status = o.Status()
 	}
@@ -235,6 +254,10 @@ func ensureCreatableFileuploadFile(m *models.FileuploadFileSetter) {
 	if !(m.Name.IsValue()) {
 		val := random_string(nil)
 		m.Name = omit.From(val)
+	}
+	if !(m.OrganizationID.IsValue()) {
+		val := random_int32(nil)
+		m.OrganizationID = omit.From(val)
 	}
 	if !(m.Status.IsValue()) {
 		val := random_enums_FileuploadFilestatustype(nil)
@@ -322,12 +345,30 @@ func (o *FileuploadFileTemplate) Create(ctx context.Context, exec bob.Executor) 
 
 	opt.CreatorID = omit.From(rel2.ID)
 
+	if o.r.Organization == nil {
+		FileuploadFileMods.WithNewOrganization().Apply(ctx, o)
+	}
+
+	var rel3 *models.Organization
+
+	if o.r.Organization.o.alreadyPersisted {
+		rel3 = o.r.Organization.o.Build()
+	} else {
+		rel3, err = o.r.Organization.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.OrganizationID = omit.From(rel3.ID)
+
 	m, err := models.FileuploadFiles.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
 	m.R.CreatorUser = rel2
+	m.R.Organization = rel3
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -412,6 +453,7 @@ func (m fileuploadFileMods) RandomizeAllColumns(f *faker.Faker) FileuploadFileMo
 		FileuploadFileMods.RandomCreatorID(f),
 		FileuploadFileMods.RandomDeleted(f),
 		FileuploadFileMods.RandomName(f),
+		FileuploadFileMods.RandomOrganizationID(f),
 		FileuploadFileMods.RandomStatus(f),
 		FileuploadFileMods.RandomSizeBytes(f),
 		FileuploadFileMods.RandomFileUUID(f),
@@ -627,6 +669,37 @@ func (m fileuploadFileMods) RandomName(f *faker.Faker) FileuploadFileMod {
 }
 
 // Set the model columns to this value
+func (m fileuploadFileMods) OrganizationID(val int32) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.OrganizationID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadFileMods) OrganizationIDFunc(f func() int32) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.OrganizationID = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadFileMods) UnsetOrganizationID() FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.OrganizationID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadFileMods) RandomOrganizationID(f *faker.Faker) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.OrganizationID = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
 func (m fileuploadFileMods) Status(val enums.FileuploadFilestatustype) FileuploadFileMod {
 	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
 		o.Status = func() enums.FileuploadFilestatustype { return val }
@@ -735,6 +808,11 @@ func (m fileuploadFileMods) WithParentsCascading() FileuploadFileMod {
 			related := o.f.NewUserWithContext(ctx, UserMods.WithParentsCascading())
 			m.WithCreatorUser(related).Apply(ctx, o)
 		}
+		{
+
+			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
+			m.WithOrganization(related).Apply(ctx, o)
+		}
 	})
 }
 
@@ -795,6 +873,36 @@ func (m fileuploadFileMods) WithExistingCreatorUser(em *models.User) FileuploadF
 func (m fileuploadFileMods) WithoutCreatorUser() FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
 		o.r.CreatorUser = nil
+	})
+}
+
+func (m fileuploadFileMods) WithOrganization(rel *OrganizationTemplate) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Organization = &fileuploadFileROrganizationR{
+			o: rel,
+		}
+	})
+}
+
+func (m fileuploadFileMods) WithNewOrganization(mods ...OrganizationMod) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		related := o.f.NewOrganizationWithContext(ctx, mods...)
+
+		m.WithOrganization(related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadFileMods) WithExistingOrganization(em *models.Organization) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Organization = &fileuploadFileROrganizationR{
+			o: o.f.FromExistingOrganization(em),
+		}
+	})
+}
+
+func (m fileuploadFileMods) WithoutOrganization() FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Organization = nil
 	})
 }
 

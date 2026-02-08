@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
+
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -31,6 +33,9 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 	for {
 		row, err := reader.Read()
 		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
 			return fmt.Errorf("Failed to read all CSV records for file %d: %w", file_id, err)
 		}
 		log.Debug().Strs("row", row).Msg("Line")

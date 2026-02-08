@@ -24,14 +24,15 @@ func NewPoolUpload(ctx context.Context, u *models.User, upload userfile.FileUplo
 	}
 
 	file, err := models.FileuploadFiles.Insert(&models.FileuploadFileSetter{
-		ContentType: omit.From(upload.ContentType),
-		Created:     omit.From(time.Now()),
-		CreatorID:   omit.From(u.ID),
-		Deleted:     omitnull.FromPtr[time.Time](nil),
-		Name:        omit.From(upload.Name),
-		Status:      omit.From(enums.FileuploadFilestatustypeUploaded),
-		SizeBytes:   omit.From(int32(upload.SizeBytes)),
-		FileUUID:    omit.From(upload.UUID),
+		ContentType:    omit.From(upload.ContentType),
+		Created:        omit.From(time.Now()),
+		CreatorID:      omit.From(u.ID),
+		Deleted:        omitnull.FromPtr[time.Time](nil),
+		Name:           omit.From(upload.Name),
+		OrganizationID: omit.From(u.OrganizationID),
+		Status:         omit.From(enums.FileuploadFilestatustypeUploaded),
+		SizeBytes:      omit.From(int32(upload.SizeBytes)),
+		FileUUID:       omit.From(upload.UUID),
 	}).One(ctx, txn)
 	if err != nil {
 		return PoolUpload{}, fmt.Errorf("Failed to create file upload: %w", err)

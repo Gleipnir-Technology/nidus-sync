@@ -14,6 +14,7 @@ CREATE TABLE fileupload.file (
 	creator_id INTEGER REFERENCES user_(id) NOT NULL,
 	deleted TIMESTAMP WITHOUT TIME ZONE,
 	name TEXT NOT NULL,
+	organization_id INTEGER REFERENCES organization(id) NOT NULL,
 	status fileupload.FileStatusType NOT NULL,
 	size_bytes INTEGER NOT NULL,
 	file_uuid uuid NOT NULL,

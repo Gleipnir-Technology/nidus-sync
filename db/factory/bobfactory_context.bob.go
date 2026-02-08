@@ -186,6 +186,7 @@ var (
 	fileuploadFileRelCSVCtx               = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
 	fileuploadFileRelErrorsCtx            = newContextual[bool]("fileupload.error.fileupload.file.fileupload.error.error_file_id_fkey")
 	fileuploadFileRelCreatorUserCtx       = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
+	fileuploadFileRelOrganizationCtx      = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 
 	// Relationship Contexts for geography_columns
 	geographyColumnWithParentsCascadingCtx = newContextual[bool]("geographyColumnWithParentsCascading")
@@ -276,6 +277,7 @@ var (
 	organizationRelZonesCtx                     = newContextual[bool]("fieldseeker.zones.organization.fieldseeker.zones.zones_organization_id_fkey")
 	organizationRelZones2sCtx                   = newContextual[bool]("fieldseeker.zones2.organization.fieldseeker.zones2.zones2_organization_id_fkey")
 	organizationRelFieldseekerSyncsCtx          = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
+	organizationRelFilesCtx                     = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 	organizationRelH3AggregationsCtx            = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
 	organizationRelNoteAudiosCtx                = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
 	organizationRelNoteImagesCtx                = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")

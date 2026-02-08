@@ -84,6 +84,7 @@ type organizationR struct {
 	Zones                     []*organizationRZonesR
 	Zones2s                   []*organizationRZones2sR
 	FieldseekerSyncs          []*organizationRFieldseekerSyncsR
+	Files                     []*organizationRFilesR
 	H3Aggregations            []*organizationRH3AggregationsR
 	NoteAudios                []*organizationRNoteAudiosR
 	NoteImages                []*organizationRNoteImagesR
@@ -213,6 +214,10 @@ type organizationRZones2sR struct {
 type organizationRFieldseekerSyncsR struct {
 	number int
 	o      *FieldseekerSyncTemplate
+}
+type organizationRFilesR struct {
+	number int
+	o      *FileuploadFileTemplate
 }
 type organizationRH3AggregationsR struct {
 	number int
@@ -642,6 +647,19 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			rel = append(rel, related...)
 		}
 		o.R.FieldseekerSyncs = rel
+	}
+
+	if t.r.Files != nil {
+		rel := models.FileuploadFileSlice{}
+		for _, r := range t.r.Files {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Files = rel
 	}
 
 	if t.r.H3Aggregations != nil {
@@ -1465,6 +1483,26 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isFilesDone, _ := organizationRelFilesCtx.Value(ctx)
+	if !isFilesDone && o.r.Files != nil {
+		ctx = organizationRelFilesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Files {
+			if r.o.alreadyPersisted {
+				m.R.Files = append(m.R.Files, r.o.Build())
+			} else {
+				rel30, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachFiles(ctx, exec, rel30...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isH3AggregationsDone, _ := organizationRelH3AggregationsCtx.Value(ctx)
 	if !isH3AggregationsDone && o.r.H3Aggregations != nil {
 		ctx = organizationRelH3AggregationsCtx.WithValue(ctx, true)
@@ -1472,12 +1510,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.H3Aggregations = append(m.R.H3Aggregations, r.o.Build())
 			} else {
-				rel30, err := r.o.CreateMany(ctx, exec, r.number)
+				rel31, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachH3Aggregations(ctx, exec, rel30...)
+				err = m.AttachH3Aggregations(ctx, exec, rel31...)
 				if err != nil {
 					return err
 				}
@@ -1492,12 +1530,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel31...)
+				err = m.AttachNoteAudios(ctx, exec, rel32...)
 				if err != nil {
 					return err
 				}
@@ -1512,12 +1550,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				rel33, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel32...)
+				err = m.AttachNoteImages(ctx, exec, rel33...)
 				if err != nil {
 					return err
 				}
@@ -1531,12 +1569,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.ImportDistrictGidDistrict.o.alreadyPersisted {
 			m.R.ImportDistrictGidDistrict = o.r.ImportDistrictGidDistrict.o.Build()
 		} else {
-			var rel33 *models.ImportDistrict
-			rel33, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
+			var rel34 *models.ImportDistrict
+			rel34, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel33)
+			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel34)
 			if err != nil {
 				return err
 			}
@@ -1551,12 +1589,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel34, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel34...)
+				err = m.AttachNuisances(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1571,12 +1609,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel35...)
+				err = m.AttachPublicreportPool(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1591,12 +1629,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel36...)
+				err = m.AttachQuicks(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1611,12 +1649,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel38, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel37...)
+				err = m.AttachUser(ctx, exec, rel38...)
 				if err != nil {
 					return err
 				}
@@ -3642,6 +3680,54 @@ func (m organizationMods) AddExistingFieldseekerSyncs(existingModels ...*models.
 func (m organizationMods) WithoutFieldseekerSyncs() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.FieldseekerSyncs = nil
+	})
+}
+
+func (m organizationMods) WithFiles(number int, related *FileuploadFileTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Files = []*organizationRFilesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewFiles(number int, mods ...FileuploadFileMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewFileuploadFileWithContext(ctx, mods...)
+		m.WithFiles(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddFiles(number int, related *FileuploadFileTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Files = append(o.r.Files, &organizationRFilesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewFiles(number int, mods ...FileuploadFileMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewFileuploadFileWithContext(ctx, mods...)
+		m.AddFiles(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingFiles(existingModels ...*models.FileuploadFile) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Files = append(o.r.Files, &organizationRFilesR{
+				o: o.f.FromExistingFileuploadFile(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutFiles() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Files = nil
 	})
 }
 

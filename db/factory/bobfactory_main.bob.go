@@ -2319,6 +2319,7 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	o.CreatorID = func() int32 { return m.CreatorID }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
 	o.Name = func() string { return m.Name }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.Status = func() enums.FileuploadFilestatustype { return m.Status }
 	o.SizeBytes = func() int32 { return m.SizeBytes }
 	o.FileUUID = func() uuid.UUID { return m.FileUUID }
@@ -2332,6 +2333,9 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	}
 	if m.R.CreatorUser != nil {
 		FileuploadFileMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		FileuploadFileMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
 
 	return o
@@ -2931,6 +2935,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.FieldseekerSyncs) > 0 {
 		OrganizationMods.AddExistingFieldseekerSyncs(m.R.FieldseekerSyncs...).Apply(ctx, o)
+	}
+	if len(m.R.Files) > 0 {
+		OrganizationMods.AddExistingFiles(m.R.Files...).Apply(ctx, o)
 	}
 	if len(m.R.H3Aggregations) > 0 {
 		OrganizationMods.AddExistingH3Aggregations(m.R.H3Aggregations...).Apply(ctx, o)
