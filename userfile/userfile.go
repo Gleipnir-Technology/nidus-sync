@@ -29,3 +29,8 @@ func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) erro
 	log.Info().Str("filepath", filepath).Msg("Save audio file content")
 	return nil
 }
+
+func NewFileReader(collection Collection, uid uuid.UUID) (io.Reader, error) {
+	path := fileContentPath(collection, uid)
+	return os.Open(path)
+}

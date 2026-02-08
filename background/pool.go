@@ -26,7 +26,7 @@ func startWorkerCSV(ctx context.Context, channelJobImport chan jobImportCSVPool)
 				return
 			case job := <-channelJobImport:
 				log.Info().Int32("id", job.fileID).Msg("Processing CSV job")
-				err := csv.ProcessJob(job.fileID)
+				err := csv.ProcessJob(ctx, job.fileID)
 				if err != nil {
 					log.Error().Err(err).Int32("id", job.fileID).Msg("Error processing CSV file")
 				}
