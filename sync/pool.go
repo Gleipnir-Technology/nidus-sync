@@ -44,6 +44,18 @@ func getPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 	html.RenderOrError(w, "sync/pool-csv-upload.html", data)
 }
+func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
+	userContent, err := contentForUser(r.Context(), u)
+	if err != nil {
+		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentPoolUpload{
+		URL:  newContentURL(),
+		User: userContent,
+	}
+	html.RenderOrError(w, "sync/pool-by-id.html", data)
+}
 func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 	if err != nil {

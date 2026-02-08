@@ -16,7 +16,6 @@ import (
 /*
 	admin                           = buildTemplate("admin", "base")
 	dataEntry                       = buildTemplate("data-entry", "base")
-	dataEntryGood                   = buildTemplate("data-entry-good", "base")
 	dataEntryBad                    = buildTemplate("data-entry-bad", "base")
 	dispatch                        = buildTemplate("dispatch", "base")
 	dispatchResults                 = buildTemplate("dispatch-results", "base")
