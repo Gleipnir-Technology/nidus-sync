@@ -17,6 +17,20 @@ type jobImportCSVPool struct {
 
 var channelJobImportCSVPool chan jobImportCSVPool
 
+func ProcessUpload(file_id int32) {
+	enqueueUploadJob(jobImportCSVPool{
+		fileID: file_id,
+	})
+}
+
+func enqueueUploadJob(job jobImportCSVPool) {
+	select {
+	case channelJobImportCSVPool <- job:
+		log.Info().Int32("file_id", job.fileID).Msg("Enqueued csv job")
+	default:
+		log.Warn().Int32("file_id", job.fileID).Msg("csv channel is full, dropping job")
+	}
+}
 func startWorkerCSV(ctx context.Context, channelJobImport chan jobImportCSVPool) {
 	go func() {
 		for {

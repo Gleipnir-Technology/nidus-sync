@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -45,6 +46,7 @@ func NewPoolUpload(ctx context.Context, u *models.User, upload userfile.FileUplo
 		return PoolUpload{}, fmt.Errorf("Failed to create csv: %w", err)
 	}
 	txn.Commit(ctx)
+	background.ProcessUpload(file.ID)
 	return PoolUpload{
 		ID: file.ID,
 	}, nil
