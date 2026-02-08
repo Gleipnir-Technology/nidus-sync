@@ -13,9 +13,10 @@ var waitGroup sync.WaitGroup
 func Start(ctx context.Context) {
 	newOAuthTokenChannel = make(chan struct{}, 10)
 
-	channelJobAudio = make(chan jobAudio, 100)  // Buffered channel to prevent blocking
-	channelJobEmail = make(chan email.Job, 100) // Buffered channel to prevent blocking
-	channelJobText = make(chan text.Job, 100)   // Buffered channel to prevent blocking
+	channelJobAudio = make(chan jobAudio, 100)                 // Buffered channel to prevent blocking
+	channelJobImportCSVPool = make(chan jobImportCSVPool, 100) // Buffered channel to prevent blocking
+	channelJobEmail = make(chan email.Job, 100)                // Buffered channel to prevent blocking
+	channelJobText = make(chan text.Job, 100)                  // Buffered channel to prevent blocking
 
 	waitGroup.Add(1)
 	go func() {
@@ -27,6 +28,12 @@ func Start(ctx context.Context) {
 	go func() {
 		defer waitGroup.Done()
 		startWorkerAudio(ctx, channelJobAudio)
+	}()
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		startWorkerCSV(ctx, channelJobImportCSVPool)
 	}()
 
 	waitGroup.Add(1)
