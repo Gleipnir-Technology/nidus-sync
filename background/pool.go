@@ -17,6 +17,7 @@ type jobImportCSVPool struct {
 var channelJobImportCSVPool chan jobImportCSVPool
 
 func processCSVJob(file_id int32) error {
+	log.Debug().Int32("file_id", file_id).Msg("Fake processing CSV job")
 	return nil
 }
 func startWorkerCSV(ctx context.Context, channelJobImport chan jobImportCSVPool) {
