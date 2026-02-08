@@ -16,9 +16,7 @@ var (
 	DomainNidus                string
 	DomainTegola               string
 	Environment                string
-	FilesDirectoryLogo         string
-	FilesDirectoryPublic       string
-	FilesDirectoryUser         string
+	FilesDirectory             string
 	FieldseekerSchemaDirectory string
 	ForwardEmailAPIToken       string
 	ForwardEmailReportAddress  string
@@ -100,17 +98,9 @@ func Parse() (err error) {
 	if FieldseekerSchemaDirectory == "" {
 		return fmt.Errorf("You must specify a non-empty FIELDSEEKER_SCHEMA_DIRECTORY")
 	}
-	FilesDirectoryLogo = os.Getenv("FILES_DIRECTORY_LOGO")
-	if FilesDirectoryLogo == "" {
-		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_LOGO")
-	}
-	FilesDirectoryPublic = os.Getenv("FILES_DIRECTORY_PUBLIC")
-	if FilesDirectoryPublic == "" {
-		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_PUBLIC")
-	}
-	FilesDirectoryUser = os.Getenv("FILES_DIRECTORY_USER")
-	if FilesDirectoryUser == "" {
-		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY_USER")
+	FilesDirectory = os.Getenv("FILES_DIRECTORY")
+	if FilesDirectory == "" {
+		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY")
 	}
 	ForwardEmailReportAddress = os.Getenv("FORWARDEMAIL_REPORT_ADDRESS")
 	if ForwardEmailReportAddress == "" {

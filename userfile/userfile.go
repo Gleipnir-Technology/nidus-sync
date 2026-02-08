@@ -11,21 +11,26 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func AudioFileContentPathRaw(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.m4a", config.FilesDirectoryUser, audioUUID)
-}
-func AudioFileContentPathMp3(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.mp3", config.FilesDirectoryUser, audioUUID)
-}
-func AudioFileContentPathNormalized(audioUUID string) string {
-	return fmt.Sprintf("%s/%s-normalized.m4a", config.FilesDirectoryUser, audioUUID)
-}
-func AudioFileContentPathOgg(audioUUID string) string {
-	return fmt.Sprintf("%s/%s.ogg", config.FilesDirectoryUser, audioUUID)
-}
+/*
+	func AudioFileContentPathRaw(audioUUID string) string {
+		return fmt.Sprintf("%s/%s.m4a", config.FilesDirectoryUser, audioUUID)
+	}
+
+	func AudioFileContentPathMp3(audioUUID string) string {
+		return fmt.Sprintf("%s/%s.mp3", config.FilesDirectoryUser, audioUUID)
+	}
+
+	func AudioFileContentPathNormalized(audioUUID string) string {
+		return fmt.Sprintf("%s/%s-normalized.m4a", config.FilesDirectoryUser, audioUUID)
+	}
+
+	func AudioFileContentPathOgg(audioUUID string) string {
+		return fmt.Sprintf("%s/%s.ogg", config.FilesDirectoryUser, audioUUID)
+	}
+*/
 func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
-	filepath := AudioFileContentPathRaw(audioUUID.String())
+	filepath := fileContentPath("user", audioUUID, "m4a")
 	dst, err := os.Create(filepath)
 	if err != nil {
 		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create audio file")
@@ -41,17 +46,22 @@ func AudioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 	log.Info().Str("filepath", filepath).Msg("Save audio file content")
 	return nil
 }
-func ImageFileContentPathRawUser(uid string) string {
-	return imageFileContentPath(config.FilesDirectoryUser, uid, "raw")
-}
-func imageFileContentPathLogoPng(uid string) string {
-	return imageFileContentPath(config.FilesDirectoryLogo, uid, "png")
-}
-func imageFileContentPath(dir string, uid string, ext string) string {
-	return fmt.Sprintf("%s/%s.%s", dir, uid, ext)
-}
+
+/*
+	func ImageFileContentPathRawUser(uid string) string {
+		return imageFileContentPath(config.FilesDirectoryUser, uid, "raw")
+	}
+
+	func imageFileContentPathLogoPng(uid string) string {
+		return imageFileContentPath(config.FilesDirectoryLogo, uid, "png")
+	}
+
+	func imageFileContentPath(dir string, uid string, ext string) string {
+		return fmt.Sprintf("%s/%s.%s", dir, uid, ext)
+	}
+*/
 func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
-	filepath := ImageFileContentPathRawUser(uid.String())
+	filepath := fileContentPath("user", uid, "raw")
 
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
@@ -68,13 +78,15 @@ func ImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	return nil
 }
 func ImageFileContentWriteLogo(w http.ResponseWriter, uid uuid.UUID) {
-	image_path := imageFileContentPathLogoPng(uid.String())
+	//image_path := imageFileContentPathLogoPng(uid.String())
+	image_path := fileContentPath("logo", uid, "png")
 	writeFileContent(w, image_path)
 }
 
 func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	// Create file in configured directory
-	filepath := PublicImageFileContentPathRaw(uid.String())
+	//filepath := PublicImageFileContentPathRaw(uid.String())
+	filepath := fileContentPath("public", uid, "raw")
 	dst, err := os.Create(filepath)
 	if err != nil {
 		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create public image file")
@@ -91,13 +103,37 @@ func PublicImageFileContentWrite(uid uuid.UUID, body io.Reader) error {
 	return nil
 }
 
+/*
 func PublicImageFileContentPathRaw(uid string) string {
 	return fmt.Sprintf("%s/%s.raw", config.FilesDirectoryPublic, uid)
 }
+*/
 
-func PublicImageFileToResponse(w http.ResponseWriter, uid string) {
-	image_path := PublicImageFileContentPathRaw(uid)
+func PublicImageFileToResponse(w http.ResponseWriter, uid uuid.UUID) {
+	//image_path := PublicImageFileContentPathRaw(uid)
+	image_path := fileContentPath("public", uid, "raw")
 	writeFileContent(w, image_path)
+}
+
+func fileContentPath(subdir string, uid uuid.UUID, extension string) string {
+	return fmt.Sprintf("%s/%s/%s.%s", config.FilesDirectory, subdir, uid.String(), extension)
+}
+func fileContentWrite(body io.Reader, subdir string, uid uuid.UUID, extension string) error {
+	// Create file in configured directory
+	filepath := fileContentPath(subdir, uid, extension)
+	dst, err := os.Create(filepath)
+	if err != nil {
+		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create file")
+		return fmt.Errorf("Failed to create file at %s: %v", filepath, err)
+	}
+	defer dst.Close()
+
+	// Copy rest of request body to file
+	_, err = io.Copy(dst, body)
+	if err != nil {
+		return fmt.Errorf("Unable to save content of %s: %v", filepath, err)
+	}
+	return nil
 }
 
 func writeFileContent(w http.ResponseWriter, image_path string) {

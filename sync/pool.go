@@ -3,6 +3,7 @@ package sync
 import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"net/http"
 )
 
