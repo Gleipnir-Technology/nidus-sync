@@ -41,3 +41,16 @@ func getPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 	html.RenderOrError(w, "sync/pool-csv-upload.html", data)
 }
+func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
+	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
+	if err != nil {
+		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
+		return
+	}
+	uploads, err := userfile.SaveFileUpload(r, "csvfile", "pool", "csv")
+	if err != nil {
+		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
+		return
+	}
+	images, err := saveImageUploads(r.Context(), tx, uploads)
+}

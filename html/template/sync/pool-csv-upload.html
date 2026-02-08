@@ -24,33 +24,93 @@
 							<th>Field</th>
 							<th>Description</th>
 							<th>Format</th>
-							<th>Required</th>
+							<th>Example</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
-							<td class="required-field">Latitude</td>
-							<td>GPS latitude coordinate</td>
-							<td>Decimal (e.g., 37.7749)</td>
-							<td>Yes</td>
+							<td class="required-field">Street Address</td>
+							<td>Street number and name of the address of the pool</td>
+							<td>Text</td>
+							<td>123 Main St.</td>
 						</tr>
 						<tr>
-							<td class="required-field">Longitude</td>
-							<td>GPS longitude coordinate</td>
-							<td>Decimal (e.g., -122.4194)</td>
-							<td>Yes</td>
+							<td class="required-field">City</td>
+							<td>The city portion of the pool's address</td>
+							<td>Text</td>
+							<td>Visalia</td>
 						</tr>
 						<tr>
-							<td class="required-field">Plat ID</td>
-							<td>Unique identifier for the property</td>
-							<td>Alphanumeric (e.g., P12345)</td>
-							<td>Yes</td>
+							<td>Notes</td>
+							<td>
+								Any notes from the district to include with the pool record
+							</td>
+							<td>Text</td>
+							<td>"Collects rain water when empty"</td>
 						</tr>
 						<tr>
-							<td>Street Address</td>
-							<td>Nearest street address to the pool</td>
-							<td>Text (e.g., 123 Main St)</td>
+							<td class="required-field">Postal Code</td>
+							<td>Postal (Zip) Code of the pool's address</td>
+							<td>numbers and optional hypen</td>
+							<td>81234 or 91234-5678</td>
+						</tr>
+						<tr>
+							<td>Pool Condition</td>
+							<td>The condition of the pool when it was last inspected</td>
+							<td>Text</td>
+							<td>"blue", "dry", "green", or "murky"</td>
+						</tr>
+						<tr>
+							<td>Property Owner Name</td>
+							<td>Name of the person or entity that owns the property</td>
+							<td>Text</td>
 							<td>No</td>
+						</tr>
+						<tr>
+							<td>Property Owner Phone</td>
+							<td>
+								Phone number of the person or entity that owns the property
+							</td>
+							<td>
+								<a href="https://www.twilio.com/docs/glossary/what-e164"
+									>E164 format</a
+								>, or enough digits to be a valid phone number
+							</td>
+							<td>
+								"+14155552671" or "1-(901)-555-1234" or "9015551234" or
+								"1901-555-12-34"
+							</td>
+						</tr>
+						<tr>
+							<td>Resident Owned</td>
+							<td>
+								Whether or not the current resident of the property is also the
+								owner
+							</td>
+							<td>Yes, No, or empty</td>
+							<td>"Yes" or "No" or ""</td>
+						</tr>
+						<tr>
+							<td>Resident Phone</td>
+							<td>Phone number of the resident</td>
+							<td>
+								<a href="https://www.twilio.com/docs/glossary/what-e164"
+									>E164 format</a
+								>, or enough digits to be a valid phone number
+							</td>
+							<td>
+								"+14155552671" or "1-(901)-555-1234" or "9015551234" or
+								"1901-555-12-34"
+							</td>
+						</tr>
+						<tr>
+							<td>Tags></td>
+							<td>
+								Any additional columns in the file will be treated as tags and
+								attached to the record
+							</td>
+							<td>Text</td>
+							<td>"Hostile" or "Unresponsive" or "Dog"</td>
 						</tr>
 					</tbody>
 				</table>
@@ -72,36 +132,47 @@
 				<h5 class="mb-0">Upload Data</h5>
 			</div>
 			<div class="card-body">
-				<div class="upload-area">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="48"
-						height="48"
-						fill="currentColor"
-						class="bi bi-cloud-arrow-up text-primary mb-3"
-						viewBox="0 0 16 16"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2z"
+				<form
+					action="{{ .URL.PoolCSVUpload }}"
+					method="POST"
+					enctype="multipart/form-data"
+				>
+					<div class="upload-area">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="48"
+							height="48"
+							fill="currentColor"
+							class="bi bi-cloud-arrow-up text-primary mb-3"
+							viewBox="0 0 16 16"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2z"
+							/>
+							<path
+								d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383zm.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"
+							/>
+						</svg>
+						<h5>Select your CSV file</h5>
+						<p class="text-muted">
+							Drag and drop a file here or click to browse
+						</p>
+						<input
+							type="file"
+							class="form-control"
+							id="csvFile"
+							name="csvfile"
+							accept=".csv"
 						/>
-						<path
-							d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383zm.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"
-						/>
-					</svg>
-					<h5>Select your CSV file</h5>
-					<p class="text-muted">Drag and drop a file here or click to browse</p>
-					<input type="file" class="form-control" id="csvFile" accept=".csv" />
-				</div>
+					</div>
 
-				<div class="d-grid gap-2">
-					<a href="/mock/data-entry/good">
-						<button class="btn btn-primary" type="button" id="uploadButton">
+					<div class="d-grid gap-2 text-center">
+						<button class="btn btn-primary" type="submit">
 							Upload and Continue
 						</button>
-					</a>
-					<a href="/mock/data-entry/bad"> See what happens on a bad upload </a>
-				</div>
+					</div>
+				</form>
 			</div>
 		</div>
 
