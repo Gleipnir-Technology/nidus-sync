@@ -40,7 +40,7 @@ func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Tx, email s
 		NuisanceID:   omit.From(sr.id),
 		EmailAddress: omit.From(email),
 	}
-	_, err := models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
+	_, err := models.PublicreportNotifyEmailNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
 		return newInternalError(err, "Failed to save new notification email row")
 	}
