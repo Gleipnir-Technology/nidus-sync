@@ -65,7 +65,7 @@ func Router() chi.Router {
 	r.Method("GET", "/pool/upload", auth.NewEnsureAuth(getPoolUpload))
 	r.Method("GET", "/pool/upload/{id}", auth.NewEnsureAuth(getPoolUploadByID))
 	r.Method("POST", "/pool/upload", auth.NewEnsureAuth(postPoolUpload))
-	r.Method("GET", "/settings", auth.NewEnsureAuth(getSettings))
+	r.Method("GET", "/setting", auth.NewEnsureAuth(getSettings))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
