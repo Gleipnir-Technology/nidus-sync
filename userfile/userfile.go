@@ -6,11 +6,25 @@ import (
 	//"net/http"
 	"os"
 
-	//"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
+func CreateDirectories() error {
+	for _, subdir := range collectionToSubdir {
+		path := config.FilesDirectory + "/" + subdir
+		_, err := os.Stat(path)
+		if err == nil {
+			continue
+		}
+		err = os.MkdirAll(path, 0750)
+		if err != nil {
+			return fmt.Errorf("Failed to create userfile directory '%s': %w", path, err)
+		}
+	}
+	return nil
+}
 func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) error {
 	// Create file in configured directory
 	filepath := fileContentPath(collection, uid)

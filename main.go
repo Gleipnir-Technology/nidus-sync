@@ -21,6 +21,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
+	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/getsentry/sentry-go/zerolog"
@@ -100,6 +101,12 @@ func main() {
 		os.Exit(6)
 	}
 
+	err = userfile.CreateDirectories()
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create userfile directories")
+		os.Exit(7)
+	}
+
 	router_logger := log.With().Logger()
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
@@ -134,7 +141,7 @@ func main() {
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start openAI client")
-		os.Exit(7)
+		os.Exit(8)
 	}
 	background.Start(ctx)
 	server := &http.Server{
