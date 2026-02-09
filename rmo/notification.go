@@ -42,6 +42,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 	e := report.SaveReporter(ctx, txn, report_id, name, email, phone, has_consent)
 	if e != nil {
+		log.Error().Err(e).Str("name", name).Msg("Failed to save reporter")
 		http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 		return
 	}
@@ -49,12 +50,14 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		if has_subscribe {
 			e := report.RegisterSubscriptionEmail(ctx, txn, email)
 			if e != nil {
+				log.Error().Err(e).Str("email", email).Msg("Failed to register subscription email")
 				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}
 		if has_notification {
 			e := report.RegisterNotificationEmail(ctx, txn, report_id, email)
 			if e != nil {
+				log.Error().Err(e).Str("email", email).Msg("Failed to register notification email")
 				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}
@@ -63,12 +66,14 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		if has_subscribe {
 			e := report.RegisterSubscriptionPhone(ctx, txn, *phone)
 			if e != nil {
+				log.Error().Err(e).Str("phone", phone_str).Msg("Failed to register subscription phone")
 				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}
 		if has_notification {
 			e := report.RegisterNotificationPhone(ctx, txn, report_id, *phone)
 			if e != nil {
+				log.Error().Err(e).Str("phone", phone_str).Msg("Failed to register notification phone")
 				http.Redirect(w, r, fmt.Sprintf("/error?code=%s&report=%s", e.Code(), report_id), http.StatusFound)
 			}
 		}

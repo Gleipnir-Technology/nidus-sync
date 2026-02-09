@@ -42,7 +42,7 @@ func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Tx, email s
 	}
 	_, err := models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to save new notification row")
+		return newErrorWithCode("internal-error", "Failed to save new notification email row")
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ func (sr Nuisance) addNotificationPhone(ctx context.Context, txn bob.Tx, phone t
 	}
 	_, err = models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to save new notification row")
+		return newErrorWithCode("internal-error", "Failed to save new notification phone row")
 	}
 	return nil
 }
