@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = []
+  args_bin = ["-prod"]
   bin = "./tmp/nidus-sync"
   cmd = "go build -o ./tmp/nidus-sync ."
   delay = 1000

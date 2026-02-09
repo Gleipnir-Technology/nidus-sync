@@ -16,7 +16,7 @@ import (
 	//"strings"
 	//"time"
 
-	//"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	//"github.com/aarondl/opt/null"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -36,7 +36,7 @@ type templateSystemDisk struct {
 
 func LoadTemplates() error {
 	_, err := os.Stat("html/template")
-	if err == nil {
+	if err == nil && !config.IsProductionEnvironment() {
 		templates = templateSystemDisk{
 			sourceFS: os.DirFS("./html/template"),
 		}

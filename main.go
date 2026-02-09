@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -38,6 +39,12 @@ func main() {
 	}
 	log.Info().Msg("Starting...")
 
+	var prod = flag.Bool("prod", false, "Force into production mode")
+	flag.Parse()
+	if prod != nil && *prod {
+		log.Warn().Msg("Forcing production mode for testing templates")
+		config.Environment = "PRODUCTION"
+	}
 	err = sentry.Init(sentry.ClientOptions{
 		Debug:            false, //!config.IsProductionEnvironment(),
 		Dsn:              config.SentryDSN,
