@@ -63,6 +63,23 @@ type OAuthTokenResponse struct {
 	Username              string `json:"username"`
 }
 
+func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*models.OauthToken, error) {
+	users, err := org.User().All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
+	}
+	for _, user := range users {
+		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
+		}
+		for _, oauth := range oauths {
+			return oauth, nil
+		}
+	}
+	return nil, &NoOAuthForOrg{}
+}
+
 func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
 	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
 
@@ -415,23 +432,6 @@ func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
 	}
 }
 
-func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.OauthToken, error) {
-	users, err := org.User().All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
-	}
-	for _, user := range users {
-		oauths, err := user.UserOauthTokens(models.SelectWhere.OauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
-		}
-		for _, oauth := range oauths {
-			return oauth, nil
-		}
-	}
-	return nil, &NoOAuthForOrg{}
-}
-
 func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization) error {
 	pollTicker := time.NewTicker(1)
 	for {
@@ -439,7 +439,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 		case <-ctx.Done():
 			return nil
 		case <-pollTicker.C:
-			oauth, err := getOAuthForOrg(ctx, org)
+			oauth, err := GetOAuthForOrg(ctx, org)
 			if err != nil {
 				return fmt.Errorf("Failed to get oauth for org: %w", err)
 			}
