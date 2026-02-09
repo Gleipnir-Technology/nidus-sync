@@ -1,0 +1,13 @@
+
+.summary-card {
+	transition: transform 0.2s;
+}
+.summary-card:hover {
+	transform: translateY(-5px);
+}
+.warning-row {
+	background-color: rgba(255, 193, 7, 0.15) !important;
+}
+.status-badge {
+	font-size: 0.85rem;
+}

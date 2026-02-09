@@ -2,28 +2,28 @@
 {{ define "title" }}Pool Upload{{ end }}
 
 {{ define "extraheader" }}
-	<style>
-		.summary-card {
-			transition: transform 0.2s;
-		}
-		.summary-card:hover {
-			transform: translateY(-5px);
-		}
-		.warning-row {
-			background-color: rgba(255, 193, 7, 0.15) !important;
-		}
-		.status-badge {
-			font-size: 0.85rem;
-		}
-	</style>
 {{ end }}
 {{ define "content" }}
 	<div class="container mt-4 results-container">
 		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h2>Upload Results: pools-data-2023.csv</h2>
-			<span class="badge bg-success rounded-pill">
-				<i class="bi bi-check-circle me-1"></i> File Parsed Successfully
-			</span>
+			<h2>Upload Results: {{ .Upload.Name }}</h2>
+			{{ if eq .Upload.Status "parsed" }}
+				<span class="badge bg-success rounded-pill">
+					<i class="bi bi-check-circle me-1"></i> File Parsed Successfully
+				</span>
+			{{ else if eq .Upload.Status "error" }}
+				<span class="badge bg-danger rounded-pill">
+					<i class="bi bi-exclamation me-1"></i> File Has Problems
+				</span>
+			{{ else if eq .Upload.Status "uploaded" }}
+				<span class="badge bg-info rounded-pill">
+					<i class="bi bi-arrow-clockwise me-1"></i> File Is Processing
+				</span>
+			{{ else }}
+				<span class="badge bg-warning rounded-pill">
+					<i class="bi bi-question me-1"></i> Unknown status
+				</span>
+			{{ end }}
 		</div>
 
 		<div class="row mb-4">

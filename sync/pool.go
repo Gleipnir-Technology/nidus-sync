@@ -13,9 +13,9 @@ import (
 )
 
 type ContentPoolDetail struct {
-	Pool platform.PoolDetail
-	URL  ContentURL
-	User User
+	Upload platform.UploadPoolDetail
+	URL    ContentURL
+	User   User
 }
 type ContentPoolList struct {
 	Uploads []platform.PoolUpload
@@ -72,15 +72,15 @@ func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to parse file_id", err, http.StatusInternalServerError)
 		return
 	}
-	detail, err := platform.GetPoolDetail(ctx, u.OrganizationID, int32(file_id))
+	detail, err := platform.GetUploadPoolDetail(ctx, u.OrganizationID, int32(file_id))
 	if err != nil {
 		respondError(w, "Failed to get pool", err, http.StatusInternalServerError)
 		return
 	}
 	data := ContentPoolDetail{
-		Pool: detail,
-		URL:  newContentURL(),
-		User: userContent,
+		Upload: detail,
+		URL:    newContentURL(),
+		User:   userContent,
 	}
 	html.RenderOrError(w, "sync/pool-by-id.html", data)
 }
