@@ -24,7 +24,6 @@ import (
 var ()
 
 type Config struct {
-	URLTegola string
 }
 
 type ContentSource struct {
@@ -52,7 +51,6 @@ type ContextCell struct {
 	User            User
 }
 type ContextDashboard struct {
-	Config               Config
 	CountTraps           int
 	CountMosquitoSources int
 	CountServiceRequests int
@@ -61,6 +59,7 @@ type ContextDashboard struct {
 	LastSync             *time.Time
 	MapData              ComponentMap
 	RecentRequests       []ServiceRequestSummary
+	URL                  ContentURL
 	User                 User
 }
 
@@ -137,7 +136,16 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSettings(w http.ResponseWriter, r *http.Request, u *models.User) {
-	settings(w, r, u)
+	userContent, err := contentForUser(r.Context(), u)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentAuthenticatedPlaceholder{
+		URL:  newContentURL(),
+		User: userContent,
+	}
+	html.RenderOrError(w, "sync/settings.html", data)
 }
 
 func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -291,9 +299,6 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		return
 	}
 	data := ContextDashboard{
-		Config: Config{
-			URLTegola: config.MakeURLTegola("/"),
-		},
 		CountTraps:           int(trapCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
@@ -306,18 +311,6 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		User:           userContent,
 	}
 	html.RenderOrError(w, "sync/dashboard.html", data)
-}
-
-func settings(w http.ResponseWriter, r *http.Request, user *models.User) {
-	userContent, err := contentForUser(r.Context(), user)
-	if err != nil {
-		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContentAuthenticatedPlaceholder{
-		User: userContent,
-	}
-	html.RenderOrError(w, "sync/settings.html", data)
 }
 
 func source(w http.ResponseWriter, r *http.Request, user *models.User, id uuid.UUID) {

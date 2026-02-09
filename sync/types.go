@@ -26,6 +26,7 @@ type ComponentMap struct {
 	Zoom        int
 }
 type ContentAuthenticatedPlaceholder struct {
+	URL  ContentURL
 	User User
 }
 type ContentMockURLs struct {
