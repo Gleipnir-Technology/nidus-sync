@@ -725,6 +725,85 @@ func (e *FileuploadFilestatustype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for FileuploadPoolconditiontype
+const (
+	FileuploadPoolconditiontypeGreen   FileuploadPoolconditiontype = "green"
+	FileuploadPoolconditiontypeMurky   FileuploadPoolconditiontype = "murky"
+	FileuploadPoolconditiontypeBlue    FileuploadPoolconditiontype = "blue"
+	FileuploadPoolconditiontypeUnknown FileuploadPoolconditiontype = "unknown"
+)
+
+func AllFileuploadPoolconditiontype() []FileuploadPoolconditiontype {
+	return []FileuploadPoolconditiontype{
+		FileuploadPoolconditiontypeGreen,
+		FileuploadPoolconditiontypeMurky,
+		FileuploadPoolconditiontypeBlue,
+		FileuploadPoolconditiontypeUnknown,
+	}
+}
+
+type FileuploadPoolconditiontype string
+
+func (e FileuploadPoolconditiontype) String() string {
+	return string(e)
+}
+
+func (e FileuploadPoolconditiontype) Valid() bool {
+	switch e {
+	case FileuploadPoolconditiontypeGreen,
+		FileuploadPoolconditiontypeMurky,
+		FileuploadPoolconditiontypeBlue,
+		FileuploadPoolconditiontypeUnknown:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e FileuploadPoolconditiontype) All() []FileuploadPoolconditiontype {
+	return AllFileuploadPoolconditiontype()
+}
+
+func (e FileuploadPoolconditiontype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadPoolconditiontype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e FileuploadPoolconditiontype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *FileuploadPoolconditiontype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e FileuploadPoolconditiontype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *FileuploadPoolconditiontype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = FileuploadPoolconditiontype(x)
+	case []byte:
+		*e = FileuploadPoolconditiontype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into FileuploadPoolconditiontype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid FileuploadPoolconditiontype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for H3aggregationtype
 const (
 	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"
@@ -1008,85 +1087,6 @@ func (e *Notificationtype) Scan(value any) error {
 
 	if !e.Valid() {
 		return fmt.Errorf("invalid Notificationtype value: %s", *e)
-	}
-
-	return nil
-}
-
-// Enum values for Poolconditiontype
-const (
-	PoolconditiontypeGreen   Poolconditiontype = "green"
-	PoolconditiontypeMurky   Poolconditiontype = "murky"
-	PoolconditiontypeBlue    Poolconditiontype = "blue"
-	PoolconditiontypeUnknown Poolconditiontype = "unknown"
-)
-
-func AllPoolconditiontype() []Poolconditiontype {
-	return []Poolconditiontype{
-		PoolconditiontypeGreen,
-		PoolconditiontypeMurky,
-		PoolconditiontypeBlue,
-		PoolconditiontypeUnknown,
-	}
-}
-
-type Poolconditiontype string
-
-func (e Poolconditiontype) String() string {
-	return string(e)
-}
-
-func (e Poolconditiontype) Valid() bool {
-	switch e {
-	case PoolconditiontypeGreen,
-		PoolconditiontypeMurky,
-		PoolconditiontypeBlue,
-		PoolconditiontypeUnknown:
-		return true
-	default:
-		return false
-	}
-}
-
-// useful when testing in other packages
-func (e Poolconditiontype) All() []Poolconditiontype {
-	return AllPoolconditiontype()
-}
-
-func (e Poolconditiontype) MarshalText() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *Poolconditiontype) UnmarshalText(text []byte) error {
-	return e.Scan(text)
-}
-
-func (e Poolconditiontype) MarshalBinary() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *Poolconditiontype) UnmarshalBinary(data []byte) error {
-	return e.Scan(data)
-}
-
-func (e Poolconditiontype) Value() (driver.Value, error) {
-	return string(e), nil
-}
-
-func (e *Poolconditiontype) Scan(value any) error {
-	switch x := value.(type) {
-	case string:
-		*e = Poolconditiontype(x)
-	case []byte:
-		*e = Poolconditiontype(x)
-	case nil:
-		return fmt.Errorf("cannot nil into Poolconditiontype")
-	default:
-		return fmt.Errorf("cannot scan type %T: %v", value, value)
-	}
-
-	if !e.Valid() {
-		return fmt.Errorf("invalid Poolconditiontype value: %s", *e)
 	}
 
 	return nil

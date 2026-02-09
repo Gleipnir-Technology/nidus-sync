@@ -161,6 +161,16 @@ func random_enums_FileuploadFilestatustype(f *faker.Faker, limits ...string) enu
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_FileuploadPoolconditiontype(f *faker.Faker, limits ...string) enums.FileuploadPoolconditiontype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.FileuploadPoolconditiontype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_H3aggregationtype(f *faker.Faker, limits ...string) enums.H3aggregationtype {
 	if f == nil {
 		f = &defaultFaker
@@ -187,16 +197,6 @@ func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notif
 	}
 
 	var e enums.Notificationtype
-	all := e.All()
-	return all[f.IntBetween(0, len(all)-1)]
-}
-
-func random_enums_Poolconditiontype(f *faker.Faker, limits ...string) enums.Poolconditiontype {
-	if f == nil {
-		f = &defaultFaker
-	}
-
-	var e enums.Poolconditiontype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

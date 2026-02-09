@@ -3,13 +3,20 @@ package sync
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/go-chi/chi/v5"
 )
 
+type ContentPoolDetail struct {
+	Pool platform.PoolDetail
+	URL  ContentURL
+	User User
+}
 type ContentPoolList struct {
 	Uploads []platform.PoolUpload
 	URL     ContentURL
@@ -58,7 +65,20 @@ func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContentPoolUpload{
+	ctx := r.Context()
+	file_id_str := chi.URLParam(r, "id")
+	file_id, err := strconv.ParseInt(file_id_str, 10, 32)
+	if err != nil {
+		respondError(w, "Failed to parse file_id", err, http.StatusInternalServerError)
+		return
+	}
+	detail, err := platform.GetPoolDetail(ctx, u.OrganizationID, int32(file_id))
+	if err != nil {
+		respondError(w, "Failed to get pool", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentPoolDetail{
+		Pool: detail,
 		URL:  newContentURL(),
 		User: userContent,
 	}

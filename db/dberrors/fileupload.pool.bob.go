@@ -3,15 +3,15 @@
 
 package dberrors
 
-var PoolErrors = &poolErrors{
+var FileuploadPoolErrors = &fileuploadPoolErrors{
 	ErrUniquePoolPkey: &UniqueConstraintError{
-		schema:  "",
+		schema:  "fileupload",
 		table:   "pool",
 		columns: []string{"id", "version"},
 		s:       "pool_pkey",
 	},
 }
 
-type poolErrors struct {
+type fileuploadPoolErrors struct {
 	ErrUniquePoolPkey *UniqueConstraintError
 }

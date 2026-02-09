@@ -60,13 +60,13 @@ type UserTemplate struct {
 type userR struct {
 	PublicUserUser    []*userRPublicUserUserR
 	CreatorFiles      []*userRCreatorFilesR
+	CreatorPools      []*userRCreatorPoolsR
 	CreatorNoteAudios []*userRCreatorNoteAudiosR
 	DeletorNoteAudios []*userRDeletorNoteAudiosR
 	CreatorNoteImages []*userRCreatorNoteImagesR
 	DeletorNoteImages []*userRDeletorNoteImagesR
 	UserNotifications []*userRUserNotificationsR
 	UserOauthTokens   []*userRUserOauthTokensR
-	CreatorPools      []*userRCreatorPoolsR
 	Organization      *userROrganizationR
 }
 
@@ -77,6 +77,10 @@ type userRPublicUserUserR struct {
 type userRCreatorFilesR struct {
 	number int
 	o      *FileuploadFileTemplate
+}
+type userRCreatorPoolsR struct {
+	number int
+	o      *FileuploadPoolTemplate
 }
 type userRCreatorNoteAudiosR struct {
 	number int
@@ -101,10 +105,6 @@ type userRUserNotificationsR struct {
 type userRUserOauthTokensR struct {
 	number int
 	o      *OauthTokenTemplate
-}
-type userRCreatorPoolsR struct {
-	number int
-	o      *PoolTemplate
 }
 type userROrganizationR struct {
 	o *OrganizationTemplate
@@ -144,6 +144,19 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.CreatorFiles = rel
+	}
+
+	if t.r.CreatorPools != nil {
+		rel := models.FileuploadPoolSlice{}
+		for _, r := range t.r.CreatorPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CreatorID = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorPools = rel
 	}
 
 	if t.r.CreatorNoteAudios != nil {
@@ -222,19 +235,6 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.UserOauthTokens = rel
-	}
-
-	if t.r.CreatorPools != nil {
-		rel := models.PoolSlice{}
-		for _, r := range t.r.CreatorPools {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.CreatorID = o.ID // h2
-				rel.R.CreatorUser = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.CreatorPools = rel
 	}
 
 	if t.r.Organization != nil {
@@ -444,6 +444,26 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
+	isCreatorPoolsDone, _ := userRelCreatorPoolsCtx.Value(ctx)
+	if !isCreatorPoolsDone && o.r.CreatorPools != nil {
+		ctx = userRelCreatorPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorPools {
+			if r.o.alreadyPersisted {
+				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
+			} else {
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorPools(ctx, exec, rel2...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isCreatorNoteAudiosDone, _ := userRelCreatorNoteAudiosCtx.Value(ctx)
 	if !isCreatorNoteAudiosDone && o.r.CreatorNoteAudios != nil {
 		ctx = userRelCreatorNoteAudiosCtx.WithValue(ctx, true)
@@ -451,12 +471,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteAudios = append(m.R.CreatorNoteAudios, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteAudios(ctx, exec, rel2...)
+				err = m.AttachCreatorNoteAudios(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -471,12 +491,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteAudios = append(m.R.DeletorNoteAudios, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteAudios(ctx, exec, rel3...)
+				err = m.AttachDeletorNoteAudios(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -491,12 +511,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteImages = append(m.R.CreatorNoteImages, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteImages(ctx, exec, rel4...)
+				err = m.AttachCreatorNoteImages(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -511,12 +531,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteImages = append(m.R.DeletorNoteImages, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteImages(ctx, exec, rel5...)
+				err = m.AttachDeletorNoteImages(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -531,12 +551,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserNotifications = append(m.R.UserNotifications, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserNotifications(ctx, exec, rel6...)
+				err = m.AttachUserNotifications(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -551,32 +571,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
 			} else {
-				rel7, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachUserOauthTokens(ctx, exec, rel7...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	isCreatorPoolsDone, _ := userRelCreatorPoolsCtx.Value(ctx)
-	if !isCreatorPoolsDone && o.r.CreatorPools != nil {
-		ctx = userRelCreatorPoolsCtx.WithValue(ctx, true)
-		for _, r := range o.r.CreatorPools {
-			if r.o.alreadyPersisted {
-				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
-			} else {
 				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorPools(ctx, exec, rel8...)
+				err = m.AttachUserOauthTokens(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -1354,6 +1354,54 @@ func (m userMods) WithoutCreatorFiles() UserMod {
 	})
 }
 
+func (m userMods) WithCreatorPools(number int, related *FileuploadPoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = []*userRCreatorPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorPools(number int, mods ...FileuploadPoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.WithCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorPools(number int, related *FileuploadPoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorPools(number int, mods ...FileuploadPoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.AddCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorPools(existingModels ...*models.FileuploadPool) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+				o: o.f.FromExistingFileuploadPool(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorPools() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = nil
+	})
+}
+
 func (m userMods) WithCreatorNoteAudios(number int, related *NoteAudioTemplate) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.CreatorNoteAudios = []*userRCreatorNoteAudiosR{{
@@ -1639,53 +1687,5 @@ func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.OauthToke
 func (m userMods) WithoutUserOauthTokens() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.UserOauthTokens = nil
-	})
-}
-
-func (m userMods) WithCreatorPools(number int, related *PoolTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = []*userRCreatorPoolsR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m userMods) WithNewCreatorPools(number int, mods ...PoolMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewPoolWithContext(ctx, mods...)
-		m.WithCreatorPools(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddCreatorPools(number int, related *PoolTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m userMods) AddNewCreatorPools(number int, mods ...PoolMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewPoolWithContext(ctx, mods...)
-		m.AddCreatorPools(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddExistingCreatorPools(existingModels ...*models.Pool) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		for _, em := range existingModels {
-			o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
-				o: o.f.FromExistingPool(em),
-			})
-		}
-	})
-}
-
-func (m userMods) WithoutCreatorPools() UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = nil
 	})
 }

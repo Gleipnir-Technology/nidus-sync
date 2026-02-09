@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var Pools = Table[
-	poolColumns,
-	poolIndexes,
-	poolForeignKeys,
-	poolUniques,
-	poolChecks,
+var FileuploadPools = Table[
+	fileuploadPoolColumns,
+	fileuploadPoolIndexes,
+	fileuploadPoolForeignKeys,
+	fileuploadPoolUniques,
+	fileuploadPoolChecks,
 ]{
-	Schema: "",
+	Schema: "fileupload",
 	Name:   "pool",
-	Columns: poolColumns{
+	Columns: fileuploadPoolColumns{
 		AddressCity: column{
 			Name:      "address_city",
 			DBType:    "text",
@@ -42,9 +42,18 @@ var Pools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Committed: column{
+			Name:      "committed",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Condition: column{
 			Name:      "condition",
-			DBType:    "public.poolconditiontype",
+			DBType:    "fileupload.poolconditiontype",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -69,6 +78,15 @@ var Pools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		CSVFile: column{
+			Name:      "csv_file",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Deleted: column{
 			Name:      "deleted",
 			DBType:    "timestamp without time zone",
@@ -78,8 +96,35 @@ var Pools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Committed: column{
-			Name:      "committed",
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		H3cell: column{
+			Name:      "h3cell",
+			DBType:    "h3index",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('fileupload.pool_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsInDistrict: column{
+			Name:      "is_in_district",
 			DBType:    "boolean",
 			Default:   "",
 			Comment:   "",
@@ -87,10 +132,10 @@ var Pools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ID: column{
-			Name:      "id",
-			DBType:    "integer",
-			Default:   "nextval('pool_id_seq'::regclass)",
+		IsNew: column{
+			Name:      "is_new",
+			DBType:    "boolean",
+			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -160,7 +205,7 @@ var Pools = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: poolIndexes{
+	Indexes: fileuploadPoolIndexes{
 		PoolPkey: index{
 			Type: "btree",
 			Name: "pool_pkey",
@@ -189,19 +234,28 @@ var Pools = Table[
 		Columns: []string{"id", "version"},
 		Comment: "",
 	},
-	ForeignKeys: poolForeignKeys{
-		PoolPoolCreatorIDFkey: foreignKey{
+	ForeignKeys: fileuploadPoolForeignKeys{
+		FileuploadPoolPoolCreatorIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "pool.pool_creator_id_fkey",
+				Name:    "fileupload.pool.pool_creator_id_fkey",
 				Columns: []string{"creator_id"},
 				Comment: "",
 			},
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
-		PoolPoolOrganizationIDFkey: foreignKey{
+		FileuploadPoolPoolCSVFileFkey: foreignKey{
 			constraint: constraint{
-				Name:    "pool.pool_organization_id_fkey",
+				Name:    "fileupload.pool.pool_csv_file_fkey",
+				Columns: []string{"csv_file"},
+				Comment: "",
+			},
+			ForeignTable:   "fileupload.csv",
+			ForeignColumns: []string{"file_id"},
+		},
+		FileuploadPoolPoolOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "fileupload.pool.pool_organization_id_fkey",
 				Columns: []string{"organization_id"},
 				Comment: "",
 			},
@@ -213,16 +267,21 @@ var Pools = Table[
 	Comment: "",
 }
 
-type poolColumns struct {
+type fileuploadPoolColumns struct {
 	AddressCity        column
 	AddressPostalCode  column
 	AddressStreet      column
+	Committed          column
 	Condition          column
 	Created            column
 	CreatorID          column
+	CSVFile            column
 	Deleted            column
-	Committed          column
+	Geom               column
+	H3cell             column
 	ID                 column
+	IsInDistrict       column
+	IsNew              column
 	Notes              column
 	OrganizationID     column
 	PropertyOwnerName  column
@@ -232,41 +291,42 @@ type poolColumns struct {
 	Version            column
 }
 
-func (c poolColumns) AsSlice() []column {
+func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Condition, c.Created, c.CreatorID, c.Deleted, c.Committed, c.ID, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhone, c.ResidentOwned, c.ResidentPhone, c.Version,
+		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhone, c.ResidentOwned, c.ResidentPhone, c.Version,
 	}
 }
 
-type poolIndexes struct {
+type fileuploadPoolIndexes struct {
 	PoolPkey index
 }
 
-func (i poolIndexes) AsSlice() []index {
+func (i fileuploadPoolIndexes) AsSlice() []index {
 	return []index{
 		i.PoolPkey,
 	}
 }
 
-type poolForeignKeys struct {
-	PoolPoolCreatorIDFkey      foreignKey
-	PoolPoolOrganizationIDFkey foreignKey
+type fileuploadPoolForeignKeys struct {
+	FileuploadPoolPoolCreatorIDFkey      foreignKey
+	FileuploadPoolPoolCSVFileFkey        foreignKey
+	FileuploadPoolPoolOrganizationIDFkey foreignKey
 }
 
-func (f poolForeignKeys) AsSlice() []foreignKey {
+func (f fileuploadPoolForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PoolPoolCreatorIDFkey, f.PoolPoolOrganizationIDFkey,
+		f.FileuploadPoolPoolCreatorIDFkey, f.FileuploadPoolPoolCSVFileFkey, f.FileuploadPoolPoolOrganizationIDFkey,
 	}
 }
 
-type poolUniques struct{}
+type fileuploadPoolUniques struct{}
 
-func (u poolUniques) AsSlice() []constraint {
+func (u fileuploadPoolUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type poolChecks struct{}
+type fileuploadPoolChecks struct{}
 
-func (c poolChecks) AsSlice() []check {
+func (c fileuploadPoolChecks) AsSlice() []check {
 	return []check{}
 }

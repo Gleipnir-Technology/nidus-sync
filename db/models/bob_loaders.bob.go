@@ -59,6 +59,7 @@ type preloaders struct {
 	FileuploadErrorCSV                fileuploadErrorCSVPreloader
 	FileuploadErrorFile               fileuploadErrorFilePreloader
 	FileuploadFile                    fileuploadFilePreloader
+	FileuploadPool                    fileuploadPoolPreloader
 	H3Aggregation                     h3AggregationPreloader
 	ImportDistrict                    importDistrictPreloader
 	NoteAudio                         noteAudioPreloader
@@ -70,7 +71,6 @@ type preloaders struct {
 	Notification                      notificationPreloader
 	OauthToken                        oauthTokenPreloader
 	Organization                      organizationPreloader
-	Pool                              poolPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisancePreloader
@@ -130,6 +130,7 @@ func getPreloaders() preloaders {
 		FileuploadErrorCSV:                buildFileuploadErrorCSVPreloader(),
 		FileuploadErrorFile:               buildFileuploadErrorFilePreloader(),
 		FileuploadFile:                    buildFileuploadFilePreloader(),
+		FileuploadPool:                    buildFileuploadPoolPreloader(),
 		H3Aggregation:                     buildH3AggregationPreloader(),
 		ImportDistrict:                    buildImportDistrictPreloader(),
 		NoteAudio:                         buildNoteAudioPreloader(),
@@ -141,7 +142,6 @@ func getPreloaders() preloaders {
 		Notification:                      buildNotificationPreloader(),
 		OauthToken:                        buildOauthTokenPreloader(),
 		Organization:                      buildOrganizationPreloader(),
-		Pool:                              buildPoolPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisancePreloader(),
@@ -207,6 +207,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	FileuploadErrorCSV                fileuploadErrorCSVThenLoader[Q]
 	FileuploadErrorFile               fileuploadErrorFileThenLoader[Q]
 	FileuploadFile                    fileuploadFileThenLoader[Q]
+	FileuploadPool                    fileuploadPoolThenLoader[Q]
 	H3Aggregation                     h3AggregationThenLoader[Q]
 	ImportDistrict                    importDistrictThenLoader[Q]
 	NoteAudio                         noteAudioThenLoader[Q]
@@ -218,7 +219,6 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                      notificationThenLoader[Q]
 	OauthToken                        oauthTokenThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
-	Pool                              poolThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisanceThenLoader[Q]
@@ -278,6 +278,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FileuploadErrorCSV:                buildFileuploadErrorCSVThenLoader[Q](),
 		FileuploadErrorFile:               buildFileuploadErrorFileThenLoader[Q](),
 		FileuploadFile:                    buildFileuploadFileThenLoader[Q](),
+		FileuploadPool:                    buildFileuploadPoolThenLoader[Q](),
 		H3Aggregation:                     buildH3AggregationThenLoader[Q](),
 		ImportDistrict:                    buildImportDistrictThenLoader[Q](),
 		NoteAudio:                         buildNoteAudioThenLoader[Q](),
@@ -289,7 +290,6 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                      buildNotificationThenLoader[Q](),
 		OauthToken:                        buildOauthTokenThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
-		Pool:                              buildPoolThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisanceThenLoader[Q](),

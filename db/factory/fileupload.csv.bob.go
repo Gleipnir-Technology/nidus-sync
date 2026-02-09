@@ -52,6 +52,7 @@ type FileuploadCSVTemplate struct {
 type fileuploadCSVR struct {
 	File             *fileuploadCSVRFileR
 	CSVFileErrorCSVS []*fileuploadCSVRCSVFileErrorCSVSR
+	CSVFilePools     []*fileuploadCSVRCSVFilePoolsR
 }
 
 type fileuploadCSVRFileR struct {
@@ -60,6 +61,10 @@ type fileuploadCSVRFileR struct {
 type fileuploadCSVRCSVFileErrorCSVSR struct {
 	number int
 	o      *FileuploadErrorCSVTemplate
+}
+type fileuploadCSVRCSVFilePoolsR struct {
+	number int
+	o      *FileuploadPoolTemplate
 }
 
 // Apply mods to the FileuploadCSVTemplate
@@ -90,6 +95,19 @@ func (t FileuploadCSVTemplate) setModelRels(o *models.FileuploadCSV) {
 			rel = append(rel, related...)
 		}
 		o.R.CSVFileErrorCSVS = rel
+	}
+
+	if t.r.CSVFilePools != nil {
+		rel := models.FileuploadPoolSlice{}
+		for _, r := range t.r.CSVFilePools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CSVFile = o.FileID // h2
+				rel.R.CSVFileCSV = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CSVFilePools = rel
 	}
 }
 
@@ -201,6 +219,26 @@ func (o *FileuploadCSVTemplate) insertOptRels(ctx context.Context, exec bob.Exec
 				}
 
 				err = m.AttachCSVFileErrorCSVS(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isCSVFilePoolsDone, _ := fileuploadCSVRelCSVFilePoolsCtx.Value(ctx)
+	if !isCSVFilePoolsDone && o.r.CSVFilePools != nil {
+		ctx = fileuploadCSVRelCSVFilePoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CSVFilePools {
+			if r.o.alreadyPersisted {
+				m.R.CSVFilePools = append(m.R.CSVFilePools, r.o.Build())
+			} else {
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCSVFilePools(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -561,5 +599,53 @@ func (m fileuploadCSVMods) AddExistingCSVFileErrorCSVS(existingModels ...*models
 func (m fileuploadCSVMods) WithoutCSVFileErrorCSVS() FileuploadCSVMod {
 	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
 		o.r.CSVFileErrorCSVS = nil
+	})
+}
+
+func (m fileuploadCSVMods) WithCSVFilePools(number int, related *FileuploadPoolTemplate) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFilePools = []*fileuploadCSVRCSVFilePoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m fileuploadCSVMods) WithNewCSVFilePools(number int, mods ...FileuploadPoolMod) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.WithCSVFilePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadCSVMods) AddCSVFilePools(number int, related *FileuploadPoolTemplate) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFilePools = append(o.r.CSVFilePools, &fileuploadCSVRCSVFilePoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m fileuploadCSVMods) AddNewCSVFilePools(number int, mods ...FileuploadPoolMod) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.AddCSVFilePools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadCSVMods) AddExistingCSVFilePools(existingModels ...*models.FileuploadPool) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		for _, em := range existingModels {
+			o.r.CSVFilePools = append(o.r.CSVFilePools, &fileuploadCSVRCSVFilePoolsR{
+				o: o.f.FromExistingFileuploadPool(em),
+			})
+		}
+	})
+}
+
+func (m fileuploadCSVMods) WithoutCSVFilePools() FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFilePools = nil
 	})
 }

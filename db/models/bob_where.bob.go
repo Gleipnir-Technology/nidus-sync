@@ -59,6 +59,7 @@ func Where[Q psql.Filterable]() struct {
 	FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
 	FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 	FileuploadFiles                    fileuploadFileWhere[Q]
+	FileuploadPools                    fileuploadPoolWhere[Q]
 	GeographyColumns                   geographyColumnWhere[Q]
 	GeometryColumns                    geometryColumnWhere[Q]
 	GooseDBVersions                    gooseDBVersionWhere[Q]
@@ -73,7 +74,6 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                      notificationWhere[Q]
 	OauthTokens                        oauthTokenWhere[Q]
 	Organizations                      organizationWhere[Q]
-	Pools                              poolWhere[Q]
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -136,6 +136,7 @@ func Where[Q psql.Filterable]() struct {
 		FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
 		FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 		FileuploadFiles                    fileuploadFileWhere[Q]
+		FileuploadPools                    fileuploadPoolWhere[Q]
 		GeographyColumns                   geographyColumnWhere[Q]
 		GeometryColumns                    geometryColumnWhere[Q]
 		GooseDBVersions                    gooseDBVersionWhere[Q]
@@ -150,7 +151,6 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                      notificationWhere[Q]
 		OauthTokens                        oauthTokenWhere[Q]
 		Organizations                      organizationWhere[Q]
-		Pools                              poolWhere[Q]
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -212,6 +212,7 @@ func Where[Q psql.Filterable]() struct {
 		FileuploadErrorCSVS:                buildFileuploadErrorCSVWhere[Q](FileuploadErrorCSVS.Columns),
 		FileuploadErrorFiles:               buildFileuploadErrorFileWhere[Q](FileuploadErrorFiles.Columns),
 		FileuploadFiles:                    buildFileuploadFileWhere[Q](FileuploadFiles.Columns),
+		FileuploadPools:                    buildFileuploadPoolWhere[Q](FileuploadPools.Columns),
 		GeographyColumns:                   buildGeographyColumnWhere[Q](GeographyColumns.Columns),
 		GeometryColumns:                    buildGeometryColumnWhere[Q](GeometryColumns.Columns),
 		GooseDBVersions:                    buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),
@@ -226,7 +227,6 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                      buildNotificationWhere[Q](Notifications.Columns),
 		OauthTokens:                        buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
-		Pools:                              buildPoolWhere[Q](Pools.Columns),
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNotifyEmailNuisances:   buildPublicreportNotifyEmailNuisanceWhere[Q](PublicreportNotifyEmailNuisances.Columns),

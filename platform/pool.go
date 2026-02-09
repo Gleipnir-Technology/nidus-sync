@@ -19,6 +19,16 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
+type PoolDetail struct {
+	Created time.Time `db:"created"`
+	ID      int32     `db:"id"`
+	Pools   []PoolRow
+	Status  string `db:"status"`
+}
+type PoolRow struct {
+	Street string
+	City   string
+}
 type PoolUpload struct {
 	Created time.Time `db:"created"`
 	ID      int32     `db:"id"`
@@ -60,6 +70,35 @@ func NewPoolUpload(ctx context.Context, u *models.User, upload userfile.FileUplo
 	background.ProcessUpload(file.ID)
 	return PoolUpload{
 		ID: file.ID,
+	}, nil
+}
+func GetPoolDetail(ctx context.Context, organization_id int32, file_id int32) (PoolDetail, error) {
+	file, err := models.FindFileuploadFile(ctx, db.PGInstance.BobDB, file_id)
+	if err != nil {
+		return PoolDetail{}, fmt.Errorf("Failed to lookup file %d: %w", file_id, err)
+	}
+	/*
+		csv, err := models.FindFileuploadCSV(ctx, db.PGInstance.BobDB, file_id)
+		if err != nil {
+			return PoolDetail{}, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
+		}
+	*/
+	rows, err := models.FileuploadPools.Query(
+		models.SelectWhere.FileuploadPools.CSVFile.EQ(file_id),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return PoolDetail{}, fmt.Errorf("Failed to query pools for %d: %w", file_id, err)
+	}
+	pools := make([]PoolRow, 0)
+	for _, r := range rows {
+		pools = append(pools, PoolRow{
+			Street: r.AddressStreet,
+			City:   r.AddressCity,
+		})
+	}
+	return PoolDetail{
+		Pools:  pools,
+		Status: file.Status.String(),
 	}, nil
 }
 func PoolUploadList(ctx context.Context, organization_id int32) ([]PoolUpload, error) {

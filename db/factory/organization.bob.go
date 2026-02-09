@@ -85,11 +85,11 @@ type organizationR struct {
 	Zones2s                   []*organizationRZones2sR
 	FieldseekerSyncs          []*organizationRFieldseekerSyncsR
 	Files                     []*organizationRFilesR
+	Pools                     []*organizationRPoolsR
 	H3Aggregations            []*organizationRH3AggregationsR
 	NoteAudios                []*organizationRNoteAudiosR
 	NoteImages                []*organizationRNoteImagesR
 	ImportDistrictGidDistrict *organizationRImportDistrictGidDistrictR
-	Pools                     []*organizationRPoolsR
 	Nuisances                 []*organizationRNuisancesR
 	PublicreportPool          []*organizationRPublicreportPoolR
 	Quicks                    []*organizationRQuicksR
@@ -220,6 +220,10 @@ type organizationRFilesR struct {
 	number int
 	o      *FileuploadFileTemplate
 }
+type organizationRPoolsR struct {
+	number int
+	o      *FileuploadPoolTemplate
+}
 type organizationRH3AggregationsR struct {
 	number int
 	o      *H3AggregationTemplate
@@ -234,10 +238,6 @@ type organizationRNoteImagesR struct {
 }
 type organizationRImportDistrictGidDistrictR struct {
 	o *ImportDistrictTemplate
-}
-type organizationRPoolsR struct {
-	number int
-	o      *PoolTemplate
 }
 type organizationRNuisancesR struct {
 	number int
@@ -667,6 +667,19 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.Files = rel
 	}
 
+	if t.r.Pools != nil {
+		rel := models.FileuploadPoolSlice{}
+		for _, r := range t.r.Pools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Pools = rel
+	}
+
 	if t.r.H3Aggregations != nil {
 		rel := models.H3AggregationSlice{}
 		for _, r := range t.r.H3Aggregations {
@@ -711,19 +724,6 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		rel.R.ImportDistrictGidOrganization = o
 		o.ImportDistrictGid = null.From(rel.Gid) // h2
 		o.R.ImportDistrictGidDistrict = rel
-	}
-
-	if t.r.Pools != nil {
-		rel := models.PoolSlice{}
-		for _, r := range t.r.Pools {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.OrganizationID = o.ID // h2
-				rel.R.Organization = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.Pools = rel
 	}
 
 	if t.r.Nuisances != nil {
@@ -1521,6 +1521,26 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isPoolsDone, _ := organizationRelPoolsCtx.Value(ctx)
+	if !isPoolsDone && o.r.Pools != nil {
+		ctx = organizationRelPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Pools {
+			if r.o.alreadyPersisted {
+				m.R.Pools = append(m.R.Pools, r.o.Build())
+			} else {
+				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPools(ctx, exec, rel31...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isH3AggregationsDone, _ := organizationRelH3AggregationsCtx.Value(ctx)
 	if !isH3AggregationsDone && o.r.H3Aggregations != nil {
 		ctx = organizationRelH3AggregationsCtx.WithValue(ctx, true)
@@ -1528,12 +1548,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.H3Aggregations = append(m.R.H3Aggregations, r.o.Build())
 			} else {
-				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachH3Aggregations(ctx, exec, rel31...)
+				err = m.AttachH3Aggregations(ctx, exec, rel32...)
 				if err != nil {
 					return err
 				}
@@ -1548,12 +1568,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				rel33, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel32...)
+				err = m.AttachNoteAudios(ctx, exec, rel33...)
 				if err != nil {
 					return err
 				}
@@ -1568,12 +1588,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel33, err := r.o.CreateMany(ctx, exec, r.number)
+				rel34, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel33...)
+				err = m.AttachNoteImages(ctx, exec, rel34...)
 				if err != nil {
 					return err
 				}
@@ -1587,37 +1607,17 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.ImportDistrictGidDistrict.o.alreadyPersisted {
 			m.R.ImportDistrictGidDistrict = o.r.ImportDistrictGidDistrict.o.Build()
 		} else {
-			var rel34 *models.ImportDistrict
-			rel34, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
+			var rel35 *models.ImportDistrict
+			rel35, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel34)
+			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel35)
 			if err != nil {
 				return err
 			}
 		}
 
-	}
-
-	isPoolsDone, _ := organizationRelPoolsCtx.Value(ctx)
-	if !isPoolsDone && o.r.Pools != nil {
-		ctx = organizationRelPoolsCtx.WithValue(ctx, true)
-		for _, r := range o.r.Pools {
-			if r.o.alreadyPersisted {
-				m.R.Pools = append(m.R.Pools, r.o.Build())
-			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachPools(ctx, exec, rel35...)
-				if err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	isNuisancesDone, _ := organizationRelNuisancesCtx.Value(ctx)
@@ -3769,6 +3769,54 @@ func (m organizationMods) WithoutFiles() OrganizationMod {
 	})
 }
 
+func (m organizationMods) WithPools(number int, related *FileuploadPoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = []*organizationRPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewPools(number int, mods ...FileuploadPoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.WithPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddPools(number int, related *FileuploadPoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewPools(number int, mods ...FileuploadPoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.AddPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingPools(existingModels ...*models.FileuploadPool) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+				o: o.f.FromExistingFileuploadPool(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutPools() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = nil
+	})
+}
+
 func (m organizationMods) WithH3Aggregations(number int, related *H3AggregationTemplate) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.H3Aggregations = []*organizationRH3AggregationsR{{
@@ -3910,54 +3958,6 @@ func (m organizationMods) AddExistingNoteImages(existingModels ...*models.NoteIm
 func (m organizationMods) WithoutNoteImages() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.NoteImages = nil
-	})
-}
-
-func (m organizationMods) WithPools(number int, related *PoolTemplate) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = []*organizationRPoolsR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m organizationMods) WithNewPools(number int, mods ...PoolMod) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		related := o.f.NewPoolWithContext(ctx, mods...)
-		m.WithPools(number, related).Apply(ctx, o)
-	})
-}
-
-func (m organizationMods) AddPools(number int, related *PoolTemplate) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m organizationMods) AddNewPools(number int, mods ...PoolMod) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		related := o.f.NewPoolWithContext(ctx, mods...)
-		m.AddPools(number, related).Apply(ctx, o)
-	})
-}
-
-func (m organizationMods) AddExistingPools(existingModels ...*models.Pool) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		for _, em := range existingModels {
-			o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
-				o: o.f.FromExistingPool(em),
-			})
-		}
-	})
-}
-
-func (m organizationMods) WithoutPools() OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = nil
 	})
 }
 

@@ -42,22 +42,27 @@ CREATE TABLE fileupload.error_csv (
 	message TEXT NOT NULL,
 	PRIMARY KEY (id)
 );
-CREATE TYPE PoolConditionType AS ENUM (
+CREATE TYPE fileupload.PoolConditionType AS ENUM (
 	'green',
 	'murky',
 	'blue',
 	'unknown'
 );
-CREATE TABLE pool (
+CREATE TABLE fileupload.pool (
 	address_city TEXT NOT NULL,
 	address_postal_code TEXT NOT NULL,
 	address_street TEXT NOT NULL,
-	condition PoolConditionType NOT NULL,
+	committed BOOLEAN NOT NULL, -- Whether or not its just proposed before a CSV file is committed
+	condition fileupload.PoolConditionType NOT NULL,
 	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	creator_id INTEGER REFERENCES user_(id) NOT NULL,
+	csv_file INTEGER REFERENCES fileupload.csv(file_id) NOT NULL,
 	deleted TIMESTAMP WITHOUT TIME ZONE,
-	committed BOOLEAN NOT NULL, -- Whether or not its just proposed before a CSV file is committed
+	geom geometry(Point, 3857),
+	h3cell h3index,
 	id SERIAL,
+	is_in_district BOOLEAN NOT NULL, -- Whether or not the pool is within the district
+	is_new BOOLEAN NOT NULL, -- Whether or not we already have a pool in the system for this row
 	notes TEXT NOT NULL,
 	organization_id INTEGER REFERENCES organization(id) NOT NULL,
 	property_owner_name TEXT NOT NULL,
@@ -68,8 +73,8 @@ CREATE TABLE pool (
 	PRIMARY KEY (id, version)
 );
 -- +goose Down
-DROP TABLE pool;
-DROP TYPE poolconditiontype;
+DROP TABLE fileupload.pool;
+DROP TYPE fileupload.PoolConditionType;
 DROP TABLE fileupload.error_csv;
 DROP TABLE fileupload.error_file;
 DROP TABLE fileupload.csv;

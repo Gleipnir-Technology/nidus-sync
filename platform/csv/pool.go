@@ -100,17 +100,22 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 			}
 			return fmt.Errorf("Failed to read all CSV records for file %d: %w", file_id, err)
 		}
-		setter := models.PoolSetter{
+		setter := models.FileuploadPoolSetter{
 			// required fields
 			//AddressCity: omit.From(),
 			//AddressPostalCode: omit.From(),
 			//AddressStreet: omit.From(),
+			Committed: omit.From(false),
+			Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
 			Created:   omit.From(time.Now()),
 			CreatorID: omit.From(file.CreatorID),
-			Committed: omit.From(false),
-			Condition: omit.From(enums.PoolconditiontypeUnknown),
+			CSVFile:   omit.From(file.ID),
 			Deleted:   omitnull.FromPtr[time.Time](nil),
+			Geom:      omitnull.FromPtr[string](nil),
+			H3cell:    omitnull.FromPtr[string](nil),
 			// ID - generated
+			IsInDistrict:       omit.From(false),
+			IsNew:              omit.From(false),
 			Notes:              omit.From(""),
 			OrganizationID:     omit.From(file.OrganizationID),
 			PropertyOwnerName:  omit.From(""),
@@ -129,7 +134,7 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 			case headerAddressStreet:
 				setter.AddressStreet = omit.From(col)
 			case headerCondition:
-				var condition enums.Poolconditiontype
+				var condition enums.FileuploadPoolconditiontype
 				err := condition.Scan(strings.ToLower(col))
 				if err != nil {
 					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", poolConditionValidValues()))
@@ -153,7 +158,7 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 				setter.ResidentPhone = omitnull.From(col)
 			}
 		}
-		_, err = models.Pools.Insert(&setter).Exec(ctx, txn)
+		_, err = models.FileuploadPools.Insert(&setter).Exec(ctx, txn)
 		if err != nil {
 			return fmt.Errorf("Failed to create pool: %w", err)
 		}
@@ -260,7 +265,7 @@ func missingRequiredHeaders(headers []headerPoolEnum) []headerPoolEnum {
 }
 func poolConditionValidValues() string {
 	var b strings.Builder
-	for i, cond := range enums.AllPoolconditiontype() {
+	for i, cond := range enums.AllFileuploadPoolconditiontype() {
 		if i == 0 {
 			fmt.Fprintf(&b, "'%s'", cond)
 		} else {
