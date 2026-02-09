@@ -1,0 +1,28 @@
+{{ template "rmo/layout/base.html" . }}
+
+{{ define "title" }}Error{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	{{ if (eq .District nil) }}
+		{{ template "rmo/component/header-rmo.html" . }}
+	{{ else }}
+		{{ template "rmo/component/header-district.html" .District }}
+	{{ end }}
+	<div class="container">
+		<h1>Sorry, something went wrong.</h1>
+		<h2>Error code: {{ .Code }}</h2>
+		<p>
+			Sorry, you shouldn't ever see this page, it's generally meant to indicate
+			that something in the site is very broken. We'll automatically get a
+			report for this, so you don't need to send anything, but if you'd like to
+			tell us about it, please reach out to
+			<a href="mailto:support@report.mosquitoes.online"
+				>support@report.mosquitoes.online</a
+			>
+		</p>
+		<img
+			src="https://media.istockphoto.com/id/499569999/vector/anti-mosquito-sign.jpg?s=612x612&w=0&k=20&c=F0Hc_YCC9gOh0Rs59nZ5z7Di0HgimqDtmotTHqkfOAM="
+		/>
+	</div>
+{{ end }}

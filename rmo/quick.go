@@ -86,7 +86,7 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 	report := r.URL.Query().Get("report")
 	html.RenderOrError(
 		w,
-		"rmo/register-notificition-complete.html",
+		"rmo/register-notifications-complete.html",
 		ContentRegisterNotificationsComplete{
 			ReportID: report,
 		},
