@@ -40,7 +40,7 @@ func (sr Pool) addNotificationEmail(ctx context.Context, txn bob.Tx, email strin
 	_, err := models.PublicreportNotifyEmailPools.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to save new notification email row")
-		return newErrorWithCode("internal-error", "Failed to save new notification email row")
+		return newInternalError(err, "Failed to save new notification email row")
 	}
 	return nil
 }
@@ -54,7 +54,7 @@ func (sr Pool) addNotificationPhone(ctx context.Context, txn bob.Tx, phone text.
 	_, err := models.PublicreportNotifyPhonePools.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to save new notification phone row")
-		return newErrorWithCode("internal-error", "Failed to save new notification phone row")
+		return newInternalError(err, "Failed to save new notification phone row")
 	}
 	return nil
 }
@@ -96,7 +96,7 @@ func (sr Pool) updateReportCol(ctx context.Context, txn bob.Tx, setter *models.P
 	err := sr.row.Update(ctx, txn, setter)
 	if err != nil {
 		log.Error().Err(err).Str("public_id", sr.publicReportID).Int32("report_id", sr.id).Msg("Failed to update report")
-		return newErrorWithCode("internal-error", "Failed to update pool report in the database")
+		return newInternalError(err, "Failed to update pool report in the database")
 	}
 	return nil
 }
@@ -109,7 +109,7 @@ func newPool(ctx context.Context, public_id string, report_id int32) (Pool, *Err
 	row, err := models.FindPublicreportPool(ctx, db.PGInstance.BobDB, report_id)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to find pool report")
-		return Pool{}, newErrorWithCode("internal-error", "Failed to find pool report %d: %w", public_id, err)
+		return Pool{}, newInternalError(err, "Failed to find pool report %d: %w", public_id, err)
 	}
 	return Pool{
 		id:             report_id,

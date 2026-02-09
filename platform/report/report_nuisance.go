@@ -42,7 +42,7 @@ func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Tx, email s
 	}
 	_, err := models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to save new notification email row")
+		return newInternalError(err, "Failed to save new notification email row")
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ func (sr Nuisance) addNotificationPhone(ctx context.Context, txn bob.Tx, phone t
 	}
 	_, err = models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to save new notification phone row")
+		return newInternalError(err, "Failed to save new notification phone row")
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (sr Nuisance) updateReportCol(ctx context.Context, txn bob.Tx, setter *mode
 	err := sr.row.Update(ctx, txn, setter)
 	if err != nil {
 		log.Error().Err(err).Str("public_id", sr.publicReportID).Int32("report_id", sr.id).Msg("Failed to update report")
-		return newErrorWithCode("internal-error", "Failed to update nuisance report in the database")
+		return newInternalError(err, "Failed to update nuisance report in the database")
 	}
 	return nil
 }
@@ -108,11 +108,11 @@ func (sr Nuisance) updateReporterPhone(ctx context.Context, txn bob.Tx, phone te
 		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.publicReportID))),
 	).Exec(ctx, txn)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
+		return newInternalError(err, "Failed to update report: %w", err)
 	}
 	rowcount, err := result.RowsAffected()
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
+		return newInternalError(err, "Failed to get rows affected: %w", err)
 	}
 	if rowcount != 1 {
 		log.Warn().Str("public_report_id", sr.publicReportID).Msg("updated more than one row, which is a programmer error")
@@ -123,7 +123,7 @@ func (sr Nuisance) updateReporterPhone(ctx context.Context, txn bob.Tx, phone te
 func newNuisance(ctx context.Context, public_id string, report_id int32) (Nuisance, *ErrorWithCode) {
 	row, err := models.FindPublicreportNuisance(ctx, db.PGInstance.BobDB, report_id)
 	if err != nil {
-		return Nuisance{}, newErrorWithCode("internal-error", "Failed to find nuisance report %d: %w", public_id, err)
+		return Nuisance{}, newInternalError(err, "Failed to find nuisance report %d: %w", public_id, err)
 	}
 	return Nuisance{
 		id:             report_id,
