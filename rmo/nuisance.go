@@ -116,7 +116,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		log.Warn().Err(err).Str("duration_str", duration_str).Msg("Failed to interpret 'duration'")
 	}
 
-	log.Debug().Strs("source_locations", source_locations).Msg("parsing")
+	//log.Debug().Strs("source_locations", source_locations).Msg("parsing")
 	if slices.Contains(source_locations, "backyard") {
 		is_location_backyard = true
 	}

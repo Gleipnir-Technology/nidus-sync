@@ -88,7 +88,7 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 			return fmt.Errorf("error adding SVG templates: %w", err)
 		}
 		ts.nameToTemplate[short_path] = new_t
-		log.Debug().Str("path", short_path).Msg("Loaded page template")
+		//log.Debug().Str("path", short_path).Msg("Loaded page template")
 		return nil
 	})
 	return err
@@ -119,7 +119,7 @@ func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir st
 			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
 		}
 		//ts.nameToTemplate[short_path] = new_t
-		log.Debug().Str("path", short_path).Msg("Loaded shared component template")
+		//log.Debug().Str("path", short_path).Msg("Loaded shared component template")
 		return nil
 	})
 	return err
