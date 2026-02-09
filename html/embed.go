@@ -44,7 +44,7 @@ func newTemplateSystemEmbed() (templateSystemEmbed, error) {
 }
 func (ts templateSystemEmbed) loadAll() error {
 	// Then, parse all remaining templates into their named slots, adding the shared stuff
-	page_subdirs := []string{"template/sync"}
+	page_subdirs := []string{"template/rmo", "template/sync"}
 	for _, subdir := range page_subdirs {
 		err := ts.loadTemplateSubdir(subdir)
 		if err != nil {
@@ -72,12 +72,20 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 			return fmt.Errorf("error parsing '%s': %w", path, err)
 		}
 		short_path := removeLeadingDir(path)
-		shared_subdirs := []string{"template/sync/component", "template/sync/layout"}
+		shared_subdirs := []string{"template/rmo/component", "template/rmo/layout", "template/sync/component", "template/sync/layout"}
 		for _, shared_subdir := range shared_subdirs {
 			err := ts.addSubdirTemplates(new_t, shared_subdir)
 			if err != nil {
 				return fmt.Errorf("Failed to add subdir '%s' templates: %w", shared_subdir, err)
 			}
+		}
+		svg_fs, err := fs.Sub(ts.sourceFS, "template/svg")
+		if err != nil {
+			return fmt.Errorf("failed to get template/svg sub")
+		}
+		err = addSVGTemplates(svg_fs, new_t)
+		if err != nil {
+			return fmt.Errorf("error adding SVG templates: %w", err)
 		}
 		ts.nameToTemplate[short_path] = new_t
 		log.Debug().Str("path", short_path).Msg("Loaded page template")
