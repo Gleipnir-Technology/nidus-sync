@@ -20,11 +20,13 @@ import (
 )
 
 type UploadPoolDetail struct {
-	Created time.Time
-	ID      int32
-	Name    string
-	Pools   []UploadPoolRow
-	Status  string
+	CountExisting int
+	CountNew      int
+	Created       time.Time
+	ID            int32
+	Name          string
+	Pools         []UploadPoolRow
+	Status        string
 }
 type UploadPoolRow struct {
 	Street string
@@ -91,16 +93,25 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		return UploadPoolDetail{}, fmt.Errorf("Failed to query pools for %d: %w", file_id, err)
 	}
 	pools := make([]UploadPoolRow, 0)
+	count_existing := 0
+	count_new := 0
 	for _, r := range rows {
+		if r.IsNew {
+			count_new = count_new + 1
+		} else {
+			count_existing = count_existing + 1
+		}
 		pools = append(pools, UploadPoolRow{
 			Street: r.AddressStreet,
 			City:   r.AddressCity,
 		})
 	}
 	return UploadPoolDetail{
-		Name:   file.Name,
-		Pools:  pools,
-		Status: file.Status.String(),
+		CountExisting: count_existing,
+		CountNew:      count_new,
+		Name:          file.Name,
+		Pools:         pools,
+		Status:        file.Status.String(),
 	}, nil
 }
 func PoolUploadList(ctx context.Context, organization_id int32) ([]PoolUpload, error) {

@@ -30,7 +30,7 @@
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-primary">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-primary">45</h1>
+						<h1 class="display-4 text-primary">{{ .Upload.CountExisting }}</h1>
 						<h5>Existing Pools</h5>
 						<p class="text-muted">Matches found in previous records</p>
 					</div>
@@ -39,7 +39,7 @@
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-success">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-success">23</h1>
+						<h1 class="display-4 text-success">{{ .Upload.CountNew }}</h1>
 						<h5>New Pools</h5>
 						<p class="text-muted">Not found in existing records</p>
 					</div>
