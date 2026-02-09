@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/rwcarlsen/goexif/exif"
+	"github.com/rwcarlsen/goexif/tiff"
 	//exif "github.com/rwcarlsen/goexif/exif"
 	//"github.com/dsoprea/go-exif-extra/format"
 )
@@ -48,6 +49,10 @@ type ImageUpload struct {
 	UUID           uuid.UUID
 }
 
+func (e *ExifCollection) Walk(name exif.FieldName, tag *tiff.Tag) error {
+	e.Tags[string(name)] = tag.String()
+	return nil
+}
 func extractExif(content_type string, file_bytes []byte) (result *ExifCollection, err error) {
 	/*
 		Using "github.com/evanoberholster/imagemeta"
@@ -62,18 +67,22 @@ func extractExif(content_type string, file_bytes []byte) (result *ExifCollection
 		return result, err
 	*/
 
-	exif, err := exif.Decode(bytes.NewReader(file_bytes))
+	e, err := exif.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
 		if err.Error() == "exif: failed to find exif intro marker" {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Failed to decode image meta: %w", err)
 	}
-	lat, lng, _ := exif.LatLong()
-	result.GPS = &GPS{
-		Latitude:  lat,
-		Longitude: lng,
+	lat, lng, _ := e.LatLong()
+	result = &ExifCollection{
+		GPS: &GPS{
+			Latitude:  lat,
+			Longitude: lng,
+		},
+		Tags: make(map[string]string, 0),
 	}
+	err = e.Walk(result)
 	return result, err
 }
 
