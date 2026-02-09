@@ -2,8 +2,57 @@
 
 {{ define "title" }}Pool List{{ end }}
 {{ define "extraheader" }}
+	<script>
+		function onLoaded() {
+			document.querySelectorAll("tr.clickable-row").forEach((el) => {
+				el.addEventListener("click", (e) => {
+					let element = e.target;
+					while (element.nodeName != "TR") {
+						element = element.parentElement;
+					}
+					let uploadId = element.dataset.uploadId;
+					window.location = "/pool/upload/" + uploadId;
+				});
+			});
+		}
+		document.addEventListener("DOMContentLoaded", onLoaded);
+	</script>
 {{ end }}
 {{ define "content" }}
-	<h1>Pool list</h1>
-	<a class="btn btn-primary" href="{{ .URL.PoolCSVUpload }}">Do an upload</a>
+	<div class="container-fluid py-3">
+		<div class="col-12">
+			<div class="row">
+				<div class="card shadow-sm">
+					<div class="card-header">
+						<h1>Pool CSV Uploads</h1>
+					</div>
+					<div class="card-body py-2">
+						<div class="table-responsive">
+							<table class="table table-sm table-bordered table-hover">
+								<thead class="table-light">
+									<tr>
+										<th>Status</th>
+										<th>Uploaded</th>
+									</tr>
+								</thead>
+								<tbody>
+									{{ range .Uploads }}
+										<tr class="clickable-row" data-upload-id="{{ .ID }}">
+											<td>{{ .Status }}</td>
+											<td>{{ .Created|timeSince }}</td>
+										</tr>
+									{{ end }}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<a class="btn btn-primary" href="{{ .URL.PoolCSVUpload }}"
+					>Do an upload</a
+				>
+			</div>
+		</div>
+	</div>
 {{ end }}

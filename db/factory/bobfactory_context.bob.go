@@ -176,15 +176,20 @@ var (
 	// Relationship Contexts for fileupload.csv
 	fileuploadCSVWithParentsCascadingCtx = newContextual[bool]("fileuploadCSVWithParentsCascading")
 	fileuploadCSVRelFileCtx              = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
+	fileuploadCSVRelCSVFileErrorCSVSCtx  = newContextual[bool]("fileupload.csv.fileupload.error_csv.fileupload.error_csv.error_csv_csv_file_id_fkey")
 
-	// Relationship Contexts for fileupload.error
-	fileuploadErrorWithParentsCascadingCtx = newContextual[bool]("fileuploadErrorWithParentsCascading")
-	fileuploadErrorRelFileCtx              = newContextual[bool]("fileupload.error.fileupload.file.fileupload.error.error_file_id_fkey")
+	// Relationship Contexts for fileupload.error_csv
+	fileuploadErrorCSVWithParentsCascadingCtx = newContextual[bool]("fileuploadErrorCSVWithParentsCascading")
+	fileuploadErrorCSVRelCSVFileCSVCtx        = newContextual[bool]("fileupload.csv.fileupload.error_csv.fileupload.error_csv.error_csv_csv_file_id_fkey")
+
+	// Relationship Contexts for fileupload.error_file
+	fileuploadErrorFileWithParentsCascadingCtx = newContextual[bool]("fileuploadErrorFileWithParentsCascading")
+	fileuploadErrorFileRelFileCtx              = newContextual[bool]("fileupload.error_file.fileupload.file.fileupload.error_file.error_file_file_id_fkey")
 
 	// Relationship Contexts for fileupload.file
 	fileuploadFileWithParentsCascadingCtx = newContextual[bool]("fileuploadFileWithParentsCascading")
 	fileuploadFileRelCSVCtx               = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
-	fileuploadFileRelErrorsCtx            = newContextual[bool]("fileupload.error.fileupload.file.fileupload.error.error_file_id_fkey")
+	fileuploadFileRelErrorFilesCtx        = newContextual[bool]("fileupload.error_file.fileupload.file.fileupload.error_file.error_file_file_id_fkey")
 	fileuploadFileRelCreatorUserCtx       = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
 	fileuploadFileRelOrganizationCtx      = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 
@@ -259,7 +264,7 @@ var (
 	organizationRelMosquitoinspectionsCtx       = newContextual[bool]("fieldseeker.mosquitoinspection.organization.fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey")
 	organizationRelPointlocationsCtx            = newContextual[bool]("fieldseeker.pointlocation.organization.fieldseeker.pointlocation.pointlocation_organization_id_fkey")
 	organizationRelPolygonlocationsCtx          = newContextual[bool]("fieldseeker.polygonlocation.organization.fieldseeker.polygonlocation.polygonlocation_organization_id_fkey")
-	organizationRelPoolsCtx                     = newContextual[bool]("fieldseeker.pool.organization.fieldseeker.pool.pool_organization_id_fkey")
+	organizationRelFieldseekerPoolCtx           = newContextual[bool]("fieldseeker.pool.organization.fieldseeker.pool.pool_organization_id_fkey")
 	organizationRelPooldetailsCtx               = newContextual[bool]("fieldseeker.pooldetail.organization.fieldseeker.pooldetail.pooldetail_organization_id_fkey")
 	organizationRelProposedtreatmentareasCtx    = newContextual[bool]("fieldseeker.proposedtreatmentarea.organization.fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey")
 	organizationRelQamosquitoinspectionsCtx     = newContextual[bool]("fieldseeker.qamosquitoinspection.organization.fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey")
@@ -282,10 +287,16 @@ var (
 	organizationRelNoteAudiosCtx                = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
 	organizationRelNoteImagesCtx                = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")
 	organizationRelImportDistrictGidDistrictCtx = newContextual[bool]("import.district.organization.organization.organization_import_district_gid_fkey")
+	organizationRelPoolsCtx                     = newContextual[bool]("organization.pool.pool.pool_organization_id_fkey")
 	organizationRelNuisancesCtx                 = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
 	organizationRelPublicreportPoolCtx          = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
 	organizationRelQuicksCtx                    = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
 	organizationRelUserCtx                      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
+
+	// Relationship Contexts for pool
+	poolWithParentsCascadingCtx = newContextual[bool]("poolWithParentsCascading")
+	poolRelCreatorUserCtx       = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
+	poolRelOrganizationCtx      = newContextual[bool]("organization.pool.pool.pool_organization_id_fkey")
 
 	// Relationship Contexts for publicreport.image
 	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
@@ -377,6 +388,7 @@ var (
 	userRelDeletorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_deletor_id_fkey")
 	userRelUserNotificationsCtx = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
 	userRelUserOauthTokensCtx   = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
+	userRelCreatorPoolsCtx      = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
 	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )
 

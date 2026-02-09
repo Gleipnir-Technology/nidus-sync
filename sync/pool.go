@@ -11,8 +11,9 @@ import (
 )
 
 type ContentPoolList struct {
-	URL  ContentURL
-	User User
+	Uploads []platform.PoolUpload
+	URL     ContentURL
+	User    User
 }
 type ContentPoolUpload struct {
 	URL  ContentURL
@@ -20,14 +21,21 @@ type ContentPoolUpload struct {
 }
 
 func getPoolList(w http.ResponseWriter, r *http.Request, u *models.User) {
-	userContent, err := contentForUser(r.Context(), u)
+	ctx := r.Context()
+	userContent, err := contentForUser(ctx, u)
 	if err != nil {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
+	uploads, err := platform.PoolUploadList(ctx, u.OrganizationID)
+	if err != nil {
+		respondError(w, "Failed to get uploads", err, http.StatusInternalServerError)
+		return
+	}
 	data := ContentPoolList{
-		URL:  newContentURL(),
-		User: userContent,
+		Uploads: uploads,
+		URL:     newContentURL(),
+		User:    userContent,
 	}
 	html.RenderOrError(w, "sync/pool-list.html", data)
 }
@@ -77,5 +85,9 @@ func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 	upload := uploads[0]
 	pool_upload, err := platform.NewPoolUpload(r.Context(), u, upload)
+	if err != nil {
+		respondError(w, "Failed to create new pool", err, http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/pool/upload/%d", pool_upload.ID), http.StatusFound)
 }

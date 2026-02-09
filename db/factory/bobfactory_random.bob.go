@@ -191,6 +191,16 @@ func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notif
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Poolconditiontype(f *faker.Faker, limits ...string) enums.Poolconditiontype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Poolconditiontype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_PublicreportAccuracytype(f *faker.Faker, limits ...string) enums.PublicreportAccuracytype {
 	if f == nil {
 		f = &defaultFaker

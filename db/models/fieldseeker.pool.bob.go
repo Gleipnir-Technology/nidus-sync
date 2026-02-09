@@ -1153,7 +1153,7 @@ func (fieldseekerPool0 *FieldseekerPool) InsertOrganization(ctx context.Context,
 
 	fieldseekerPool0.R.Organization = organization1
 
-	organization1.R.Pools = append(organization1.R.Pools, fieldseekerPool0)
+	organization1.R.FieldseekerPool = append(organization1.R.FieldseekerPool, fieldseekerPool0)
 
 	return nil
 }
@@ -1168,7 +1168,7 @@ func (fieldseekerPool0 *FieldseekerPool) AttachOrganization(ctx context.Context,
 
 	fieldseekerPool0.R.Organization = organization1
 
-	organization1.R.Pools = append(organization1.R.Pools, fieldseekerPool0)
+	organization1.R.FieldseekerPool = append(organization1.R.FieldseekerPool, fieldseekerPool0)
 
 	return nil
 }
@@ -1264,7 +1264,7 @@ func (o *FieldseekerPool) Preload(name string, retrieved any) error {
 		o.R.Organization = rel
 
 		if rel != nil {
-			rel.R.Pools = FieldseekerPoolSlice{o}
+			rel.R.FieldseekerPool = FieldseekerPoolSlice{o}
 		}
 		return nil
 	default:
@@ -1327,7 +1327,7 @@ func (o *FieldseekerPool) LoadOrganization(ctx context.Context, exec bob.Executo
 		return err
 	}
 
-	related.R.Pools = FieldseekerPoolSlice{o}
+	related.R.FieldseekerPool = FieldseekerPoolSlice{o}
 
 	o.R.Organization = related
 	return nil
@@ -1355,7 +1355,7 @@ func (os FieldseekerPoolSlice) LoadOrganization(ctx context.Context, exec bob.Ex
 				continue
 			}
 
-			rel.R.Pools = append(rel.R.Pools, o)
+			rel.R.FieldseekerPool = append(rel.R.FieldseekerPool, o)
 
 			o.R.Organization = rel
 			break

@@ -6,11 +6,14 @@ package factory
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -35,8 +38,10 @@ func (mods FileuploadCSVModSlice) Apply(ctx context.Context, n *FileuploadCSVTem
 // FileuploadCSVTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FileuploadCSVTemplate struct {
-	FileID func() int32
-	Type   func() enums.FileuploadCsvtype
+	Committed func() null.Val[time.Time]
+	FileID    func() int32
+	Rowcount  func() int32
+	Type      func() enums.FileuploadCsvtype
 
 	r fileuploadCSVR
 	f *Factory
@@ -45,11 +50,16 @@ type FileuploadCSVTemplate struct {
 }
 
 type fileuploadCSVR struct {
-	File *fileuploadCSVRFileR
+	File             *fileuploadCSVRFileR
+	CSVFileErrorCSVS []*fileuploadCSVRCSVFileErrorCSVSR
 }
 
 type fileuploadCSVRFileR struct {
 	o *FileuploadFileTemplate
+}
+type fileuploadCSVRCSVFileErrorCSVSR struct {
+	number int
+	o      *FileuploadErrorCSVTemplate
 }
 
 // Apply mods to the FileuploadCSVTemplate
@@ -68,6 +78,19 @@ func (t FileuploadCSVTemplate) setModelRels(o *models.FileuploadCSV) {
 		o.FileID = rel.ID // h2
 		o.R.File = rel
 	}
+
+	if t.r.CSVFileErrorCSVS != nil {
+		rel := models.FileuploadErrorCSVSlice{}
+		for _, r := range t.r.CSVFileErrorCSVS {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CSVFileID = o.FileID // h2
+				rel.R.CSVFileCSV = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CSVFileErrorCSVS = rel
+	}
 }
 
 // BuildSetter returns an *models.FileuploadCSVSetter
@@ -75,9 +98,17 @@ func (t FileuploadCSVTemplate) setModelRels(o *models.FileuploadCSV) {
 func (o FileuploadCSVTemplate) BuildSetter() *models.FileuploadCSVSetter {
 	m := &models.FileuploadCSVSetter{}
 
+	if o.Committed != nil {
+		val := o.Committed()
+		m.Committed = omitnull.FromNull(val)
+	}
 	if o.FileID != nil {
 		val := o.FileID()
 		m.FileID = omit.From(val)
+	}
+	if o.Rowcount != nil {
+		val := o.Rowcount()
+		m.Rowcount = omit.From(val)
 	}
 	if o.Type != nil {
 		val := o.Type()
@@ -105,8 +136,14 @@ func (o FileuploadCSVTemplate) BuildManySetter(number int) []*models.FileuploadC
 func (o FileuploadCSVTemplate) Build() *models.FileuploadCSV {
 	m := &models.FileuploadCSV{}
 
+	if o.Committed != nil {
+		m.Committed = o.Committed()
+	}
 	if o.FileID != nil {
 		m.FileID = o.FileID()
+	}
+	if o.Rowcount != nil {
+		m.Rowcount = o.Rowcount()
 	}
 	if o.Type != nil {
 		m.Type = o.Type()
@@ -135,6 +172,10 @@ func ensureCreatableFileuploadCSV(m *models.FileuploadCSVSetter) {
 		val := random_int32(nil)
 		m.FileID = omit.From(val)
 	}
+	if !(m.Rowcount.IsValue()) {
+		val := random_int32(nil)
+		m.Rowcount = omit.From(val)
+	}
 	if !(m.Type.IsValue()) {
 		val := random_enums_FileuploadCsvtype(nil)
 		m.Type = omit.From(val)
@@ -146,6 +187,26 @@ func ensureCreatableFileuploadCSV(m *models.FileuploadCSVSetter) {
 // any required relationship should have already exist on the model
 func (o *FileuploadCSVTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FileuploadCSV) error {
 	var err error
+
+	isCSVFileErrorCSVSDone, _ := fileuploadCSVRelCSVFileErrorCSVSCtx.Value(ctx)
+	if !isCSVFileErrorCSVSDone && o.r.CSVFileErrorCSVS != nil {
+		ctx = fileuploadCSVRelCSVFileErrorCSVSCtx.WithValue(ctx, true)
+		for _, r := range o.r.CSVFileErrorCSVS {
+			if r.o.alreadyPersisted {
+				m.R.CSVFileErrorCSVS = append(m.R.CSVFileErrorCSVS, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCSVFileErrorCSVS(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	return err
 }
@@ -258,9 +319,64 @@ type fileuploadCSVMods struct{}
 
 func (m fileuploadCSVMods) RandomizeAllColumns(f *faker.Faker) FileuploadCSVMod {
 	return FileuploadCSVModSlice{
+		FileuploadCSVMods.RandomCommitted(f),
 		FileuploadCSVMods.RandomFileID(f),
+		FileuploadCSVMods.RandomRowcount(f),
 		FileuploadCSVMods.RandomType(f),
 	}
+}
+
+// Set the model columns to this value
+func (m fileuploadCSVMods) Committed(val null.Val[time.Time]) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Committed = func() null.Val[time.Time] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadCSVMods) CommittedFunc(f func() null.Val[time.Time]) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Committed = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadCSVMods) UnsetCommitted() FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Committed = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadCSVMods) RandomCommitted(f *faker.Faker) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Committed = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadCSVMods) RandomCommittedNotNull(f *faker.Faker) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Committed = func() null.Val[time.Time] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_time_Time(f)
+			return null.From(val)
+		}
+	})
 }
 
 // Set the model columns to this value
@@ -289,6 +405,37 @@ func (m fileuploadCSVMods) UnsetFileID() FileuploadCSVMod {
 func (m fileuploadCSVMods) RandomFileID(f *faker.Faker) FileuploadCSVMod {
 	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
 		o.FileID = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadCSVMods) Rowcount(val int32) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Rowcount = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadCSVMods) RowcountFunc(f func() int32) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Rowcount = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadCSVMods) UnsetRowcount() FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Rowcount = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadCSVMods) RandomRowcount(f *faker.Faker) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(_ context.Context, o *FileuploadCSVTemplate) {
+		o.Rowcount = func() int32 {
 			return random_int32(f)
 		}
 	})
@@ -366,5 +513,53 @@ func (m fileuploadCSVMods) WithExistingFile(em *models.FileuploadFile) Fileuploa
 func (m fileuploadCSVMods) WithoutFile() FileuploadCSVMod {
 	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
 		o.r.File = nil
+	})
+}
+
+func (m fileuploadCSVMods) WithCSVFileErrorCSVS(number int, related *FileuploadErrorCSVTemplate) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFileErrorCSVS = []*fileuploadCSVRCSVFileErrorCSVSR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m fileuploadCSVMods) WithNewCSVFileErrorCSVS(number int, mods ...FileuploadErrorCSVMod) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		related := o.f.NewFileuploadErrorCSVWithContext(ctx, mods...)
+		m.WithCSVFileErrorCSVS(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadCSVMods) AddCSVFileErrorCSVS(number int, related *FileuploadErrorCSVTemplate) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFileErrorCSVS = append(o.r.CSVFileErrorCSVS, &fileuploadCSVRCSVFileErrorCSVSR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m fileuploadCSVMods) AddNewCSVFileErrorCSVS(number int, mods ...FileuploadErrorCSVMod) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		related := o.f.NewFileuploadErrorCSVWithContext(ctx, mods...)
+		m.AddCSVFileErrorCSVS(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadCSVMods) AddExistingCSVFileErrorCSVS(existingModels ...*models.FileuploadErrorCSV) FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		for _, em := range existingModels {
+			o.r.CSVFileErrorCSVS = append(o.r.CSVFileErrorCSVS, &fileuploadCSVRCSVFileErrorCSVSR{
+				o: o.f.FromExistingFileuploadErrorCSV(em),
+			})
+		}
+	})
+}
+
+func (m fileuploadCSVMods) WithoutCSVFileErrorCSVS() FileuploadCSVMod {
+	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
+		o.r.CSVFileErrorCSVS = nil
 	})
 }

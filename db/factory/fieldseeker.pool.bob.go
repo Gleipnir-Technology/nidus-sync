@@ -99,7 +99,7 @@ func (o *FieldseekerPoolTemplate) Apply(ctx context.Context, mods ...Fieldseeker
 func (t FieldseekerPoolTemplate) setModelRels(o *models.FieldseekerPool) {
 	if t.r.Organization != nil {
 		rel := t.r.Organization.o.Build()
-		rel.R.Pools = append(rel.R.Pools, o)
+		rel.R.FieldseekerPool = append(rel.R.FieldseekerPool, o)
 		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
 	}

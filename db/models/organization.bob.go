@@ -67,7 +67,7 @@ type organizationR struct {
 	Mosquitoinspections       FieldseekerMosquitoinspectionSlice     // fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey
 	Pointlocations            FieldseekerPointlocationSlice          // fieldseeker.pointlocation.pointlocation_organization_id_fkey
 	Polygonlocations          FieldseekerPolygonlocationSlice        // fieldseeker.polygonlocation.polygonlocation_organization_id_fkey
-	Pools                     FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
+	FieldseekerPool           FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
 	Pooldetails               FieldseekerPooldetailSlice             // fieldseeker.pooldetail.pooldetail_organization_id_fkey
 	Proposedtreatmentareas    FieldseekerProposedtreatmentareaSlice  // fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey
 	Qamosquitoinspections     FieldseekerQamosquitoinspectionSlice   // fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey
@@ -90,6 +90,7 @@ type organizationR struct {
 	NoteAudios                NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
 	NoteImages                NoteImageSlice                         // note_image.note_image_organization_id_fkey
 	ImportDistrictGidDistrict *ImportDistrict                        // organization.organization_import_district_gid_fkey
+	Pools                     PoolSlice                              // pool.pool_organization_id_fkey
 	Nuisances                 PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool          PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
 	Quicks                    PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
@@ -872,14 +873,14 @@ func (os OrganizationSlice) Polygonlocations(mods ...bob.Mod[*dialect.SelectQuer
 	)...)
 }
 
-// Pools starts a query for related objects on fieldseeker.pool
-func (o *Organization) Pools(mods ...bob.Mod[*dialect.SelectQuery]) FieldseekerPoolsQuery {
+// FieldseekerPool starts a query for related objects on fieldseeker.pool
+func (o *Organization) FieldseekerPool(mods ...bob.Mod[*dialect.SelectQuery]) FieldseekerPoolsQuery {
 	return FieldseekerPools.Query(append(mods,
 		sm.Where(FieldseekerPools.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os OrganizationSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) FieldseekerPoolsQuery {
+func (os OrganizationSlice) FieldseekerPool(mods ...bob.Mod[*dialect.SelectQuery]) FieldseekerPoolsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1421,6 +1422,30 @@ func (os OrganizationSlice) ImportDistrictGidDistrict(mods ...bob.Mod[*dialect.S
 
 	return ImportDistricts.Query(append(mods,
 		sm.Where(psql.Group(ImportDistricts.Columns.Gid).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Pools starts a query for related objects on pool
+func (o *Organization) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	return Pools.Query(append(mods,
+		sm.Where(Pools.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Pools.Query(append(mods,
+		sm.Where(psql.Group(Pools.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -2330,45 +2355,45 @@ func (organization0 *Organization) AttachPolygonlocations(ctx context.Context, e
 	return nil
 }
 
-func insertOrganizationPools0(ctx context.Context, exec bob.Executor, fieldseekerPools1 []*FieldseekerPoolSetter, organization0 *Organization) (FieldseekerPoolSlice, error) {
+func insertOrganizationFieldseekerPool0(ctx context.Context, exec bob.Executor, fieldseekerPools1 []*FieldseekerPoolSetter, organization0 *Organization) (FieldseekerPoolSlice, error) {
 	for i := range fieldseekerPools1 {
 		fieldseekerPools1[i].OrganizationID = omit.From(organization0.ID)
 	}
 
 	ret, err := FieldseekerPools.Insert(bob.ToMods(fieldseekerPools1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationPools0: %w", err)
+		return ret, fmt.Errorf("insertOrganizationFieldseekerPool0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachOrganizationPools0(ctx context.Context, exec bob.Executor, count int, fieldseekerPools1 FieldseekerPoolSlice, organization0 *Organization) (FieldseekerPoolSlice, error) {
+func attachOrganizationFieldseekerPool0(ctx context.Context, exec bob.Executor, count int, fieldseekerPools1 FieldseekerPoolSlice, organization0 *Organization) (FieldseekerPoolSlice, error) {
 	setter := &FieldseekerPoolSetter{
 		OrganizationID: omit.From(organization0.ID),
 	}
 
 	err := fieldseekerPools1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationPools0: %w", err)
+		return nil, fmt.Errorf("attachOrganizationFieldseekerPool0: %w", err)
 	}
 
 	return fieldseekerPools1, nil
 }
 
-func (organization0 *Organization) InsertPools(ctx context.Context, exec bob.Executor, related ...*FieldseekerPoolSetter) error {
+func (organization0 *Organization) InsertFieldseekerPool(ctx context.Context, exec bob.Executor, related ...*FieldseekerPoolSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	fieldseekerPools1, err := insertOrganizationPools0(ctx, exec, related, organization0)
+	fieldseekerPools1, err := insertOrganizationFieldseekerPool0(ctx, exec, related, organization0)
 	if err != nil {
 		return err
 	}
 
-	organization0.R.Pools = append(organization0.R.Pools, fieldseekerPools1...)
+	organization0.R.FieldseekerPool = append(organization0.R.FieldseekerPool, fieldseekerPools1...)
 
 	for _, rel := range fieldseekerPools1 {
 		rel.R.Organization = organization0
@@ -2376,7 +2401,7 @@ func (organization0 *Organization) InsertPools(ctx context.Context, exec bob.Exe
 	return nil
 }
 
-func (organization0 *Organization) AttachPools(ctx context.Context, exec bob.Executor, related ...*FieldseekerPool) error {
+func (organization0 *Organization) AttachFieldseekerPool(ctx context.Context, exec bob.Executor, related ...*FieldseekerPool) error {
 	if len(related) == 0 {
 		return nil
 	}
@@ -2384,12 +2409,12 @@ func (organization0 *Organization) AttachPools(ctx context.Context, exec bob.Exe
 	var err error
 	fieldseekerPools1 := FieldseekerPoolSlice(related)
 
-	_, err = attachOrganizationPools0(ctx, exec, len(related), fieldseekerPools1, organization0)
+	_, err = attachOrganizationFieldseekerPool0(ctx, exec, len(related), fieldseekerPools1, organization0)
 	if err != nil {
 		return err
 	}
 
-	organization0.R.Pools = append(organization0.R.Pools, fieldseekerPools1...)
+	organization0.R.FieldseekerPool = append(organization0.R.FieldseekerPool, fieldseekerPools1...)
 
 	for _, rel := range related {
 		rel.R.Organization = organization0
@@ -3874,6 +3899,74 @@ func (organization0 *Organization) AttachImportDistrictGidDistrict(ctx context.C
 	return nil
 }
 
+func insertOrganizationPools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, organization0 *Organization) (PoolSlice, error) {
+	for i := range pools1 {
+		pools1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := Pools.Insert(bob.ToMods(pools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationPools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationPools0(ctx context.Context, exec bob.Executor, count int, pools1 PoolSlice, organization0 *Organization) (PoolSlice, error) {
+	setter := &PoolSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := pools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationPools0: %w", err)
+	}
+
+	return pools1, nil
+}
+
+func (organization0 *Organization) InsertPools(ctx context.Context, exec bob.Executor, related ...*PoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	pools1, err := insertOrganizationPools0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Pools = append(organization0.R.Pools, pools1...)
+
+	for _, rel := range pools1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachPools(ctx context.Context, exec bob.Executor, related ...*Pool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	pools1 := PoolSlice(related)
+
+	_, err = attachOrganizationPools0(ctx, exec, len(related), pools1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Pools = append(organization0.R.Pools, pools1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, organization0 *Organization) (PublicreportNuisanceSlice, error) {
 	for i := range publicreportNuisances1 {
 		publicreportNuisances1[i].OrganizationID = omitnull.From(organization0.ID)
@@ -4350,13 +4443,13 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Pools":
+	case "FieldseekerPool":
 		rels, ok := retrieved.(FieldseekerPoolSlice)
 		if !ok {
 			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Pools = rels
+		o.R.FieldseekerPool = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -4670,6 +4763,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			rel.R.ImportDistrictGidOrganization = o
 		}
 		return nil
+	case "Pools":
+		rels, ok := retrieved.(PoolSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Pools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "Nuisances":
 		rels, ok := retrieved.(PublicreportNuisanceSlice)
 		if !ok {
@@ -4766,7 +4873,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	Mosquitoinspections       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Pointlocations            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Polygonlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerPool           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Pooldetails               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Proposedtreatmentareas    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Qamosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -4789,6 +4896,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	NoteAudios                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ImportDistrictGidDistrict func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -4832,8 +4940,8 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	type PolygonlocationsLoadInterface interface {
 		LoadPolygonlocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type PoolsLoadInterface interface {
-		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type FieldseekerPoolLoadInterface interface {
+		LoadFieldseekerPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PooldetailsLoadInterface interface {
 		LoadPooldetails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -4900,6 +5008,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type ImportDistrictGidDistrictLoadInterface interface {
 		LoadImportDistrictGidDistrict(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PoolsLoadInterface interface {
+		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NuisancesLoadInterface interface {
 		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -4987,10 +5098,10 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 				return retrieved.LoadPolygonlocations(ctx, exec, mods...)
 			},
 		),
-		Pools: thenLoadBuilder[Q](
-			"Pools",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPools(ctx, exec, mods...)
+		FieldseekerPool: thenLoadBuilder[Q](
+			"FieldseekerPool",
+			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerPoolLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFieldseekerPool(ctx, exec, mods...)
 			},
 		),
 		Pooldetails: thenLoadBuilder[Q](
@@ -5123,6 +5234,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"ImportDistrictGidDistrict",
 			func(ctx context.Context, exec bob.Executor, retrieved ImportDistrictGidDistrictLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadImportDistrictGidDistrict(ctx, exec, mods...)
+			},
+		),
+		Pools: thenLoadBuilder[Q](
+			"Pools",
+			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPools(ctx, exec, mods...)
 			},
 		),
 		Nuisances: thenLoadBuilder[Q](
@@ -5924,16 +6041,16 @@ func (os OrganizationSlice) LoadPolygonlocations(ctx context.Context, exec bob.E
 	return nil
 }
 
-// LoadPools loads the organization's Pools into the .R struct
-func (o *Organization) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadFieldseekerPool loads the organization's FieldseekerPool into the .R struct
+func (o *Organization) LoadFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.Pools = nil
+	o.R.FieldseekerPool = nil
 
-	related, err := o.Pools(mods...).All(ctx, exec)
+	related, err := o.FieldseekerPool(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -5942,17 +6059,17 @@ func (o *Organization) LoadPools(ctx context.Context, exec bob.Executor, mods ..
 		rel.R.Organization = o
 	}
 
-	o.R.Pools = related
+	o.R.FieldseekerPool = related
 	return nil
 }
 
-// LoadPools loads the organization's Pools into the .R struct
-func (os OrganizationSlice) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadFieldseekerPool loads the organization's FieldseekerPool into the .R struct
+func (os OrganizationSlice) LoadFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	fieldseekerPools, err := os.Pools(mods...).All(ctx, exec)
+	fieldseekerPools, err := os.FieldseekerPool(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -5962,7 +6079,7 @@ func (os OrganizationSlice) LoadPools(ctx context.Context, exec bob.Executor, mo
 			continue
 		}
 
-		o.R.Pools = nil
+		o.R.FieldseekerPool = nil
 	}
 
 	for _, o := range os {
@@ -5978,7 +6095,7 @@ func (os OrganizationSlice) LoadPools(ctx context.Context, exec bob.Executor, mo
 
 			rel.R.Organization = o
 
-			o.R.Pools = append(o.R.Pools, rel)
+			o.R.FieldseekerPool = append(o.R.FieldseekerPool, rel)
 		}
 	}
 
@@ -7321,6 +7438,67 @@ func (os OrganizationSlice) LoadImportDistrictGidDistrict(ctx context.Context, e
 	return nil
 }
 
+// LoadPools loads the organization's Pools into the .R struct
+func (o *Organization) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Pools = nil
+
+	related, err := o.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Pools = related
+	return nil
+}
+
+// LoadPools loads the organization's Pools into the .R struct
+func (os OrganizationSlice) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	pools, err := os.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Pools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range pools {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Pools = append(o.R.Pools, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadNuisances loads the organization's Nuisances into the .R struct
 func (o *Organization) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -7588,7 +7766,7 @@ type organizationC struct {
 	Mosquitoinspections     *int64
 	Pointlocations          *int64
 	Polygonlocations        *int64
-	Pools                   *int64
+	FieldseekerPool         *int64
 	Pooldetails             *int64
 	Proposedtreatmentareas  *int64
 	Qamosquitoinspections   *int64
@@ -7610,6 +7788,7 @@ type organizationC struct {
 	H3Aggregations          *int64
 	NoteAudios              *int64
 	NoteImages              *int64
+	Pools                   *int64
 	Nuisances               *int64
 	PublicreportPool        *int64
 	Quicks                  *int64
@@ -7647,8 +7826,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.Pointlocations = &count
 	case "Polygonlocations":
 		o.C.Polygonlocations = &count
-	case "Pools":
-		o.C.Pools = &count
+	case "FieldseekerPool":
+		o.C.FieldseekerPool = &count
 	case "Pooldetails":
 		o.C.Pooldetails = &count
 	case "Proposedtreatmentareas":
@@ -7691,6 +7870,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.NoteAudios = &count
 	case "NoteImages":
 		o.C.NoteImages = &count
+	case "Pools":
+		o.C.Pools = &count
 	case "Nuisances":
 		o.C.Nuisances = &count
 	case "PublicreportPool":
@@ -7716,7 +7897,7 @@ type organizationCountPreloader struct {
 	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Pools                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -7738,6 +7919,7 @@ type organizationCountPreloader struct {
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Pools                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -7956,8 +8138,8 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
-		Pools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Pools", func(parent string) bob.Expression {
+		FieldseekerPool: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("FieldseekerPool", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = Organizations.Alias()
@@ -8330,6 +8512,23 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Pools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Pools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Pools.Name()),
+					sm.Where(psql.Quote(Pools.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		Nuisances: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("Nuisances", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -8414,7 +8613,7 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -8436,6 +8635,7 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -8479,8 +8679,8 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	type PolygonlocationsCountInterface interface {
 		LoadCountPolygonlocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type PoolsCountInterface interface {
-		LoadCountPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type FieldseekerPoolCountInterface interface {
+		LoadCountFieldseekerPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PooldetailsCountInterface interface {
 		LoadCountPooldetails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -8544,6 +8744,9 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type NoteImagesCountInterface interface {
 		LoadCountNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PoolsCountInterface interface {
+		LoadCountPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NuisancesCountInterface interface {
 		LoadCountNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -8631,10 +8834,10 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 				return retrieved.LoadCountPolygonlocations(ctx, exec, mods...)
 			},
 		),
-		Pools: countThenLoadBuilder[Q](
-			"Pools",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPools(ctx, exec, mods...)
+		FieldseekerPool: countThenLoadBuilder[Q](
+			"FieldseekerPool",
+			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerPoolCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountFieldseekerPool(ctx, exec, mods...)
 			},
 		),
 		Pooldetails: countThenLoadBuilder[Q](
@@ -8761,6 +8964,12 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"NoteImages",
 			func(ctx context.Context, exec bob.Executor, retrieved NoteImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountNoteImages(ctx, exec, mods...)
+			},
+		),
+		Pools: countThenLoadBuilder[Q](
+			"Pools",
+			func(ctx context.Context, exec bob.Executor, retrieved PoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPools(ctx, exec, mods...)
 			},
 		),
 		Nuisances: countThenLoadBuilder[Q](
@@ -9150,29 +9359,29 @@ func (os OrganizationSlice) LoadCountPolygonlocations(ctx context.Context, exec 
 	return nil
 }
 
-// LoadCountPools loads the count of Pools into the C struct
-func (o *Organization) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountFieldseekerPool loads the count of FieldseekerPool into the C struct
+func (o *Organization) LoadCountFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.Pools(mods...).Count(ctx, exec)
+	count, err := o.FieldseekerPool(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.Pools = &count
+	o.C.FieldseekerPool = &count
 	return nil
 }
 
-// LoadCountPools loads the count of Pools for a slice
-func (os OrganizationSlice) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountFieldseekerPool loads the count of FieldseekerPool for a slice
+func (os OrganizationSlice) LoadCountFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountPools(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountFieldseekerPool(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -9810,6 +10019,36 @@ func (os OrganizationSlice) LoadCountNoteImages(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+// LoadCountPools loads the count of Pools into the C struct
+func (o *Organization) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Pools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Pools = &count
+	return nil
+}
+
+// LoadCountPools loads the count of Pools for a slice
+func (os OrganizationSlice) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountNuisances loads the count of Nuisances into the C struct
 func (o *Organization) LoadCountNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -9944,7 +10183,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	Mosquitoinspections       modAs[Q, fieldseekerMosquitoinspectionColumns]
 	Pointlocations            modAs[Q, fieldseekerPointlocationColumns]
 	Polygonlocations          modAs[Q, fieldseekerPolygonlocationColumns]
-	Pools                     modAs[Q, fieldseekerPoolColumns]
+	FieldseekerPool           modAs[Q, fieldseekerPoolColumns]
 	Pooldetails               modAs[Q, fieldseekerPooldetailColumns]
 	Proposedtreatmentareas    modAs[Q, fieldseekerProposedtreatmentareaColumns]
 	Qamosquitoinspections     modAs[Q, fieldseekerQamosquitoinspectionColumns]
@@ -9967,6 +10206,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	NoteAudios                modAs[Q, noteAudioColumns]
 	NoteImages                modAs[Q, noteImageColumns]
 	ImportDistrictGidDistrict modAs[Q, importDistrictColumns]
+	Pools                     modAs[Q, poolColumns]
 	Nuisances                 modAs[Q, publicreportNuisanceColumns]
 	PublicreportPool          modAs[Q, publicreportPoolColumns]
 	Quicks                    modAs[Q, publicreportQuickColumns]
@@ -10164,7 +10404,7 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 				return mods
 			},
 		},
-		Pools: modAs[Q, fieldseekerPoolColumns]{
+		FieldseekerPool: modAs[Q, fieldseekerPoolColumns]{
 			c: FieldseekerPools.Columns,
 			f: func(to fieldseekerPoolColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
@@ -10480,6 +10720,20 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 				{
 					mods = append(mods, dialect.Join[Q](typ, ImportDistricts.Name().As(to.Alias())).On(
 						to.Gid.EQ(cols.ImportDistrictGid),
+					))
+				}
+
+				return mods
+			},
+		},
+		Pools: modAs[Q, poolColumns]{
+			c: Pools.Columns,
+			f: func(to poolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
 					))
 				}
 

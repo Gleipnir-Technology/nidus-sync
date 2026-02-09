@@ -66,6 +66,7 @@ type userR struct {
 	DeletorNoteImages []*userRDeletorNoteImagesR
 	UserNotifications []*userRUserNotificationsR
 	UserOauthTokens   []*userRUserOauthTokensR
+	CreatorPools      []*userRCreatorPoolsR
 	Organization      *userROrganizationR
 }
 
@@ -100,6 +101,10 @@ type userRUserNotificationsR struct {
 type userRUserOauthTokensR struct {
 	number int
 	o      *OauthTokenTemplate
+}
+type userRCreatorPoolsR struct {
+	number int
+	o      *PoolTemplate
 }
 type userROrganizationR struct {
 	o *OrganizationTemplate
@@ -217,6 +222,19 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.UserOauthTokens = rel
+	}
+
+	if t.r.CreatorPools != nil {
+		rel := models.PoolSlice{}
+		for _, r := range t.r.CreatorPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CreatorID = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorPools = rel
 	}
 
 	if t.r.Organization != nil {
@@ -546,6 +564,26 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
+	isCreatorPoolsDone, _ := userRelCreatorPoolsCtx.Value(ctx)
+	if !isCreatorPoolsDone && o.r.CreatorPools != nil {
+		ctx = userRelCreatorPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorPools {
+			if r.o.alreadyPersisted {
+				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
+			} else {
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorPools(ctx, exec, rel8...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return err
 }
 
@@ -560,25 +598,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel8 *models.Organization
+	var rel9 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel8 = o.r.Organization.o.Build()
+		rel9 = o.r.Organization.o.Build()
 	} else {
-		rel8, err = o.r.Organization.o.Create(ctx, exec)
+		rel9, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel8.ID)
+	opt.OrganizationID = omit.From(rel9.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel8
+	m.R.Organization = rel9
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1601,5 +1639,53 @@ func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.OauthToke
 func (m userMods) WithoutUserOauthTokens() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.UserOauthTokens = nil
+	})
+}
+
+func (m userMods) WithCreatorPools(number int, related *PoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = []*userRCreatorPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorPools(number int, mods ...PoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.WithCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorPools(number int, related *PoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorPools(number int, mods ...PoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.AddCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorPools(existingModels ...*models.Pool) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+				o: o.f.FromExistingPool(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorPools() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = nil
 	})
 }

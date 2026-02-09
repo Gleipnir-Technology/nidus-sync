@@ -71,7 +71,8 @@ type joins[Q dialect.Joinable] struct {
 	FieldseekerZones2s                 joinSet[fieldseekerZones2Joins[Q]]
 	FieldseekerSyncs                   joinSet[fieldseekerSyncJoins[Q]]
 	FileuploadCSVS                     joinSet[fileuploadCSVJoins[Q]]
-	FileuploadErrors                   joinSet[fileuploadErrorJoins[Q]]
+	FileuploadErrorCSVS                joinSet[fileuploadErrorCSVJoins[Q]]
+	FileuploadErrorFiles               joinSet[fileuploadErrorFileJoins[Q]]
 	FileuploadFiles                    joinSet[fileuploadFileJoins[Q]]
 	H3Aggregations                     joinSet[h3AggregationJoins[Q]]
 	ImportDistricts                    joinSet[importDistrictJoins[Q]]
@@ -84,6 +85,7 @@ type joins[Q dialect.Joinable] struct {
 	Notifications                      joinSet[notificationJoins[Q]]
 	OauthTokens                        joinSet[oauthTokenJoins[Q]]
 	Organizations                      joinSet[organizationJoins[Q]]
+	Pools                              joinSet[poolJoins[Q]]
 	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
 	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
 	PublicreportNotifyEmailNuisances   joinSet[publicreportNotifyEmailNuisanceJoins[Q]]
@@ -148,7 +150,8 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FieldseekerZones2s:                 buildJoinSet[fieldseekerZones2Joins[Q]](FieldseekerZones2s.Columns, buildFieldseekerZones2Joins),
 		FieldseekerSyncs:                   buildJoinSet[fieldseekerSyncJoins[Q]](FieldseekerSyncs.Columns, buildFieldseekerSyncJoins),
 		FileuploadCSVS:                     buildJoinSet[fileuploadCSVJoins[Q]](FileuploadCSVS.Columns, buildFileuploadCSVJoins),
-		FileuploadErrors:                   buildJoinSet[fileuploadErrorJoins[Q]](FileuploadErrors.Columns, buildFileuploadErrorJoins),
+		FileuploadErrorCSVS:                buildJoinSet[fileuploadErrorCSVJoins[Q]](FileuploadErrorCSVS.Columns, buildFileuploadErrorCSVJoins),
+		FileuploadErrorFiles:               buildJoinSet[fileuploadErrorFileJoins[Q]](FileuploadErrorFiles.Columns, buildFileuploadErrorFileJoins),
 		FileuploadFiles:                    buildJoinSet[fileuploadFileJoins[Q]](FileuploadFiles.Columns, buildFileuploadFileJoins),
 		H3Aggregations:                     buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
 		ImportDistricts:                    buildJoinSet[importDistrictJoins[Q]](ImportDistricts.Columns, buildImportDistrictJoins),
@@ -161,6 +164,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Notifications:                      buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
 		OauthTokens:                        buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		Pools:                              buildJoinSet[poolJoins[Q]](Pools.Columns, buildPoolJoins),
 		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
 		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
 		PublicreportNotifyEmailNuisances:   buildJoinSet[publicreportNotifyEmailNuisanceJoins[Q]](PublicreportNotifyEmailNuisances.Columns, buildPublicreportNotifyEmailNuisanceJoins),

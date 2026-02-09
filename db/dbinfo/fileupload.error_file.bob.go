@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var FileuploadErrors = Table[
-	fileuploadErrorColumns,
-	fileuploadErrorIndexes,
-	fileuploadErrorForeignKeys,
-	fileuploadErrorUniques,
-	fileuploadErrorChecks,
+var FileuploadErrorFiles = Table[
+	fileuploadErrorFileColumns,
+	fileuploadErrorFileIndexes,
+	fileuploadErrorFileForeignKeys,
+	fileuploadErrorFileUniques,
+	fileuploadErrorFileChecks,
 ]{
 	Schema: "fileupload",
-	Name:   "error",
-	Columns: fileuploadErrorColumns{
+	Name:   "error_file",
+	Columns: fileuploadErrorFileColumns{
 		FileID: column{
 			Name:      "file_id",
 			DBType:    "integer",
@@ -27,16 +27,7 @@ var FileuploadErrors = Table[
 		ID: column{
 			Name:      "id",
 			DBType:    "integer",
-			Default:   "nextval('fileupload.error_id_seq'::regclass)",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Line: column{
-			Name:      "line",
-			DBType:    "integer",
-			Default:   "",
+			Default:   "nextval('fileupload.error_file_id_seq'::regclass)",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
@@ -52,10 +43,10 @@ var FileuploadErrors = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: fileuploadErrorIndexes{
-		ErrorPkey: index{
+	Indexes: fileuploadErrorFileIndexes{
+		ErrorFilePkey: index{
 			Type: "btree",
-			Name: "error_pkey",
+			Name: "error_file_pkey",
 			Columns: []indexColumn{
 				{
 					Name:         "id",
@@ -72,14 +63,14 @@ var FileuploadErrors = Table[
 		},
 	},
 	PrimaryKey: &constraint{
-		Name:    "error_pkey",
+		Name:    "error_file_pkey",
 		Columns: []string{"id"},
 		Comment: "",
 	},
-	ForeignKeys: fileuploadErrorForeignKeys{
-		FileuploadErrorErrorFileIDFkey: foreignKey{
+	ForeignKeys: fileuploadErrorFileForeignKeys{
+		FileuploadErrorFileErrorFileFileIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "fileupload.error.error_file_id_fkey",
+				Name:    "fileupload.error_file.error_file_file_id_fkey",
 				Columns: []string{"file_id"},
 				Comment: "",
 			},
@@ -91,47 +82,46 @@ var FileuploadErrors = Table[
 	Comment: "",
 }
 
-type fileuploadErrorColumns struct {
+type fileuploadErrorFileColumns struct {
 	FileID  column
 	ID      column
-	Line    column
 	Message column
 }
 
-func (c fileuploadErrorColumns) AsSlice() []column {
+func (c fileuploadErrorFileColumns) AsSlice() []column {
 	return []column{
-		c.FileID, c.ID, c.Line, c.Message,
+		c.FileID, c.ID, c.Message,
 	}
 }
 
-type fileuploadErrorIndexes struct {
-	ErrorPkey index
+type fileuploadErrorFileIndexes struct {
+	ErrorFilePkey index
 }
 
-func (i fileuploadErrorIndexes) AsSlice() []index {
+func (i fileuploadErrorFileIndexes) AsSlice() []index {
 	return []index{
-		i.ErrorPkey,
+		i.ErrorFilePkey,
 	}
 }
 
-type fileuploadErrorForeignKeys struct {
-	FileuploadErrorErrorFileIDFkey foreignKey
+type fileuploadErrorFileForeignKeys struct {
+	FileuploadErrorFileErrorFileFileIDFkey foreignKey
 }
 
-func (f fileuploadErrorForeignKeys) AsSlice() []foreignKey {
+func (f fileuploadErrorFileForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.FileuploadErrorErrorFileIDFkey,
+		f.FileuploadErrorFileErrorFileFileIDFkey,
 	}
 }
 
-type fileuploadErrorUniques struct{}
+type fileuploadErrorFileUniques struct{}
 
-func (u fileuploadErrorUniques) AsSlice() []constraint {
+func (u fileuploadErrorFileUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type fileuploadErrorChecks struct{}
+type fileuploadErrorFileChecks struct{}
 
-func (c fileuploadErrorChecks) AsSlice() []check {
+func (c fileuploadErrorFileChecks) AsSlice() []check {
 	return []check{}
 }

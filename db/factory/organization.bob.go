@@ -66,7 +66,7 @@ type organizationR struct {
 	Mosquitoinspections       []*organizationRMosquitoinspectionsR
 	Pointlocations            []*organizationRPointlocationsR
 	Polygonlocations          []*organizationRPolygonlocationsR
-	Pools                     []*organizationRPoolsR
+	FieldseekerPool           []*organizationRFieldseekerPoolR
 	Pooldetails               []*organizationRPooldetailsR
 	Proposedtreatmentareas    []*organizationRProposedtreatmentareasR
 	Qamosquitoinspections     []*organizationRQamosquitoinspectionsR
@@ -89,6 +89,7 @@ type organizationR struct {
 	NoteAudios                []*organizationRNoteAudiosR
 	NoteImages                []*organizationRNoteImagesR
 	ImportDistrictGidDistrict *organizationRImportDistrictGidDistrictR
+	Pools                     []*organizationRPoolsR
 	Nuisances                 []*organizationRNuisancesR
 	PublicreportPool          []*organizationRPublicreportPoolR
 	Quicks                    []*organizationRQuicksR
@@ -143,7 +144,7 @@ type organizationRPolygonlocationsR struct {
 	number int
 	o      *FieldseekerPolygonlocationTemplate
 }
-type organizationRPoolsR struct {
+type organizationRFieldseekerPoolR struct {
 	number int
 	o      *FieldseekerPoolTemplate
 }
@@ -233,6 +234,10 @@ type organizationRNoteImagesR struct {
 }
 type organizationRImportDistrictGidDistrictR struct {
 	o *ImportDistrictTemplate
+}
+type organizationRPoolsR struct {
+	number int
+	o      *PoolTemplate
 }
 type organizationRNuisancesR struct {
 	number int
@@ -415,9 +420,9 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.Polygonlocations = rel
 	}
 
-	if t.r.Pools != nil {
+	if t.r.FieldseekerPool != nil {
 		rel := models.FieldseekerPoolSlice{}
-		for _, r := range t.r.Pools {
+		for _, r := range t.r.FieldseekerPool {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
 				rel.OrganizationID = o.ID // h2
@@ -425,7 +430,7 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			}
 			rel = append(rel, related...)
 		}
-		o.R.Pools = rel
+		o.R.FieldseekerPool = rel
 	}
 
 	if t.r.Pooldetails != nil {
@@ -706,6 +711,19 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		rel.R.ImportDistrictGidOrganization = o
 		o.ImportDistrictGid = null.From(rel.Gid) // h2
 		o.R.ImportDistrictGidDistrict = rel
+	}
+
+	if t.r.Pools != nil {
+		rel := models.PoolSlice{}
+		for _, r := range t.r.Pools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Pools = rel
 	}
 
 	if t.r.Nuisances != nil {
@@ -1123,19 +1141,19 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
-	isPoolsDone, _ := organizationRelPoolsCtx.Value(ctx)
-	if !isPoolsDone && o.r.Pools != nil {
-		ctx = organizationRelPoolsCtx.WithValue(ctx, true)
-		for _, r := range o.r.Pools {
+	isFieldseekerPoolDone, _ := organizationRelFieldseekerPoolCtx.Value(ctx)
+	if !isFieldseekerPoolDone && o.r.FieldseekerPool != nil {
+		ctx = organizationRelFieldseekerPoolCtx.WithValue(ctx, true)
+		for _, r := range o.r.FieldseekerPool {
 			if r.o.alreadyPersisted {
-				m.R.Pools = append(m.R.Pools, r.o.Build())
+				m.R.FieldseekerPool = append(m.R.FieldseekerPool, r.o.Build())
 			} else {
 				rel12, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPools(ctx, exec, rel12...)
+				err = m.AttachFieldseekerPool(ctx, exec, rel12...)
 				if err != nil {
 					return err
 				}
@@ -1582,6 +1600,26 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 
 	}
 
+	isPoolsDone, _ := organizationRelPoolsCtx.Value(ctx)
+	if !isPoolsDone && o.r.Pools != nil {
+		ctx = organizationRelPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Pools {
+			if r.o.alreadyPersisted {
+				m.R.Pools = append(m.R.Pools, r.o.Build())
+			} else {
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPools(ctx, exec, rel35...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isNuisancesDone, _ := organizationRelNuisancesCtx.Value(ctx)
 	if !isNuisancesDone && o.r.Nuisances != nil {
 		ctx = organizationRelNuisancesCtx.WithValue(ctx, true)
@@ -1589,12 +1627,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel35...)
+				err = m.AttachNuisances(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1609,12 +1647,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel36...)
+				err = m.AttachPublicreportPool(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1629,12 +1667,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel38, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel37...)
+				err = m.AttachQuicks(ctx, exec, rel38...)
 				if err != nil {
 					return err
 				}
@@ -1649,12 +1687,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel38, err := r.o.CreateMany(ctx, exec, r.number)
+				rel39, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel38...)
+				err = m.AttachUser(ctx, exec, rel39...)
 				if err != nil {
 					return err
 				}
@@ -2819,51 +2857,51 @@ func (m organizationMods) WithoutPolygonlocations() OrganizationMod {
 	})
 }
 
-func (m organizationMods) WithPools(number int, related *FieldseekerPoolTemplate) OrganizationMod {
+func (m organizationMods) WithFieldseekerPool(number int, related *FieldseekerPoolTemplate) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = []*organizationRPoolsR{{
+		o.r.FieldseekerPool = []*organizationRFieldseekerPoolR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m organizationMods) WithNewPools(number int, mods ...FieldseekerPoolMod) OrganizationMod {
+func (m organizationMods) WithNewFieldseekerPool(number int, mods ...FieldseekerPoolMod) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		related := o.f.NewFieldseekerPoolWithContext(ctx, mods...)
-		m.WithPools(number, related).Apply(ctx, o)
+		m.WithFieldseekerPool(number, related).Apply(ctx, o)
 	})
 }
 
-func (m organizationMods) AddPools(number int, related *FieldseekerPoolTemplate) OrganizationMod {
+func (m organizationMods) AddFieldseekerPool(number int, related *FieldseekerPoolTemplate) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+		o.r.FieldseekerPool = append(o.r.FieldseekerPool, &organizationRFieldseekerPoolR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m organizationMods) AddNewPools(number int, mods ...FieldseekerPoolMod) OrganizationMod {
+func (m organizationMods) AddNewFieldseekerPool(number int, mods ...FieldseekerPoolMod) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		related := o.f.NewFieldseekerPoolWithContext(ctx, mods...)
-		m.AddPools(number, related).Apply(ctx, o)
+		m.AddFieldseekerPool(number, related).Apply(ctx, o)
 	})
 }
 
-func (m organizationMods) AddExistingPools(existingModels ...*models.FieldseekerPool) OrganizationMod {
+func (m organizationMods) AddExistingFieldseekerPool(existingModels ...*models.FieldseekerPool) OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		for _, em := range existingModels {
-			o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+			o.r.FieldseekerPool = append(o.r.FieldseekerPool, &organizationRFieldseekerPoolR{
 				o: o.f.FromExistingFieldseekerPool(em),
 			})
 		}
 	})
 }
 
-func (m organizationMods) WithoutPools() OrganizationMod {
+func (m organizationMods) WithoutFieldseekerPool() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.Pools = nil
+		o.r.FieldseekerPool = nil
 	})
 }
 
@@ -3872,6 +3910,54 @@ func (m organizationMods) AddExistingNoteImages(existingModels ...*models.NoteIm
 func (m organizationMods) WithoutNoteImages() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.NoteImages = nil
+	})
+}
+
+func (m organizationMods) WithPools(number int, related *PoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = []*organizationRPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewPools(number int, mods ...PoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.WithPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddPools(number int, related *PoolTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewPools(number int, mods ...PoolMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.AddPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingPools(existingModels ...*models.Pool) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Pools = append(o.r.Pools, &organizationRPoolsR{
+				o: o.f.FromExistingPool(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutPools() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Pools = nil
 	})
 }
 

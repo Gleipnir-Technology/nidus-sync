@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -19,15 +20,21 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // FileuploadCSV is an object representing the database table.
 type FileuploadCSV struct {
-	FileID int32                   `db:"file_id,pk" `
-	Type   enums.FileuploadCsvtype `db:"type_" `
+	Committed null.Val[time.Time]     `db:"committed" `
+	FileID    int32                   `db:"file_id,pk" `
+	Rowcount  int32                   `db:"rowcount" `
+	Type      enums.FileuploadCsvtype `db:"type_" `
 
 	R fileuploadCSVR `db:"-" `
+
+	C fileuploadCSVC `db:"-" `
 }
 
 // FileuploadCSVSlice is an alias for a slice of pointers to FileuploadCSV.
@@ -42,16 +49,19 @@ type FileuploadCSVSQuery = *psql.ViewQuery[*FileuploadCSV, FileuploadCSVSlice]
 
 // fileuploadCSVR is where relationships are stored.
 type fileuploadCSVR struct {
-	File *FileuploadFile // fileupload.csv.csv_file_id_fkey
+	File             *FileuploadFile         // fileupload.csv.csv_file_id_fkey
+	CSVFileErrorCSVS FileuploadErrorCSVSlice // fileupload.error_csv.error_csv_csv_file_id_fkey
 }
 
 func buildFileuploadCSVColumns(alias string) fileuploadCSVColumns {
 	return fileuploadCSVColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"file_id", "type_",
+			"committed", "file_id", "rowcount", "type_",
 		).WithParent("fileupload.csv"),
 		tableAlias: alias,
+		Committed:  psql.Quote(alias, "committed"),
 		FileID:     psql.Quote(alias, "file_id"),
+		Rowcount:   psql.Quote(alias, "rowcount"),
 		Type:       psql.Quote(alias, "type_"),
 	}
 }
@@ -59,7 +69,9 @@ func buildFileuploadCSVColumns(alias string) fileuploadCSVColumns {
 type fileuploadCSVColumns struct {
 	expr.ColumnsExpr
 	tableAlias string
+	Committed  psql.Expression
 	FileID     psql.Expression
+	Rowcount   psql.Expression
 	Type       psql.Expression
 }
 
@@ -75,14 +87,22 @@ func (fileuploadCSVColumns) AliasedAs(alias string) fileuploadCSVColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FileuploadCSVSetter struct {
-	FileID omit.Val[int32]                   `db:"file_id,pk" `
-	Type   omit.Val[enums.FileuploadCsvtype] `db:"type_" `
+	Committed omitnull.Val[time.Time]           `db:"committed" `
+	FileID    omit.Val[int32]                   `db:"file_id,pk" `
+	Rowcount  omit.Val[int32]                   `db:"rowcount" `
+	Type      omit.Val[enums.FileuploadCsvtype] `db:"type_" `
 }
 
 func (s FileuploadCSVSetter) SetColumns() []string {
-	vals := make([]string, 0, 2)
+	vals := make([]string, 0, 4)
+	if !s.Committed.IsUnset() {
+		vals = append(vals, "committed")
+	}
 	if s.FileID.IsValue() {
 		vals = append(vals, "file_id")
+	}
+	if s.Rowcount.IsValue() {
+		vals = append(vals, "rowcount")
 	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type_")
@@ -91,8 +111,14 @@ func (s FileuploadCSVSetter) SetColumns() []string {
 }
 
 func (s FileuploadCSVSetter) Overwrite(t *FileuploadCSV) {
+	if !s.Committed.IsUnset() {
+		t.Committed = s.Committed.MustGetNull()
+	}
 	if s.FileID.IsValue() {
 		t.FileID = s.FileID.MustGet()
+	}
+	if s.Rowcount.IsValue() {
+		t.Rowcount = s.Rowcount.MustGet()
 	}
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
@@ -105,17 +131,29 @@ func (s *FileuploadCSVSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 2)
-		if s.FileID.IsValue() {
-			vals[0] = psql.Arg(s.FileID.MustGet())
+		vals := make([]bob.Expression, 4)
+		if !s.Committed.IsUnset() {
+			vals[0] = psql.Arg(s.Committed.MustGetNull())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.Type.IsValue() {
-			vals[1] = psql.Arg(s.Type.MustGet())
+		if s.FileID.IsValue() {
+			vals[1] = psql.Arg(s.FileID.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
+		}
+
+		if s.Rowcount.IsValue() {
+			vals[2] = psql.Arg(s.Rowcount.MustGet())
+		} else {
+			vals[2] = psql.Raw("DEFAULT")
+		}
+
+		if s.Type.IsValue() {
+			vals[3] = psql.Arg(s.Type.MustGet())
+		} else {
+			vals[3] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -127,12 +165,26 @@ func (s FileuploadCSVSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FileuploadCSVSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 2)
+	exprs := make([]bob.Expression, 0, 4)
+
+	if !s.Committed.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "committed")...),
+			psql.Arg(s.Committed),
+		}})
+	}
 
 	if s.FileID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "file_id")...),
 			psql.Arg(s.FileID),
+		}})
+	}
+
+	if s.Rowcount.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "rowcount")...),
+			psql.Arg(s.Rowcount),
 		}})
 	}
 
@@ -393,6 +445,30 @@ func (os FileuploadCSVSlice) File(mods ...bob.Mod[*dialect.SelectQuery]) Fileupl
 	)...)
 }
 
+// CSVFileErrorCSVS starts a query for related objects on fileupload.error_csv
+func (o *FileuploadCSV) CSVFileErrorCSVS(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorCSVSQuery {
+	return FileuploadErrorCSVS.Query(append(mods,
+		sm.Where(FileuploadErrorCSVS.Columns.CSVFileID.EQ(psql.Arg(o.FileID))),
+	)...)
+}
+
+func (os FileuploadCSVSlice) CSVFileErrorCSVS(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorCSVSQuery {
+	pkFileID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkFileID = append(pkFileID, o.FileID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkFileID), "integer[]")),
+	))
+
+	return FileuploadErrorCSVS.Query(append(mods,
+		sm.Where(psql.Group(FileuploadErrorCSVS.Columns.CSVFileID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachFileuploadCSVFile0(ctx context.Context, exec bob.Executor, count int, fileuploadCSV0 *FileuploadCSV, fileuploadFile1 *FileuploadFile) (*FileuploadCSV, error) {
 	setter := &FileuploadCSVSetter{
 		FileID: omit.From(fileuploadFile1.ID),
@@ -441,9 +517,79 @@ func (fileuploadCSV0 *FileuploadCSV) AttachFile(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+func insertFileuploadCSVCSVFileErrorCSVS0(ctx context.Context, exec bob.Executor, fileuploadErrorCSVS1 []*FileuploadErrorCSVSetter, fileuploadCSV0 *FileuploadCSV) (FileuploadErrorCSVSlice, error) {
+	for i := range fileuploadErrorCSVS1 {
+		fileuploadErrorCSVS1[i].CSVFileID = omit.From(fileuploadCSV0.FileID)
+	}
+
+	ret, err := FileuploadErrorCSVS.Insert(bob.ToMods(fileuploadErrorCSVS1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertFileuploadCSVCSVFileErrorCSVS0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachFileuploadCSVCSVFileErrorCSVS0(ctx context.Context, exec bob.Executor, count int, fileuploadErrorCSVS1 FileuploadErrorCSVSlice, fileuploadCSV0 *FileuploadCSV) (FileuploadErrorCSVSlice, error) {
+	setter := &FileuploadErrorCSVSetter{
+		CSVFileID: omit.From(fileuploadCSV0.FileID),
+	}
+
+	err := fileuploadErrorCSVS1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachFileuploadCSVCSVFileErrorCSVS0: %w", err)
+	}
+
+	return fileuploadErrorCSVS1, nil
+}
+
+func (fileuploadCSV0 *FileuploadCSV) InsertCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, related ...*FileuploadErrorCSVSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	fileuploadErrorCSVS1, err := insertFileuploadCSVCSVFileErrorCSVS0(ctx, exec, related, fileuploadCSV0)
+	if err != nil {
+		return err
+	}
+
+	fileuploadCSV0.R.CSVFileErrorCSVS = append(fileuploadCSV0.R.CSVFileErrorCSVS, fileuploadErrorCSVS1...)
+
+	for _, rel := range fileuploadErrorCSVS1 {
+		rel.R.CSVFileCSV = fileuploadCSV0
+	}
+	return nil
+}
+
+func (fileuploadCSV0 *FileuploadCSV) AttachCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, related ...*FileuploadErrorCSV) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	fileuploadErrorCSVS1 := FileuploadErrorCSVSlice(related)
+
+	_, err = attachFileuploadCSVCSVFileErrorCSVS0(ctx, exec, len(related), fileuploadErrorCSVS1, fileuploadCSV0)
+	if err != nil {
+		return err
+	}
+
+	fileuploadCSV0.R.CSVFileErrorCSVS = append(fileuploadCSV0.R.CSVFileErrorCSVS, fileuploadErrorCSVS1...)
+
+	for _, rel := range related {
+		rel.R.CSVFileCSV = fileuploadCSV0
+	}
+
+	return nil
+}
+
 type fileuploadCSVWhere[Q psql.Filterable] struct {
-	FileID psql.WhereMod[Q, int32]
-	Type   psql.WhereMod[Q, enums.FileuploadCsvtype]
+	Committed psql.WhereNullMod[Q, time.Time]
+	FileID    psql.WhereMod[Q, int32]
+	Rowcount  psql.WhereMod[Q, int32]
+	Type      psql.WhereMod[Q, enums.FileuploadCsvtype]
 }
 
 func (fileuploadCSVWhere[Q]) AliasedAs(alias string) fileuploadCSVWhere[Q] {
@@ -452,8 +598,10 @@ func (fileuploadCSVWhere[Q]) AliasedAs(alias string) fileuploadCSVWhere[Q] {
 
 func buildFileuploadCSVWhere[Q psql.Filterable](cols fileuploadCSVColumns) fileuploadCSVWhere[Q] {
 	return fileuploadCSVWhere[Q]{
-		FileID: psql.Where[Q, int32](cols.FileID),
-		Type:   psql.Where[Q, enums.FileuploadCsvtype](cols.Type),
+		Committed: psql.WhereNull[Q, time.Time](cols.Committed),
+		FileID:    psql.Where[Q, int32](cols.FileID),
+		Rowcount:  psql.Where[Q, int32](cols.Rowcount),
+		Type:      psql.Where[Q, enums.FileuploadCsvtype](cols.Type),
 	}
 }
 
@@ -473,6 +621,20 @@ func (o *FileuploadCSV) Preload(name string, retrieved any) error {
 
 		if rel != nil {
 			rel.R.CSV = o
+		}
+		return nil
+	case "CSVFileErrorCSVS":
+		rels, ok := retrieved.(FileuploadErrorCSVSlice)
+		if !ok {
+			return fmt.Errorf("fileuploadCSV cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CSVFileErrorCSVS = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CSVFileCSV = o
+			}
 		}
 		return nil
 	default:
@@ -503,12 +665,16 @@ func buildFileuploadCSVPreloader() fileuploadCSVPreloader {
 }
 
 type fileuploadCSVThenLoader[Q orm.Loadable] struct {
-	File func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	File             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadCSVThenLoader[Q orm.Loadable]() fileuploadCSVThenLoader[Q] {
 	type FileLoadInterface interface {
 		LoadFile(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CSVFileErrorCSVSLoadInterface interface {
+		LoadCSVFileErrorCSVS(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return fileuploadCSVThenLoader[Q]{
@@ -516,6 +682,12 @@ func buildFileuploadCSVThenLoader[Q orm.Loadable]() fileuploadCSVThenLoader[Q] {
 			"File",
 			func(ctx context.Context, exec bob.Executor, retrieved FileLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadFile(ctx, exec, mods...)
+			},
+		),
+		CSVFileErrorCSVS: thenLoadBuilder[Q](
+			"CSVFileErrorCSVS",
+			func(ctx context.Context, exec bob.Executor, retrieved CSVFileErrorCSVSLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCSVFileErrorCSVS(ctx, exec, mods...)
 			},
 		),
 	}
@@ -573,9 +745,164 @@ func (os FileuploadCSVSlice) LoadFile(ctx context.Context, exec bob.Executor, mo
 	return nil
 }
 
+// LoadCSVFileErrorCSVS loads the fileuploadCSV's CSVFileErrorCSVS into the .R struct
+func (o *FileuploadCSV) LoadCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CSVFileErrorCSVS = nil
+
+	related, err := o.CSVFileErrorCSVS(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CSVFileCSV = o
+	}
+
+	o.R.CSVFileErrorCSVS = related
+	return nil
+}
+
+// LoadCSVFileErrorCSVS loads the fileuploadCSV's CSVFileErrorCSVS into the .R struct
+func (os FileuploadCSVSlice) LoadCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	fileuploadErrorCSVS, err := os.CSVFileErrorCSVS(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CSVFileErrorCSVS = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range fileuploadErrorCSVS {
+
+			if !(o.FileID == rel.CSVFileID) {
+				continue
+			}
+
+			rel.R.CSVFileCSV = o
+
+			o.R.CSVFileErrorCSVS = append(o.R.CSVFileErrorCSVS, rel)
+		}
+	}
+
+	return nil
+}
+
+// fileuploadCSVC is where relationship counts are stored.
+type fileuploadCSVC struct {
+	CSVFileErrorCSVS *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *FileuploadCSV) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "CSVFileErrorCSVS":
+		o.C.CSVFileErrorCSVS = &count
+	}
+	return nil
+}
+
+type fileuploadCSVCountPreloader struct {
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildFileuploadCSVCountPreloader() fileuploadCSVCountPreloader {
+	return fileuploadCSVCountPreloader{
+		CSVFileErrorCSVS: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*FileuploadCSV]("CSVFileErrorCSVS", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = FileuploadCSVS.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(FileuploadErrorCSVS.Name()),
+					sm.Where(psql.Quote(FileuploadErrorCSVS.Alias(), "csv_file_id").EQ(psql.Quote(parent, "file_id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type fileuploadCSVCountThenLoader[Q orm.Loadable] struct {
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildFileuploadCSVCountThenLoader[Q orm.Loadable]() fileuploadCSVCountThenLoader[Q] {
+	type CSVFileErrorCSVSCountInterface interface {
+		LoadCountCSVFileErrorCSVS(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return fileuploadCSVCountThenLoader[Q]{
+		CSVFileErrorCSVS: countThenLoadBuilder[Q](
+			"CSVFileErrorCSVS",
+			func(ctx context.Context, exec bob.Executor, retrieved CSVFileErrorCSVSCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCSVFileErrorCSVS(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountCSVFileErrorCSVS loads the count of CSVFileErrorCSVS into the C struct
+func (o *FileuploadCSV) LoadCountCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CSVFileErrorCSVS(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CSVFileErrorCSVS = &count
+	return nil
+}
+
+// LoadCountCSVFileErrorCSVS loads the count of CSVFileErrorCSVS for a slice
+func (os FileuploadCSVSlice) LoadCountCSVFileErrorCSVS(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCSVFileErrorCSVS(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type fileuploadCSVJoins[Q dialect.Joinable] struct {
-	typ  string
-	File modAs[Q, fileuploadFileColumns]
+	typ              string
+	File             modAs[Q, fileuploadFileColumns]
+	CSVFileErrorCSVS modAs[Q, fileuploadErrorCSVColumns]
 }
 
 func (j fileuploadCSVJoins[Q]) aliasedAs(alias string) fileuploadCSVJoins[Q] {
@@ -593,6 +920,20 @@ func buildFileuploadCSVJoins[Q dialect.Joinable](cols fileuploadCSVColumns, typ 
 				{
 					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.FileID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CSVFileErrorCSVS: modAs[Q, fileuploadErrorCSVColumns]{
+			c: FileuploadErrorCSVS.Columns,
+			f: func(to fileuploadErrorCSVColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, FileuploadErrorCSVS.Name().As(to.Alias())).On(
+						to.CSVFileID.EQ(cols.FileID),
 					))
 				}
 

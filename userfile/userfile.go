@@ -16,17 +16,17 @@ func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) erro
 	filepath := fileContentPath(collection, uid)
 	dst, err := os.Create(filepath)
 	if err != nil {
-		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create audio file")
-		return fmt.Errorf("Failed to create audio file at %s: %v", filepath, err)
+		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create upload file")
+		return fmt.Errorf("Failed to create upload file at %s: %v", filepath, err)
 	}
 	defer dst.Close()
 
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, body)
 	if err != nil {
-		return fmt.Errorf("Unable to save file to create audio file at %s: %v", filepath, err)
+		return fmt.Errorf("Unable to save file to copy file content to %s: %v", filepath, err)
 	}
-	log.Info().Str("filepath", filepath).Msg("Save audio file content")
+	log.Info().Str("filepath", filepath).Msg("Save upload file content")
 	return nil
 }
 

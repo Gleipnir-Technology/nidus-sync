@@ -56,7 +56,8 @@ type preloaders struct {
 	FieldseekerZones2                 fieldseekerZones2Preloader
 	FieldseekerSync                   fieldseekerSyncPreloader
 	FileuploadCSV                     fileuploadCSVPreloader
-	FileuploadError                   fileuploadErrorPreloader
+	FileuploadErrorCSV                fileuploadErrorCSVPreloader
+	FileuploadErrorFile               fileuploadErrorFilePreloader
 	FileuploadFile                    fileuploadFilePreloader
 	H3Aggregation                     h3AggregationPreloader
 	ImportDistrict                    importDistrictPreloader
@@ -69,6 +70,7 @@ type preloaders struct {
 	Notification                      notificationPreloader
 	OauthToken                        oauthTokenPreloader
 	Organization                      organizationPreloader
+	Pool                              poolPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisancePreloader
@@ -125,7 +127,8 @@ func getPreloaders() preloaders {
 		FieldseekerZones2:                 buildFieldseekerZones2Preloader(),
 		FieldseekerSync:                   buildFieldseekerSyncPreloader(),
 		FileuploadCSV:                     buildFileuploadCSVPreloader(),
-		FileuploadError:                   buildFileuploadErrorPreloader(),
+		FileuploadErrorCSV:                buildFileuploadErrorCSVPreloader(),
+		FileuploadErrorFile:               buildFileuploadErrorFilePreloader(),
 		FileuploadFile:                    buildFileuploadFilePreloader(),
 		H3Aggregation:                     buildH3AggregationPreloader(),
 		ImportDistrict:                    buildImportDistrictPreloader(),
@@ -138,6 +141,7 @@ func getPreloaders() preloaders {
 		Notification:                      buildNotificationPreloader(),
 		OauthToken:                        buildOauthTokenPreloader(),
 		Organization:                      buildOrganizationPreloader(),
+		Pool:                              buildPoolPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisancePreloader(),
@@ -200,7 +204,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	FieldseekerZones2                 fieldseekerZones2ThenLoader[Q]
 	FieldseekerSync                   fieldseekerSyncThenLoader[Q]
 	FileuploadCSV                     fileuploadCSVThenLoader[Q]
-	FileuploadError                   fileuploadErrorThenLoader[Q]
+	FileuploadErrorCSV                fileuploadErrorCSVThenLoader[Q]
+	FileuploadErrorFile               fileuploadErrorFileThenLoader[Q]
 	FileuploadFile                    fileuploadFileThenLoader[Q]
 	H3Aggregation                     h3AggregationThenLoader[Q]
 	ImportDistrict                    importDistrictThenLoader[Q]
@@ -213,6 +218,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                      notificationThenLoader[Q]
 	OauthToken                        oauthTokenThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
+	Pool                              poolThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisanceThenLoader[Q]
@@ -269,7 +275,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FieldseekerZones2:                 buildFieldseekerZones2ThenLoader[Q](),
 		FieldseekerSync:                   buildFieldseekerSyncThenLoader[Q](),
 		FileuploadCSV:                     buildFileuploadCSVThenLoader[Q](),
-		FileuploadError:                   buildFileuploadErrorThenLoader[Q](),
+		FileuploadErrorCSV:                buildFileuploadErrorCSVThenLoader[Q](),
+		FileuploadErrorFile:               buildFileuploadErrorFileThenLoader[Q](),
 		FileuploadFile:                    buildFileuploadFileThenLoader[Q](),
 		H3Aggregation:                     buildH3AggregationThenLoader[Q](),
 		ImportDistrict:                    buildImportDistrictThenLoader[Q](),
@@ -282,6 +289,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                      buildNotificationThenLoader[Q](),
 		OauthToken:                        buildOauthTokenThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
+		Pool:                              buildPoolThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisanceThenLoader[Q](),

@@ -58,7 +58,8 @@ type Factory struct {
 	baseFieldseekerZones2Mods                 FieldseekerZones2ModSlice
 	baseFieldseekerSyncMods                   FieldseekerSyncModSlice
 	baseFileuploadCSVMods                     FileuploadCSVModSlice
-	baseFileuploadErrorMods                   FileuploadErrorModSlice
+	baseFileuploadErrorCSVMods                FileuploadErrorCSVModSlice
+	baseFileuploadErrorFileMods               FileuploadErrorFileModSlice
 	baseFileuploadFileMods                    FileuploadFileModSlice
 	baseGeographyColumnMods                   GeographyColumnModSlice
 	baseGeometryColumnMods                    GeometryColumnModSlice
@@ -74,6 +75,7 @@ type Factory struct {
 	baseNotificationMods                      NotificationModSlice
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
+	basePoolMods                              PoolModSlice
 	basePublicreportImageMods                 PublicreportImageModSlice
 	basePublicreportImageExifMods             PublicreportImageExifModSlice
 	basePublicreportNotifyEmailNuisanceMods   PublicreportNotifyEmailNuisanceModSlice
@@ -2251,44 +2253,81 @@ func (f *Factory) NewFileuploadCSVWithContext(ctx context.Context, mods ...Fileu
 func (f *Factory) FromExistingFileuploadCSV(m *models.FileuploadCSV) *FileuploadCSVTemplate {
 	o := &FileuploadCSVTemplate{f: f, alreadyPersisted: true}
 
+	o.Committed = func() null.Val[time.Time] { return m.Committed }
 	o.FileID = func() int32 { return m.FileID }
+	o.Rowcount = func() int32 { return m.Rowcount }
 	o.Type = func() enums.FileuploadCsvtype { return m.Type }
 
 	ctx := context.Background()
 	if m.R.File != nil {
 		FileuploadCSVMods.WithExistingFile(m.R.File).Apply(ctx, o)
 	}
-
-	return o
-}
-
-func (f *Factory) NewFileuploadError(mods ...FileuploadErrorMod) *FileuploadErrorTemplate {
-	return f.NewFileuploadErrorWithContext(context.Background(), mods...)
-}
-
-func (f *Factory) NewFileuploadErrorWithContext(ctx context.Context, mods ...FileuploadErrorMod) *FileuploadErrorTemplate {
-	o := &FileuploadErrorTemplate{f: f}
-
-	if f != nil {
-		f.baseFileuploadErrorMods.Apply(ctx, o)
+	if len(m.R.CSVFileErrorCSVS) > 0 {
+		FileuploadCSVMods.AddExistingCSVFileErrorCSVS(m.R.CSVFileErrorCSVS...).Apply(ctx, o)
 	}
 
-	FileuploadErrorModSlice(mods).Apply(ctx, o)
+	return o
+}
+
+func (f *Factory) NewFileuploadErrorCSV(mods ...FileuploadErrorCSVMod) *FileuploadErrorCSVTemplate {
+	return f.NewFileuploadErrorCSVWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadErrorCSVWithContext(ctx context.Context, mods ...FileuploadErrorCSVMod) *FileuploadErrorCSVTemplate {
+	o := &FileuploadErrorCSVTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadErrorCSVMods.Apply(ctx, o)
+	}
+
+	FileuploadErrorCSVModSlice(mods).Apply(ctx, o)
 
 	return o
 }
 
-func (f *Factory) FromExistingFileuploadError(m *models.FileuploadError) *FileuploadErrorTemplate {
-	o := &FileuploadErrorTemplate{f: f, alreadyPersisted: true}
+func (f *Factory) FromExistingFileuploadErrorCSV(m *models.FileuploadErrorCSV) *FileuploadErrorCSVTemplate {
+	o := &FileuploadErrorCSVTemplate{f: f, alreadyPersisted: true}
 
-	o.FileID = func() int32 { return m.FileID }
+	o.Col = func() int32 { return m.Col }
+	o.CSVFileID = func() int32 { return m.CSVFileID }
 	o.ID = func() int32 { return m.ID }
 	o.Line = func() int32 { return m.Line }
 	o.Message = func() string { return m.Message }
 
 	ctx := context.Background()
+	if m.R.CSVFileCSV != nil {
+		FileuploadErrorCSVMods.WithExistingCSVFileCSV(m.R.CSVFileCSV).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewFileuploadErrorFile(mods ...FileuploadErrorFileMod) *FileuploadErrorFileTemplate {
+	return f.NewFileuploadErrorFileWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadErrorFileWithContext(ctx context.Context, mods ...FileuploadErrorFileMod) *FileuploadErrorFileTemplate {
+	o := &FileuploadErrorFileTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadErrorFileMods.Apply(ctx, o)
+	}
+
+	FileuploadErrorFileModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFileuploadErrorFile(m *models.FileuploadErrorFile) *FileuploadErrorFileTemplate {
+	o := &FileuploadErrorFileTemplate{f: f, alreadyPersisted: true}
+
+	o.FileID = func() int32 { return m.FileID }
+	o.ID = func() int32 { return m.ID }
+	o.Message = func() string { return m.Message }
+
+	ctx := context.Background()
 	if m.R.File != nil {
-		FileuploadErrorMods.WithExistingFile(m.R.File).Apply(ctx, o)
+		FileuploadErrorFileMods.WithExistingFile(m.R.File).Apply(ctx, o)
 	}
 
 	return o
@@ -2328,8 +2367,8 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	if m.R.CSV != nil {
 		FileuploadFileMods.WithExistingCSV(m.R.CSV).Apply(ctx, o)
 	}
-	if len(m.R.Errors) > 0 {
-		FileuploadFileMods.AddExistingErrors(m.R.Errors...).Apply(ctx, o)
+	if len(m.R.ErrorFiles) > 0 {
+		FileuploadFileMods.AddExistingErrorFiles(m.R.ErrorFiles...).Apply(ctx, o)
 	}
 	if m.R.CreatorUser != nil {
 		FileuploadFileMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
@@ -2882,8 +2921,8 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if len(m.R.Polygonlocations) > 0 {
 		OrganizationMods.AddExistingPolygonlocations(m.R.Polygonlocations...).Apply(ctx, o)
 	}
-	if len(m.R.Pools) > 0 {
-		OrganizationMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
+	if len(m.R.FieldseekerPool) > 0 {
+		OrganizationMods.AddExistingFieldseekerPool(m.R.FieldseekerPool...).Apply(ctx, o)
 	}
 	if len(m.R.Pooldetails) > 0 {
 		OrganizationMods.AddExistingPooldetails(m.R.Pooldetails...).Apply(ctx, o)
@@ -2951,6 +2990,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if m.R.ImportDistrictGidDistrict != nil {
 		OrganizationMods.WithExistingImportDistrictGidDistrict(m.R.ImportDistrictGidDistrict).Apply(ctx, o)
 	}
+	if len(m.R.Pools) > 0 {
+		OrganizationMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
+	}
 	if len(m.R.Nuisances) > 0 {
 		OrganizationMods.AddExistingNuisances(m.R.Nuisances...).Apply(ctx, o)
 	}
@@ -2962,6 +3004,53 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPool(mods ...PoolMod) *PoolTemplate {
+	return f.NewPoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPoolWithContext(ctx context.Context, mods ...PoolMod) *PoolTemplate {
+	o := &PoolTemplate{f: f}
+
+	if f != nil {
+		f.basePoolMods.Apply(ctx, o)
+	}
+
+	PoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPool(m *models.Pool) *PoolTemplate {
+	o := &PoolTemplate{f: f, alreadyPersisted: true}
+
+	o.AddressCity = func() string { return m.AddressCity }
+	o.AddressPostalCode = func() string { return m.AddressPostalCode }
+	o.AddressStreet = func() string { return m.AddressStreet }
+	o.Condition = func() enums.Poolconditiontype { return m.Condition }
+	o.Created = func() time.Time { return m.Created }
+	o.CreatorID = func() int32 { return m.CreatorID }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.Committed = func() bool { return m.Committed }
+	o.ID = func() int32 { return m.ID }
+	o.Notes = func() string { return m.Notes }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.PropertyOwnerName = func() string { return m.PropertyOwnerName }
+	o.PropertyOwnerPhone = func() null.Val[string] { return m.PropertyOwnerPhone }
+	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
+	o.ResidentPhone = func() null.Val[string] { return m.ResidentPhone }
+	o.Version = func() int32 { return m.Version }
+
+	ctx := context.Background()
+	if m.R.CreatorUser != nil {
+		PoolMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		PoolMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
 
 	return o
@@ -3681,6 +3770,9 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.UserOauthTokens) > 0 {
 		UserMods.AddExistingUserOauthTokens(m.R.UserOauthTokens...).Apply(ctx, o)
 	}
+	if len(m.R.CreatorPools) > 0 {
+		UserMods.AddExistingCreatorPools(m.R.CreatorPools...).Apply(ctx, o)
+	}
 	if m.R.Organization != nil {
 		UserMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
@@ -4000,12 +4092,20 @@ func (f *Factory) AddBaseFileuploadCSVMod(mods ...FileuploadCSVMod) {
 	f.baseFileuploadCSVMods = append(f.baseFileuploadCSVMods, mods...)
 }
 
-func (f *Factory) ClearBaseFileuploadErrorMods() {
-	f.baseFileuploadErrorMods = nil
+func (f *Factory) ClearBaseFileuploadErrorCSVMods() {
+	f.baseFileuploadErrorCSVMods = nil
 }
 
-func (f *Factory) AddBaseFileuploadErrorMod(mods ...FileuploadErrorMod) {
-	f.baseFileuploadErrorMods = append(f.baseFileuploadErrorMods, mods...)
+func (f *Factory) AddBaseFileuploadErrorCSVMod(mods ...FileuploadErrorCSVMod) {
+	f.baseFileuploadErrorCSVMods = append(f.baseFileuploadErrorCSVMods, mods...)
+}
+
+func (f *Factory) ClearBaseFileuploadErrorFileMods() {
+	f.baseFileuploadErrorFileMods = nil
+}
+
+func (f *Factory) AddBaseFileuploadErrorFileMod(mods ...FileuploadErrorFileMod) {
+	f.baseFileuploadErrorFileMods = append(f.baseFileuploadErrorFileMods, mods...)
 }
 
 func (f *Factory) ClearBaseFileuploadFileMods() {
@@ -4126,6 +4226,14 @@ func (f *Factory) ClearBaseOrganizationMods() {
 
 func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
+}
+
+func (f *Factory) ClearBasePoolMods() {
+	f.basePoolMods = nil
+}
+
+func (f *Factory) AddBasePoolMod(mods ...PoolMod) {
+	f.basePoolMods = append(f.basePoolMods, mods...)
 }
 
 func (f *Factory) ClearBasePublicreportImageMods() {

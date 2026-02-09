@@ -15,8 +15,26 @@ var FileuploadCSVS = Table[
 	Schema: "fileupload",
 	Name:   "csv",
 	Columns: fileuploadCSVColumns{
+		Committed: column{
+			Name:      "committed",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		FileID: column{
 			Name:      "file_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Rowcount: column{
+			Name:      "rowcount",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -74,13 +92,15 @@ var FileuploadCSVS = Table[
 }
 
 type fileuploadCSVColumns struct {
-	FileID column
-	Type   column
+	Committed column
+	FileID    column
+	Rowcount  column
+	Type      column
 }
 
 func (c fileuploadCSVColumns) AsSlice() []column {
 	return []column{
-		c.FileID, c.Type,
+		c.Committed, c.FileID, c.Rowcount, c.Type,
 	}
 }
 

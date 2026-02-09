@@ -58,7 +58,7 @@ type FileuploadFileTemplate struct {
 
 type fileuploadFileR struct {
 	CSV          *fileuploadFileRCSVR
-	Errors       []*fileuploadFileRErrorsR
+	ErrorFiles   []*fileuploadFileRErrorFilesR
 	CreatorUser  *fileuploadFileRCreatorUserR
 	Organization *fileuploadFileROrganizationR
 }
@@ -66,9 +66,9 @@ type fileuploadFileR struct {
 type fileuploadFileRCSVR struct {
 	o *FileuploadCSVTemplate
 }
-type fileuploadFileRErrorsR struct {
+type fileuploadFileRErrorFilesR struct {
 	number int
-	o      *FileuploadErrorTemplate
+	o      *FileuploadErrorFileTemplate
 }
 type fileuploadFileRCreatorUserR struct {
 	o *UserTemplate
@@ -94,9 +94,9 @@ func (t FileuploadFileTemplate) setModelRels(o *models.FileuploadFile) {
 		o.R.CSV = rel
 	}
 
-	if t.r.Errors != nil {
-		rel := models.FileuploadErrorSlice{}
-		for _, r := range t.r.Errors {
+	if t.r.ErrorFiles != nil {
+		rel := models.FileuploadErrorFileSlice{}
+		for _, r := range t.r.ErrorFiles {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
 				rel.FileID = o.ID // h2
@@ -104,7 +104,7 @@ func (t FileuploadFileTemplate) setModelRels(o *models.FileuploadFile) {
 			}
 			rel = append(rel, related...)
 		}
-		o.R.Errors = rel
+		o.R.ErrorFiles = rel
 	}
 
 	if t.r.CreatorUser != nil {
@@ -298,19 +298,19 @@ func (o *FileuploadFileTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 
 	}
 
-	isErrorsDone, _ := fileuploadFileRelErrorsCtx.Value(ctx)
-	if !isErrorsDone && o.r.Errors != nil {
-		ctx = fileuploadFileRelErrorsCtx.WithValue(ctx, true)
-		for _, r := range o.r.Errors {
+	isErrorFilesDone, _ := fileuploadFileRelErrorFilesCtx.Value(ctx)
+	if !isErrorFilesDone && o.r.ErrorFiles != nil {
+		ctx = fileuploadFileRelErrorFilesCtx.WithValue(ctx, true)
+		for _, r := range o.r.ErrorFiles {
 			if r.o.alreadyPersisted {
-				m.R.Errors = append(m.R.Errors, r.o.Build())
+				m.R.ErrorFiles = append(m.R.ErrorFiles, r.o.Build())
 			} else {
 				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachErrors(ctx, exec, rel1...)
+				err = m.AttachErrorFiles(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -906,50 +906,50 @@ func (m fileuploadFileMods) WithoutOrganization() FileuploadFileMod {
 	})
 }
 
-func (m fileuploadFileMods) WithErrors(number int, related *FileuploadErrorTemplate) FileuploadFileMod {
+func (m fileuploadFileMods) WithErrorFiles(number int, related *FileuploadErrorFileTemplate) FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
-		o.r.Errors = []*fileuploadFileRErrorsR{{
+		o.r.ErrorFiles = []*fileuploadFileRErrorFilesR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m fileuploadFileMods) WithNewErrors(number int, mods ...FileuploadErrorMod) FileuploadFileMod {
+func (m fileuploadFileMods) WithNewErrorFiles(number int, mods ...FileuploadErrorFileMod) FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
-		related := o.f.NewFileuploadErrorWithContext(ctx, mods...)
-		m.WithErrors(number, related).Apply(ctx, o)
+		related := o.f.NewFileuploadErrorFileWithContext(ctx, mods...)
+		m.WithErrorFiles(number, related).Apply(ctx, o)
 	})
 }
 
-func (m fileuploadFileMods) AddErrors(number int, related *FileuploadErrorTemplate) FileuploadFileMod {
+func (m fileuploadFileMods) AddErrorFiles(number int, related *FileuploadErrorFileTemplate) FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
-		o.r.Errors = append(o.r.Errors, &fileuploadFileRErrorsR{
+		o.r.ErrorFiles = append(o.r.ErrorFiles, &fileuploadFileRErrorFilesR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m fileuploadFileMods) AddNewErrors(number int, mods ...FileuploadErrorMod) FileuploadFileMod {
+func (m fileuploadFileMods) AddNewErrorFiles(number int, mods ...FileuploadErrorFileMod) FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
-		related := o.f.NewFileuploadErrorWithContext(ctx, mods...)
-		m.AddErrors(number, related).Apply(ctx, o)
+		related := o.f.NewFileuploadErrorFileWithContext(ctx, mods...)
+		m.AddErrorFiles(number, related).Apply(ctx, o)
 	})
 }
 
-func (m fileuploadFileMods) AddExistingErrors(existingModels ...*models.FileuploadError) FileuploadFileMod {
+func (m fileuploadFileMods) AddExistingErrorFiles(existingModels ...*models.FileuploadErrorFile) FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
 		for _, em := range existingModels {
-			o.r.Errors = append(o.r.Errors, &fileuploadFileRErrorsR{
-				o: o.f.FromExistingFileuploadError(em),
+			o.r.ErrorFiles = append(o.r.ErrorFiles, &fileuploadFileRErrorFilesR{
+				o: o.f.FromExistingFileuploadErrorFile(em),
 			})
 		}
 	})
 }
 
-func (m fileuploadFileMods) WithoutErrors() FileuploadFileMod {
+func (m fileuploadFileMods) WithoutErrorFiles() FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
-		o.r.Errors = nil
+		o.r.ErrorFiles = nil
 	})
 }

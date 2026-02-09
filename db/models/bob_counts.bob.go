@@ -25,6 +25,7 @@ type preloadCounts struct {
 	CommsEmailContact    commsEmailContactCountPreloader
 	CommsEmailTemplate   commsEmailTemplateCountPreloader
 	CommsPhone           commsPhoneCountPreloader
+	FileuploadCSV        fileuploadCSVCountPreloader
 	FileuploadFile       fileuploadFileCountPreloader
 	NoteAudio            noteAudioCountPreloader
 	NoteImage            noteImageCountPreloader
@@ -42,6 +43,7 @@ func getPreloadCount() preloadCounts {
 		CommsEmailContact:    buildCommsEmailContactCountPreloader(),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountPreloader(),
 		CommsPhone:           buildCommsPhoneCountPreloader(),
+		FileuploadCSV:        buildFileuploadCSVCountPreloader(),
 		FileuploadFile:       buildFileuploadFileCountPreloader(),
 		NoteAudio:            buildNoteAudioCountPreloader(),
 		NoteImage:            buildNoteImageCountPreloader(),
@@ -59,6 +61,7 @@ type thenLoadCounts[Q orm.Loadable] struct {
 	CommsEmailContact    commsEmailContactCountThenLoader[Q]
 	CommsEmailTemplate   commsEmailTemplateCountThenLoader[Q]
 	CommsPhone           commsPhoneCountThenLoader[Q]
+	FileuploadCSV        fileuploadCSVCountThenLoader[Q]
 	FileuploadFile       fileuploadFileCountThenLoader[Q]
 	NoteAudio            noteAudioCountThenLoader[Q]
 	NoteImage            noteImageCountThenLoader[Q]
@@ -76,6 +79,7 @@ func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 		CommsEmailContact:    buildCommsEmailContactCountThenLoader[Q](),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountThenLoader[Q](),
 		CommsPhone:           buildCommsPhoneCountThenLoader[Q](),
+		FileuploadCSV:        buildFileuploadCSVCountThenLoader[Q](),
 		FileuploadFile:       buildFileuploadFileCountThenLoader[Q](),
 		NoteAudio:            buildNoteAudioCountThenLoader[Q](),
 		NoteImage:            buildNoteImageCountThenLoader[Q](),

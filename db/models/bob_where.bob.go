@@ -56,7 +56,8 @@ func Where[Q psql.Filterable]() struct {
 	FieldseekerZones2s                 fieldseekerZones2Where[Q]
 	FieldseekerSyncs                   fieldseekerSyncWhere[Q]
 	FileuploadCSVS                     fileuploadCSVWhere[Q]
-	FileuploadErrors                   fileuploadErrorWhere[Q]
+	FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
+	FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 	FileuploadFiles                    fileuploadFileWhere[Q]
 	GeographyColumns                   geographyColumnWhere[Q]
 	GeometryColumns                    geometryColumnWhere[Q]
@@ -72,6 +73,7 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                      notificationWhere[Q]
 	OauthTokens                        oauthTokenWhere[Q]
 	Organizations                      organizationWhere[Q]
+	Pools                              poolWhere[Q]
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -131,7 +133,8 @@ func Where[Q psql.Filterable]() struct {
 		FieldseekerZones2s                 fieldseekerZones2Where[Q]
 		FieldseekerSyncs                   fieldseekerSyncWhere[Q]
 		FileuploadCSVS                     fileuploadCSVWhere[Q]
-		FileuploadErrors                   fileuploadErrorWhere[Q]
+		FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
+		FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 		FileuploadFiles                    fileuploadFileWhere[Q]
 		GeographyColumns                   geographyColumnWhere[Q]
 		GeometryColumns                    geometryColumnWhere[Q]
@@ -147,6 +150,7 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                      notificationWhere[Q]
 		OauthTokens                        oauthTokenWhere[Q]
 		Organizations                      organizationWhere[Q]
+		Pools                              poolWhere[Q]
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -205,7 +209,8 @@ func Where[Q psql.Filterable]() struct {
 		FieldseekerZones2s:                 buildFieldseekerZones2Where[Q](FieldseekerZones2s.Columns),
 		FieldseekerSyncs:                   buildFieldseekerSyncWhere[Q](FieldseekerSyncs.Columns),
 		FileuploadCSVS:                     buildFileuploadCSVWhere[Q](FileuploadCSVS.Columns),
-		FileuploadErrors:                   buildFileuploadErrorWhere[Q](FileuploadErrors.Columns),
+		FileuploadErrorCSVS:                buildFileuploadErrorCSVWhere[Q](FileuploadErrorCSVS.Columns),
+		FileuploadErrorFiles:               buildFileuploadErrorFileWhere[Q](FileuploadErrorFiles.Columns),
 		FileuploadFiles:                    buildFileuploadFileWhere[Q](FileuploadFiles.Columns),
 		GeographyColumns:                   buildGeographyColumnWhere[Q](GeographyColumns.Columns),
 		GeometryColumns:                    buildGeometryColumnWhere[Q](GeometryColumns.Columns),
@@ -221,6 +226,7 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                      buildNotificationWhere[Q](Notifications.Columns),
 		OauthTokens:                        buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
+		Pools:                              buildPoolWhere[Q](Pools.Columns),
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNotifyEmailNuisances:   buildPublicreportNotifyEmailNuisanceWhere[Q](PublicreportNotifyEmailNuisances.Columns),

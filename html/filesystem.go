@@ -106,7 +106,7 @@ func (ts templateSystemDisk) addSupportingTemplates(t *template.Template) error 
 		if err != nil {
 			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
 		}
-		log.Debug().Str("path", path).Msg("Read template")
+		//log.Debug().Str("path", path).Msg("Read template")
 		return nil
 	})
 	if err != nil {
@@ -139,7 +139,7 @@ func (ts templateSystemDisk) addSVGTemplates(t *template.Template) error {
 		if err != nil {
 			return fmt.Errorf("Failed to add svg '%s' to embedded template: %v", svg, err)
 		}
-		log.Debug().Str("name", svg_name).Msg("add svg template")
+		//log.Debug().Str("name", svg_name).Msg("add svg template")
 	}
 	return nil
 }

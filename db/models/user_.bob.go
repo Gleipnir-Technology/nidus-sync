@@ -65,6 +65,7 @@ type userR struct {
 	DeletorNoteImages NoteImageSlice      // note_image.note_image_deletor_id_fkey
 	UserNotifications NotificationSlice   // notification.notification_user_id_fkey
 	UserOauthTokens   OauthTokenSlice     // oauth_token.oauth_token_user_id_fkey
+	CreatorPools      PoolSlice           // pool.pool_creator_id_fkey
 	Organization      *Organization       // user_.user__organization_id_fkey
 }
 
@@ -804,6 +805,30 @@ func (os UserSlice) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) Oauth
 	)...)
 }
 
+// CreatorPools starts a query for related objects on pool
+func (o *User) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	return Pools.Query(append(mods,
+		sm.Where(Pools.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Pools.Query(append(mods,
+		sm.Where(psql.Group(Pools.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Organization starts a query for related objects on organization
 func (o *User) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
@@ -1372,6 +1397,74 @@ func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor,
 	return nil
 }
 
+func insertUserCreatorPools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, user0 *User) (PoolSlice, error) {
+	for i := range pools1 {
+		pools1[i].CreatorID = omit.From(user0.ID)
+	}
+
+	ret, err := Pools.Insert(bob.ToMods(pools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorPools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorPools0(ctx context.Context, exec bob.Executor, count int, pools1 PoolSlice, user0 *User) (PoolSlice, error) {
+	setter := &PoolSetter{
+		CreatorID: omit.From(user0.ID),
+	}
+
+	err := pools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorPools0: %w", err)
+	}
+
+	return pools1, nil
+}
+
+func (user0 *User) InsertCreatorPools(ctx context.Context, exec bob.Executor, related ...*PoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	pools1, err := insertUserCreatorPools0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorPools = append(user0.R.CreatorPools, pools1...)
+
+	for _, rel := range pools1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorPools(ctx context.Context, exec bob.Executor, related ...*Pool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	pools1 := PoolSlice(related)
+
+	_, err = attachUserCreatorPools0(ctx, exec, len(related), pools1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorPools = append(user0.R.CreatorPools, pools1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
 func attachUserOrganization0(ctx context.Context, exec bob.Executor, count int, user0 *User, organization1 *Organization) (*User, error) {
 	setter := &UserSetter{
 		OrganizationID: omit.From(organization1.ID),
@@ -1574,6 +1667,20 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "CreatorPools":
+		rels, ok := retrieved.(PoolSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorPools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
@@ -1622,6 +1729,7 @@ type userThenLoader[Q orm.Loadable] struct {
 	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -1649,6 +1757,9 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type UserOauthTokensLoadInterface interface {
 		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorPoolsLoadInterface interface {
+		LoadCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1701,6 +1812,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"UserOauthTokens",
 			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadUserOauthTokens(ctx, exec, mods...)
+			},
+		),
+		CreatorPools: thenLoadBuilder[Q](
+			"CreatorPools",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorPools(ctx, exec, mods...)
 			},
 		),
 		Organization: thenLoadBuilder[Q](
@@ -2206,6 +2323,67 @@ func (os UserSlice) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, 
 	return nil
 }
 
+// LoadCreatorPools loads the user's CreatorPools into the .R struct
+func (o *User) LoadCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorPools = nil
+
+	related, err := o.CreatorPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorPools = related
+	return nil
+}
+
+// LoadCreatorPools loads the user's CreatorPools into the .R struct
+func (os UserSlice) LoadCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	pools, err := os.CreatorPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorPools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range pools {
+
+			if !(o.ID == rel.CreatorID) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorPools = append(o.R.CreatorPools, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadOrganization loads the user's Organization into the .R struct
 func (o *User) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -2268,6 +2446,7 @@ type userC struct {
 	DeletorNoteImages *int64
 	UserNotifications *int64
 	UserOauthTokens   *int64
+	CreatorPools      *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -2293,6 +2472,8 @@ func (o *User) PreloadCount(name string, count int64) error {
 		o.C.UserNotifications = &count
 	case "UserOauthTokens":
 		o.C.UserOauthTokens = &count
+	case "CreatorPools":
+		o.C.CreatorPools = &count
 	}
 	return nil
 }
@@ -2306,6 +2487,7 @@ type userCountPreloader struct {
 	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildUserCountPreloader() userCountPreloader {
@@ -2446,6 +2628,23 @@ func buildUserCountPreloader() userCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		CreatorPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorPools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Pools.Name()),
+					sm.Where(psql.Quote(Pools.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
@@ -2458,6 +2657,7 @@ type userCountThenLoader[Q orm.Loadable] struct {
 	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
@@ -2484,6 +2684,9 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 	}
 	type UserOauthTokensCountInterface interface {
 		LoadCountUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorPoolsCountInterface interface {
+		LoadCountCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return userCountThenLoader[Q]{
@@ -2533,6 +2736,12 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 			"UserOauthTokens",
 			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountUserOauthTokens(ctx, exec, mods...)
+			},
+		),
+		CreatorPools: countThenLoadBuilder[Q](
+			"CreatorPools",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorPools(ctx, exec, mods...)
 			},
 		),
 	}
@@ -2778,6 +2987,36 @@ func (os UserSlice) LoadCountUserOauthTokens(ctx context.Context, exec bob.Execu
 	return nil
 }
 
+// LoadCountCreatorPools loads the count of CreatorPools into the C struct
+func (o *User) LoadCountCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorPools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorPools = &count
+	return nil
+}
+
+// LoadCountCreatorPools loads the count of CreatorPools for a slice
+func (os UserSlice) LoadCountCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type userJoins[Q dialect.Joinable] struct {
 	typ               string
 	PublicUserUser    modAs[Q, arcgisuserColumns]
@@ -2788,6 +3027,7 @@ type userJoins[Q dialect.Joinable] struct {
 	DeletorNoteImages modAs[Q, noteImageColumns]
 	UserNotifications modAs[Q, notificationColumns]
 	UserOauthTokens   modAs[Q, oauthTokenColumns]
+	CreatorPools      modAs[Q, poolColumns]
 	Organization      modAs[Q, organizationColumns]
 }
 
@@ -2904,6 +3144,20 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, OauthTokens.Name().As(to.Alias())).On(
 						to.UserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorPools: modAs[Q, poolColumns]{
+			c: Pools.Columns,
+			f: func(to poolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
+						to.CreatorID.EQ(cols.ID),
 					))
 				}
 

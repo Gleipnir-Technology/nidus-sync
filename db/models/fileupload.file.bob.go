@@ -56,10 +56,10 @@ type FileuploadFilesQuery = *psql.ViewQuery[*FileuploadFile, FileuploadFileSlice
 
 // fileuploadFileR is where relationships are stored.
 type fileuploadFileR struct {
-	CSV          *FileuploadCSV       // fileupload.csv.csv_file_id_fkey
-	Errors       FileuploadErrorSlice // fileupload.error.error_file_id_fkey
-	CreatorUser  *User                // fileupload.file.file_creator_id_fkey
-	Organization *Organization        // fileupload.file.file_organization_id_fkey
+	CSV          *FileuploadCSV           // fileupload.csv.csv_file_id_fkey
+	ErrorFiles   FileuploadErrorFileSlice // fileupload.error_file.error_file_file_id_fkey
+	CreatorUser  *User                    // fileupload.file.file_creator_id_fkey
+	Organization *Organization            // fileupload.file.file_organization_id_fkey
 }
 
 func buildFileuploadFileColumns(alias string) fileuploadFileColumns {
@@ -586,14 +586,14 @@ func (os FileuploadFileSlice) CSV(mods ...bob.Mod[*dialect.SelectQuery]) Fileupl
 	)...)
 }
 
-// Errors starts a query for related objects on fileupload.error
-func (o *FileuploadFile) Errors(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorsQuery {
-	return FileuploadErrors.Query(append(mods,
-		sm.Where(FileuploadErrors.Columns.FileID.EQ(psql.Arg(o.ID))),
+// ErrorFiles starts a query for related objects on fileupload.error_file
+func (o *FileuploadFile) ErrorFiles(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorFilesQuery {
+	return FileuploadErrorFiles.Query(append(mods,
+		sm.Where(FileuploadErrorFiles.Columns.FileID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os FileuploadFileSlice) Errors(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorsQuery {
+func (os FileuploadFileSlice) ErrorFiles(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadErrorFilesQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -605,8 +605,8 @@ func (os FileuploadFileSlice) Errors(mods ...bob.Mod[*dialect.SelectQuery]) File
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return FileuploadErrors.Query(append(mods,
-		sm.Where(psql.Group(FileuploadErrors.Columns.FileID).OP("IN", PKArgExpr)),
+	return FileuploadErrorFiles.Query(append(mods,
+		sm.Where(psql.Group(FileuploadErrorFiles.Columns.FileID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -712,66 +712,66 @@ func (fileuploadFile0 *FileuploadFile) AttachCSV(ctx context.Context, exec bob.E
 	return nil
 }
 
-func insertFileuploadFileErrors0(ctx context.Context, exec bob.Executor, fileuploadErrors1 []*FileuploadErrorSetter, fileuploadFile0 *FileuploadFile) (FileuploadErrorSlice, error) {
-	for i := range fileuploadErrors1 {
-		fileuploadErrors1[i].FileID = omit.From(fileuploadFile0.ID)
+func insertFileuploadFileErrorFiles0(ctx context.Context, exec bob.Executor, fileuploadErrorFiles1 []*FileuploadErrorFileSetter, fileuploadFile0 *FileuploadFile) (FileuploadErrorFileSlice, error) {
+	for i := range fileuploadErrorFiles1 {
+		fileuploadErrorFiles1[i].FileID = omit.From(fileuploadFile0.ID)
 	}
 
-	ret, err := FileuploadErrors.Insert(bob.ToMods(fileuploadErrors1...)).All(ctx, exec)
+	ret, err := FileuploadErrorFiles.Insert(bob.ToMods(fileuploadErrorFiles1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertFileuploadFileErrors0: %w", err)
+		return ret, fmt.Errorf("insertFileuploadFileErrorFiles0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachFileuploadFileErrors0(ctx context.Context, exec bob.Executor, count int, fileuploadErrors1 FileuploadErrorSlice, fileuploadFile0 *FileuploadFile) (FileuploadErrorSlice, error) {
-	setter := &FileuploadErrorSetter{
+func attachFileuploadFileErrorFiles0(ctx context.Context, exec bob.Executor, count int, fileuploadErrorFiles1 FileuploadErrorFileSlice, fileuploadFile0 *FileuploadFile) (FileuploadErrorFileSlice, error) {
+	setter := &FileuploadErrorFileSetter{
 		FileID: omit.From(fileuploadFile0.ID),
 	}
 
-	err := fileuploadErrors1.UpdateAll(ctx, exec, *setter)
+	err := fileuploadErrorFiles1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachFileuploadFileErrors0: %w", err)
+		return nil, fmt.Errorf("attachFileuploadFileErrorFiles0: %w", err)
 	}
 
-	return fileuploadErrors1, nil
+	return fileuploadErrorFiles1, nil
 }
 
-func (fileuploadFile0 *FileuploadFile) InsertErrors(ctx context.Context, exec bob.Executor, related ...*FileuploadErrorSetter) error {
+func (fileuploadFile0 *FileuploadFile) InsertErrorFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadErrorFileSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	fileuploadErrors1, err := insertFileuploadFileErrors0(ctx, exec, related, fileuploadFile0)
+	fileuploadErrorFiles1, err := insertFileuploadFileErrorFiles0(ctx, exec, related, fileuploadFile0)
 	if err != nil {
 		return err
 	}
 
-	fileuploadFile0.R.Errors = append(fileuploadFile0.R.Errors, fileuploadErrors1...)
+	fileuploadFile0.R.ErrorFiles = append(fileuploadFile0.R.ErrorFiles, fileuploadErrorFiles1...)
 
-	for _, rel := range fileuploadErrors1 {
+	for _, rel := range fileuploadErrorFiles1 {
 		rel.R.File = fileuploadFile0
 	}
 	return nil
 }
 
-func (fileuploadFile0 *FileuploadFile) AttachErrors(ctx context.Context, exec bob.Executor, related ...*FileuploadError) error {
+func (fileuploadFile0 *FileuploadFile) AttachErrorFiles(ctx context.Context, exec bob.Executor, related ...*FileuploadErrorFile) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	fileuploadErrors1 := FileuploadErrorSlice(related)
+	fileuploadErrorFiles1 := FileuploadErrorFileSlice(related)
 
-	_, err = attachFileuploadFileErrors0(ctx, exec, len(related), fileuploadErrors1, fileuploadFile0)
+	_, err = attachFileuploadFileErrorFiles0(ctx, exec, len(related), fileuploadErrorFiles1, fileuploadFile0)
 	if err != nil {
 		return err
 	}
 
-	fileuploadFile0.R.Errors = append(fileuploadFile0.R.Errors, fileuploadErrors1...)
+	fileuploadFile0.R.ErrorFiles = append(fileuploadFile0.R.ErrorFiles, fileuploadErrorFiles1...)
 
 	for _, rel := range related {
 		rel.R.File = fileuploadFile0
@@ -926,13 +926,13 @@ func (o *FileuploadFile) Preload(name string, retrieved any) error {
 			rel.R.File = o
 		}
 		return nil
-	case "Errors":
-		rels, ok := retrieved.(FileuploadErrorSlice)
+	case "ErrorFiles":
+		rels, ok := retrieved.(FileuploadErrorFileSlice)
 		if !ok {
 			return fmt.Errorf("fileuploadFile cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Errors = rels
+		o.R.ErrorFiles = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1021,7 +1021,7 @@ func buildFileuploadFilePreloader() fileuploadFilePreloader {
 
 type fileuploadFileThenLoader[Q orm.Loadable] struct {
 	CSV          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Errors       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ErrorFiles   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -1030,8 +1030,8 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 	type CSVLoadInterface interface {
 		LoadCSV(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type ErrorsLoadInterface interface {
-		LoadErrors(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ErrorFilesLoadInterface interface {
+		LoadErrorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorUserLoadInterface interface {
 		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1047,10 +1047,10 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 				return retrieved.LoadCSV(ctx, exec, mods...)
 			},
 		),
-		Errors: thenLoadBuilder[Q](
-			"Errors",
-			func(ctx context.Context, exec bob.Executor, retrieved ErrorsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadErrors(ctx, exec, mods...)
+		ErrorFiles: thenLoadBuilder[Q](
+			"ErrorFiles",
+			func(ctx context.Context, exec bob.Executor, retrieved ErrorFilesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadErrorFiles(ctx, exec, mods...)
 			},
 		),
 		CreatorUser: thenLoadBuilder[Q](
@@ -1120,16 +1120,16 @@ func (os FileuploadFileSlice) LoadCSV(ctx context.Context, exec bob.Executor, mo
 	return nil
 }
 
-// LoadErrors loads the fileuploadFile's Errors into the .R struct
-func (o *FileuploadFile) LoadErrors(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadErrorFiles loads the fileuploadFile's ErrorFiles into the .R struct
+func (o *FileuploadFile) LoadErrorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.Errors = nil
+	o.R.ErrorFiles = nil
 
-	related, err := o.Errors(mods...).All(ctx, exec)
+	related, err := o.ErrorFiles(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1138,17 +1138,17 @@ func (o *FileuploadFile) LoadErrors(ctx context.Context, exec bob.Executor, mods
 		rel.R.File = o
 	}
 
-	o.R.Errors = related
+	o.R.ErrorFiles = related
 	return nil
 }
 
-// LoadErrors loads the fileuploadFile's Errors into the .R struct
-func (os FileuploadFileSlice) LoadErrors(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadErrorFiles loads the fileuploadFile's ErrorFiles into the .R struct
+func (os FileuploadFileSlice) LoadErrorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	fileuploadErrors, err := os.Errors(mods...).All(ctx, exec)
+	fileuploadErrorFiles, err := os.ErrorFiles(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1158,7 +1158,7 @@ func (os FileuploadFileSlice) LoadErrors(ctx context.Context, exec bob.Executor,
 			continue
 		}
 
-		o.R.Errors = nil
+		o.R.ErrorFiles = nil
 	}
 
 	for _, o := range os {
@@ -1166,7 +1166,7 @@ func (os FileuploadFileSlice) LoadErrors(ctx context.Context, exec bob.Executor,
 			continue
 		}
 
-		for _, rel := range fileuploadErrors {
+		for _, rel := range fileuploadErrorFiles {
 
 			if !(o.ID == rel.FileID) {
 				continue
@@ -1174,7 +1174,7 @@ func (os FileuploadFileSlice) LoadErrors(ctx context.Context, exec bob.Executor,
 
 			rel.R.File = o
 
-			o.R.Errors = append(o.R.Errors, rel)
+			o.R.ErrorFiles = append(o.R.ErrorFiles, rel)
 		}
 	}
 
@@ -1287,7 +1287,7 @@ func (os FileuploadFileSlice) LoadOrganization(ctx context.Context, exec bob.Exe
 
 // fileuploadFileC is where relationship counts are stored.
 type fileuploadFileC struct {
-	Errors *int64
+	ErrorFiles *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1297,20 +1297,20 @@ func (o *FileuploadFile) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
-	case "Errors":
-		o.C.Errors = &count
+	case "ErrorFiles":
+		o.C.ErrorFiles = &count
 	}
 	return nil
 }
 
 type fileuploadFileCountPreloader struct {
-	Errors func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	ErrorFiles func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildFileuploadFileCountPreloader() fileuploadFileCountPreloader {
 	return fileuploadFileCountPreloader{
-		Errors: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*FileuploadFile]("Errors", func(parent string) bob.Expression {
+		ErrorFiles: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*FileuploadFile]("ErrorFiles", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = FileuploadFiles.Alias()
@@ -1319,8 +1319,8 @@ func buildFileuploadFileCountPreloader() fileuploadFileCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(FileuploadErrors.Name()),
-					sm.Where(psql.Quote(FileuploadErrors.Alias(), "file_id").EQ(psql.Quote(parent, "id"))),
+					sm.From(FileuploadErrorFiles.Name()),
+					sm.Where(psql.Quote(FileuploadErrorFiles.Alias(), "file_id").EQ(psql.Quote(parent, "id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -1330,47 +1330,47 @@ func buildFileuploadFileCountPreloader() fileuploadFileCountPreloader {
 }
 
 type fileuploadFileCountThenLoader[Q orm.Loadable] struct {
-	Errors func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ErrorFiles func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadFileCountThenLoader[Q orm.Loadable]() fileuploadFileCountThenLoader[Q] {
-	type ErrorsCountInterface interface {
-		LoadCountErrors(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ErrorFilesCountInterface interface {
+		LoadCountErrorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return fileuploadFileCountThenLoader[Q]{
-		Errors: countThenLoadBuilder[Q](
-			"Errors",
-			func(ctx context.Context, exec bob.Executor, retrieved ErrorsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountErrors(ctx, exec, mods...)
+		ErrorFiles: countThenLoadBuilder[Q](
+			"ErrorFiles",
+			func(ctx context.Context, exec bob.Executor, retrieved ErrorFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountErrorFiles(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadCountErrors loads the count of Errors into the C struct
-func (o *FileuploadFile) LoadCountErrors(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountErrorFiles loads the count of ErrorFiles into the C struct
+func (o *FileuploadFile) LoadCountErrorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.Errors(mods...).Count(ctx, exec)
+	count, err := o.ErrorFiles(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.Errors = &count
+	o.C.ErrorFiles = &count
 	return nil
 }
 
-// LoadCountErrors loads the count of Errors for a slice
-func (os FileuploadFileSlice) LoadCountErrors(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountErrorFiles loads the count of ErrorFiles for a slice
+func (os FileuploadFileSlice) LoadCountErrorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountErrors(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountErrorFiles(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -1381,7 +1381,7 @@ func (os FileuploadFileSlice) LoadCountErrors(ctx context.Context, exec bob.Exec
 type fileuploadFileJoins[Q dialect.Joinable] struct {
 	typ          string
 	CSV          modAs[Q, fileuploadCSVColumns]
-	Errors       modAs[Q, fileuploadErrorColumns]
+	ErrorFiles   modAs[Q, fileuploadErrorFileColumns]
 	CreatorUser  modAs[Q, userColumns]
 	Organization modAs[Q, organizationColumns]
 }
@@ -1407,13 +1407,13 @@ func buildFileuploadFileJoins[Q dialect.Joinable](cols fileuploadFileColumns, ty
 				return mods
 			},
 		},
-		Errors: modAs[Q, fileuploadErrorColumns]{
-			c: FileuploadErrors.Columns,
-			f: func(to fileuploadErrorColumns) bob.Mod[Q] {
+		ErrorFiles: modAs[Q, fileuploadErrorFileColumns]{
+			c: FileuploadErrorFiles.Columns,
+			f: func(to fileuploadErrorFileColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadErrors.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, FileuploadErrorFiles.Name().As(to.Alias())).On(
 						to.FileID.EQ(cols.ID),
 					))
 				}
