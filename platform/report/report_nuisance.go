@@ -79,50 +79,27 @@ func (sr Nuisance) reportID() int32 {
 	return sr.id
 }
 func (sr Nuisance) updateReporterConsent(ctx context.Context, txn bob.Tx, has_consent bool) *ErrorWithCode {
-	setter := models.PublicreportNuisanceSetter{
+	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
 		ReporterContactConsent: omitnull.From(has_consent),
-	}
-	_, err := models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
+	})
+}
+func (sr Nuisance) updateReportCol(ctx context.Context, txn bob.Tx, setter *models.PublicreportNuisanceSetter) *ErrorWithCode {
+	err := sr.row.Update(ctx, txn, setter)
 	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to save new notification row")
+		log.Error().Err(err).Str("public_id", sr.publicReportID).Int32("report_id", sr.id).Msg("Failed to update report")
+		return newErrorWithCode("internal-error", "Failed to update nuisance report in the database")
 	}
 	return nil
 }
 func (sr Nuisance) updateReporterEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
-	result, err := psql.Update(
-		um.Table("publicreport.nuisance"),
-		um.SetCol("reporter_email").ToArg(email),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.publicReportID))),
-	).Exec(ctx, txn)
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
-	}
-	rowcount, err := result.RowsAffected()
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
-	}
-	if rowcount != 1 {
-		log.Warn().Str("public_report_id", sr.publicReportID).Msg("updated more than one row, which is a programmer error")
-	}
-	return nil
+	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
+		ReporterEmail: omitnull.From(email),
+	})
 }
 func (sr Nuisance) updateReporterName(ctx context.Context, txn bob.Tx, name string) *ErrorWithCode {
-	result, err := psql.Update(
-		um.Table("publicreport.nuisance"),
-		um.SetCol("reporter_name").ToArg(name),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.publicReportID))),
-	).Exec(ctx, txn)
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to update report: %w", err)
-	}
-	rowcount, err := result.RowsAffected()
-	if err != nil {
-		return newErrorWithCode("internal-error", "Failed to get rows affected: %w", err)
-	}
-	if rowcount != 1 {
-		log.Warn().Str("public_report_id", sr.publicReportID).Msg("updated more than one row, which is a programmer error")
-	}
-	return nil
+	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
+		ReporterName: omitnull.From(name),
+	})
 }
 func (sr Nuisance) updateReporterPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
 	result, err := psql.Update(
