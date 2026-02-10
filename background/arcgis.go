@@ -106,15 +106,19 @@ func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 	setter := models.OauthTokenSetter{
 		AccessToken:         omit.From(token.AccessToken),
 		AccessTokenExpires:  omit.From(accessExpires),
+		ArcgisID:            omitnull.FromPtr[string](nil),
+		ArcgisLicenseTypeID: omitnull.FromPtr[string](nil),
+		InvalidatedAt:       omitnull.FromPtr[time.Time](nil),
 		RefreshToken:        omit.From(token.RefreshToken),
 		RefreshTokenExpires: omit.From(refreshExpires),
+		UserID:              omit.From(user.ID),
 		Username:            omit.From(token.Username),
 	}
-	err = user.InsertUserOauthTokens(ctx, db.PGInstance.BobDB, &setter)
+	oauth, err := models.OauthTokens.Insert(&setter).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %w", err)
 	}
-	go updateArcgisUserData(context.Background(), user, token.AccessToken, accessExpires, token.RefreshToken, refreshExpires)
+	go updateArcgisUserData(context.Background(), user, oauth)
 	return nil
 }
 
@@ -216,7 +220,7 @@ func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseek
 			return
 		}
 		defer output.Close()
-		schema, err := fieldseekerClient.Schema(layer.ID)
+		schema, err := fieldseekerClient.Schema(ctx, layer.ID)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get schema")
 			return
@@ -227,6 +231,25 @@ func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseek
 			continue
 		}
 	}
+}
+
+func extractURLParts(urlString string) (string, []string, error) {
+	parsedURL, err := url.Parse(urlString)
+	if err != nil {
+		return "", nil, err
+	}
+
+	host := parsedURL.Scheme + "://" + parsedURL.Host
+
+	// Split the path and filter empty parts
+	var pathParts []string
+	for _, part := range strings.Split(parsedURL.Path, "/") {
+		if part != "" {
+			pathParts = append(pathParts, part)
+		}
+	}
+
+	return host, pathParts, nil
 }
 
 func futureUTCTimestamp(secondsFromNow int) time.Time {
@@ -247,14 +270,16 @@ func generateCodeVerifier() string {
 }
 
 // Find out what we can about this user
-func updateArcgisUserData(ctx context.Context, user *models.User, access_token string, access_token_expires time.Time, refresh_token string, refresh_token_expires time.Time) {
+func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.OauthToken) {
 	client := arcgis.NewArcGIS(
 		arcgis.AuthenticatorOAuth{
-			AccessToken:         access_token,
-			AccessTokenExpires:  access_token_expires,
-			RefreshToken:        refresh_token,
-			RefreshTokenExpires: refresh_token_expires,
+			AccessToken:         oauth.AccessToken,
+			AccessTokenExpires:  oauth.AccessTokenExpires,
+			RefreshToken:        oauth.RefreshToken,
+			RefreshTokenExpires: oauth.RefreshTokenExpires,
 		},
+		nil,
+		nil,
 	)
 
 	portal, err := updatePortalData(ctx, client, user.ID)
@@ -268,7 +293,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 		//um.SetCol(string(models.OauthTokens.Columns.ArcgisLicenseTypeID)).ToArg(portal.User.UserLicenseTypeID),
 		um.SetCol("arcgis_id").ToArg(portal.User.ID),
 		um.SetCol("arcgis_license_type_id").ToArg(portal.User.UserLicenseTypeID),
-		um.Where(models.OauthTokens.Columns.RefreshToken.EQ(psql.Arg(refresh_token))),
+		um.Where(models.OauthTokens.Columns.RefreshToken.EQ(psql.Arg(oauth.RefreshToken))),
 	).Exec(ctx, db.PGInstance.BobDB)
 	//_, err = sql.UpdateOauthTokenOrg(portal.User.ID, portal.User.UserLicenseTypeID, refresh_token).Exec(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -309,7 +334,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 		return
 	}
 
-	search, err := client.Search("Fieldseeker")
+	search, err := client.Search(ctx, "Fieldseeker")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get search FieldseekerGIS data")
 		return
@@ -327,10 +352,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 				log.Error().Err(err).Msg("Failed to create new organization")
 				return
 			}
-			fieldseekerClient, err = fieldseeker.NewFieldSeeker(
-				client,
-				result.URL,
-			)
+			fieldseekerClient, err = newFieldSeeker(ctx, oauth)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to create fieldseeker client")
 				return
@@ -341,15 +363,49 @@ func updateArcgisUserData(ctx context.Context, user *models.User, access_token s
 	if !ok {
 		log.Error().Int("org.id", int(org.ID)).Msg("Cannot get webhooks - ArcGIS ID is null")
 	}
-	client.Context = &arcgis_id
 	maybeCreateWebhook(ctx, fieldseekerClient)
 	downloadFieldseekerSchema(ctx, fieldseekerClient, arcgis_id)
 	notification.ClearOauth(ctx, user)
 	newOAuthTokenChannel <- struct{}{}
 }
 
+func newFieldSeeker(ctx context.Context, oauth *models.OauthToken) (*fieldseeker.FieldSeeker, error) {
+	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get org ID: %w", err)
+	}
+	// The URL for fieldseeker should be something like
+	// https://foo.arcgis.com/123abc/arcgis/rest/services/FieldSeekerGIS/FeatureServer
+	// We need to break it up
+	host, pathParts, err := extractURLParts(row.FieldseekerURL.MustGet())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to break up provided url: %v", err)
+	}
+	if len(pathParts) < 1 {
+		return nil, errors.New("Didn't get enough path parts")
+	}
+	context := pathParts[0]
+	ar := arcgis.NewArcGIS(
+		arcgis.AuthenticatorOAuth{
+			AccessToken:         oauth.AccessToken,
+			AccessTokenExpires:  oauth.AccessTokenExpires,
+			RefreshToken:        oauth.RefreshToken,
+			RefreshTokenExpires: oauth.RefreshTokenExpires,
+		},
+		&context,
+		&host,
+	)
+	log.Info().Str("context", context).Str("host", host).Msg("Using base fieldseeker URL")
+	//ar.Context = &context
+	//ar.Host = host
+	return fieldseeker.NewFieldSeeker(
+		ctx,
+		ar,
+		row.FieldseekerURL.MustGet(),
+	)
+}
 func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32) (*arcgis.PortalsResponse, error) {
-	p, err := client.PortalsSelf()
+	p, err := client.PortalsSelf(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get ArcGIS user data: %w", err)
 	}
@@ -419,7 +475,7 @@ func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32)
 }
 
 func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
-	webhooks, err := client.WebhookList()
+	webhooks, err := client.WebhookList(ctx)
 	if err != nil {
 		if errors.Is(err, arcgis.ErrorNotPermitted) {
 			log.Info().Msg("This oauth token is not allowed to get webhooks")
@@ -463,22 +519,7 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 	log.Info().Msg("Update Fieldseeker data")
 	syncStatusByOrg[org.ID] = true
 	var err error
-	ar := arcgis.NewArcGIS(
-		arcgis.AuthenticatorOAuth{
-			AccessToken:         oauth.AccessToken,
-			AccessTokenExpires:  oauth.AccessTokenExpires,
-			RefreshToken:        oauth.RefreshToken,
-			RefreshTokenExpires: oauth.RefreshTokenExpires,
-		},
-	)
-	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return fmt.Errorf("Failed to get org ID: %w", err)
-	}
-	fssync, err := fieldseeker.NewFieldSeeker(
-		ar,
-		row.FieldseekerURL.MustGet(),
-	)
+	fssync, err := newFieldSeeker(ctx, oauth)
 	if err != nil {
 		return fmt.Errorf("Failed to create fssync: %w", err)
 	}
@@ -521,28 +562,26 @@ func exportFieldseekerData(ctx context.Context, org *models.Organization, oauth 
 }
 
 func logPermissions(ctx context.Context, org *models.Organization, oauth *models.OauthToken) {
-	ar := arcgis.NewArcGIS(
-		arcgis.AuthenticatorOAuth{
-			AccessToken:         oauth.AccessToken,
-			AccessTokenExpires:  oauth.AccessTokenExpires,
-			RefreshToken:        oauth.RefreshToken,
-			RefreshTokenExpires: oauth.RefreshTokenExpires,
-		},
-	)
-	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
+	/*row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get org in log permissions")
 		return
 	}
-	fssync, err := fieldseeker.NewFieldSeeker(
-		ar,
-		row.FieldseekerURL.MustGet(),
+	oauth, err := models.FindOauthToken(ctx, db.PGInstance.BobDB, row.ID)
+	if err != nil {
+		return fmt.Errorf("Failed to update oauth token from database: %w", err)
+	}
+	*/
+
+	fssync, err := newFieldSeeker(
+		ctx,
+		oauth,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create fieldseeker client in log permissions")
 		return
 	}
-	_, err = fssync.AdminInfo()
+	_, err = fssync.AdminInfo(ctx)
 	if err != nil {
 		if errors.Is(err, arcgis.ErrorNotPermitted) {
 			log.Info().Msg("This oauth token is not allowed to query for admin info")
@@ -551,7 +590,7 @@ func logPermissions(ctx context.Context, org *models.Organization, oauth *models
 		log.Error().Err(err).Msg("Failed to get admin info log permissions")
 		return
 	}
-	permissions, err := fssync.PermissionList()
+	permissions, err := fssync.PermissionList(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to query permissions in log permissions")
 		return
@@ -734,7 +773,7 @@ func handleTokenRequest(ctx context.Context, req *http.Request) (*OAuthTokenResp
 			return nil, fmt.Errorf("Failed to unmarshal error JSON: %w", err)
 		}
 		if errorResponse.Error.Code > 0 {
-			return nil, errorResponse.AsError()
+			return nil, errorResponse.AsError(ctx)
 		}
 	}
 	log.Info().Str("refresh token", tokenResponse.RefreshToken).Str("access token", tokenResponse.AccessToken).Int("access expires", tokenResponse.ExpiresIn).Int("refresh expires", tokenResponse.RefreshTokenExpiresIn).Msg("Oauth token acquired")
@@ -1128,7 +1167,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 
 func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[SyncStats], org *models.Organization, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature) (SyncStats, error) {
 	var stats SyncStats
-	count, err := fssync.QueryCount(layer.ID)
+	count, err := fssync.QueryCount(ctx, layer.ID)
 	if err != nil {
 		return stats, fmt.Errorf("Failed to get counts for layer %s (%d): %w", layer.Name, layer.ID, err)
 	}
@@ -1151,7 +1190,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 			switch l {
 			case fieldseeker.LayerAerialSpraySession:
 				name = "AerialSpraySession"
-				rows, err := fssync.AerialSpraySession(offset)
+				rows, err := fssync.AerialSpraySession(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1162,7 +1201,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerAerialSprayLine:
 				name = "LayerAerialSprayLine"
-				rows, err := fssync.AerialSprayLine(offset)
+				rows, err := fssync.AerialSprayLine(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1173,7 +1212,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerBarrierSpray:
 				name = "LayerBarrierSpray"
-				rows, err := fssync.BarrierSpray(offset)
+				rows, err := fssync.BarrierSpray(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1184,7 +1223,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerBarrierSprayRoute:
 				name = "LayerBarrierSprayRoute"
-				rows, err := fssync.BarrierSprayRoute(offset)
+				rows, err := fssync.BarrierSprayRoute(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1195,7 +1234,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerContainerRelate:
 				name = "LayerContainerRelate"
-				rows, err := fssync.ContainerRelate(offset)
+				rows, err := fssync.ContainerRelate(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1206,7 +1245,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerFieldScoutingLog:
 				name = "LayerFieldScoutingLog"
-				rows, err := fssync.FieldScoutingLog(offset)
+				rows, err := fssync.FieldScoutingLog(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1217,7 +1256,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerHabitatRelate:
 				name = "LayerHabitatRelate"
-				rows, err := fssync.HabitatRelate(offset)
+				rows, err := fssync.HabitatRelate(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1228,7 +1267,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerInspectionSample:
 				name = "LayerInspectionSample"
-				rows, err := fssync.InspectionSample(offset)
+				rows, err := fssync.InspectionSample(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1239,7 +1278,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerInspectionSampleDetail:
 				name = "LayerInspectionSampleDetail"
-				rows, err := fssync.InspectionSampleDetail(offset)
+				rows, err := fssync.InspectionSampleDetail(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1250,7 +1289,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerLandingCount:
 				name = "LayerLandingCount"
-				rows, err := fssync.LandingCount(offset)
+				rows, err := fssync.LandingCount(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1261,7 +1300,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerLandingCountLocation:
 				name = "LayerLandingCountLocation"
-				rows, err := fssync.LandingCountLocation(offset)
+				rows, err := fssync.LandingCountLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1272,7 +1311,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerLineLocation:
 				name = "LayerLineLocation"
-				rows, err := fssync.LineLocation(offset)
+				rows, err := fssync.LineLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1283,7 +1322,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerLocationTracking:
 				name = "LayerLocationTracking"
-				rows, err := fssync.LocationTracking(offset)
+				rows, err := fssync.LocationTracking(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1294,7 +1333,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerMosquitoInspection:
 				name = "LayerMosquitoInspection"
-				rows, err := fssync.MosquitoInspection(offset)
+				rows, err := fssync.MosquitoInspection(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1305,7 +1344,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerOfflineMapAreas:
 				name = "LayerOfflineMapAreas"
-				rows, err := fssync.OfflineMapAreas(offset)
+				rows, err := fssync.OfflineMapAreas(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1316,7 +1355,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerProposedTreatmentArea:
 				name = "LayerProposedTreatmentArea"
-				rows, err := fssync.ProposedTreatmentArea(offset)
+				rows, err := fssync.ProposedTreatmentArea(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1327,7 +1366,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerPointLocation:
 				name = "LayerPointLocation"
-				rows, err := fssync.PointLocation(offset)
+				rows, err := fssync.PointLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1338,7 +1377,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerPolygonLocation:
 				name = "LayerPolygonLocation"
-				rows, err := fssync.PolygonLocation(offset)
+				rows, err := fssync.PolygonLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1349,7 +1388,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerPoolDetail:
 				name = "LayerPoolDetail"
-				rows, err := fssync.PoolDetail(offset)
+				rows, err := fssync.PoolDetail(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1360,7 +1399,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerPool:
 				name = "LayerPool"
-				rows, err := fssync.Pool(offset)
+				rows, err := fssync.Pool(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1371,7 +1410,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerPoolBuffer:
 				name = "LayerPoolBuffer"
-				rows, err := fssync.PoolBuffer(offset)
+				rows, err := fssync.PoolBuffer(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1382,7 +1421,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerQALarvCount:
 				name = "LayerQALarvCount"
-				rows, err := fssync.QALarvCount(offset)
+				rows, err := fssync.QALarvCount(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1393,7 +1432,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerQAMosquitoInspection:
 				name = "LayerQAMosquitoInspection"
-				rows, err := fssync.QAMosquitoInspection(offset)
+				rows, err := fssync.QAMosquitoInspection(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1404,7 +1443,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerQAProductObservation:
 				name = "LayerQAProductObservation"
-				rows, err := fssync.QAProductObservation(offset)
+				rows, err := fssync.QAProductObservation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1415,7 +1454,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerRestrictedArea:
 				name = "LayerRestrictedArea"
-				rows, err := fssync.RestrictedArea(offset)
+				rows, err := fssync.RestrictedArea(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1426,7 +1465,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerRodentInspection:
 				name = "LayerRodentInspection"
-				rows, err := fssync.RodentInspection(offset)
+				rows, err := fssync.RodentInspection(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1437,7 +1476,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerRodentLocation:
 				name = "LayerRodentLocation"
-				rows, err := fssync.RodentLocation(offset)
+				rows, err := fssync.RodentLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1448,7 +1487,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerSampleCollection:
 				name = "LayerSampleCollection"
-				rows, err := fssync.SampleCollection(offset)
+				rows, err := fssync.SampleCollection(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1459,7 +1498,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerSampleLocation:
 				name = "LayerSampleLocation"
-				rows, err := fssync.SampleLocation(offset)
+				rows, err := fssync.SampleLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1470,7 +1509,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerServiceRequest:
 				name = "LayerServiceRequest"
-				rows, err := fssync.ServiceRequest(offset)
+				rows, err := fssync.ServiceRequest(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1481,7 +1520,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerSpeciesAbundance:
 				name = "LayerSpeciesAbundance"
-				rows, err := fssync.SpeciesAbundance(offset)
+				rows, err := fssync.SpeciesAbundance(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1492,7 +1531,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerStormDrain:
 				name = "LayerStormDrain"
-				rows, err := fssync.StormDrain(offset)
+				rows, err := fssync.StormDrain(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1503,7 +1542,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTracklog:
 				name = "LayerTracklog"
-				rows, err := fssync.Tracklog(offset)
+				rows, err := fssync.Tracklog(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1514,7 +1553,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTrapLocation:
 				name = "LayerTrapLocation"
-				rows, err := fssync.TrapLocation(offset)
+				rows, err := fssync.TrapLocation(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1525,7 +1564,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTrapData:
 				name = "LayerTrapData"
-				rows, err := fssync.TrapData(offset)
+				rows, err := fssync.TrapData(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1536,7 +1575,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTimeCard:
 				name = "LayerTimeCard"
-				rows, err := fssync.TimeCard(offset)
+				rows, err := fssync.TimeCard(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1547,7 +1586,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTreatment:
 				name = "LayerTreatment"
-				rows, err := fssync.Treatment(offset)
+				rows, err := fssync.Treatment(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1558,7 +1597,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerTreatmentArea:
 				name = "LayerTreatmentArea"
-				rows, err := fssync.TreatmentArea(offset)
+				rows, err := fssync.TreatmentArea(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1569,7 +1608,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerULVSprayRoute:
 				name = "LayerULVSprayRoute"
-				rows, err := fssync.ULVSprayRoute(offset)
+				rows, err := fssync.ULVSprayRoute(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1580,7 +1619,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerZones:
 				name = "LayerZones"
-				rows, err := fssync.Zones(offset)
+				rows, err := fssync.Zones(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
@@ -1591,7 +1630,7 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 				unchanged = uint(len(rows)) - inserts - updates
 			case fieldseeker.LayerZones2:
 				name = "LayerZones2"
-				rows, err := fssync.Zones2(offset)
+				rows, err := fssync.Zones2(ctx, offset)
 				if err != nil {
 					return SyncStats{}, fmt.Errorf("Failed to query %s: %w", name, err)
 				}
