@@ -152,7 +152,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 			um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
 		).Exec(ctx, tx)
 		if err != nil {
-			respondError(w, "Failed to insert publicreport.pool", err, http.StatusInternalServerError)
+			respondError(w, "Failed to update publicreport.pool geospatial", err, http.StatusInternalServerError)
 			return
 		}
 	}

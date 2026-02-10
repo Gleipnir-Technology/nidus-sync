@@ -160,15 +160,13 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	}
 	var organization_id *int32
 	var h3cell h3.Cell
-	if latlng.Latitude != nil && latlng.Longitude != nil {
-		organization_id, err = matchDistrict(ctx, *latlng.Longitude, *latlng.Latitude, uploads)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to match district")
-		}
-		h3cell, err = h3utils.GetCell(*latlng.Longitude, *latlng.Latitude, 15)
-		if err != nil {
-			respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
-		}
+	organization_id, err = matchDistrict(ctx, latlng.Longitude, latlng.Latitude, uploads)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to match district")
+	}
+	h3cell, err = h3utils.GetCell(*latlng.Longitude, *latlng.Latitude, 15)
+	if err != nil {
+		respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
 	}
 
 	setter := models.PublicreportNuisanceSetter{
@@ -212,14 +210,20 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
 	}
-	if latlng.Latitude != nil && latlng.Longitude != nil {
+	geospatial, err := geospatialFromForm(r)
+	if err != nil {
+		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
+		return
+	}
+	if geospatial.Populated {
 		_, err = psql.Update(
 			um.Table("publicreport.nuisance"),
-			um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", *latlng.Longitude, *latlng.Latitude)),
+			um.SetCol("h3cell").ToArg(geospatial.Cell),
+			um.SetCol("location").To(geospatial.GeometryQuery),
 			um.Where(psql.Quote("id").EQ(psql.Arg(nuisance.ID))),
 		).Exec(ctx, txn)
 		if err != nil {
-			respondError(w, "Failed to insert publicreport", err, http.StatusInternalServerError)
+			respondError(w, "Failed to insert publicreport.nuisance geospatial", err, http.StatusInternalServerError)
 			return
 		}
 	}

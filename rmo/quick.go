@@ -1,7 +1,6 @@
 package rmo
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -16,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -92,33 +90,6 @@ func getRegisterNotificationsComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
-func matchDistrict(ctx context.Context, longitude, latitude float64, images []ImageUpload) (*int32, error) {
-	for _, image := range images {
-		if image.Exif.GPS == nil {
-			continue
-		}
-		_, org, err := platform.DistrictForLocation(ctx, image.Exif.GPS.Longitude, image.Exif.GPS.Latitude)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to get district for location")
-			continue
-		}
-		if org != nil {
-			return &org.ID, nil
-		}
-	}
-	_, org, err := platform.DistrictForLocation(ctx, longitude, latitude)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get district for location")
-		return nil, fmt.Errorf("Failed to get district for location: %w", err)
-	}
-	if org == nil {
-		log.Debug().Err(err).Float64("lng", longitude).Float64("lat", latitude).Msg("No district match by report location")
-		return nil, nil
-	}
-	log.Debug().Err(err).Int32("org_id", org.ID).Float64("lng", longitude).Float64("lat", latitude).Msg("Found district match by report location")
-	return &org.ID, nil
-}
-
 func postQuick(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 	if err != nil {
@@ -170,7 +141,7 @@ func postQuick(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	organization_id, err := matchDistrict(ctx, longitude, latitude, uploads)
+	organization_id, err := matchDistrict(ctx, &longitude, &latitude, uploads)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to match district")
 	}

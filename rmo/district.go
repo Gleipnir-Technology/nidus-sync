@@ -1,6 +1,8 @@
 package rmo
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
@@ -8,7 +10,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type ContentDistrict struct {
@@ -53,6 +57,39 @@ func getDistrictList(w http.ResponseWriter, r *http.Request) {
 	)
 
 }
+func matchDistrict(ctx context.Context, longitude, latitude *float64, images []ImageUpload) (*int32, error) {
+	var err error
+	var org *models.Organization
+	for _, image := range images {
+		if image.Exif.GPS == nil {
+			continue
+		}
+		_, org, err = platform.DistrictForLocation(ctx, image.Exif.GPS.Longitude, image.Exif.GPS.Latitude)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get district for location")
+			continue
+		}
+		if org != nil {
+			return &org.ID, nil
+		}
+	}
+	if longitude == nil || latitude == nil {
+		log.Debug().Msg("No location from images, no latlng for the report itself, cannot match")
+		return nil, nil
+	}
+	_, org, err = platform.DistrictForLocation(ctx, *longitude, *latitude)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get district for location")
+		return nil, fmt.Errorf("Failed to get district for location: %w", err)
+	}
+	if org == nil {
+		log.Debug().Err(err).Float64("lng", *longitude).Float64("lat", *latitude).Msg("No district match by report location")
+		return nil, nil
+	}
+	log.Debug().Err(err).Int32("org_id", org.ID).Float64("lng", *longitude).Float64("lat", *latitude).Msg("Found district match by report location")
+	return &org.ID, nil
+}
+
 func newContentDistrict(d *models.Organization) *ContentDistrict {
 	if d == nil {
 		return nil
