@@ -3,7 +3,7 @@ package background
 import (
 	"context"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/rs/zerolog/log"
 )
 

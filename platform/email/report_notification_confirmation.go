@@ -4,10 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/rs/zerolog/log"
 )
+
+type contentEmailReportConfirmation struct {
+	Base            contentEmailBase
+	URLReportStatus string
+}
 
 func NewJobReportNotificationConfirmation(destination, report_id string) Job {
 	return jobEmailReportNotificationConfirmation{
@@ -68,7 +74,7 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 	if err != nil {
 		return fmt.Errorf("Failed to store email log: %w", err)
 	}
-	resp, err := sendEmail(ctx, emailRequest{
+	resp, err := email.Send(ctx, email.Request{
 		From:    config.ForwardEmailReportAddress,
 		HTML:    html,
 		Subject: subject,

@@ -23,10 +23,9 @@ import (
 
 type E164 = phonenumbers.PhoneNumber
 
-func PhoneString(p E164) string {
-	return phonenumbers.Format(&p, phonenumbers.E164)
+func EnsureInDB(ctx context.Context, destination E164) (err error) {
+	return ensureInDB(ctx, PhoneString(destination))
 }
-
 func HandleTextMessage(src string, dst string, body string) {
 	ctx := context.Background()
 
@@ -98,15 +97,27 @@ func ParsePhoneNumber(input string) (*E164, error) {
 	return phonenumbers.Parse(input, "US")
 }
 
+func PhoneString(p E164) string {
+	return phonenumbers.Format(&p, phonenumbers.E164)
+}
+
 func StoreSources() error {
 	ctx := context.TODO()
 	for _, n := range []string{config.PhoneNumberReportStr, config.PhoneNumberSupportStr, config.VoipMSNumber} {
 		var err error
 		// Deal with Voip.ms not expecting API calls with the prefixed +1
 		if !strings.HasPrefix(n, "+1") {
-			err = ensureInDB(ctx, "+1"+n)
+			dest, err := ParsePhoneNumber("+1" + n)
+			if err != nil {
+				return fmt.Errorf("Failed to parse +1'%s' as phone number: %w", n, err)
+			}
+			err = EnsureInDB(ctx, *dest)
 		} else {
-			err = ensureInDB(ctx, n)
+			dest, err := ParsePhoneNumber(n)
+			if err != nil {
+				return fmt.Errorf("Failed to parse '%s' as phone number: %w", n, err)
+			}
+			err = EnsureInDB(ctx, *dest)
 		}
 		if err != nil {
 			return fmt.Errorf("Failed to add number '%s' to DB: %w", n, err)
@@ -172,21 +183,6 @@ func sendInitialText(ctx context.Context, src string, dst string) error {
 	return nil
 }
 
-func ensureInitialText(ctx context.Context, src string, dst string) error {
-	//
-	rows, err := models.CommsTextLogs.Query(
-		models.SelectWhere.CommsTextLogs.Destination.EQ(dst),
-		models.SelectWhere.CommsTextLogs.IsWelcome.EQ(true),
-	).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return fmt.Errorf("Failed to query text logs: %w", err)
-	}
-	if len(rows) > 0 {
-		return nil
-	}
-	return sendInitialText(ctx, src, dst)
-}
-
 func ensureInDB(ctx context.Context, destination string) (err error) {
 	_, err = models.FindCommsPhone(ctx, db.PGInstance.BobDB, destination)
 	if err != nil {
@@ -206,6 +202,21 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 		return fmt.Errorf("Unexpected error searching for phone contact: %w", err)
 	}
 	return nil
+}
+
+func ensureInitialText(ctx context.Context, src string, dst string) error {
+	//
+	rows, err := models.CommsTextLogs.Query(
+		models.SelectWhere.CommsTextLogs.Destination.EQ(dst),
+		models.SelectWhere.CommsTextLogs.IsWelcome.EQ(true),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to query text logs: %w", err)
+	}
+	if len(rows) > 0 {
+		return nil
+	}
+	return sendInitialText(ctx, src, dst)
 }
 
 func generateNextMessage(ctx context.Context, history []llm.Message, customer_phone string) (llm.Message, error) {

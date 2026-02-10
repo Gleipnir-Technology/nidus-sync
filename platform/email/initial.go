@@ -4,12 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/rs/zerolog/log"
 )
+
+type contentEmailInitial struct {
+	Base         contentEmailBase
+	Destination  string
+	URLSubscribe string
+}
 
 type jobInitial struct {
 	base jobEmailBase
@@ -20,7 +27,7 @@ func (job jobInitial) Destination() string {
 }
 
 func maybeSendInitialEmail(ctx context.Context, destination string) error {
-	err := ensureInDB(ctx, destination)
+	err := EnsureInDB(ctx, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to add email recipient to database: %w", err)
 	}
@@ -65,7 +72,7 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to store email log: %w", err)
 	}
-	resp, err := sendEmail(ctx, emailRequest{
+	resp, err := email.Send(ctx, email.Request{
 		From:    source,
 		HTML:    html,
 		Subject: subject,

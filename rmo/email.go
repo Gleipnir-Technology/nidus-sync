@@ -3,10 +3,10 @@ package rmo
 import (
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/aarondl/opt/omit"
 	"github.com/go-chi/chi/v5"
 )

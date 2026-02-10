@@ -37,6 +37,12 @@ var (
 	templateReportNotificationConfirmationID int32
 )
 
+type contentEmailBase struct {
+	URLLogo          string
+	URLUnsubscribe   string
+	URLViewInBrowser string
+}
+
 type ContentEmailRender struct {
 	IsBrowser bool
 	C         any

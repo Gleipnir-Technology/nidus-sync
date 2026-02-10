@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 	//"github.com/stephenafamo/scan"
@@ -65,16 +66,20 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func RegisterNotificationEmail(ctx context.Context, txn bob.Tx, report_id string, email string) *ErrorWithCode {
+func RegisterNotificationEmail(ctx context.Context, txn bob.Tx, report_id string, destination string) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
 	}
-	err = some_report.addNotificationEmail(ctx, txn, email)
+	e := email.EnsureInDB(ctx, destination)
+	if e != nil {
+		return newInternalError(e, "Failed to ensure phone is in DB")
+	}
+	err = some_report.addNotificationEmail(ctx, txn, destination)
 	if err != nil {
 		return err
 	}
-	background.ReportSubscriptionConfirmationEmail(email, report_id)
+	background.ReportSubscriptionConfirmationEmail(destination, report_id)
 	return nil
 }
 
@@ -82,6 +87,10 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
+	}
+	e := text.EnsureInDB(ctx, phone)
+	if e != nil {
+		return newInternalError(e, "Failed to ensure phone is in DB")
 	}
 	err = some_report.addNotificationPhone(ctx, txn, phone)
 	if err != nil {
@@ -92,11 +101,11 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string
 }
 
 func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
-	log.Warn().Msg("RegisterSubscription not implemented yet")
+	log.Warn().Str("email", email).Msg("RegisterSubscription not implemented yet")
 	return nil
 }
 func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
-	log.Warn().Msg("RegisterSubscription not implemented yet")
+	log.Warn().Str("phone", text.PhoneString(phone)).Msg("RegisterSubscription not implemented yet")
 	return nil
 }
 
