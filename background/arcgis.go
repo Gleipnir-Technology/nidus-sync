@@ -153,7 +153,7 @@ func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
 				err := maintainOAuth(workerCtx, oauth)
 				if err != nil {
 					markTokenFailed(ctx, oauth)
-					if errors.Is(err, arcgis.InvalidatedRefreshTokenError) {
+					if errors.Is(err, arcgis.ErrorInvalidatedRefreshToken) {
 						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
 					} else {
 						debug.LogErrorTypeInfo(err)
@@ -421,7 +421,12 @@ func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32)
 func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
 	webhooks, err := client.WebhookList()
 	if err != nil {
+		if errors.Is(err, arcgis.ErrorNotPermitted) {
+			log.Info().Msg("This oauth token is not allowed to get webhooks")
+			return
+		}
 		log.Error().Err(err).Msg("Failed to get webhooks")
+		return
 	}
 	for _, hook := range webhooks {
 		if hook.Name == "Nidus Sync" {
@@ -439,6 +444,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 		case <-ctx.Done():
 			return nil
 		case <-pollTicker.C:
+			pollTicker = time.NewTicker(15 * time.Minute)
 			oauth, err := GetOAuthForOrg(ctx, org)
 			if err != nil {
 				return fmt.Errorf("Failed to get oauth for org: %w", err)
@@ -450,7 +456,6 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 				return fmt.Errorf("Failed to export Fieldseeker data: %w", err)
 			}
 			log.Info().Msg("Completed exporting data, waiting 15 minutes to go agoin.")
-			pollTicker = time.NewTicker(15 * time.Minute)
 		}
 	}
 }
@@ -539,6 +544,10 @@ func logPermissions(ctx context.Context, org *models.Organization, oauth *models
 	}
 	_, err = fssync.AdminInfo()
 	if err != nil {
+		if errors.Is(err, arcgis.ErrorNotPermitted) {
+			log.Info().Msg("This oauth token is not allowed to query for admin info")
+			return
+		}
 		log.Error().Err(err).Msg("Failed to get admin info log permissions")
 		return
 	}
