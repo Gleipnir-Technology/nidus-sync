@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/nyaruka/phonenumbers"
+	//"github.com/rs/zerolog/log"
 )
 
 var (
@@ -59,6 +60,7 @@ func MakeURLReport(path string, args ...string) string {
 	return makeURL(DomainRMO, path, args...)
 }
 func MakeURLTegola(path string, args ...string) string {
+	//log.Debug().Str("path", path).Strs("args", args).Str("domain", DomainTegola).Msg("Making tegola url")
 	return makeURL(DomainTegola, path, args...)
 }
 
