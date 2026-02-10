@@ -40,6 +40,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/error?code=transaction-failed&report=%s", report_id), http.StatusFound)
 		return
 	}
+	defer txn.Rollback(ctx)
 	e := report.SaveReporter(ctx, txn, report_id, name, email, phone, has_consent)
 	if e != nil {
 		log.Error().Err(e).Str("name", name).Msg("Failed to save reporter")
@@ -78,5 +79,6 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	txn.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
 }
