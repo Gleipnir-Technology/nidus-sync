@@ -5,10 +5,14 @@ package factory
 
 import (
 	"context"
+	"testing"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -36,6 +40,7 @@ type PublicreportSubscribeEmailTemplate struct {
 	Created      func() time.Time
 	Deleted      func() null.Val[time.Time]
 	EmailAddress func() string
+	ID           func() int32
 
 	r publicreportSubscribeEmailR
 	f *Factory
@@ -69,6 +74,43 @@ func (t PublicreportSubscribeEmailTemplate) setModelRels(o *models.PublicreportS
 	}
 }
 
+// BuildSetter returns an *models.PublicreportSubscribeEmailSetter
+// this does nothing with the relationship templates
+func (o PublicreportSubscribeEmailTemplate) BuildSetter() *models.PublicreportSubscribeEmailSetter {
+	m := &models.PublicreportSubscribeEmailSetter{}
+
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omit.From(val)
+	}
+	if o.Deleted != nil {
+		val := o.Deleted()
+		m.Deleted = omitnull.FromNull(val)
+	}
+	if o.EmailAddress != nil {
+		val := o.EmailAddress()
+		m.EmailAddress = omit.From(val)
+	}
+	if o.ID != nil {
+		val := o.ID()
+		m.ID = omit.From(val)
+	}
+
+	return m
+}
+
+// BuildManySetter returns an []*models.PublicreportSubscribeEmailSetter
+// this does nothing with the relationship templates
+func (o PublicreportSubscribeEmailTemplate) BuildManySetter(number int) []*models.PublicreportSubscribeEmailSetter {
+	m := make([]*models.PublicreportSubscribeEmailSetter, number)
+
+	for i := range m {
+		m[i] = o.BuildSetter()
+	}
+
+	return m
+}
+
 // Build returns an *models.PublicreportSubscribeEmail
 // Related objects are also created and placed in the .R field
 // NOTE: Objects are not inserted into the database. Use PublicreportSubscribeEmailTemplate.Create
@@ -83,6 +125,9 @@ func (o PublicreportSubscribeEmailTemplate) Build() *models.PublicreportSubscrib
 	}
 	if o.EmailAddress != nil {
 		m.EmailAddress = o.EmailAddress()
+	}
+	if o.ID != nil {
+		m.ID = o.ID()
 	}
 
 	o.setModelRels(m)
@@ -103,6 +148,127 @@ func (o PublicreportSubscribeEmailTemplate) BuildMany(number int) models.Publicr
 	return m
 }
 
+func ensureCreatablePublicreportSubscribeEmail(m *models.PublicreportSubscribeEmailSetter) {
+	if !(m.Created.IsValue()) {
+		val := random_time_Time(nil)
+		m.Created = omit.From(val)
+	}
+	if !(m.EmailAddress.IsValue()) {
+		val := random_string(nil)
+		m.EmailAddress = omit.From(val)
+	}
+}
+
+// insertOptRels creates and inserts any optional the relationships on *models.PublicreportSubscribeEmail
+// according to the relationships in the template.
+// any required relationship should have already exist on the model
+func (o *PublicreportSubscribeEmailTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportSubscribeEmail) error {
+	var err error
+
+	return err
+}
+
+// Create builds a publicreportSubscribeEmail and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+func (o *PublicreportSubscribeEmailTemplate) Create(ctx context.Context, exec bob.Executor) (*models.PublicreportSubscribeEmail, error) {
+	var err error
+	opt := o.BuildSetter()
+	ensureCreatablePublicreportSubscribeEmail(opt)
+
+	if o.r.EmailAddressEmailContact == nil {
+		PublicreportSubscribeEmailMods.WithNewEmailAddressEmailContact().Apply(ctx, o)
+	}
+
+	var rel0 *models.CommsEmailContact
+
+	if o.r.EmailAddressEmailContact.o.alreadyPersisted {
+		rel0 = o.r.EmailAddressEmailContact.o.Build()
+	} else {
+		rel0, err = o.r.EmailAddressEmailContact.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.EmailAddress = omit.From(rel0.Address)
+
+	m, err := models.PublicreportSubscribeEmails.Insert(opt).One(ctx, exec)
+	if err != nil {
+		return nil, err
+	}
+
+	m.R.EmailAddressEmailContact = rel0
+
+	if err := o.insertOptRels(ctx, exec, m); err != nil {
+		return nil, err
+	}
+	return m, err
+}
+
+// MustCreate builds a publicreportSubscribeEmail and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+// panics if an error occurs
+func (o *PublicreportSubscribeEmailTemplate) MustCreate(ctx context.Context, exec bob.Executor) *models.PublicreportSubscribeEmail {
+	m, err := o.Create(ctx, exec)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+// CreateOrFail builds a publicreportSubscribeEmail and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
+func (o *PublicreportSubscribeEmailTemplate) CreateOrFail(ctx context.Context, tb testing.TB, exec bob.Executor) *models.PublicreportSubscribeEmail {
+	tb.Helper()
+	m, err := o.Create(ctx, exec)
+	if err != nil {
+		tb.Fatal(err)
+		return nil
+	}
+	return m
+}
+
+// CreateMany builds multiple publicreportSubscribeEmails and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+func (o PublicreportSubscribeEmailTemplate) CreateMany(ctx context.Context, exec bob.Executor, number int) (models.PublicreportSubscribeEmailSlice, error) {
+	var err error
+	m := make(models.PublicreportSubscribeEmailSlice, number)
+
+	for i := range m {
+		m[i], err = o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return m, nil
+}
+
+// MustCreateMany builds multiple publicreportSubscribeEmails and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+// panics if an error occurs
+func (o PublicreportSubscribeEmailTemplate) MustCreateMany(ctx context.Context, exec bob.Executor, number int) models.PublicreportSubscribeEmailSlice {
+	m, err := o.CreateMany(ctx, exec, number)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+// CreateManyOrFail builds multiple publicreportSubscribeEmails and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
+func (o PublicreportSubscribeEmailTemplate) CreateManyOrFail(ctx context.Context, tb testing.TB, exec bob.Executor, number int) models.PublicreportSubscribeEmailSlice {
+	tb.Helper()
+	m, err := o.CreateMany(ctx, exec, number)
+	if err != nil {
+		tb.Fatal(err)
+		return nil
+	}
+	return m
+}
+
 // PublicreportSubscribeEmail has methods that act as mods for the PublicreportSubscribeEmailTemplate
 var PublicreportSubscribeEmailMods publicreportSubscribeEmailMods
 
@@ -113,6 +279,7 @@ func (m publicreportSubscribeEmailMods) RandomizeAllColumns(f *faker.Faker) Publ
 		PublicreportSubscribeEmailMods.RandomCreated(f),
 		PublicreportSubscribeEmailMods.RandomDeleted(f),
 		PublicreportSubscribeEmailMods.RandomEmailAddress(f),
+		PublicreportSubscribeEmailMods.RandomID(f),
 	}
 }
 
@@ -227,6 +394,37 @@ func (m publicreportSubscribeEmailMods) RandomEmailAddress(f *faker.Faker) Publi
 	return PublicreportSubscribeEmailModFunc(func(_ context.Context, o *PublicreportSubscribeEmailTemplate) {
 		o.EmailAddress = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportSubscribeEmailMods) ID(val int32) PublicreportSubscribeEmailMod {
+	return PublicreportSubscribeEmailModFunc(func(_ context.Context, o *PublicreportSubscribeEmailTemplate) {
+		o.ID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportSubscribeEmailMods) IDFunc(f func() int32) PublicreportSubscribeEmailMod {
+	return PublicreportSubscribeEmailModFunc(func(_ context.Context, o *PublicreportSubscribeEmailTemplate) {
+		o.ID = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportSubscribeEmailMods) UnsetID() PublicreportSubscribeEmailMod {
+	return PublicreportSubscribeEmailModFunc(func(_ context.Context, o *PublicreportSubscribeEmailTemplate) {
+		o.ID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportSubscribeEmailMods) RandomID(f *faker.Faker) PublicreportSubscribeEmailMod {
+	return PublicreportSubscribeEmailModFunc(func(_ context.Context, o *PublicreportSubscribeEmailTemplate) {
+		o.ID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

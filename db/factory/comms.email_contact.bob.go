@@ -328,6 +328,26 @@ func (o *CommsEmailContactTemplate) insertOptRels(ctx context.Context, exec bob.
 		}
 	}
 
+	isEmailAddressSubscribeEmailsDone, _ := commsEmailContactRelEmailAddressSubscribeEmailsCtx.Value(ctx)
+	if !isEmailAddressSubscribeEmailsDone && o.r.EmailAddressSubscribeEmails != nil {
+		ctx = commsEmailContactRelEmailAddressSubscribeEmailsCtx.WithValue(ctx, true)
+		for _, r := range o.r.EmailAddressSubscribeEmails {
+			if r.o.alreadyPersisted {
+				m.R.EmailAddressSubscribeEmails = append(m.R.EmailAddressSubscribeEmails, r.o.Build())
+			} else {
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachEmailAddressSubscribeEmails(ctx, exec, rel4...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return err
 }
 

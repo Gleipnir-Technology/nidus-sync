@@ -5,10 +5,14 @@ package factory
 
 import (
 	"context"
+	"testing"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -35,6 +39,7 @@ func (mods PublicreportSubscribePhoneModSlice) Apply(ctx context.Context, n *Pub
 type PublicreportSubscribePhoneTemplate struct {
 	Created   func() time.Time
 	Deleted   func() null.Val[time.Time]
+	ID        func() int32
 	PhoneE164 func() string
 
 	r publicreportSubscribePhoneR
@@ -69,6 +74,43 @@ func (t PublicreportSubscribePhoneTemplate) setModelRels(o *models.PublicreportS
 	}
 }
 
+// BuildSetter returns an *models.PublicreportSubscribePhoneSetter
+// this does nothing with the relationship templates
+func (o PublicreportSubscribePhoneTemplate) BuildSetter() *models.PublicreportSubscribePhoneSetter {
+	m := &models.PublicreportSubscribePhoneSetter{}
+
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omit.From(val)
+	}
+	if o.Deleted != nil {
+		val := o.Deleted()
+		m.Deleted = omitnull.FromNull(val)
+	}
+	if o.ID != nil {
+		val := o.ID()
+		m.ID = omit.From(val)
+	}
+	if o.PhoneE164 != nil {
+		val := o.PhoneE164()
+		m.PhoneE164 = omit.From(val)
+	}
+
+	return m
+}
+
+// BuildManySetter returns an []*models.PublicreportSubscribePhoneSetter
+// this does nothing with the relationship templates
+func (o PublicreportSubscribePhoneTemplate) BuildManySetter(number int) []*models.PublicreportSubscribePhoneSetter {
+	m := make([]*models.PublicreportSubscribePhoneSetter, number)
+
+	for i := range m {
+		m[i] = o.BuildSetter()
+	}
+
+	return m
+}
+
 // Build returns an *models.PublicreportSubscribePhone
 // Related objects are also created and placed in the .R field
 // NOTE: Objects are not inserted into the database. Use PublicreportSubscribePhoneTemplate.Create
@@ -80,6 +122,9 @@ func (o PublicreportSubscribePhoneTemplate) Build() *models.PublicreportSubscrib
 	}
 	if o.Deleted != nil {
 		m.Deleted = o.Deleted()
+	}
+	if o.ID != nil {
+		m.ID = o.ID()
 	}
 	if o.PhoneE164 != nil {
 		m.PhoneE164 = o.PhoneE164()
@@ -103,6 +148,127 @@ func (o PublicreportSubscribePhoneTemplate) BuildMany(number int) models.Publicr
 	return m
 }
 
+func ensureCreatablePublicreportSubscribePhone(m *models.PublicreportSubscribePhoneSetter) {
+	if !(m.Created.IsValue()) {
+		val := random_time_Time(nil)
+		m.Created = omit.From(val)
+	}
+	if !(m.PhoneE164.IsValue()) {
+		val := random_string(nil)
+		m.PhoneE164 = omit.From(val)
+	}
+}
+
+// insertOptRels creates and inserts any optional the relationships on *models.PublicreportSubscribePhone
+// according to the relationships in the template.
+// any required relationship should have already exist on the model
+func (o *PublicreportSubscribePhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportSubscribePhone) error {
+	var err error
+
+	return err
+}
+
+// Create builds a publicreportSubscribePhone and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+func (o *PublicreportSubscribePhoneTemplate) Create(ctx context.Context, exec bob.Executor) (*models.PublicreportSubscribePhone, error) {
+	var err error
+	opt := o.BuildSetter()
+	ensureCreatablePublicreportSubscribePhone(opt)
+
+	if o.r.PhoneE164Phone == nil {
+		PublicreportSubscribePhoneMods.WithNewPhoneE164Phone().Apply(ctx, o)
+	}
+
+	var rel0 *models.CommsPhone
+
+	if o.r.PhoneE164Phone.o.alreadyPersisted {
+		rel0 = o.r.PhoneE164Phone.o.Build()
+	} else {
+		rel0, err = o.r.PhoneE164Phone.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.PhoneE164 = omit.From(rel0.E164)
+
+	m, err := models.PublicreportSubscribePhones.Insert(opt).One(ctx, exec)
+	if err != nil {
+		return nil, err
+	}
+
+	m.R.PhoneE164Phone = rel0
+
+	if err := o.insertOptRels(ctx, exec, m); err != nil {
+		return nil, err
+	}
+	return m, err
+}
+
+// MustCreate builds a publicreportSubscribePhone and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+// panics if an error occurs
+func (o *PublicreportSubscribePhoneTemplate) MustCreate(ctx context.Context, exec bob.Executor) *models.PublicreportSubscribePhone {
+	m, err := o.Create(ctx, exec)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+// CreateOrFail builds a publicreportSubscribePhone and inserts it into the database
+// Relations objects are also inserted and placed in the .R field
+// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
+func (o *PublicreportSubscribePhoneTemplate) CreateOrFail(ctx context.Context, tb testing.TB, exec bob.Executor) *models.PublicreportSubscribePhone {
+	tb.Helper()
+	m, err := o.Create(ctx, exec)
+	if err != nil {
+		tb.Fatal(err)
+		return nil
+	}
+	return m
+}
+
+// CreateMany builds multiple publicreportSubscribePhones and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+func (o PublicreportSubscribePhoneTemplate) CreateMany(ctx context.Context, exec bob.Executor, number int) (models.PublicreportSubscribePhoneSlice, error) {
+	var err error
+	m := make(models.PublicreportSubscribePhoneSlice, number)
+
+	for i := range m {
+		m[i], err = o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return m, nil
+}
+
+// MustCreateMany builds multiple publicreportSubscribePhones and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+// panics if an error occurs
+func (o PublicreportSubscribePhoneTemplate) MustCreateMany(ctx context.Context, exec bob.Executor, number int) models.PublicreportSubscribePhoneSlice {
+	m, err := o.CreateMany(ctx, exec, number)
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+// CreateManyOrFail builds multiple publicreportSubscribePhones and inserts them into the database
+// Relations objects are also inserted and placed in the .R field
+// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
+func (o PublicreportSubscribePhoneTemplate) CreateManyOrFail(ctx context.Context, tb testing.TB, exec bob.Executor, number int) models.PublicreportSubscribePhoneSlice {
+	tb.Helper()
+	m, err := o.CreateMany(ctx, exec, number)
+	if err != nil {
+		tb.Fatal(err)
+		return nil
+	}
+	return m
+}
+
 // PublicreportSubscribePhone has methods that act as mods for the PublicreportSubscribePhoneTemplate
 var PublicreportSubscribePhoneMods publicreportSubscribePhoneMods
 
@@ -112,6 +278,7 @@ func (m publicreportSubscribePhoneMods) RandomizeAllColumns(f *faker.Faker) Publ
 	return PublicreportSubscribePhoneModSlice{
 		PublicreportSubscribePhoneMods.RandomCreated(f),
 		PublicreportSubscribePhoneMods.RandomDeleted(f),
+		PublicreportSubscribePhoneMods.RandomID(f),
 		PublicreportSubscribePhoneMods.RandomPhoneE164(f),
 	}
 }
@@ -196,6 +363,37 @@ func (m publicreportSubscribePhoneMods) RandomDeletedNotNull(f *faker.Faker) Pub
 
 			val := random_time_Time(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m publicreportSubscribePhoneMods) ID(val int32) PublicreportSubscribePhoneMod {
+	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
+		o.ID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m publicreportSubscribePhoneMods) IDFunc(f func() int32) PublicreportSubscribePhoneMod {
+	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
+		o.ID = f
+	})
+}
+
+// Clear any values for the column
+func (m publicreportSubscribePhoneMods) UnsetID() PublicreportSubscribePhoneMod {
+	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
+		o.ID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m publicreportSubscribePhoneMods) RandomID(f *faker.Faker) PublicreportSubscribePhoneMod {
+	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
+		o.ID = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

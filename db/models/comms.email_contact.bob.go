@@ -816,6 +816,74 @@ func (commsEmailContact0 *CommsEmailContact) AttachEmailAddressNotifyEmailPools(
 	return nil
 }
 
+func insertCommsEmailContactEmailAddressSubscribeEmails0(ctx context.Context, exec bob.Executor, publicreportSubscribeEmails1 []*PublicreportSubscribeEmailSetter, commsEmailContact0 *CommsEmailContact) (PublicreportSubscribeEmailSlice, error) {
+	for i := range publicreportSubscribeEmails1 {
+		publicreportSubscribeEmails1[i].EmailAddress = omit.From(commsEmailContact0.Address)
+	}
+
+	ret, err := PublicreportSubscribeEmails.Insert(bob.ToMods(publicreportSubscribeEmails1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsEmailContactEmailAddressSubscribeEmails0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsEmailContactEmailAddressSubscribeEmails0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribeEmails1 PublicreportSubscribeEmailSlice, commsEmailContact0 *CommsEmailContact) (PublicreportSubscribeEmailSlice, error) {
+	setter := &PublicreportSubscribeEmailSetter{
+		EmailAddress: omit.From(commsEmailContact0.Address),
+	}
+
+	err := publicreportSubscribeEmails1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsEmailContactEmailAddressSubscribeEmails0: %w", err)
+	}
+
+	return publicreportSubscribeEmails1, nil
+}
+
+func (commsEmailContact0 *CommsEmailContact) InsertEmailAddressSubscribeEmails(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribeEmailSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportSubscribeEmails1, err := insertCommsEmailContactEmailAddressSubscribeEmails0(ctx, exec, related, commsEmailContact0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailContact0.R.EmailAddressSubscribeEmails = append(commsEmailContact0.R.EmailAddressSubscribeEmails, publicreportSubscribeEmails1...)
+
+	for _, rel := range publicreportSubscribeEmails1 {
+		rel.R.EmailAddressEmailContact = commsEmailContact0
+	}
+	return nil
+}
+
+func (commsEmailContact0 *CommsEmailContact) AttachEmailAddressSubscribeEmails(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribeEmail) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportSubscribeEmails1 := PublicreportSubscribeEmailSlice(related)
+
+	_, err = attachCommsEmailContactEmailAddressSubscribeEmails0(ctx, exec, len(related), publicreportSubscribeEmails1, commsEmailContact0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailContact0.R.EmailAddressSubscribeEmails = append(commsEmailContact0.R.EmailAddressSubscribeEmails, publicreportSubscribeEmails1...)
+
+	for _, rel := range related {
+		rel.R.EmailAddressEmailContact = commsEmailContact0
+	}
+
+	return nil
+}
+
 type commsEmailContactWhere[Q psql.Filterable] struct {
 	Address      psql.WhereMod[Q, string]
 	Confirmed    psql.WhereMod[Q, bool]

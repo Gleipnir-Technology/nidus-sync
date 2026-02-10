@@ -3,6 +3,8 @@
 
 package dbinfo
 
+import "github.com/aarondl/opt/null"
+
 var PublicreportSubscribeEmails = Table[
 	publicreportSubscribeEmailColumns,
 	publicreportSubscribeEmailIndexes,
@@ -40,8 +42,40 @@ var PublicreportSubscribeEmails = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('publicreport.subscribe_email_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
-
+	Indexes: publicreportSubscribeEmailIndexes{
+		SubscribeEmailPkey: index{
+			Type: "btree",
+			Name: "subscribe_email_pkey",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+	},
+	PrimaryKey: &constraint{
+		Name:    "subscribe_email_pkey",
+		Columns: []string{"id"},
+		Comment: "",
+	},
 	ForeignKeys: publicreportSubscribeEmailForeignKeys{
 		PublicreportSubscribeEmailSubscribeEmailEmailAddressFkey: foreignKey{
 			constraint: constraint{
@@ -61,18 +95,23 @@ type publicreportSubscribeEmailColumns struct {
 	Created      column
 	Deleted      column
 	EmailAddress column
+	ID           column
 }
 
 func (c publicreportSubscribeEmailColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.EmailAddress,
+		c.Created, c.Deleted, c.EmailAddress, c.ID,
 	}
 }
 
-type publicreportSubscribeEmailIndexes struct{}
+type publicreportSubscribeEmailIndexes struct {
+	SubscribeEmailPkey index
+}
 
 func (i publicreportSubscribeEmailIndexes) AsSlice() []index {
-	return []index{}
+	return []index{
+		i.SubscribeEmailPkey,
+	}
 }
 
 type publicreportSubscribeEmailForeignKeys struct {

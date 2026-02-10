@@ -393,6 +393,26 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 		}
 	}
 
+	isPhoneE164SubscribePhonesDone, _ := commsPhoneRelPhoneE164SubscribePhonesCtx.Value(ctx)
+	if !isPhoneE164SubscribePhonesDone && o.r.PhoneE164SubscribePhones != nil {
+		ctx = commsPhoneRelPhoneE164SubscribePhonesCtx.WithValue(ctx, true)
+		for _, r := range o.r.PhoneE164SubscribePhones {
+			if r.o.alreadyPersisted {
+				m.R.PhoneE164SubscribePhones = append(m.R.PhoneE164SubscribePhones, r.o.Build())
+			} else {
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPhoneE164SubscribePhones(ctx, exec, rel6...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return err
 }
 

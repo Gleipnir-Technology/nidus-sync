@@ -3628,6 +3628,7 @@ func (f *Factory) FromExistingPublicreportSubscribeEmail(m *models.PublicreportS
 	o.Created = func() time.Time { return m.Created }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
 	o.EmailAddress = func() string { return m.EmailAddress }
+	o.ID = func() int32 { return m.ID }
 
 	ctx := context.Background()
 	if m.R.EmailAddressEmailContact != nil {
@@ -3658,6 +3659,7 @@ func (f *Factory) FromExistingPublicreportSubscribePhone(m *models.PublicreportS
 
 	o.Created = func() time.Time { return m.Created }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.ID = func() int32 { return m.ID }
 	o.PhoneE164 = func() string { return m.PhoneE164 }
 
 	ctx := context.Background()

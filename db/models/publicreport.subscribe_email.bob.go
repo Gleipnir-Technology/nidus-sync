@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
@@ -28,6 +29,7 @@ type PublicreportSubscribeEmail struct {
 	Created      time.Time           `db:"created" `
 	Deleted      null.Val[time.Time] `db:"deleted" `
 	EmailAddress string              `db:"email_address" `
+	ID           int32               `db:"id,pk" `
 
 	R publicreportSubscribeEmailR `db:"-" `
 }
@@ -36,10 +38,10 @@ type PublicreportSubscribeEmail struct {
 // This should almost always be used instead of []*PublicreportSubscribeEmail.
 type PublicreportSubscribeEmailSlice []*PublicreportSubscribeEmail
 
-// PublicreportSubscribeEmails contains methods to work with the subscribe_email view
-var PublicreportSubscribeEmails = psql.NewViewx[*PublicreportSubscribeEmail, PublicreportSubscribeEmailSlice]("publicreport", "subscribe_email", buildPublicreportSubscribeEmailColumns("publicreport.subscribe_email"))
+// PublicreportSubscribeEmails contains methods to work with the subscribe_email table
+var PublicreportSubscribeEmails = psql.NewTablex[*PublicreportSubscribeEmail, PublicreportSubscribeEmailSlice, *PublicreportSubscribeEmailSetter]("publicreport", "subscribe_email", buildPublicreportSubscribeEmailColumns("publicreport.subscribe_email"))
 
-// PublicreportSubscribeEmailsQuery is a query on the subscribe_email view
+// PublicreportSubscribeEmailsQuery is a query on the subscribe_email table
 type PublicreportSubscribeEmailsQuery = *psql.ViewQuery[*PublicreportSubscribeEmail, PublicreportSubscribeEmailSlice]
 
 // publicreportSubscribeEmailR is where relationships are stored.
@@ -50,12 +52,13 @@ type publicreportSubscribeEmailR struct {
 func buildPublicreportSubscribeEmailColumns(alias string) publicreportSubscribeEmailColumns {
 	return publicreportSubscribeEmailColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "deleted", "email_address",
+			"created", "deleted", "email_address", "id",
 		).WithParent("publicreport.subscribe_email"),
 		tableAlias:   alias,
 		Created:      psql.Quote(alias, "created"),
 		Deleted:      psql.Quote(alias, "deleted"),
 		EmailAddress: psql.Quote(alias, "email_address"),
+		ID:           psql.Quote(alias, "id"),
 	}
 }
 
@@ -65,6 +68,7 @@ type publicreportSubscribeEmailColumns struct {
 	Created      psql.Expression
 	Deleted      psql.Expression
 	EmailAddress psql.Expression
+	ID           psql.Expression
 }
 
 func (c publicreportSubscribeEmailColumns) Alias() string {
@@ -82,10 +86,11 @@ type PublicreportSubscribeEmailSetter struct {
 	Created      omit.Val[time.Time]     `db:"created" `
 	Deleted      omitnull.Val[time.Time] `db:"deleted" `
 	EmailAddress omit.Val[string]        `db:"email_address" `
+	ID           omit.Val[int32]         `db:"id,pk" `
 }
 
 func (s PublicreportSubscribeEmailSetter) SetColumns() []string {
-	vals := make([]string, 0, 3)
+	vals := make([]string, 0, 4)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
@@ -94,6 +99,9 @@ func (s PublicreportSubscribeEmailSetter) SetColumns() []string {
 	}
 	if s.EmailAddress.IsValue() {
 		vals = append(vals, "email_address")
+	}
+	if s.ID.IsValue() {
+		vals = append(vals, "id")
 	}
 	return vals
 }
@@ -108,11 +116,18 @@ func (s PublicreportSubscribeEmailSetter) Overwrite(t *PublicreportSubscribeEmai
 	if s.EmailAddress.IsValue() {
 		t.EmailAddress = s.EmailAddress.MustGet()
 	}
+	if s.ID.IsValue() {
+		t.ID = s.ID.MustGet()
+	}
 }
 
 func (s *PublicreportSubscribeEmailSetter) Apply(q *dialect.InsertQuery) {
+	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+		return PublicreportSubscribeEmails.BeforeInsertHooks.RunHooks(ctx, exec, s)
+	})
+
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 3)
+		vals := make([]bob.Expression, 4)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -131,6 +146,12 @@ func (s *PublicreportSubscribeEmailSetter) Apply(q *dialect.InsertQuery) {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
+		if s.ID.IsValue() {
+			vals[3] = psql.Arg(s.ID.MustGet())
+		} else {
+			vals[3] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -140,7 +161,7 @@ func (s PublicreportSubscribeEmailSetter) UpdateMod() bob.Mod[*dialect.UpdateQue
 }
 
 func (s PublicreportSubscribeEmailSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 3)
+	exprs := make([]bob.Expression, 0, 4)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -163,7 +184,36 @@ func (s PublicreportSubscribeEmailSetter) Expressions(prefix ...string) []bob.Ex
 		}})
 	}
 
+	if s.ID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "id")...),
+			psql.Arg(s.ID),
+		}})
+	}
+
 	return exprs
+}
+
+// FindPublicreportSubscribeEmail retrieves a single record by primary key
+// If cols is empty Find will return all columns.
+func FindPublicreportSubscribeEmail(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*PublicreportSubscribeEmail, error) {
+	if len(cols) == 0 {
+		return PublicreportSubscribeEmails.Query(
+			sm.Where(PublicreportSubscribeEmails.Columns.ID.EQ(psql.Arg(IDPK))),
+		).One(ctx, exec)
+	}
+
+	return PublicreportSubscribeEmails.Query(
+		sm.Where(PublicreportSubscribeEmails.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Columns(PublicreportSubscribeEmails.Columns.Only(cols...)),
+	).One(ctx, exec)
+}
+
+// PublicreportSubscribeEmailExists checks the presence of a single record by primary key
+func PublicreportSubscribeEmailExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
+	return PublicreportSubscribeEmails.Query(
+		sm.Where(PublicreportSubscribeEmails.Columns.ID.EQ(psql.Arg(IDPK))),
+	).Exists(ctx, exec)
 }
 
 // AfterQueryHook is called after PublicreportSubscribeEmail is retrieved from the database
@@ -173,9 +223,59 @@ func (o *PublicreportSubscribeEmail) AfterQueryHook(ctx context.Context, exec bo
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = PublicreportSubscribeEmails.AfterSelectHooks.RunHooks(ctx, exec, PublicreportSubscribeEmailSlice{o})
+	case bob.QueryTypeInsert:
+		ctx, err = PublicreportSubscribeEmails.AfterInsertHooks.RunHooks(ctx, exec, PublicreportSubscribeEmailSlice{o})
+	case bob.QueryTypeUpdate:
+		ctx, err = PublicreportSubscribeEmails.AfterUpdateHooks.RunHooks(ctx, exec, PublicreportSubscribeEmailSlice{o})
+	case bob.QueryTypeDelete:
+		ctx, err = PublicreportSubscribeEmails.AfterDeleteHooks.RunHooks(ctx, exec, PublicreportSubscribeEmailSlice{o})
 	}
 
 	return err
+}
+
+// primaryKeyVals returns the primary key values of the PublicreportSubscribeEmail
+func (o *PublicreportSubscribeEmail) primaryKeyVals() bob.Expression {
+	return psql.Arg(o.ID)
+}
+
+func (o *PublicreportSubscribeEmail) pkEQ() dialect.Expression {
+	return psql.Quote("publicreport.subscribe_email", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
+	}))
+}
+
+// Update uses an executor to update the PublicreportSubscribeEmail
+func (o *PublicreportSubscribeEmail) Update(ctx context.Context, exec bob.Executor, s *PublicreportSubscribeEmailSetter) error {
+	v, err := PublicreportSubscribeEmails.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.R = v.R
+	*o = *v
+
+	return nil
+}
+
+// Delete deletes a single PublicreportSubscribeEmail record with an executor
+func (o *PublicreportSubscribeEmail) Delete(ctx context.Context, exec bob.Executor) error {
+	_, err := PublicreportSubscribeEmails.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
+	return err
+}
+
+// Reload refreshes the PublicreportSubscribeEmail using the executor
+func (o *PublicreportSubscribeEmail) Reload(ctx context.Context, exec bob.Executor) error {
+	o2, err := PublicreportSubscribeEmails.Query(
+		sm.Where(PublicreportSubscribeEmails.Columns.ID.EQ(psql.Arg(o.ID))),
+	).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+	o2.R = o.R
+	*o = *o2
+
+	return nil
 }
 
 // AfterQueryHook is called after PublicreportSubscribeEmailSlice is retrieved from the database
@@ -185,9 +285,136 @@ func (o PublicreportSubscribeEmailSlice) AfterQueryHook(ctx context.Context, exe
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = PublicreportSubscribeEmails.AfterSelectHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeInsert:
+		ctx, err = PublicreportSubscribeEmails.AfterInsertHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeUpdate:
+		ctx, err = PublicreportSubscribeEmails.AfterUpdateHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeDelete:
+		ctx, err = PublicreportSubscribeEmails.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
+}
+
+func (o PublicreportSubscribeEmailSlice) pkIN() dialect.Expression {
+	if len(o) == 0 {
+		return psql.Raw("NULL")
+	}
+
+	return psql.Quote("publicreport.subscribe_email", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+		pkPairs := make([]bob.Expression, len(o))
+		for i, row := range o {
+			pkPairs[i] = row.primaryKeyVals()
+		}
+		return bob.ExpressSlice(ctx, w, d, start, pkPairs, "", ", ", "")
+	}))
+}
+
+// copyMatchingRows finds models in the given slice that have the same primary key
+// then it first copies the existing relationships from the old model to the new model
+// and then replaces the old model in the slice with the new model
+func (o PublicreportSubscribeEmailSlice) copyMatchingRows(from ...*PublicreportSubscribeEmail) {
+	for i, old := range o {
+		for _, new := range from {
+			if new.ID != old.ID {
+				continue
+			}
+			new.R = old.R
+			o[i] = new
+			break
+		}
+	}
+}
+
+// UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
+func (o PublicreportSubscribeEmailSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
+		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+			return PublicreportSubscribeEmails.BeforeUpdateHooks.RunHooks(ctx, exec, o)
+		})
+
+		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
+			var err error
+			switch retrieved := retrieved.(type) {
+			case *PublicreportSubscribeEmail:
+				o.copyMatchingRows(retrieved)
+			case []*PublicreportSubscribeEmail:
+				o.copyMatchingRows(retrieved...)
+			case PublicreportSubscribeEmailSlice:
+				o.copyMatchingRows(retrieved...)
+			default:
+				// If the retrieved value is not a PublicreportSubscribeEmail or a slice of PublicreportSubscribeEmail
+				// then run the AfterUpdateHooks on the slice
+				_, err = PublicreportSubscribeEmails.AfterUpdateHooks.RunHooks(ctx, exec, o)
+			}
+
+			return err
+		}))
+
+		q.AppendWhere(o.pkIN())
+	})
+}
+
+// DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
+func (o PublicreportSubscribeEmailSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
+	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
+		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+			return PublicreportSubscribeEmails.BeforeDeleteHooks.RunHooks(ctx, exec, o)
+		})
+
+		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
+			var err error
+			switch retrieved := retrieved.(type) {
+			case *PublicreportSubscribeEmail:
+				o.copyMatchingRows(retrieved)
+			case []*PublicreportSubscribeEmail:
+				o.copyMatchingRows(retrieved...)
+			case PublicreportSubscribeEmailSlice:
+				o.copyMatchingRows(retrieved...)
+			default:
+				// If the retrieved value is not a PublicreportSubscribeEmail or a slice of PublicreportSubscribeEmail
+				// then run the AfterDeleteHooks on the slice
+				_, err = PublicreportSubscribeEmails.AfterDeleteHooks.RunHooks(ctx, exec, o)
+			}
+
+			return err
+		}))
+
+		q.AppendWhere(o.pkIN())
+	})
+}
+
+func (o PublicreportSubscribeEmailSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals PublicreportSubscribeEmailSetter) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	_, err := PublicreportSubscribeEmails.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
+	return err
+}
+
+func (o PublicreportSubscribeEmailSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	_, err := PublicreportSubscribeEmails.Delete(o.DeleteMod()).Exec(ctx, exec)
+	return err
+}
+
+func (o PublicreportSubscribeEmailSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	o2, err := PublicreportSubscribeEmails.Query(sm.Where(o.pkIN())).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.copyMatchingRows(o2...)
+
+	return nil
 }
 
 // EmailAddressEmailContact starts a query for related objects on comms.email_contact
@@ -214,10 +441,59 @@ func (os PublicreportSubscribeEmailSlice) EmailAddressEmailContact(mods ...bob.M
 	)...)
 }
 
+func attachPublicreportSubscribeEmailEmailAddressEmailContact0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribeEmail0 *PublicreportSubscribeEmail, commsEmailContact1 *CommsEmailContact) (*PublicreportSubscribeEmail, error) {
+	setter := &PublicreportSubscribeEmailSetter{
+		EmailAddress: omit.From(commsEmailContact1.Address),
+	}
+
+	err := publicreportSubscribeEmail0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportSubscribeEmailEmailAddressEmailContact0: %w", err)
+	}
+
+	return publicreportSubscribeEmail0, nil
+}
+
+func (publicreportSubscribeEmail0 *PublicreportSubscribeEmail) InsertEmailAddressEmailContact(ctx context.Context, exec bob.Executor, related *CommsEmailContactSetter) error {
+	var err error
+
+	commsEmailContact1, err := CommsEmailContacts.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportSubscribeEmailEmailAddressEmailContact0(ctx, exec, 1, publicreportSubscribeEmail0, commsEmailContact1)
+	if err != nil {
+		return err
+	}
+
+	publicreportSubscribeEmail0.R.EmailAddressEmailContact = commsEmailContact1
+
+	commsEmailContact1.R.EmailAddressSubscribeEmails = append(commsEmailContact1.R.EmailAddressSubscribeEmails, publicreportSubscribeEmail0)
+
+	return nil
+}
+
+func (publicreportSubscribeEmail0 *PublicreportSubscribeEmail) AttachEmailAddressEmailContact(ctx context.Context, exec bob.Executor, commsEmailContact1 *CommsEmailContact) error {
+	var err error
+
+	_, err = attachPublicreportSubscribeEmailEmailAddressEmailContact0(ctx, exec, 1, publicreportSubscribeEmail0, commsEmailContact1)
+	if err != nil {
+		return err
+	}
+
+	publicreportSubscribeEmail0.R.EmailAddressEmailContact = commsEmailContact1
+
+	commsEmailContact1.R.EmailAddressSubscribeEmails = append(commsEmailContact1.R.EmailAddressSubscribeEmails, publicreportSubscribeEmail0)
+
+	return nil
+}
+
 type publicreportSubscribeEmailWhere[Q psql.Filterable] struct {
 	Created      psql.WhereMod[Q, time.Time]
 	Deleted      psql.WhereNullMod[Q, time.Time]
 	EmailAddress psql.WhereMod[Q, string]
+	ID           psql.WhereMod[Q, int32]
 }
 
 func (publicreportSubscribeEmailWhere[Q]) AliasedAs(alias string) publicreportSubscribeEmailWhere[Q] {
@@ -229,6 +505,7 @@ func buildPublicreportSubscribeEmailWhere[Q psql.Filterable](cols publicreportSu
 		Created:      psql.Where[Q, time.Time](cols.Created),
 		Deleted:      psql.WhereNull[Q, time.Time](cols.Deleted),
 		EmailAddress: psql.Where[Q, string](cols.EmailAddress),
+		ID:           psql.Where[Q, int32](cols.ID),
 	}
 }
 

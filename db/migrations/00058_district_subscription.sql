@@ -13,3 +13,6 @@ CREATE TABLE publicreport.subscribe_phone (
 	phone_e164 TEXT NOT NULL REFERENCES comms.phone(e164),
 	PRIMARY KEY(district_id, phone_e164)
 );
+-- +goose Down
+DROP TABLE publicreport.subscribe_phone;
+DROP TABLE publicreport.subscribe_email;

@@ -3,6 +3,8 @@
 
 package dbinfo
 
+import "github.com/aarondl/opt/null"
+
 var PublicreportSubscribePhones = Table[
 	publicreportSubscribePhoneColumns,
 	publicreportSubscribePhoneIndexes,
@@ -31,6 +33,15 @@ var PublicreportSubscribePhones = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('publicreport.subscribe_phone_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		PhoneE164: column{
 			Name:      "phone_e164",
 			DBType:    "text",
@@ -41,7 +52,30 @@ var PublicreportSubscribePhones = Table[
 			AutoIncr:  false,
 		},
 	},
-
+	Indexes: publicreportSubscribePhoneIndexes{
+		SubscribePhonePkey: index{
+			Type: "btree",
+			Name: "subscribe_phone_pkey",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+	},
+	PrimaryKey: &constraint{
+		Name:    "subscribe_phone_pkey",
+		Columns: []string{"id"},
+		Comment: "",
+	},
 	ForeignKeys: publicreportSubscribePhoneForeignKeys{
 		PublicreportSubscribePhoneSubscribePhonePhoneE164Fkey: foreignKey{
 			constraint: constraint{
@@ -60,19 +94,24 @@ var PublicreportSubscribePhones = Table[
 type publicreportSubscribePhoneColumns struct {
 	Created   column
 	Deleted   column
+	ID        column
 	PhoneE164 column
 }
 
 func (c publicreportSubscribePhoneColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.PhoneE164,
+		c.Created, c.Deleted, c.ID, c.PhoneE164,
 	}
 }
 
-type publicreportSubscribePhoneIndexes struct{}
+type publicreportSubscribePhoneIndexes struct {
+	SubscribePhonePkey index
+}
 
 func (i publicreportSubscribePhoneIndexes) AsSlice() []index {
-	return []index{}
+	return []index{
+		i.SubscribePhonePkey,
+	}
 }
 
 type publicreportSubscribePhoneForeignKeys struct {

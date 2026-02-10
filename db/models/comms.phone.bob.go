@@ -980,6 +980,74 @@ func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhonePools(ctx context.Conte
 	return nil
 }
 
+func insertCommsPhonePhoneE164SubscribePhones0(ctx context.Context, exec bob.Executor, publicreportSubscribePhones1 []*PublicreportSubscribePhoneSetter, commsPhone0 *CommsPhone) (PublicreportSubscribePhoneSlice, error) {
+	for i := range publicreportSubscribePhones1 {
+		publicreportSubscribePhones1[i].PhoneE164 = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := PublicreportSubscribePhones.Insert(bob.ToMods(publicreportSubscribePhones1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164SubscribePhones0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneE164SubscribePhones0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribePhones1 PublicreportSubscribePhoneSlice, commsPhone0 *CommsPhone) (PublicreportSubscribePhoneSlice, error) {
+	setter := &PublicreportSubscribePhoneSetter{
+		PhoneE164: omit.From(commsPhone0.E164),
+	}
+
+	err := publicreportSubscribePhones1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164SubscribePhones0: %w", err)
+	}
+
+	return publicreportSubscribePhones1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhoneSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportSubscribePhones1, err := insertCommsPhonePhoneE164SubscribePhones0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164SubscribePhones = append(commsPhone0.R.PhoneE164SubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range publicreportSubscribePhones1 {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhone) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportSubscribePhones1 := PublicreportSubscribePhoneSlice(related)
+
+	_, err = attachCommsPhonePhoneE164SubscribePhones0(ctx, exec, len(related), publicreportSubscribePhones1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164SubscribePhones = append(commsPhone0.R.PhoneE164SubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+
+	return nil
+}
+
 type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
 	IsSubscribed psql.WhereMod[Q, bool]
