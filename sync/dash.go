@@ -41,7 +41,7 @@ type ContentTrap struct {
 	Trap    Trap
 	User    User
 }
-type ContextCell struct {
+type ContentCell struct {
 	BreedingSources []BreedingSourceSummary
 	CellBoundary    h3.CellBoundary
 	Inspections     []Inspection
@@ -50,7 +50,7 @@ type ContextCell struct {
 	Treatments      []Treatment
 	User            User
 }
-type ContextDashboard struct {
+type ContentDashboard struct {
 	CountTraps           int
 	CountMosquitoSources int
 	CountServiceRequests int
@@ -66,7 +66,7 @@ type ContextDashboard struct {
 type ContentLayoutTest struct {
 	User User
 }
-type ContextDistrict struct {
+type ContentDistrict struct {
 	MapboxToken string
 }
 
@@ -85,7 +85,7 @@ func getCellDetails(w http.ResponseWriter, r *http.Request, user *models.User) {
 }
 
 func getDistrict(w http.ResponseWriter, r *http.Request) {
-	context := ContextDistrict{
+	context := ContentDistrict{
 		MapboxToken: config.MapboxToken,
 	}
 	html.RenderOrError(w, "sync/district.html", &context)
@@ -227,7 +227,7 @@ func cell(ctx context.Context, w http.ResponseWriter, user *models.User, c int64
 		respondError(w, "Failed to get treatments", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContextCell{
+	data := ContentCell{
 		BreedingSources: sources,
 		CellBoundary:    boundary,
 		Inspections:     inspections,
@@ -298,7 +298,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		respondError(w, "Failed to get user context", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContextDashboard{
+	data := ContentDashboard{
 		CountTraps:           int(trapCount),
 		CountMosquitoSources: int(sourceCount),
 		CountServiceRequests: int(serviceCount),
@@ -308,6 +308,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 			MapboxToken: config.MapboxToken,
 		},
 		RecentRequests: requests,
+		URL:            newContentURL(),
 		User:           userContent,
 	}
 	html.RenderOrError(w, "sync/dashboard.html", data)
