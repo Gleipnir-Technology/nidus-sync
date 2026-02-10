@@ -87,6 +87,8 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportQuicks                 publicreportQuickWhere[Q]
 	PublicreportQuickImages            publicreportQuickImageWhere[Q]
 	PublicreportReportLocations        publicreportReportLocationWhere[Q]
+	PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
+	PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
 	Sessions                           sessionWhere[Q]
@@ -164,6 +166,8 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportQuicks                 publicreportQuickWhere[Q]
 		PublicreportQuickImages            publicreportQuickImageWhere[Q]
 		PublicreportReportLocations        publicreportReportLocationWhere[Q]
+		PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
+		PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
 		Sessions                           sessionWhere[Q]
@@ -240,6 +244,8 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),
 		PublicreportQuickImages:            buildPublicreportQuickImageWhere[Q](PublicreportQuickImages.Columns),
 		PublicreportReportLocations:        buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
+		PublicreportSubscribeEmails:        buildPublicreportSubscribeEmailWhere[Q](PublicreportSubscribeEmails.Columns),
+		PublicreportSubscribePhones:        buildPublicreportSubscribePhoneWhere[Q](PublicreportSubscribePhones.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Sessions:                           buildSessionWhere[Q](Sessions.Columns),

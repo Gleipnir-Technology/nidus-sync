@@ -83,6 +83,8 @@ type preloaders struct {
 	PublicreportPoolImage             publicreportPoolImagePreloader
 	PublicreportQuick                 publicreportQuickPreloader
 	PublicreportQuickImage            publicreportQuickImagePreloader
+	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
+	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
 	User                              userPreloader
 }
 
@@ -154,6 +156,8 @@ func getPreloaders() preloaders {
 		PublicreportPoolImage:             buildPublicreportPoolImagePreloader(),
 		PublicreportQuick:                 buildPublicreportQuickPreloader(),
 		PublicreportQuickImage:            buildPublicreportQuickImagePreloader(),
+		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
+		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
 		User:                              buildUserPreloader(),
 	}
 }
@@ -231,6 +235,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportPoolImage             publicreportPoolImageThenLoader[Q]
 	PublicreportQuick                 publicreportQuickThenLoader[Q]
 	PublicreportQuickImage            publicreportQuickImageThenLoader[Q]
+	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
+	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
 	User                              userThenLoader[Q]
 }
 
@@ -302,6 +308,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportPoolImage:             buildPublicreportPoolImageThenLoader[Q](),
 		PublicreportQuick:                 buildPublicreportQuickThenLoader[Q](),
 		PublicreportQuickImage:            buildPublicreportQuickImageThenLoader[Q](),
+		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
+		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}
 }

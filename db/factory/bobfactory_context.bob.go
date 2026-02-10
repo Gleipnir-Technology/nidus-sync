@@ -23,6 +23,7 @@ var (
 	commsEmailContactRelOrganizationsCtx                    = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
 	commsEmailContactRelEmailAddressNotifyEmailNuisancesCtx = newContextual[bool]("comms.email_contact.publicreport.notify_email_nuisance.publicreport.notify_email_nuisance.notify_email_nuisance_email_address_fkey")
 	commsEmailContactRelEmailAddressNotifyEmailPoolsCtx     = newContextual[bool]("comms.email_contact.publicreport.notify_email_pool.publicreport.notify_email_pool.notify_email_pool_email_address_fkey")
+	commsEmailContactRelEmailAddressSubscribeEmailsCtx      = newContextual[bool]("comms.email_contact.publicreport.subscribe_email.publicreport.subscribe_email.subscribe_email_email_address_fkey")
 
 	// Relationship Contexts for comms.email_log
 	commsEmailLogWithParentsCascadingCtx       = newContextual[bool]("commsEmailLogWithParentsCascading")
@@ -41,6 +42,7 @@ var (
 	commsPhoneRelOrganizationsCtx                 = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
 	commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx = newContextual[bool]("comms.phone.publicreport.notify_phone_nuisance.publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey")
 	commsPhoneRelPhoneE164NotifyPhonePoolsCtx     = newContextual[bool]("comms.phone.publicreport.notify_phone_pool.publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey")
+	commsPhoneRelPhoneE164SubscribePhonesCtx      = newContextual[bool]("comms.phone.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey")
 
 	// Relationship Contexts for comms.text_job
 	commsTextJobWithParentsCascadingCtx = newContextual[bool]("commsTextJobWithParentsCascading")
@@ -298,6 +300,8 @@ var (
 	organizationRelNuisancesCtx                 = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
 	organizationRelPublicreportPoolCtx          = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
 	organizationRelQuicksCtx                    = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
+	organizationRelDistrictSubscribeEmailsCtx   = newContextual[bool]("organization.publicreport.subscribe_email.publicreport.subscribe_email.subscribe_email_district_id_fkey")
+	organizationRelDistrictSubscribePhonesCtx   = newContextual[bool]("organization.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_district_id_fkey")
 	organizationRelUserCtx                      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
 	// Relationship Contexts for publicreport.image
@@ -367,6 +371,16 @@ var (
 
 	// Relationship Contexts for publicreport.report_location
 	publicreportReportLocationWithParentsCascadingCtx = newContextual[bool]("publicreportReportLocationWithParentsCascading")
+
+	// Relationship Contexts for publicreport.subscribe_email
+	publicreportSubscribeEmailWithParentsCascadingCtx        = newContextual[bool]("publicreportSubscribeEmailWithParentsCascading")
+	publicreportSubscribeEmailRelDistrictOrganizationCtx     = newContextual[bool]("organization.publicreport.subscribe_email.publicreport.subscribe_email.subscribe_email_district_id_fkey")
+	publicreportSubscribeEmailRelEmailAddressEmailContactCtx = newContextual[bool]("comms.email_contact.publicreport.subscribe_email.publicreport.subscribe_email.subscribe_email_email_address_fkey")
+
+	// Relationship Contexts for publicreport.subscribe_phone
+	publicreportSubscribePhoneWithParentsCascadingCtx    = newContextual[bool]("publicreportSubscribePhoneWithParentsCascading")
+	publicreportSubscribePhoneRelDistrictOrganizationCtx = newContextual[bool]("organization.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_district_id_fkey")
+	publicreportSubscribePhoneRelPhoneE164PhoneCtx       = newContextual[bool]("comms.phone.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey")
 
 	// Relationship Contexts for raster_columns
 	rasterColumnWithParentsCascadingCtx = newContextual[bool]("rasterColumnWithParentsCascading")

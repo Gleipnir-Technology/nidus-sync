@@ -94,6 +94,8 @@ type organizationR struct {
 	Nuisances                 PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool          PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
 	Quicks                    PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
+	DistrictSubscribeEmails   PublicreportSubscribeEmailSlice        // publicreport.subscribe_email.subscribe_email_district_id_fkey
+	DistrictSubscribePhones   PublicreportSubscribePhoneSlice        // publicreport.subscribe_phone.subscribe_phone_district_id_fkey
 	User                      UserSlice                              // user_.user__organization_id_fkey
 }
 
@@ -1518,6 +1520,54 @@ func (os OrganizationSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) Public
 
 	return PublicreportQuicks.Query(append(mods,
 		sm.Where(psql.Group(PublicreportQuicks.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// DistrictSubscribeEmails starts a query for related objects on publicreport.subscribe_email
+func (o *Organization) DistrictSubscribeEmails(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribeEmailsQuery {
+	return PublicreportSubscribeEmails.Query(append(mods,
+		sm.Where(PublicreportSubscribeEmails.Columns.DistrictID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) DistrictSubscribeEmails(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribeEmailsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportSubscribeEmails.Query(append(mods,
+		sm.Where(psql.Group(PublicreportSubscribeEmails.Columns.DistrictID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// DistrictSubscribePhones starts a query for related objects on publicreport.subscribe_phone
+func (o *Organization) DistrictSubscribePhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribePhonesQuery {
+	return PublicreportSubscribePhones.Query(append(mods,
+		sm.Where(PublicreportSubscribePhones.Columns.DistrictID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) DistrictSubscribePhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribePhonesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportSubscribePhones.Query(append(mods,
+		sm.Where(psql.Group(PublicreportSubscribePhones.Columns.DistrictID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -4171,6 +4221,142 @@ func (organization0 *Organization) AttachQuicks(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+func insertOrganizationDistrictSubscribeEmails0(ctx context.Context, exec bob.Executor, publicreportSubscribeEmails1 []*PublicreportSubscribeEmailSetter, organization0 *Organization) (PublicreportSubscribeEmailSlice, error) {
+	for i := range publicreportSubscribeEmails1 {
+		publicreportSubscribeEmails1[i].DistrictID = omit.From(organization0.ID)
+	}
+
+	ret, err := PublicreportSubscribeEmails.Insert(bob.ToMods(publicreportSubscribeEmails1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationDistrictSubscribeEmails0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationDistrictSubscribeEmails0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribeEmails1 PublicreportSubscribeEmailSlice, organization0 *Organization) (PublicreportSubscribeEmailSlice, error) {
+	setter := &PublicreportSubscribeEmailSetter{
+		DistrictID: omit.From(organization0.ID),
+	}
+
+	err := publicreportSubscribeEmails1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationDistrictSubscribeEmails0: %w", err)
+	}
+
+	return publicreportSubscribeEmails1, nil
+}
+
+func (organization0 *Organization) InsertDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribeEmailSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportSubscribeEmails1, err := insertOrganizationDistrictSubscribeEmails0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.DistrictSubscribeEmails = append(organization0.R.DistrictSubscribeEmails, publicreportSubscribeEmails1...)
+
+	for _, rel := range publicreportSubscribeEmails1 {
+		rel.R.DistrictOrganization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribeEmail) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportSubscribeEmails1 := PublicreportSubscribeEmailSlice(related)
+
+	_, err = attachOrganizationDistrictSubscribeEmails0(ctx, exec, len(related), publicreportSubscribeEmails1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.DistrictSubscribeEmails = append(organization0.R.DistrictSubscribeEmails, publicreportSubscribeEmails1...)
+
+	for _, rel := range related {
+		rel.R.DistrictOrganization = organization0
+	}
+
+	return nil
+}
+
+func insertOrganizationDistrictSubscribePhones0(ctx context.Context, exec bob.Executor, publicreportSubscribePhones1 []*PublicreportSubscribePhoneSetter, organization0 *Organization) (PublicreportSubscribePhoneSlice, error) {
+	for i := range publicreportSubscribePhones1 {
+		publicreportSubscribePhones1[i].DistrictID = omit.From(organization0.ID)
+	}
+
+	ret, err := PublicreportSubscribePhones.Insert(bob.ToMods(publicreportSubscribePhones1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationDistrictSubscribePhones0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationDistrictSubscribePhones0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribePhones1 PublicreportSubscribePhoneSlice, organization0 *Organization) (PublicreportSubscribePhoneSlice, error) {
+	setter := &PublicreportSubscribePhoneSetter{
+		DistrictID: omit.From(organization0.ID),
+	}
+
+	err := publicreportSubscribePhones1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationDistrictSubscribePhones0: %w", err)
+	}
+
+	return publicreportSubscribePhones1, nil
+}
+
+func (organization0 *Organization) InsertDistrictSubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhoneSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportSubscribePhones1, err := insertOrganizationDistrictSubscribePhones0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.DistrictSubscribePhones = append(organization0.R.DistrictSubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range publicreportSubscribePhones1 {
+		rel.R.DistrictOrganization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachDistrictSubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhone) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportSubscribePhones1 := PublicreportSubscribePhoneSlice(related)
+
+	_, err = attachOrganizationDistrictSubscribePhones0(ctx, exec, len(related), publicreportSubscribePhones1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.DistrictSubscribePhones = append(organization0.R.DistrictSubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range related {
+		rel.R.DistrictOrganization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationUser0(ctx context.Context, exec bob.Executor, users1 []*UserSetter, organization0 *Organization) (UserSlice, error) {
 	for i := range users1 {
 		users1[i].OrganizationID = omit.From(organization0.ID)
@@ -4819,6 +5005,34 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "DistrictSubscribeEmails":
+		rels, ok := retrieved.(PublicreportSubscribeEmailSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.DistrictSubscribeEmails = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.DistrictOrganization = o
+			}
+		}
+		return nil
+	case "DistrictSubscribePhones":
+		rels, ok := retrieved.(PublicreportSubscribePhoneSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.DistrictSubscribePhones = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.DistrictOrganization = o
+			}
+		}
+		return nil
 	case "User":
 		rels, ok := retrieved.(UserSlice)
 		if !ok {
@@ -4900,6 +5114,8 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	Nuisances                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DistrictSubscribeEmails   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DistrictSubscribePhones   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -5020,6 +5236,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type QuicksLoadInterface interface {
 		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type DistrictSubscribeEmailsLoadInterface interface {
+		LoadDistrictSubscribeEmails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type DistrictSubscribePhonesLoadInterface interface {
+		LoadDistrictSubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserLoadInterface interface {
 		LoadUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -5258,6 +5480,18 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"Quicks",
 			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadQuicks(ctx, exec, mods...)
+			},
+		),
+		DistrictSubscribeEmails: thenLoadBuilder[Q](
+			"DistrictSubscribeEmails",
+			func(ctx context.Context, exec bob.Executor, retrieved DistrictSubscribeEmailsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadDistrictSubscribeEmails(ctx, exec, mods...)
+			},
+		),
+		DistrictSubscribePhones: thenLoadBuilder[Q](
+			"DistrictSubscribePhones",
+			func(ctx context.Context, exec bob.Executor, retrieved DistrictSubscribePhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadDistrictSubscribePhones(ctx, exec, mods...)
 			},
 		),
 		User: thenLoadBuilder[Q](
@@ -7691,6 +7925,128 @@ func (os OrganizationSlice) LoadQuicks(ctx context.Context, exec bob.Executor, m
 	return nil
 }
 
+// LoadDistrictSubscribeEmails loads the organization's DistrictSubscribeEmails into the .R struct
+func (o *Organization) LoadDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.DistrictSubscribeEmails = nil
+
+	related, err := o.DistrictSubscribeEmails(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.DistrictOrganization = o
+	}
+
+	o.R.DistrictSubscribeEmails = related
+	return nil
+}
+
+// LoadDistrictSubscribeEmails loads the organization's DistrictSubscribeEmails into the .R struct
+func (os OrganizationSlice) LoadDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportSubscribeEmails, err := os.DistrictSubscribeEmails(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.DistrictSubscribeEmails = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportSubscribeEmails {
+
+			if !(o.ID == rel.DistrictID) {
+				continue
+			}
+
+			rel.R.DistrictOrganization = o
+
+			o.R.DistrictSubscribeEmails = append(o.R.DistrictSubscribeEmails, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadDistrictSubscribePhones loads the organization's DistrictSubscribePhones into the .R struct
+func (o *Organization) LoadDistrictSubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.DistrictSubscribePhones = nil
+
+	related, err := o.DistrictSubscribePhones(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.DistrictOrganization = o
+	}
+
+	o.R.DistrictSubscribePhones = related
+	return nil
+}
+
+// LoadDistrictSubscribePhones loads the organization's DistrictSubscribePhones into the .R struct
+func (os OrganizationSlice) LoadDistrictSubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportSubscribePhones, err := os.DistrictSubscribePhones(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.DistrictSubscribePhones = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportSubscribePhones {
+
+			if !(o.ID == rel.DistrictID) {
+				continue
+			}
+
+			rel.R.DistrictOrganization = o
+
+			o.R.DistrictSubscribePhones = append(o.R.DistrictSubscribePhones, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadUser loads the organization's User into the .R struct
 func (o *Organization) LoadUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -7792,6 +8148,8 @@ type organizationC struct {
 	Nuisances               *int64
 	PublicreportPool        *int64
 	Quicks                  *int64
+	DistrictSubscribeEmails *int64
+	DistrictSubscribePhones *int64
 	User                    *int64
 }
 
@@ -7878,6 +8236,10 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.PublicreportPool = &count
 	case "Quicks":
 		o.C.Quicks = &count
+	case "DistrictSubscribeEmails":
+		o.C.DistrictSubscribeEmails = &count
+	case "DistrictSubscribePhones":
+		o.C.DistrictSubscribePhones = &count
 	case "User":
 		o.C.User = &count
 	}
@@ -7923,6 +8285,8 @@ type organizationCountPreloader struct {
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DistrictSubscribeEmails func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DistrictSubscribePhones func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	User                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
@@ -8580,6 +8944,40 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		DistrictSubscribeEmails: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("DistrictSubscribeEmails", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportSubscribeEmails.Name()),
+					sm.Where(psql.Quote(PublicreportSubscribeEmails.Alias(), "district_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		DistrictSubscribePhones: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("DistrictSubscribePhones", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportSubscribePhones.Name()),
+					sm.Where(psql.Quote(PublicreportSubscribePhones.Alias(), "district_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		User: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("User", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -8639,6 +9037,8 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DistrictSubscribeEmails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DistrictSubscribePhones func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -8756,6 +9156,12 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type QuicksCountInterface interface {
 		LoadCountQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type DistrictSubscribeEmailsCountInterface interface {
+		LoadCountDistrictSubscribeEmails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type DistrictSubscribePhonesCountInterface interface {
+		LoadCountDistrictSubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserCountInterface interface {
 		LoadCountUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -8988,6 +9394,18 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"Quicks",
 			func(ctx context.Context, exec bob.Executor, retrieved QuicksCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountQuicks(ctx, exec, mods...)
+			},
+		),
+		DistrictSubscribeEmails: countThenLoadBuilder[Q](
+			"DistrictSubscribeEmails",
+			func(ctx context.Context, exec bob.Executor, retrieved DistrictSubscribeEmailsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountDistrictSubscribeEmails(ctx, exec, mods...)
+			},
+		),
+		DistrictSubscribePhones: countThenLoadBuilder[Q](
+			"DistrictSubscribePhones",
+			func(ctx context.Context, exec bob.Executor, retrieved DistrictSubscribePhonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountDistrictSubscribePhones(ctx, exec, mods...)
 			},
 		),
 		User: countThenLoadBuilder[Q](
@@ -10139,6 +10557,66 @@ func (os OrganizationSlice) LoadCountQuicks(ctx context.Context, exec bob.Execut
 	return nil
 }
 
+// LoadCountDistrictSubscribeEmails loads the count of DistrictSubscribeEmails into the C struct
+func (o *Organization) LoadCountDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.DistrictSubscribeEmails(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.DistrictSubscribeEmails = &count
+	return nil
+}
+
+// LoadCountDistrictSubscribeEmails loads the count of DistrictSubscribeEmails for a slice
+func (os OrganizationSlice) LoadCountDistrictSubscribeEmails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountDistrictSubscribeEmails(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountDistrictSubscribePhones loads the count of DistrictSubscribePhones into the C struct
+func (o *Organization) LoadCountDistrictSubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.DistrictSubscribePhones(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.DistrictSubscribePhones = &count
+	return nil
+}
+
+// LoadCountDistrictSubscribePhones loads the count of DistrictSubscribePhones for a slice
+func (os OrganizationSlice) LoadCountDistrictSubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountDistrictSubscribePhones(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountUser loads the count of User into the C struct
 func (o *Organization) LoadCountUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -10210,6 +10688,8 @@ type organizationJoins[Q dialect.Joinable] struct {
 	Nuisances                 modAs[Q, publicreportNuisanceColumns]
 	PublicreportPool          modAs[Q, publicreportPoolColumns]
 	Quicks                    modAs[Q, publicreportQuickColumns]
+	DistrictSubscribeEmails   modAs[Q, publicreportSubscribeEmailColumns]
+	DistrictSubscribePhones   modAs[Q, publicreportSubscribePhoneColumns]
 	User                      modAs[Q, userColumns]
 }
 
@@ -10776,6 +11256,34 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 				{
 					mods = append(mods, dialect.Join[Q](typ, PublicreportQuicks.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		DistrictSubscribeEmails: modAs[Q, publicreportSubscribeEmailColumns]{
+			c: PublicreportSubscribeEmails.Columns,
+			f: func(to publicreportSubscribeEmailColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportSubscribeEmails.Name().As(to.Alias())).On(
+						to.DistrictID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		DistrictSubscribePhones: modAs[Q, publicreportSubscribePhoneColumns]{
+			c: PublicreportSubscribePhones.Columns,
+			f: func(to publicreportSubscribePhoneColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportSubscribePhones.Name().As(to.Alias())).On(
+						to.DistrictID.EQ(cols.ID),
 					))
 				}
 

@@ -52,6 +52,7 @@ type commsPhoneR struct {
 	Organizations                 []*commsPhoneROrganizationsR
 	PhoneE164NotifyPhoneNuisances []*commsPhoneRPhoneE164NotifyPhoneNuisancesR
 	PhoneE164NotifyPhonePools     []*commsPhoneRPhoneE164NotifyPhonePoolsR
+	PhoneE164SubscribePhones      []*commsPhoneRPhoneE164SubscribePhonesR
 }
 
 type commsPhoneRDestinationTextJobsR struct {
@@ -77,6 +78,10 @@ type commsPhoneRPhoneE164NotifyPhoneNuisancesR struct {
 type commsPhoneRPhoneE164NotifyPhonePoolsR struct {
 	number int
 	o      *PublicreportNotifyPhonePoolTemplate
+}
+type commsPhoneRPhoneE164SubscribePhonesR struct {
+	number int
+	o      *PublicreportSubscribePhoneTemplate
 }
 
 // Apply mods to the CommsPhoneTemplate
@@ -164,6 +169,19 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			rel = append(rel, related...)
 		}
 		o.R.PhoneE164NotifyPhonePools = rel
+	}
+
+	if t.r.PhoneE164SubscribePhones != nil {
+		rel := models.PublicreportSubscribePhoneSlice{}
+		for _, r := range t.r.PhoneE164SubscribePhones {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PhoneE164 = o.E164 // h2
+				rel.R.PhoneE164Phone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PhoneE164SubscribePhones = rel
 	}
 }
 
@@ -368,6 +386,26 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 				}
 
 				err = m.AttachPhoneE164NotifyPhonePools(ctx, exec, rel5...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPhoneE164SubscribePhonesDone, _ := commsPhoneRelPhoneE164SubscribePhonesCtx.Value(ctx)
+	if !isPhoneE164SubscribePhonesDone && o.r.PhoneE164SubscribePhones != nil {
+		ctx = commsPhoneRelPhoneE164SubscribePhonesCtx.WithValue(ctx, true)
+		for _, r := range o.r.PhoneE164SubscribePhones {
+			if r.o.alreadyPersisted {
+				m.R.PhoneE164SubscribePhones = append(m.R.PhoneE164SubscribePhones, r.o.Build())
+			} else {
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPhoneE164SubscribePhones(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -860,5 +898,53 @@ func (m commsPhoneMods) AddExistingPhoneE164NotifyPhonePools(existingModels ...*
 func (m commsPhoneMods) WithoutPhoneE164NotifyPhonePools() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		o.r.PhoneE164NotifyPhonePools = nil
+	})
+}
+
+func (m commsPhoneMods) WithPhoneE164SubscribePhones(number int, related *PublicreportSubscribePhoneTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164SubscribePhones = []*commsPhoneRPhoneE164SubscribePhonesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewPhoneE164SubscribePhones(number int, mods ...PublicreportSubscribePhoneMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportSubscribePhoneWithContext(ctx, mods...)
+		m.WithPhoneE164SubscribePhones(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddPhoneE164SubscribePhones(number int, related *PublicreportSubscribePhoneTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164SubscribePhones = append(o.r.PhoneE164SubscribePhones, &commsPhoneRPhoneE164SubscribePhonesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewPhoneE164SubscribePhones(number int, mods ...PublicreportSubscribePhoneMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewPublicreportSubscribePhoneWithContext(ctx, mods...)
+		m.AddPhoneE164SubscribePhones(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingPhoneE164SubscribePhones(existingModels ...*models.PublicreportSubscribePhone) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.PhoneE164SubscribePhones = append(o.r.PhoneE164SubscribePhones, &commsPhoneRPhoneE164SubscribePhonesR{
+				o: o.f.FromExistingPublicreportSubscribePhone(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutPhoneE164SubscribePhones() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneE164SubscribePhones = nil
 	})
 }

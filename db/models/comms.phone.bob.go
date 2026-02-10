@@ -53,6 +53,7 @@ type commsPhoneR struct {
 	Organizations                 OrganizationSlice                    // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
 	PhoneE164NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey
 	PhoneE164NotifyPhonePools     PublicreportNotifyPhonePoolSlice     // publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey
+	PhoneE164SubscribePhones      PublicreportSubscribePhoneSlice      // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
 }
 
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
@@ -550,6 +551,30 @@ func (os CommsPhoneSlice) PhoneE164NotifyPhonePools(mods ...bob.Mod[*dialect.Sel
 	)...)
 }
 
+// PhoneE164SubscribePhones starts a query for related objects on publicreport.subscribe_phone
+func (o *CommsPhone) PhoneE164SubscribePhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribePhonesQuery {
+	return PublicreportSubscribePhones.Query(append(mods,
+		sm.Where(PublicreportSubscribePhones.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) PhoneE164SubscribePhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportSubscribePhonesQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return PublicreportSubscribePhones.Query(append(mods,
+		sm.Where(psql.Group(PublicreportSubscribePhones.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertCommsPhoneDestinationTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, commsPhone0 *CommsPhone) (CommsTextJobSlice, error) {
 	for i := range commsTextJobs1 {
 		commsTextJobs1[i].Destination = omit.From(commsPhone0.E164)
@@ -955,6 +980,74 @@ func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhonePools(ctx context.Conte
 	return nil
 }
 
+func insertCommsPhonePhoneE164SubscribePhones0(ctx context.Context, exec bob.Executor, publicreportSubscribePhones1 []*PublicreportSubscribePhoneSetter, commsPhone0 *CommsPhone) (PublicreportSubscribePhoneSlice, error) {
+	for i := range publicreportSubscribePhones1 {
+		publicreportSubscribePhones1[i].PhoneE164 = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := PublicreportSubscribePhones.Insert(bob.ToMods(publicreportSubscribePhones1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164SubscribePhones0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneE164SubscribePhones0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribePhones1 PublicreportSubscribePhoneSlice, commsPhone0 *CommsPhone) (PublicreportSubscribePhoneSlice, error) {
+	setter := &PublicreportSubscribePhoneSetter{
+		PhoneE164: omit.From(commsPhone0.E164),
+	}
+
+	err := publicreportSubscribePhones1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164SubscribePhones0: %w", err)
+	}
+
+	return publicreportSubscribePhones1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhoneSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportSubscribePhones1, err := insertCommsPhonePhoneE164SubscribePhones0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164SubscribePhones = append(commsPhone0.R.PhoneE164SubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range publicreportSubscribePhones1 {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, related ...*PublicreportSubscribePhone) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportSubscribePhones1 := PublicreportSubscribePhoneSlice(related)
+
+	_, err = attachCommsPhonePhoneE164SubscribePhones0(ctx, exec, len(related), publicreportSubscribePhones1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164SubscribePhones = append(commsPhone0.R.PhoneE164SubscribePhones, publicreportSubscribePhones1...)
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+
+	return nil
+}
+
 type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
 	IsSubscribed psql.WhereMod[Q, bool]
@@ -1063,6 +1156,20 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "PhoneE164SubscribePhones":
+		rels, ok := retrieved.(PublicreportSubscribePhoneSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PhoneE164SubscribePhones = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.PhoneE164Phone = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("commsPhone has no relationship %q", name)
 	}
@@ -1081,6 +1188,7 @@ type commsPhoneThenLoader[Q orm.Loadable] struct {
 	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
@@ -1101,6 +1209,9 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	}
 	type PhoneE164NotifyPhonePoolsLoadInterface interface {
 		LoadPhoneE164NotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164SubscribePhonesLoadInterface interface {
+		LoadPhoneE164SubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneThenLoader[Q]{
@@ -1138,6 +1249,12 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 			"PhoneE164NotifyPhonePools",
 			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhonePoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPhoneE164NotifyPhonePools(ctx, exec, mods...)
+			},
+		),
+		PhoneE164SubscribePhones: thenLoadBuilder[Q](
+			"PhoneE164SubscribePhones",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164SubscribePhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164SubscribePhones(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1529,6 +1646,67 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhonePools(ctx context.Context, exe
 	return nil
 }
 
+// LoadPhoneE164SubscribePhones loads the commsPhone's PhoneE164SubscribePhones into the .R struct
+func (o *CommsPhone) LoadPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PhoneE164SubscribePhones = nil
+
+	related, err := o.PhoneE164SubscribePhones(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = o
+	}
+
+	o.R.PhoneE164SubscribePhones = related
+	return nil
+}
+
+// LoadPhoneE164SubscribePhones loads the commsPhone's PhoneE164SubscribePhones into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportSubscribePhones, err := os.PhoneE164SubscribePhones(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PhoneE164SubscribePhones = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportSubscribePhones {
+
+			if !(o.E164 == rel.PhoneE164) {
+				continue
+			}
+
+			rel.R.PhoneE164Phone = o
+
+			o.R.PhoneE164SubscribePhones = append(o.R.PhoneE164SubscribePhones, rel)
+		}
+	}
+
+	return nil
+}
+
 // commsPhoneC is where relationship counts are stored.
 type commsPhoneC struct {
 	DestinationTextJobs           *int64
@@ -1537,6 +1715,7 @@ type commsPhoneC struct {
 	Organizations                 *int64
 	PhoneE164NotifyPhoneNuisances *int64
 	PhoneE164NotifyPhonePools     *int64
+	PhoneE164SubscribePhones      *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1558,6 +1737,8 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 		o.C.PhoneE164NotifyPhoneNuisances = &count
 	case "PhoneE164NotifyPhonePools":
 		o.C.PhoneE164NotifyPhonePools = &count
+	case "PhoneE164SubscribePhones":
+		o.C.PhoneE164SubscribePhones = &count
 	}
 	return nil
 }
@@ -1569,6 +1750,7 @@ type commsPhoneCountPreloader struct {
 	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
@@ -1678,6 +1860,23 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		PhoneE164SubscribePhones: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("PhoneE164SubscribePhones", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsPhones.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(PublicreportSubscribePhones.Name()),
+					sm.Where(psql.Quote(PublicreportSubscribePhones.Alias(), "phone_e164").EQ(psql.Quote(parent, "e164"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
@@ -1688,6 +1887,7 @@ type commsPhoneCountThenLoader[Q orm.Loadable] struct {
 	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[Q] {
@@ -1708,6 +1908,9 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 	}
 	type PhoneE164NotifyPhonePoolsCountInterface interface {
 		LoadCountPhoneE164NotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164SubscribePhonesCountInterface interface {
+		LoadCountPhoneE164SubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneCountThenLoader[Q]{
@@ -1745,6 +1948,12 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 			"PhoneE164NotifyPhonePools",
 			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhonePoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountPhoneE164NotifyPhonePools(ctx, exec, mods...)
+			},
+		),
+		PhoneE164SubscribePhones: countThenLoadBuilder[Q](
+			"PhoneE164SubscribePhones",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164SubscribePhonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPhoneE164SubscribePhones(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1930,6 +2139,36 @@ func (os CommsPhoneSlice) LoadCountPhoneE164NotifyPhonePools(ctx context.Context
 	return nil
 }
 
+// LoadCountPhoneE164SubscribePhones loads the count of PhoneE164SubscribePhones into the C struct
+func (o *CommsPhone) LoadCountPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.PhoneE164SubscribePhones(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.PhoneE164SubscribePhones = &count
+	return nil
+}
+
+// LoadCountPhoneE164SubscribePhones loads the count of PhoneE164SubscribePhones for a slice
+func (os CommsPhoneSlice) LoadCountPhoneE164SubscribePhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPhoneE164SubscribePhones(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type commsPhoneJoins[Q dialect.Joinable] struct {
 	typ                           string
 	DestinationTextJobs           modAs[Q, commsTextJobColumns]
@@ -1938,6 +2177,7 @@ type commsPhoneJoins[Q dialect.Joinable] struct {
 	Organizations                 modAs[Q, organizationColumns]
 	PhoneE164NotifyPhoneNuisances modAs[Q, publicreportNotifyPhoneNuisanceColumns]
 	PhoneE164NotifyPhonePools     modAs[Q, publicreportNotifyPhonePoolColumns]
+	PhoneE164SubscribePhones      modAs[Q, publicreportSubscribePhoneColumns]
 }
 
 func (j commsPhoneJoins[Q]) aliasedAs(alias string) commsPhoneJoins[Q] {
@@ -2032,6 +2272,20 @@ func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, PublicreportNotifyPhonePools.Name().As(to.Alias())).On(
+						to.PhoneE164.EQ(cols.E164),
+					))
+				}
+
+				return mods
+			},
+		},
+		PhoneE164SubscribePhones: modAs[Q, publicreportSubscribePhoneColumns]{
+			c: PublicreportSubscribePhones.Columns,
+			f: func(to publicreportSubscribePhoneColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, PublicreportSubscribePhones.Name().As(to.Alias())).On(
 						to.PhoneE164.EQ(cols.E164),
 					))
 				}

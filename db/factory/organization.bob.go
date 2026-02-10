@@ -93,6 +93,8 @@ type organizationR struct {
 	Nuisances                 []*organizationRNuisancesR
 	PublicreportPool          []*organizationRPublicreportPoolR
 	Quicks                    []*organizationRQuicksR
+	DistrictSubscribeEmails   []*organizationRDistrictSubscribeEmailsR
+	DistrictSubscribePhones   []*organizationRDistrictSubscribePhonesR
 	User                      []*organizationRUserR
 }
 
@@ -250,6 +252,14 @@ type organizationRPublicreportPoolR struct {
 type organizationRQuicksR struct {
 	number int
 	o      *PublicreportQuickTemplate
+}
+type organizationRDistrictSubscribeEmailsR struct {
+	number int
+	o      *PublicreportSubscribeEmailTemplate
+}
+type organizationRDistrictSubscribePhonesR struct {
+	number int
+	o      *PublicreportSubscribePhoneTemplate
 }
 type organizationRUserR struct {
 	number int
@@ -763,6 +773,32 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			rel = append(rel, related...)
 		}
 		o.R.Quicks = rel
+	}
+
+	if t.r.DistrictSubscribeEmails != nil {
+		rel := models.PublicreportSubscribeEmailSlice{}
+		for _, r := range t.r.DistrictSubscribeEmails {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.DistrictID = o.ID // h2
+				rel.R.DistrictOrganization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.DistrictSubscribeEmails = rel
+	}
+
+	if t.r.DistrictSubscribePhones != nil {
+		rel := models.PublicreportSubscribePhoneSlice{}
+		for _, r := range t.r.DistrictSubscribePhones {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.DistrictID = o.ID // h2
+				rel.R.DistrictOrganization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.DistrictSubscribePhones = rel
 	}
 
 	if t.r.User != nil {
@@ -1680,6 +1716,46 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isDistrictSubscribeEmailsDone, _ := organizationRelDistrictSubscribeEmailsCtx.Value(ctx)
+	if !isDistrictSubscribeEmailsDone && o.r.DistrictSubscribeEmails != nil {
+		ctx = organizationRelDistrictSubscribeEmailsCtx.WithValue(ctx, true)
+		for _, r := range o.r.DistrictSubscribeEmails {
+			if r.o.alreadyPersisted {
+				m.R.DistrictSubscribeEmails = append(m.R.DistrictSubscribeEmails, r.o.Build())
+			} else {
+				rel39, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachDistrictSubscribeEmails(ctx, exec, rel39...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isDistrictSubscribePhonesDone, _ := organizationRelDistrictSubscribePhonesCtx.Value(ctx)
+	if !isDistrictSubscribePhonesDone && o.r.DistrictSubscribePhones != nil {
+		ctx = organizationRelDistrictSubscribePhonesCtx.WithValue(ctx, true)
+		for _, r := range o.r.DistrictSubscribePhones {
+			if r.o.alreadyPersisted {
+				m.R.DistrictSubscribePhones = append(m.R.DistrictSubscribePhones, r.o.Build())
+			} else {
+				rel40, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachDistrictSubscribePhones(ctx, exec, rel40...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isUserDone, _ := organizationRelUserCtx.Value(ctx)
 	if !isUserDone && o.r.User != nil {
 		ctx = organizationRelUserCtx.WithValue(ctx, true)
@@ -1687,12 +1763,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel39, err := r.o.CreateMany(ctx, exec, r.number)
+				rel41, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel39...)
+				err = m.AttachUser(ctx, exec, rel41...)
 				if err != nil {
 					return err
 				}
@@ -4102,6 +4178,102 @@ func (m organizationMods) AddExistingQuicks(existingModels ...*models.Publicrepo
 func (m organizationMods) WithoutQuicks() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.Quicks = nil
+	})
+}
+
+func (m organizationMods) WithDistrictSubscribeEmails(number int, related *PublicreportSubscribeEmailTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribeEmails = []*organizationRDistrictSubscribeEmailsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewDistrictSubscribeEmails(number int, mods ...PublicreportSubscribeEmailMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportSubscribeEmailWithContext(ctx, mods...)
+		m.WithDistrictSubscribeEmails(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddDistrictSubscribeEmails(number int, related *PublicreportSubscribeEmailTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribeEmails = append(o.r.DistrictSubscribeEmails, &organizationRDistrictSubscribeEmailsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewDistrictSubscribeEmails(number int, mods ...PublicreportSubscribeEmailMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportSubscribeEmailWithContext(ctx, mods...)
+		m.AddDistrictSubscribeEmails(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingDistrictSubscribeEmails(existingModels ...*models.PublicreportSubscribeEmail) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.DistrictSubscribeEmails = append(o.r.DistrictSubscribeEmails, &organizationRDistrictSubscribeEmailsR{
+				o: o.f.FromExistingPublicreportSubscribeEmail(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutDistrictSubscribeEmails() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribeEmails = nil
+	})
+}
+
+func (m organizationMods) WithDistrictSubscribePhones(number int, related *PublicreportSubscribePhoneTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribePhones = []*organizationRDistrictSubscribePhonesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewDistrictSubscribePhones(number int, mods ...PublicreportSubscribePhoneMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportSubscribePhoneWithContext(ctx, mods...)
+		m.WithDistrictSubscribePhones(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddDistrictSubscribePhones(number int, related *PublicreportSubscribePhoneTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribePhones = append(o.r.DistrictSubscribePhones, &organizationRDistrictSubscribePhonesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewDistrictSubscribePhones(number int, mods ...PublicreportSubscribePhoneMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewPublicreportSubscribePhoneWithContext(ctx, mods...)
+		m.AddDistrictSubscribePhones(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingDistrictSubscribePhones(existingModels ...*models.PublicreportSubscribePhone) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.DistrictSubscribePhones = append(o.r.DistrictSubscribePhones, &organizationRDistrictSubscribePhonesR{
+				o: o.f.FromExistingPublicreportSubscribePhone(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutDistrictSubscribePhones() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.DistrictSubscribePhones = nil
 	})
 }
 

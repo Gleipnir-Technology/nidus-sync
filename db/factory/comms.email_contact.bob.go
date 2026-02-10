@@ -50,6 +50,7 @@ type commsEmailContactR struct {
 	Organizations                    []*commsEmailContactROrganizationsR
 	EmailAddressNotifyEmailNuisances []*commsEmailContactREmailAddressNotifyEmailNuisancesR
 	EmailAddressNotifyEmailPools     []*commsEmailContactREmailAddressNotifyEmailPoolsR
+	EmailAddressSubscribeEmails      []*commsEmailContactREmailAddressSubscribeEmailsR
 }
 
 type commsEmailContactRDestinationEmailLogsR struct {
@@ -67,6 +68,10 @@ type commsEmailContactREmailAddressNotifyEmailNuisancesR struct {
 type commsEmailContactREmailAddressNotifyEmailPoolsR struct {
 	number int
 	o      *PublicreportNotifyEmailPoolTemplate
+}
+type commsEmailContactREmailAddressSubscribeEmailsR struct {
+	number int
+	o      *PublicreportSubscribeEmailTemplate
 }
 
 // Apply mods to the CommsEmailContactTemplate
@@ -128,6 +133,19 @@ func (t CommsEmailContactTemplate) setModelRels(o *models.CommsEmailContact) {
 			rel = append(rel, related...)
 		}
 		o.R.EmailAddressNotifyEmailPools = rel
+	}
+
+	if t.r.EmailAddressSubscribeEmails != nil {
+		rel := models.PublicreportSubscribeEmailSlice{}
+		for _, r := range t.r.EmailAddressSubscribeEmails {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.EmailAddress = o.Address // h2
+				rel.R.EmailAddressEmailContact = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.EmailAddressSubscribeEmails = rel
 	}
 }
 
@@ -303,6 +321,26 @@ func (o *CommsEmailContactTemplate) insertOptRels(ctx context.Context, exec bob.
 				}
 
 				err = m.AttachEmailAddressNotifyEmailPools(ctx, exec, rel3...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isEmailAddressSubscribeEmailsDone, _ := commsEmailContactRelEmailAddressSubscribeEmailsCtx.Value(ctx)
+	if !isEmailAddressSubscribeEmailsDone && o.r.EmailAddressSubscribeEmails != nil {
+		ctx = commsEmailContactRelEmailAddressSubscribeEmailsCtx.WithValue(ctx, true)
+		for _, r := range o.r.EmailAddressSubscribeEmails {
+			if r.o.alreadyPersisted {
+				m.R.EmailAddressSubscribeEmails = append(m.R.EmailAddressSubscribeEmails, r.o.Build())
+			} else {
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachEmailAddressSubscribeEmails(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -731,5 +769,53 @@ func (m commsEmailContactMods) AddExistingEmailAddressNotifyEmailPools(existingM
 func (m commsEmailContactMods) WithoutEmailAddressNotifyEmailPools() CommsEmailContactMod {
 	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
 		o.r.EmailAddressNotifyEmailPools = nil
+	})
+}
+
+func (m commsEmailContactMods) WithEmailAddressSubscribeEmails(number int, related *PublicreportSubscribeEmailTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressSubscribeEmails = []*commsEmailContactREmailAddressSubscribeEmailsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsEmailContactMods) WithNewEmailAddressSubscribeEmails(number int, mods ...PublicreportSubscribeEmailMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportSubscribeEmailWithContext(ctx, mods...)
+		m.WithEmailAddressSubscribeEmails(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddEmailAddressSubscribeEmails(number int, related *PublicreportSubscribeEmailTemplate) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressSubscribeEmails = append(o.r.EmailAddressSubscribeEmails, &commsEmailContactREmailAddressSubscribeEmailsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsEmailContactMods) AddNewEmailAddressSubscribeEmails(number int, mods ...PublicreportSubscribeEmailMod) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		related := o.f.NewPublicreportSubscribeEmailWithContext(ctx, mods...)
+		m.AddEmailAddressSubscribeEmails(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsEmailContactMods) AddExistingEmailAddressSubscribeEmails(existingModels ...*models.PublicreportSubscribeEmail) CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		for _, em := range existingModels {
+			o.r.EmailAddressSubscribeEmails = append(o.r.EmailAddressSubscribeEmails, &commsEmailContactREmailAddressSubscribeEmailsR{
+				o: o.f.FromExistingPublicreportSubscribeEmail(em),
+			})
+		}
+	})
+}
+
+func (m commsEmailContactMods) WithoutEmailAddressSubscribeEmails() CommsEmailContactMod {
+	return CommsEmailContactModFunc(func(ctx context.Context, o *CommsEmailContactTemplate) {
+		o.r.EmailAddressSubscribeEmails = nil
 	})
 }

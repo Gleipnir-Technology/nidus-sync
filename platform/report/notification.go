@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	//"time"
+	"time"
 
-	//"github.com/aarondl/opt/omit"
-	//"github.com/aarondl/opt/omitnull"
 	"github.com/Gleipnir-Technology/bob"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql/um"
@@ -100,12 +100,41 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string
 	return nil
 }
 
-func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
-	log.Warn().Str("email", email).Msg("RegisterSubscription not implemented yet")
+func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, destination string) *ErrorWithCode {
+	e := email.EnsureInDB(ctx, destination)
+	if e != nil {
+		return newInternalError(e, "Failed to ensure email is in DB")
+	}
+	setter := models.PublicreportSubscribeEmailSetter{
+		Created: omit.From(time.Now()),
+		Deleted: omitnull.FromPtr[time.Time](nil),
+		//DistrictID:   omit.FromPtr[int32](nil),
+		EmailAddress: omit.From(destination),
+	}
+	_, err := models.PublicreportSubscribeEmails.Insert(&setter).Exec(ctx, txn)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to save new subscription email row")
+		return newInternalError(err, "Failed to save new subscription email row")
+	}
+
 	return nil
 }
 func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
-	log.Warn().Str("phone", text.PhoneString(phone)).Msg("RegisterSubscription not implemented yet")
+	e := text.EnsureInDB(ctx, phone)
+	if e != nil {
+		return newInternalError(e, "Failed to ensure phone is in DB")
+	}
+	setter := models.PublicreportSubscribePhoneSetter{
+		Created: omit.From(time.Now()),
+		Deleted: omitnull.FromPtr[time.Time](nil),
+		//DistrictID:   omitnull.FromPtr[int32](nil),
+		PhoneE164: omit.From(text.PhoneString(phone)),
+	}
+	_, err := models.PublicreportSubscribePhones.Insert(&setter).Exec(ctx, txn)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to save new subscription phone row")
+		return newInternalError(err, "Failed to save new subscription phone row")
+	}
 	return nil
 }
 

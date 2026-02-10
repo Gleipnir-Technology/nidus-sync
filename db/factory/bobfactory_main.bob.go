@@ -89,6 +89,8 @@ type Factory struct {
 	basePublicreportQuickMods                 PublicreportQuickModSlice
 	basePublicreportQuickImageMods            PublicreportQuickImageModSlice
 	basePublicreportReportLocationMods        PublicreportReportLocationModSlice
+	basePublicreportSubscribeEmailMods        PublicreportSubscribeEmailModSlice
+	basePublicreportSubscribePhoneMods        PublicreportSubscribePhoneModSlice
 	baseRasterColumnMods                      RasterColumnModSlice
 	baseRasterOverviewMods                    RasterOverviewModSlice
 	baseSessionMods                           SessionModSlice
@@ -211,6 +213,9 @@ func (f *Factory) FromExistingCommsEmailContact(m *models.CommsEmailContact) *Co
 	}
 	if len(m.R.EmailAddressNotifyEmailPools) > 0 {
 		CommsEmailContactMods.AddExistingEmailAddressNotifyEmailPools(m.R.EmailAddressNotifyEmailPools...).Apply(ctx, o)
+	}
+	if len(m.R.EmailAddressSubscribeEmails) > 0 {
+		CommsEmailContactMods.AddExistingEmailAddressSubscribeEmails(m.R.EmailAddressSubscribeEmails...).Apply(ctx, o)
 	}
 
 	return o
@@ -335,6 +340,9 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	}
 	if len(m.R.PhoneE164NotifyPhonePools) > 0 {
 		CommsPhoneMods.AddExistingPhoneE164NotifyPhonePools(m.R.PhoneE164NotifyPhonePools...).Apply(ctx, o)
+	}
+	if len(m.R.PhoneE164SubscribePhones) > 0 {
+		CommsPhoneMods.AddExistingPhoneE164SubscribePhones(m.R.PhoneE164SubscribePhones...).Apply(ctx, o)
 	}
 
 	return o
@@ -3060,6 +3068,12 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if len(m.R.Quicks) > 0 {
 		OrganizationMods.AddExistingQuicks(m.R.Quicks...).Apply(ctx, o)
 	}
+	if len(m.R.DistrictSubscribeEmails) > 0 {
+		OrganizationMods.AddExistingDistrictSubscribeEmails(m.R.DistrictSubscribeEmails...).Apply(ctx, o)
+	}
+	if len(m.R.DistrictSubscribePhones) > 0 {
+		OrganizationMods.AddExistingDistrictSubscribePhones(m.R.DistrictSubscribePhones...).Apply(ctx, o)
+	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
 	}
@@ -3594,6 +3608,76 @@ func (f *Factory) FromExistingPublicreportReportLocation(m *models.PublicreportR
 	o.Location = func() null.Val[string] { return m.Location }
 	o.PublicID = func() null.Val[string] { return m.PublicID }
 	o.Status = func() null.Val[enums.PublicreportReportstatustype] { return m.Status }
+
+	return o
+}
+
+func (f *Factory) NewPublicreportSubscribeEmail(mods ...PublicreportSubscribeEmailMod) *PublicreportSubscribeEmailTemplate {
+	return f.NewPublicreportSubscribeEmailWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportSubscribeEmailWithContext(ctx context.Context, mods ...PublicreportSubscribeEmailMod) *PublicreportSubscribeEmailTemplate {
+	o := &PublicreportSubscribeEmailTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportSubscribeEmailMods.Apply(ctx, o)
+	}
+
+	PublicreportSubscribeEmailModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportSubscribeEmail(m *models.PublicreportSubscribeEmail) *PublicreportSubscribeEmailTemplate {
+	o := &PublicreportSubscribeEmailTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.DistrictID = func() int32 { return m.DistrictID }
+	o.EmailAddress = func() string { return m.EmailAddress }
+
+	ctx := context.Background()
+	if m.R.DistrictOrganization != nil {
+		PublicreportSubscribeEmailMods.WithExistingDistrictOrganization(m.R.DistrictOrganization).Apply(ctx, o)
+	}
+	if m.R.EmailAddressEmailContact != nil {
+		PublicreportSubscribeEmailMods.WithExistingEmailAddressEmailContact(m.R.EmailAddressEmailContact).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewPublicreportSubscribePhone(mods ...PublicreportSubscribePhoneMod) *PublicreportSubscribePhoneTemplate {
+	return f.NewPublicreportSubscribePhoneWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPublicreportSubscribePhoneWithContext(ctx context.Context, mods ...PublicreportSubscribePhoneMod) *PublicreportSubscribePhoneTemplate {
+	o := &PublicreportSubscribePhoneTemplate{f: f}
+
+	if f != nil {
+		f.basePublicreportSubscribePhoneMods.Apply(ctx, o)
+	}
+
+	PublicreportSubscribePhoneModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPublicreportSubscribePhone(m *models.PublicreportSubscribePhone) *PublicreportSubscribePhoneTemplate {
+	o := &PublicreportSubscribePhoneTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.DistrictID = func() int32 { return m.DistrictID }
+	o.PhoneE164 = func() string { return m.PhoneE164 }
+
+	ctx := context.Background()
+	if m.R.DistrictOrganization != nil {
+		PublicreportSubscribePhoneMods.WithExistingDistrictOrganization(m.R.DistrictOrganization).Apply(ctx, o)
+	}
+	if m.R.PhoneE164Phone != nil {
+		PublicreportSubscribePhoneMods.WithExistingPhoneE164Phone(m.R.PhoneE164Phone).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -4349,6 +4433,22 @@ func (f *Factory) ClearBasePublicreportReportLocationMods() {
 
 func (f *Factory) AddBasePublicreportReportLocationMod(mods ...PublicreportReportLocationMod) {
 	f.basePublicreportReportLocationMods = append(f.basePublicreportReportLocationMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportSubscribeEmailMods() {
+	f.basePublicreportSubscribeEmailMods = nil
+}
+
+func (f *Factory) AddBasePublicreportSubscribeEmailMod(mods ...PublicreportSubscribeEmailMod) {
+	f.basePublicreportSubscribeEmailMods = append(f.basePublicreportSubscribeEmailMods, mods...)
+}
+
+func (f *Factory) ClearBasePublicreportSubscribePhoneMods() {
+	f.basePublicreportSubscribePhoneMods = nil
+}
+
+func (f *Factory) AddBasePublicreportSubscribePhoneMod(mods ...PublicreportSubscribePhoneMod) {
+	f.basePublicreportSubscribePhoneMods = append(f.basePublicreportSubscribePhoneMods, mods...)
 }
 
 func (f *Factory) ClearBaseRasterColumnMods() {
