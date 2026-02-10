@@ -3,8 +3,6 @@
 
 package dbinfo
 
-import "github.com/aarondl/opt/null"
-
 var PublicreportSubscribeEmails = Table[
 	publicreportSubscribeEmailColumns,
 	publicreportSubscribeEmailIndexes,
@@ -33,15 +31,6 @@ var PublicreportSubscribeEmails = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		DistrictID: column{
-			Name:      "district_id",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		EmailAddress: column{
 			Name:      "email_address",
 			DBType:    "text",
@@ -52,45 +41,8 @@ var PublicreportSubscribeEmails = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: publicreportSubscribeEmailIndexes{
-		SubscribeEmailPkey: index{
-			Type: "btree",
-			Name: "subscribe_email_pkey",
-			Columns: []indexColumn{
-				{
-					Name:         "district_id",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "email_address",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        true,
-			Comment:       "",
-			NullsFirst:    []bool{false, false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
-	},
-	PrimaryKey: &constraint{
-		Name:    "subscribe_email_pkey",
-		Columns: []string{"district_id", "email_address"},
-		Comment: "",
-	},
+
 	ForeignKeys: publicreportSubscribeEmailForeignKeys{
-		PublicreportSubscribeEmailSubscribeEmailDistrictIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "publicreport.subscribe_email.subscribe_email_district_id_fkey",
-				Columns: []string{"district_id"},
-				Comment: "",
-			},
-			ForeignTable:   "organization",
-			ForeignColumns: []string{"id"},
-		},
 		PublicreportSubscribeEmailSubscribeEmailEmailAddressFkey: foreignKey{
 			constraint: constraint{
 				Name:    "publicreport.subscribe_email.subscribe_email_email_address_fkey",
@@ -108,34 +60,28 @@ var PublicreportSubscribeEmails = Table[
 type publicreportSubscribeEmailColumns struct {
 	Created      column
 	Deleted      column
-	DistrictID   column
 	EmailAddress column
 }
 
 func (c publicreportSubscribeEmailColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.DistrictID, c.EmailAddress,
+		c.Created, c.Deleted, c.EmailAddress,
 	}
 }
 
-type publicreportSubscribeEmailIndexes struct {
-	SubscribeEmailPkey index
-}
+type publicreportSubscribeEmailIndexes struct{}
 
 func (i publicreportSubscribeEmailIndexes) AsSlice() []index {
-	return []index{
-		i.SubscribeEmailPkey,
-	}
+	return []index{}
 }
 
 type publicreportSubscribeEmailForeignKeys struct {
-	PublicreportSubscribeEmailSubscribeEmailDistrictIDFkey   foreignKey
 	PublicreportSubscribeEmailSubscribeEmailEmailAddressFkey foreignKey
 }
 
 func (f publicreportSubscribeEmailForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportSubscribeEmailSubscribeEmailDistrictIDFkey, f.PublicreportSubscribeEmailSubscribeEmailEmailAddressFkey,
+		f.PublicreportSubscribeEmailSubscribeEmailEmailAddressFkey,
 	}
 }
 

@@ -5,14 +5,10 @@ package factory
 
 import (
 	"context"
-	"testing"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -37,10 +33,9 @@ func (mods PublicreportSubscribePhoneModSlice) Apply(ctx context.Context, n *Pub
 // PublicreportSubscribePhoneTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PublicreportSubscribePhoneTemplate struct {
-	Created    func() time.Time
-	Deleted    func() null.Val[time.Time]
-	DistrictID func() int32
-	PhoneE164  func() string
+	Created   func() time.Time
+	Deleted   func() null.Val[time.Time]
+	PhoneE164 func() string
 
 	r publicreportSubscribePhoneR
 	f *Factory
@@ -49,13 +44,9 @@ type PublicreportSubscribePhoneTemplate struct {
 }
 
 type publicreportSubscribePhoneR struct {
-	DistrictOrganization *publicreportSubscribePhoneRDistrictOrganizationR
-	PhoneE164Phone       *publicreportSubscribePhoneRPhoneE164PhoneR
+	PhoneE164Phone *publicreportSubscribePhoneRPhoneE164PhoneR
 }
 
-type publicreportSubscribePhoneRDistrictOrganizationR struct {
-	o *OrganizationTemplate
-}
 type publicreportSubscribePhoneRPhoneE164PhoneR struct {
 	o *CommsPhoneTemplate
 }
@@ -70,56 +61,12 @@ func (o *PublicreportSubscribePhoneTemplate) Apply(ctx context.Context, mods ...
 // setModelRels creates and sets the relationships on *models.PublicreportSubscribePhone
 // according to the relationships in the template. Nothing is inserted into the db
 func (t PublicreportSubscribePhoneTemplate) setModelRels(o *models.PublicreportSubscribePhone) {
-	if t.r.DistrictOrganization != nil {
-		rel := t.r.DistrictOrganization.o.Build()
-		rel.R.DistrictSubscribePhones = append(rel.R.DistrictSubscribePhones, o)
-		o.DistrictID = rel.ID // h2
-		o.R.DistrictOrganization = rel
-	}
-
 	if t.r.PhoneE164Phone != nil {
 		rel := t.r.PhoneE164Phone.o.Build()
 		rel.R.PhoneE164SubscribePhones = append(rel.R.PhoneE164SubscribePhones, o)
 		o.PhoneE164 = rel.E164 // h2
 		o.R.PhoneE164Phone = rel
 	}
-}
-
-// BuildSetter returns an *models.PublicreportSubscribePhoneSetter
-// this does nothing with the relationship templates
-func (o PublicreportSubscribePhoneTemplate) BuildSetter() *models.PublicreportSubscribePhoneSetter {
-	m := &models.PublicreportSubscribePhoneSetter{}
-
-	if o.Created != nil {
-		val := o.Created()
-		m.Created = omit.From(val)
-	}
-	if o.Deleted != nil {
-		val := o.Deleted()
-		m.Deleted = omitnull.FromNull(val)
-	}
-	if o.DistrictID != nil {
-		val := o.DistrictID()
-		m.DistrictID = omit.From(val)
-	}
-	if o.PhoneE164 != nil {
-		val := o.PhoneE164()
-		m.PhoneE164 = omit.From(val)
-	}
-
-	return m
-}
-
-// BuildManySetter returns an []*models.PublicreportSubscribePhoneSetter
-// this does nothing with the relationship templates
-func (o PublicreportSubscribePhoneTemplate) BuildManySetter(number int) []*models.PublicreportSubscribePhoneSetter {
-	m := make([]*models.PublicreportSubscribePhoneSetter, number)
-
-	for i := range m {
-		m[i] = o.BuildSetter()
-	}
-
-	return m
 }
 
 // Build returns an *models.PublicreportSubscribePhone
@@ -133,9 +80,6 @@ func (o PublicreportSubscribePhoneTemplate) Build() *models.PublicreportSubscrib
 	}
 	if o.Deleted != nil {
 		m.Deleted = o.Deleted()
-	}
-	if o.DistrictID != nil {
-		m.DistrictID = o.DistrictID()
 	}
 	if o.PhoneE164 != nil {
 		m.PhoneE164 = o.PhoneE164()
@@ -159,149 +103,6 @@ func (o PublicreportSubscribePhoneTemplate) BuildMany(number int) models.Publicr
 	return m
 }
 
-func ensureCreatablePublicreportSubscribePhone(m *models.PublicreportSubscribePhoneSetter) {
-	if !(m.Created.IsValue()) {
-		val := random_time_Time(nil)
-		m.Created = omit.From(val)
-	}
-	if !(m.DistrictID.IsValue()) {
-		val := random_int32(nil)
-		m.DistrictID = omit.From(val)
-	}
-	if !(m.PhoneE164.IsValue()) {
-		val := random_string(nil)
-		m.PhoneE164 = omit.From(val)
-	}
-}
-
-// insertOptRels creates and inserts any optional the relationships on *models.PublicreportSubscribePhone
-// according to the relationships in the template.
-// any required relationship should have already exist on the model
-func (o *PublicreportSubscribePhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.PublicreportSubscribePhone) error {
-	var err error
-
-	return err
-}
-
-// Create builds a publicreportSubscribePhone and inserts it into the database
-// Relations objects are also inserted and placed in the .R field
-func (o *PublicreportSubscribePhoneTemplate) Create(ctx context.Context, exec bob.Executor) (*models.PublicreportSubscribePhone, error) {
-	var err error
-	opt := o.BuildSetter()
-	ensureCreatablePublicreportSubscribePhone(opt)
-
-	if o.r.DistrictOrganization == nil {
-		PublicreportSubscribePhoneMods.WithNewDistrictOrganization().Apply(ctx, o)
-	}
-
-	var rel0 *models.Organization
-
-	if o.r.DistrictOrganization.o.alreadyPersisted {
-		rel0 = o.r.DistrictOrganization.o.Build()
-	} else {
-		rel0, err = o.r.DistrictOrganization.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.DistrictID = omit.From(rel0.ID)
-
-	if o.r.PhoneE164Phone == nil {
-		PublicreportSubscribePhoneMods.WithNewPhoneE164Phone().Apply(ctx, o)
-	}
-
-	var rel1 *models.CommsPhone
-
-	if o.r.PhoneE164Phone.o.alreadyPersisted {
-		rel1 = o.r.PhoneE164Phone.o.Build()
-	} else {
-		rel1, err = o.r.PhoneE164Phone.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.PhoneE164 = omit.From(rel1.E164)
-
-	m, err := models.PublicreportSubscribePhones.Insert(opt).One(ctx, exec)
-	if err != nil {
-		return nil, err
-	}
-
-	m.R.DistrictOrganization = rel0
-	m.R.PhoneE164Phone = rel1
-
-	if err := o.insertOptRels(ctx, exec, m); err != nil {
-		return nil, err
-	}
-	return m, err
-}
-
-// MustCreate builds a publicreportSubscribePhone and inserts it into the database
-// Relations objects are also inserted and placed in the .R field
-// panics if an error occurs
-func (o *PublicreportSubscribePhoneTemplate) MustCreate(ctx context.Context, exec bob.Executor) *models.PublicreportSubscribePhone {
-	m, err := o.Create(ctx, exec)
-	if err != nil {
-		panic(err)
-	}
-	return m
-}
-
-// CreateOrFail builds a publicreportSubscribePhone and inserts it into the database
-// Relations objects are also inserted and placed in the .R field
-// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
-func (o *PublicreportSubscribePhoneTemplate) CreateOrFail(ctx context.Context, tb testing.TB, exec bob.Executor) *models.PublicreportSubscribePhone {
-	tb.Helper()
-	m, err := o.Create(ctx, exec)
-	if err != nil {
-		tb.Fatal(err)
-		return nil
-	}
-	return m
-}
-
-// CreateMany builds multiple publicreportSubscribePhones and inserts them into the database
-// Relations objects are also inserted and placed in the .R field
-func (o PublicreportSubscribePhoneTemplate) CreateMany(ctx context.Context, exec bob.Executor, number int) (models.PublicreportSubscribePhoneSlice, error) {
-	var err error
-	m := make(models.PublicreportSubscribePhoneSlice, number)
-
-	for i := range m {
-		m[i], err = o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m, nil
-}
-
-// MustCreateMany builds multiple publicreportSubscribePhones and inserts them into the database
-// Relations objects are also inserted and placed in the .R field
-// panics if an error occurs
-func (o PublicreportSubscribePhoneTemplate) MustCreateMany(ctx context.Context, exec bob.Executor, number int) models.PublicreportSubscribePhoneSlice {
-	m, err := o.CreateMany(ctx, exec, number)
-	if err != nil {
-		panic(err)
-	}
-	return m
-}
-
-// CreateManyOrFail builds multiple publicreportSubscribePhones and inserts them into the database
-// Relations objects are also inserted and placed in the .R field
-// It calls `tb.Fatal(err)` on the test/benchmark if an error occurs
-func (o PublicreportSubscribePhoneTemplate) CreateManyOrFail(ctx context.Context, tb testing.TB, exec bob.Executor, number int) models.PublicreportSubscribePhoneSlice {
-	tb.Helper()
-	m, err := o.CreateMany(ctx, exec, number)
-	if err != nil {
-		tb.Fatal(err)
-		return nil
-	}
-	return m
-}
-
 // PublicreportSubscribePhone has methods that act as mods for the PublicreportSubscribePhoneTemplate
 var PublicreportSubscribePhoneMods publicreportSubscribePhoneMods
 
@@ -311,7 +112,6 @@ func (m publicreportSubscribePhoneMods) RandomizeAllColumns(f *faker.Faker) Publ
 	return PublicreportSubscribePhoneModSlice{
 		PublicreportSubscribePhoneMods.RandomCreated(f),
 		PublicreportSubscribePhoneMods.RandomDeleted(f),
-		PublicreportSubscribePhoneMods.RandomDistrictID(f),
 		PublicreportSubscribePhoneMods.RandomPhoneE164(f),
 	}
 }
@@ -401,37 +201,6 @@ func (m publicreportSubscribePhoneMods) RandomDeletedNotNull(f *faker.Faker) Pub
 }
 
 // Set the model columns to this value
-func (m publicreportSubscribePhoneMods) DistrictID(val int32) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.DistrictID = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m publicreportSubscribePhoneMods) DistrictIDFunc(f func() int32) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.DistrictID = f
-	})
-}
-
-// Clear any values for the column
-func (m publicreportSubscribePhoneMods) UnsetDistrictID() PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.DistrictID = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m publicreportSubscribePhoneMods) RandomDistrictID(f *faker.Faker) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.DistrictID = func() int32 {
-			return random_int32(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m publicreportSubscribePhoneMods) PhoneE164(val string) PublicreportSubscribePhoneMod {
 	return PublicreportSubscribePhoneModFunc(func(_ context.Context, o *PublicreportSubscribePhoneTemplate) {
 		o.PhoneE164 = func() string { return val }
@@ -470,44 +239,9 @@ func (m publicreportSubscribePhoneMods) WithParentsCascading() PublicreportSubsc
 		ctx = publicreportSubscribePhoneWithParentsCascadingCtx.WithValue(ctx, true)
 		{
 
-			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
-			m.WithDistrictOrganization(related).Apply(ctx, o)
-		}
-		{
-
 			related := o.f.NewCommsPhoneWithContext(ctx, CommsPhoneMods.WithParentsCascading())
 			m.WithPhoneE164Phone(related).Apply(ctx, o)
 		}
-	})
-}
-
-func (m publicreportSubscribePhoneMods) WithDistrictOrganization(rel *OrganizationTemplate) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(ctx context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.r.DistrictOrganization = &publicreportSubscribePhoneRDistrictOrganizationR{
-			o: rel,
-		}
-	})
-}
-
-func (m publicreportSubscribePhoneMods) WithNewDistrictOrganization(mods ...OrganizationMod) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(ctx context.Context, o *PublicreportSubscribePhoneTemplate) {
-		related := o.f.NewOrganizationWithContext(ctx, mods...)
-
-		m.WithDistrictOrganization(related).Apply(ctx, o)
-	})
-}
-
-func (m publicreportSubscribePhoneMods) WithExistingDistrictOrganization(em *models.Organization) PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(ctx context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.r.DistrictOrganization = &publicreportSubscribePhoneRDistrictOrganizationR{
-			o: o.f.FromExistingOrganization(em),
-		}
-	})
-}
-
-func (m publicreportSubscribePhoneMods) WithoutDistrictOrganization() PublicreportSubscribePhoneMod {
-	return PublicreportSubscribePhoneModFunc(func(ctx context.Context, o *PublicreportSubscribePhoneTemplate) {
-		o.r.DistrictOrganization = nil
 	})
 }
 

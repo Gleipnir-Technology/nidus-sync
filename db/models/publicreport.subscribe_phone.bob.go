@@ -12,7 +12,6 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
@@ -26,10 +25,9 @@ import (
 
 // PublicreportSubscribePhone is an object representing the database table.
 type PublicreportSubscribePhone struct {
-	Created    time.Time           `db:"created" `
-	Deleted    null.Val[time.Time] `db:"deleted" `
-	DistrictID int32               `db:"district_id,pk" `
-	PhoneE164  string              `db:"phone_e164,pk" `
+	Created   time.Time           `db:"created" `
+	Deleted   null.Val[time.Time] `db:"deleted" `
+	PhoneE164 string              `db:"phone_e164" `
 
 	R publicreportSubscribePhoneR `db:"-" `
 }
@@ -38,27 +36,25 @@ type PublicreportSubscribePhone struct {
 // This should almost always be used instead of []*PublicreportSubscribePhone.
 type PublicreportSubscribePhoneSlice []*PublicreportSubscribePhone
 
-// PublicreportSubscribePhones contains methods to work with the subscribe_phone table
-var PublicreportSubscribePhones = psql.NewTablex[*PublicreportSubscribePhone, PublicreportSubscribePhoneSlice, *PublicreportSubscribePhoneSetter]("publicreport", "subscribe_phone", buildPublicreportSubscribePhoneColumns("publicreport.subscribe_phone"))
+// PublicreportSubscribePhones contains methods to work with the subscribe_phone view
+var PublicreportSubscribePhones = psql.NewViewx[*PublicreportSubscribePhone, PublicreportSubscribePhoneSlice]("publicreport", "subscribe_phone", buildPublicreportSubscribePhoneColumns("publicreport.subscribe_phone"))
 
-// PublicreportSubscribePhonesQuery is a query on the subscribe_phone table
+// PublicreportSubscribePhonesQuery is a query on the subscribe_phone view
 type PublicreportSubscribePhonesQuery = *psql.ViewQuery[*PublicreportSubscribePhone, PublicreportSubscribePhoneSlice]
 
 // publicreportSubscribePhoneR is where relationships are stored.
 type publicreportSubscribePhoneR struct {
-	DistrictOrganization *Organization // publicreport.subscribe_phone.subscribe_phone_district_id_fkey
-	PhoneE164Phone       *CommsPhone   // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
+	PhoneE164Phone *CommsPhone // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
 }
 
 func buildPublicreportSubscribePhoneColumns(alias string) publicreportSubscribePhoneColumns {
 	return publicreportSubscribePhoneColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "deleted", "district_id", "phone_e164",
+			"created", "deleted", "phone_e164",
 		).WithParent("publicreport.subscribe_phone"),
 		tableAlias: alias,
 		Created:    psql.Quote(alias, "created"),
 		Deleted:    psql.Quote(alias, "deleted"),
-		DistrictID: psql.Quote(alias, "district_id"),
 		PhoneE164:  psql.Quote(alias, "phone_e164"),
 	}
 }
@@ -68,7 +64,6 @@ type publicreportSubscribePhoneColumns struct {
 	tableAlias string
 	Created    psql.Expression
 	Deleted    psql.Expression
-	DistrictID psql.Expression
 	PhoneE164  psql.Expression
 }
 
@@ -84,22 +79,18 @@ func (publicreportSubscribePhoneColumns) AliasedAs(alias string) publicreportSub
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportSubscribePhoneSetter struct {
-	Created    omit.Val[time.Time]     `db:"created" `
-	Deleted    omitnull.Val[time.Time] `db:"deleted" `
-	DistrictID omit.Val[int32]         `db:"district_id,pk" `
-	PhoneE164  omit.Val[string]        `db:"phone_e164,pk" `
+	Created   omit.Val[time.Time]     `db:"created" `
+	Deleted   omitnull.Val[time.Time] `db:"deleted" `
+	PhoneE164 omit.Val[string]        `db:"phone_e164" `
 }
 
 func (s PublicreportSubscribePhoneSetter) SetColumns() []string {
-	vals := make([]string, 0, 4)
+	vals := make([]string, 0, 3)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
 	if !s.Deleted.IsUnset() {
 		vals = append(vals, "deleted")
-	}
-	if s.DistrictID.IsValue() {
-		vals = append(vals, "district_id")
 	}
 	if s.PhoneE164.IsValue() {
 		vals = append(vals, "phone_e164")
@@ -114,21 +105,14 @@ func (s PublicreportSubscribePhoneSetter) Overwrite(t *PublicreportSubscribePhon
 	if !s.Deleted.IsUnset() {
 		t.Deleted = s.Deleted.MustGetNull()
 	}
-	if s.DistrictID.IsValue() {
-		t.DistrictID = s.DistrictID.MustGet()
-	}
 	if s.PhoneE164.IsValue() {
 		t.PhoneE164 = s.PhoneE164.MustGet()
 	}
 }
 
 func (s *PublicreportSubscribePhoneSetter) Apply(q *dialect.InsertQuery) {
-	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-		return PublicreportSubscribePhones.BeforeInsertHooks.RunHooks(ctx, exec, s)
-	})
-
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 4)
+		vals := make([]bob.Expression, 3)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -141,16 +125,10 @@ func (s *PublicreportSubscribePhoneSetter) Apply(q *dialect.InsertQuery) {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.DistrictID.IsValue() {
-			vals[2] = psql.Arg(s.DistrictID.MustGet())
+		if s.PhoneE164.IsValue() {
+			vals[2] = psql.Arg(s.PhoneE164.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
-		}
-
-		if s.PhoneE164.IsValue() {
-			vals[3] = psql.Arg(s.PhoneE164.MustGet())
-		} else {
-			vals[3] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -162,7 +140,7 @@ func (s PublicreportSubscribePhoneSetter) UpdateMod() bob.Mod[*dialect.UpdateQue
 }
 
 func (s PublicreportSubscribePhoneSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 4)
+	exprs := make([]bob.Expression, 0, 3)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -178,13 +156,6 @@ func (s PublicreportSubscribePhoneSetter) Expressions(prefix ...string) []bob.Ex
 		}})
 	}
 
-	if s.DistrictID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "district_id")...),
-			psql.Arg(s.DistrictID),
-		}})
-	}
-
 	if s.PhoneE164.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "phone_e164")...),
@@ -195,31 +166,6 @@ func (s PublicreportSubscribePhoneSetter) Expressions(prefix ...string) []bob.Ex
 	return exprs
 }
 
-// FindPublicreportSubscribePhone retrieves a single record by primary key
-// If cols is empty Find will return all columns.
-func FindPublicreportSubscribePhone(ctx context.Context, exec bob.Executor, DistrictIDPK int32, PhoneE164PK string, cols ...string) (*PublicreportSubscribePhone, error) {
-	if len(cols) == 0 {
-		return PublicreportSubscribePhones.Query(
-			sm.Where(PublicreportSubscribePhones.Columns.DistrictID.EQ(psql.Arg(DistrictIDPK))),
-			sm.Where(PublicreportSubscribePhones.Columns.PhoneE164.EQ(psql.Arg(PhoneE164PK))),
-		).One(ctx, exec)
-	}
-
-	return PublicreportSubscribePhones.Query(
-		sm.Where(PublicreportSubscribePhones.Columns.DistrictID.EQ(psql.Arg(DistrictIDPK))),
-		sm.Where(PublicreportSubscribePhones.Columns.PhoneE164.EQ(psql.Arg(PhoneE164PK))),
-		sm.Columns(PublicreportSubscribePhones.Columns.Only(cols...)),
-	).One(ctx, exec)
-}
-
-// PublicreportSubscribePhoneExists checks the presence of a single record by primary key
-func PublicreportSubscribePhoneExists(ctx context.Context, exec bob.Executor, DistrictIDPK int32, PhoneE164PK string) (bool, error) {
-	return PublicreportSubscribePhones.Query(
-		sm.Where(PublicreportSubscribePhones.Columns.DistrictID.EQ(psql.Arg(DistrictIDPK))),
-		sm.Where(PublicreportSubscribePhones.Columns.PhoneE164.EQ(psql.Arg(PhoneE164PK))),
-	).Exists(ctx, exec)
-}
-
 // AfterQueryHook is called after PublicreportSubscribePhone is retrieved from the database
 func (o *PublicreportSubscribePhone) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
@@ -227,63 +173,9 @@ func (o *PublicreportSubscribePhone) AfterQueryHook(ctx context.Context, exec bo
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = PublicreportSubscribePhones.AfterSelectHooks.RunHooks(ctx, exec, PublicreportSubscribePhoneSlice{o})
-	case bob.QueryTypeInsert:
-		ctx, err = PublicreportSubscribePhones.AfterInsertHooks.RunHooks(ctx, exec, PublicreportSubscribePhoneSlice{o})
-	case bob.QueryTypeUpdate:
-		ctx, err = PublicreportSubscribePhones.AfterUpdateHooks.RunHooks(ctx, exec, PublicreportSubscribePhoneSlice{o})
-	case bob.QueryTypeDelete:
-		ctx, err = PublicreportSubscribePhones.AfterDeleteHooks.RunHooks(ctx, exec, PublicreportSubscribePhoneSlice{o})
 	}
 
 	return err
-}
-
-// primaryKeyVals returns the primary key values of the PublicreportSubscribePhone
-func (o *PublicreportSubscribePhone) primaryKeyVals() bob.Expression {
-	return psql.ArgGroup(
-		o.DistrictID,
-		o.PhoneE164,
-	)
-}
-
-func (o *PublicreportSubscribePhone) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("publicreport.subscribe_phone", "district_id"), psql.Quote("publicreport.subscribe_phone", "phone_e164")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
-	}))
-}
-
-// Update uses an executor to update the PublicreportSubscribePhone
-func (o *PublicreportSubscribePhone) Update(ctx context.Context, exec bob.Executor, s *PublicreportSubscribePhoneSetter) error {
-	v, err := PublicreportSubscribePhones.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.R = v.R
-	*o = *v
-
-	return nil
-}
-
-// Delete deletes a single PublicreportSubscribePhone record with an executor
-func (o *PublicreportSubscribePhone) Delete(ctx context.Context, exec bob.Executor) error {
-	_, err := PublicreportSubscribePhones.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
-	return err
-}
-
-// Reload refreshes the PublicreportSubscribePhone using the executor
-func (o *PublicreportSubscribePhone) Reload(ctx context.Context, exec bob.Executor) error {
-	o2, err := PublicreportSubscribePhones.Query(
-		sm.Where(PublicreportSubscribePhones.Columns.DistrictID.EQ(psql.Arg(o.DistrictID))),
-		sm.Where(PublicreportSubscribePhones.Columns.PhoneE164.EQ(psql.Arg(o.PhoneE164))),
-	).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-	o2.R = o.R
-	*o = *o2
-
-	return nil
 }
 
 // AfterQueryHook is called after PublicreportSubscribePhoneSlice is retrieved from the database
@@ -293,163 +185,9 @@ func (o PublicreportSubscribePhoneSlice) AfterQueryHook(ctx context.Context, exe
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = PublicreportSubscribePhones.AfterSelectHooks.RunHooks(ctx, exec, o)
-	case bob.QueryTypeInsert:
-		ctx, err = PublicreportSubscribePhones.AfterInsertHooks.RunHooks(ctx, exec, o)
-	case bob.QueryTypeUpdate:
-		ctx, err = PublicreportSubscribePhones.AfterUpdateHooks.RunHooks(ctx, exec, o)
-	case bob.QueryTypeDelete:
-		ctx, err = PublicreportSubscribePhones.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
-}
-
-func (o PublicreportSubscribePhoneSlice) pkIN() dialect.Expression {
-	if len(o) == 0 {
-		return psql.Raw("NULL")
-	}
-
-	return psql.Group(psql.Quote("publicreport.subscribe_phone", "district_id"), psql.Quote("publicreport.subscribe_phone", "phone_e164")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		pkPairs := make([]bob.Expression, len(o))
-		for i, row := range o {
-			pkPairs[i] = row.primaryKeyVals()
-		}
-		return bob.ExpressSlice(ctx, w, d, start, pkPairs, "", ", ", "")
-	}))
-}
-
-// copyMatchingRows finds models in the given slice that have the same primary key
-// then it first copies the existing relationships from the old model to the new model
-// and then replaces the old model in the slice with the new model
-func (o PublicreportSubscribePhoneSlice) copyMatchingRows(from ...*PublicreportSubscribePhone) {
-	for i, old := range o {
-		for _, new := range from {
-			if new.DistrictID != old.DistrictID {
-				continue
-			}
-			if new.PhoneE164 != old.PhoneE164 {
-				continue
-			}
-			new.R = old.R
-			o[i] = new
-			break
-		}
-	}
-}
-
-// UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
-func (o PublicreportSubscribePhoneSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
-	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
-		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return PublicreportSubscribePhones.BeforeUpdateHooks.RunHooks(ctx, exec, o)
-		})
-
-		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
-			var err error
-			switch retrieved := retrieved.(type) {
-			case *PublicreportSubscribePhone:
-				o.copyMatchingRows(retrieved)
-			case []*PublicreportSubscribePhone:
-				o.copyMatchingRows(retrieved...)
-			case PublicreportSubscribePhoneSlice:
-				o.copyMatchingRows(retrieved...)
-			default:
-				// If the retrieved value is not a PublicreportSubscribePhone or a slice of PublicreportSubscribePhone
-				// then run the AfterUpdateHooks on the slice
-				_, err = PublicreportSubscribePhones.AfterUpdateHooks.RunHooks(ctx, exec, o)
-			}
-
-			return err
-		}))
-
-		q.AppendWhere(o.pkIN())
-	})
-}
-
-// DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
-func (o PublicreportSubscribePhoneSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
-	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
-		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return PublicreportSubscribePhones.BeforeDeleteHooks.RunHooks(ctx, exec, o)
-		})
-
-		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
-			var err error
-			switch retrieved := retrieved.(type) {
-			case *PublicreportSubscribePhone:
-				o.copyMatchingRows(retrieved)
-			case []*PublicreportSubscribePhone:
-				o.copyMatchingRows(retrieved...)
-			case PublicreportSubscribePhoneSlice:
-				o.copyMatchingRows(retrieved...)
-			default:
-				// If the retrieved value is not a PublicreportSubscribePhone or a slice of PublicreportSubscribePhone
-				// then run the AfterDeleteHooks on the slice
-				_, err = PublicreportSubscribePhones.AfterDeleteHooks.RunHooks(ctx, exec, o)
-			}
-
-			return err
-		}))
-
-		q.AppendWhere(o.pkIN())
-	})
-}
-
-func (o PublicreportSubscribePhoneSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals PublicreportSubscribePhoneSetter) error {
-	if len(o) == 0 {
-		return nil
-	}
-
-	_, err := PublicreportSubscribePhones.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
-	return err
-}
-
-func (o PublicreportSubscribePhoneSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
-	if len(o) == 0 {
-		return nil
-	}
-
-	_, err := PublicreportSubscribePhones.Delete(o.DeleteMod()).Exec(ctx, exec)
-	return err
-}
-
-func (o PublicreportSubscribePhoneSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
-	if len(o) == 0 {
-		return nil
-	}
-
-	o2, err := PublicreportSubscribePhones.Query(sm.Where(o.pkIN())).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.copyMatchingRows(o2...)
-
-	return nil
-}
-
-// DistrictOrganization starts a query for related objects on organization
-func (o *PublicreportSubscribePhone) DistrictOrganization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	return Organizations.Query(append(mods,
-		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.DistrictID))),
-	)...)
-}
-
-func (os PublicreportSubscribePhoneSlice) DistrictOrganization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkDistrictID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkDistrictID = append(pkDistrictID, o.DistrictID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkDistrictID), "integer[]")),
-	))
-
-	return Organizations.Query(append(mods,
-		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
 }
 
 // PhoneE164Phone starts a query for related objects on comms.phone
@@ -476,107 +214,10 @@ func (os PublicreportSubscribePhoneSlice) PhoneE164Phone(mods ...bob.Mod[*dialec
 	)...)
 }
 
-func attachPublicreportSubscribePhoneDistrictOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribePhone0 *PublicreportSubscribePhone, organization1 *Organization) (*PublicreportSubscribePhone, error) {
-	setter := &PublicreportSubscribePhoneSetter{
-		DistrictID: omit.From(organization1.ID),
-	}
-
-	err := publicreportSubscribePhone0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportSubscribePhoneDistrictOrganization0: %w", err)
-	}
-
-	return publicreportSubscribePhone0, nil
-}
-
-func (publicreportSubscribePhone0 *PublicreportSubscribePhone) InsertDistrictOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
-	var err error
-
-	organization1, err := Organizations.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportSubscribePhoneDistrictOrganization0(ctx, exec, 1, publicreportSubscribePhone0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportSubscribePhone0.R.DistrictOrganization = organization1
-
-	organization1.R.DistrictSubscribePhones = append(organization1.R.DistrictSubscribePhones, publicreportSubscribePhone0)
-
-	return nil
-}
-
-func (publicreportSubscribePhone0 *PublicreportSubscribePhone) AttachDistrictOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
-	var err error
-
-	_, err = attachPublicreportSubscribePhoneDistrictOrganization0(ctx, exec, 1, publicreportSubscribePhone0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportSubscribePhone0.R.DistrictOrganization = organization1
-
-	organization1.R.DistrictSubscribePhones = append(organization1.R.DistrictSubscribePhones, publicreportSubscribePhone0)
-
-	return nil
-}
-
-func attachPublicreportSubscribePhonePhoneE164Phone0(ctx context.Context, exec bob.Executor, count int, publicreportSubscribePhone0 *PublicreportSubscribePhone, commsPhone1 *CommsPhone) (*PublicreportSubscribePhone, error) {
-	setter := &PublicreportSubscribePhoneSetter{
-		PhoneE164: omit.From(commsPhone1.E164),
-	}
-
-	err := publicreportSubscribePhone0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportSubscribePhonePhoneE164Phone0: %w", err)
-	}
-
-	return publicreportSubscribePhone0, nil
-}
-
-func (publicreportSubscribePhone0 *PublicreportSubscribePhone) InsertPhoneE164Phone(ctx context.Context, exec bob.Executor, related *CommsPhoneSetter) error {
-	var err error
-
-	commsPhone1, err := CommsPhones.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportSubscribePhonePhoneE164Phone0(ctx, exec, 1, publicreportSubscribePhone0, commsPhone1)
-	if err != nil {
-		return err
-	}
-
-	publicreportSubscribePhone0.R.PhoneE164Phone = commsPhone1
-
-	commsPhone1.R.PhoneE164SubscribePhones = append(commsPhone1.R.PhoneE164SubscribePhones, publicreportSubscribePhone0)
-
-	return nil
-}
-
-func (publicreportSubscribePhone0 *PublicreportSubscribePhone) AttachPhoneE164Phone(ctx context.Context, exec bob.Executor, commsPhone1 *CommsPhone) error {
-	var err error
-
-	_, err = attachPublicreportSubscribePhonePhoneE164Phone0(ctx, exec, 1, publicreportSubscribePhone0, commsPhone1)
-	if err != nil {
-		return err
-	}
-
-	publicreportSubscribePhone0.R.PhoneE164Phone = commsPhone1
-
-	commsPhone1.R.PhoneE164SubscribePhones = append(commsPhone1.R.PhoneE164SubscribePhones, publicreportSubscribePhone0)
-
-	return nil
-}
-
 type publicreportSubscribePhoneWhere[Q psql.Filterable] struct {
-	Created    psql.WhereMod[Q, time.Time]
-	Deleted    psql.WhereNullMod[Q, time.Time]
-	DistrictID psql.WhereMod[Q, int32]
-	PhoneE164  psql.WhereMod[Q, string]
+	Created   psql.WhereMod[Q, time.Time]
+	Deleted   psql.WhereNullMod[Q, time.Time]
+	PhoneE164 psql.WhereMod[Q, string]
 }
 
 func (publicreportSubscribePhoneWhere[Q]) AliasedAs(alias string) publicreportSubscribePhoneWhere[Q] {
@@ -585,10 +226,9 @@ func (publicreportSubscribePhoneWhere[Q]) AliasedAs(alias string) publicreportSu
 
 func buildPublicreportSubscribePhoneWhere[Q psql.Filterable](cols publicreportSubscribePhoneColumns) publicreportSubscribePhoneWhere[Q] {
 	return publicreportSubscribePhoneWhere[Q]{
-		Created:    psql.Where[Q, time.Time](cols.Created),
-		Deleted:    psql.WhereNull[Q, time.Time](cols.Deleted),
-		DistrictID: psql.Where[Q, int32](cols.DistrictID),
-		PhoneE164:  psql.Where[Q, string](cols.PhoneE164),
+		Created:   psql.Where[Q, time.Time](cols.Created),
+		Deleted:   psql.WhereNull[Q, time.Time](cols.Deleted),
+		PhoneE164: psql.Where[Q, string](cols.PhoneE164),
 	}
 }
 
@@ -598,18 +238,6 @@ func (o *PublicreportSubscribePhone) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "DistrictOrganization":
-		rel, ok := retrieved.(*Organization)
-		if !ok {
-			return fmt.Errorf("publicreportSubscribePhone cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.DistrictOrganization = rel
-
-		if rel != nil {
-			rel.R.DistrictSubscribePhones = PublicreportSubscribePhoneSlice{o}
-		}
-		return nil
 	case "PhoneE164Phone":
 		rel, ok := retrieved.(*CommsPhone)
 		if !ok {
@@ -628,25 +256,11 @@ func (o *PublicreportSubscribePhone) Preload(name string, retrieved any) error {
 }
 
 type publicreportSubscribePhonePreloader struct {
-	DistrictOrganization func(...psql.PreloadOption) psql.Preloader
-	PhoneE164Phone       func(...psql.PreloadOption) psql.Preloader
+	PhoneE164Phone func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPublicreportSubscribePhonePreloader() publicreportSubscribePhonePreloader {
 	return publicreportSubscribePhonePreloader{
-		DistrictOrganization: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
-				Name: "DistrictOrganization",
-				Sides: []psql.PreloadSide{
-					{
-						From:        PublicreportSubscribePhones,
-						To:          Organizations,
-						FromColumns: []string{"district_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Organizations.Columns.Names(), opts...)
-		},
 		PhoneE164Phone: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*CommsPhone, CommsPhoneSlice](psql.PreloadRel{
 				Name: "PhoneE164Phone",
@@ -664,25 +278,15 @@ func buildPublicreportSubscribePhonePreloader() publicreportSubscribePhonePreloa
 }
 
 type publicreportSubscribePhoneThenLoader[Q orm.Loadable] struct {
-	DistrictOrganization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PhoneE164Phone       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164Phone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportSubscribePhoneThenLoader[Q orm.Loadable]() publicreportSubscribePhoneThenLoader[Q] {
-	type DistrictOrganizationLoadInterface interface {
-		LoadDistrictOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type PhoneE164PhoneLoadInterface interface {
 		LoadPhoneE164Phone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportSubscribePhoneThenLoader[Q]{
-		DistrictOrganization: thenLoadBuilder[Q](
-			"DistrictOrganization",
-			func(ctx context.Context, exec bob.Executor, retrieved DistrictOrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadDistrictOrganization(ctx, exec, mods...)
-			},
-		),
 		PhoneE164Phone: thenLoadBuilder[Q](
 			"PhoneE164Phone",
 			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164PhoneLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -690,58 +294,6 @@ func buildPublicreportSubscribePhoneThenLoader[Q orm.Loadable]() publicreportSub
 			},
 		),
 	}
-}
-
-// LoadDistrictOrganization loads the publicreportSubscribePhone's DistrictOrganization into the .R struct
-func (o *PublicreportSubscribePhone) LoadDistrictOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.DistrictOrganization = nil
-
-	related, err := o.DistrictOrganization(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.DistrictSubscribePhones = PublicreportSubscribePhoneSlice{o}
-
-	o.R.DistrictOrganization = related
-	return nil
-}
-
-// LoadDistrictOrganization loads the publicreportSubscribePhone's DistrictOrganization into the .R struct
-func (os PublicreportSubscribePhoneSlice) LoadDistrictOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	organizations, err := os.DistrictOrganization(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range organizations {
-
-			if !(o.DistrictID == rel.ID) {
-				continue
-			}
-
-			rel.R.DistrictSubscribePhones = append(rel.R.DistrictSubscribePhones, o)
-
-			o.R.DistrictOrganization = rel
-			break
-		}
-	}
-
-	return nil
 }
 
 // LoadPhoneE164Phone loads the publicreportSubscribePhone's PhoneE164Phone into the .R struct
@@ -797,9 +349,8 @@ func (os PublicreportSubscribePhoneSlice) LoadPhoneE164Phone(ctx context.Context
 }
 
 type publicreportSubscribePhoneJoins[Q dialect.Joinable] struct {
-	typ                  string
-	DistrictOrganization modAs[Q, organizationColumns]
-	PhoneE164Phone       modAs[Q, commsPhoneColumns]
+	typ            string
+	PhoneE164Phone modAs[Q, commsPhoneColumns]
 }
 
 func (j publicreportSubscribePhoneJoins[Q]) aliasedAs(alias string) publicreportSubscribePhoneJoins[Q] {
@@ -809,20 +360,6 @@ func (j publicreportSubscribePhoneJoins[Q]) aliasedAs(alias string) publicreport
 func buildPublicreportSubscribePhoneJoins[Q dialect.Joinable](cols publicreportSubscribePhoneColumns, typ string) publicreportSubscribePhoneJoins[Q] {
 	return publicreportSubscribePhoneJoins[Q]{
 		typ: typ,
-		DistrictOrganization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.DistrictID),
-					))
-				}
-
-				return mods
-			},
-		},
 		PhoneE164Phone: modAs[Q, commsPhoneColumns]{
 			c: CommsPhones.Columns,
 			f: func(to commsPhoneColumns) bob.Mod[Q] {

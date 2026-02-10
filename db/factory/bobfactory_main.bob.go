@@ -3068,12 +3068,6 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if len(m.R.Quicks) > 0 {
 		OrganizationMods.AddExistingQuicks(m.R.Quicks...).Apply(ctx, o)
 	}
-	if len(m.R.DistrictSubscribeEmails) > 0 {
-		OrganizationMods.AddExistingDistrictSubscribeEmails(m.R.DistrictSubscribeEmails...).Apply(ctx, o)
-	}
-	if len(m.R.DistrictSubscribePhones) > 0 {
-		OrganizationMods.AddExistingDistrictSubscribePhones(m.R.DistrictSubscribePhones...).Apply(ctx, o)
-	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
 	}
@@ -3633,13 +3627,9 @@ func (f *Factory) FromExistingPublicreportSubscribeEmail(m *models.PublicreportS
 
 	o.Created = func() time.Time { return m.Created }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
-	o.DistrictID = func() int32 { return m.DistrictID }
 	o.EmailAddress = func() string { return m.EmailAddress }
 
 	ctx := context.Background()
-	if m.R.DistrictOrganization != nil {
-		PublicreportSubscribeEmailMods.WithExistingDistrictOrganization(m.R.DistrictOrganization).Apply(ctx, o)
-	}
 	if m.R.EmailAddressEmailContact != nil {
 		PublicreportSubscribeEmailMods.WithExistingEmailAddressEmailContact(m.R.EmailAddressEmailContact).Apply(ctx, o)
 	}
@@ -3668,13 +3658,9 @@ func (f *Factory) FromExistingPublicreportSubscribePhone(m *models.PublicreportS
 
 	o.Created = func() time.Time { return m.Created }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
-	o.DistrictID = func() int32 { return m.DistrictID }
 	o.PhoneE164 = func() string { return m.PhoneE164 }
 
 	ctx := context.Background()
-	if m.R.DistrictOrganization != nil {
-		PublicreportSubscribePhoneMods.WithExistingDistrictOrganization(m.R.DistrictOrganization).Apply(ctx, o)
-	}
 	if m.R.PhoneE164Phone != nil {
 		PublicreportSubscribePhoneMods.WithExistingPhoneE164Phone(m.R.PhoneE164Phone).Apply(ctx, o)
 	}
