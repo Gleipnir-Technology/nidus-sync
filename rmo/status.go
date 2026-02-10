@@ -112,6 +112,14 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
 
+	if !nuisance.OrganizationID.IsNull() {
+		org_id := nuisance.OrganizationID.MustGet()
+		org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
+		if err != nil {
+			return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
+		}
+		result.District = newContentDistrict(org)
+	}
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.Address
 	result.Report.Created = nuisance.Created
@@ -208,6 +216,15 @@ func contentFromPool(ctx context.Context, report_id string) (result ContentStatu
 	images, err := sql.PublicreportImageWithJSONByPoolID(pool.ID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
+	}
+
+	if !pool.OrganizationID.IsNull() {
+		org_id := pool.OrganizationID.MustGet()
+		org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
+		if err != nil {
+			return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
+		}
+		result.District = newContentDistrict(org)
 	}
 
 	result.Report.ID = report_id
