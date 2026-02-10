@@ -85,7 +85,7 @@ func ForUser(ctx context.Context, u *models.User) ([]Notification, error) {
 func notificationTypeName(t enums.Notificationtype) string {
 	switch t {
 	case enums.NotificationtypeOauthTokenInvalidated:
-		return "alert"
+		return "oauth-token-invalid"
 	default:
 		return "unknown-type"
 	}

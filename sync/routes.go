@@ -17,6 +17,7 @@ func Router() chi.Router {
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/district", getDistrict)
 
+	// Mock endpoints
 	r.Get("/mock", renderMock("mock-root.html"))
 	r.Get("/mock/admin", renderMock("admin.html"))
 	r.Get("/mock/admin/service-request", renderMock("admin-service-request.html"))
@@ -46,10 +47,9 @@ func Router() chi.Router {
 	r.Get("/mock/setting/user", renderMock("setting-user.html"))
 	r.Get("/mock/setting/user/add", renderMock("setting-user-add.html"))
 
+	// Utility endpoints
 	r.Get("/oauth/refresh", getOAuthRefresh)
-
 	r.Get("/privacy", getPrivacy)
-
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)
@@ -61,6 +61,7 @@ func Router() chi.Router {
 	r.Route("/api", api.AddRoutes)
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/layout-test", auth.NewEnsureAuth(getLayoutTest))
+	r.Method("GET", "/notification", auth.NewEnsureAuth(getNotificationList))
 	r.Method("GET", "/pool", auth.NewEnsureAuth(getPoolList))
 	r.Method("GET", "/pool/upload", auth.NewEnsureAuth(getPoolUpload))
 	r.Method("GET", "/pool/upload/{id}", auth.NewEnsureAuth(getPoolUploadByID))

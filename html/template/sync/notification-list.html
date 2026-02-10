@@ -1,0 +1,71 @@
+{{ template "sync/layout/authenticated.html" . }}
+{{ define "title" }}Layout Test{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<div class="container py-5">
+		<div class="row justify-content-center">
+			<div class="col-md-8">
+				<div class="card shadow-sm">
+					<div
+						class="card-header bg-white d-flex justify-content-between align-items-center"
+					>
+						<h5 class="mb-0">Notifications</h5>
+						<span class="badge bg-primary">{{ len .Notifications }}</span>
+					</div>
+					<div class="list-group list-group-flush">
+						{{ range .Notifications }}
+							<a
+								href="{{ .Link }}"
+								class="list-group-item list-group-item-action notification-item"
+							>
+								<div class="d-flex align-items-center">
+									<!-- Icon based on notification type -->
+									{{ if eq .Type "oauth-token-invalid" }}
+										<div class="me-3 fs-4 text-primary">
+											<i class="bi bi-circle-square"></i>
+										</div>
+									{{ else if eq .Type "success" }}
+										<div class="me-3 fs-4 text-success">
+											<i class="bi bi-check-circle-fill"></i>
+										</div>
+									{{ else if eq .Type "warning" }}
+										<div class="me-3 fs-4 text-warning">
+											<i class="bi bi-exclamation-triangle-fill"></i>
+										</div>
+									{{ else if eq .Type "danger" }}
+										<div class="me-3 fs-4 text-danger">
+											<i class="bi bi-x-circle-fill"></i>
+										</div>
+									{{ else if eq .Type "message" }}
+										<div class="me-3 fs-4 text-info">
+											<i class="bi bi-envelope-fill"></i>
+										</div>
+									{{ else }}
+										<div class="me-3 fs-4 text-secondary">
+											<i class="bi bi-bell-fill"></i>
+										</div>
+									{{ end }}
+
+
+									<div class="flex-grow-1" data-notification-type="{{ .Type }}">
+										<div>{{ .Message }}</div>
+										<div class="notification-time">{{ .Time|timeSince }}</div>
+									</div>
+									<div class="ms-2">
+										<i class="bi bi-chevron-right text-muted"></i>
+									</div>
+								</div>
+							</a>
+						{{ else }}
+							<div class="list-group-item text-center text-muted py-4">
+								<i class="bi bi-bell-slash fs-4 mb-2"></i>
+								<p>No notifications yet</p>
+							</div>
+						{{ end }}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
