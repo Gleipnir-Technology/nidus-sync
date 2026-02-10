@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
@@ -86,6 +87,12 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to parse lat lng for pool report", err, http.StatusInternalServerError)
 		return
 	}
+
+	geospatial, err := geospatialFromForm(r)
+	if err != nil {
+		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
+		return
+	}
 	public_id, err := report.GenerateReportID()
 	if err != nil {
 		respondError(w, "Failed to create pool report public ID", err, http.StatusInternalServerError)
@@ -99,6 +106,23 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(ctx)
+
+	uploads, err := extractImageUploads(r)
+	if err != nil {
+		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
+		return
+	}
+	images, err := saveImageUploads(r.Context(), tx, uploads)
+	if err != nil {
+		respondError(w, "Failed to save image uploads", err, http.StatusInternalServerError)
+		return
+	}
+
+	var organization_id *int32
+	organization_id, err = matchDistrict(ctx, latlng.Longitude, latlng.Latitude, uploads)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to match district")
+	}
 
 	setter := models.PublicreportPoolSetter{
 		AccessComments:  omit.From(access_comments),
@@ -115,7 +139,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		AddressRegion:   omit.From(address_region),
 		Comments:        omit.From(comments),
 		Created:         omit.From(time.Now()),
-		//H3cell: add later
+		//H3cell:       omitnull.From(geospatial.Cell.String()),
 		HasAdult:               omit.From(has_adult),
 		HasBackyardPermission:  omit.From(has_backyard_permission),
 		HasLarvae:              omit.From(has_larvae),
@@ -123,15 +147,16 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		IsReporterConfidential: omit.From(is_reporter_confidential),
 		IsReporterOwner:        omit.From(is_reporter_owner),
 		//Location: add later
-		MapZoom:       omit.From(latlng.MapZoom),
-		OwnerEmail:    omit.From(owner_email),
-		OwnerName:     omit.From(owner_name),
-		OwnerPhone:    omit.From(owner_phone),
-		PublicID:      omit.From(public_id),
-		ReporterEmail: omit.From(""),
-		ReporterName:  omit.From(""),
-		ReporterPhone: omit.From(""),
-		Status:        omit.From(enums.PublicreportReportstatustypeReported),
+		MapZoom:        omit.From(latlng.MapZoom),
+		OrganizationID: omitnull.FromPtr(organization_id),
+		OwnerEmail:     omit.From(owner_email),
+		OwnerName:      omit.From(owner_name),
+		OwnerPhone:     omit.From(owner_phone),
+		PublicID:       omit.From(public_id),
+		ReporterEmail:  omit.From(""),
+		ReporterName:   omit.From(""),
+		ReporterPhone:  omit.From(""),
+		Status:         omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	pool, err := models.PublicreportPools.Insert(&setter).One(ctx, tx)
 	if err != nil {
@@ -139,11 +164,6 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geospatial, err := geospatialFromForm(r)
-	if err != nil {
-		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
-		return
-	}
 	if geospatial.Populated {
 		_, err = psql.Update(
 			um.Table("publicreport.pool"),
@@ -157,12 +177,6 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Info().Int32("id", pool.ID).Str("public_id", pool.PublicID).Msg("Created pool report")
-	uploads, err := extractImageUploads(r)
-	if err != nil {
-		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
-		return
-	}
-	images, err := saveImageUploads(r.Context(), tx, uploads)
 	setters := make([]*models.PublicreportPoolImageSetter, 0)
 	for _, image := range images {
 		setters = append(setters, &models.PublicreportPoolImageSetter{

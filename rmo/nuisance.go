@@ -13,13 +13,11 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
-	"github.com/uber/h3-go/v4"
 )
 
 type ContentNuisance struct {
@@ -140,6 +138,12 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	geospatial, err := geospatialFromForm(r)
+	if err != nil {
+		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
+		return
+	}
+
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		respondError(w, "Failed to create transaction", err, http.StatusInternalServerError)
@@ -159,27 +163,22 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var organization_id *int32
-	var h3cell h3.Cell
 	organization_id, err = matchDistrict(ctx, latlng.Longitude, latlng.Latitude, uploads)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to match district")
 	}
-	h3cell, err = h3utils.GetCell(*latlng.Longitude, *latlng.Latitude, 15)
-	if err != nil {
-		respondError(w, "Failedt o get h3 cell", err, http.StatusInternalServerError)
-	}
 
 	setter := models.PublicreportNuisanceSetter{
-		AdditionalInfo:      omit.From(additional_info),
-		Address:             omit.From(address),
-		AddressCountry:      omit.From(address_country),
-		AddressPlace:        omit.From(address_place),
-		AddressPostcode:     omit.From(address_postcode),
-		AddressRegion:       omit.From(address_region),
-		AddressStreet:       omit.From(address_street),
-		Created:             omit.From(time.Now()),
-		Duration:            omit.From(duration),
-		H3cell:              omitnull.From(h3cell.String()),
+		AdditionalInfo:  omit.From(additional_info),
+		Address:         omit.From(address),
+		AddressCountry:  omit.From(address_country),
+		AddressPlace:    omit.From(address_place),
+		AddressPostcode: omit.From(address_postcode),
+		AddressRegion:   omit.From(address_region),
+		AddressStreet:   omit.From(address_street),
+		Created:         omit.From(time.Now()),
+		Duration:        omit.From(duration),
+		//H3cell:              omitnull.From(geospatial.Cell.String()),
 		IsLocationBackyard:  omit.From(is_location_backyard),
 		IsLocationFrontyard: omit.From(is_location_frontyard),
 		IsLocationGarden:    omit.From(is_location_garden),
@@ -208,11 +207,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(ctx, txn)
 	if err != nil {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
-		return
-	}
-	geospatial, err := geospatialFromForm(r)
-	if err != nil {
-		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
 		return
 	}
 	if geospatial.Populated {
