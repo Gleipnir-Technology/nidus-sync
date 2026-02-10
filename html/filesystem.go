@@ -2,23 +2,12 @@ package html
 
 import (
 	"bytes"
-	//"embed"
-	//"errors"
 	"fmt"
-	"html/template"
-	//"io"
 	"io/fs"
-	//"math"
 	"net/http"
 	"os"
-	//"path"
-	//"strconv"
-	//"strings"
-	//"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	//"github.com/aarondl/opt/null"
-	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,31 +42,12 @@ func (ts templateSystemDisk) loadAll() error {
 	return nil
 }
 func (ts templateSystemDisk) renderOrError(w http.ResponseWriter, template_name string, context interface{}) {
-	t, err := ts.parseTemplate(template_name)
+	t, err := parseTemplate(ts.sourceFS, template_name)
 	if err != nil {
 		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to parse template")
 		RespondError(w, "Failed to parse template", err, http.StatusInternalServerError)
 		return
 	}
-	err = ts.addSupportingTemplates(t)
-	if err != nil {
-		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to add supporting templates")
-		RespondError(w, "Failed to add supporting templates", err, http.StatusInternalServerError)
-		return
-	}
-	svg_fs, err := fs.Sub(ts.sourceFS, "svg")
-	if err != nil {
-		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to add get svg subdir")
-		RespondError(w, "Failed to add supporting svg templates", err, http.StatusInternalServerError)
-		return
-	}
-	err = addSVGTemplates(svg_fs, t)
-	if err != nil {
-		log.Error().Err(err).Str("template_name", template_name).Msg("Failed to add supporting templates")
-		RespondError(w, "Failed to add supporting templates", err, http.StatusInternalServerError)
-		return
-	}
-
 	buf := &bytes.Buffer{}
 	err = t.Execute(buf, context)
 	if err != nil {
@@ -86,53 +56,6 @@ func (ts templateSystemDisk) renderOrError(w http.ResponseWriter, template_name 
 		return
 	}
 	buf.WriteTo(w)
-}
-func (ts templateSystemDisk) addSupportingTemplates(t *template.Template) error {
-	err := fs.WalkDir(ts.sourceFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		content, err := fs.ReadFile(ts.sourceFS, path)
-		if err != nil {
-			return fmt.Errorf("error reading template %s: %w", path, err)
-		}
-
-		new_t := template.New(path)
-		addFuncMap(new_t)
-		_, err = new_t.Parse(string(content))
-		if err != nil {
-			return fmt.Errorf("error parsing '%s': %w", path, err)
-		}
-		_, err = t.AddParseTree(new_t.Name(), new_t.Tree)
-		if err != nil {
-			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
-		}
-		//log.Debug().Str("path", path).Msg("Read template")
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("error walking template directory: %w", err)
-	}
-	return nil
-}
-func (ts templateSystemDisk) parseTemplate(filename string) (*template.Template, error) {
-	t := template.New(filename)
-	log.Debug().Str("filename", filename).Msg("parsing template")
-	addFuncMap(t)
-	content, err := fs.ReadFile(ts.sourceFS, filename)
-	if err != nil {
-		return nil, fmt.Errorf("error reading template %s: %w", filename, err)
-	}
-	_, err = t.Parse(string(content))
-	if err != nil {
-		return nil, fmt.Errorf("error parsing '%s': %w", filename, err)
-	}
-	return t, nil
 }
 
 /*
@@ -221,29 +144,3 @@ func (ts templateSystemDisk) parseTemplate(filename string) (*template.Template,
 		return templ, nil
 	}
 */
-func addSVGTemplates(filesystem fs.FS, t *template.Template) error {
-	svgs, err := fs.ReadDir(filesystem, ".")
-	if err != nil {
-		log.Warn().Msg("Failed to read svg directory")
-		return nil
-	}
-	for _, svg := range svgs {
-		content, err := fs.ReadFile(filesystem, svg.Name())
-		if err != nil {
-			return fmt.Errorf("Failed to read svg '%s' from embedded filesystem: %w", svg, err)
-		}
-		svg_name := svg.Name()
-		svg_template := fmt.Sprintf("{{define \"%s\"}}%s{{end}}", svg_name, string(content))
-		svg_t, err := template.New(svg_name).Parse(svg_template)
-		if err != nil {
-			return fmt.Errorf("Failed to parse svg '%s' from embedded filesystem: %v", svg, err)
-		}
-		_, err = t.AddParseTree(svg_t.Name(), svg_t.Tree)
-		if err != nil {
-			return fmt.Errorf("Failed to add svg '%s' to embedded template: %v", svg, err)
-		}
-		//log.Debug().Str("name", svg_name).Msg("add svg template")
-	}
-	//log.Debug().Msg("Done adding SVG templates")
-	return nil
-}

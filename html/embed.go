@@ -44,7 +44,7 @@ func newTemplateSystemEmbed() (templateSystemEmbed, error) {
 }
 func (ts templateSystemEmbed) loadAll() error {
 	// Then, parse all remaining templates into their named slots, adding the shared stuff
-	page_subdirs := []string{"template/rmo", "template/sync"}
+	page_subdirs := []string{"rmo", "sync"}
 	for _, subdir := range page_subdirs {
 		err := ts.loadTemplateSubdir(subdir)
 		if err != nil {
@@ -55,40 +55,21 @@ func (ts templateSystemEmbed) loadAll() error {
 }
 
 func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
-	err := fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
+	template_fs, err := fs.Sub(ts.sourceFS, "template")
+	if err != nil {
+		return fmt.Errorf("Failed to create template sub-fs: %w", err)
+	}
+	err = fs.WalkDir(template_fs, subdir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
 
-		content, err := fs.ReadFile(ts.sourceFS, path)
-		if err != nil {
-			return fmt.Errorf("error reading template %s: %w", path, err)
-		}
-
-		new_t := template.New(path)
-		addFuncMap(new_t)
-		_, err = new_t.Parse(string(content))
+		new_t, err := parseTemplate(template_fs, path)
 		if err != nil {
 			return fmt.Errorf("error parsing '%s': %w", path, err)
 		}
-		short_path := removeLeadingDir(path)
-		shared_subdirs := []string{"template/rmo/component", "template/rmo/layout", "template/sync/component", "template/sync/layout"}
-		for _, shared_subdir := range shared_subdirs {
-			err := ts.addSubdirTemplates(new_t, shared_subdir)
-			if err != nil {
-				return fmt.Errorf("Failed to add subdir '%s' templates: %w", shared_subdir, err)
-			}
-		}
-		svg_fs, err := fs.Sub(ts.sourceFS, "template/svg")
-		if err != nil {
-			return fmt.Errorf("failed to get template/svg sub")
-		}
-		err = addSVGTemplates(svg_fs, new_t)
-		if err != nil {
-			return fmt.Errorf("error adding SVG templates: %w", err)
-		}
-		ts.nameToTemplate[short_path] = new_t
-		//log.Debug().Str("path", short_path).Msg("Loaded page template")
+		ts.nameToTemplate[path] = new_t
+		log.Debug().Str("path", path).Msg("Loaded page template")
 		return nil
 	})
 	return err
@@ -118,8 +99,7 @@ func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir st
 		if err != nil {
 			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
 		}
-		//ts.nameToTemplate[short_path] = new_t
-		//log.Debug().Str("path", short_path).Msg("Loaded shared component template")
+		log.Debug().Str("path", short_path).Msg("Loaded shared component template")
 		return nil
 	})
 	return err
