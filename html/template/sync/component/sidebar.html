@@ -17,6 +17,24 @@
 				</a>
 			</li>
 			<li>
+				<a href="/notification">
+					<div class="menu-icon"><i class="bi bi-bell"></i></div>
+					{{ if gt (len .Notifications) 0 }}
+						<span
+							class="position-absolute translate-middle badge rounded-pill bg-primary"
+						>
+							{{ if gt (len .Notifications) 99 }}
+								99+
+							{{ else }}
+								{{ len .Notifications }}
+							{{ end }}
+							<span class="visually-hidden">unread notifications</span>
+						</span>
+					{{ end }}
+					<span class="menu-text ms-2">Notifications</span>
+				</a>
+			</li>
+			<li>
 				<a href="/pool">
 					<div class="menu-icon"><i class="bi bi-water"></i></div>
 					<span class="menu-text ms-2">Pool</span>
