@@ -6,8 +6,9 @@ class MapAggregate extends HTMLElement {
 		super();
 
 		// Create a shadow DOM
-		this.attachShadow({mode: "open" });
+		this.attachShadow({ mode: "open" });
 
+		this._markers = [];
 		// Initial render
 		this.render();
 	}
@@ -26,156 +27,181 @@ class MapAggregate extends HTMLElement {
 
 	// Lifecycle: watch these attributes for changes
 	static get observedAttributes() {
-		return ["api-key", "latitude", "longitude", "organization-id", "tegola", "zoom"];
+		return [
+			"api-key",
+			"latitude",
+			"longitude",
+			"organization-id",
+			"tegola",
+			"zoom",
+		];
 	}
 
 	// Lifecycle: respond to attribute changes
 	attributeChangedCallback(name, oldValue, newValue) {
 		// Only handle if map exists and values actually changed
 		if (!this._map || oldValue === newValue) return;
-		
-		if (name === 'api-key') {
+
+		if (name === "api-key") {
 			this._apiKey = newValue;
 		}
-		
-		if (name === 'latitude' || name === 'longitude') {
-			if (this.hasAttribute('latitude') && this.hasAttribute('longitude')) {
-				const lat = Number(this.getAttribute('latitude'));
-				const lng = Number(this.getAttribute('longitude'));
+
+		if (name === "latitude" || name === "longitude") {
+			if (this.hasAttribute("latitude") && this.hasAttribute("longitude")) {
+				const lat = Number(this.getAttribute("latitude"));
+				const lng = Number(this.getAttribute("longitude"));
 				this._map.setCenter([lat, lng]);
 			}
 		}
 
-		if (name === 'organization-id') {
+		if (name === "organization-id") {
 			this._organizationID = newValue;
 		}
 
-		if (name === 'tegola') {
+		if (name === "tegola") {
 			this._tegola = newValue;
 		}
 
-		if (name === 'zoom') {
+		if (name === "zoom") {
 			this._map.setZoom(Number(newValue));
 		}
 	}
-	
+
 	_initializeMap() {
 		const apiKey = this.getAttribute("api-key");
 		const lat = Number(this.getAttribute("latitude") || 36.2);
 		const lng = Number(this.getAttribute("longitude") || -119.2);
 		const organization_id = Number(this.getAttribute("organization-id") || 0);
-		const tegola = this.getAttribute("tegola")
+		const tegola = this.getAttribute("tegola");
 		const zoom = Number(this.getAttribute("zoom") || 15);
 
 		mapboxgl.accessToken = apiKey;
 		const mapElement = this.shadowRoot.querySelector("#map");
-		map = new mapboxgl.Map({
+		this._map = new mapboxgl.Map({
 			container: mapElement,
 			center: {
 				lat: lat,
 				lng: lng,
 			},
-			style: 'mapbox://styles/mapbox/streets-v12', // style URL
+			style: "mapbox://styles/mapbox/streets-v12", // style URL
 			zoom: zoom,
 		});
-		map.on("load", () => {
-			map.addSource('tegola', {
-				'type': 'vector',
-				'tiles': [
-					`${tegola}maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`
-				]
+		this._map.on("load", () => {
+			this._map.addSource("tegola", {
+				type: "vector",
+				tiles: [
+					`${tegola}maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`,
+				],
 			});
-			map.addInteraction('nidus-mouseenter-interaction', {
-				type: 'mouseenter',
-				target: { layerId: 'nidus' },
+			this._map.addInteraction("nidus-mouseenter-interaction", {
+				type: "mouseenter",
+				target: { layerId: "nidus" },
 				handler: () => {
-					map.getCanvas().style.cursor = 'pointer';
-				}
+					map.getCanvas().style.cursor = "pointer";
+				},
 			});
-			map.addInteraction('nidus-mouseleave-interaction', {
-				type: 'mouseleave',
-				target: { layerId: 'nidus' },
+			this._map.addInteraction("nidus-mouseleave-interaction", {
+				type: "mouseleave",
+				target: { layerId: "nidus" },
 				handler: () => {
-					map.getCanvas().style.cursor = '';
-				}
+					map.getCanvas().style.cursor = "";
+				},
 			});
-			map.addLayer({
-				'id': 'mosquito_source',
-				'type': 'fill',
-				'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-				'source': 'tegola',
-				'source-layer': 'mosquito_source',
-				'paint': {
-					'fill-opacity': 0.4,
-					'fill-color': '#dc3545'
-				}
+			this._map.addLayer({
+				id: "mosquito_source",
+				type: "fill",
+				filter: [
+					"==",
+					["zoom"],
+					["+", 2, ["to-number", ["get", "resolution"]]],
+				],
+				source: "tegola",
+				"source-layer": "mosquito_source",
+				paint: {
+					"fill-opacity": 0.4,
+					"fill-color": "#dc3545",
+				},
 			});
-			map.addLayer({
-				'id': 'service_request',
-				'type': 'fill',
-				'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-				'source': 'tegola',
-				'source-layer': 'service_request',
-				'paint': {
-					'fill-opacity': 0.4,
-					'fill-color': '#ffc107'
-				}
+			this._map.addLayer({
+				id: "service_request",
+				type: "fill",
+				filter: [
+					"==",
+					["zoom"],
+					["+", 2, ["to-number", ["get", "resolution"]]],
+				],
+				source: "tegola",
+				"source-layer": "service_request",
+				paint: {
+					"fill-opacity": 0.4,
+					"fill-color": "#ffc107",
+				},
 			});
-			map.addLayer({
-				'id': 'trap',
-				'type': 'fill',
-				'filter': ['==', ['zoom'], ['+', 2, ['to-number', ['get', 'resolution']]]],
-				'source': 'tegola',
-				'source-layer': 'trap',
-				'paint': {
-					'fill-opacity': 0.4,
-					'fill-color': '#0dcaf0'
-				}
+			this._map.addLayer({
+				id: "trap",
+				type: "fill",
+				filter: [
+					"==",
+					["zoom"],
+					["+", 2, ["to-number", ["get", "resolution"]]],
+				],
+				source: "tegola",
+				"source-layer": "trap",
+				paint: {
+					"fill-opacity": 0.4,
+					"fill-color": "#0dcaf0",
+				},
 			});
-			map.addInteraction("tegola-click-mosquito-source", {
+			this._map.addInteraction("tegola-click-mosquito-source", {
 				type: "click",
 				target: { layerId: "mosquito_source" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
-					this.dispatchEvent(new CustomEvent("cell-click", {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: {
-							cell: properties.cell
-						}
-					}));
-				}
+					this.dispatchEvent(
+						new CustomEvent("cell-click", {
+							bubbles: true,
+							composed: true, // Allows event to cross shadow DOM boundary
+							detail: {
+								cell: properties.cell,
+							},
+						}),
+					);
+				},
 			});
-			map.addInteraction("tegola-click-service-request", {
+			this._map.addInteraction("tegola-click-service-request", {
 				type: "click",
 				target: { layerId: "service_request" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
-					this.dispatchEvent(new CustomEvent("cell-click", {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: {
-							cell: properties.cell
-						}
-					}));
-				}
+					this.dispatchEvent(
+						new CustomEvent("cell-click", {
+							bubbles: true,
+							composed: true, // Allows event to cross shadow DOM boundary
+							detail: {
+								cell: properties.cell,
+							},
+						}),
+					);
+				},
 			});
-			map.addInteraction("tegola-click-trap", {
+			this._map.addInteraction("tegola-click-trap", {
 				type: "click",
 				target: { layerId: "trap" },
 				handler: (e) => {
 					const coordinates = e.feature.geometry.coordinates.slice();
 					const properties = e.feature.properties;
-					this.dispatchEvent(new CustomEvent("cell-click", {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: {
-							cell: properties.cell
-						}
-					}));
-				}
+					this.dispatchEvent(
+						new CustomEvent("cell-click", {
+							bubbles: true,
+							composed: true, // Allows event to cross shadow DOM boundary
+							detail: {
+								cell: properties.cell,
+							},
+						}),
+					);
+				},
 			});
 		});
 	}
@@ -184,25 +210,23 @@ class MapAggregate extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 			<style>
+				@import url('https://api.mapbox.com/mapbox-gl-js/v2.14.0/mapbox-gl.css');
 				.map-container {
 					background-color: #e9ecef;
 					border-radius: 10px;
 					box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 					height: 500px;
-					display: flex;
-					align-items: center;
-					justify-content: center;
 					margin-top: 20px;
+					position: relative;
 				}
 				#map {
-					height: 500px;
-					width:100%;
-					margin-bottom: 10px;
-				}
-				#map img {
-					max-width: none;
-					min-width: 0px;
-					height: auto;
+					position: absolute;
+					top: 0;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					height: 100%;
+					width: 100%
 				}
 			</style>
 			
@@ -226,13 +250,15 @@ class MapAggregate extends HTMLElement {
 
 		const marker = new mapboxgl.Marker({
 			color: "#FF0000",
-			draggable: true
-		}).setLngLat(coords).addTo(map);
-		marker.on('dragend', function(e) {
+			draggable: true,
+		})
+			.setLngLat(coords)
+			.addTo(this._map);
+		marker.on("dragend", function (e) {
 			const markerDraggedEvent = new CustomEvent("markerdragend", {
 				detail: {
-					marker: marker
-				}
+					marker: marker,
+				},
 			});
 			mapContainer.dispatchEvent(markerDraggedEvent);
 		});
@@ -240,4 +266,4 @@ class MapAggregate extends HTMLElement {
 	}
 }
 
-customElements.define('map-aggregate', MapAggregate);
+customElements.define("map-aggregate", MapAggregate);
