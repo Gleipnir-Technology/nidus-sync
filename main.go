@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -143,7 +144,9 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start openAI client")
 		os.Exit(8)
 	}
-	background.Start(ctx)
+	custom_logger := log.With().Logger().Level(zerolog.InfoLevel)
+	background_ctx := arcgis.WithLogger(ctx, custom_logger)
+	background.Start(background_ctx)
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,
