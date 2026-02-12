@@ -1,0 +1,48 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Stadia{{ end }}
+{{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<link
+		href="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css"
+		rel="stylesheet"
+	/>
+	<style type="text/css">
+		body {
+			margin: 0;
+			padding: 0;
+		}
+
+		#map {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: 100%;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<body>
+		<div id="map"></div>
+		<script type="text/javascript">
+			var map = new maplibregl.Map({
+				container: "map",
+				style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Style URL; see our documentation for more options
+				center: [12, 53], // Initial focus coordinate
+				zoom: 4,
+			});
+
+			// MapLibre GL JS does not handle RTL text by default,
+			// so we recommend adding this dependency to fully support RTL rendering if your style includes RTL text
+			maplibregl.setRTLTextPlugin(
+				"https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js",
+			);
+
+			// Add zoom and rotation controls to the map.
+			map.addControl(new maplibregl.NavigationControl());
+		</script>
+	</body>
+{{ end }}

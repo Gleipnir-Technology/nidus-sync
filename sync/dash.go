@@ -162,6 +162,22 @@ func getSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	source(w, r, u, globalid)
 }
 
+func getStadia(w http.ResponseWriter, r *http.Request, u *models.User) {
+	userContent, err := contentForUser(r.Context(), u)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	data := ContentDashboard{
+		MapData: ComponentMap{
+			MapboxToken: config.MapboxToken,
+		},
+		URL:  newContentURL(),
+		User: userContent,
+	}
+	html.RenderOrError(w, "sync/stadia.html", data)
+
+}
 func getTemplateTest(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/template-test.html", nil)
 }
