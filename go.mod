@@ -81,6 +81,7 @@ require (
 	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	resty.dev/v3 v3.0.0-beta.6 // indirect
 )
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob

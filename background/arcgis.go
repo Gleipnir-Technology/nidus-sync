@@ -22,6 +22,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
+	"github.com/Gleipnir-Technology/arcgis-go/response"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
@@ -36,6 +37,7 @@ import (
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
 	"github.com/jackc/pgx/v5"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -139,7 +141,8 @@ func IsSyncOngoing(org_id int32) bool {
 }
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
-func refreshFieldseekerData(ctx context.Context, newOauthCh <-chan struct{}) {
+func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan struct{}) {
+	ctx := log.With().Str("component", "arcgis").Logger().Level(zerolog.InfoLevel).WithContext(background_ctx)
 	syncStatusByOrg = make(map[int32]bool, 0)
 	for {
 		workerCtx, cancel := context.WithCancel(context.Background())
@@ -208,11 +211,8 @@ type SyncStats struct {
 }
 
 func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseeker.FieldSeeker, arcgis_id string) {
-	layers, err := fieldseekerClient.FeatureServerLayers(ctx)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get fieldseeker layers")
-		return
-	}
+	layers := fieldseekerClient.Layers()
+	log.Debug().Int("len", len(layers)).Msg("Downloading fieldseeker schema")
 	for _, layer := range layers {
 		err := os.MkdirAll(filepath.Join(config.FieldseekerSchemaDirectory, arcgis_id), os.ModePerm)
 		if err != nil {
@@ -276,10 +276,9 @@ func generateCodeVerifier() string {
 
 // Find out what we can about this user
 func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.OauthToken) {
-	client, err := arcgis.NewArcGIS(
+	client, err := arcgis.NewArcGISAuth(
 		ctx,
-		nil,
-		arcgis.AuthenticatorOAuth{
+		&arcgis.AuthenticatorOAuth{
 			AccessToken:         oauth.AccessToken,
 			AccessTokenExpires:  oauth.AccessTokenExpires,
 			RefreshToken:        oauth.RefreshToken,
@@ -343,37 +342,25 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		return
 	}
 
-	search, err := client.Search(ctx, "FieldseekerGIS")
+	fssync, err := fieldseeker.NewFieldSeekerFromAG(ctx, *client)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get search FieldseekerGIS data")
-		return
+		log.Error().Err(err).Msg("Failed to create fieldseeker")
 	}
-	var fieldseeker_client *fieldseeker.FieldSeeker
-	for _, result := range search.Results {
-		log.Info().Str("name", result.Name).Msg("Got result")
-		if result.Name == "FieldSeekerGIS" {
-			log.Info().Str("url", result.URL).Msg("Found Fieldseeker")
-			setter := models.OrganizationSetter{
-				FieldseekerURL: omitnull.From(result.URL),
-			}
-			err = org.Update(ctx, db.PGInstance.BobDB, &setter)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to create new organization")
-				return
-			}
-			fieldseeker_client, err = NewFieldSeeker(ctx, oauth)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed to create new fieldseeker")
-				return
-			}
-		}
+	log.Info().Str("url", fssync.ServiceFeature.URL.String()).Msg("Found Fieldseeker")
+	setter := models.OrganizationSetter{
+		FieldseekerURL: omitnull.From(fssync.ServiceFeature.URL.String()),
+	}
+	err = org.Update(ctx, db.PGInstance.BobDB, &setter)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create new organization")
+		return
 	}
 	arcgis_id, ok := org.ArcgisID.Get()
 	if !ok {
 		log.Error().Int("org.id", int(org.ID)).Msg("Cannot get webhooks - ArcGIS ID is null")
 	}
-	maybeCreateWebhook(ctx, fieldseeker_client)
-	downloadFieldseekerSchema(ctx, fieldseeker_client, arcgis_id)
+	maybeCreateWebhook(ctx, fssync)
+	downloadFieldseekerSchema(ctx, fssync, arcgis_id)
 	notification.ClearOauth(ctx, user)
 	newOAuthTokenChannel <- struct{}{}
 }
@@ -394,9 +381,8 @@ func NewFieldSeeker(ctx context.Context, oauth *models.OauthToken) (*fieldseeker
 		return nil, errors.New("Didn't get enough path parts")
 	}
 	context := pathParts[0]
-	ar, err := arcgis.NewArcGIS(
+	ar, err := arcgis.NewArcGISAuth(
 		ctx,
-		&host,
 		arcgis.AuthenticatorOAuth{
 			AccessToken:         oauth.AccessToken,
 			AccessTokenExpires:  oauth.AccessTokenExpires,
@@ -408,23 +394,18 @@ func NewFieldSeeker(ctx context.Context, oauth *models.OauthToken) (*fieldseeker
 		return nil, fmt.Errorf("Failed to create ArcGIS client: %w", err)
 	}
 	log.Info().Str("context", context).Str("host", host).Msg("Using base fieldseeker URL")
-	fssync, err := fieldseeker.NewFieldSeeker(ar, row.FieldseekerURL.MustGet())
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create Fieldseeker client: %w", err)
-	}
-	// check that the authentication is valid
-	_, err = fssync.FeatureServerLayers(ctx)
+	fssync, err := fieldseeker.NewFieldSeekerFromURL(ctx, *ar, row.FieldseekerURL.MustGet())
 	if err != nil {
 		if errors.Is(err, arcgis.ErrorInvalidAuthToken) {
 			return nil, InvalidatedTokenError{}
 		} else if errors.Is(err, arcgis.ErrorInvalidRefreshToken) {
 			return nil, InvalidatedTokenError{}
 		}
-		return nil, fmt.Errorf("Unrecognized error checking oauth validity: %w", err)
+		return nil, fmt.Errorf("Failed to create Fieldseeker client: %w", err)
 	}
 	return fssync, nil
 }
-func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32) (*arcgis.PortalsResponse, error) {
+func updatePortalData(ctx context.Context, client *arcgis.ArcGIS, user_id int32) (*response.Portal, error) {
 	p, err := client.PortalsSelf(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get ArcGIS user data: %w", err)
@@ -555,10 +536,7 @@ func exportFieldseekerData(ctx context.Context, fssync *fieldseeker.FieldSeeker,
 	pool := pond.NewResultPool[SyncStats](20)
 	group := pool.NewGroup()
 	var ss SyncStats
-	layers, err := fssync.FeatureServerLayers(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to get layers: %w", err)
-	}
+	layers := fssync.Layers()
 	for _, l := range layers {
 		ss, err = exportFieldseekerLayer(ctx, group, org, fssync, l)
 		if err != nil {
@@ -1192,7 +1170,7 @@ func updateRowFromFeatureFS(ctx context.Context, transaction pgx.Tx, table strin
 	return nil
 }
 
-func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[SyncStats], org *models.Organization, fssync *fieldseeker.FieldSeeker, layer arcgis.LayerFeature) (SyncStats, error) {
+func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[SyncStats], org *models.Organization, fssync *fieldseeker.FieldSeeker, layer response.Layer) (SyncStats, error) {
 	var stats SyncStats
 	count, err := fssync.QueryCount(ctx, layer.ID)
 	if err != nil {
