@@ -5,6 +5,7 @@ import (
 )
 
 type ContentURL struct {
+	OAuthRefreshArcGIS  string
 	PoolCSVUpload       string
 	SamplePoolCSV       string
 	Setting             string
@@ -18,6 +19,7 @@ type ContentURL struct {
 
 func newContentURL() ContentURL {
 	return ContentURL{
+		OAuthRefreshArcGIS:  config.MakeURLNidus("/arcgis/oauth/begin"),
 		PoolCSVUpload:       config.MakeURLNidus("/pool/upload"),
 		SamplePoolCSV:       config.MakeURLNidus("/static/file/sample-pool.csv"),
 		Setting:             config.MakeURLNidus("/setting"),

@@ -110,6 +110,7 @@ func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) 
 		AccessTokenExpires:  omit.From(accessExpires),
 		ArcgisID:            omitnull.FromPtr[string](nil),
 		ArcgisLicenseTypeID: omitnull.FromPtr[string](nil),
+		Created:             omit.From(time.Now()),
 		InvalidatedAt:       omitnull.FromPtr[time.Time](nil),
 		RefreshToken:        omit.From(token.RefreshToken),
 		RefreshTokenExpires: omit.From(refreshExpires),

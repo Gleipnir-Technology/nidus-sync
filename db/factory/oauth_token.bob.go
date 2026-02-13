@@ -47,6 +47,7 @@ type OauthTokenTemplate struct {
 	ArcgisLicenseTypeID func() null.Val[string]
 	RefreshTokenExpires func() time.Time
 	InvalidatedAt       func() null.Val[time.Time]
+	Created             func() time.Time
 
 	r oauthTokenR
 	f *Factory
@@ -125,6 +126,10 @@ func (o OauthTokenTemplate) BuildSetter() *models.OauthTokenSetter {
 		val := o.InvalidatedAt()
 		m.InvalidatedAt = omitnull.FromNull(val)
 	}
+	if o.Created != nil {
+		val := o.Created()
+		m.Created = omit.From(val)
+	}
 
 	return m
 }
@@ -177,6 +182,9 @@ func (o OauthTokenTemplate) Build() *models.OauthToken {
 	if o.InvalidatedAt != nil {
 		m.InvalidatedAt = o.InvalidatedAt()
 	}
+	if o.Created != nil {
+		m.Created = o.Created()
+	}
 
 	o.setModelRels(m)
 
@@ -216,6 +224,10 @@ func ensureCreatableOauthToken(m *models.OauthTokenSetter) {
 	if !(m.UserID.IsValue()) {
 		val := random_int32(nil)
 		m.UserID = omit.From(val)
+	}
+	if !(m.Created.IsValue()) {
+		val := random_time_Time(nil)
+		m.Created = omit.From(val)
 	}
 }
 
@@ -346,6 +358,7 @@ func (m oauthTokenMods) RandomizeAllColumns(f *faker.Faker) OauthTokenMod {
 		OauthTokenMods.RandomArcgisLicenseTypeID(f),
 		OauthTokenMods.RandomRefreshTokenExpires(f),
 		OauthTokenMods.RandomInvalidatedAt(f),
+		OauthTokenMods.RandomCreated(f),
 	}
 }
 
@@ -721,6 +734,37 @@ func (m oauthTokenMods) RandomInvalidatedAtNotNull(f *faker.Faker) OauthTokenMod
 
 			val := random_time_Time(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m oauthTokenMods) Created(val time.Time) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.Created = func() time.Time { return val }
+	})
+}
+
+// Set the Column from the function
+func (m oauthTokenMods) CreatedFunc(f func() time.Time) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.Created = f
+	})
+}
+
+// Clear any values for the column
+func (m oauthTokenMods) UnsetCreated() OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.Created = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m oauthTokenMods) RandomCreated(f *faker.Faker) OauthTokenMod {
+	return OauthTokenModFunc(func(_ context.Context, o *OauthTokenTemplate) {
+		o.Created = func() time.Time {
+			return random_time_Time(f)
 		}
 	})
 }

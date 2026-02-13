@@ -36,7 +36,6 @@ import (
 	serviceRequestQuickConfirmation = buildTemplate("service-request-quick-confirmation", "base")
 	serviceRequestUpdates           = buildTemplate("service-request-updates", "base")
 	settingRoot                     = buildTemplate("setting-mock", "base")
-	settingIntegration              = buildTemplate("setting-integration", "base")
 	settingPesticide                = buildTemplate("setting-pesticide", "base")
 	settingPesticideAdd             = buildTemplate("setting-pesticide-add", "base")
 	settingUsers                    = buildTemplate("setting-user", "base")

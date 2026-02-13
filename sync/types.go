@@ -60,8 +60,6 @@ type ContentDashboardLoading struct {
 	User User
 }
 
-type ContentPlaceholder struct {
-}
 type ContentSignin struct {
 	InvalidCredentials bool
 }

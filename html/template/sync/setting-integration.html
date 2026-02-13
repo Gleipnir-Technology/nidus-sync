@@ -1,6 +1,6 @@
-{{ template "sync/layout/base.html" . }}
+{{ template "sync/layout/authenticated.html" . }}
 
-{{ define "title" }}Dash{{ end }}
+{{ define "title" }}Settings - Integrations{{ end }}
 {{ define "extraheader" }}
 	<style>
 		.integration-card {
@@ -69,30 +69,36 @@
 							<tr>
 								<td width="30%"><strong>OAuth Token Status</strong></td>
 								<td>
-									<span class="status-active">
-										<i class="bi bi-check-circle-fill me-1"></i> Active
-									</span>
+									{{ if .ArcGISOAuth.InvalidatedAt.IsNull }}
+										<span class="status-active">
+											<i class="bi bi-check-circle-fill me-1"></i> Active
+										</span>
+									{{ else }}
+										<span class="status-inactive">
+											<i class="bi bi-x-circle-fill me-1"></i> Active
+										</span>
+									{{ end }}
 								</td>
 							</tr>
 							<tr>
 								<td><strong>Token Expiration</strong></td>
-								<td>26 days remaining (Expires on Dec 31, 2025)</td>
+								<td>{{ .ArcGISOAuth.AccessTokenExpires|timeSince }}</td>
 							</tr>
 							<tr>
 								<td><strong>Integration Method</strong></td>
-								<td>Web Hooks</td>
+								<td>Polling</td>
 							</tr>
 							<tr>
 								<td><strong>Permission Level</strong></td>
-								<td>Read & Write</td>
+								<td>Read</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 				<div class="d-flex gap-2">
-					<button class="btn btn-primary">
+					<a class="btn btn-primary" href="{{ .URL.OAuthRefreshArcGIS }}">
 						<i class="bi bi-arrow-repeat me-2"></i>Refresh OAuth Token
-					</button>
+					</a>
 					<button class="btn btn-outline-danger">
 						<i class="bi bi-trash me-2"></i>Delete Token
 					</button>

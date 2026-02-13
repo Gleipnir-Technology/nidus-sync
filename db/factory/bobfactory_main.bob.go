@@ -2912,6 +2912,7 @@ func (f *Factory) FromExistingOauthToken(m *models.OauthToken) *OauthTokenTempla
 	o.ArcgisLicenseTypeID = func() null.Val[string] { return m.ArcgisLicenseTypeID }
 	o.RefreshTokenExpires = func() time.Time { return m.RefreshTokenExpires }
 	o.InvalidatedAt = func() null.Val[time.Time] { return m.InvalidatedAt }
+	o.Created = func() time.Time { return m.Created }
 
 	ctx := context.Background()
 	if m.R.UserUser != nil {
