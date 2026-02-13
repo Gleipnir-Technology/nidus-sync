@@ -20,6 +20,7 @@ import (
 func addFuncMap(t *template.Template) {
 	funcMap := template.FuncMap{
 		"bigNumber":          bigNumber,
+		"hasPassed":          hasPassed,
 		"html":               unescapeHTML,
 		"json":               unescapeJS,
 		"GISStatement":       gisStatement,
@@ -60,6 +61,10 @@ func publicReportID(s string) string {
 }
 func timeAsRelativeDate(d time.Time) string {
 	return d.Format("01-02")
+}
+
+func hasPassed(t time.Time) bool {
+	return t.Before(time.Now())
 }
 
 // FormatTimeDuration returns a human-readable string representing a time.Duration

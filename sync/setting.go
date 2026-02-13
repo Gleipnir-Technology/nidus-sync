@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 )

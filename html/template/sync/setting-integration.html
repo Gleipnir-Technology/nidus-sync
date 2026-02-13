@@ -69,13 +69,17 @@
 							<tr>
 								<td width="30%"><strong>OAuth Token Status</strong></td>
 								<td>
-									{{ if .ArcGISOAuth.InvalidatedAt.IsNull }}
-										<span class="status-active">
-											<i class="bi bi-check-circle-fill me-1"></i> Active
+									{{ if not .ArcGISOAuth.InvalidatedAt.IsNull }}
+										<span class="status-inactive">
+											<i class="bi bi-x-circle-fill me-1"></i> Invalidated
+										</span>
+									{{ else if hasPassed .ArcGISOAuth.AccessTokenExpires }}
+										<span class="status-inactive">
+											<i class="bi bi-x-circle-fill me-1"></i> Expired
 										</span>
 									{{ else }}
-										<span class="status-inactive">
-											<i class="bi bi-x-circle-fill me-1"></i> Active
+										<span class="status-active">
+											<i class="bi bi-check-circle-fill me-1"></i> Active
 										</span>
 									{{ end }}
 								</td>
