@@ -30,8 +30,8 @@ func addFuncMap(t *template.Template) {
 		"timeDelta":          timeDelta,
 		"timeElapsed":        timeElapsed,
 		"timeInterval":       timeInterval,
-		"timeSince":          timeSince,
-		"timeSincePtr":       timeSincePtr,
+		"timeRelative":       timeRelative,
+		"timeRelativePtr":    timeRelativePtr,
 		"uuidShort":          uuidShort,
 	}
 	t.Funcs(funcMap)
@@ -179,26 +179,42 @@ func timeInterval(d time.Duration) string {
 	years := days / 365
 	return fmt.Sprintf("every %d years", int(math.Round(years)))
 }
-func timeSincePtr(t *time.Time) string {
-	if t == nil {
-		return "never"
-	}
-	return timeSince(*t)
-}
-func timeSince(t time.Time) string {
+func timeRelative(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)
 
 	hours := diff.Hours()
-	if hours < 1 {
-		minutes := diff.Minutes()
-		return fmt.Sprintf("%d minutes ago", int(minutes))
-	} else if hours < 24 {
-		return fmt.Sprintf("%d hours ago", int(hours))
+	if hours > 0 {
+		if hours < 1 {
+			minutes := diff.Minutes()
+			return fmt.Sprintf("%d minutes ago", int(minutes))
+		} else if hours < 24 {
+			return fmt.Sprintf("%d hours ago", int(hours))
+		} else {
+			days := hours / 24
+			return fmt.Sprintf("%d days ago", int(days))
+		}
 	} else {
-		days := hours / 24
-		return fmt.Sprintf("%d days ago", int(days))
+		if hours < -24 {
+			days := hours / 24
+			return fmt.Sprintf("in %d days", -1*int(days))
+		} else if hours < -1 {
+			return fmt.Sprintf("in %d hours", -1*int(hours))
+		} else {
+			minutes := diff.Minutes()
+			if minutes > -1 {
+				seconds := diff.Seconds()
+				return fmt.Sprintf("in %d seconds", -1*int(seconds))
+			}
+			return fmt.Sprintf("in %d minutes", -1*int(minutes))
+		}
 	}
+}
+func timeRelativePtr(t *time.Time) string {
+	if t == nil {
+		return "never"
+	}
+	return timeRelative(*t)
 }
 func unescapeHTML(s string) template.HTML {
 	return template.HTML(s)

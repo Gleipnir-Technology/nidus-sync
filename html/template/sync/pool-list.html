@@ -39,7 +39,7 @@
 									{{ range .Uploads }}
 										<tr class="clickable-row" data-upload-id="{{ .ID }}">
 											<td>{{ .Status }}</td>
-											<td>{{ .Created|timeSince }}</td>
+											<td>{{ .Created|timeRelative }}</td>
 										</tr>
 									{{ end }}
 								</tbody>

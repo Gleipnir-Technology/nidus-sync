@@ -89,8 +89,8 @@
 												<a href="/source/{{ .ID }}">{{ .ID|uuidShort }}</a>
 											</td>
 											<td>{{ .Type }}</td>
-											<td>{{ .LastInspected|timeSincePtr }}</td>
-											<td>{{ .LastTreated|timeSincePtr }}</td>
+											<td>{{ .LastInspected|timeRelativePtr }}</td>
+											<td>{{ .LastTreated|timeRelativePtr }}</td>
 										</tr>
 									{{ end }}
 								</tbody>
@@ -138,7 +138,7 @@
 												>
 											</td>
 											<td>{{ .Location }}</td>
-											<td>{{ .Date|timeSincePtr }}</td>
+											<td>{{ .Date|timeRelativePtr }}</td>
 											<td>{{ .Action }}</td>
 											<td>{{ .Notes }}</td>
 										</tr>
@@ -225,7 +225,7 @@
 													>{{ .LocationID|uuidShort }}</a
 												>
 											</td>
-											<td>{{ .Date|timeSincePtr }}</td>
+											<td>{{ .Date|timeRelativePtr }}</td>
 											<td>{{ .Product }}</td>
 											<td>{{ .Notes }}</td>
 										</tr>

@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", onLoad);
 					</div>
 					<div class="col-md-4 mb-3">
 						<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
-						<span>{{ .Report.Created|timeSince }}</span>
+						<span>{{ .Report.Created|timeRelative }}</span>
 					</div>
 					<div class="col-md-4 mb-3">
 						<strong><i class="bi bi-crosshair me-2"></i>District:</strong>
@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", onLoad);
 				<div class="timeline">
 					{{ range .Timeline }}
 						<div class="timeline-item">
-							<div class="timeline-date">{{ .At|timeSince }}</div>
+							<div class="timeline-date">{{ .At|timeRelative }}</div>
 							<h5 class="mb-1">{{ .Title }}</h5>
 							<p class="mb-0">{{ .Detail }}</p>
 						</div>
