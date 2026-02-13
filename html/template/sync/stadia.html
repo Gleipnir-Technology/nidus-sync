@@ -30,9 +30,26 @@
 		<script type="text/javascript">
 			var map = new maplibregl.Map({
 				container: "map",
-				style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Style URL; see our documentation for more options
+				style: "https://tiles.stadiamaps.com/styles/alidade_satellite.json", // Style URL; see our documentation for more options
 				center: [12, 53], // Initial focus coordinate
 				zoom: 4,
+			});
+			map.on("load", () => {
+				//let coords = [-119.3444741, 36.3260431 ];
+				let coords = [-119.34384512198031, 36.3260431000042];
+				map.jumpTo({
+					center: coords,
+					zoom: 19,
+				});
+				const marker = new maplibregl.Marker({
+					color: "#FF0000",
+					draggable: true,
+				})
+					.setLngLat(coords)
+					.addTo(map);
+				marker.on("dragend", (e) => {
+					console.log("Marker moved to", e);
+				});
 			});
 
 			// MapLibre GL JS does not handle RTL text by default,
