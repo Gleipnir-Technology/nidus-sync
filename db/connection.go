@@ -33,7 +33,7 @@ var (
 )
 
 func doMigrations(connection_string string) error {
-	log.Info().Str("dsn", connection_string).Msg("Connecting to database")
+	log.Debug().Str("dsn", connection_string).Msg("Connecting to database")
 	db, err := sql.Open("pgx", connection_string)
 	if err != nil {
 		return fmt.Errorf("Failed to open database connection: %w", err)
@@ -76,7 +76,7 @@ func doMigrations(connection_string string) error {
 }
 
 func InitializeDatabase(ctx context.Context, uri string) error {
-	log.Info().Str("dsn", uri).Msg("Connecting to database")
+	log.Debug().Str("dsn", uri).Msg("Initializing database")
 	needs, err := needsMigrations(uri)
 	if err != nil {
 		return fmt.Errorf("Failed to determine if migrations are needed: %w", err)
@@ -92,7 +92,7 @@ func InitializeDatabase(ctx context.Context, uri string) error {
 			return fmt.Errorf("Failed to handle migrations: %w", err)
 		}
 	} else {
-		log.Info().Msg("No database migrations necessary")
+		log.Debug().Msg("No database migrations necessary")
 	}
 
 	pgOnce.Do(func() {
@@ -111,7 +111,6 @@ func InitializeDatabase(ctx context.Context, uri string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get database current: %w", err)
 	}
-	log.Info().Str("database", current).Msg("Connected to database")
 	err = prepareStatements(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize prepared statements: %w", err)

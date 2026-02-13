@@ -38,7 +38,6 @@ func main() {
 		log.Error().Err(err).Msg("Failed to parse config")
 		os.Exit(1)
 	}
-	log.Info().Msg("Starting...")
 
 	var prod = flag.Bool("prod", false, "Force into production mode")
 	flag.Parse()
@@ -76,7 +75,7 @@ func main() {
 	defer sentryWriter.Close()
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter)).Level(zerolog.InfoLevel)
 
 	err = db.InitializeDatabase(context.TODO(), config.PGDSN)
 	if err != nil {
@@ -131,7 +130,7 @@ func main() {
 	hr.Map(config.DomainNidus, sr)
 	r.Mount("/", hr)
 
-	log.Info().Str("report url", config.DomainRMO).Str("sync url", config.DomainNidus).Msg("Serving at URLs")
+	log.Debug().Str("report url", config.DomainRMO).Str("sync url", config.DomainNidus).Msg("Serving at URLs")
 
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())

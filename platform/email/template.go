@@ -88,7 +88,7 @@ func LoadTemplates() error {
 			templateTXT:  template_txt,
 		}
 		templateByID[template_id] = &built
-		log.Info().Int32("id", template_id).Str("name", name).Msg("Added template to cache")
+		//log.Debug().Int32("id", template_id).Str("name", name).Msg("Added template to cache")
 	}
 	templateInitialID, err = loadTemplateID(ctx, tx, enums.CommsMessagetypeemailInitialContact)
 	if err != nil {
