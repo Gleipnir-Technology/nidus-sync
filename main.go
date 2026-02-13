@@ -135,6 +135,7 @@ func main() {
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	background.Start(ctx)
 
 	openai_logger := log.With().Logger()
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)

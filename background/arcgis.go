@@ -154,6 +154,9 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 			log.Error().Err(err).Msg("Failed to get oauths")
 			return
 		}
+		if len(oauths) == 0 {
+			log.Info().Msg("No oauths to maintain")
+		}
 		for _, oauth := range oauths {
 			wg.Add(1)
 			go func() {
@@ -176,6 +179,9 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 			log.Error().Err(err).Msg("Failed to get orgs")
 			return
 		}
+		if len(orgs) == 0 {
+			log.Info().Msg("No orgs to maintain")
+		}
 		for _, org := range orgs {
 			wg.Add(1)
 			go func() {
@@ -183,7 +189,7 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 				err := periodicallyExportFieldseeker(workerCtx, org)
 				if err != nil {
 					if errors.Is(err, &NoOAuthForOrg{}) {
-						//log.Debug().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
+						log.Debug().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
 						return
 					}
 					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
