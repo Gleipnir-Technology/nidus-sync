@@ -16,6 +16,7 @@ require (
 	github.com/go-chi/hostrouter v0.3.0
 	github.com/go-chi/render v1.0.3
 	github.com/gofrs/uuid/v5 v5.4.0
+	github.com/google/go-querystring v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jaswdr/faker/v2 v2.8.1
@@ -33,6 +34,7 @@ require (
 	github.com/twilio/twilio-go v1.29.1
 	github.com/uber/h3-go/v4 v4.4.0
 	golang.org/x/crypto v0.47.0
+	resty.dev/v3 v3.0.0-beta.6
 )
 
 require (
@@ -81,7 +83,6 @@ require (
 	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	resty.dev/v3 v3.0.0-beta.6 // indirect
 )
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
