@@ -88,7 +88,7 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string
 	if err != nil {
 		return err
 	}
-	e := text.EnsureInDB(ctx, phone)
+	e := text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure phone is in DB")
 	}
@@ -120,7 +120,7 @@ func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, destination stri
 	return nil
 }
 func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
-	e := text.EnsureInDB(ctx, phone)
+	e := text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure phone is in DB")
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -146,7 +147,13 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 			case headerPropertyOwnerName:
 				setter.PropertyOwnerName = omit.From(col)
 			case headerPropertyOwnerPhone:
-				setter.PropertyOwnerPhone = omitnull.From(col)
+				phone, err := text.ParsePhoneNumber(col)
+				if err != nil {
+					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					continue
+				}
+				text.EnsureInDB(ctx, txn, *phone)
+				setter.PropertyOwnerPhone = omitnull.From(text.PhoneString(*phone))
 			case headerResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
@@ -23,8 +24,8 @@ import (
 
 type E164 = phonenumbers.PhoneNumber
 
-func EnsureInDB(ctx context.Context, destination E164) (err error) {
-	return ensureInDB(ctx, PhoneString(destination))
+func EnsureInDB(ctx context.Context, ex bob.Executor, destination E164) (err error) {
+	return ensureInDB(ctx, ex, PhoneString(destination))
 }
 func HandleTextMessage(src string, dst string, body string) {
 	ctx := context.Background()
@@ -111,13 +112,13 @@ func StoreSources() error {
 			if err != nil {
 				return fmt.Errorf("Failed to parse +1'%s' as phone number: %w", n, err)
 			}
-			err = EnsureInDB(ctx, *dest)
+			err = EnsureInDB(ctx, db.PGInstance.BobDB, *dest)
 		} else {
 			dest, err := ParsePhoneNumber(n)
 			if err != nil {
 				return fmt.Errorf("Failed to parse '%s' as phone number: %w", n, err)
 			}
-			err = EnsureInDB(ctx, *dest)
+			err = EnsureInDB(ctx, db.PGInstance.BobDB, *dest)
 		}
 		if err != nil {
 			return fmt.Errorf("Failed to add number '%s' to DB: %w", n, err)
@@ -183,7 +184,7 @@ func sendInitialText(ctx context.Context, src string, dst string) error {
 	return nil
 }
 
-func ensureInDB(ctx context.Context, destination string) (err error) {
+func ensureInDB(ctx context.Context, ex bob.Executor, destination string) (err error) {
 	_, err = models.FindCommsPhone(ctx, db.PGInstance.BobDB, destination)
 	if err != nil {
 		// doesn't exist
@@ -192,7 +193,7 @@ func ensureInDB(ctx context.Context, destination string) (err error) {
 				E164:         omit.From(destination),
 				IsSubscribed: omit.From(false),
 				Status:       omit.From(enums.CommsPhonestatustypeUnconfirmed),
-			}).One(ctx, db.PGInstance.BobDB)
+			}).One(ctx, ex)
 			if err != nil {
 				return fmt.Errorf("Failed to insert new phone contact: %w", err)
 			}
@@ -330,7 +331,7 @@ func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Mes
 }
 
 func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) error {
-	err := ensureInDB(ctx, destination)
+	err := ensureInDB(ctx, db.PGInstance.BobDB, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/nyaruka/phonenumbers"
 	//"github.com/rs/zerolog/log"
@@ -48,7 +49,7 @@ func sendReportSubscription(ctx context.Context, job Job) error {
 		return fmt.Errorf("job is not for report subscription confirmation")
 	}
 
-	err := ensureInDB(ctx, job.destination())
+	err := ensureInDB(ctx, db.PGInstance.BobDB, job.destination())
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
