@@ -22,6 +22,7 @@ import (
 type UploadPoolDetail struct {
 	CountExisting int
 	CountNew      int
+	CountOutside  int
 	Created       time.Time
 	ID            int32
 	Name          string
@@ -95,9 +96,12 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	pools := make([]UploadPoolRow, 0)
 	count_existing := 0
 	count_new := 0
+	count_outside := 0
 	for _, r := range rows {
 		if r.IsNew {
 			count_new = count_new + 1
+		} else if !r.IsInDistrict {
+			count_outside = count_outside + 1
 		} else {
 			count_existing = count_existing + 1
 		}
@@ -108,6 +112,7 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	}
 	return UploadPoolDetail{
 		CountExisting: count_existing,
+		CountOutside:  count_outside,
 		CountNew:      count_new,
 		Name:          file.Name,
 		Pools:         pools,

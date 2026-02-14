@@ -398,16 +398,16 @@ func NewFieldSeeker(ctx context.Context, oauth *models.OauthToken) (*fieldseeker
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create ArcGIS client: %w", err)
-	}
-	log.Info().Str("context", context).Str("host", host).Msg("Using base fieldseeker URL")
-	fssync, err := fieldseeker.NewFieldSeekerFromURL(ctx, *ar, row.FieldseekerURL.MustGet())
-	if err != nil {
 		if errors.Is(err, arcgis.ErrorInvalidAuthToken) {
 			return nil, InvalidatedTokenError{}
 		} else if errors.Is(err, arcgis.ErrorInvalidRefreshToken) {
 			return nil, InvalidatedTokenError{}
 		}
+		return nil, fmt.Errorf("Failed to create ArcGIS client: %w", err)
+	}
+	log.Info().Str("context", context).Str("host", host).Msg("Using base fieldseeker URL")
+	fssync, err := fieldseeker.NewFieldSeekerFromURL(ctx, *ar, row.FieldseekerURL.MustGet())
+	if err != nil {
 		return nil, fmt.Errorf("Failed to create Fieldseeker client: %w", err)
 	}
 	return fssync, nil
@@ -522,6 +522,10 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 				oauth,
 			)
 			if err != nil {
+				if errors.Is(err, &InvalidatedTokenError{}) {
+					log.Info().Int32("org", org.ID).Msg("oauth token for org is invalid, waiting for refresh")
+					continue
+				}
 				return fmt.Errorf("Failed to create fieldseeker client: %w", err)
 			}
 			logPermissions(ctx, fssync)
@@ -620,14 +624,14 @@ func maintainOAuth(ctx context.Context, oauth *models.OauthToken) error {
 			return fmt.Errorf("Failed to update oauth token from database: %w", err)
 		}
 		var accessTokenDelay time.Duration
-		if oauth.AccessTokenExpires.Before(time.Now()) {
-			accessTokenDelay = 1
+		if oauth.AccessTokenExpires.Before(time.Now()) || time.Until(oauth.AccessTokenExpires) < (3*time.Second) {
+			accessTokenDelay = time.Second
 		} else {
 			accessTokenDelay = time.Until(oauth.AccessTokenExpires) - (3 * time.Second)
 		}
 		var refreshTokenDelay time.Duration
-		if oauth.RefreshTokenExpires.Before(time.Now()) {
-			refreshTokenDelay = 1
+		if oauth.RefreshTokenExpires.Before(time.Now()) || time.Until(oauth.RefreshTokenExpires) < (3*time.Second) {
+			refreshTokenDelay = time.Second
 		} else {
 			refreshTokenDelay = time.Until(oauth.RefreshTokenExpires) - (3 * time.Second)
 		}
