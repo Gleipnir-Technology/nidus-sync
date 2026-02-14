@@ -138,7 +138,7 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 				var condition enums.FileuploadPoolconditiontype
 				err := condition.Scan(strings.ToLower(col))
 				if err != nil {
-					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", poolConditionValidValues()))
+					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
 					continue
 				}
 				setter.Condition = omit.From(condition)
