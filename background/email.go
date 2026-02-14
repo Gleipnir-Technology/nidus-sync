@@ -27,7 +27,7 @@ func enqueueJobEmail(job email.Job) {
 
 func startWorkerEmail(ctx context.Context, channel chan email.Job) {
 	go func() {
-		log.Info().Msg("Email worker started")
+		log.Debug().Msg("Email worker started")
 		for {
 			select {
 			case <-ctx.Done():

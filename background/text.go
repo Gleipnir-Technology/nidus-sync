@@ -29,7 +29,7 @@ func enqueueJobText(job text.Job) {
 
 func startWorkerText(ctx context.Context, channel chan text.Job) {
 	go func() {
-		log.Info().Msg("Text worker started")
+		log.Debug().Msg("Text worker started")
 		for {
 			select {
 			case <-ctx.Done():
