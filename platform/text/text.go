@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -185,24 +186,16 @@ func sendInitialText(ctx context.Context, src string, dst string) error {
 }
 
 func ensureInDB(ctx context.Context, ex bob.Executor, destination string) (err error) {
-	_, err = models.FindCommsPhone(ctx, db.PGInstance.BobDB, destination)
-	if err != nil {
-		// doesn't exist
-		if err.Error() == "sql: no rows in result set" {
-			_, err = models.CommsPhones.Insert(&models.CommsPhoneSetter{
-				E164:         omit.From(destination),
-				IsSubscribed: omit.From(false),
-				Status:       omit.From(enums.CommsPhonestatustypeUnconfirmed),
-			}).One(ctx, ex)
-			if err != nil {
-				return fmt.Errorf("Failed to insert new phone contact: %w", err)
-			}
-			log.Info().Str("phone", destination).Msg("Added text to the comms database")
-			return nil
-		}
-		return fmt.Errorf("Unexpected error searching for phone contact: %w", err)
-	}
-	return nil
+	_, err = psql.Insert(
+		im.Into("comms.phone", "e164", "is_subscribed", "status"),
+		im.Values(
+			psql.Arg(destination),
+			psql.Arg(false),
+			psql.Arg("unconfirmed"),
+		),
+		im.OnConflict("e164").DoNothing(),
+	).Exec(ctx, ex)
+	return err
 }
 
 func ensureInitialText(ctx context.Context, src string, dst string) error {
