@@ -69,137 +69,65 @@
 				</div>
 			</div>
 			<div class="card-body">
-				<div class="alert alert-warning" role="alert">
-					<i class="bi bi-exclamation-triangle me-2"></i>
-					<strong>Warning:</strong> 4 entries appear to be outside district
-					boundaries. These are highlighted in yellow below.
-				</div>
-
-				<div class="table-responsive">
-					<table class="table table-hover table-striped">
-						<thead class="table-light">
-							<tr>
-								<th>Plat ID</th>
-								<th>Latitude</th>
-								<th>Longitude</th>
-								<th>Street Address</th>
-								<th>Status</th>
-								<th>In District</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>P12345</td>
-								<td>37.7749</td>
-								<td>-122.4194</td>
-								<td>123 Main St, Anytown, CA</td>
-								<td>
-									<span class="badge bg-primary status-badge">Existing</span>
-								</td>
-								<td>
-									<i class="bi bi-check-circle-fill text-success"></i> Yes
-								</td>
-							</tr>
-							<tr>
-								<td>P23456</td>
-								<td>37.3352</td>
-								<td>-121.8811</td>
-								<td>456 Oak Ave, Someville, CA</td>
-								<td>
-									<span class="badge bg-primary status-badge">Existing</span>
-								</td>
-								<td>
-									<i class="bi bi-check-circle-fill text-success"></i> Yes
-								</td>
-							</tr>
-							<tr class="warning-row">
-								<td>P34567</td>
-								<td>38.5816</td>
-								<td>-121.4944</td>
-								<td>789 Pine Rd, Outtown, CA</td>
-								<td><span class="badge bg-success status-badge">New</span></td>
-								<td>
-									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
-									<strong>No</strong> - Outside northern boundary
-								</td>
-							</tr>
-							<tr>
-								<td>P45678</td>
-								<td>37.4419</td>
-								<td>-122.1430</td>
-								<td>101 Elm St, Cityville, CA</td>
-								<td><span class="badge bg-success status-badge">New</span></td>
-								<td>
-									<i class="bi bi-check-circle-fill text-success"></i> Yes
-								</td>
-							</tr>
-							<tr>
-								<td>P56789</td>
-								<td>37.3541</td>
-								<td>-121.9552</td>
-								<td>202 Maple Dr, Townburg, CA</td>
-								<td>
-									<span class="badge bg-primary status-badge">Existing</span>
-								</td>
-								<td>
-									<i class="bi bi-check-circle-fill text-success"></i> Yes
-								</td>
-							</tr>
-							<tr class="warning-row">
-								<td>P67890</td>
-								<td>35.3733</td>
-								<td>-119.0187</td>
-								<td>303 Cedar Ln, Farville, CA</td>
-								<td><span class="badge bg-success status-badge">New</span></td>
-								<td>
-									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
-									<strong>No</strong> - Outside southern boundary
-								</td>
-							</tr>
-							<tr>
-								<td>P78901</td>
-								<td>37.8044</td>
-								<td>-122.2712</td>
-								<td>404 Birch Ave, Metroburg, CA</td>
-								<td>
-									<span class="badge bg-primary status-badge">Existing</span>
-								</td>
-								<td>
-									<i class="bi bi-check-circle-fill text-success"></i> Yes
-								</td>
-							</tr>
-							<tr class="warning-row">
-								<td>P89012</td>
-								<td>37.4032</td>
-								<td>-123.9612</td>
-								<td>505 Walnut St, Edgetown, CA</td>
-								<td><span class="badge bg-success status-badge">New</span></td>
-								<td>
-									<i class="bi bi-exclamation-triangle-fill text-warning"></i>
-									<strong>No</strong> - Outside western boundary
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-
-				<nav aria-label="Table navigation">
-					<ul class="pagination justify-content-center mt-3">
-						<li class="page-item disabled">
-							<a class="page-link" href="#" tabindex="-1" aria-disabled="true"
-								>Previous</a
-							>
-						</li>
-						<li class="page-item active">
-							<a class="page-link" href="#">1</a>
-						</li>
-						<li class="page-item"><a class="page-link" href="#">2</a></li>
-						<li class="page-item"><a class="page-link" href="#">3</a></li>
-						<li class="page-item">
-							<a class="page-link" href="#">Next</a>
-						</li>
-					</ul>
-				</nav>
+				{{ range .Upload.Errors }}
+					<div class="alert alert-danger" role="alert">
+						<i class="bi bi-exclamation-triangle me-2"></i>
+						<strong>Error:</strong>{{ .Message }}
+					</div>
+				{{ end }}
+				{{ if eq (len .Upload.Pools) 0 }}
+					<div class="alert alert-warning" role="alert">
+						<i class="bi bi-exclamation-triangle me-2"></i>
+						<strong>Warning:</strong> No pools could be understood from your
+						file.
+					</div>
+				{{ else }}
+					<div class="table-responsive">
+						<table class="table table-hover table-striped">
+							<thead class="table-light">
+								<tr>
+									<th>Street</th>
+									<th>City</th>
+									<th>Post</th>
+									<th>Status</th>
+									<th>Condition</th>
+								</tr>
+							</thead>
+							<tbody>
+								{{ range .Upload.Pools }}
+									<tr>
+										<td>{{ .Street }}</td>
+										<td>{{ .City }}</td>
+										<td>{{ .PostalCode }}</td>
+										{{ if eq .Status "new" }}
+											<td>
+												<span class="badge bg-success status-badge">New</span>
+											</td>
+										{{ else if eq .Status "existing" }}
+											<td>
+												<span class="badge bg-primary status-badge"
+													>Existing</span
+												>
+											</td>
+										{{ else if eq .Status "outside" }}
+											<td>
+												<span class="badge bg-warning status-badge"
+													>Outside</span
+												>
+											</td>
+										{{ else }}
+											<td>
+												<span class="badge bg-warning status-badge"
+													>{{ .Status }}</span
+												>
+											</td>
+										{{ end }}
+									</tr>
+								{{ end }}
+							</tbody>
+						</table>
+					</div>
+				{{ end }}
 			</div>
 		</div>
 

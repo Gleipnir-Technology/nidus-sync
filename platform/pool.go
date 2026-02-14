@@ -24,14 +24,23 @@ type UploadPoolDetail struct {
 	CountNew      int
 	CountOutside  int
 	Created       time.Time
+	Errors        []UploadPoolError
 	ID            int32
 	Name          string
 	Pools         []UploadPoolRow
 	Status        string
 }
+type UploadPoolError struct {
+	Column  uint
+	Line    uint
+	Message string
+}
 type UploadPoolRow struct {
-	Street string
-	City   string
+	City       string
+	Condition  string
+	Street     string
+	PostalCode string
+	Status     string
 }
 type PoolUpload struct {
 	Created time.Time `db:"created"`
@@ -84,36 +93,60 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	/*
 		csv, err := models.FindFileuploadCSV(ctx, db.PGInstance.BobDB, file_id)
 		if err != nil {
-			return PoolDetail{}, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
+			return UploadPoolDetail{}, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
 		}
 	*/
-	rows, err := models.FileuploadPools.Query(
+	error_rows, err := models.FileuploadErrorCSVS.Query(
+		models.SelectWhere.FileuploadErrorCSVS.CSVFileID.EQ(file_id),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup errors in csv %d: %w", file_id, err)
+	}
+	errors := make([]UploadPoolError, 0)
+	for _, row := range error_rows {
+		errors = append(errors, UploadPoolError{
+			Column:  uint(row.Col),
+			Line:    uint(row.Line),
+			Message: row.Message,
+		})
+	}
+
+	pool_rows, err := models.FileuploadPools.Query(
 		models.SelectWhere.FileuploadPools.CSVFile.EQ(file_id),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return UploadPoolDetail{}, fmt.Errorf("Failed to query pools for %d: %w", file_id, err)
 	}
+
 	pools := make([]UploadPoolRow, 0)
 	count_existing := 0
 	count_new := 0
 	count_outside := 0
-	for _, r := range rows {
+	status := "unknown"
+	for _, r := range pool_rows {
 		if r.IsNew {
 			count_new = count_new + 1
+			status = "new"
 		} else if !r.IsInDistrict {
 			count_outside = count_outside + 1
+			status = "outside"
 		} else {
 			count_existing = count_existing + 1
+			status = "existing"
 		}
 		pools = append(pools, UploadPoolRow{
-			Street: r.AddressStreet,
-			City:   r.AddressCity,
+			City:       r.AddressCity,
+			Condition:  r.Condition.String(),
+			PostalCode: r.AddressPostalCode,
+			Status:     status,
+			Street:     r.AddressStreet,
 		})
 	}
 	return UploadPoolDetail{
 		CountExisting: count_existing,
 		CountOutside:  count_outside,
 		CountNew:      count_new,
+		Errors:        errors,
 		Name:          file.Name,
 		Pools:         pools,
 		Status:        file.Status.String(),
