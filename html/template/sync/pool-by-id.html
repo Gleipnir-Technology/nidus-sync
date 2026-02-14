@@ -75,58 +75,66 @@
 						<strong>Error:</strong>{{ .Message }}
 					</div>
 				{{ end }}
-				{{ if eq (len .Upload.Pools) 0 }}
-					<div class="alert alert-warning" role="alert">
+				{{ if eq .Upload.Status "uploaded" }}
+					<div class="alert alert-info" role="alert">
 						<i class="bi bi-exclamation-triangle me-2"></i>
-						<strong>Warning:</strong> No pools could be understood from your
-						file.
+						<strong>Working:</strong> File is still processing... refresh this
+						page in a bit to see updates.
 					</div>
 				{{ else }}
-					<div class="table-responsive">
-						<table class="table table-hover table-striped">
-							<thead class="table-light">
-								<tr>
-									<th>Street</th>
-									<th>City</th>
-									<th>Post</th>
-									<th>Status</th>
-									<th>Condition</th>
-								</tr>
-							</thead>
-							<tbody>
-								{{ range .Upload.Pools }}
+					{{ if eq (len .Upload.Pools) 0 }}
+						<div class="alert alert-warning" role="alert">
+							<i class="bi bi-exclamation-triangle me-2"></i>
+							<strong>Warning:</strong> No pools could be understood from your
+							file.
+						</div>
+					{{ else }}
+						<div class="table-responsive">
+							<table class="table table-hover table-striped">
+								<thead class="table-light">
 									<tr>
-										<td>{{ .Street }}</td>
-										<td>{{ .City }}</td>
-										<td>{{ .PostalCode }}</td>
-										{{ if eq .Status "new" }}
-											<td>
-												<span class="badge bg-success status-badge">New</span>
-											</td>
-										{{ else if eq .Status "existing" }}
-											<td>
-												<span class="badge bg-primary status-badge"
-													>Existing</span
-												>
-											</td>
-										{{ else if eq .Status "outside" }}
-											<td>
-												<span class="badge bg-warning status-badge"
-													>Outside</span
-												>
-											</td>
-										{{ else }}
-											<td>
-												<span class="badge bg-warning status-badge"
-													>{{ .Status }}</span
-												>
-											</td>
-										{{ end }}
+										<th>Street</th>
+										<th>City</th>
+										<th>Post</th>
+										<th>Status</th>
+										<th>Condition</th>
 									</tr>
-								{{ end }}
-							</tbody>
-						</table>
-					</div>
+								</thead>
+								<tbody>
+									{{ range .Upload.Pools }}
+										<tr>
+											<td>{{ .Street }}</td>
+											<td>{{ .City }}</td>
+											<td>{{ .PostalCode }}</td>
+											{{ if eq .Status "new" }}
+												<td>
+													<span class="badge bg-success status-badge">New</span>
+												</td>
+											{{ else if eq .Status "existing" }}
+												<td>
+													<span class="badge bg-primary status-badge"
+														>Existing</span
+													>
+												</td>
+											{{ else if eq .Status "outside" }}
+												<td>
+													<span class="badge bg-warning status-badge"
+														>Outside</span
+													>
+												</td>
+											{{ else }}
+												<td>
+													<span class="badge bg-warning status-badge"
+														>{{ .Status }}</span
+													>
+												</td>
+											{{ end }}
+										</tr>
+									{{ end }}
+								</tbody>
+							</table>
+						</div>
+					{{ end }}
 				{{ end }}
 			</div>
 		</div>
