@@ -15,7 +15,8 @@ type StadiaMaps struct {
 func NewStadiaMaps(api_key string) *StadiaMaps {
 	//logger := NewLogger(log.Logger)
 	//r := resty.New().SetLogger(logger).SetDebug(true)
-	r := resty.New().SetDebug(true)
+	//r := resty.New().SetDebug(true)
+	r := resty.New()
 	return &StadiaMaps{
 		APIKey:  api_key,
 		client:  r,
