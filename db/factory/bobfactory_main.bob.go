@@ -335,6 +335,12 @@ func (f *Factory) FromExistingCommsPhone(m *models.CommsPhone) *CommsPhoneTempla
 	if len(m.R.Organizations) > 0 {
 		CommsPhoneMods.AddExistingOrganizations(m.R.Organizations...).Apply(ctx, o)
 	}
+	if len(m.R.PropertyOwnerPhoneE164Pools) > 0 {
+		CommsPhoneMods.AddExistingPropertyOwnerPhoneE164Pools(m.R.PropertyOwnerPhoneE164Pools...).Apply(ctx, o)
+	}
+	if len(m.R.ResidentPhoneE164Pools) > 0 {
+		CommsPhoneMods.AddExistingResidentPhoneE164Pools(m.R.ResidentPhoneE164Pools...).Apply(ctx, o)
+	}
 	if len(m.R.PhoneE164NotifyPhoneNuisances) > 0 {
 		CommsPhoneMods.AddExistingPhoneE164NotifyPhoneNuisances(m.R.PhoneE164NotifyPhoneNuisances...).Apply(ctx, o)
 	}
@@ -2427,10 +2433,10 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.Notes = func() string { return m.Notes }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.PropertyOwnerName = func() string { return m.PropertyOwnerName }
-	o.PropertyOwnerPhone = func() null.Val[string] { return m.PropertyOwnerPhone }
 	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
-	o.ResidentPhone = func() null.Val[string] { return m.ResidentPhone }
 	o.Version = func() int32 { return m.Version }
+	o.PropertyOwnerPhoneE164 = func() null.Val[string] { return m.PropertyOwnerPhoneE164 }
+	o.ResidentPhoneE164 = func() null.Val[string] { return m.ResidentPhoneE164 }
 
 	ctx := context.Background()
 	if m.R.CreatorUser != nil {
@@ -2441,6 +2447,12 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	}
 	if m.R.Organization != nil {
 		FileuploadPoolMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+	if m.R.PropertyOwnerPhoneE164Phone != nil {
+		FileuploadPoolMods.WithExistingPropertyOwnerPhoneE164Phone(m.R.PropertyOwnerPhoneE164Phone).Apply(ctx, o)
+	}
+	if m.R.ResidentPhoneE164Phone != nil {
+		FileuploadPoolMods.WithExistingResidentPhoneE164Phone(m.R.ResidentPhoneE164Phone).Apply(ctx, o)
 	}
 
 	return o

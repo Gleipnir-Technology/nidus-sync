@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/jaswdr/faker/v2"
 )
@@ -50,6 +51,8 @@ type commsPhoneR struct {
 	DestinationTextLogs           []*commsPhoneRDestinationTextLogsR
 	SourceTextLogs                []*commsPhoneRSourceTextLogsR
 	Organizations                 []*commsPhoneROrganizationsR
+	PropertyOwnerPhoneE164Pools   []*commsPhoneRPropertyOwnerPhoneE164PoolsR
+	ResidentPhoneE164Pools        []*commsPhoneRResidentPhoneE164PoolsR
 	PhoneE164NotifyPhoneNuisances []*commsPhoneRPhoneE164NotifyPhoneNuisancesR
 	PhoneE164NotifyPhonePools     []*commsPhoneRPhoneE164NotifyPhonePoolsR
 	PhoneE164SubscribePhones      []*commsPhoneRPhoneE164SubscribePhonesR
@@ -70,6 +73,14 @@ type commsPhoneRSourceTextLogsR struct {
 type commsPhoneROrganizationsR struct {
 	number int
 	o      *OrganizationTemplate
+}
+type commsPhoneRPropertyOwnerPhoneE164PoolsR struct {
+	number int
+	o      *FileuploadPoolTemplate
+}
+type commsPhoneRResidentPhoneE164PoolsR struct {
+	number int
+	o      *FileuploadPoolTemplate
 }
 type commsPhoneRPhoneE164NotifyPhoneNuisancesR struct {
 	number int
@@ -143,6 +154,32 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			rel = append(rel, related...)
 		}
 		o.R.Organizations = rel
+	}
+
+	if t.r.PropertyOwnerPhoneE164Pools != nil {
+		rel := models.FileuploadPoolSlice{}
+		for _, r := range t.r.PropertyOwnerPhoneE164Pools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PropertyOwnerPhoneE164 = null.From(o.E164) // h2
+				rel.R.PropertyOwnerPhoneE164Phone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PropertyOwnerPhoneE164Pools = rel
+	}
+
+	if t.r.ResidentPhoneE164Pools != nil {
+		rel := models.FileuploadPoolSlice{}
+		for _, r := range t.r.ResidentPhoneE164Pools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.ResidentPhoneE164 = null.From(o.E164) // h2
+				rel.R.ResidentPhoneE164Phone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.ResidentPhoneE164Pools = rel
 	}
 
 	if t.r.PhoneE164NotifyPhoneNuisances != nil {
@@ -353,6 +390,46 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 		}
 	}
 
+	isPropertyOwnerPhoneE164PoolsDone, _ := commsPhoneRelPropertyOwnerPhoneE164PoolsCtx.Value(ctx)
+	if !isPropertyOwnerPhoneE164PoolsDone && o.r.PropertyOwnerPhoneE164Pools != nil {
+		ctx = commsPhoneRelPropertyOwnerPhoneE164PoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.PropertyOwnerPhoneE164Pools {
+			if r.o.alreadyPersisted {
+				m.R.PropertyOwnerPhoneE164Pools = append(m.R.PropertyOwnerPhoneE164Pools, r.o.Build())
+			} else {
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPropertyOwnerPhoneE164Pools(ctx, exec, rel4...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isResidentPhoneE164PoolsDone, _ := commsPhoneRelResidentPhoneE164PoolsCtx.Value(ctx)
+	if !isResidentPhoneE164PoolsDone && o.r.ResidentPhoneE164Pools != nil {
+		ctx = commsPhoneRelResidentPhoneE164PoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.ResidentPhoneE164Pools {
+			if r.o.alreadyPersisted {
+				m.R.ResidentPhoneE164Pools = append(m.R.ResidentPhoneE164Pools, r.o.Build())
+			} else {
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachResidentPhoneE164Pools(ctx, exec, rel5...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isPhoneE164NotifyPhoneNuisancesDone, _ := commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx.Value(ctx)
 	if !isPhoneE164NotifyPhoneNuisancesDone && o.r.PhoneE164NotifyPhoneNuisances != nil {
 		ctx = commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx.WithValue(ctx, true)
@@ -360,12 +437,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.PhoneE164NotifyPhoneNuisances = append(m.R.PhoneE164NotifyPhoneNuisances, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPhoneE164NotifyPhoneNuisances(ctx, exec, rel4...)
+				err = m.AttachPhoneE164NotifyPhoneNuisances(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -380,12 +457,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.PhoneE164NotifyPhonePools = append(m.R.PhoneE164NotifyPhonePools, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPhoneE164NotifyPhonePools(ctx, exec, rel5...)
+				err = m.AttachPhoneE164NotifyPhonePools(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -400,12 +477,12 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 			if r.o.alreadyPersisted {
 				m.R.PhoneE164SubscribePhones = append(m.R.PhoneE164SubscribePhones, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPhoneE164SubscribePhones(ctx, exec, rel6...)
+				err = m.AttachPhoneE164SubscribePhones(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -802,6 +879,102 @@ func (m commsPhoneMods) AddExistingOrganizations(existingModels ...*models.Organ
 func (m commsPhoneMods) WithoutOrganizations() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		o.r.Organizations = nil
+	})
+}
+
+func (m commsPhoneMods) WithPropertyOwnerPhoneE164Pools(number int, related *FileuploadPoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PropertyOwnerPhoneE164Pools = []*commsPhoneRPropertyOwnerPhoneE164PoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewPropertyOwnerPhoneE164Pools(number int, mods ...FileuploadPoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.WithPropertyOwnerPhoneE164Pools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddPropertyOwnerPhoneE164Pools(number int, related *FileuploadPoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PropertyOwnerPhoneE164Pools = append(o.r.PropertyOwnerPhoneE164Pools, &commsPhoneRPropertyOwnerPhoneE164PoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewPropertyOwnerPhoneE164Pools(number int, mods ...FileuploadPoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.AddPropertyOwnerPhoneE164Pools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingPropertyOwnerPhoneE164Pools(existingModels ...*models.FileuploadPool) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.PropertyOwnerPhoneE164Pools = append(o.r.PropertyOwnerPhoneE164Pools, &commsPhoneRPropertyOwnerPhoneE164PoolsR{
+				o: o.f.FromExistingFileuploadPool(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutPropertyOwnerPhoneE164Pools() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PropertyOwnerPhoneE164Pools = nil
+	})
+}
+
+func (m commsPhoneMods) WithResidentPhoneE164Pools(number int, related *FileuploadPoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.ResidentPhoneE164Pools = []*commsPhoneRResidentPhoneE164PoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewResidentPhoneE164Pools(number int, mods ...FileuploadPoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.WithResidentPhoneE164Pools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddResidentPhoneE164Pools(number int, related *FileuploadPoolTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.ResidentPhoneE164Pools = append(o.r.ResidentPhoneE164Pools, &commsPhoneRResidentPhoneE164PoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewResidentPhoneE164Pools(number int, mods ...FileuploadPoolMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
+		m.AddResidentPhoneE164Pools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingResidentPhoneE164Pools(existingModels ...*models.FileuploadPool) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.ResidentPhoneE164Pools = append(o.r.ResidentPhoneE164Pools, &commsPhoneRResidentPhoneE164PoolsR{
+				o: o.f.FromExistingFileuploadPool(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutResidentPhoneE164Pools() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.ResidentPhoneE164Pools = nil
 	})
 }
 

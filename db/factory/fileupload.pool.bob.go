@@ -38,27 +38,27 @@ func (mods FileuploadPoolModSlice) Apply(ctx context.Context, n *FileuploadPoolT
 // FileuploadPoolTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FileuploadPoolTemplate struct {
-	AddressCity        func() string
-	AddressPostalCode  func() string
-	AddressStreet      func() string
-	Committed          func() bool
-	Condition          func() enums.FileuploadPoolconditiontype
-	Created            func() time.Time
-	CreatorID          func() int32
-	CSVFile            func() int32
-	Deleted            func() null.Val[time.Time]
-	Geom               func() null.Val[string]
-	H3cell             func() null.Val[string]
-	ID                 func() int32
-	IsInDistrict       func() bool
-	IsNew              func() bool
-	Notes              func() string
-	OrganizationID     func() int32
-	PropertyOwnerName  func() string
-	PropertyOwnerPhone func() null.Val[string]
-	ResidentOwned      func() null.Val[bool]
-	ResidentPhone      func() null.Val[string]
-	Version            func() int32
+	AddressCity            func() string
+	AddressPostalCode      func() string
+	AddressStreet          func() string
+	Committed              func() bool
+	Condition              func() enums.FileuploadPoolconditiontype
+	Created                func() time.Time
+	CreatorID              func() int32
+	CSVFile                func() int32
+	Deleted                func() null.Val[time.Time]
+	Geom                   func() null.Val[string]
+	H3cell                 func() null.Val[string]
+	ID                     func() int32
+	IsInDistrict           func() bool
+	IsNew                  func() bool
+	Notes                  func() string
+	OrganizationID         func() int32
+	PropertyOwnerName      func() string
+	ResidentOwned          func() null.Val[bool]
+	Version                func() int32
+	PropertyOwnerPhoneE164 func() null.Val[string]
+	ResidentPhoneE164      func() null.Val[string]
 
 	r fileuploadPoolR
 	f *Factory
@@ -67,9 +67,11 @@ type FileuploadPoolTemplate struct {
 }
 
 type fileuploadPoolR struct {
-	CreatorUser  *fileuploadPoolRCreatorUserR
-	CSVFileCSV   *fileuploadPoolRCSVFileCSVR
-	Organization *fileuploadPoolROrganizationR
+	CreatorUser                 *fileuploadPoolRCreatorUserR
+	CSVFileCSV                  *fileuploadPoolRCSVFileCSVR
+	Organization                *fileuploadPoolROrganizationR
+	PropertyOwnerPhoneE164Phone *fileuploadPoolRPropertyOwnerPhoneE164PhoneR
+	ResidentPhoneE164Phone      *fileuploadPoolRResidentPhoneE164PhoneR
 }
 
 type fileuploadPoolRCreatorUserR struct {
@@ -80,6 +82,12 @@ type fileuploadPoolRCSVFileCSVR struct {
 }
 type fileuploadPoolROrganizationR struct {
 	o *OrganizationTemplate
+}
+type fileuploadPoolRPropertyOwnerPhoneE164PhoneR struct {
+	o *CommsPhoneTemplate
+}
+type fileuploadPoolRResidentPhoneE164PhoneR struct {
+	o *CommsPhoneTemplate
 }
 
 // Apply mods to the FileuploadPoolTemplate
@@ -111,6 +119,20 @@ func (t FileuploadPoolTemplate) setModelRels(o *models.FileuploadPool) {
 		rel.R.Pools = append(rel.R.Pools, o)
 		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
+	}
+
+	if t.r.PropertyOwnerPhoneE164Phone != nil {
+		rel := t.r.PropertyOwnerPhoneE164Phone.o.Build()
+		rel.R.PropertyOwnerPhoneE164Pools = append(rel.R.PropertyOwnerPhoneE164Pools, o)
+		o.PropertyOwnerPhoneE164 = null.From(rel.E164) // h2
+		o.R.PropertyOwnerPhoneE164Phone = rel
+	}
+
+	if t.r.ResidentPhoneE164Phone != nil {
+		rel := t.r.ResidentPhoneE164Phone.o.Build()
+		rel.R.ResidentPhoneE164Pools = append(rel.R.ResidentPhoneE164Pools, o)
+		o.ResidentPhoneE164 = null.From(rel.E164) // h2
+		o.R.ResidentPhoneE164Phone = rel
 	}
 }
 
@@ -187,21 +209,21 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.PropertyOwnerName()
 		m.PropertyOwnerName = omit.From(val)
 	}
-	if o.PropertyOwnerPhone != nil {
-		val := o.PropertyOwnerPhone()
-		m.PropertyOwnerPhone = omitnull.FromNull(val)
-	}
 	if o.ResidentOwned != nil {
 		val := o.ResidentOwned()
 		m.ResidentOwned = omitnull.FromNull(val)
 	}
-	if o.ResidentPhone != nil {
-		val := o.ResidentPhone()
-		m.ResidentPhone = omitnull.FromNull(val)
-	}
 	if o.Version != nil {
 		val := o.Version()
 		m.Version = omit.From(val)
+	}
+	if o.PropertyOwnerPhoneE164 != nil {
+		val := o.PropertyOwnerPhoneE164()
+		m.PropertyOwnerPhoneE164 = omitnull.FromNull(val)
+	}
+	if o.ResidentPhoneE164 != nil {
+		val := o.ResidentPhoneE164()
+		m.ResidentPhoneE164 = omitnull.FromNull(val)
 	}
 
 	return m
@@ -276,17 +298,17 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.PropertyOwnerName != nil {
 		m.PropertyOwnerName = o.PropertyOwnerName()
 	}
-	if o.PropertyOwnerPhone != nil {
-		m.PropertyOwnerPhone = o.PropertyOwnerPhone()
-	}
 	if o.ResidentOwned != nil {
 		m.ResidentOwned = o.ResidentOwned()
 	}
-	if o.ResidentPhone != nil {
-		m.ResidentPhone = o.ResidentPhone()
-	}
 	if o.Version != nil {
 		m.Version = o.Version()
+	}
+	if o.PropertyOwnerPhoneE164 != nil {
+		m.PropertyOwnerPhoneE164 = o.PropertyOwnerPhoneE164()
+	}
+	if o.ResidentPhoneE164 != nil {
+		m.ResidentPhoneE164 = o.ResidentPhoneE164()
 	}
 
 	o.setModelRels(m)
@@ -371,6 +393,44 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 // any required relationship should have already exist on the model
 func (o *FileuploadPoolTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.FileuploadPool) error {
 	var err error
+
+	isPropertyOwnerPhoneE164PhoneDone, _ := fileuploadPoolRelPropertyOwnerPhoneE164PhoneCtx.Value(ctx)
+	if !isPropertyOwnerPhoneE164PhoneDone && o.r.PropertyOwnerPhoneE164Phone != nil {
+		ctx = fileuploadPoolRelPropertyOwnerPhoneE164PhoneCtx.WithValue(ctx, true)
+		if o.r.PropertyOwnerPhoneE164Phone.o.alreadyPersisted {
+			m.R.PropertyOwnerPhoneE164Phone = o.r.PropertyOwnerPhoneE164Phone.o.Build()
+		} else {
+			var rel3 *models.CommsPhone
+			rel3, err = o.r.PropertyOwnerPhoneE164Phone.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachPropertyOwnerPhoneE164Phone(ctx, exec, rel3)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
+	isResidentPhoneE164PhoneDone, _ := fileuploadPoolRelResidentPhoneE164PhoneCtx.Value(ctx)
+	if !isResidentPhoneE164PhoneDone && o.r.ResidentPhoneE164Phone != nil {
+		ctx = fileuploadPoolRelResidentPhoneE164PhoneCtx.WithValue(ctx, true)
+		if o.r.ResidentPhoneE164Phone.o.alreadyPersisted {
+			m.R.ResidentPhoneE164Phone = o.r.ResidentPhoneE164Phone.o.Build()
+		} else {
+			var rel4 *models.CommsPhone
+			rel4, err = o.r.ResidentPhoneE164Phone.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachResidentPhoneE164Phone(ctx, exec, rel4)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 
 	return err
 }
@@ -536,10 +596,10 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomNotes(f),
 		FileuploadPoolMods.RandomOrganizationID(f),
 		FileuploadPoolMods.RandomPropertyOwnerName(f),
-		FileuploadPoolMods.RandomPropertyOwnerPhone(f),
 		FileuploadPoolMods.RandomResidentOwned(f),
-		FileuploadPoolMods.RandomResidentPhone(f),
 		FileuploadPoolMods.RandomVersion(f),
+		FileuploadPoolMods.RandomPropertyOwnerPhoneE164(f),
+		FileuploadPoolMods.RandomResidentPhoneE164(f),
 	}
 }
 
@@ -1137,59 +1197,6 @@ func (m fileuploadPoolMods) RandomPropertyOwnerName(f *faker.Faker) FileuploadPo
 }
 
 // Set the model columns to this value
-func (m fileuploadPoolMods) PropertyOwnerPhone(val null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.PropertyOwnerPhone = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) PropertyOwnerPhoneFunc(f func() null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.PropertyOwnerPhone = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetPropertyOwnerPhone() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.PropertyOwnerPhone = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m fileuploadPoolMods) RandomPropertyOwnerPhone(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.PropertyOwnerPhone = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fileuploadPoolMods) RandomPropertyOwnerPhoneNotNull(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.PropertyOwnerPhone = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m fileuploadPoolMods) ResidentOwned(val null.Val[bool]) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.ResidentOwned = func() null.Val[bool] { return val }
@@ -1243,59 +1250,6 @@ func (m fileuploadPoolMods) RandomResidentOwnedNotNull(f *faker.Faker) Fileuploa
 }
 
 // Set the model columns to this value
-func (m fileuploadPoolMods) ResidentPhone(val null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentPhone = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) ResidentPhoneFunc(f func() null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentPhone = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetResidentPhone() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentPhone = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m fileuploadPoolMods) RandomResidentPhone(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentPhone = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fileuploadPoolMods) RandomResidentPhoneNotNull(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentPhone = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m fileuploadPoolMods) Version(val int32) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.Version = func() int32 { return val }
@@ -1326,6 +1280,112 @@ func (m fileuploadPoolMods) RandomVersion(f *faker.Faker) FileuploadPoolMod {
 	})
 }
 
+// Set the model columns to this value
+func (m fileuploadPoolMods) PropertyOwnerPhoneE164(val null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.PropertyOwnerPhoneE164 = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) PropertyOwnerPhoneE164Func(f func() null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.PropertyOwnerPhoneE164 = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetPropertyOwnerPhoneE164() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.PropertyOwnerPhoneE164 = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadPoolMods) RandomPropertyOwnerPhoneE164(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.PropertyOwnerPhoneE164 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadPoolMods) RandomPropertyOwnerPhoneE164NotNull(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.PropertyOwnerPhoneE164 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) ResidentPhoneE164(val null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentPhoneE164 = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) ResidentPhoneE164Func(f func() null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentPhoneE164 = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetResidentPhoneE164() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentPhoneE164 = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadPoolMods) RandomResidentPhoneE164(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentPhoneE164 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadPoolMods) RandomResidentPhoneE164NotNull(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentPhoneE164 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m fileuploadPoolMods) WithParentsCascading() FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
 		if isDone, _ := fileuploadPoolWithParentsCascadingCtx.Value(ctx); isDone {
@@ -1346,6 +1406,16 @@ func (m fileuploadPoolMods) WithParentsCascading() FileuploadPoolMod {
 
 			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
 			m.WithOrganization(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewCommsPhoneWithContext(ctx, CommsPhoneMods.WithParentsCascading())
+			m.WithPropertyOwnerPhoneE164Phone(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewCommsPhoneWithContext(ctx, CommsPhoneMods.WithParentsCascading())
+			m.WithResidentPhoneE164Phone(related).Apply(ctx, o)
 		}
 	})
 }
@@ -1437,5 +1507,65 @@ func (m fileuploadPoolMods) WithExistingOrganization(em *models.Organization) Fi
 func (m fileuploadPoolMods) WithoutOrganization() FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
 		o.r.Organization = nil
+	})
+}
+
+func (m fileuploadPoolMods) WithPropertyOwnerPhoneE164Phone(rel *CommsPhoneTemplate) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.PropertyOwnerPhoneE164Phone = &fileuploadPoolRPropertyOwnerPhoneE164PhoneR{
+			o: rel,
+		}
+	})
+}
+
+func (m fileuploadPoolMods) WithNewPropertyOwnerPhoneE164Phone(mods ...CommsPhoneMod) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		related := o.f.NewCommsPhoneWithContext(ctx, mods...)
+
+		m.WithPropertyOwnerPhoneE164Phone(related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadPoolMods) WithExistingPropertyOwnerPhoneE164Phone(em *models.CommsPhone) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.PropertyOwnerPhoneE164Phone = &fileuploadPoolRPropertyOwnerPhoneE164PhoneR{
+			o: o.f.FromExistingCommsPhone(em),
+		}
+	})
+}
+
+func (m fileuploadPoolMods) WithoutPropertyOwnerPhoneE164Phone() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.PropertyOwnerPhoneE164Phone = nil
+	})
+}
+
+func (m fileuploadPoolMods) WithResidentPhoneE164Phone(rel *CommsPhoneTemplate) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.ResidentPhoneE164Phone = &fileuploadPoolRResidentPhoneE164PhoneR{
+			o: rel,
+		}
+	})
+}
+
+func (m fileuploadPoolMods) WithNewResidentPhoneE164Phone(mods ...CommsPhoneMod) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		related := o.f.NewCommsPhoneWithContext(ctx, mods...)
+
+		m.WithResidentPhoneE164Phone(related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadPoolMods) WithExistingResidentPhoneE164Phone(em *models.CommsPhone) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.ResidentPhoneE164Phone = &fileuploadPoolRResidentPhoneE164PhoneR{
+			o: o.f.FromExistingCommsPhone(em),
+		}
+	})
+}
+
+func (m fileuploadPoolMods) WithoutResidentPhoneE164Phone() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
+		o.r.ResidentPhoneE164Phone = nil
 	})
 }

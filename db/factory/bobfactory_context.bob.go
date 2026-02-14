@@ -40,6 +40,8 @@ var (
 	commsPhoneRelDestinationTextLogsCtx           = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsPhoneRelSourceTextLogsCtx                = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
 	commsPhoneRelOrganizationsCtx                 = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
+	commsPhoneRelPropertyOwnerPhoneE164PoolsCtx   = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_property_owner_phone_e164_fkey")
+	commsPhoneRelResidentPhoneE164PoolsCtx        = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_resident_phone_e164_fkey")
 	commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx = newContextual[bool]("comms.phone.publicreport.notify_phone_nuisance.publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey")
 	commsPhoneRelPhoneE164NotifyPhonePoolsCtx     = newContextual[bool]("comms.phone.publicreport.notify_phone_pool.publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey")
 	commsPhoneRelPhoneE164SubscribePhonesCtx      = newContextual[bool]("comms.phone.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey")
@@ -197,10 +199,12 @@ var (
 	fileuploadFileRelOrganizationCtx      = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 
 	// Relationship Contexts for fileupload.pool
-	fileuploadPoolWithParentsCascadingCtx = newContextual[bool]("fileuploadPoolWithParentsCascading")
-	fileuploadPoolRelCreatorUserCtx       = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
-	fileuploadPoolRelCSVFileCSVCtx        = newContextual[bool]("fileupload.csv.fileupload.pool.fileupload.pool.pool_csv_file_fkey")
-	fileuploadPoolRelOrganizationCtx      = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
+	fileuploadPoolWithParentsCascadingCtx           = newContextual[bool]("fileuploadPoolWithParentsCascading")
+	fileuploadPoolRelCreatorUserCtx                 = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
+	fileuploadPoolRelCSVFileCSVCtx                  = newContextual[bool]("fileupload.csv.fileupload.pool.fileupload.pool.pool_csv_file_fkey")
+	fileuploadPoolRelOrganizationCtx                = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
+	fileuploadPoolRelPropertyOwnerPhoneE164PhoneCtx = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_property_owner_phone_e164_fkey")
+	fileuploadPoolRelResidentPhoneE164PhoneCtx      = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_resident_phone_e164_fkey")
 
 	// Relationship Contexts for geography_columns
 	geographyColumnWithParentsCascadingCtx = newContextual[bool]("geographyColumnWithParentsCascading")

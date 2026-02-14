@@ -97,6 +97,11 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 		row, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
+				file.Update(ctx, txn, &models.FileuploadFileSetter{
+					Status: omit.From(enums.FileuploadFilestatustypeParsed),
+				})
+				log.Info().Int32("file_id", file_id).Msg("Set file to parsed")
+				txn.Commit(ctx)
 				return nil
 			}
 			return fmt.Errorf("Failed to read all CSV records for file %d: %w", file_id, err)
@@ -115,15 +120,15 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 			Geom:      omitnull.FromPtr[string](nil),
 			H3cell:    omitnull.FromPtr[string](nil),
 			// ID - generated
-			IsInDistrict:       omit.From(false),
-			IsNew:              omit.From(false),
-			Notes:              omit.From(""),
-			OrganizationID:     omit.From(file.OrganizationID),
-			PropertyOwnerName:  omit.From(""),
-			PropertyOwnerPhone: omitnull.FromPtr[string](nil),
-			ResidentOwned:      omitnull.FromPtr[bool](nil),
-			ResidentPhone:      omitnull.FromPtr[string](nil),
-			Version:            omit.From(int32(0)),
+			IsInDistrict:           omit.From(false),
+			IsNew:                  omit.From(false),
+			Notes:                  omit.From(""),
+			OrganizationID:         omit.From(file.OrganizationID),
+			PropertyOwnerName:      omit.From(""),
+			PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
+			ResidentOwned:          omitnull.FromPtr[bool](nil),
+			ResidentPhoneE164:      omitnull.FromPtr[string](nil),
+			Version:                omit.From(int32(0)),
 		}
 		for i, col := range row {
 			hdr := headers[i]
@@ -153,7 +158,7 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 					continue
 				}
 				text.EnsureInDB(ctx, txn, *phone)
-				setter.PropertyOwnerPhone = omitnull.From(text.PhoneString(*phone))
+				setter.PropertyOwnerPhoneE164 = omitnull.From(text.PhoneString(*phone))
 			case headerResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {
@@ -162,7 +167,13 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 				}
 				setter.ResidentOwned = omitnull.From(boolValue)
 			case headerResidentPhone:
-				setter.ResidentPhone = omitnull.From(col)
+				phone, err := text.ParsePhoneNumber(col)
+				if err != nil {
+					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					continue
+				}
+				text.EnsureInDB(ctx, txn, *phone)
+				setter.ResidentPhoneE164 = omitnull.From(text.PhoneString(*phone))
 			}
 		}
 		_, err = models.FileuploadPools.Insert(&setter).Exec(ctx, txn)
@@ -171,11 +182,6 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 		}
 		row_number = row_number + 1
 	}
-	file.Update(ctx, txn, &models.FileuploadFileSetter{
-		Status: omit.From(enums.FileuploadFilestatustypeParsed),
-	})
-	txn.Commit(ctx)
-	return nil
 }
 func addError(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, row_number int32, column_number int32, msg string) error {
 	r, err := models.FileuploadErrorCSVS.Insert(&models.FileuploadErrorCSVSetter{
@@ -188,7 +194,7 @@ func addError(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, row_numb
 	if err != nil {
 		return fmt.Errorf("Failed to add error: %w", err)
 	}
-	log.Info().Int32("id", r.ID).Int32("file_id", c.FileID).Str("msg", msg).Msg("Created CSV file error")
+	log.Info().Int32("id", r.ID).Int32("file_id", c.FileID).Str("msg", msg).Int32("row", row_number).Int32("col", column_number).Msg("Created CSV file error")
 	return nil
 }
 func addImportError(file *models.FileuploadFile, err error) {
