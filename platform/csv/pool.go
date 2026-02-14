@@ -178,6 +178,9 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 		}
 		for i, col := range row {
 			hdr := headers[i]
+			if col == "" {
+				continue
+			}
 			switch hdr {
 			case headerAddressCity:
 				setter.AddressCity = omit.From(col)
