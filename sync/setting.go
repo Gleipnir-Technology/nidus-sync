@@ -128,13 +128,21 @@ func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.Use
 	html.RenderOrError(w, "sync/setting-integration.html", data)
 }
 
-type contentSettingPesticide struct{}
+type contentSettingPlaceholder struct{}
 
 func getSettingPesticide(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
-	content := contentSettingPesticide{}
+	content := contentSettingPlaceholder{}
 	return "sync/setting-pesticide.html", content, nil
 }
 func getSettingPesticideAdd(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
-	content := contentSettingPesticide{}
+	content := contentSettingPlaceholder{}
 	return "sync/setting-pesticide-add.html", content, nil
+}
+func getSettingUserAdd(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+	content := contentSettingPlaceholder{}
+	return "sync/setting-user-add.html", content, nil
+}
+func getSettingUserList(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+	content := contentSettingPlaceholder{}
+	return "sync/setting-user-list.html", content, nil
 }

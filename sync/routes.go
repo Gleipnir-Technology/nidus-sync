@@ -34,8 +34,6 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/schedule", "sync/mock/report-schedule.html")
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 	addMock(r, "/mock/service-request/{code}", "sync/mock/service-request-detail.html")
-	addMock(r, "/mock/setting/user", "sync/mock/setting-user.html")
-	addMock(r, "/mock/setting/user/add", "sync/mock/setting-user-add.html")
 
 	// Utility endpoints
 	r.Get("/oauth/refresh", getOAuthRefresh)
@@ -62,6 +60,8 @@ func Router() chi.Router {
 	r.Method("GET", "/setting/integration", auth.NewEnsureAuth(getSettingIntegration))
 	r.Method("GET", "/setting/pesticide", authenticatedHandler(getSettingPesticide))
 	r.Method("GET", "/setting/pesticide/add", authenticatedHandler(getSettingPesticideAdd))
+	r.Method("GET", "/setting/user", authenticatedHandler(getSettingUserList))
+	r.Method("GET", "/setting/user/add", authenticatedHandler(getSettingUserAdd))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))
