@@ -3,14 +3,12 @@ package email
 import (
 	"context"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -42,33 +40,8 @@ func EnsureInDB(ctx context.Context, destination string) (err error) {
 	return nil
 }
 
-func convertToPGData(data map[string]string) pgtypes.HStore {
-	result := pgtypes.HStore{}
-	for k, v := range data {
-		result[k] = sql.Null[string]{V: v, Valid: true}
-	}
-	return result
-}
-
-func convertFromPGData(d pgtypes.HStore) map[string]string {
-	result := make(map[string]string, 0)
-	for k, v := range d {
-		value, err := v.Value()
-		if err != nil {
-			log.Warn().Err(err).Str("key", k).Msg("Failed to convert from HSTORE")
-			continue
-		}
-		value_str, ok := value.(string)
-		if !ok {
-			log.Warn().Msg("Failed to convert to string")
-		}
-		result[k] = value_str
-	}
-	return result
-}
-
 func insertEmailLog(ctx context.Context, data map[string]string, destination string, public_id string, source string, subject string, template_id int32) (err error) {
-	data_for_insert := convertToPGData(data)
+	data_for_insert := db.ConvertToPGData(data)
 	var type_ enums.CommsMessagetypeemail
 	switch template_id {
 	case templateReportNotificationConfirmationID:

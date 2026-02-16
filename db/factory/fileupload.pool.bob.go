@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/null"
@@ -47,7 +48,6 @@ type FileuploadPoolTemplate struct {
 	CreatorID              func() int32
 	CSVFile                func() int32
 	Deleted                func() null.Val[time.Time]
-	Geom                   func() null.Val[string]
 	H3cell                 func() null.Val[string]
 	ID                     func() int32
 	IsInDistrict           func() bool
@@ -59,6 +59,8 @@ type FileuploadPoolTemplate struct {
 	Version                func() int32
 	PropertyOwnerPhoneE164 func() null.Val[string]
 	ResidentPhoneE164      func() null.Val[string]
+	Geom                   func() null.Val[string]
+	Tags                   func() pgtypes.HStore
 
 	r fileuploadPoolR
 	f *Factory
@@ -177,10 +179,6 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.Deleted()
 		m.Deleted = omitnull.FromNull(val)
 	}
-	if o.Geom != nil {
-		val := o.Geom()
-		m.Geom = omitnull.FromNull(val)
-	}
 	if o.H3cell != nil {
 		val := o.H3cell()
 		m.H3cell = omitnull.FromNull(val)
@@ -224,6 +222,14 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 	if o.ResidentPhoneE164 != nil {
 		val := o.ResidentPhoneE164()
 		m.ResidentPhoneE164 = omitnull.FromNull(val)
+	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
+	if o.Tags != nil {
+		val := o.Tags()
+		m.Tags = omit.From(val)
 	}
 
 	return m
@@ -274,9 +280,6 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.Deleted != nil {
 		m.Deleted = o.Deleted()
 	}
-	if o.Geom != nil {
-		m.Geom = o.Geom()
-	}
 	if o.H3cell != nil {
 		m.H3cell = o.H3cell()
 	}
@@ -309,6 +312,12 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	}
 	if o.ResidentPhoneE164 != nil {
 		m.ResidentPhoneE164 = o.ResidentPhoneE164()
+	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
+	}
+	if o.Tags != nil {
+		m.Tags = o.Tags()
 	}
 
 	o.setModelRels(m)
@@ -385,6 +394,10 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 	if !(m.Version.IsValue()) {
 		val := random_int32(nil)
 		m.Version = omit.From(val)
+	}
+	if !(m.Tags.IsValue()) {
+		val := random_pgtypes_HStore(nil)
+		m.Tags = omit.From(val)
 	}
 }
 
@@ -588,7 +601,6 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomCreatorID(f),
 		FileuploadPoolMods.RandomCSVFile(f),
 		FileuploadPoolMods.RandomDeleted(f),
-		FileuploadPoolMods.RandomGeom(f),
 		FileuploadPoolMods.RandomH3cell(f),
 		FileuploadPoolMods.RandomID(f),
 		FileuploadPoolMods.RandomIsInDistrict(f),
@@ -600,6 +612,8 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomVersion(f),
 		FileuploadPoolMods.RandomPropertyOwnerPhoneE164(f),
 		FileuploadPoolMods.RandomResidentPhoneE164(f),
+		FileuploadPoolMods.RandomGeom(f),
+		FileuploadPoolMods.RandomTags(f),
 	}
 }
 
@@ -899,59 +913,6 @@ func (m fileuploadPoolMods) RandomDeletedNotNull(f *faker.Faker) FileuploadPoolM
 			}
 
 			val := random_time_Time(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m fileuploadPoolMods) Geom(val null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) GeomFunc(f func() null.Val[string]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetGeom() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m fileuploadPoolMods) RandomGeom(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fileuploadPoolMods) RandomGeomNotNull(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
 			return null.From(val)
 		}
 	})
@@ -1382,6 +1343,90 @@ func (m fileuploadPoolMods) RandomResidentPhoneE164NotNull(f *faker.Faker) Fileu
 
 			val := random_string(f)
 			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) Geom(val null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) GeomFunc(f func() null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetGeom() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadPoolMods) RandomGeom(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadPoolMods) RandomGeomNotNull(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) Tags(val pgtypes.HStore) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Tags = func() pgtypes.HStore { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) TagsFunc(f func() pgtypes.HStore) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Tags = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetTags() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Tags = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadPoolMods) RandomTags(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Tags = func() pgtypes.HStore {
+			return random_pgtypes_HStore(f)
 		}
 	})
 }

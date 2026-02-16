@@ -96,15 +96,6 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Geom: column{
-			Name:      "geom",
-			DBType:    "geometry",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		H3cell: column{
 			Name:      "h3cell",
 			DBType:    "h3index",
@@ -204,6 +195,24 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Tags: column{
+			Name:      "tags",
+			DBType:    "hstore",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fileuploadPoolIndexes{
 		PoolPkey: index{
@@ -295,7 +304,6 @@ type fileuploadPoolColumns struct {
 	CreatorID              column
 	CSVFile                column
 	Deleted                column
-	Geom                   column
 	H3cell                 column
 	ID                     column
 	IsInDistrict           column
@@ -307,11 +315,13 @@ type fileuploadPoolColumns struct {
 	Version                column
 	PropertyOwnerPhoneE164 column
 	ResidentPhoneE164      column
+	Geom                   column
+	Tags                   column
 }
 
 func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.ResidentOwned, c.Version, c.PropertyOwnerPhoneE164, c.ResidentPhoneE164,
+		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.ResidentOwned, c.Version, c.PropertyOwnerPhoneE164, c.ResidentPhoneE164, c.Geom, c.Tags,
 	}
 }
 

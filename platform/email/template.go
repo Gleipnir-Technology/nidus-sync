@@ -103,7 +103,7 @@ func LoadTemplates() error {
 }
 
 func RenderHTML(template_id int32, s pgtypes.HStore) (html []byte, err error) {
-	data := convertFromPGData(s)
+	data := db.ConvertFromPGData(s)
 	t, ok := templateByID[template_id]
 	if !ok {
 		return []byte{}, fmt.Errorf("Failed to lookup template %d", template_id)

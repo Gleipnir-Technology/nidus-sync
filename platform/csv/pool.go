@@ -175,8 +175,8 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 	if err != nil {
 		return pools, fmt.Errorf("Failed to read header of CSV for file %d: %w", file.ID, err)
 	}
-	headers := parseHeaders(h)
-	missing_headers := missingRequiredHeaders(headers)
+	header_types, header_names := parseHeaders(h)
+	missing_headers := missingRequiredHeaders(header_types)
 	for _, mh := range missing_headers {
 		errorMissingHeader(ctx, txn, c, mh)
 		file.Update(ctx, txn, &models.FileuploadFileSetter{
@@ -197,6 +197,7 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			}
 			return pools, fmt.Errorf("Failed to read all CSV records for file %d: %w", file.ID, err)
 		}
+		tags := make(map[string]string, 0)
 		setter := models.FileuploadPoolSetter{
 			// required fields
 			//AddressCity: omit.From(),
@@ -219,14 +220,15 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
 			ResidentOwned:          omitnull.FromPtr[bool](nil),
 			ResidentPhoneE164:      omitnull.FromPtr[string](nil),
-			Version:                omit.From(int32(0)),
+			//Tags:       		convertToPGData(tags),
+			Version: omit.From(int32(0)),
 		}
 		for i, col := range row {
-			hdr := headers[i]
+			hdr_t := header_types[i]
 			if col == "" {
 				continue
 			}
-			switch hdr {
+			switch hdr_t {
 			case headerAddressCity:
 				setter.AddressCity = omit.From(col)
 			case headerAddressPostalCode:
@@ -268,8 +270,12 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 				}
 				text.EnsureInDB(ctx, txn, *phone)
 				setter.ResidentPhoneE164 = omitnull.From(text.PhoneString(*phone))
+			case headerTag:
+				tags[header_names[i]] = col
 			}
+
 		}
+		setter.Tags = omit.From(db.ConvertToPGData(tags))
 		pool, err := models.FileuploadPools.Insert(&setter).One(ctx, txn)
 		if err != nil {
 			return pools, fmt.Errorf("Failed to create pool: %w", err)
@@ -317,8 +323,9 @@ func errorMissingHeader(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV
 	msg := fmt.Sprintf("The file is missing the '%s' header", h.String())
 	return addError(ctx, txn, c, 0, 0, msg)
 }
-func parseHeaders(row []string) []headerPoolEnum {
-	results := make([]headerPoolEnum, 0)
+func parseHeaders(row []string) ([]headerPoolEnum, []string) {
+	result_enums := make([]headerPoolEnum, 0)
+	result_names := make([]string, 0)
 	for _, h := range row {
 		ht := strings.TrimSpace(h)
 		hl := strings.ToLower(ht)
@@ -350,10 +357,11 @@ func parseHeaders(row []string) []headerPoolEnum {
 		default:
 			type_ = headerTag
 		}
-		results = append(results, type_)
+		result_enums = append(result_enums, type_)
+		result_names = append(result_names, hl)
 	}
 
-	return results
+	return result_enums, result_names
 }
 func missingRequiredHeaders(headers []headerPoolEnum) []headerPoolEnum {
 	results := make([]headerPoolEnum, 0)

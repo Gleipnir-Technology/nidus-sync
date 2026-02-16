@@ -38,9 +38,11 @@ type UploadPoolError struct {
 type UploadPoolRow struct {
 	City       string
 	Condition  string
-	Street     string
+	Errors     []UploadPoolError
 	PostalCode string
 	Status     string
+	Street     string
+	Tags       map[string]string
 }
 type PoolUpload struct {
 	Created time.Time `db:"created"`
@@ -102,13 +104,25 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	if err != nil {
 		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup errors in csv %d: %w", file_id, err)
 	}
-	errors := make([]UploadPoolError, 0)
+	file_errors := make([]UploadPoolError, 0)
+	errors_by_row := make(map[int32][]UploadPoolError, 0)
 	for _, row := range error_rows {
-		errors = append(errors, UploadPoolError{
+		e := UploadPoolError{
 			Column:  uint(row.Col),
 			Line:    uint(row.Line),
 			Message: row.Message,
-		})
+		}
+		if row.Line == 0 {
+			file_errors = append(file_errors, e)
+		} else {
+			by_row, ok := errors_by_row[row.Line]
+			if !ok {
+				errors_by_row[row.Line] = []UploadPoolError{e}
+				continue
+			}
+			by_row = append(by_row, e)
+			errors_by_row[row.Line] = by_row
+		}
 	}
 
 	pool_rows, err := models.FileuploadPools.Query(
@@ -123,7 +137,7 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	count_new := 0
 	count_outside := 0
 	status := "unknown"
-	for _, r := range pool_rows {
+	for i, r := range pool_rows {
 		if r.IsNew {
 			count_new = count_new + 1
 			status = "new"
@@ -134,19 +148,26 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 			count_existing = count_existing + 1
 			status = "existing"
 		}
+		tags := db.ConvertFromPGData(r.Tags)
+		errors, ok := errors_by_row[int32(i)]
+		if !ok {
+			errors = []UploadPoolError{}
+		}
 		pools = append(pools, UploadPoolRow{
 			City:       r.AddressCity,
 			Condition:  r.Condition.String(),
+			Errors:     errors,
 			PostalCode: r.AddressPostalCode,
 			Status:     status,
 			Street:     r.AddressStreet,
+			Tags:       tags,
 		})
 	}
 	return UploadPoolDetail{
 		CountExisting: count_existing,
 		CountOutside:  count_outside,
 		CountNew:      count_new,
-		Errors:        errors,
+		Errors:        file_errors,
 		Name:          file.Name,
 		Pools:         pools,
 		Status:        file.Status.String(),
