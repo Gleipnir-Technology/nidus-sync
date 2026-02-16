@@ -198,7 +198,11 @@ document.addEventListener('DOMContentLoaded', onLoad);
 													>
 												</td>
 											{{ end }}
-											<td>{{ .Condition }}</td>
+											<td>
+												<span class="badge bg-{{ .Condition }} status-badge"
+													>{{ .Condition }}</span
+												>
+											</td>
 											<td>{{ len .Tags }}</td>
 										</tr>
 									{{ end }}
