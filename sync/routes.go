@@ -35,7 +35,6 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 	addMock(r, "/mock/service-request/{code}", "sync/mock/service-request-detail.html")
 	addMock(r, "/mock/setting", "sync/mock/setting.html")
-	addMock(r, "/mock/setting/pesticide/add", "sync/mock/setting-pesticide-add.html")
 	addMock(r, "/mock/setting/user", "sync/mock/setting-user.html")
 	addMock(r, "/mock/setting/user/add", "sync/mock/setting-user-add.html")
 
@@ -63,6 +62,7 @@ func Router() chi.Router {
 	r.Method("GET", "/setting/district", auth.NewEnsureAuth(getSettingDistrict))
 	r.Method("GET", "/setting/integration", auth.NewEnsureAuth(getSettingIntegration))
 	r.Method("GET", "/setting/pesticide", authenticatedHandler(getSettingPesticide))
+	r.Method("GET", "/setting/pesticide/add", authenticatedHandler(getSettingPesticideAdd))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))

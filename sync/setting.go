@@ -134,3 +134,7 @@ func getSettingPesticide(ctx context.Context, user *models.User) (string, interf
 	content := contentSettingPesticide{}
 	return "sync/setting-pesticide.html", content, nil
 }
+func getSettingPesticideAdd(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+	content := contentSettingPesticide{}
+	return "sync/setting-pesticide-add.html", content, nil
+}
