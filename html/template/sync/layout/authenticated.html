@@ -19,6 +19,31 @@
 		<!-- favicon -->
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
+		<script>
+			var tooltipByElementId = {};
+			document.addEventListener("DOMContentLoaded", function () {
+				var popoverTriggerList = [].slice.call(
+					document.querySelectorAll('[data-bs-toggle="popover"]'),
+				);
+				var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+					return new bootstrap.Popover(popoverTriggerEl);
+				});
+				console.log("Initialized ", popoverTriggerList.length, " popovers");
+
+				var tooltipTriggerList = [].slice.call(
+					document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+				);
+				var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+					let t = new bootstrap.Tooltip(tooltipTriggerEl);
+					if (tooltipTriggerEl.id != "") {
+						tooltipByElementId[tooltipTriggerEl.id] = t;
+						console.log("added tooltip to", tooltipTriggerEl.id);
+					}
+					return t;
+				});
+				console.log("Initialized ", tooltipTriggerList.length, " tooltips");
+			});
+		</script>
 	</head>
 	<body>
 		{{ template "sync/component/icons.html" }}
