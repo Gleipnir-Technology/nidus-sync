@@ -10,6 +10,21 @@
 	<script>
 const CSV_FILE_ID={{ .CSVFileID }};
 const ORG_ID={{ .User.Organization.ID }}
+function handleShowIssuesOnly() {
+	const checkboxShowIssuesOnly = document.getElementById("showIssuesOnly");
+	const allRows = document.querySelectorAll('tr');
+	if (checkboxShowIssuesOnly.checked) {
+		allRows.forEach(row => {
+			if (!row.classList.contains("has-error")) {
+				row.style.display = "none";
+			}
+		});
+	} else {
+		allRows.forEach(row => {
+			row.style.display = "table-row";
+		});
+	}
+}
 function onLoad() {
 	const map = document.querySelector("map-libre-test");
 	map.addEventListener("load", (event) => {
@@ -32,6 +47,11 @@ function onLoad() {
 			}
 		});
 	});
+
+	const checkboxShowIssuesOnly = document.getElementById("showIssuesOnly");
+	checkboxShowIssuesOnly.onclick = handleShowIssuesOnly;
+	// Set the correct state if the browser remembers the state of the checkbox
+	handleShowIssuesOnly();
 }
 document.addEventListener('DOMContentLoaded', onLoad);
 	</script>
