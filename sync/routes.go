@@ -34,7 +34,6 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/schedule", "sync/mock/report-schedule.html")
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 	addMock(r, "/mock/service-request/{code}", "sync/mock/service-request-detail.html")
-	addMock(r, "/mock/setting", "sync/mock/setting.html")
 	addMock(r, "/mock/setting/user", "sync/mock/setting-user.html")
 	addMock(r, "/mock/setting/user/add", "sync/mock/setting-user-add.html")
 
