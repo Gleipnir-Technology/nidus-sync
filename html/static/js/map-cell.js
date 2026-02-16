@@ -1,0 +1,167 @@
+var map = null;
+// A map for showing a single h3 cell
+class MapCell extends HTMLElement {
+	constructor() {
+		super();
+
+		// Create a shadow DOM
+		this.attachShadow({ mode: "open" });
+
+		this._markers = [];
+		// Initial render
+		this.render();
+	}
+
+	// Lifecycle: when element is added to the DOM
+	connectedCallback() {
+		// Initialize the map when the element is added to the DOM
+		setTimeout(() => this._initializeMap(), 0);
+	}
+
+	disconnectedCallback() {
+		if (this._map) {
+			this._map.remove();
+		}
+	}
+
+	// Lifecycle: watch these attributes for changes
+	static get observedAttributes() {
+		return [
+			"api-key",
+			"latitude",
+			"longitude",
+			"organization-id",
+			"tegola",
+			"zoom",
+		];
+	}
+
+	// Lifecycle: respond to attribute changes
+	attributeChangedCallback(name, oldValue, newValue) {
+		// Only handle if map exists and values actually changed
+		if (!this._map || oldValue === newValue) return;
+
+		if (name === "api-key") {
+			this._apiKey = newValue;
+		}
+
+		if (name === "latitude" || name === "longitude") {
+			if (this.hasAttribute("latitude") && this.hasAttribute("longitude")) {
+				const lat = Number(this.getAttribute("latitude"));
+				const lng = Number(this.getAttribute("longitude"));
+				this._map.setCenter([lat, lng]);
+			}
+		}
+
+		if (name === "organization-id") {
+			this._organizationID = newValue;
+		}
+
+		if (name === "tegola") {
+			this._tegola = newValue;
+		}
+
+		if (name === "zoom") {
+			this._map.setZoom(Number(newValue));
+		}
+	}
+
+	_initializeMap() {
+		const geojson = JSON.parse(this.getAttribute("geojson"));
+		const lat = Number(this.getAttribute("latitude") || 36.2);
+		const lng = Number(this.getAttribute("longitude") || -119.2);
+		const organization_id = Number(this.getAttribute("organization-id") || 0);
+		const tegola = this.getAttribute("tegola");
+		const zoom = Number(this.getAttribute("zoom") || 15);
+
+		const mapElement = this.shadowRoot.querySelector("#map");
+		this._map = new maplibregl.Map({
+			container: mapElement,
+			center: {
+				lat: lat,
+				lng: lng,
+			},
+			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
+			zoom: zoom,
+		});
+		const layer_id = "geojson-layer";
+		const source_id = "geojson-source";
+		this._map.on("load", () => {
+			this._map.addSource(source_id, {
+				data: geojson,
+				type: "geojson",
+			});
+			this._map.addLayer({
+				id: layer_id,
+				interactive: false,
+				paint: {
+					"fill-opacity": 0.3,
+					"fill-color": "#dc3545",
+				},
+				source: source_id,
+				type: "fill",
+			});
+		});
+	}
+
+	// Initial render of component
+	render() {
+		this.shadowRoot.innerHTML = `
+			<style>
+				@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
+				.map-container {
+					background-color: #e9ecef;
+					border-radius: 10px;
+					box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+					height: 500px;
+					margin-top: 20px;
+					position: relative;
+				}
+				#map {
+					position: absolute;
+					top: 0;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					height: 100%;
+					width: 100%
+				}
+			</style>
+			
+			<div id="map-container" class="map-container">
+				<div id="map"></div>
+			</div>
+		`;
+	}
+
+	jumpTo(args) {
+		this._map.jumpTo(args);
+	}
+
+	setMarker(coords) {
+		console.log("Setting map marker", coords);
+		this._map.jumpTo({
+			center: coords,
+			zoom: 14,
+		});
+		this._markers.forEach((marker) => marker.remove());
+
+		const marker = new maplibregl.Marker({
+			color: "#FF0000",
+			draggable: true,
+		})
+			.setLngLat(coords)
+			.addTo(this._map);
+		marker.on("dragend", function (e) {
+			const markerDraggedEvent = new CustomEvent("markerdragend", {
+				detail: {
+					marker: marker,
+				},
+			});
+			mapContainer.dispatchEvent(markerDraggedEvent);
+		});
+		this._markers = [marker];
+	}
+}
+
+customElements.define("map-cell", MapCell);
