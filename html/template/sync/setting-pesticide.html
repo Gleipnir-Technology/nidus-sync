@@ -1,6 +1,6 @@
-{{ template "sync/layout/base.html" . }}
+{{ template "sync/layout/authenticated.html" . }}
 
-{{ define "title" }}Dash{{ end }}
+{{ define "title" }}Settings - Pesticide{{ end }}
 {{ define "extraheader" }}
 	<style>
 		.target-icon {
@@ -39,7 +39,7 @@
 		<div class="d-flex justify-content-between align-items-center mb-4">
 			<h1 class="mb-0">Pesticide Products Configuration</h1>
 			<a
-				href="{{ .URLs.SettingPesticideAdd }}"
+				href="{{ .URL.SettingPesticideAdd }}"
 				class="btn btn-primary"
 				id="addProductBtn"
 			>

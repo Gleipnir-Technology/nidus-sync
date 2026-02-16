@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -125,4 +126,11 @@ func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.Use
 		User:        userContent,
 	}
 	html.RenderOrError(w, "sync/setting-integration.html", data)
+}
+
+type contentSettingPesticide struct{}
+
+func getSettingPesticide(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+	content := contentSettingPesticide{}
+	return "sync/setting-pesticide.html", content, nil
 }

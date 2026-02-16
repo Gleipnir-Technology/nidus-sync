@@ -1,8 +1,12 @@
 package sync
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,7 +24,6 @@ func Router() chi.Router {
 	// Mock endpoints
 	r.Get("/mock", renderMockList)
 	addMock(r, "/mock/admin", "sync/mock/admin.html")
-	addMock(r, "/mock/admin", "sync/mock/admin.html")
 	addMock(r, "/mock/dispatch", "sync/mock/dispatch.html")
 	addMock(r, "/mock/dispatch-results", "sync/mock/dispatch-results.html")
 	addMock(r, "/mock/report", "sync/mock/report.html")
@@ -32,7 +35,6 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 	addMock(r, "/mock/service-request/{code}", "sync/mock/service-request-detail.html")
 	addMock(r, "/mock/setting", "sync/mock/setting.html")
-	addMock(r, "/mock/setting/pesticide", "sync/mock/setting-pesticide.html")
 	addMock(r, "/mock/setting/pesticide/add", "sync/mock/setting-pesticide-add.html")
 	addMock(r, "/mock/setting/user", "sync/mock/setting-user.html")
 	addMock(r, "/mock/setting/user/add", "sync/mock/setting-user-add.html")
@@ -60,6 +62,7 @@ func Router() chi.Router {
 	r.Method("GET", "/setting", auth.NewEnsureAuth(getSetting))
 	r.Method("GET", "/setting/district", auth.NewEnsureAuth(getSettingDistrict))
 	r.Method("GET", "/setting/integration", auth.NewEnsureAuth(getSettingIntegration))
+	r.Method("GET", "/setting/pesticide", authenticatedHandler(getSettingPesticide))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))
@@ -68,4 +71,44 @@ func Router() chi.Router {
 
 	html.AddStaticRoute(r, "/static")
 	return r
+}
+
+type errorWithStatus struct {
+	Message string
+	Status  int
+}
+
+func (e *errorWithStatus) Error() string {
+	return e.Message
+}
+
+type handlerFunction func(context.Context, *models.User) (string, interface{}, *errorWithStatus)
+type wrappedHandler func(http.ResponseWriter, *http.Request)
+type contentAuthenticated struct {
+	C    interface{}
+	URL  ContentURL
+	User User
+}
+
+// w http.ResponseWriter, r *http.Request, u *models.User) {
+func authenticatedHandler(f handlerFunction) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
+		ctx := r.Context()
+		userContent, err := contentForUser(ctx, u)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		template, content, e := f(ctx, u)
+		if err != nil {
+			//log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error from sync pages")
+			http.Error(w, err.Error(), e.Status)
+			return
+		}
+		html.RenderOrError(w, template, contentAuthenticated{
+			C:    content,
+			URL:  newContentURL(),
+			User: userContent,
+		})
+	})
 }
