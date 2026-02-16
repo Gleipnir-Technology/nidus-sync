@@ -19,8 +19,7 @@ We're using a customized Bootstrap theme for this site. You'll need to build the
 
 ```
 nix develop
-cd scss
-scss custom.scss > ../html/static/css/bootstrap.css
+sass --style=compressed --trace "$SASS_SRC_DIR/custom.scss":"$CSS_OUTPUT_DIR/bootstrap.css"
 ```
 
 ## Running
@@ -90,5 +89,5 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 For iterating on styles
 
 ```
-watchexec -e *.scss sass --style=compressed scss/custom.scss:html/static/css/bootstrap.css
+watchexec -e *.scss sass scss/custom.scss:html/static/css/bootstrap.css
 ```
