@@ -8,11 +8,13 @@ CREATE EXTENSION h3_postgis CASCADE;
 CREATE EXTENSION hstore;
 CREATE SCHEMA import;
 ALTER SCHEMA import OWNER TO $1;
+GRANT USAGE ON SCHEMA fileupload TO "tegola";
 GRANT USAGE ON SCHEMA import TO "tegola";
 GRANT USAGE ON SCHEMA publicreport TO "tegola";
-GRANT SELECT ON publicreport.report_location TO "tegola";
+GRANT SELECT ON fileupload.pool TO "tegola";
 GRANT SELECT ON h3_aggregation to "tegola";
 GRANT SELECT ON import.district TO "tegola";
+GRANT SELECT ON publicreport.report_location TO "tegola";
 GRANT ALL PRIVILEGES ON SCHEMA public TO $1;
 -- do import of district data
 ALTER TABLE import.district ADD COLUMN geom_4326 geometry(MultiPolygon,4326) GENERATED ALWAYS AS (ST_Transform(geom, 4326)) STORED;

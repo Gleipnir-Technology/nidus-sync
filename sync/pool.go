@@ -13,9 +13,10 @@ import (
 )
 
 type ContentPoolDetail struct {
-	Upload platform.UploadPoolDetail
-	URL    ContentURL
-	User   User
+	CSVFileID int32
+	Upload    platform.UploadPoolDetail
+	URL       ContentURL
+	User      User
 }
 type ContentPoolList struct {
 	Uploads []platform.PoolUpload
@@ -78,9 +79,10 @@ func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
 		return
 	}
 	data := ContentPoolDetail{
-		Upload: detail,
-		URL:    newContentURL(),
-		User:   userContent,
+		CSVFileID: int32(file_id),
+		Upload:    detail,
+		URL:       newContentURL(),
+		User:      userContent,
 	}
 	html.RenderOrError(w, "sync/pool-by-id.html", data)
 }

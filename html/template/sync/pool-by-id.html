@@ -2,6 +2,39 @@
 {{ define "title" }}Pool Upload{{ end }}
 
 {{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script src="/static/js/map-libre-test.js"></script>
+	<script>
+const CSV_FILE_ID={{ .CSVFileID }};
+const ORG_ID={{ .User.Organization.ID }}
+function onLoad() {
+	const map = document.querySelector("map-libre-test");
+	map.addEventListener("load", (event) => {
+		map.addSource('tegola-nidus', {
+			'type': 'vector',
+			'tiles': [
+				`{{.URL.Tegola}}maps/nidus/{z}/{x}/{y}?csv_file=${CSV_FILE_ID}&organization_id=${ORG_ID}`
+			]
+		});
+		map.addLayer({
+			'id': 'pool',
+			'source': 'tegola-nidus',
+			'source-layer': 'fileupload_pool',
+			'type': 'circle',
+			'paint': {
+				'circle-color': "#DC4535",
+				'circle-radius': 7,
+				'circle-stroke-width': 2,
+				'circle-stroke-color': "#9C1C28"
+			}
+		});
+	});
+}
+document.addEventListener('DOMContentLoaded', onLoad);
+	</script>
 {{ end }}
 {{ define "content" }}
 	<div class="container mt-4 results-container">
@@ -56,6 +89,9 @@
 			</div>
 		</div>
 
+		<div class="card mb-4">
+			<map-libre-test></map-libre-test>
+		</div>
 		<div class="card mb-4">
 			<div
 				class="card-header bg-light d-flex justify-content-between align-items-center"
