@@ -62,6 +62,7 @@ type ImportDistrictTemplate struct {
 	Geom4326     func() null.Val[string]
 	Centroid4326 func() null.Val[string]
 	Extent4326   func() null.Val[string]
+	Area4326SQM  func() null.Val[decimal.Decimal]
 
 	r importDistrictR
 	f *Factory
@@ -285,6 +286,9 @@ func (o ImportDistrictTemplate) Build() *models.ImportDistrict {
 	if o.Extent4326 != nil {
 		m.Extent4326 = o.Extent4326()
 	}
+	if o.Area4326SQM != nil {
+		m.Area4326SQM = o.Area4326SQM()
+	}
 
 	o.setModelRels(m)
 
@@ -449,6 +453,7 @@ func (m importDistrictMods) RandomizeAllColumns(f *faker.Faker) ImportDistrictMo
 		ImportDistrictMods.RandomGeom4326(f),
 		ImportDistrictMods.RandomCentroid4326(f),
 		ImportDistrictMods.RandomExtent4326(f),
+		ImportDistrictMods.RandomArea4326SQM(f),
 	}
 }
 
@@ -1750,6 +1755,59 @@ func (m importDistrictMods) RandomExtent4326NotNull(f *faker.Faker) ImportDistri
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m importDistrictMods) Area4326SQM(val null.Val[decimal.Decimal]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Area4326SQM = func() null.Val[decimal.Decimal] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m importDistrictMods) Area4326SQMFunc(f func() null.Val[decimal.Decimal]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Area4326SQM = f
+	})
+}
+
+// Clear any values for the column
+func (m importDistrictMods) UnsetArea4326SQM() ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Area4326SQM = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m importDistrictMods) RandomArea4326SQM(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Area4326SQM = func() null.Val[decimal.Decimal] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_decimal_Decimal(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m importDistrictMods) RandomArea4326SQMNotNull(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Area4326SQM = func() null.Val[decimal.Decimal] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_decimal_Decimal(f)
 			return null.From(val)
 		}
 	})

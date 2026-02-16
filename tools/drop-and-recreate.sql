@@ -20,3 +20,4 @@ GRANT ALL PRIVILEGES ON SCHEMA public TO $1;
 ALTER TABLE import.district ADD COLUMN geom_4326 geometry(MultiPolygon,4326) GENERATED ALWAYS AS (ST_Transform(geom, 4326)) STORED;
 ALTER TABLE import.district ADD COLUMN centroid_4326 geometry(Point,4326) GENERATED ALWAYS AS (ST_Transform(ST_Centroid(geom), 4326)) STORED;
 ALTER TABLE import.district ADD COLUMN extent_4326 geometry(Polygon,4326) GENERATED ALWAYS AS (ST_Transform(ST_Envelope(geom), 4326)) STORED;
+ALTER TABLE import.district ADD COLUMN area_4326_sqm numeric GENERATED ALWAYS AS (ST_Area(ST_Transform(geom, 4326)::geography)) STORED;

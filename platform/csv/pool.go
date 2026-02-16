@@ -150,7 +150,7 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file models.FileuploadFile, po
         			FROM import.district d
 				JOIN organization o ON d.gid = o.import_district_gid
 				WHERE o.id = p.organization_id
-					AND ST_Contains(d.geom, p.geom)
+					AND ST_Contains(d.geom_4326, p.geom)
 			)
 		)
 	WHERE p.geom IS NOT NULL;`

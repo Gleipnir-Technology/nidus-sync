@@ -2624,6 +2624,7 @@ func (f *Factory) FromExistingImportDistrict(m *models.ImportDistrict) *ImportDi
 	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
 	o.Centroid4326 = func() null.Val[string] { return m.Centroid4326 }
 	o.Extent4326 = func() null.Val[string] { return m.Extent4326 }
+	o.Area4326SQM = func() null.Val[decimal.Decimal] { return m.Area4326SQM }
 
 	ctx := context.Background()
 	if m.R.ImportDistrictGidOrganization != nil {

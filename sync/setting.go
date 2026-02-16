@@ -15,12 +15,25 @@ import (
 )
 
 type contentDistrict struct {
-	Centroid string  `db:"st_asgeojson"`
-	GID      int32   `db:"gid"`
-	XMin     float32 `db:"st_xmin"`
-	YMin     float32 `db:"st_ymin"`
-	XMax     float32 `db:"st_xmax"`
-	YMax     float32 `db:"st_ymax"`
+	Address                 string  `db:"address"`
+	Agency                  string  `db:"agency"`
+	Centroid                string  `db:"st_asgeojson"`
+	Contact                 string  `db:"contact"`
+	City1                   string  `db:"city1"`
+	City2                   string  `db:"city2"`
+	Fax                     string  `db:"fax1"`
+	GID                     int32   `db:"gid"`
+	Phone1                  string  `db:"phone1"`
+	Phone2                  string  `db:"phone2"`
+	GeneralManager          string  `db:"general_mg"`
+	PostalCode              string  `db:"postal_c_1"`
+	ShapeArea               string  `db:"shape_area"`
+	SurfaceAreaMetersSquare string  `db:"area_4326_sqm"`
+	Website                 string  `db:"website"`
+	XMin                    float32 `db:"st_xmin"`
+	XMax                    float32 `db:"st_xmax"`
+	YMin                    float32 `db:"st_ymin"`
+	YMax                    float32 `db:"st_ymax"`
 }
 type contentSettingDistrict struct {
 	District contentDistrict
@@ -61,7 +74,19 @@ func getSettingDistrict(w http.ResponseWriter, r *http.Request, u *models.User) 
 		district, err = bob.One[contentDistrict](ctx, db.PGInstance.BobDB, psql.Select(
 			sm.From("import.district"),
 			sm.Columns(
+				"address",
+				"agency",
+				"area_4326_sqm",
+				"city1",
+				"city2",
+				"contact",
+				"fax1",
+				"general_mg",
 				"gid",
+				"phone1",
+				"phone2",
+				"postal_c_1",
+				"website",
 				psql.F("ST_AsGeoJSON", "centroid_4326"),
 				psql.F("ST_XMin", "extent_4326"),
 				psql.F("ST_YMin", "extent_4326"),

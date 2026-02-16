@@ -51,6 +51,7 @@ type ImportDistrict struct {
 	Geom4326     null.Val[string]          `db:"geom_4326,generated" `
 	Centroid4326 null.Val[string]          `db:"centroid_4326,generated" `
 	Extent4326   null.Val[string]          `db:"extent_4326,generated" `
+	Area4326SQM  null.Val[decimal.Decimal] `db:"area_4326_sqm,generated" `
 
 	R importDistrictR `db:"-" `
 }
@@ -73,7 +74,7 @@ type importDistrictR struct {
 func buildImportDistrictColumns(alias string) importDistrictColumns {
 	return importDistrictColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326", "centroid_4326", "extent_4326",
+			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326", "centroid_4326", "extent_4326", "area_4326_sqm",
 		).WithParent("import.district"),
 		tableAlias:   alias,
 		Gid:          psql.Quote(alias, "gid"),
@@ -101,6 +102,7 @@ func buildImportDistrictColumns(alias string) importDistrictColumns {
 		Geom4326:     psql.Quote(alias, "geom_4326"),
 		Centroid4326: psql.Quote(alias, "centroid_4326"),
 		Extent4326:   psql.Quote(alias, "extent_4326"),
+		Area4326SQM:  psql.Quote(alias, "area_4326_sqm"),
 	}
 }
 
@@ -132,6 +134,7 @@ type importDistrictColumns struct {
 	Geom4326     psql.Expression
 	Centroid4326 psql.Expression
 	Extent4326   psql.Expression
+	Area4326SQM  psql.Expression
 }
 
 func (c importDistrictColumns) Alias() string {
@@ -944,6 +947,7 @@ type importDistrictWhere[Q psql.Filterable] struct {
 	Geom4326     psql.WhereNullMod[Q, string]
 	Centroid4326 psql.WhereNullMod[Q, string]
 	Extent4326   psql.WhereNullMod[Q, string]
+	Area4326SQM  psql.WhereNullMod[Q, decimal.Decimal]
 }
 
 func (importDistrictWhere[Q]) AliasedAs(alias string) importDistrictWhere[Q] {
@@ -977,6 +981,7 @@ func buildImportDistrictWhere[Q psql.Filterable](cols importDistrictColumns) imp
 		Geom4326:     psql.WhereNull[Q, string](cols.Geom4326),
 		Centroid4326: psql.WhereNull[Q, string](cols.Centroid4326),
 		Extent4326:   psql.WhereNull[Q, string](cols.Extent4326),
+		Area4326SQM:  psql.WhereNull[Q, decimal.Decimal](cols.Area4326SQM),
 	}
 }
 
