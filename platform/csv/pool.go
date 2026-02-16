@@ -213,7 +213,7 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			H3cell:    omitnull.FromPtr[string](nil),
 			// ID - generated
 			IsInDistrict:           omit.From(false),
-			IsNew:                  omit.From(false),
+			IsNew:                  omit.From(true),
 			Notes:                  omit.From(""),
 			OrganizationID:         omit.From(file.OrganizationID),
 			PropertyOwnerName:      omit.From(""),
