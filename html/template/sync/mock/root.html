@@ -1,0 +1,24 @@
+{{ template "sync/layout/base.html" . }}
+
+{{ define "title" }}Mock Root{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<div class="container">
+		<h1>Mock Listing</h1>
+		<table class="table">
+			<thead>
+				<tr>
+					<th scope="col" style="min-width: 20vw">Link</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .Mocks }}
+					<tr>
+						<td><a href="{{ .Path }}">{{ .Path }}</a></td>
+					</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+{{ end }}

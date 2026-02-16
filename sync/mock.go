@@ -102,36 +102,57 @@ func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func mock(t string, w http.ResponseWriter, code string) {
-	data := ContentMock{
-		DistrictName: "Delta MVCD",
-		URLs: ContentMockURLs{
-			Dispatch:            "/mock/dispatch",
-			DispatchResults:     "/mock/dispatch-results",
-			ReportConfirmation:  fmt.Sprintf("/mock/report/%s/confirm", code),
-			ReportDetail:        fmt.Sprintf("/mock/report/%s", code),
-			ReportContribute:    fmt.Sprintf("/mock/report/%s/contribute", code),
-			ReportEvidence:      fmt.Sprintf("/mock/report/%s/evidence", code),
-			ReportSchedule:      fmt.Sprintf("/mock/report/%s/schedule", code),
-			ReportUpdate:        fmt.Sprintf("/mock/report/%s/update", code),
-			Root:                "/mock",
-			Setting:             "/mock/setting",
-			SettingIntegration:  "/mock/setting/integration",
-			SettingPesticide:    "/mock/setting/pesticide",
-			SettingPesticideAdd: "/mock/setting/pesticide/add",
-			SettingUser:         "/mock/setting/user",
-			SettingUserAdd:      "/mock/setting/user/add",
-		},
-	}
-	html.RenderOrError(w, t, data)
+type mock struct {
+	Path     string
+	template string
 }
 
-func renderMock(templateName string) http.HandlerFunc {
+var mocks = []mock{}
+
+func addMock(r chi.Router, path string, template string) {
+	mocks = append(mocks, mock{
+		Path:     path,
+		template: template,
+	})
+	r.Get(path, renderMock(template))
+}
+func renderMock(template_name string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := chi.URLParam(r, "code")
 		if code == "" {
 			code = "abc-123"
 		}
-		mock(templateName, w, code)
+		data := ContentMock{
+			DistrictName: "Delta MVCD",
+			URLs: ContentMockURLs{
+				Dispatch:            "/mock/dispatch",
+				DispatchResults:     "/mock/dispatch-results",
+				ReportConfirmation:  fmt.Sprintf("/mock/report/%s/confirm", code),
+				ReportDetail:        fmt.Sprintf("/mock/report/%s", code),
+				ReportContribute:    fmt.Sprintf("/mock/report/%s/contribute", code),
+				ReportEvidence:      fmt.Sprintf("/mock/report/%s/evidence", code),
+				ReportSchedule:      fmt.Sprintf("/mock/report/%s/schedule", code),
+				ReportUpdate:        fmt.Sprintf("/mock/report/%s/update", code),
+				Root:                "/mock",
+				Setting:             "/mock/setting",
+				SettingIntegration:  "/mock/setting/integration",
+				SettingPesticide:    "/mock/setting/pesticide",
+				SettingPesticideAdd: "/mock/setting/pesticide/add",
+				SettingUser:         "/mock/setting/user",
+				SettingUserAdd:      "/mock/setting/user/add",
+			},
+		}
+		html.RenderOrError(w, template_name, data)
 	}
+}
+
+type contentMockList struct {
+	Mocks []mock
+}
+
+func renderMockList(w http.ResponseWriter, r *http.Request) {
+	data := contentMockList{
+		Mocks: mocks,
+	}
+	html.RenderOrError(w, "sync/mock/root.html", data)
 }
