@@ -3,12 +3,32 @@ package sync
 import (
 	"net/http"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
-type ContentSettingIntegration struct {
+type contentDistrict struct {
+	Centroid string  `db:"st_asgeojson"`
+	GID      int32   `db:"gid"`
+	XMin     float32 `db:"st_xmin"`
+	YMin     float32 `db:"st_ymin"`
+	XMax     float32 `db:"st_xmax"`
+	YMax     float32 `db:"st_ymax"`
+}
+type contentSettingDistrict struct {
+	District contentDistrict
+	URL      ContentURL
+	User     User
+}
+
+type contentSettingIntegration struct {
 	ArcGISOAuth *models.OauthToken
 	URL         ContentURL
 	User        User
@@ -26,6 +46,42 @@ func getSetting(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 	html.RenderOrError(w, "sync/settings.html", data)
 }
+func getSettingDistrict(w http.ResponseWriter, r *http.Request, u *models.User) {
+	ctx := r.Context()
+	userContent, err := contentForUser(ctx, u)
+	if err != nil {
+		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
+		return
+	}
+	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
+	var district contentDistrict
+	gid := int32(0)
+	if org.ImportDistrictGid.IsValue() {
+		gid = org.ImportDistrictGid.MustGet()
+		district, err = bob.One[contentDistrict](ctx, db.PGInstance.BobDB, psql.Select(
+			sm.From("import.district"),
+			sm.Columns(
+				"gid",
+				psql.F("ST_AsGeoJSON", "centroid_4326"),
+				psql.F("ST_XMin", "extent_4326"),
+				psql.F("ST_YMin", "extent_4326"),
+				psql.F("ST_XMax", "extent_4326"),
+				psql.F("ST_YMax", "extent_4326"),
+			),
+			sm.Where(psql.Quote("gid").EQ(psql.Arg(gid))),
+		), scan.StructMapper[contentDistrict]())
+		if err != nil {
+			respondError(w, "Failed to get extents", err, http.StatusInternalServerError)
+			return
+		}
+	}
+	data := contentSettingDistrict{
+		District: district,
+		URL:      newContentURL(),
+		User:     userContent,
+	}
+	html.RenderOrError(w, "sync/setting-district.html", data)
+}
 func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.User) {
 	ctx := r.Context()
 	userContent, err := contentForUser(ctx, u)
@@ -38,7 +94,7 @@ func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.Use
 		respondError(w, "Failed to get oauth", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContentSettingIntegration{
+	data := contentSettingIntegration{
 		ArcGISOAuth: oauth,
 		URL:         newContentURL(),
 		User:        userContent,

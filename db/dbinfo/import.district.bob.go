@@ -222,6 +222,24 @@ var ImportDistricts = Table[
 			Generated: true,
 			AutoIncr:  false,
 		},
+		Centroid4326: column{
+			Name:      "centroid_4326",
+			DBType:    "geometry",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		Extent4326: column{
+			Name:      "extent_4326",
+			DBType:    "geometry",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: importDistrictIndexes{
 		DistrictPkey: index{
@@ -269,34 +287,36 @@ var ImportDistricts = Table[
 }
 
 type importDistrictColumns struct {
-	Gid       column
-	ID        column
-	Website   column
-	Contact   column
-	Address   column
-	Regionid  column
-	PostalCod column
-	Phone1    column
-	Fax1      column
-	Agency    column
-	Code1     column
-	City1     column
-	ShapeLeng column
-	Address2  column
-	GeneralMG column
-	City2     column
-	PostalC1  column
-	Fax2      column
-	Phone2    column
-	ShapeLe1  column
-	ShapeArea column
-	Geom      column
-	Geom4326  column
+	Gid          column
+	ID           column
+	Website      column
+	Contact      column
+	Address      column
+	Regionid     column
+	PostalCod    column
+	Phone1       column
+	Fax1         column
+	Agency       column
+	Code1        column
+	City1        column
+	ShapeLeng    column
+	Address2     column
+	GeneralMG    column
+	City2        column
+	PostalC1     column
+	Fax2         column
+	Phone2       column
+	ShapeLe1     column
+	ShapeArea    column
+	Geom         column
+	Geom4326     column
+	Centroid4326 column
+	Extent4326   column
 }
 
 func (c importDistrictColumns) AsSlice() []column {
 	return []column{
-		c.Gid, c.ID, c.Website, c.Contact, c.Address, c.Regionid, c.PostalCod, c.Phone1, c.Fax1, c.Agency, c.Code1, c.City1, c.ShapeLeng, c.Address2, c.GeneralMG, c.City2, c.PostalC1, c.Fax2, c.Phone2, c.ShapeLe1, c.ShapeArea, c.Geom, c.Geom4326,
+		c.Gid, c.ID, c.Website, c.Contact, c.Address, c.Regionid, c.PostalCod, c.Phone1, c.Fax1, c.Agency, c.Code1, c.City1, c.ShapeLeng, c.Address2, c.GeneralMG, c.City2, c.PostalC1, c.Fax2, c.Phone2, c.ShapeLe1, c.ShapeArea, c.Geom, c.Geom4326, c.Centroid4326, c.Extent4326,
 	}
 }
 

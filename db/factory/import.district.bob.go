@@ -37,29 +37,31 @@ func (mods ImportDistrictModSlice) Apply(ctx context.Context, n *ImportDistrictT
 // ImportDistrictTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type ImportDistrictTemplate struct {
-	Gid       func() int32
-	ID        func() null.Val[decimal.Decimal]
-	Website   func() null.Val[string]
-	Contact   func() null.Val[string]
-	Address   func() null.Val[string]
-	Regionid  func() null.Val[decimal.Decimal]
-	PostalCod func() null.Val[decimal.Decimal]
-	Phone1    func() null.Val[string]
-	Fax1      func() null.Val[string]
-	Agency    func() null.Val[string]
-	Code1     func() null.Val[string]
-	City1     func() null.Val[string]
-	ShapeLeng func() null.Val[decimal.Decimal]
-	Address2  func() null.Val[string]
-	GeneralMG func() null.Val[string]
-	City2     func() null.Val[string]
-	PostalC1  func() null.Val[decimal.Decimal]
-	Fax2      func() null.Val[string]
-	Phone2    func() null.Val[string]
-	ShapeLe1  func() null.Val[decimal.Decimal]
-	ShapeArea func() null.Val[decimal.Decimal]
-	Geom      func() null.Val[string]
-	Geom4326  func() null.Val[string]
+	Gid          func() int32
+	ID           func() null.Val[decimal.Decimal]
+	Website      func() null.Val[string]
+	Contact      func() null.Val[string]
+	Address      func() null.Val[string]
+	Regionid     func() null.Val[decimal.Decimal]
+	PostalCod    func() null.Val[decimal.Decimal]
+	Phone1       func() null.Val[string]
+	Fax1         func() null.Val[string]
+	Agency       func() null.Val[string]
+	Code1        func() null.Val[string]
+	City1        func() null.Val[string]
+	ShapeLeng    func() null.Val[decimal.Decimal]
+	Address2     func() null.Val[string]
+	GeneralMG    func() null.Val[string]
+	City2        func() null.Val[string]
+	PostalC1     func() null.Val[decimal.Decimal]
+	Fax2         func() null.Val[string]
+	Phone2       func() null.Val[string]
+	ShapeLe1     func() null.Val[decimal.Decimal]
+	ShapeArea    func() null.Val[decimal.Decimal]
+	Geom         func() null.Val[string]
+	Geom4326     func() null.Val[string]
+	Centroid4326 func() null.Val[string]
+	Extent4326   func() null.Val[string]
 
 	r importDistrictR
 	f *Factory
@@ -277,6 +279,12 @@ func (o ImportDistrictTemplate) Build() *models.ImportDistrict {
 	if o.Geom4326 != nil {
 		m.Geom4326 = o.Geom4326()
 	}
+	if o.Centroid4326 != nil {
+		m.Centroid4326 = o.Centroid4326()
+	}
+	if o.Extent4326 != nil {
+		m.Extent4326 = o.Extent4326()
+	}
 
 	o.setModelRels(m)
 
@@ -439,6 +447,8 @@ func (m importDistrictMods) RandomizeAllColumns(f *faker.Faker) ImportDistrictMo
 		ImportDistrictMods.RandomShapeArea(f),
 		ImportDistrictMods.RandomGeom(f),
 		ImportDistrictMods.RandomGeom4326(f),
+		ImportDistrictMods.RandomCentroid4326(f),
+		ImportDistrictMods.RandomExtent4326(f),
 	}
 }
 
@@ -1629,6 +1639,112 @@ func (m importDistrictMods) RandomGeom4326(f *faker.Faker) ImportDistrictMod {
 func (m importDistrictMods) RandomGeom4326NotNull(f *faker.Faker) ImportDistrictMod {
 	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
 		o.Geom4326 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m importDistrictMods) Centroid4326(val null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Centroid4326 = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m importDistrictMods) Centroid4326Func(f func() null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Centroid4326 = f
+	})
+}
+
+// Clear any values for the column
+func (m importDistrictMods) UnsetCentroid4326() ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Centroid4326 = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m importDistrictMods) RandomCentroid4326(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Centroid4326 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m importDistrictMods) RandomCentroid4326NotNull(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Centroid4326 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m importDistrictMods) Extent4326(val null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Extent4326 = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m importDistrictMods) Extent4326Func(f func() null.Val[string]) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Extent4326 = f
+	})
+}
+
+// Clear any values for the column
+func (m importDistrictMods) UnsetExtent4326() ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Extent4326 = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m importDistrictMods) RandomExtent4326(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Extent4326 = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m importDistrictMods) RandomExtent4326NotNull(f *faker.Faker) ImportDistrictMod {
+	return ImportDistrictModFunc(func(_ context.Context, o *ImportDistrictTemplate) {
+		o.Extent4326 = func() null.Val[string] {
 			if f == nil {
 				f = &defaultFaker
 			}

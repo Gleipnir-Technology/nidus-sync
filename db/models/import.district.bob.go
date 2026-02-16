@@ -26,29 +26,31 @@ import (
 
 // ImportDistrict is an object representing the database table.
 type ImportDistrict struct {
-	Gid       int32                     `db:"gid,pk" `
-	ID        null.Val[decimal.Decimal] `db:"id" `
-	Website   null.Val[string]          `db:"website" `
-	Contact   null.Val[string]          `db:"contact" `
-	Address   null.Val[string]          `db:"address" `
-	Regionid  null.Val[decimal.Decimal] `db:"regionid" `
-	PostalCod null.Val[decimal.Decimal] `db:"postal_cod" `
-	Phone1    null.Val[string]          `db:"phone1" `
-	Fax1      null.Val[string]          `db:"fax1" `
-	Agency    null.Val[string]          `db:"agency" `
-	Code1     null.Val[string]          `db:"code1" `
-	City1     null.Val[string]          `db:"city1" `
-	ShapeLeng null.Val[decimal.Decimal] `db:"shape_leng" `
-	Address2  null.Val[string]          `db:"address2" `
-	GeneralMG null.Val[string]          `db:"general_mg" `
-	City2     null.Val[string]          `db:"city2" `
-	PostalC1  null.Val[decimal.Decimal] `db:"postal_c_1" `
-	Fax2      null.Val[string]          `db:"fax2" `
-	Phone2    null.Val[string]          `db:"phone2" `
-	ShapeLe1  null.Val[decimal.Decimal] `db:"shape_le_1" `
-	ShapeArea null.Val[decimal.Decimal] `db:"shape_area" `
-	Geom      null.Val[string]          `db:"geom" `
-	Geom4326  null.Val[string]          `db:"geom_4326,generated" `
+	Gid          int32                     `db:"gid,pk" `
+	ID           null.Val[decimal.Decimal] `db:"id" `
+	Website      null.Val[string]          `db:"website" `
+	Contact      null.Val[string]          `db:"contact" `
+	Address      null.Val[string]          `db:"address" `
+	Regionid     null.Val[decimal.Decimal] `db:"regionid" `
+	PostalCod    null.Val[decimal.Decimal] `db:"postal_cod" `
+	Phone1       null.Val[string]          `db:"phone1" `
+	Fax1         null.Val[string]          `db:"fax1" `
+	Agency       null.Val[string]          `db:"agency" `
+	Code1        null.Val[string]          `db:"code1" `
+	City1        null.Val[string]          `db:"city1" `
+	ShapeLeng    null.Val[decimal.Decimal] `db:"shape_leng" `
+	Address2     null.Val[string]          `db:"address2" `
+	GeneralMG    null.Val[string]          `db:"general_mg" `
+	City2        null.Val[string]          `db:"city2" `
+	PostalC1     null.Val[decimal.Decimal] `db:"postal_c_1" `
+	Fax2         null.Val[string]          `db:"fax2" `
+	Phone2       null.Val[string]          `db:"phone2" `
+	ShapeLe1     null.Val[decimal.Decimal] `db:"shape_le_1" `
+	ShapeArea    null.Val[decimal.Decimal] `db:"shape_area" `
+	Geom         null.Val[string]          `db:"geom" `
+	Geom4326     null.Val[string]          `db:"geom_4326,generated" `
+	Centroid4326 null.Val[string]          `db:"centroid_4326,generated" `
+	Extent4326   null.Val[string]          `db:"extent_4326,generated" `
 
 	R importDistrictR `db:"-" `
 }
@@ -71,61 +73,65 @@ type importDistrictR struct {
 func buildImportDistrictColumns(alias string) importDistrictColumns {
 	return importDistrictColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326",
+			"gid", "id", "website", "contact", "address", "regionid", "postal_cod", "phone1", "fax1", "agency", "code1", "city1", "shape_leng", "address2", "general_mg", "city2", "postal_c_1", "fax2", "phone2", "shape_le_1", "shape_area", "geom", "geom_4326", "centroid_4326", "extent_4326",
 		).WithParent("import.district"),
-		tableAlias: alias,
-		Gid:        psql.Quote(alias, "gid"),
-		ID:         psql.Quote(alias, "id"),
-		Website:    psql.Quote(alias, "website"),
-		Contact:    psql.Quote(alias, "contact"),
-		Address:    psql.Quote(alias, "address"),
-		Regionid:   psql.Quote(alias, "regionid"),
-		PostalCod:  psql.Quote(alias, "postal_cod"),
-		Phone1:     psql.Quote(alias, "phone1"),
-		Fax1:       psql.Quote(alias, "fax1"),
-		Agency:     psql.Quote(alias, "agency"),
-		Code1:      psql.Quote(alias, "code1"),
-		City1:      psql.Quote(alias, "city1"),
-		ShapeLeng:  psql.Quote(alias, "shape_leng"),
-		Address2:   psql.Quote(alias, "address2"),
-		GeneralMG:  psql.Quote(alias, "general_mg"),
-		City2:      psql.Quote(alias, "city2"),
-		PostalC1:   psql.Quote(alias, "postal_c_1"),
-		Fax2:       psql.Quote(alias, "fax2"),
-		Phone2:     psql.Quote(alias, "phone2"),
-		ShapeLe1:   psql.Quote(alias, "shape_le_1"),
-		ShapeArea:  psql.Quote(alias, "shape_area"),
-		Geom:       psql.Quote(alias, "geom"),
-		Geom4326:   psql.Quote(alias, "geom_4326"),
+		tableAlias:   alias,
+		Gid:          psql.Quote(alias, "gid"),
+		ID:           psql.Quote(alias, "id"),
+		Website:      psql.Quote(alias, "website"),
+		Contact:      psql.Quote(alias, "contact"),
+		Address:      psql.Quote(alias, "address"),
+		Regionid:     psql.Quote(alias, "regionid"),
+		PostalCod:    psql.Quote(alias, "postal_cod"),
+		Phone1:       psql.Quote(alias, "phone1"),
+		Fax1:         psql.Quote(alias, "fax1"),
+		Agency:       psql.Quote(alias, "agency"),
+		Code1:        psql.Quote(alias, "code1"),
+		City1:        psql.Quote(alias, "city1"),
+		ShapeLeng:    psql.Quote(alias, "shape_leng"),
+		Address2:     psql.Quote(alias, "address2"),
+		GeneralMG:    psql.Quote(alias, "general_mg"),
+		City2:        psql.Quote(alias, "city2"),
+		PostalC1:     psql.Quote(alias, "postal_c_1"),
+		Fax2:         psql.Quote(alias, "fax2"),
+		Phone2:       psql.Quote(alias, "phone2"),
+		ShapeLe1:     psql.Quote(alias, "shape_le_1"),
+		ShapeArea:    psql.Quote(alias, "shape_area"),
+		Geom:         psql.Quote(alias, "geom"),
+		Geom4326:     psql.Quote(alias, "geom_4326"),
+		Centroid4326: psql.Quote(alias, "centroid_4326"),
+		Extent4326:   psql.Quote(alias, "extent_4326"),
 	}
 }
 
 type importDistrictColumns struct {
 	expr.ColumnsExpr
-	tableAlias string
-	Gid        psql.Expression
-	ID         psql.Expression
-	Website    psql.Expression
-	Contact    psql.Expression
-	Address    psql.Expression
-	Regionid   psql.Expression
-	PostalCod  psql.Expression
-	Phone1     psql.Expression
-	Fax1       psql.Expression
-	Agency     psql.Expression
-	Code1      psql.Expression
-	City1      psql.Expression
-	ShapeLeng  psql.Expression
-	Address2   psql.Expression
-	GeneralMG  psql.Expression
-	City2      psql.Expression
-	PostalC1   psql.Expression
-	Fax2       psql.Expression
-	Phone2     psql.Expression
-	ShapeLe1   psql.Expression
-	ShapeArea  psql.Expression
-	Geom       psql.Expression
-	Geom4326   psql.Expression
+	tableAlias   string
+	Gid          psql.Expression
+	ID           psql.Expression
+	Website      psql.Expression
+	Contact      psql.Expression
+	Address      psql.Expression
+	Regionid     psql.Expression
+	PostalCod    psql.Expression
+	Phone1       psql.Expression
+	Fax1         psql.Expression
+	Agency       psql.Expression
+	Code1        psql.Expression
+	City1        psql.Expression
+	ShapeLeng    psql.Expression
+	Address2     psql.Expression
+	GeneralMG    psql.Expression
+	City2        psql.Expression
+	PostalC1     psql.Expression
+	Fax2         psql.Expression
+	Phone2       psql.Expression
+	ShapeLe1     psql.Expression
+	ShapeArea    psql.Expression
+	Geom         psql.Expression
+	Geom4326     psql.Expression
+	Centroid4326 psql.Expression
+	Extent4326   psql.Expression
 }
 
 func (c importDistrictColumns) Alias() string {
@@ -913,29 +919,31 @@ func (importDistrict0 *ImportDistrict) AttachImportDistrictGidOrganization(ctx c
 }
 
 type importDistrictWhere[Q psql.Filterable] struct {
-	Gid       psql.WhereMod[Q, int32]
-	ID        psql.WhereNullMod[Q, decimal.Decimal]
-	Website   psql.WhereNullMod[Q, string]
-	Contact   psql.WhereNullMod[Q, string]
-	Address   psql.WhereNullMod[Q, string]
-	Regionid  psql.WhereNullMod[Q, decimal.Decimal]
-	PostalCod psql.WhereNullMod[Q, decimal.Decimal]
-	Phone1    psql.WhereNullMod[Q, string]
-	Fax1      psql.WhereNullMod[Q, string]
-	Agency    psql.WhereNullMod[Q, string]
-	Code1     psql.WhereNullMod[Q, string]
-	City1     psql.WhereNullMod[Q, string]
-	ShapeLeng psql.WhereNullMod[Q, decimal.Decimal]
-	Address2  psql.WhereNullMod[Q, string]
-	GeneralMG psql.WhereNullMod[Q, string]
-	City2     psql.WhereNullMod[Q, string]
-	PostalC1  psql.WhereNullMod[Q, decimal.Decimal]
-	Fax2      psql.WhereNullMod[Q, string]
-	Phone2    psql.WhereNullMod[Q, string]
-	ShapeLe1  psql.WhereNullMod[Q, decimal.Decimal]
-	ShapeArea psql.WhereNullMod[Q, decimal.Decimal]
-	Geom      psql.WhereNullMod[Q, string]
-	Geom4326  psql.WhereNullMod[Q, string]
+	Gid          psql.WhereMod[Q, int32]
+	ID           psql.WhereNullMod[Q, decimal.Decimal]
+	Website      psql.WhereNullMod[Q, string]
+	Contact      psql.WhereNullMod[Q, string]
+	Address      psql.WhereNullMod[Q, string]
+	Regionid     psql.WhereNullMod[Q, decimal.Decimal]
+	PostalCod    psql.WhereNullMod[Q, decimal.Decimal]
+	Phone1       psql.WhereNullMod[Q, string]
+	Fax1         psql.WhereNullMod[Q, string]
+	Agency       psql.WhereNullMod[Q, string]
+	Code1        psql.WhereNullMod[Q, string]
+	City1        psql.WhereNullMod[Q, string]
+	ShapeLeng    psql.WhereNullMod[Q, decimal.Decimal]
+	Address2     psql.WhereNullMod[Q, string]
+	GeneralMG    psql.WhereNullMod[Q, string]
+	City2        psql.WhereNullMod[Q, string]
+	PostalC1     psql.WhereNullMod[Q, decimal.Decimal]
+	Fax2         psql.WhereNullMod[Q, string]
+	Phone2       psql.WhereNullMod[Q, string]
+	ShapeLe1     psql.WhereNullMod[Q, decimal.Decimal]
+	ShapeArea    psql.WhereNullMod[Q, decimal.Decimal]
+	Geom         psql.WhereNullMod[Q, string]
+	Geom4326     psql.WhereNullMod[Q, string]
+	Centroid4326 psql.WhereNullMod[Q, string]
+	Extent4326   psql.WhereNullMod[Q, string]
 }
 
 func (importDistrictWhere[Q]) AliasedAs(alias string) importDistrictWhere[Q] {
@@ -944,29 +952,31 @@ func (importDistrictWhere[Q]) AliasedAs(alias string) importDistrictWhere[Q] {
 
 func buildImportDistrictWhere[Q psql.Filterable](cols importDistrictColumns) importDistrictWhere[Q] {
 	return importDistrictWhere[Q]{
-		Gid:       psql.Where[Q, int32](cols.Gid),
-		ID:        psql.WhereNull[Q, decimal.Decimal](cols.ID),
-		Website:   psql.WhereNull[Q, string](cols.Website),
-		Contact:   psql.WhereNull[Q, string](cols.Contact),
-		Address:   psql.WhereNull[Q, string](cols.Address),
-		Regionid:  psql.WhereNull[Q, decimal.Decimal](cols.Regionid),
-		PostalCod: psql.WhereNull[Q, decimal.Decimal](cols.PostalCod),
-		Phone1:    psql.WhereNull[Q, string](cols.Phone1),
-		Fax1:      psql.WhereNull[Q, string](cols.Fax1),
-		Agency:    psql.WhereNull[Q, string](cols.Agency),
-		Code1:     psql.WhereNull[Q, string](cols.Code1),
-		City1:     psql.WhereNull[Q, string](cols.City1),
-		ShapeLeng: psql.WhereNull[Q, decimal.Decimal](cols.ShapeLeng),
-		Address2:  psql.WhereNull[Q, string](cols.Address2),
-		GeneralMG: psql.WhereNull[Q, string](cols.GeneralMG),
-		City2:     psql.WhereNull[Q, string](cols.City2),
-		PostalC1:  psql.WhereNull[Q, decimal.Decimal](cols.PostalC1),
-		Fax2:      psql.WhereNull[Q, string](cols.Fax2),
-		Phone2:    psql.WhereNull[Q, string](cols.Phone2),
-		ShapeLe1:  psql.WhereNull[Q, decimal.Decimal](cols.ShapeLe1),
-		ShapeArea: psql.WhereNull[Q, decimal.Decimal](cols.ShapeArea),
-		Geom:      psql.WhereNull[Q, string](cols.Geom),
-		Geom4326:  psql.WhereNull[Q, string](cols.Geom4326),
+		Gid:          psql.Where[Q, int32](cols.Gid),
+		ID:           psql.WhereNull[Q, decimal.Decimal](cols.ID),
+		Website:      psql.WhereNull[Q, string](cols.Website),
+		Contact:      psql.WhereNull[Q, string](cols.Contact),
+		Address:      psql.WhereNull[Q, string](cols.Address),
+		Regionid:     psql.WhereNull[Q, decimal.Decimal](cols.Regionid),
+		PostalCod:    psql.WhereNull[Q, decimal.Decimal](cols.PostalCod),
+		Phone1:       psql.WhereNull[Q, string](cols.Phone1),
+		Fax1:         psql.WhereNull[Q, string](cols.Fax1),
+		Agency:       psql.WhereNull[Q, string](cols.Agency),
+		Code1:        psql.WhereNull[Q, string](cols.Code1),
+		City1:        psql.WhereNull[Q, string](cols.City1),
+		ShapeLeng:    psql.WhereNull[Q, decimal.Decimal](cols.ShapeLeng),
+		Address2:     psql.WhereNull[Q, string](cols.Address2),
+		GeneralMG:    psql.WhereNull[Q, string](cols.GeneralMG),
+		City2:        psql.WhereNull[Q, string](cols.City2),
+		PostalC1:     psql.WhereNull[Q, decimal.Decimal](cols.PostalC1),
+		Fax2:         psql.WhereNull[Q, string](cols.Fax2),
+		Phone2:       psql.WhereNull[Q, string](cols.Phone2),
+		ShapeLe1:     psql.WhereNull[Q, decimal.Decimal](cols.ShapeLe1),
+		ShapeArea:    psql.WhereNull[Q, decimal.Decimal](cols.ShapeArea),
+		Geom:         psql.WhereNull[Q, string](cols.Geom),
+		Geom4326:     psql.WhereNull[Q, string](cols.Geom4326),
+		Centroid4326: psql.WhereNull[Q, string](cols.Centroid4326),
+		Extent4326:   psql.WhereNull[Q, string](cols.Extent4326),
 	}
 }
 
