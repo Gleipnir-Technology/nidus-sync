@@ -1,0 +1,190 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script src="/static/js/map-aggregate.js"></script>
+	<script>
+		function onLoad() {
+			const map = document.querySelector("map-aggregate");
+			map.addEventListener("cell-click", (event) => {
+				window.location.href = "/cell/" + event.detail.cell;
+			});
+		}
+		window.addEventListener("load", onLoad);
+	</script>
+{{ end }}
+{{ define "content" }}
+	<div class="container mt-4">
+		<h1 class="mb-3">Field Operations Radar</h1>
+
+		<!-- Map View -->
+		<div class="card mb-4">
+			<div class="card-header">
+				<h5 class="mb-0">Technician Locations</h5>
+			</div>
+			<div class="card-body p-0">
+				<div class="map-placeholder">
+					<h3 class="text-muted">Map View - Technician Locations</h3>
+				</div>
+			</div>
+		</div>
+
+		<!-- Technicians Table -->
+		<div class="card">
+			<div
+				class="card-header d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0">Field Technicians Status</h5>
+				<span class="badge bg-primary">12 Active Technicians</span>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th scope="col">Technician</th>
+								<th scope="col">Last Update</th>
+								<th scope="col">Current Activity</th>
+								<th scope="col">Time Remaining</th>
+								<th scope="col">Next Activity</th>
+								<th scope="col">Schedule</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>Sarah Johnson</div>
+									</div>
+								</td>
+								<td>2 min ago</td>
+								<td>
+									<span class="status-badge bg-success">At Site</span>
+								</td>
+								<td>15 min</td>
+								<td>Lakeside Park</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>Michael Torres</div>
+									</div>
+								</td>
+								<td>7 min ago</td>
+								<td>
+									<span class="status-badge bg-warning">On Break</span>
+								</td>
+								<td>8 min</td>
+								<td>Henderson Marsh</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>Lisa Williams</div>
+									</div>
+								</td>
+								<td>12 min ago</td>
+								<td>
+									<span class="status-badge bg-info">In Transit</span>
+								</td>
+								<td>5 min</td>
+								<td>Westside Creek</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>Robert Chen</div>
+									</div>
+								</td>
+								<td>34 min ago</td>
+								<td>
+									<span class="status-badge bg-secondary">Unknown</span>
+								</td>
+								<td>--</td>
+								<td>Oak Grove Pond</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>Emily Nguyen</div>
+									</div>
+								</td>
+								<td>5 min ago</td>
+								<td>
+									<span class="status-badge bg-success">At Site</span>
+								</td>
+								<td>23 min</td>
+								<td>Harbor Point</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar-placeholder me-2">
+											<i class="bi bi-person-fill"></i>
+										</div>
+										<div>James Wilson</div>
+									</div>
+								</td>
+								<td>Just now</td>
+								<td>
+									<span class="status-badge bg-info">In Transit</span>
+								</td>
+								<td>12 min</td>
+								<td>Meadow Heights</td>
+								<td>
+									<a href="#" class="btn btn-sm btn-outline-primary">
+										<i class="bi bi-calendar3"></i>
+									</a>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
