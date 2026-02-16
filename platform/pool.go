@@ -105,7 +105,7 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup errors in csv %d: %w", file_id, err)
 	}
 	file_errors := make([]UploadPoolError, 0)
-	errors_by_row := make(map[int32][]UploadPoolError, 0)
+	errors_by_line := make(map[int32][]UploadPoolError, 0)
 	for _, row := range error_rows {
 		e := UploadPoolError{
 			Column:  uint(row.Col),
@@ -115,13 +115,14 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		if row.Line == 0 {
 			file_errors = append(file_errors, e)
 		} else {
-			by_row, ok := errors_by_row[row.Line]
+			log.Info().Int32("line", row.Line).Msg("Found error")
+			by_line, ok := errors_by_line[row.Line]
 			if !ok {
-				errors_by_row[row.Line] = []UploadPoolError{e}
+				errors_by_line[row.Line] = []UploadPoolError{e}
 				continue
 			}
-			by_row = append(by_row, e)
-			errors_by_row[row.Line] = by_row
+			by_line = append(by_line, e)
+			errors_by_line[row.Line] = by_line
 		}
 	}
 
@@ -137,7 +138,7 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 	count_new := 0
 	count_outside := 0
 	status := "unknown"
-	for i, r := range pool_rows {
+	for _, r := range pool_rows {
 		if r.IsNew {
 			count_new = count_new + 1
 			status = "new"
@@ -149,9 +150,12 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 			status = "existing"
 		}
 		tags := db.ConvertFromPGData(r.Tags)
-		errors, ok := errors_by_row[int32(i)]
+		// add 2 here because our file lines are 1-indexed and we skip the header line, but we are ranging 0-indexed
+		errors, ok := errors_by_line[r.LineNumber]
 		if !ok {
 			errors = []UploadPoolError{}
+		} else {
+			log.Info().Int32("line", r.LineNumber).Int32("id", r.ID).Msg("Found errors in errors_by_line")
 		}
 		pools = append(pools, UploadPoolRow{
 			City:       r.AddressCity,

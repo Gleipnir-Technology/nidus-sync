@@ -106,28 +106,35 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file models.FileuploadFile, po
 	log.Info().Int("len", len(responses)).Msg("bulk query response")
 	for i, resp := range responses {
 		pool := pools[i]
+		sublog := log.With().
+			Int("row", i).
+			Str("pool.address_postal", pool.AddressPostalCode).
+			Str("pool.address_street", pool.AddressStreet).
+			Str("pool.postal", pool.AddressPostalCode).
+			Logger()
+
 		if resp.Status != 200 {
-			log.Info().Int("row", i).Int("status", resp.Status).Str("pool.address", pool.AddressStreet).Str("pool.postal", pool.AddressPostalCode).Str("msg", resp.Message).Msg("Non-200 status on geocode request")
+			sublog.Info().Int("status", resp.Status).Str("msg", resp.Message).Msg("Non-200 status on geocode request")
 			continue
 		}
 		if resp.Response == nil {
-			log.Info().Int("row", i).Str("pool.address", pool.AddressStreet).Str("pool.postal", pool.AddressPostalCode).Str("msg", resp.Message).Msg("nil response on geocode")
+			sublog.Info().Str("msg", resp.Message).Msg("nil response on geocode")
 			continue
 		}
 		if len(resp.Response.Features) > 1 {
-			log.Warn().Int("row", i).Int("len", len(resp.Response.Features)).Msg("too many features")
+			sublog.Warn().Int("len", len(resp.Response.Features)).Msg("too many features")
 			continue
 		}
 		feature := resp.Response.Features[0]
 		if feature.Geometry.Type != "Point" {
-			log.Warn().Int("row", i).Str("type", feature.Geometry.Type).Msg("wrong type")
+			sublog.Warn().Str("type", feature.Geometry.Type).Msg("wrong type")
 			continue
 		}
 		longitude := feature.Geometry.Coordinates[0]
 		latitude := feature.Geometry.Coordinates[1]
 		cell, err := h3utils.GetCell(longitude, latitude, 15)
 		if err != nil {
-			log.Warn().Err(err).Int("row", i).Float64("lng", longitude).Float64("lat", latitude).Msg("failed to convert h3 cell")
+			sublog.Warn().Err(err).Float64("lng", longitude).Float64("lat", latitude).Msg("failed to convert h3 cell")
 			continue
 		}
 		geom_query := geom.PostgisPointQuery(longitude, latitude)
@@ -184,7 +191,8 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 		})
 		return pools, nil
 	}
-	row_number := 0
+	// Start at 2 because the header is line 1, not line 0
+	line_number := int32(2)
 	for {
 		row, err := reader.Read()
 		if err != nil {
@@ -214,6 +222,7 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			// ID - generated
 			IsInDistrict:           omit.From(false),
 			IsNew:                  omit.From(true),
+			LineNumber:             omit.From(line_number),
 			Notes:                  omit.From(""),
 			OrganizationID:         omit.From(file.OrganizationID),
 			PropertyOwnerName:      omit.From(""),
@@ -221,7 +230,6 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			ResidentOwned:          omitnull.FromPtr[bool](nil),
 			ResidentPhoneE164:      omitnull.FromPtr[string](nil),
 			//Tags:       		convertToPGData(tags),
-			Version: omit.From(int32(0)),
 		}
 		for i, col := range row {
 			hdr_t := header_types[i]
@@ -239,7 +247,8 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 				var condition enums.FileuploadPoolconditiontype
 				err := condition.Scan(strings.ToLower(col))
 				if err != nil {
-					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
+					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
+					setter.Condition = omit.From(enums.FileuploadPoolconditiontypeUnknown)
 					continue
 				}
 				setter.Condition = omit.From(condition)
@@ -250,7 +259,7 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			case headerPropertyOwnerPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
 					continue
 				}
 				text.EnsureInDB(ctx, txn, *phone)
@@ -258,14 +267,14 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			case headerResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", col))
+					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", col))
 					continue
 				}
 				setter.ResidentOwned = omitnull.From(boolValue)
 			case headerResidentPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(row_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
 					continue
 				}
 				text.EnsureInDB(ctx, txn, *phone)
@@ -281,7 +290,7 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 			return pools, fmt.Errorf("Failed to create pool: %w", err)
 		}
 		pools = append(pools, pool)
-		row_number = row_number + 1
+		line_number = line_number + 1
 	}
 }
 func addError(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, row_number int32, column_number int32, msg string) error {

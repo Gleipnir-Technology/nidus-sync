@@ -48,6 +48,7 @@ type FileuploadPoolTemplate struct {
 	CreatorID              func() int32
 	CSVFile                func() int32
 	Deleted                func() null.Val[time.Time]
+	Geom                   func() null.Val[string]
 	H3cell                 func() null.Val[string]
 	ID                     func() int32
 	IsInDistrict           func() bool
@@ -55,11 +56,10 @@ type FileuploadPoolTemplate struct {
 	Notes                  func() string
 	OrganizationID         func() int32
 	PropertyOwnerName      func() string
-	ResidentOwned          func() null.Val[bool]
-	Version                func() int32
 	PropertyOwnerPhoneE164 func() null.Val[string]
+	ResidentOwned          func() null.Val[bool]
 	ResidentPhoneE164      func() null.Val[string]
-	Geom                   func() null.Val[string]
+	LineNumber             func() int32
 	Tags                   func() pgtypes.HStore
 
 	r fileuploadPoolR
@@ -179,6 +179,10 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.Deleted()
 		m.Deleted = omitnull.FromNull(val)
 	}
+	if o.Geom != nil {
+		val := o.Geom()
+		m.Geom = omitnull.FromNull(val)
+	}
 	if o.H3cell != nil {
 		val := o.H3cell()
 		m.H3cell = omitnull.FromNull(val)
@@ -207,25 +211,21 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.PropertyOwnerName()
 		m.PropertyOwnerName = omit.From(val)
 	}
-	if o.ResidentOwned != nil {
-		val := o.ResidentOwned()
-		m.ResidentOwned = omitnull.FromNull(val)
-	}
-	if o.Version != nil {
-		val := o.Version()
-		m.Version = omit.From(val)
-	}
 	if o.PropertyOwnerPhoneE164 != nil {
 		val := o.PropertyOwnerPhoneE164()
 		m.PropertyOwnerPhoneE164 = omitnull.FromNull(val)
+	}
+	if o.ResidentOwned != nil {
+		val := o.ResidentOwned()
+		m.ResidentOwned = omitnull.FromNull(val)
 	}
 	if o.ResidentPhoneE164 != nil {
 		val := o.ResidentPhoneE164()
 		m.ResidentPhoneE164 = omitnull.FromNull(val)
 	}
-	if o.Geom != nil {
-		val := o.Geom()
-		m.Geom = omitnull.FromNull(val)
+	if o.LineNumber != nil {
+		val := o.LineNumber()
+		m.LineNumber = omit.From(val)
 	}
 	if o.Tags != nil {
 		val := o.Tags()
@@ -280,6 +280,9 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.Deleted != nil {
 		m.Deleted = o.Deleted()
 	}
+	if o.Geom != nil {
+		m.Geom = o.Geom()
+	}
 	if o.H3cell != nil {
 		m.H3cell = o.H3cell()
 	}
@@ -301,20 +304,17 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.PropertyOwnerName != nil {
 		m.PropertyOwnerName = o.PropertyOwnerName()
 	}
-	if o.ResidentOwned != nil {
-		m.ResidentOwned = o.ResidentOwned()
-	}
-	if o.Version != nil {
-		m.Version = o.Version()
-	}
 	if o.PropertyOwnerPhoneE164 != nil {
 		m.PropertyOwnerPhoneE164 = o.PropertyOwnerPhoneE164()
+	}
+	if o.ResidentOwned != nil {
+		m.ResidentOwned = o.ResidentOwned()
 	}
 	if o.ResidentPhoneE164 != nil {
 		m.ResidentPhoneE164 = o.ResidentPhoneE164()
 	}
-	if o.Geom != nil {
-		m.Geom = o.Geom()
+	if o.LineNumber != nil {
+		m.LineNumber = o.LineNumber()
 	}
 	if o.Tags != nil {
 		m.Tags = o.Tags()
@@ -391,9 +391,9 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 		val := random_string(nil)
 		m.PropertyOwnerName = omit.From(val)
 	}
-	if !(m.Version.IsValue()) {
+	if !(m.LineNumber.IsValue()) {
 		val := random_int32(nil)
-		m.Version = omit.From(val)
+		m.LineNumber = omit.From(val)
 	}
 	if !(m.Tags.IsValue()) {
 		val := random_pgtypes_HStore(nil)
@@ -601,6 +601,7 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomCreatorID(f),
 		FileuploadPoolMods.RandomCSVFile(f),
 		FileuploadPoolMods.RandomDeleted(f),
+		FileuploadPoolMods.RandomGeom(f),
 		FileuploadPoolMods.RandomH3cell(f),
 		FileuploadPoolMods.RandomID(f),
 		FileuploadPoolMods.RandomIsInDistrict(f),
@@ -608,11 +609,10 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomNotes(f),
 		FileuploadPoolMods.RandomOrganizationID(f),
 		FileuploadPoolMods.RandomPropertyOwnerName(f),
-		FileuploadPoolMods.RandomResidentOwned(f),
-		FileuploadPoolMods.RandomVersion(f),
 		FileuploadPoolMods.RandomPropertyOwnerPhoneE164(f),
+		FileuploadPoolMods.RandomResidentOwned(f),
 		FileuploadPoolMods.RandomResidentPhoneE164(f),
-		FileuploadPoolMods.RandomGeom(f),
+		FileuploadPoolMods.RandomLineNumber(f),
 		FileuploadPoolMods.RandomTags(f),
 	}
 }
@@ -919,6 +919,59 @@ func (m fileuploadPoolMods) RandomDeletedNotNull(f *faker.Faker) FileuploadPoolM
 }
 
 // Set the model columns to this value
+func (m fileuploadPoolMods) Geom(val null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) GeomFunc(f func() null.Val[string]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetGeom() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadPoolMods) RandomGeom(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadPoolMods) RandomGeomNotNull(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Geom = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
 func (m fileuploadPoolMods) H3cell(val null.Val[string]) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.H3cell = func() null.Val[string] { return val }
@@ -1158,90 +1211,6 @@ func (m fileuploadPoolMods) RandomPropertyOwnerName(f *faker.Faker) FileuploadPo
 }
 
 // Set the model columns to this value
-func (m fileuploadPoolMods) ResidentOwned(val null.Val[bool]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentOwned = func() null.Val[bool] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) ResidentOwnedFunc(f func() null.Val[bool]) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentOwned = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetResidentOwned() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentOwned = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m fileuploadPoolMods) RandomResidentOwned(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentOwned = func() null.Val[bool] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_bool(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fileuploadPoolMods) RandomResidentOwnedNotNull(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.ResidentOwned = func() null.Val[bool] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_bool(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m fileuploadPoolMods) Version(val int32) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Version = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) VersionFunc(f func() int32) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Version = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetVersion() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Version = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m fileuploadPoolMods) RandomVersion(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Version = func() int32 {
-			return random_int32(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m fileuploadPoolMods) PropertyOwnerPhoneE164(val null.Val[string]) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.PropertyOwnerPhoneE164 = func() null.Val[string] { return val }
@@ -1289,6 +1258,59 @@ func (m fileuploadPoolMods) RandomPropertyOwnerPhoneE164NotNull(f *faker.Faker) 
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) ResidentOwned(val null.Val[bool]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentOwned = func() null.Val[bool] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) ResidentOwnedFunc(f func() null.Val[bool]) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentOwned = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetResidentOwned() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentOwned = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadPoolMods) RandomResidentOwned(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentOwned = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadPoolMods) RandomResidentOwnedNotNull(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.ResidentOwned = func() null.Val[bool] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_bool(f)
 			return null.From(val)
 		}
 	})
@@ -1348,54 +1370,32 @@ func (m fileuploadPoolMods) RandomResidentPhoneE164NotNull(f *faker.Faker) Fileu
 }
 
 // Set the model columns to this value
-func (m fileuploadPoolMods) Geom(val null.Val[string]) FileuploadPoolMod {
+func (m fileuploadPoolMods) LineNumber(val int32) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] { return val }
+		o.LineNumber = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m fileuploadPoolMods) GeomFunc(f func() null.Val[string]) FileuploadPoolMod {
+func (m fileuploadPoolMods) LineNumberFunc(f func() int32) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = f
+		o.LineNumber = f
 	})
 }
 
 // Clear any values for the column
-func (m fileuploadPoolMods) UnsetGeom() FileuploadPoolMod {
+func (m fileuploadPoolMods) UnsetLineNumber() FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = nil
+		o.LineNumber = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m fileuploadPoolMods) RandomGeom(f *faker.Faker) FileuploadPoolMod {
+func (m fileuploadPoolMods) RandomLineNumber(f *faker.Faker) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m fileuploadPoolMods) RandomGeomNotNull(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Geom = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
+		o.LineNumber = func() int32 {
+			return random_int32(f)
 		}
 	})
 }

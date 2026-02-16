@@ -36,6 +36,7 @@ type FileuploadPool struct {
 	CreatorID              int32                             `db:"creator_id" `
 	CSVFile                int32                             `db:"csv_file" `
 	Deleted                null.Val[time.Time]               `db:"deleted" `
+	Geom                   null.Val[string]                  `db:"geom" `
 	H3cell                 null.Val[string]                  `db:"h3cell" `
 	ID                     int32                             `db:"id,pk" `
 	IsInDistrict           bool                              `db:"is_in_district" `
@@ -43,11 +44,10 @@ type FileuploadPool struct {
 	Notes                  string                            `db:"notes" `
 	OrganizationID         int32                             `db:"organization_id" `
 	PropertyOwnerName      string                            `db:"property_owner_name" `
-	ResidentOwned          null.Val[bool]                    `db:"resident_owned" `
-	Version                int32                             `db:"version,pk" `
 	PropertyOwnerPhoneE164 null.Val[string]                  `db:"property_owner_phone_e164" `
+	ResidentOwned          null.Val[bool]                    `db:"resident_owned" `
 	ResidentPhoneE164      null.Val[string]                  `db:"resident_phone_e164" `
-	Geom                   null.Val[string]                  `db:"geom" `
+	LineNumber             int32                             `db:"line_number" `
 	Tags                   pgtypes.HStore                    `db:"tags" `
 
 	R fileuploadPoolR `db:"-" `
@@ -75,7 +75,7 @@ type fileuploadPoolR struct {
 func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 	return fileuploadPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_city", "address_postal_code", "address_street", "committed", "condition", "created", "creator_id", "csv_file", "deleted", "h3cell", "id", "is_in_district", "is_new", "notes", "organization_id", "property_owner_name", "resident_owned", "version", "property_owner_phone_e164", "resident_phone_e164", "geom", "tags",
+			"address_city", "address_postal_code", "address_street", "committed", "condition", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "organization_id", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags",
 		).WithParent("fileupload.pool"),
 		tableAlias:             alias,
 		AddressCity:            psql.Quote(alias, "address_city"),
@@ -87,6 +87,7 @@ func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 		CreatorID:              psql.Quote(alias, "creator_id"),
 		CSVFile:                psql.Quote(alias, "csv_file"),
 		Deleted:                psql.Quote(alias, "deleted"),
+		Geom:                   psql.Quote(alias, "geom"),
 		H3cell:                 psql.Quote(alias, "h3cell"),
 		ID:                     psql.Quote(alias, "id"),
 		IsInDistrict:           psql.Quote(alias, "is_in_district"),
@@ -94,11 +95,10 @@ func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 		Notes:                  psql.Quote(alias, "notes"),
 		OrganizationID:         psql.Quote(alias, "organization_id"),
 		PropertyOwnerName:      psql.Quote(alias, "property_owner_name"),
-		ResidentOwned:          psql.Quote(alias, "resident_owned"),
-		Version:                psql.Quote(alias, "version"),
 		PropertyOwnerPhoneE164: psql.Quote(alias, "property_owner_phone_e164"),
+		ResidentOwned:          psql.Quote(alias, "resident_owned"),
 		ResidentPhoneE164:      psql.Quote(alias, "resident_phone_e164"),
-		Geom:                   psql.Quote(alias, "geom"),
+		LineNumber:             psql.Quote(alias, "line_number"),
 		Tags:                   psql.Quote(alias, "tags"),
 	}
 }
@@ -115,6 +115,7 @@ type fileuploadPoolColumns struct {
 	CreatorID              psql.Expression
 	CSVFile                psql.Expression
 	Deleted                psql.Expression
+	Geom                   psql.Expression
 	H3cell                 psql.Expression
 	ID                     psql.Expression
 	IsInDistrict           psql.Expression
@@ -122,11 +123,10 @@ type fileuploadPoolColumns struct {
 	Notes                  psql.Expression
 	OrganizationID         psql.Expression
 	PropertyOwnerName      psql.Expression
-	ResidentOwned          psql.Expression
-	Version                psql.Expression
 	PropertyOwnerPhoneE164 psql.Expression
+	ResidentOwned          psql.Expression
 	ResidentPhoneE164      psql.Expression
-	Geom                   psql.Expression
+	LineNumber             psql.Expression
 	Tags                   psql.Expression
 }
 
@@ -151,6 +151,7 @@ type FileuploadPoolSetter struct {
 	CreatorID              omit.Val[int32]                             `db:"creator_id" `
 	CSVFile                omit.Val[int32]                             `db:"csv_file" `
 	Deleted                omitnull.Val[time.Time]                     `db:"deleted" `
+	Geom                   omitnull.Val[string]                        `db:"geom" `
 	H3cell                 omitnull.Val[string]                        `db:"h3cell" `
 	ID                     omit.Val[int32]                             `db:"id,pk" `
 	IsInDistrict           omit.Val[bool]                              `db:"is_in_district" `
@@ -158,11 +159,10 @@ type FileuploadPoolSetter struct {
 	Notes                  omit.Val[string]                            `db:"notes" `
 	OrganizationID         omit.Val[int32]                             `db:"organization_id" `
 	PropertyOwnerName      omit.Val[string]                            `db:"property_owner_name" `
-	ResidentOwned          omitnull.Val[bool]                          `db:"resident_owned" `
-	Version                omit.Val[int32]                             `db:"version,pk" `
 	PropertyOwnerPhoneE164 omitnull.Val[string]                        `db:"property_owner_phone_e164" `
+	ResidentOwned          omitnull.Val[bool]                          `db:"resident_owned" `
 	ResidentPhoneE164      omitnull.Val[string]                        `db:"resident_phone_e164" `
-	Geom                   omitnull.Val[string]                        `db:"geom" `
+	LineNumber             omit.Val[int32]                             `db:"line_number" `
 	Tags                   omit.Val[pgtypes.HStore]                    `db:"tags" `
 }
 
@@ -195,6 +195,9 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	if !s.Deleted.IsUnset() {
 		vals = append(vals, "deleted")
 	}
+	if !s.Geom.IsUnset() {
+		vals = append(vals, "geom")
+	}
 	if !s.H3cell.IsUnset() {
 		vals = append(vals, "h3cell")
 	}
@@ -216,20 +219,17 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	if s.PropertyOwnerName.IsValue() {
 		vals = append(vals, "property_owner_name")
 	}
-	if !s.ResidentOwned.IsUnset() {
-		vals = append(vals, "resident_owned")
-	}
-	if s.Version.IsValue() {
-		vals = append(vals, "version")
-	}
 	if !s.PropertyOwnerPhoneE164.IsUnset() {
 		vals = append(vals, "property_owner_phone_e164")
+	}
+	if !s.ResidentOwned.IsUnset() {
+		vals = append(vals, "resident_owned")
 	}
 	if !s.ResidentPhoneE164.IsUnset() {
 		vals = append(vals, "resident_phone_e164")
 	}
-	if !s.Geom.IsUnset() {
-		vals = append(vals, "geom")
+	if s.LineNumber.IsValue() {
+		vals = append(vals, "line_number")
 	}
 	if s.Tags.IsValue() {
 		vals = append(vals, "tags")
@@ -265,6 +265,9 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	if !s.Deleted.IsUnset() {
 		t.Deleted = s.Deleted.MustGetNull()
 	}
+	if !s.Geom.IsUnset() {
+		t.Geom = s.Geom.MustGetNull()
+	}
 	if !s.H3cell.IsUnset() {
 		t.H3cell = s.H3cell.MustGetNull()
 	}
@@ -286,20 +289,17 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	if s.PropertyOwnerName.IsValue() {
 		t.PropertyOwnerName = s.PropertyOwnerName.MustGet()
 	}
-	if !s.ResidentOwned.IsUnset() {
-		t.ResidentOwned = s.ResidentOwned.MustGetNull()
-	}
-	if s.Version.IsValue() {
-		t.Version = s.Version.MustGet()
-	}
 	if !s.PropertyOwnerPhoneE164.IsUnset() {
 		t.PropertyOwnerPhoneE164 = s.PropertyOwnerPhoneE164.MustGetNull()
+	}
+	if !s.ResidentOwned.IsUnset() {
+		t.ResidentOwned = s.ResidentOwned.MustGetNull()
 	}
 	if !s.ResidentPhoneE164.IsUnset() {
 		t.ResidentPhoneE164 = s.ResidentPhoneE164.MustGetNull()
 	}
-	if !s.Geom.IsUnset() {
-		t.Geom = s.Geom.MustGetNull()
+	if s.LineNumber.IsValue() {
+		t.LineNumber = s.LineNumber.MustGet()
 	}
 	if s.Tags.IsValue() {
 		t.Tags = s.Tags.MustGet()
@@ -367,62 +367,62 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[9] = psql.Arg(s.H3cell.MustGetNull())
+		if !s.Geom.IsUnset() {
+			vals[9] = psql.Arg(s.Geom.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.ID.IsValue() {
-			vals[10] = psql.Arg(s.ID.MustGet())
+		if !s.H3cell.IsUnset() {
+			vals[10] = psql.Arg(s.H3cell.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsInDistrict.IsValue() {
-			vals[11] = psql.Arg(s.IsInDistrict.MustGet())
+		if s.ID.IsValue() {
+			vals[11] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsNew.IsValue() {
-			vals[12] = psql.Arg(s.IsNew.MustGet())
+		if s.IsInDistrict.IsValue() {
+			vals[12] = psql.Arg(s.IsInDistrict.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.Notes.IsValue() {
-			vals[13] = psql.Arg(s.Notes.MustGet())
+		if s.IsNew.IsValue() {
+			vals[13] = psql.Arg(s.IsNew.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.OrganizationID.IsValue() {
-			vals[14] = psql.Arg(s.OrganizationID.MustGet())
+		if s.Notes.IsValue() {
+			vals[14] = psql.Arg(s.Notes.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.PropertyOwnerName.IsValue() {
-			vals[15] = psql.Arg(s.PropertyOwnerName.MustGet())
+		if s.OrganizationID.IsValue() {
+			vals[15] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentOwned.IsUnset() {
-			vals[16] = psql.Arg(s.ResidentOwned.MustGetNull())
+		if s.PropertyOwnerName.IsValue() {
+			vals[16] = psql.Arg(s.PropertyOwnerName.MustGet())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.Version.IsValue() {
-			vals[17] = psql.Arg(s.Version.MustGet())
+		if !s.PropertyOwnerPhoneE164.IsUnset() {
+			vals[17] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if !s.PropertyOwnerPhoneE164.IsUnset() {
-			vals[18] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
+		if !s.ResidentOwned.IsUnset() {
+			vals[18] = psql.Arg(s.ResidentOwned.MustGetNull())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
@@ -433,8 +433,8 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Geom.IsUnset() {
-			vals[20] = psql.Arg(s.Geom.MustGetNull())
+		if s.LineNumber.IsValue() {
+			vals[20] = psql.Arg(s.LineNumber.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
@@ -519,6 +519,13 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if !s.Geom.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geom")...),
+			psql.Arg(s.Geom),
+		}})
+	}
+
 	if !s.H3cell.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "h3cell")...),
@@ -568,24 +575,17 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.ResidentOwned.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "resident_owned")...),
-			psql.Arg(s.ResidentOwned),
-		}})
-	}
-
-	if s.Version.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "version")...),
-			psql.Arg(s.Version),
-		}})
-	}
-
 	if !s.PropertyOwnerPhoneE164.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "property_owner_phone_e164")...),
 			psql.Arg(s.PropertyOwnerPhoneE164),
+		}})
+	}
+
+	if !s.ResidentOwned.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "resident_owned")...),
+			psql.Arg(s.ResidentOwned),
 		}})
 	}
 
@@ -596,10 +596,10 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Geom.IsUnset() {
+	if s.LineNumber.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "geom")...),
-			psql.Arg(s.Geom),
+			psql.Quote(append(prefix, "line_number")...),
+			psql.Arg(s.LineNumber),
 		}})
 	}
 
@@ -615,26 +615,23 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindFileuploadPool retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindFileuploadPool(ctx context.Context, exec bob.Executor, IDPK int32, VersionPK int32, cols ...string) (*FileuploadPool, error) {
+func FindFileuploadPool(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*FileuploadPool, error) {
 	if len(cols) == 0 {
 		return FileuploadPools.Query(
 			sm.Where(FileuploadPools.Columns.ID.EQ(psql.Arg(IDPK))),
-			sm.Where(FileuploadPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return FileuploadPools.Query(
 		sm.Where(FileuploadPools.Columns.ID.EQ(psql.Arg(IDPK))),
-		sm.Where(FileuploadPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(FileuploadPools.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // FileuploadPoolExists checks the presence of a single record by primary key
-func FileuploadPoolExists(ctx context.Context, exec bob.Executor, IDPK int32, VersionPK int32) (bool, error) {
+func FileuploadPoolExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
 	return FileuploadPools.Query(
 		sm.Where(FileuploadPools.Columns.ID.EQ(psql.Arg(IDPK))),
-		sm.Where(FileuploadPools.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
 
@@ -658,14 +655,11 @@ func (o *FileuploadPool) AfterQueryHook(ctx context.Context, exec bob.Executor, 
 
 // primaryKeyVals returns the primary key values of the FileuploadPool
 func (o *FileuploadPool) primaryKeyVals() bob.Expression {
-	return psql.ArgGroup(
-		o.ID,
-		o.Version,
-	)
+	return psql.Arg(o.ID)
 }
 
 func (o *FileuploadPool) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("fileupload.pool", "id"), psql.Quote("fileupload.pool", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("fileupload.pool", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -693,7 +687,6 @@ func (o *FileuploadPool) Delete(ctx context.Context, exec bob.Executor) error {
 func (o *FileuploadPool) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := FileuploadPools.Query(
 		sm.Where(FileuploadPools.Columns.ID.EQ(psql.Arg(o.ID))),
-		sm.Where(FileuploadPools.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -727,7 +720,7 @@ func (o FileuploadPoolSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("fileupload.pool", "id"), psql.Quote("fileupload.pool", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("fileupload.pool", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -743,9 +736,6 @@ func (o FileuploadPoolSlice) copyMatchingRows(from ...*FileuploadPool) {
 	for i, old := range o {
 		for _, new := range from {
 			if new.ID != old.ID {
-				continue
-			}
-			if new.Version != old.Version {
 				continue
 			}
 			new.R = old.R
@@ -1216,6 +1206,7 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	CreatorID              psql.WhereMod[Q, int32]
 	CSVFile                psql.WhereMod[Q, int32]
 	Deleted                psql.WhereNullMod[Q, time.Time]
+	Geom                   psql.WhereNullMod[Q, string]
 	H3cell                 psql.WhereNullMod[Q, string]
 	ID                     psql.WhereMod[Q, int32]
 	IsInDistrict           psql.WhereMod[Q, bool]
@@ -1223,11 +1214,10 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	Notes                  psql.WhereMod[Q, string]
 	OrganizationID         psql.WhereMod[Q, int32]
 	PropertyOwnerName      psql.WhereMod[Q, string]
-	ResidentOwned          psql.WhereNullMod[Q, bool]
-	Version                psql.WhereMod[Q, int32]
 	PropertyOwnerPhoneE164 psql.WhereNullMod[Q, string]
+	ResidentOwned          psql.WhereNullMod[Q, bool]
 	ResidentPhoneE164      psql.WhereNullMod[Q, string]
-	Geom                   psql.WhereNullMod[Q, string]
+	LineNumber             psql.WhereMod[Q, int32]
 	Tags                   psql.WhereMod[Q, pgtypes.HStore]
 }
 
@@ -1246,6 +1236,7 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		CreatorID:              psql.Where[Q, int32](cols.CreatorID),
 		CSVFile:                psql.Where[Q, int32](cols.CSVFile),
 		Deleted:                psql.WhereNull[Q, time.Time](cols.Deleted),
+		Geom:                   psql.WhereNull[Q, string](cols.Geom),
 		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
 		ID:                     psql.Where[Q, int32](cols.ID),
 		IsInDistrict:           psql.Where[Q, bool](cols.IsInDistrict),
@@ -1253,11 +1244,10 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		Notes:                  psql.Where[Q, string](cols.Notes),
 		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		PropertyOwnerName:      psql.Where[Q, string](cols.PropertyOwnerName),
-		ResidentOwned:          psql.WhereNull[Q, bool](cols.ResidentOwned),
-		Version:                psql.Where[Q, int32](cols.Version),
 		PropertyOwnerPhoneE164: psql.WhereNull[Q, string](cols.PropertyOwnerPhoneE164),
+		ResidentOwned:          psql.WhereNull[Q, bool](cols.ResidentOwned),
 		ResidentPhoneE164:      psql.WhereNull[Q, string](cols.ResidentPhoneE164),
-		Geom:                   psql.WhereNull[Q, string](cols.Geom),
+		LineNumber:             psql.Where[Q, int32](cols.LineNumber),
 		Tags:                   psql.Where[Q, pgtypes.HStore](cols.Tags),
 	}
 }

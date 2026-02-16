@@ -7,7 +7,7 @@ var FileuploadPoolErrors = &fileuploadPoolErrors{
 	ErrUniquePoolPkey: &UniqueConstraintError{
 		schema:  "fileupload",
 		table:   "pool",
-		columns: []string{"id", "version"},
+		columns: []string{"id"},
 		s:       "pool_pkey",
 	},
 }

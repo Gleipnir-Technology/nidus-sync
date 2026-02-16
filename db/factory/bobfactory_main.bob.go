@@ -2425,6 +2425,7 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.CreatorID = func() int32 { return m.CreatorID }
 	o.CSVFile = func() int32 { return m.CSVFile }
 	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.Geom = func() null.Val[string] { return m.Geom }
 	o.H3cell = func() null.Val[string] { return m.H3cell }
 	o.ID = func() int32 { return m.ID }
 	o.IsInDistrict = func() bool { return m.IsInDistrict }
@@ -2432,11 +2433,10 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.Notes = func() string { return m.Notes }
 	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.PropertyOwnerName = func() string { return m.PropertyOwnerName }
-	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
-	o.Version = func() int32 { return m.Version }
 	o.PropertyOwnerPhoneE164 = func() null.Val[string] { return m.PropertyOwnerPhoneE164 }
+	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
 	o.ResidentPhoneE164 = func() null.Val[string] { return m.ResidentPhoneE164 }
-	o.Geom = func() null.Val[string] { return m.Geom }
+	o.LineNumber = func() int32 { return m.LineNumber }
 	o.Tags = func() pgtypes.HStore { return m.Tags }
 
 	ctx := context.Background()

@@ -96,6 +96,15 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geom: column{
+			Name:      "geom",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		H3cell: column{
 			Name:      "h3cell",
 			DBType:    "h3index",
@@ -159,27 +168,18 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ResidentOwned: column{
-			Name:      "resident_owned",
-			DBType:    "boolean",
+		PropertyOwnerPhoneE164: column{
+			Name:      "property_owner_phone_e164",
+			DBType:    "text",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Version: column{
-			Name:      "version",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		PropertyOwnerPhoneE164: column{
-			Name:      "property_owner_phone_e164",
-			DBType:    "text",
+		ResidentOwned: column{
+			Name:      "resident_owned",
+			DBType:    "boolean",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -195,12 +195,12 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Geom: column{
-			Name:      "geom",
-			DBType:    "geometry",
-			Default:   "NULL",
+		LineNumber: column{
+			Name:      "line_number",
+			DBType:    "integer",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -224,15 +224,10 @@ var FileuploadPools = Table[
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
-				{
-					Name:         "version",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
 			},
 			Unique:        true,
 			Comment:       "",
-			NullsFirst:    []bool{false, false},
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -240,7 +235,7 @@ var FileuploadPools = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "pool_pkey",
-		Columns: []string{"id", "version"},
+		Columns: []string{"id"},
 		Comment: "",
 	},
 	ForeignKeys: fileuploadPoolForeignKeys{
@@ -304,6 +299,7 @@ type fileuploadPoolColumns struct {
 	CreatorID              column
 	CSVFile                column
 	Deleted                column
+	Geom                   column
 	H3cell                 column
 	ID                     column
 	IsInDistrict           column
@@ -311,17 +307,16 @@ type fileuploadPoolColumns struct {
 	Notes                  column
 	OrganizationID         column
 	PropertyOwnerName      column
-	ResidentOwned          column
-	Version                column
 	PropertyOwnerPhoneE164 column
+	ResidentOwned          column
 	ResidentPhoneE164      column
-	Geom                   column
+	LineNumber             column
 	Tags                   column
 }
 
 func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.ResidentOwned, c.Version, c.PropertyOwnerPhoneE164, c.ResidentPhoneE164, c.Geom, c.Tags,
+		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags,
 	}
 }
 
