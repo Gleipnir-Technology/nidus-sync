@@ -48,7 +48,7 @@ class MapDistrict extends HTMLElement {
 		this._map = new maplibregl.Map({
 			container: mapElement,
 			center: centroid.coordinates,
-			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Style URL; see our documentation for more options
+			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 		}).fitBounds(bounds, {
 			padding: { top: 10, bottom: 10, left: 10, right: 10 },
 		});

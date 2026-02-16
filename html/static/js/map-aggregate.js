@@ -68,22 +68,20 @@ class MapAggregate extends HTMLElement {
 	}
 
 	_initializeMap() {
-		const apiKey = this.getAttribute("api-key");
 		const lat = Number(this.getAttribute("latitude") || 36.2);
 		const lng = Number(this.getAttribute("longitude") || -119.2);
 		const organization_id = Number(this.getAttribute("organization-id") || 0);
 		const tegola = this.getAttribute("tegola");
 		const zoom = Number(this.getAttribute("zoom") || 15);
 
-		mapboxgl.accessToken = apiKey;
 		const mapElement = this.shadowRoot.querySelector("#map");
-		this._map = new mapboxgl.Map({
+		this._map = new maplibregl.Map({
 			container: mapElement,
 			center: {
 				lat: lat,
 				lng: lng,
 			},
-			style: "mapbox://styles/mapbox/streets-v12", // style URL
+			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 			zoom: zoom,
 		});
 		this._map.on("load", () => {
@@ -92,20 +90,6 @@ class MapAggregate extends HTMLElement {
 				tiles: [
 					`${tegola}maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`,
 				],
-			});
-			this._map.addInteraction("nidus-mouseenter-interaction", {
-				type: "mouseenter",
-				target: { layerId: "nidus" },
-				handler: () => {
-					map.getCanvas().style.cursor = "pointer";
-				},
-			});
-			this._map.addInteraction("nidus-mouseleave-interaction", {
-				type: "mouseleave",
-				target: { layerId: "nidus" },
-				handler: () => {
-					map.getCanvas().style.cursor = "";
-				},
 			});
 			this._map.addLayer({
 				id: "mosquito_source",
@@ -152,57 +136,29 @@ class MapAggregate extends HTMLElement {
 					"fill-color": "#0dcaf0",
 				},
 			});
-			this._map.addInteraction("tegola-click-mosquito-source", {
-				type: "click",
-				target: { layerId: "mosquito_source" },
-				handler: (e) => {
-					const coordinates = e.feature.geometry.coordinates.slice();
-					const properties = e.feature.properties;
-					this.dispatchEvent(
-						new CustomEvent("cell-click", {
-							bubbles: true,
-							composed: true, // Allows event to cross shadow DOM boundary
-							detail: {
-								cell: properties.cell,
-							},
-						}),
-					);
-				},
+			this._map.on("mouseenter", "mosquito_source", (e) => {
+				this._map.getCanvas().style.cursor = "pointer";
 			});
-			this._map.addInteraction("tegola-click-service-request", {
-				type: "click",
-				target: { layerId: "service_request" },
-				handler: (e) => {
-					const coordinates = e.feature.geometry.coordinates.slice();
-					const properties = e.feature.properties;
-					this.dispatchEvent(
-						new CustomEvent("cell-click", {
-							bubbles: true,
-							composed: true, // Allows event to cross shadow DOM boundary
-							detail: {
-								cell: properties.cell,
-							},
-						}),
-					);
-				},
+			this._map.on("mouseleave", "mosquito_source", (e) => {
+				this._map.getCanvas().style.cursor = "";
 			});
-			this._map.addInteraction("tegola-click-trap", {
-				type: "click",
-				target: { layerId: "trap" },
-				handler: (e) => {
-					const coordinates = e.feature.geometry.coordinates.slice();
-					const properties = e.feature.properties;
-					this.dispatchEvent(
-						new CustomEvent("cell-click", {
-							bubbles: true,
-							composed: true, // Allows event to cross shadow DOM boundary
-							detail: {
-								cell: properties.cell,
-							},
-						}),
-					);
-				},
-			});
+			const _handleClick = (e) => {
+				const feature = e.features[0];
+				const coordinates = feature.geometry.coordinates.slice();
+				const properties = feature.properties;
+				this.dispatchEvent(
+					new CustomEvent("cell-click", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							cell: properties.cell,
+						},
+					}),
+				);
+			};
+			this._map.on("click", "mosquito_source", _handleClick);
+			this._map.on("click", "service_request", _handleClick);
+			this._map.on("click", "trap", _handleClick);
 		});
 	}
 
@@ -210,7 +166,7 @@ class MapAggregate extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 			<style>
-				@import url('https://api.mapbox.com/mapbox-gl-js/v2.14.0/mapbox-gl.css');
+				@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
 				.map-container {
 					background-color: #e9ecef;
 					border-radius: 10px;
@@ -248,7 +204,7 @@ class MapAggregate extends HTMLElement {
 		});
 		this._markers.forEach((marker) => marker.remove());
 
-		const marker = new mapboxgl.Marker({
+		const marker = new maplibregl.Marker({
 			color: "#FF0000",
 			draggable: true,
 		})
