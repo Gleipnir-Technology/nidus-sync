@@ -23,7 +23,6 @@ func Router() chi.Router {
 
 	// Mock endpoints
 	r.Get("/mock", renderMockList)
-	addMock(r, "/mock/admin", "sync/mock/admin.html")
 	addMock(r, "/mock/dispatch", "sync/mock/dispatch.html")
 	addMock(r, "/mock/dispatch-results", "sync/mock/dispatch-results.html")
 	addMock(r, "/mock/report", "sync/mock/report.html")
@@ -47,6 +46,7 @@ func Router() chi.Router {
 
 	// Authenticated endpoints
 	r.Route("/api", api.AddRoutes)
+	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
 	r.Method("GET", "/layout-test", auth.NewEnsureAuth(getLayoutTest))
 	r.Method("GET", "/message", authenticatedHandler(getMessageList))

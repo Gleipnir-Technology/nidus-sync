@@ -1,4 +1,4 @@
-{{ template "sync/layout/base.html" . }}
+{{ template "sync/layout/authenticated.html" . }}
 
 {{ define "title" }}Dash{{ end }}
 {{ define "extraheader" }}
@@ -67,45 +67,6 @@
 	</style>
 {{ end }}
 {{ define "content" }}
-	<!-- Header -->
-	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-		<div class="container-fluid">
-			<a class="navbar-brand d-flex align-items-center" href="#">
-				<img
-					src="https://via.placeholder.com/40"
-					alt="{{ .DistrictName }} Logo"
-					class="me-2"
-				/>
-				<span>{{ .DistrictName }} Mosquito Abatement District</span>
-			</a>
-			<button
-				class="navbar-toggler"
-				type="button"
-				data-bs-toggle="collapse"
-				data-bs-target="#navbarNav"
-			>
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<!--
-		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav ms-auto">
-				<li class="nav-item">
-					<a class="nav-link active" href="#"><i class="bi bi-house-door"></i> Dashboard</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#"><i class="bi bi-people"></i> Residents</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#"><i class="bi bi-clipboard-data"></i> Reports</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#"><i class="bi bi-gear"></i> Settings</a>
-				</li>
-			</ul>
-		</div>-->
-		</div>
-	</nav>
-
 	<div class="container-fluid py-3">
 		<div class="row mb-3">
 			<div class="col-12">
