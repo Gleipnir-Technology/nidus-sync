@@ -380,6 +380,9 @@ func NewFieldSeeker(ctx context.Context, oauth *models.OauthToken) (*fieldseeker
 	// The URL for fieldseeker should be something like
 	// https://foo.arcgis.com/123abc/arcgis/rest/services/FieldSeekerGIS/FeatureServer
 	// We need to break it up
+	if row.FieldseekerURL.IsNull() {
+		return nil, fmt.Errorf("No fieldseeker URL")
+	}
 	host, pathParts, err := extractURLParts(row.FieldseekerURL.MustGet())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to break up provided url: %v", err)
