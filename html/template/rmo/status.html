@@ -64,15 +64,15 @@ function onLoad() {
 	const checkboxNuisance = document.getElementById("checkboxNuisance");
 	const checkboxWater = document.getElementById("checkboxWater");
 	map.addEventListener("load", (event) => {
-		map.addSource('tegola-mosquito', {
+		map.addSource('tegola', {
 			'type': 'vector',
 			'tiles': [
-				'{{.URL.Tegola}}maps/mosquito/{z}/{x}/{y}'
+				'{{.URL.Tegola}}maps/rmo/{z}/{x}/{y}'
 			]
 		});
 		map.addLayer({
 			'id': 'nuisance',
-			'source': 'tegola-mosquito',
+			'source': 'tegola',
 			'source-layer': 'nuisance_location',
 			'type': 'circle',
 			'paint': {
@@ -84,7 +84,7 @@ function onLoad() {
 		});
 		map.addLayer({
 			'id': 'pool',
-			'source': 'tegola-mosquito',
+			'source': 'tegola',
 			'source-layer': 'pool_location',
 			'type': 'circle',
 			'paint': {
