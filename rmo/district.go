@@ -61,6 +61,9 @@ func matchDistrict(ctx context.Context, longitude, latitude *float64, images []I
 	var err error
 	var org *models.Organization
 	for _, image := range images {
+		if image.Exif == nil {
+			continue
+		}
 		if image.Exif.GPS == nil {
 			continue
 		}
