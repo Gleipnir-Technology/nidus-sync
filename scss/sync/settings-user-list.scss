@@ -1,0 +1,19 @@
+.bg-warrant {
+	background-color: $warning;
+}
+.bg-drone {
+	background-color: $info;
+}
+.form-check-input.switch-lg {
+	width: 3em;
+	height: 1.5em;
+}
+.status-badge {
+	width: 100px;
+}
+.tech-photo {
+	width: 50px;
+	height: 50px;
+	object-fit: cover;
+	border-radius: 50%;
+}
