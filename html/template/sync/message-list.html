@@ -1,0 +1,364 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Dash{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.avatar {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			background-color: #6c757d;
+			color: white;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: bold;
+		}
+		.message-card {
+			transition: transform 0.2s;
+			cursor: pointer;
+		}
+		.message-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		}
+		.unread {
+			border-left: 4px solid #0d6efd;
+		}
+		.high-priority {
+			border-left: 4px solid #dc3545;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container mt-4">
+		<div class="row mb-4">
+			<div class="col">
+				<h2><i class="fas fa-envelope me-2"></i> Message Center</h2>
+				<p class="text-muted">
+					Manage incoming communications from the public and field technicians
+				</p>
+			</div>
+			<div class="col-auto">
+				<div class="btn-group">
+					<button type="button" class="btn btn-outline-primary">
+						<i class="fas fa-sync-alt me-1"></i> Refresh
+					</button>
+					<button type="button" class="btn btn-outline-secondary">
+						<i class="fas fa-filter me-1"></i> Filters
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Message Filter Tabs -->
+		<ul class="nav nav-tabs mb-3">
+			<li class="nav-item">
+				<a class="nav-link active" href="#"
+					>All Messages <span class="badge bg-primary ms-1">12</span></a
+				>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#"
+					>Public Reports <span class="badge bg-success ms-1">5</span></a
+				>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#"
+					>Service Requests
+					<span class="badge bg-warning text-dark ms-1">4</span></a
+				>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#"
+					>Field Technicians <span class="badge bg-info ms-1">3</span></a
+				>
+			</li>
+		</ul>
+
+		<!-- Search Bar -->
+		<div class="row mb-4">
+			<div class="col-md-6">
+				<div class="input-group">
+					<input
+						type="text"
+						class="form-control"
+						placeholder="Search messages..."
+					/>
+					<button class="btn btn-outline-secondary" type="button">
+						<i class="fas fa-search"></i>
+					</button>
+				</div>
+			</div>
+			<div class="col-md-6 text-md-end mt-2 mt-md-0">
+				<div class="btn-group">
+					<button type="button" class="btn btn-sm btn-outline-secondary">
+						Newest First
+					</button>
+					<button type="button" class="btn btn-sm btn-outline-secondary">
+						Priority
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Messages List -->
+		<div class="card mb-4">
+			<div class="card-header bg-light">
+				<strong>New Messages</strong>
+			</div>
+			<div class="list-group list-group-flush">
+				<!-- Message from technician -->
+				<div class="list-group-item message-card unread p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div
+								class="avatar bg-info me-3"
+								data-bs-toggle="tooltip"
+								title="Field Technician: Sarah Johnson"
+							>
+								SJ
+							</div>
+							<div>
+								<h6 class="mb-1">
+									Sarah Johnson
+									<span class="badge bg-info ms-1">Technician</span>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Completed larvicide application at Thompson Creek. Water level
+									higher than expected, may need follow-up next week.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">20 minutes ago</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-paperclip text-secondary me-1"
+									data-bs-toggle="tooltip"
+									title="Has attachments"
+								></i>
+								<i
+									class="fas fa-map-marker-alt text-danger me-1"
+									data-bs-toggle="tooltip"
+									title="GPS location included"
+								></i>
+								<i
+									class="fas fa-exclamation-circle text-warning"
+									data-bs-toggle="tooltip"
+									title="Requires follow-up"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Message from public with breeding source report -->
+				<div class="list-group-item message-card unread high-priority p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div class="me-3 text-center" style="width: 40px;">
+								<i class="fas fa-user-circle fa-2x text-secondary"></i>
+							</div>
+							<div>
+								<h6 class="mb-1">
+									Robert Miller
+									<span class="badge bg-success ms-1">Public Report</span>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Large standing water in abandoned lot at 1234 Maple Street.
+									Many mosquitoes in the area making it impossible to use
+									backyard.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">1 hour ago</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-image text-secondary me-1"
+									data-bs-toggle="tooltip"
+									title="Contains images"
+								></i>
+								<i
+									class="fas fa-map-marker-alt text-danger me-1"
+									data-bs-toggle="tooltip"
+									title="Location provided"
+								></i>
+								<i
+									class="fas fa-exclamation-triangle text-danger"
+									data-bs-toggle="tooltip"
+									title="High priority"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Message from public with service request -->
+				<div class="list-group-item message-card p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div class="me-3 text-center" style="width: 40px;">
+								<i class="fas fa-user-circle fa-2x text-secondary"></i>
+							</div>
+							<div>
+								<h6 class="mb-1">
+									Emily Wilson
+									<span class="badge bg-warning text-dark ms-1"
+										>Service Request</span
+									>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Following up on appointment #2315. When will the technician be
+									arriving? I need to make sure someone is home.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">3 hours ago</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-calendar-alt text-primary me-1"
+									data-bs-toggle="tooltip"
+									title="Related to appointment"
+								></i>
+								<i
+									class="fas fa-clock text-warning"
+									data-bs-toggle="tooltip"
+									title="Awaiting response"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Message from technician -->
+				<div class="list-group-item message-card p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div
+								class="avatar bg-success me-3"
+								data-bs-toggle="tooltip"
+								title="Field Technician: Mike Torres"
+							>
+								MT
+							</div>
+							<div>
+								<h6 class="mb-1">
+									Mike Torres <span class="badge bg-info ms-1">Technician</span>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Trap collection complete for sectors 4, 5, and 6. Samples
+									being delivered to lab this afternoon. High counts in sector
+									5.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">5 hours ago</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-vial text-success me-1"
+									data-bs-toggle="tooltip"
+									title="Lab samples"
+								></i>
+								<i
+									class="fas fa-chart-bar text-primary"
+									data-bs-toggle="tooltip"
+									title="Contains surveillance data"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Message from public with breeding source -->
+				<div class="list-group-item message-card p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div class="me-3 text-center" style="width: 40px;">
+								<i class="fas fa-user-circle fa-2x text-secondary"></i>
+							</div>
+							<div>
+								<h6 class="mb-1">
+									Jennifer Adams
+									<span class="badge bg-success ms-1">Public Report</span>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Storm drain on corner of Oak and Pine appears to be clogged
+									and creating standing water. Mosquitoes are bad in this area.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">Yesterday</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-map-marker-alt text-danger me-1"
+									data-bs-toggle="tooltip"
+									title="Location provided"
+								></i>
+								<i
+									class="fas fa-check-circle text-success"
+									data-bs-toggle="tooltip"
+									title="Assigned to technician"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Older Messages Section -->
+		<div class="card">
+			<div class="card-header bg-light d-flex justify-content-between">
+				<strong>Earlier Messages</strong>
+				<a href="#" class="text-decoration-none">View all</a>
+			</div>
+			<div class="list-group list-group-flush">
+				<!-- Abbreviated list of older messages -->
+				<div class="list-group-item message-card p-3">
+					<div class="d-flex w-100 justify-content-between align-items-center">
+						<div class="d-flex align-items-center">
+							<div
+								class="avatar bg-secondary me-3"
+								data-bs-toggle="tooltip"
+								title="Field Technician: David Chen"
+							>
+								DC
+							</div>
+							<div>
+								<h6 class="mb-1">
+									David Chen <span class="badge bg-info ms-1">Technician</span>
+								</h6>
+								<p class="mb-1 text-truncate" style="max-width: 500px;">
+									Weekly surveillance report submitted for Western District. All
+									traps processed.
+								</p>
+							</div>
+						</div>
+						<div class="text-end">
+							<small class="text-muted">2 days ago</small>
+							<div class="mt-1">
+								<i
+									class="fas fa-file-pdf text-danger me-1"
+									data-bs-toggle="tooltip"
+									title="PDF Report Attached"
+								></i>
+								<i
+									class="fas fa-check text-success"
+									data-bs-toggle="tooltip"
+									title="Completed"
+								></i>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- More messages would go here -->
+			</div>
+		</div>
+	</div>
+{{ end }}
