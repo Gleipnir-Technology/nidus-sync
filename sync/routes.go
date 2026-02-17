@@ -23,7 +23,6 @@ func Router() chi.Router {
 
 	// Mock endpoints
 	r.Get("/mock", renderMockList)
-	addMock(r, "/mock/dispatch-results", "sync/mock/dispatch-results.html")
 	addMock(r, "/mock/report", "sync/mock/report.html")
 	addMock(r, "/mock/report/{code}", "sync/mock/report-detail.html")
 	addMock(r, "/mock/report/{code}/confirm", "sync/mock/report-confirmation.html")

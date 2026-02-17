@@ -7,6 +7,8 @@ import (
 type ContentURL struct {
 	OAuthRefreshArcGIS  string
 	PoolCSVUpload       string
+	Root                string
+	Route               string
 	SamplePoolCSV       string
 	Setting             string
 	SettingIntegration  string
@@ -22,6 +24,8 @@ func newContentURL() ContentURL {
 	return ContentURL{
 		OAuthRefreshArcGIS:  config.MakeURLNidus("/arcgis/oauth/begin"),
 		PoolCSVUpload:       config.MakeURLNidus("/pool/upload"),
+		Root:                config.MakeURLNidus("/"),
+		Route:               config.MakeURLNidus("/route"),
 		SamplePoolCSV:       config.MakeURLNidus("/static/file/sample-pool.csv"),
 		Setting:             config.MakeURLNidus("/setting"),
 		SettingIntegration:  config.MakeURLNidus("/setting/integration"),
