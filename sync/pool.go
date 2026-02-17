@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -12,11 +13,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type ContentPoolDetail struct {
-	CSVFileID int32
-	Upload    platform.UploadPoolDetail
-	URL       ContentURL
-	User      User
+type contentPoolDetail struct {
+	CSVFileID    int32
+	Organization *models.Organization
+	Upload       platform.UploadPoolDetail
+	URL          ContentURL
+	User         User
 }
 type ContentPoolList struct {
 	Uploads []platform.PoolUpload
@@ -61,12 +63,17 @@ func getPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
 	html.RenderOrError(w, "sync/pool-csv-upload.html", data)
 }
 func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
-	userContent, err := contentForUser(r.Context(), u)
+	ctx := r.Context()
+	userContent, err := contentForUser(ctx, u)
 	if err != nil {
 		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
 		return
 	}
-	ctx := r.Context()
+	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		respondError(w, "Failed to get organization", err, http.StatusInternalServerError)
+		return
+	}
 	file_id_str := chi.URLParam(r, "id")
 	file_id, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
@@ -78,11 +85,12 @@ func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
 		respondError(w, "Failed to get pool", err, http.StatusInternalServerError)
 		return
 	}
-	data := ContentPoolDetail{
-		CSVFileID: int32(file_id),
-		Upload:    detail,
-		URL:       newContentURL(),
-		User:      userContent,
+	data := contentPoolDetail{
+		CSVFileID:    int32(file_id),
+		Organization: org,
+		Upload:       detail,
+		URL:          newContentURL(),
+		User:         userContent,
 	}
 	html.RenderOrError(w, "sync/pool-by-id.html", data)
 }

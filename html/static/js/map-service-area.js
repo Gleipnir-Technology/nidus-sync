@@ -28,7 +28,6 @@ class MapServiceArea extends HTMLElement {
 	}
 
 	_initializeMap() {
-		const apiKey = this.getAttribute("api-key");
 		const centroid = JSON.parse(this.getAttribute("centroid"));
 		const csv_file = this.getAttribute("csv-file");
 		const organization_id = this.getAttribute("organization-id");

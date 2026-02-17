@@ -27,45 +27,27 @@ class MapLibreTest extends HTMLElement {
 		}
 	}
 
-	// Lifecycle: watch these attributes for changes
-	static get observedAttributes() {
-		return ["latitude", "longitude", "zoom"];
-	}
-
-	// Lifecycle: respond to attribute changes
-	attributeChangedCallback(name, oldValue, newValue) {
-		// Only handle if map exists and values actually changed
-		if (!this._map || oldValue === newValue) return;
-
-		if (name === "latitude" || name === "longitude") {
-			if (this.hasAttribute("latitude") && this.hasAttribute("longitude")) {
-				const lat = Number(this.getAttribute("latitude"));
-				const lng = Number(this.getAttribute("longitude"));
-				this._map.setCenter([lat, lng]);
-			}
-		}
-
-		if (name === "zoom") {
-			this._map.setZoom(Number(newValue));
-		}
-	}
-
 	_initializeMap() {
-		const apiKey = this.getAttribute("api-key");
-		const lat = Number(this.getAttribute("latitude") || 36.2);
-		const lng = Number(this.getAttribute("longitude") || -119.2);
-		const mapElement = this.shadowRoot.querySelector("#map");
+		const centroid = JSON.parse(this.getAttribute("centroid"));
+		const organization_id = this.getAttribute("organization-id");
 		const tegola = this.getAttribute("tegola");
-		const zoom = Number(this.getAttribute("zoom") || 15);
+		const xmin = parseFloat(this.getAttribute("xmin"));
+		const ymin = parseFloat(this.getAttribute("ymin"));
+		const xmax = parseFloat(this.getAttribute("xmax"));
+		const ymax = parseFloat(this.getAttribute("ymax"));
+		const bounds = [
+			[xmin, ymin],
+			[xmax, ymax],
+		];
+
+		const mapElement = this.shadowRoot.querySelector("#map");
 
 		this._map = new maplibregl.Map({
 			container: mapElement,
-			center: {
-				lat: lat,
-				lng: lng,
-			},
+			center: centroid.coordinates,
 			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Style URL; see our documentation for more options
-			zoom: zoom,
+		}).fitBounds(bounds, {
+			padding: { top: 10, bottom: 10, left: 10, right: 10 },
 		});
 		this._map.on("load", () => {
 			this.dispatchEvent(new CustomEvent("load"), {
