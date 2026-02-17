@@ -199,7 +199,7 @@ class AddressOrReportInput extends HTMLElement {
 		this.shadowRoot.innerHTML = `
 			<style>
 				@import url('/static/css/bootstrap.css');
-				@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css');
+				@import url('/static/css/bootstrap-icons.css');
 				.detail-label {
 					font-size: 0.8rem;
 					text-transform: uppercase;
@@ -238,7 +238,7 @@ class AddressOrReportInput extends HTMLElement {
 			</style>
 			
 			<div class="input-group">
-				<span class="input-group-text"><i class="bi bi-magnifying-glass"></i></span>
+				<span class="input-group-text"><i class="bi bi-search"></i></span>
 				<input type="text" class="form-control form-control-lg" id="addressSearch" maxlength="200" name="address" placeholder="${placeholder}">
 				<div id="suggestions" class="suggestions-container list-group"></div>
 			</div>
