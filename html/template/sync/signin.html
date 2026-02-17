@@ -38,6 +38,7 @@
 					</div>
 
 					<form method="POST" action="/signin">
+						<input type="hidden" name="next" value="{{ .Next }}" />
 						<div class="mb-3">
 							<label for="username" class="form-label">Username</label>
 							<input

@@ -9,8 +9,8 @@ type ContentURL struct {
 	PoolCSVUpload       string
 	SamplePoolCSV       string
 	Setting             string
-	SettingDistrict     string
 	SettingIntegration  string
+	SettingOrganization string
 	SettingPesticide    string
 	SettingPesticideAdd string
 	SettingUser         string
@@ -24,8 +24,8 @@ func newContentURL() ContentURL {
 		PoolCSVUpload:       config.MakeURLNidus("/pool/upload"),
 		SamplePoolCSV:       config.MakeURLNidus("/static/file/sample-pool.csv"),
 		Setting:             config.MakeURLNidus("/setting"),
-		SettingDistrict:     config.MakeURLNidus("/setting/district"),
 		SettingIntegration:  config.MakeURLNidus("/setting/integration"),
+		SettingOrganization: config.MakeURLNidus("/setting/organization"),
 		SettingPesticide:    config.MakeURLNidus("/setting/pesticide"),
 		SettingPesticideAdd: config.MakeURLNidus("/setting/pesticide/add"),
 		SettingUser:         config.MakeURLNidus("/setting/user"),

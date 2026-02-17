@@ -96,6 +96,168 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		GeneralManagerName: column{
+			Name:      "general_manager_name",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		MailingAddressCity: column{
+			Name:      "mailing_address_city",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		MailingAddressPostalCode: column{
+			Name:      "mailing_address_postal_code",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		MailingAddressStreet: column{
+			Name:      "mailing_address_street",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficeAddressCity: column{
+			Name:      "office_address_city",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficeAddressPostalCode: column{
+			Name:      "office_address_postal_code",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficeAddressStreet: column{
+			Name:      "office_address_street",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ServiceAreaGeometry: column{
+			Name:      "service_area_geometry",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ServiceAreaSquareMeters: column{
+			Name:      "service_area_square_meters",
+			DBType:    "numeric",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaCentroid: column{
+			Name:      "service_area_centroid",
+			DBType:    "geometry",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaExtent: column{
+			Name:      "service_area_extent",
+			DBType:    "geometry",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		OfficeFax: column{
+			Name:      "office_fax",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficePhone: column{
+			Name:      "office_phone",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ServiceAreaXmin: column{
+			Name:      "service_area_xmin",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaYmin: column{
+			Name:      "service_area_ymin",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaXmax: column{
+			Name:      "service_area_xmax",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaYmax: column{
+			Name:      "service_area_ymax",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaCentroidGeojson: column{
+			Name:      "service_area_centroid_geojson",
+			DBType:    "text",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -149,23 +311,6 @@ var Organizations = Table[
 			Where:         "",
 			Include:       []string{},
 		},
-		OrganizationWebsiteKey: index{
-			Type: "btree",
-			Name: "organization_website_key",
-			Columns: []indexColumn{
-				{
-					Name:         "website",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        true,
-			Comment:       "",
-			NullsFirst:    []bool{false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "organization_pkey",
@@ -194,31 +339,44 @@ var Organizations = Table[
 			Columns: []string{"slug"},
 			Comment: "",
 		},
-		OrganizationWebsiteKey: constraint{
-			Name:    "organization_website_key",
-			Columns: []string{"website"},
-			Comment: "",
-		},
 	},
 
 	Comment: "",
 }
 
 type organizationColumns struct {
-	ID                column
-	Name              column
-	ArcgisID          column
-	ArcgisName        column
-	FieldseekerURL    column
-	ImportDistrictGid column
-	Website           column
-	LogoUUID          column
-	Slug              column
+	ID                         column
+	Name                       column
+	ArcgisID                   column
+	ArcgisName                 column
+	FieldseekerURL             column
+	ImportDistrictGid          column
+	Website                    column
+	LogoUUID                   column
+	Slug                       column
+	GeneralManagerName         column
+	MailingAddressCity         column
+	MailingAddressPostalCode   column
+	MailingAddressStreet       column
+	OfficeAddressCity          column
+	OfficeAddressPostalCode    column
+	OfficeAddressStreet        column
+	ServiceAreaGeometry        column
+	ServiceAreaSquareMeters    column
+	ServiceAreaCentroid        column
+	ServiceAreaExtent          column
+	OfficeFax                  column
+	OfficePhone                column
+	ServiceAreaXmin            column
+	ServiceAreaYmin            column
+	ServiceAreaXmax            column
+	ServiceAreaYmax            column
+	ServiceAreaCentroidGeojson column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson,
 	}
 }
 
@@ -226,12 +384,11 @@ type organizationIndexes struct {
 	OrganizationPkey                 index
 	OrganizationImportDistrictGidKey index
 	OrganizationSlugKey              index
-	OrganizationWebsiteKey           index
 }
 
 func (i organizationIndexes) AsSlice() []index {
 	return []index{
-		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationSlugKey, i.OrganizationWebsiteKey,
+		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationSlugKey,
 	}
 }
 
@@ -248,12 +405,11 @@ func (f organizationForeignKeys) AsSlice() []foreignKey {
 type organizationUniques struct {
 	OrganizationImportDistrictGidKey constraint
 	OrganizationSlugKey              constraint
-	OrganizationWebsiteKey           constraint
 }
 
 func (u organizationUniques) AsSlice() []constraint {
 	return []constraint{
-		u.OrganizationImportDistrictGidKey, u.OrganizationSlugKey, u.OrganizationWebsiteKey,
+		u.OrganizationImportDistrictGidKey, u.OrganizationSlugKey,
 	}
 }
 

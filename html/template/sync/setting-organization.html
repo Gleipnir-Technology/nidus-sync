@@ -6,7 +6,7 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-district.js"></script>
+	<script src="/static/js/map-service-area.js"></script>
 	<style>
 		.settings-card {
 			box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -28,15 +28,18 @@
 					</button>
 				</div>
 
-				<map-district
-					district-id="{{ .District.GID }}"
-					centroid="{{ .District.Centroid|json }}"
-					xmin="{{ .District.XMin }}"
-					ymin="{{ .District.YMin }}"
-					xmax="{{ .District.XMax }}"
-					ymax="{{ .District.YMax }}"
-					tegola="{{ .URL.Tegola }}"
-				></map-district>
+				{{ if .Organization.ServiceAreaCentroidGeojson.IsValue }}
+					<map-service-area
+						organization-id="{{ .Organization.ID }}"
+						centroid="{{ .Organization.ServiceAreaCentroidGeojson.MustGet|json }}"
+						xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
+						ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
+						xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
+						ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
+						tegola="{{ .URL.Tegola }}"
+					></map-service-area>
+				{{ end }}
+
 
 				<div class="row">
 					<!-- Basic Information -->
@@ -55,8 +58,8 @@
 									<input
 										type="text"
 										class="form-control"
-										id="agencyName"
-										value="{{ .District.Agency }}"
+										id="name"
+										value="{{ .Organization.Name }}"
 									/>
 								</div>
 								<div class="mb-3">
@@ -67,7 +70,7 @@
 										type="url"
 										class="form-control"
 										id="website"
-										value="{{ .District.Website }}"
+										value="{{ .Organization.Website.GetOr "" }}"
 									/>
 								</div>
 								<div class="mb-3">
@@ -79,18 +82,7 @@
 										type="text"
 										class="form-control"
 										id="generalManager"
-										value="{{ .District.GeneralManager }}"
-									/>
-								</div>
-								<div class="mb-3">
-									<label for="contactPerson" class="form-label"
-										><i class="bi bi-person me-1"></i> Contact Person</label
-									>
-									<input
-										type="text"
-										class="form-control"
-										id="contactPerson"
-										value="{{ .District.Contact }}"
+										value="{{ .Organization.GeneralManagerName.GetOr "" }}"
 									/>
 								</div>
 							</div>
@@ -108,13 +100,13 @@
 							<div class="card-body">
 								<div class="mb-3">
 									<label for="address" class="form-label"
-										><i class="bi bi-geo me-1"></i> Address</label
+										><i class="bi bi-geo me-1"></i> Street</label
 									>
 									<input
 										type="text"
 										class="form-control"
 										id="address"
-										value="{{ .District.Address }}"
+										value="{{ .Organization.OfficeAddressStreet.GetOr "" }}"
 									/>
 								</div>
 								<div class="row">
@@ -126,7 +118,7 @@
 											type="text"
 											class="form-control"
 											id="city"
-											value="{{ .District.City1 }},{{ .District.City2 }}"
+											value="{{ .Organization.OfficeAddressCity.GetOr "" }}"
 										/>
 									</div>
 									<div class="col-md-6 mb-3">
@@ -137,32 +129,19 @@
 											type="text"
 											class="form-control"
 											id="postalCode"
-											value="{{ .District.PostalCode }}"
+											value="{{ .Organization.OfficeAddressPostalCode.GetOr "" }}"
 										/>
 									</div>
 								</div>
 								<div class="mb-3">
 									<label for="phoneNumber" class="form-label"
 										><i class="bi bi-telephone me-1"></i> Phone Number
-										(Primary)</label
-									>
+									</label>
 									<input
 										type="tel"
 										class="form-control"
 										id="phoneNumber"
-										value="{{ .District.Phone1 }}"
-									/>
-								</div>
-								<div class="mb-3">
-									<label for="secondaryPhone" class="form-label"
-										><i class="bi bi-telephone-plus me-1"></i> Phone Number
-										(Secondary)</label
-									>
-									<input
-										type="tel"
-										class="form-control"
-										id="secondaryPhone"
-										value="{{ .District.Phone2 }}"
+										value="{{ .Organization.OfficePhone.GetOr "" }}"
 									/>
 								</div>
 								<div class="mb-3">
@@ -173,18 +152,18 @@
 										type="tel"
 										class="form-control"
 										id="faxNumber"
-										value="{{ .District.Fax }}"
+										value="{{ .Organization.OfficeFax.GetOr "" }}"
 									/>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					<!-- District Coverage Information -->
+					<!-- Organization Coverage Information -->
 					<div class="col-12">
 						<div class="card settings-card">
 							<div class="card-header bg-light">
-								<h5><i class="bi bi-map me-2"></i> District Coverage</h5>
+								<h5><i class="bi bi-map me-2"></i> Service Area Coverage</h5>
 							</div>
 							<div class="card-body">
 								<div class="row">
@@ -197,7 +176,9 @@
 											type="number"
 											class="form-control"
 											id="totalArea"
-											value="{{ .District.SurfaceAreaMetersSquare }}"
+											value="{{ if .Organization.ServiceAreaSquareMeters.IsValue }}
+												{{ .Organization.ServiceAreaSquareMeters.MustGet }}
+											{{ end }}"
 										/>
 									</div>
 								</div>

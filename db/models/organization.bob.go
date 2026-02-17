@@ -23,20 +23,39 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/scan"
 )
 
 // Organization is an object representing the database table.
 type Organization struct {
-	ID                int32               `db:"id,pk" `
-	Name              string              `db:"name" `
-	ArcgisID          null.Val[string]    `db:"arcgis_id" `
-	ArcgisName        null.Val[string]    `db:"arcgis_name" `
-	FieldseekerURL    null.Val[string]    `db:"fieldseeker_url" `
-	ImportDistrictGid null.Val[int32]     `db:"import_district_gid" `
-	Website           null.Val[string]    `db:"website" `
-	LogoUUID          null.Val[uuid.UUID] `db:"logo_uuid" `
-	Slug              null.Val[string]    `db:"slug" `
+	ID                         int32                     `db:"id,pk" `
+	Name                       string                    `db:"name" `
+	ArcgisID                   null.Val[string]          `db:"arcgis_id" `
+	ArcgisName                 null.Val[string]          `db:"arcgis_name" `
+	FieldseekerURL             null.Val[string]          `db:"fieldseeker_url" `
+	ImportDistrictGid          null.Val[int32]           `db:"import_district_gid" `
+	Website                    null.Val[string]          `db:"website" `
+	LogoUUID                   null.Val[uuid.UUID]       `db:"logo_uuid" `
+	Slug                       null.Val[string]          `db:"slug" `
+	GeneralManagerName         null.Val[string]          `db:"general_manager_name" `
+	MailingAddressCity         null.Val[string]          `db:"mailing_address_city" `
+	MailingAddressPostalCode   null.Val[string]          `db:"mailing_address_postal_code" `
+	MailingAddressStreet       null.Val[string]          `db:"mailing_address_street" `
+	OfficeAddressCity          null.Val[string]          `db:"office_address_city" `
+	OfficeAddressPostalCode    null.Val[string]          `db:"office_address_postal_code" `
+	OfficeAddressStreet        null.Val[string]          `db:"office_address_street" `
+	ServiceAreaGeometry        null.Val[string]          `db:"service_area_geometry" `
+	ServiceAreaSquareMeters    null.Val[decimal.Decimal] `db:"service_area_square_meters,generated" `
+	ServiceAreaCentroid        null.Val[string]          `db:"service_area_centroid,generated" `
+	ServiceAreaExtent          null.Val[string]          `db:"service_area_extent,generated" `
+	OfficeFax                  null.Val[string]          `db:"office_fax" `
+	OfficePhone                null.Val[string]          `db:"office_phone" `
+	ServiceAreaXmin            null.Val[float64]         `db:"service_area_xmin,generated" `
+	ServiceAreaYmin            null.Val[float64]         `db:"service_area_ymin,generated" `
+	ServiceAreaXmax            null.Val[float64]         `db:"service_area_xmax,generated" `
+	ServiceAreaYmax            null.Val[float64]         `db:"service_area_ymax,generated" `
+	ServiceAreaCentroidGeojson null.Val[string]          `db:"service_area_centroid_geojson,generated" `
 
 	R organizationR `db:"-" `
 
@@ -55,78 +74,113 @@ type OrganizationsQuery = *psql.ViewQuery[*Organization, OrganizationSlice]
 
 // organizationR is where relationships are stored.
 type organizationR struct {
-	EmailContacts             CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
-	Phones                    CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
-	Containerrelates          FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
-	Fieldscoutinglogs         FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
-	Habitatrelates            FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
-	Inspectionsamples         FieldseekerInspectionsampleSlice       // fieldseeker.inspectionsample.inspectionsample_organization_id_fkey
-	Inspectionsampledetails   FieldseekerInspectionsampledetailSlice // fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey
-	Linelocations             FieldseekerLinelocationSlice           // fieldseeker.linelocation.linelocation_organization_id_fkey
-	Locationtrackings         FieldseekerLocationtrackingSlice       // fieldseeker.locationtracking.locationtracking_organization_id_fkey
-	Mosquitoinspections       FieldseekerMosquitoinspectionSlice     // fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey
-	Pointlocations            FieldseekerPointlocationSlice          // fieldseeker.pointlocation.pointlocation_organization_id_fkey
-	Polygonlocations          FieldseekerPolygonlocationSlice        // fieldseeker.polygonlocation.polygonlocation_organization_id_fkey
-	FieldseekerPool           FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
-	Pooldetails               FieldseekerPooldetailSlice             // fieldseeker.pooldetail.pooldetail_organization_id_fkey
-	Proposedtreatmentareas    FieldseekerProposedtreatmentareaSlice  // fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey
-	Qamosquitoinspections     FieldseekerQamosquitoinspectionSlice   // fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey
-	Rodentlocations           FieldseekerRodentlocationSlice         // fieldseeker.rodentlocation.rodentlocation_organization_id_fkey
-	Samplecollections         FieldseekerSamplecollectionSlice       // fieldseeker.samplecollection.samplecollection_organization_id_fkey
-	Samplelocations           FieldseekerSamplelocationSlice         // fieldseeker.samplelocation.samplelocation_organization_id_fkey
-	Servicerequests           FieldseekerServicerequestSlice         // fieldseeker.servicerequest.servicerequest_organization_id_fkey
-	Speciesabundances         FieldseekerSpeciesabundanceSlice       // fieldseeker.speciesabundance.speciesabundance_organization_id_fkey
-	Stormdrains               FieldseekerStormdrainSlice             // fieldseeker.stormdrain.stormdrain_organization_id_fkey
-	Timecards                 FieldseekerTimecardSlice               // fieldseeker.timecard.timecard_organization_id_fkey
-	Trapdata                  FieldseekerTrapdatumSlice              // fieldseeker.trapdata.trapdata_organization_id_fkey
-	Traplocations             FieldseekerTraplocationSlice           // fieldseeker.traplocation.traplocation_organization_id_fkey
-	Treatments                FieldseekerTreatmentSlice              // fieldseeker.treatment.treatment_organization_id_fkey
-	Treatmentareas            FieldseekerTreatmentareaSlice          // fieldseeker.treatmentarea.treatmentarea_organization_id_fkey
-	Zones                     FieldseekerZoneSlice                   // fieldseeker.zones.zones_organization_id_fkey
-	Zones2s                   FieldseekerZones2Slice                 // fieldseeker.zones2.zones2_organization_id_fkey
-	FieldseekerSyncs          FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
-	Files                     FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
-	Pools                     FileuploadPoolSlice                    // fileupload.pool.pool_organization_id_fkey
-	H3Aggregations            H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
-	NoteAudios                NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
-	NoteImages                NoteImageSlice                         // note_image.note_image_organization_id_fkey
-	ImportDistrictGidDistrict *ImportDistrict                        // organization.organization_import_district_gid_fkey
-	Nuisances                 PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
-	PublicreportPool          PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
-	Quicks                    PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
-	User                      UserSlice                              // user_.user__organization_id_fkey
+	EmailContacts           CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
+	Phones                  CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	Containerrelates        FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
+	Fieldscoutinglogs       FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
+	Habitatrelates          FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
+	Inspectionsamples       FieldseekerInspectionsampleSlice       // fieldseeker.inspectionsample.inspectionsample_organization_id_fkey
+	Inspectionsampledetails FieldseekerInspectionsampledetailSlice // fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey
+	Linelocations           FieldseekerLinelocationSlice           // fieldseeker.linelocation.linelocation_organization_id_fkey
+	Locationtrackings       FieldseekerLocationtrackingSlice       // fieldseeker.locationtracking.locationtracking_organization_id_fkey
+	Mosquitoinspections     FieldseekerMosquitoinspectionSlice     // fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey
+	Pointlocations          FieldseekerPointlocationSlice          // fieldseeker.pointlocation.pointlocation_organization_id_fkey
+	Polygonlocations        FieldseekerPolygonlocationSlice        // fieldseeker.polygonlocation.polygonlocation_organization_id_fkey
+	FieldseekerPool         FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
+	Pooldetails             FieldseekerPooldetailSlice             // fieldseeker.pooldetail.pooldetail_organization_id_fkey
+	Proposedtreatmentareas  FieldseekerProposedtreatmentareaSlice  // fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey
+	Qamosquitoinspections   FieldseekerQamosquitoinspectionSlice   // fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey
+	Rodentlocations         FieldseekerRodentlocationSlice         // fieldseeker.rodentlocation.rodentlocation_organization_id_fkey
+	Samplecollections       FieldseekerSamplecollectionSlice       // fieldseeker.samplecollection.samplecollection_organization_id_fkey
+	Samplelocations         FieldseekerSamplelocationSlice         // fieldseeker.samplelocation.samplelocation_organization_id_fkey
+	Servicerequests         FieldseekerServicerequestSlice         // fieldseeker.servicerequest.servicerequest_organization_id_fkey
+	Speciesabundances       FieldseekerSpeciesabundanceSlice       // fieldseeker.speciesabundance.speciesabundance_organization_id_fkey
+	Stormdrains             FieldseekerStormdrainSlice             // fieldseeker.stormdrain.stormdrain_organization_id_fkey
+	Timecards               FieldseekerTimecardSlice               // fieldseeker.timecard.timecard_organization_id_fkey
+	Trapdata                FieldseekerTrapdatumSlice              // fieldseeker.trapdata.trapdata_organization_id_fkey
+	Traplocations           FieldseekerTraplocationSlice           // fieldseeker.traplocation.traplocation_organization_id_fkey
+	Treatments              FieldseekerTreatmentSlice              // fieldseeker.treatment.treatment_organization_id_fkey
+	Treatmentareas          FieldseekerTreatmentareaSlice          // fieldseeker.treatmentarea.treatmentarea_organization_id_fkey
+	Zones                   FieldseekerZoneSlice                   // fieldseeker.zones.zones_organization_id_fkey
+	Zones2s                 FieldseekerZones2Slice                 // fieldseeker.zones2.zones2_organization_id_fkey
+	FieldseekerSyncs        FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
+	Files                   FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
+	Pools                   FileuploadPoolSlice                    // fileupload.pool.pool_organization_id_fkey
+	H3Aggregations          H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
+	NoteAudios              NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
+	NoteImages              NoteImageSlice                         // note_image.note_image_organization_id_fkey
+	Nuisances               PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
+	PublicreportPool        PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
+	Quicks                  PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
+	User                    UserSlice                              // user_.user__organization_id_fkey
 }
 
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid", "slug",
+			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson",
 		).WithParent("organization"),
-		tableAlias:        alias,
-		ID:                psql.Quote(alias, "id"),
-		Name:              psql.Quote(alias, "name"),
-		ArcgisID:          psql.Quote(alias, "arcgis_id"),
-		ArcgisName:        psql.Quote(alias, "arcgis_name"),
-		FieldseekerURL:    psql.Quote(alias, "fieldseeker_url"),
-		ImportDistrictGid: psql.Quote(alias, "import_district_gid"),
-		Website:           psql.Quote(alias, "website"),
-		LogoUUID:          psql.Quote(alias, "logo_uuid"),
-		Slug:              psql.Quote(alias, "slug"),
+		tableAlias:                 alias,
+		ID:                         psql.Quote(alias, "id"),
+		Name:                       psql.Quote(alias, "name"),
+		ArcgisID:                   psql.Quote(alias, "arcgis_id"),
+		ArcgisName:                 psql.Quote(alias, "arcgis_name"),
+		FieldseekerURL:             psql.Quote(alias, "fieldseeker_url"),
+		ImportDistrictGid:          psql.Quote(alias, "import_district_gid"),
+		Website:                    psql.Quote(alias, "website"),
+		LogoUUID:                   psql.Quote(alias, "logo_uuid"),
+		Slug:                       psql.Quote(alias, "slug"),
+		GeneralManagerName:         psql.Quote(alias, "general_manager_name"),
+		MailingAddressCity:         psql.Quote(alias, "mailing_address_city"),
+		MailingAddressPostalCode:   psql.Quote(alias, "mailing_address_postal_code"),
+		MailingAddressStreet:       psql.Quote(alias, "mailing_address_street"),
+		OfficeAddressCity:          psql.Quote(alias, "office_address_city"),
+		OfficeAddressPostalCode:    psql.Quote(alias, "office_address_postal_code"),
+		OfficeAddressStreet:        psql.Quote(alias, "office_address_street"),
+		ServiceAreaGeometry:        psql.Quote(alias, "service_area_geometry"),
+		ServiceAreaSquareMeters:    psql.Quote(alias, "service_area_square_meters"),
+		ServiceAreaCentroid:        psql.Quote(alias, "service_area_centroid"),
+		ServiceAreaExtent:          psql.Quote(alias, "service_area_extent"),
+		OfficeFax:                  psql.Quote(alias, "office_fax"),
+		OfficePhone:                psql.Quote(alias, "office_phone"),
+		ServiceAreaXmin:            psql.Quote(alias, "service_area_xmin"),
+		ServiceAreaYmin:            psql.Quote(alias, "service_area_ymin"),
+		ServiceAreaXmax:            psql.Quote(alias, "service_area_xmax"),
+		ServiceAreaYmax:            psql.Quote(alias, "service_area_ymax"),
+		ServiceAreaCentroidGeojson: psql.Quote(alias, "service_area_centroid_geojson"),
 	}
 }
 
 type organizationColumns struct {
 	expr.ColumnsExpr
-	tableAlias        string
-	ID                psql.Expression
-	Name              psql.Expression
-	ArcgisID          psql.Expression
-	ArcgisName        psql.Expression
-	FieldseekerURL    psql.Expression
-	ImportDistrictGid psql.Expression
-	Website           psql.Expression
-	LogoUUID          psql.Expression
-	Slug              psql.Expression
+	tableAlias                 string
+	ID                         psql.Expression
+	Name                       psql.Expression
+	ArcgisID                   psql.Expression
+	ArcgisName                 psql.Expression
+	FieldseekerURL             psql.Expression
+	ImportDistrictGid          psql.Expression
+	Website                    psql.Expression
+	LogoUUID                   psql.Expression
+	Slug                       psql.Expression
+	GeneralManagerName         psql.Expression
+	MailingAddressCity         psql.Expression
+	MailingAddressPostalCode   psql.Expression
+	MailingAddressStreet       psql.Expression
+	OfficeAddressCity          psql.Expression
+	OfficeAddressPostalCode    psql.Expression
+	OfficeAddressStreet        psql.Expression
+	ServiceAreaGeometry        psql.Expression
+	ServiceAreaSquareMeters    psql.Expression
+	ServiceAreaCentroid        psql.Expression
+	ServiceAreaExtent          psql.Expression
+	OfficeFax                  psql.Expression
+	OfficePhone                psql.Expression
+	ServiceAreaXmin            psql.Expression
+	ServiceAreaYmin            psql.Expression
+	ServiceAreaXmax            psql.Expression
+	ServiceAreaYmax            psql.Expression
+	ServiceAreaCentroidGeojson psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -141,19 +195,29 @@ func (organizationColumns) AliasedAs(alias string) organizationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type OrganizationSetter struct {
-	ID                omit.Val[int32]         `db:"id,pk" `
-	Name              omit.Val[string]        `db:"name" `
-	ArcgisID          omitnull.Val[string]    `db:"arcgis_id" `
-	ArcgisName        omitnull.Val[string]    `db:"arcgis_name" `
-	FieldseekerURL    omitnull.Val[string]    `db:"fieldseeker_url" `
-	ImportDistrictGid omitnull.Val[int32]     `db:"import_district_gid" `
-	Website           omitnull.Val[string]    `db:"website" `
-	LogoUUID          omitnull.Val[uuid.UUID] `db:"logo_uuid" `
-	Slug              omitnull.Val[string]    `db:"slug" `
+	ID                       omit.Val[int32]         `db:"id,pk" `
+	Name                     omit.Val[string]        `db:"name" `
+	ArcgisID                 omitnull.Val[string]    `db:"arcgis_id" `
+	ArcgisName               omitnull.Val[string]    `db:"arcgis_name" `
+	FieldseekerURL           omitnull.Val[string]    `db:"fieldseeker_url" `
+	ImportDistrictGid        omitnull.Val[int32]     `db:"import_district_gid" `
+	Website                  omitnull.Val[string]    `db:"website" `
+	LogoUUID                 omitnull.Val[uuid.UUID] `db:"logo_uuid" `
+	Slug                     omitnull.Val[string]    `db:"slug" `
+	GeneralManagerName       omitnull.Val[string]    `db:"general_manager_name" `
+	MailingAddressCity       omitnull.Val[string]    `db:"mailing_address_city" `
+	MailingAddressPostalCode omitnull.Val[string]    `db:"mailing_address_postal_code" `
+	MailingAddressStreet     omitnull.Val[string]    `db:"mailing_address_street" `
+	OfficeAddressCity        omitnull.Val[string]    `db:"office_address_city" `
+	OfficeAddressPostalCode  omitnull.Val[string]    `db:"office_address_postal_code" `
+	OfficeAddressStreet      omitnull.Val[string]    `db:"office_address_street" `
+	ServiceAreaGeometry      omitnull.Val[string]    `db:"service_area_geometry" `
+	OfficeFax                omitnull.Val[string]    `db:"office_fax" `
+	OfficePhone              omitnull.Val[string]    `db:"office_phone" `
 }
 
 func (s OrganizationSetter) SetColumns() []string {
-	vals := make([]string, 0, 9)
+	vals := make([]string, 0, 19)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -180,6 +244,36 @@ func (s OrganizationSetter) SetColumns() []string {
 	}
 	if !s.Slug.IsUnset() {
 		vals = append(vals, "slug")
+	}
+	if !s.GeneralManagerName.IsUnset() {
+		vals = append(vals, "general_manager_name")
+	}
+	if !s.MailingAddressCity.IsUnset() {
+		vals = append(vals, "mailing_address_city")
+	}
+	if !s.MailingAddressPostalCode.IsUnset() {
+		vals = append(vals, "mailing_address_postal_code")
+	}
+	if !s.MailingAddressStreet.IsUnset() {
+		vals = append(vals, "mailing_address_street")
+	}
+	if !s.OfficeAddressCity.IsUnset() {
+		vals = append(vals, "office_address_city")
+	}
+	if !s.OfficeAddressPostalCode.IsUnset() {
+		vals = append(vals, "office_address_postal_code")
+	}
+	if !s.OfficeAddressStreet.IsUnset() {
+		vals = append(vals, "office_address_street")
+	}
+	if !s.ServiceAreaGeometry.IsUnset() {
+		vals = append(vals, "service_area_geometry")
+	}
+	if !s.OfficeFax.IsUnset() {
+		vals = append(vals, "office_fax")
+	}
+	if !s.OfficePhone.IsUnset() {
+		vals = append(vals, "office_phone")
 	}
 	return vals
 }
@@ -212,6 +306,36 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if !s.Slug.IsUnset() {
 		t.Slug = s.Slug.MustGetNull()
 	}
+	if !s.GeneralManagerName.IsUnset() {
+		t.GeneralManagerName = s.GeneralManagerName.MustGetNull()
+	}
+	if !s.MailingAddressCity.IsUnset() {
+		t.MailingAddressCity = s.MailingAddressCity.MustGetNull()
+	}
+	if !s.MailingAddressPostalCode.IsUnset() {
+		t.MailingAddressPostalCode = s.MailingAddressPostalCode.MustGetNull()
+	}
+	if !s.MailingAddressStreet.IsUnset() {
+		t.MailingAddressStreet = s.MailingAddressStreet.MustGetNull()
+	}
+	if !s.OfficeAddressCity.IsUnset() {
+		t.OfficeAddressCity = s.OfficeAddressCity.MustGetNull()
+	}
+	if !s.OfficeAddressPostalCode.IsUnset() {
+		t.OfficeAddressPostalCode = s.OfficeAddressPostalCode.MustGetNull()
+	}
+	if !s.OfficeAddressStreet.IsUnset() {
+		t.OfficeAddressStreet = s.OfficeAddressStreet.MustGetNull()
+	}
+	if !s.ServiceAreaGeometry.IsUnset() {
+		t.ServiceAreaGeometry = s.ServiceAreaGeometry.MustGetNull()
+	}
+	if !s.OfficeFax.IsUnset() {
+		t.OfficeFax = s.OfficeFax.MustGetNull()
+	}
+	if !s.OfficePhone.IsUnset() {
+		t.OfficePhone = s.OfficePhone.MustGetNull()
+	}
 }
 
 func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
@@ -220,7 +344,7 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 9)
+		vals := make([]bob.Expression, 19)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -275,6 +399,66 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
+		if !s.GeneralManagerName.IsUnset() {
+			vals[9] = psql.Arg(s.GeneralManagerName.MustGetNull())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
+		if !s.MailingAddressCity.IsUnset() {
+			vals[10] = psql.Arg(s.MailingAddressCity.MustGetNull())
+		} else {
+			vals[10] = psql.Raw("DEFAULT")
+		}
+
+		if !s.MailingAddressPostalCode.IsUnset() {
+			vals[11] = psql.Arg(s.MailingAddressPostalCode.MustGetNull())
+		} else {
+			vals[11] = psql.Raw("DEFAULT")
+		}
+
+		if !s.MailingAddressStreet.IsUnset() {
+			vals[12] = psql.Arg(s.MailingAddressStreet.MustGetNull())
+		} else {
+			vals[12] = psql.Raw("DEFAULT")
+		}
+
+		if !s.OfficeAddressCity.IsUnset() {
+			vals[13] = psql.Arg(s.OfficeAddressCity.MustGetNull())
+		} else {
+			vals[13] = psql.Raw("DEFAULT")
+		}
+
+		if !s.OfficeAddressPostalCode.IsUnset() {
+			vals[14] = psql.Arg(s.OfficeAddressPostalCode.MustGetNull())
+		} else {
+			vals[14] = psql.Raw("DEFAULT")
+		}
+
+		if !s.OfficeAddressStreet.IsUnset() {
+			vals[15] = psql.Arg(s.OfficeAddressStreet.MustGetNull())
+		} else {
+			vals[15] = psql.Raw("DEFAULT")
+		}
+
+		if !s.ServiceAreaGeometry.IsUnset() {
+			vals[16] = psql.Arg(s.ServiceAreaGeometry.MustGetNull())
+		} else {
+			vals[16] = psql.Raw("DEFAULT")
+		}
+
+		if !s.OfficeFax.IsUnset() {
+			vals[17] = psql.Arg(s.OfficeFax.MustGetNull())
+		} else {
+			vals[17] = psql.Raw("DEFAULT")
+		}
+
+		if !s.OfficePhone.IsUnset() {
+			vals[18] = psql.Arg(s.OfficePhone.MustGetNull())
+		} else {
+			vals[18] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -284,7 +468,7 @@ func (s OrganizationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 9)
+	exprs := make([]bob.Expression, 0, 19)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -346,6 +530,76 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "slug")...),
 			psql.Arg(s.Slug),
+		}})
+	}
+
+	if !s.GeneralManagerName.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "general_manager_name")...),
+			psql.Arg(s.GeneralManagerName),
+		}})
+	}
+
+	if !s.MailingAddressCity.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "mailing_address_city")...),
+			psql.Arg(s.MailingAddressCity),
+		}})
+	}
+
+	if !s.MailingAddressPostalCode.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "mailing_address_postal_code")...),
+			psql.Arg(s.MailingAddressPostalCode),
+		}})
+	}
+
+	if !s.MailingAddressStreet.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "mailing_address_street")...),
+			psql.Arg(s.MailingAddressStreet),
+		}})
+	}
+
+	if !s.OfficeAddressCity.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "office_address_city")...),
+			psql.Arg(s.OfficeAddressCity),
+		}})
+	}
+
+	if !s.OfficeAddressPostalCode.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "office_address_postal_code")...),
+			psql.Arg(s.OfficeAddressPostalCode),
+		}})
+	}
+
+	if !s.OfficeAddressStreet.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "office_address_street")...),
+			psql.Arg(s.OfficeAddressStreet),
+		}})
+	}
+
+	if !s.ServiceAreaGeometry.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "service_area_geometry")...),
+			psql.Arg(s.ServiceAreaGeometry),
+		}})
+	}
+
+	if !s.OfficeFax.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "office_fax")...),
+			psql.Arg(s.OfficeFax),
+		}})
+	}
+
+	if !s.OfficePhone.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "office_phone")...),
+			psql.Arg(s.OfficePhone),
 		}})
 	}
 
@@ -1422,30 +1676,6 @@ func (os OrganizationSlice) NoteImages(mods ...bob.Mod[*dialect.SelectQuery]) No
 
 	return NoteImages.Query(append(mods,
 		sm.Where(psql.Group(NoteImages.Columns.OrganizationID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// ImportDistrictGidDistrict starts a query for related objects on import.district
-func (o *Organization) ImportDistrictGidDistrict(mods ...bob.Mod[*dialect.SelectQuery]) ImportDistrictsQuery {
-	return ImportDistricts.Query(append(mods,
-		sm.Where(ImportDistricts.Columns.Gid.EQ(psql.Arg(o.ImportDistrictGid))),
-	)...)
-}
-
-func (os OrganizationSlice) ImportDistrictGidDistrict(mods ...bob.Mod[*dialect.SelectQuery]) ImportDistrictsQuery {
-	pkImportDistrictGid := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkImportDistrictGid = append(pkImportDistrictGid, o.ImportDistrictGid)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkImportDistrictGid), "integer[]")),
-	))
-
-	return ImportDistricts.Query(append(mods,
-		sm.Where(psql.Group(ImportDistricts.Columns.Gid).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -3919,54 +4149,6 @@ func (organization0 *Organization) AttachNoteImages(ctx context.Context, exec bo
 	return nil
 }
 
-func attachOrganizationImportDistrictGidDistrict0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, importDistrict1 *ImportDistrict) (*Organization, error) {
-	setter := &OrganizationSetter{
-		ImportDistrictGid: omitnull.From(importDistrict1.Gid),
-	}
-
-	err := organization0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationImportDistrictGidDistrict0: %w", err)
-	}
-
-	return organization0, nil
-}
-
-func (organization0 *Organization) InsertImportDistrictGidDistrict(ctx context.Context, exec bob.Executor, related *ImportDistrictSetter) error {
-	var err error
-
-	importDistrict1, err := ImportDistricts.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachOrganizationImportDistrictGidDistrict0(ctx, exec, 1, organization0, importDistrict1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ImportDistrictGidDistrict = importDistrict1
-
-	importDistrict1.R.ImportDistrictGidOrganization = organization0
-
-	return nil
-}
-
-func (organization0 *Organization) AttachImportDistrictGidDistrict(ctx context.Context, exec bob.Executor, importDistrict1 *ImportDistrict) error {
-	var err error
-
-	_, err = attachOrganizationImportDistrictGidDistrict0(ctx, exec, 1, organization0, importDistrict1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ImportDistrictGidDistrict = importDistrict1
-
-	importDistrict1.R.ImportDistrictGidOrganization = organization0
-
-	return nil
-}
-
 func insertOrganizationNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, organization0 *Organization) (PublicreportNuisanceSlice, error) {
 	for i := range publicreportNuisances1 {
 		publicreportNuisances1[i].OrganizationID = omitnull.From(organization0.ID)
@@ -4240,15 +4422,33 @@ func (organization0 *Organization) AttachUser(ctx context.Context, exec bob.Exec
 }
 
 type organizationWhere[Q psql.Filterable] struct {
-	ID                psql.WhereMod[Q, int32]
-	Name              psql.WhereMod[Q, string]
-	ArcgisID          psql.WhereNullMod[Q, string]
-	ArcgisName        psql.WhereNullMod[Q, string]
-	FieldseekerURL    psql.WhereNullMod[Q, string]
-	ImportDistrictGid psql.WhereNullMod[Q, int32]
-	Website           psql.WhereNullMod[Q, string]
-	LogoUUID          psql.WhereNullMod[Q, uuid.UUID]
-	Slug              psql.WhereNullMod[Q, string]
+	ID                         psql.WhereMod[Q, int32]
+	Name                       psql.WhereMod[Q, string]
+	ArcgisID                   psql.WhereNullMod[Q, string]
+	ArcgisName                 psql.WhereNullMod[Q, string]
+	FieldseekerURL             psql.WhereNullMod[Q, string]
+	ImportDistrictGid          psql.WhereNullMod[Q, int32]
+	Website                    psql.WhereNullMod[Q, string]
+	LogoUUID                   psql.WhereNullMod[Q, uuid.UUID]
+	Slug                       psql.WhereNullMod[Q, string]
+	GeneralManagerName         psql.WhereNullMod[Q, string]
+	MailingAddressCity         psql.WhereNullMod[Q, string]
+	MailingAddressPostalCode   psql.WhereNullMod[Q, string]
+	MailingAddressStreet       psql.WhereNullMod[Q, string]
+	OfficeAddressCity          psql.WhereNullMod[Q, string]
+	OfficeAddressPostalCode    psql.WhereNullMod[Q, string]
+	OfficeAddressStreet        psql.WhereNullMod[Q, string]
+	ServiceAreaGeometry        psql.WhereNullMod[Q, string]
+	ServiceAreaSquareMeters    psql.WhereNullMod[Q, decimal.Decimal]
+	ServiceAreaCentroid        psql.WhereNullMod[Q, string]
+	ServiceAreaExtent          psql.WhereNullMod[Q, string]
+	OfficeFax                  psql.WhereNullMod[Q, string]
+	OfficePhone                psql.WhereNullMod[Q, string]
+	ServiceAreaXmin            psql.WhereNullMod[Q, float64]
+	ServiceAreaYmin            psql.WhereNullMod[Q, float64]
+	ServiceAreaXmax            psql.WhereNullMod[Q, float64]
+	ServiceAreaYmax            psql.WhereNullMod[Q, float64]
+	ServiceAreaCentroidGeojson psql.WhereNullMod[Q, string]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -4257,15 +4457,33 @@ func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
 
 func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organizationWhere[Q] {
 	return organizationWhere[Q]{
-		ID:                psql.Where[Q, int32](cols.ID),
-		Name:              psql.Where[Q, string](cols.Name),
-		ArcgisID:          psql.WhereNull[Q, string](cols.ArcgisID),
-		ArcgisName:        psql.WhereNull[Q, string](cols.ArcgisName),
-		FieldseekerURL:    psql.WhereNull[Q, string](cols.FieldseekerURL),
-		ImportDistrictGid: psql.WhereNull[Q, int32](cols.ImportDistrictGid),
-		Website:           psql.WhereNull[Q, string](cols.Website),
-		LogoUUID:          psql.WhereNull[Q, uuid.UUID](cols.LogoUUID),
-		Slug:              psql.WhereNull[Q, string](cols.Slug),
+		ID:                         psql.Where[Q, int32](cols.ID),
+		Name:                       psql.Where[Q, string](cols.Name),
+		ArcgisID:                   psql.WhereNull[Q, string](cols.ArcgisID),
+		ArcgisName:                 psql.WhereNull[Q, string](cols.ArcgisName),
+		FieldseekerURL:             psql.WhereNull[Q, string](cols.FieldseekerURL),
+		ImportDistrictGid:          psql.WhereNull[Q, int32](cols.ImportDistrictGid),
+		Website:                    psql.WhereNull[Q, string](cols.Website),
+		LogoUUID:                   psql.WhereNull[Q, uuid.UUID](cols.LogoUUID),
+		Slug:                       psql.WhereNull[Q, string](cols.Slug),
+		GeneralManagerName:         psql.WhereNull[Q, string](cols.GeneralManagerName),
+		MailingAddressCity:         psql.WhereNull[Q, string](cols.MailingAddressCity),
+		MailingAddressPostalCode:   psql.WhereNull[Q, string](cols.MailingAddressPostalCode),
+		MailingAddressStreet:       psql.WhereNull[Q, string](cols.MailingAddressStreet),
+		OfficeAddressCity:          psql.WhereNull[Q, string](cols.OfficeAddressCity),
+		OfficeAddressPostalCode:    psql.WhereNull[Q, string](cols.OfficeAddressPostalCode),
+		OfficeAddressStreet:        psql.WhereNull[Q, string](cols.OfficeAddressStreet),
+		ServiceAreaGeometry:        psql.WhereNull[Q, string](cols.ServiceAreaGeometry),
+		ServiceAreaSquareMeters:    psql.WhereNull[Q, decimal.Decimal](cols.ServiceAreaSquareMeters),
+		ServiceAreaCentroid:        psql.WhereNull[Q, string](cols.ServiceAreaCentroid),
+		ServiceAreaExtent:          psql.WhereNull[Q, string](cols.ServiceAreaExtent),
+		OfficeFax:                  psql.WhereNull[Q, string](cols.OfficeFax),
+		OfficePhone:                psql.WhereNull[Q, string](cols.OfficePhone),
+		ServiceAreaXmin:            psql.WhereNull[Q, float64](cols.ServiceAreaXmin),
+		ServiceAreaYmin:            psql.WhereNull[Q, float64](cols.ServiceAreaYmin),
+		ServiceAreaXmax:            psql.WhereNull[Q, float64](cols.ServiceAreaXmax),
+		ServiceAreaYmax:            psql.WhereNull[Q, float64](cols.ServiceAreaYmax),
+		ServiceAreaCentroidGeojson: psql.WhereNull[Q, string](cols.ServiceAreaCentroidGeojson),
 	}
 }
 
@@ -4765,18 +4983,6 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "ImportDistrictGidDistrict":
-		rel, ok := retrieved.(*ImportDistrict)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ImportDistrictGidDistrict = rel
-
-		if rel != nil {
-			rel.R.ImportDistrictGidOrganization = o
-		}
-		return nil
 	case "Nuisances":
 		rels, ok := retrieved.(PublicreportNuisanceSlice)
 		if !ok {
@@ -4838,69 +5044,52 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 }
 
-type organizationPreloader struct {
-	ImportDistrictGidDistrict func(...psql.PreloadOption) psql.Preloader
-}
+type organizationPreloader struct{}
 
 func buildOrganizationPreloader() organizationPreloader {
-	return organizationPreloader{
-		ImportDistrictGidDistrict: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ImportDistrict, ImportDistrictSlice](psql.PreloadRel{
-				Name: "ImportDistrictGidDistrict",
-				Sides: []psql.PreloadSide{
-					{
-						From:        Organizations,
-						To:          ImportDistricts,
-						FromColumns: []string{"import_district_gid"},
-						ToColumns:   []string{"gid"},
-					},
-				},
-			}, ImportDistricts.Columns.Names(), opts...)
-		},
-	}
+	return organizationPreloader{}
 }
 
 type organizationThenLoader[Q orm.Loadable] struct {
-	EmailContacts             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Phones                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Containerrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Fieldscoutinglogs         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Habitatrelates            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsamples         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsampledetails   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Linelocations             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Locationtrackings         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Mosquitoinspections       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pointlocations            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Polygonlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerPool           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pooldetails               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Proposedtreatmentareas    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Qamosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Rodentlocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplecollections         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplelocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Servicerequests           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Speciesabundances         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Stormdrains               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Timecards                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Trapdata                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Traplocations             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatments                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatmentareas            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones2s                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerSyncs          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Files                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	H3Aggregations            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteAudios                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteImages                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ImportDistrictGidDistrict func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Nuisances                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PublicreportPool          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Quicks                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	User                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Inspectionsamples       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Inspectionsampledetails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Linelocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Locationtrackings       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Rodentlocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Samplecollections       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Samplelocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Servicerequests         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Speciesabundances       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Stormdrains             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Timecards               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Trapdata                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Traplocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Treatments              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Treatmentareas          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Zones                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Files                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
@@ -5008,9 +5197,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type NoteImagesLoadInterface interface {
 		LoadNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ImportDistrictGidDistrictLoadInterface interface {
-		LoadImportDistrictGidDistrict(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NuisancesLoadInterface interface {
 		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -5234,12 +5420,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"NoteImages",
 			func(ctx context.Context, exec bob.Executor, retrieved NoteImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadNoteImages(ctx, exec, mods...)
-			},
-		),
-		ImportDistrictGidDistrict: thenLoadBuilder[Q](
-			"ImportDistrictGidDistrict",
-			func(ctx context.Context, exec bob.Executor, retrieved ImportDistrictGidDistrictLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadImportDistrictGidDistrict(ctx, exec, mods...)
 			},
 		),
 		Nuisances: thenLoadBuilder[Q](
@@ -7438,61 +7618,6 @@ func (os OrganizationSlice) LoadNoteImages(ctx context.Context, exec bob.Executo
 			rel.R.Organization = o
 
 			o.R.NoteImages = append(o.R.NoteImages, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadImportDistrictGidDistrict loads the organization's ImportDistrictGidDistrict into the .R struct
-func (o *Organization) LoadImportDistrictGidDistrict(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ImportDistrictGidDistrict = nil
-
-	related, err := o.ImportDistrictGidDistrict(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.ImportDistrictGidOrganization = o
-
-	o.R.ImportDistrictGidDistrict = related
-	return nil
-}
-
-// LoadImportDistrictGidDistrict loads the organization's ImportDistrictGidDistrict into the .R struct
-func (os OrganizationSlice) LoadImportDistrictGidDistrict(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	importDistricts, err := os.ImportDistrictGidDistrict(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range importDistricts {
-			if !o.ImportDistrictGid.IsValue() {
-				continue
-			}
-
-			if !(o.ImportDistrictGid.IsValue() && o.ImportDistrictGid.MustGet() == rel.Gid) {
-				continue
-			}
-
-			rel.R.ImportDistrictGidOrganization = o
-
-			o.R.ImportDistrictGidDistrict = rel
-			break
 		}
 	}
 
@@ -10170,47 +10295,46 @@ func (os OrganizationSlice) LoadCountUser(ctx context.Context, exec bob.Executor
 }
 
 type organizationJoins[Q dialect.Joinable] struct {
-	typ                       string
-	EmailContacts             modAs[Q, commsEmailContactColumns]
-	Phones                    modAs[Q, commsPhoneColumns]
-	Containerrelates          modAs[Q, fieldseekerContainerrelateColumns]
-	Fieldscoutinglogs         modAs[Q, fieldseekerFieldscoutinglogColumns]
-	Habitatrelates            modAs[Q, fieldseekerHabitatrelateColumns]
-	Inspectionsamples         modAs[Q, fieldseekerInspectionsampleColumns]
-	Inspectionsampledetails   modAs[Q, fieldseekerInspectionsampledetailColumns]
-	Linelocations             modAs[Q, fieldseekerLinelocationColumns]
-	Locationtrackings         modAs[Q, fieldseekerLocationtrackingColumns]
-	Mosquitoinspections       modAs[Q, fieldseekerMosquitoinspectionColumns]
-	Pointlocations            modAs[Q, fieldseekerPointlocationColumns]
-	Polygonlocations          modAs[Q, fieldseekerPolygonlocationColumns]
-	FieldseekerPool           modAs[Q, fieldseekerPoolColumns]
-	Pooldetails               modAs[Q, fieldseekerPooldetailColumns]
-	Proposedtreatmentareas    modAs[Q, fieldseekerProposedtreatmentareaColumns]
-	Qamosquitoinspections     modAs[Q, fieldseekerQamosquitoinspectionColumns]
-	Rodentlocations           modAs[Q, fieldseekerRodentlocationColumns]
-	Samplecollections         modAs[Q, fieldseekerSamplecollectionColumns]
-	Samplelocations           modAs[Q, fieldseekerSamplelocationColumns]
-	Servicerequests           modAs[Q, fieldseekerServicerequestColumns]
-	Speciesabundances         modAs[Q, fieldseekerSpeciesabundanceColumns]
-	Stormdrains               modAs[Q, fieldseekerStormdrainColumns]
-	Timecards                 modAs[Q, fieldseekerTimecardColumns]
-	Trapdata                  modAs[Q, fieldseekerTrapdatumColumns]
-	Traplocations             modAs[Q, fieldseekerTraplocationColumns]
-	Treatments                modAs[Q, fieldseekerTreatmentColumns]
-	Treatmentareas            modAs[Q, fieldseekerTreatmentareaColumns]
-	Zones                     modAs[Q, fieldseekerZoneColumns]
-	Zones2s                   modAs[Q, fieldseekerZones2Columns]
-	FieldseekerSyncs          modAs[Q, fieldseekerSyncColumns]
-	Files                     modAs[Q, fileuploadFileColumns]
-	Pools                     modAs[Q, fileuploadPoolColumns]
-	H3Aggregations            modAs[Q, h3AggregationColumns]
-	NoteAudios                modAs[Q, noteAudioColumns]
-	NoteImages                modAs[Q, noteImageColumns]
-	ImportDistrictGidDistrict modAs[Q, importDistrictColumns]
-	Nuisances                 modAs[Q, publicreportNuisanceColumns]
-	PublicreportPool          modAs[Q, publicreportPoolColumns]
-	Quicks                    modAs[Q, publicreportQuickColumns]
-	User                      modAs[Q, userColumns]
+	typ                     string
+	EmailContacts           modAs[Q, commsEmailContactColumns]
+	Phones                  modAs[Q, commsPhoneColumns]
+	Containerrelates        modAs[Q, fieldseekerContainerrelateColumns]
+	Fieldscoutinglogs       modAs[Q, fieldseekerFieldscoutinglogColumns]
+	Habitatrelates          modAs[Q, fieldseekerHabitatrelateColumns]
+	Inspectionsamples       modAs[Q, fieldseekerInspectionsampleColumns]
+	Inspectionsampledetails modAs[Q, fieldseekerInspectionsampledetailColumns]
+	Linelocations           modAs[Q, fieldseekerLinelocationColumns]
+	Locationtrackings       modAs[Q, fieldseekerLocationtrackingColumns]
+	Mosquitoinspections     modAs[Q, fieldseekerMosquitoinspectionColumns]
+	Pointlocations          modAs[Q, fieldseekerPointlocationColumns]
+	Polygonlocations        modAs[Q, fieldseekerPolygonlocationColumns]
+	FieldseekerPool         modAs[Q, fieldseekerPoolColumns]
+	Pooldetails             modAs[Q, fieldseekerPooldetailColumns]
+	Proposedtreatmentareas  modAs[Q, fieldseekerProposedtreatmentareaColumns]
+	Qamosquitoinspections   modAs[Q, fieldseekerQamosquitoinspectionColumns]
+	Rodentlocations         modAs[Q, fieldseekerRodentlocationColumns]
+	Samplecollections       modAs[Q, fieldseekerSamplecollectionColumns]
+	Samplelocations         modAs[Q, fieldseekerSamplelocationColumns]
+	Servicerequests         modAs[Q, fieldseekerServicerequestColumns]
+	Speciesabundances       modAs[Q, fieldseekerSpeciesabundanceColumns]
+	Stormdrains             modAs[Q, fieldseekerStormdrainColumns]
+	Timecards               modAs[Q, fieldseekerTimecardColumns]
+	Trapdata                modAs[Q, fieldseekerTrapdatumColumns]
+	Traplocations           modAs[Q, fieldseekerTraplocationColumns]
+	Treatments              modAs[Q, fieldseekerTreatmentColumns]
+	Treatmentareas          modAs[Q, fieldseekerTreatmentareaColumns]
+	Zones                   modAs[Q, fieldseekerZoneColumns]
+	Zones2s                 modAs[Q, fieldseekerZones2Columns]
+	FieldseekerSyncs        modAs[Q, fieldseekerSyncColumns]
+	Files                   modAs[Q, fileuploadFileColumns]
+	Pools                   modAs[Q, fileuploadPoolColumns]
+	H3Aggregations          modAs[Q, h3AggregationColumns]
+	NoteAudios              modAs[Q, noteAudioColumns]
+	NoteImages              modAs[Q, noteImageColumns]
+	Nuisances               modAs[Q, publicreportNuisanceColumns]
+	PublicreportPool        modAs[Q, publicreportPoolColumns]
+	Quicks                  modAs[Q, publicreportQuickColumns]
+	User                    modAs[Q, userColumns]
 }
 
 func (j organizationJoins[Q]) aliasedAs(alias string) organizationJoins[Q] {
@@ -10720,20 +10844,6 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 				{
 					mods = append(mods, dialect.Join[Q](typ, NoteImages.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		ImportDistrictGidDistrict: modAs[Q, importDistrictColumns]{
-			c: ImportDistricts.Columns,
-			f: func(to importDistrictColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ImportDistricts.Name().As(to.Alias())).On(
-						to.Gid.EQ(cols.ImportDistrictGid),
 					))
 				}
 

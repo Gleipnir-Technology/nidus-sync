@@ -6,14 +6,22 @@ import (
 	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
+type ContentSignin struct {
+	InvalidCredentials bool
+	Next               string
+}
+type ContentSignup struct{}
+
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
-	signin(w, errorCode)
+	next := r.URL.Query().Get("next")
+	signin(w, errorCode, next)
 }
 
 func getSignout(w http.ResponseWriter, r *http.Request, user *models.User) {
@@ -31,10 +39,11 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	next := r.FormValue("next")
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	log.Info().Str("username", username).Msg("HTML Signin")
+	log.Info().Str("username", username).Str("next", next).Msg("HTML Signin")
 
 	_, err := auth.SigninUser(r, username, password)
 	if err != nil {
@@ -49,8 +58,11 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to signin user", err, http.StatusInternalServerError)
 		return
 	}
-
-	http.Redirect(w, r, "/", http.StatusFound)
+	if next == "" {
+		next = "/"
+	}
+	location := config.MakeURLNidus(next)
+	http.Redirect(w, r, location, http.StatusFound)
 }
 
 func postSignup(w http.ResponseWriter, r *http.Request) {
@@ -83,9 +95,13 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func signin(w http.ResponseWriter, errorCode string) {
+func signin(w http.ResponseWriter, errorCode string, next string) {
+	if next == "" {
+		next = "/"
+	}
 	data := ContentSignin{
 		InvalidCredentials: errorCode == "invalid-credentials",
+		Next:               next,
 	}
 	html.RenderOrError(w, "sync/signin.html", data)
 }

@@ -13,39 +13,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.ImportDistrict, *models.Organization, error) {
-	districts, err := models.ImportDistricts.Query(
+func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.Organization, error) {
+	organizations, err := models.Organizations.Query(
 		sm.Where(
-			psql.F("ST_Contains", psql.Raw("geom_4326"), psql.F("ST_SetSRID", psql.F("ST_MakePoint", psql.Arg(lng), psql.Arg(lat)), psql.Arg(4326))),
+			psql.F("ST_Contains", psql.Raw("service_area_geometry"), psql.F("ST_SetSRID", psql.F("ST_MakePoint", psql.Arg(lng), psql.Arg(lat)), psql.Arg(4326))),
 		),
 	).All(ctx, db.PGInstance.BobDB)
 
-	log.Debug().Int("len", len(districts)).Float64("lng", lng).Float64("lat", lat).Msg("Attempting district match")
+	log.Debug().Int("len", len(organizations)).Float64("lng", lng).Float64("lat", lat).Msg("Attempting district match")
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to query district: %w", err)
+		return nil, fmt.Errorf("failed to query organization: %w", err)
 	}
-	switch len(districts) {
+	switch len(organizations) {
 	case 0:
-		return nil, nil, nil
+		return nil, nil
 	case 1:
-		district := districts[0]
-		organizations, err := models.Organizations.Query(
-			sm.Where(
-				models.Organizations.Columns.ImportDistrictGid.EQ(psql.Arg(district.Gid)),
-			),
-		).All(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to query organization: %w", err)
-		}
-		switch len(organizations) {
-		case 0:
-			return nil, nil, nil
-		case 1:
-			return district, organizations[0], nil
-		default:
-			return nil, nil, errors.New("too many organizations")
-		}
+		org := organizations[0]
+		return org, nil
 	default:
-		return nil, nil, errors.New("too many districts")
+		return nil, errors.New("too many organizations")
 	}
 }

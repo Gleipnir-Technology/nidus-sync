@@ -64,7 +64,7 @@ func matchDistrict(ctx context.Context, longitude, latitude *float64, images []I
 		if image.Exif.GPS == nil {
 			continue
 		}
-		_, org, err = platform.DistrictForLocation(ctx, image.Exif.GPS.Longitude, image.Exif.GPS.Latitude)
+		org, err = platform.DistrictForLocation(ctx, image.Exif.GPS.Longitude, image.Exif.GPS.Latitude)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to get district for location")
 			continue
@@ -77,7 +77,7 @@ func matchDistrict(ctx context.Context, longitude, latitude *float64, images []I
 		log.Debug().Msg("No location from images, no latlng for the report itself, cannot match")
 		return nil, nil
 	}
-	_, org, err = platform.DistrictForLocation(ctx, *longitude, *latitude)
+	org, err = platform.DistrictForLocation(ctx, *longitude, *latitude)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get district for location")
 		return nil, fmt.Errorf("Failed to get district for location: %w", err)

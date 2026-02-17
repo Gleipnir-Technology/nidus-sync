@@ -60,10 +60,6 @@ type ContentDashboardLoading struct {
 	User User
 }
 
-type ContentSignin struct {
-	InvalidCredentials bool
-}
-type ContentSignup struct{}
 type Inspection struct {
 	Action     string
 	Date       *time.Time

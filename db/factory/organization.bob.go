@@ -14,6 +14,7 @@ import (
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
+	"github.com/shopspring/decimal"
 )
 
 type OrganizationMod interface {
@@ -37,15 +38,33 @@ func (mods OrganizationModSlice) Apply(ctx context.Context, n *OrganizationTempl
 // OrganizationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type OrganizationTemplate struct {
-	ID                func() int32
-	Name              func() string
-	ArcgisID          func() null.Val[string]
-	ArcgisName        func() null.Val[string]
-	FieldseekerURL    func() null.Val[string]
-	ImportDistrictGid func() null.Val[int32]
-	Website           func() null.Val[string]
-	LogoUUID          func() null.Val[uuid.UUID]
-	Slug              func() null.Val[string]
+	ID                         func() int32
+	Name                       func() string
+	ArcgisID                   func() null.Val[string]
+	ArcgisName                 func() null.Val[string]
+	FieldseekerURL             func() null.Val[string]
+	ImportDistrictGid          func() null.Val[int32]
+	Website                    func() null.Val[string]
+	LogoUUID                   func() null.Val[uuid.UUID]
+	Slug                       func() null.Val[string]
+	GeneralManagerName         func() null.Val[string]
+	MailingAddressCity         func() null.Val[string]
+	MailingAddressPostalCode   func() null.Val[string]
+	MailingAddressStreet       func() null.Val[string]
+	OfficeAddressCity          func() null.Val[string]
+	OfficeAddressPostalCode    func() null.Val[string]
+	OfficeAddressStreet        func() null.Val[string]
+	ServiceAreaGeometry        func() null.Val[string]
+	ServiceAreaSquareMeters    func() null.Val[decimal.Decimal]
+	ServiceAreaCentroid        func() null.Val[string]
+	ServiceAreaExtent          func() null.Val[string]
+	OfficeFax                  func() null.Val[string]
+	OfficePhone                func() null.Val[string]
+	ServiceAreaXmin            func() null.Val[float64]
+	ServiceAreaYmin            func() null.Val[float64]
+	ServiceAreaXmax            func() null.Val[float64]
+	ServiceAreaYmax            func() null.Val[float64]
+	ServiceAreaCentroidGeojson func() null.Val[string]
 
 	r organizationR
 	f *Factory
@@ -54,46 +73,45 @@ type OrganizationTemplate struct {
 }
 
 type organizationR struct {
-	EmailContacts             []*organizationREmailContactsR
-	Phones                    []*organizationRPhonesR
-	Containerrelates          []*organizationRContainerrelatesR
-	Fieldscoutinglogs         []*organizationRFieldscoutinglogsR
-	Habitatrelates            []*organizationRHabitatrelatesR
-	Inspectionsamples         []*organizationRInspectionsamplesR
-	Inspectionsampledetails   []*organizationRInspectionsampledetailsR
-	Linelocations             []*organizationRLinelocationsR
-	Locationtrackings         []*organizationRLocationtrackingsR
-	Mosquitoinspections       []*organizationRMosquitoinspectionsR
-	Pointlocations            []*organizationRPointlocationsR
-	Polygonlocations          []*organizationRPolygonlocationsR
-	FieldseekerPool           []*organizationRFieldseekerPoolR
-	Pooldetails               []*organizationRPooldetailsR
-	Proposedtreatmentareas    []*organizationRProposedtreatmentareasR
-	Qamosquitoinspections     []*organizationRQamosquitoinspectionsR
-	Rodentlocations           []*organizationRRodentlocationsR
-	Samplecollections         []*organizationRSamplecollectionsR
-	Samplelocations           []*organizationRSamplelocationsR
-	Servicerequests           []*organizationRServicerequestsR
-	Speciesabundances         []*organizationRSpeciesabundancesR
-	Stormdrains               []*organizationRStormdrainsR
-	Timecards                 []*organizationRTimecardsR
-	Trapdata                  []*organizationRTrapdataR
-	Traplocations             []*organizationRTraplocationsR
-	Treatments                []*organizationRTreatmentsR
-	Treatmentareas            []*organizationRTreatmentareasR
-	Zones                     []*organizationRZonesR
-	Zones2s                   []*organizationRZones2sR
-	FieldseekerSyncs          []*organizationRFieldseekerSyncsR
-	Files                     []*organizationRFilesR
-	Pools                     []*organizationRPoolsR
-	H3Aggregations            []*organizationRH3AggregationsR
-	NoteAudios                []*organizationRNoteAudiosR
-	NoteImages                []*organizationRNoteImagesR
-	ImportDistrictGidDistrict *organizationRImportDistrictGidDistrictR
-	Nuisances                 []*organizationRNuisancesR
-	PublicreportPool          []*organizationRPublicreportPoolR
-	Quicks                    []*organizationRQuicksR
-	User                      []*organizationRUserR
+	EmailContacts           []*organizationREmailContactsR
+	Phones                  []*organizationRPhonesR
+	Containerrelates        []*organizationRContainerrelatesR
+	Fieldscoutinglogs       []*organizationRFieldscoutinglogsR
+	Habitatrelates          []*organizationRHabitatrelatesR
+	Inspectionsamples       []*organizationRInspectionsamplesR
+	Inspectionsampledetails []*organizationRInspectionsampledetailsR
+	Linelocations           []*organizationRLinelocationsR
+	Locationtrackings       []*organizationRLocationtrackingsR
+	Mosquitoinspections     []*organizationRMosquitoinspectionsR
+	Pointlocations          []*organizationRPointlocationsR
+	Polygonlocations        []*organizationRPolygonlocationsR
+	FieldseekerPool         []*organizationRFieldseekerPoolR
+	Pooldetails             []*organizationRPooldetailsR
+	Proposedtreatmentareas  []*organizationRProposedtreatmentareasR
+	Qamosquitoinspections   []*organizationRQamosquitoinspectionsR
+	Rodentlocations         []*organizationRRodentlocationsR
+	Samplecollections       []*organizationRSamplecollectionsR
+	Samplelocations         []*organizationRSamplelocationsR
+	Servicerequests         []*organizationRServicerequestsR
+	Speciesabundances       []*organizationRSpeciesabundancesR
+	Stormdrains             []*organizationRStormdrainsR
+	Timecards               []*organizationRTimecardsR
+	Trapdata                []*organizationRTrapdataR
+	Traplocations           []*organizationRTraplocationsR
+	Treatments              []*organizationRTreatmentsR
+	Treatmentareas          []*organizationRTreatmentareasR
+	Zones                   []*organizationRZonesR
+	Zones2s                 []*organizationRZones2sR
+	FieldseekerSyncs        []*organizationRFieldseekerSyncsR
+	Files                   []*organizationRFilesR
+	Pools                   []*organizationRPoolsR
+	H3Aggregations          []*organizationRH3AggregationsR
+	NoteAudios              []*organizationRNoteAudiosR
+	NoteImages              []*organizationRNoteImagesR
+	Nuisances               []*organizationRNuisancesR
+	PublicreportPool        []*organizationRPublicreportPoolR
+	Quicks                  []*organizationRQuicksR
+	User                    []*organizationRUserR
 }
 
 type organizationREmailContactsR struct {
@@ -235,9 +253,6 @@ type organizationRNoteAudiosR struct {
 type organizationRNoteImagesR struct {
 	number int
 	o      *NoteImageTemplate
-}
-type organizationRImportDistrictGidDistrictR struct {
-	o *ImportDistrictTemplate
 }
 type organizationRNuisancesR struct {
 	number int
@@ -719,13 +734,6 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.NoteImages = rel
 	}
 
-	if t.r.ImportDistrictGidDistrict != nil {
-		rel := t.r.ImportDistrictGidDistrict.o.Build()
-		rel.R.ImportDistrictGidOrganization = o
-		o.ImportDistrictGid = null.From(rel.Gid) // h2
-		o.R.ImportDistrictGidDistrict = rel
-	}
-
 	if t.r.Nuisances != nil {
 		rel := models.PublicreportNuisanceSlice{}
 		for _, r := range t.r.Nuisances {
@@ -820,6 +828,46 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.Slug()
 		m.Slug = omitnull.FromNull(val)
 	}
+	if o.GeneralManagerName != nil {
+		val := o.GeneralManagerName()
+		m.GeneralManagerName = omitnull.FromNull(val)
+	}
+	if o.MailingAddressCity != nil {
+		val := o.MailingAddressCity()
+		m.MailingAddressCity = omitnull.FromNull(val)
+	}
+	if o.MailingAddressPostalCode != nil {
+		val := o.MailingAddressPostalCode()
+		m.MailingAddressPostalCode = omitnull.FromNull(val)
+	}
+	if o.MailingAddressStreet != nil {
+		val := o.MailingAddressStreet()
+		m.MailingAddressStreet = omitnull.FromNull(val)
+	}
+	if o.OfficeAddressCity != nil {
+		val := o.OfficeAddressCity()
+		m.OfficeAddressCity = omitnull.FromNull(val)
+	}
+	if o.OfficeAddressPostalCode != nil {
+		val := o.OfficeAddressPostalCode()
+		m.OfficeAddressPostalCode = omitnull.FromNull(val)
+	}
+	if o.OfficeAddressStreet != nil {
+		val := o.OfficeAddressStreet()
+		m.OfficeAddressStreet = omitnull.FromNull(val)
+	}
+	if o.ServiceAreaGeometry != nil {
+		val := o.ServiceAreaGeometry()
+		m.ServiceAreaGeometry = omitnull.FromNull(val)
+	}
+	if o.OfficeFax != nil {
+		val := o.OfficeFax()
+		m.OfficeFax = omitnull.FromNull(val)
+	}
+	if o.OfficePhone != nil {
+		val := o.OfficePhone()
+		m.OfficePhone = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -868,6 +916,60 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.Slug != nil {
 		m.Slug = o.Slug()
+	}
+	if o.GeneralManagerName != nil {
+		m.GeneralManagerName = o.GeneralManagerName()
+	}
+	if o.MailingAddressCity != nil {
+		m.MailingAddressCity = o.MailingAddressCity()
+	}
+	if o.MailingAddressPostalCode != nil {
+		m.MailingAddressPostalCode = o.MailingAddressPostalCode()
+	}
+	if o.MailingAddressStreet != nil {
+		m.MailingAddressStreet = o.MailingAddressStreet()
+	}
+	if o.OfficeAddressCity != nil {
+		m.OfficeAddressCity = o.OfficeAddressCity()
+	}
+	if o.OfficeAddressPostalCode != nil {
+		m.OfficeAddressPostalCode = o.OfficeAddressPostalCode()
+	}
+	if o.OfficeAddressStreet != nil {
+		m.OfficeAddressStreet = o.OfficeAddressStreet()
+	}
+	if o.ServiceAreaGeometry != nil {
+		m.ServiceAreaGeometry = o.ServiceAreaGeometry()
+	}
+	if o.ServiceAreaSquareMeters != nil {
+		m.ServiceAreaSquareMeters = o.ServiceAreaSquareMeters()
+	}
+	if o.ServiceAreaCentroid != nil {
+		m.ServiceAreaCentroid = o.ServiceAreaCentroid()
+	}
+	if o.ServiceAreaExtent != nil {
+		m.ServiceAreaExtent = o.ServiceAreaExtent()
+	}
+	if o.OfficeFax != nil {
+		m.OfficeFax = o.OfficeFax()
+	}
+	if o.OfficePhone != nil {
+		m.OfficePhone = o.OfficePhone()
+	}
+	if o.ServiceAreaXmin != nil {
+		m.ServiceAreaXmin = o.ServiceAreaXmin()
+	}
+	if o.ServiceAreaYmin != nil {
+		m.ServiceAreaYmin = o.ServiceAreaYmin()
+	}
+	if o.ServiceAreaXmax != nil {
+		m.ServiceAreaXmax = o.ServiceAreaXmax()
+	}
+	if o.ServiceAreaYmax != nil {
+		m.ServiceAreaYmax = o.ServiceAreaYmax()
+	}
+	if o.ServiceAreaCentroidGeojson != nil {
+		m.ServiceAreaCentroidGeojson = o.ServiceAreaCentroidGeojson()
 	}
 
 	o.setModelRels(m)
@@ -1601,25 +1703,6 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
-	isImportDistrictGidDistrictDone, _ := organizationRelImportDistrictGidDistrictCtx.Value(ctx)
-	if !isImportDistrictGidDistrictDone && o.r.ImportDistrictGidDistrict != nil {
-		ctx = organizationRelImportDistrictGidDistrictCtx.WithValue(ctx, true)
-		if o.r.ImportDistrictGidDistrict.o.alreadyPersisted {
-			m.R.ImportDistrictGidDistrict = o.r.ImportDistrictGidDistrict.o.Build()
-		} else {
-			var rel35 *models.ImportDistrict
-			rel35, err = o.r.ImportDistrictGidDistrict.o.Create(ctx, exec)
-			if err != nil {
-				return err
-			}
-			err = m.AttachImportDistrictGidDistrict(ctx, exec, rel35)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
 	isNuisancesDone, _ := organizationRelNuisancesCtx.Value(ctx)
 	if !isNuisancesDone && o.r.Nuisances != nil {
 		ctx = organizationRelNuisancesCtx.WithValue(ctx, true)
@@ -1627,12 +1710,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel36...)
+				err = m.AttachNuisances(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1647,12 +1730,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel37...)
+				err = m.AttachPublicreportPool(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1667,12 +1750,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel38, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel38...)
+				err = m.AttachQuicks(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1687,12 +1770,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel39, err := r.o.CreateMany(ctx, exec, r.number)
+				rel38, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel39...)
+				err = m.AttachUser(ctx, exec, rel38...)
 				if err != nil {
 					return err
 				}
@@ -1801,6 +1884,24 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomWebsite(f),
 		OrganizationMods.RandomLogoUUID(f),
 		OrganizationMods.RandomSlug(f),
+		OrganizationMods.RandomGeneralManagerName(f),
+		OrganizationMods.RandomMailingAddressCity(f),
+		OrganizationMods.RandomMailingAddressPostalCode(f),
+		OrganizationMods.RandomMailingAddressStreet(f),
+		OrganizationMods.RandomOfficeAddressCity(f),
+		OrganizationMods.RandomOfficeAddressPostalCode(f),
+		OrganizationMods.RandomOfficeAddressStreet(f),
+		OrganizationMods.RandomServiceAreaGeometry(f),
+		OrganizationMods.RandomServiceAreaSquareMeters(f),
+		OrganizationMods.RandomServiceAreaCentroid(f),
+		OrganizationMods.RandomServiceAreaExtent(f),
+		OrganizationMods.RandomOfficeFax(f),
+		OrganizationMods.RandomOfficePhone(f),
+		OrganizationMods.RandomServiceAreaXmin(f),
+		OrganizationMods.RandomServiceAreaYmin(f),
+		OrganizationMods.RandomServiceAreaXmax(f),
+		OrganizationMods.RandomServiceAreaYmax(f),
+		OrganizationMods.RandomServiceAreaCentroidGeojson(f),
 	}
 }
 
@@ -2237,47 +2338,966 @@ func (m organizationMods) RandomSlugNotNull(f *faker.Faker) OrganizationMod {
 	})
 }
 
+// Set the model columns to this value
+func (m organizationMods) GeneralManagerName(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.GeneralManagerName = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) GeneralManagerNameFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.GeneralManagerName = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetGeneralManagerName() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.GeneralManagerName = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomGeneralManagerName(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.GeneralManagerName = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomGeneralManagerNameNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.GeneralManagerName = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) MailingAddressCity(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCity = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) MailingAddressCityFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCity = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetMailingAddressCity() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCity = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomMailingAddressCity(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCity = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomMailingAddressCityNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCity = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) MailingAddressPostalCode(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressPostalCode = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) MailingAddressPostalCodeFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressPostalCode = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetMailingAddressPostalCode() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressPostalCode = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomMailingAddressPostalCode(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressPostalCode = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomMailingAddressPostalCodeNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressPostalCode = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) MailingAddressStreet(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressStreet = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) MailingAddressStreetFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressStreet = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetMailingAddressStreet() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressStreet = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomMailingAddressStreet(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressStreet = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomMailingAddressStreetNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressStreet = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeAddressCity(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCity = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeAddressCityFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCity = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeAddressCity() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCity = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeAddressCity(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCity = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeAddressCityNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCity = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeAddressPostalCode(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressPostalCode = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeAddressPostalCodeFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressPostalCode = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeAddressPostalCode() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressPostalCode = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeAddressPostalCode(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressPostalCode = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeAddressPostalCodeNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressPostalCode = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeAddressStreet(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressStreet = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeAddressStreetFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressStreet = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeAddressStreet() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressStreet = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeAddressStreet(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressStreet = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeAddressStreetNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressStreet = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaGeometry(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaGeometry = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaGeometryFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaGeometry = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaGeometry() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaGeometry = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaGeometry(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaGeometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaGeometryNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaGeometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaSquareMeters(val null.Val[decimal.Decimal]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaSquareMeters = func() null.Val[decimal.Decimal] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaSquareMetersFunc(f func() null.Val[decimal.Decimal]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaSquareMeters = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaSquareMeters() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaSquareMeters = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaSquareMeters(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaSquareMeters = func() null.Val[decimal.Decimal] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_decimal_Decimal(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaSquareMetersNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaSquareMeters = func() null.Val[decimal.Decimal] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_decimal_Decimal(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaCentroid(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroid = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaCentroidFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroid = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaCentroid() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroid = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaCentroid(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaCentroidNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroid = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaExtent(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaExtent = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaExtentFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaExtent = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaExtent() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaExtent = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaExtent(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaExtent = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaExtentNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaExtent = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeFax(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeFax = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeFaxFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeFax = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeFax() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeFax = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeFax(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeFax = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeFaxNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeFax = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficePhone(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficePhone = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficePhoneFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficePhone = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficePhone() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficePhone = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficePhone(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficePhone = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficePhoneNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficePhone = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaXmin(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmin = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaXminFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmin = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaXmin() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmin = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaXmin(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmin = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaXminNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmin = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaYmin(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmin = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaYminFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmin = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaYmin() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmin = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaYmin(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmin = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaYminNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmin = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaXmax(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmax = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaXmaxFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmax = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaXmax() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmax = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaXmax(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmax = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaXmaxNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaXmax = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaYmax(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmax = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaYmaxFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmax = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaYmax() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmax = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaYmax(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmax = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaYmaxNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaYmax = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaCentroidGeojson(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidGeojson = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaCentroidGeojsonFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidGeojson = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaCentroidGeojson() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidGeojson = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaCentroidGeojson(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidGeojson = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaCentroidGeojsonNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidGeojson = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m organizationMods) WithParentsCascading() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		if isDone, _ := organizationWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = organizationWithParentsCascadingCtx.WithValue(ctx, true)
-		{
-
-			related := o.f.NewImportDistrictWithContext(ctx, ImportDistrictMods.WithParentsCascading())
-			m.WithImportDistrictGidDistrict(related).Apply(ctx, o)
-		}
-	})
-}
-
-func (m organizationMods) WithImportDistrictGidDistrict(rel *ImportDistrictTemplate) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.ImportDistrictGidDistrict = &organizationRImportDistrictGidDistrictR{
-			o: rel,
-		}
-	})
-}
-
-func (m organizationMods) WithNewImportDistrictGidDistrict(mods ...ImportDistrictMod) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		related := o.f.NewImportDistrictWithContext(ctx, mods...)
-
-		m.WithImportDistrictGidDistrict(related).Apply(ctx, o)
-	})
-}
-
-func (m organizationMods) WithExistingImportDistrictGidDistrict(em *models.ImportDistrict) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.ImportDistrictGidDistrict = &organizationRImportDistrictGidDistrictR{
-			o: o.f.FromExistingImportDistrict(em),
-		}
-	})
-}
-
-func (m organizationMods) WithoutImportDistrictGidDistrict() OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.ImportDistrictGidDistrict = nil
 	})
 }
 

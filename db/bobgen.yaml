@@ -19,7 +19,6 @@ psql:
     - "arcgis"
     - "comms"
     - "fileupload"
-    - "import"
     - "public"
     - "publicreport"
     - "fieldseeker"

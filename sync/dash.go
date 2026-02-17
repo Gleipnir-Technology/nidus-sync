@@ -89,7 +89,7 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		errorCode := r.URL.Query().Get("error")
-		signin(w, errorCode)
+		signin(w, errorCode, "/")
 		return
 	} else {
 		has, err := background.HasFieldseekerConnection(r.Context(), user)

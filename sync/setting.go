@@ -4,42 +4,17 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	//"github.com/rs/zerolog/log"
-	"github.com/stephenafamo/scan"
 )
 
-type contentDistrict struct {
-	Address                 string  `db:"address"`
-	Agency                  string  `db:"agency"`
-	Centroid                string  `db:"st_asgeojson"`
-	Contact                 string  `db:"contact"`
-	City1                   string  `db:"city1"`
-	City2                   string  `db:"city2"`
-	Fax                     string  `db:"fax1"`
-	GID                     int32   `db:"gid"`
-	Phone1                  string  `db:"phone1"`
-	Phone2                  string  `db:"phone2"`
-	GeneralManager          string  `db:"general_mg"`
-	PostalCode              string  `db:"postal_c_1"`
-	ShapeArea               string  `db:"shape_area"`
-	SurfaceAreaMetersSquare string  `db:"area_4326_sqm"`
-	Website                 string  `db:"website"`
-	XMin                    float32 `db:"st_xmin"`
-	XMax                    float32 `db:"st_xmax"`
-	YMin                    float32 `db:"st_ymin"`
-	YMax                    float32 `db:"st_ymax"`
-}
-type contentSettingDistrict struct {
-	District contentDistrict
-	URL      ContentURL
-	User     User
+type contentSettingOrganization struct {
+	Organization *models.Organization
+	URL          ContentURL
+	User         User
 }
 
 type contentSettingIntegration struct {
@@ -60,7 +35,7 @@ func getSetting(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 	html.RenderOrError(w, "sync/settings.html", data)
 }
-func getSettingDistrict(w http.ResponseWriter, r *http.Request, u *models.User) {
+func getSettingOrganization(w http.ResponseWriter, r *http.Request, u *models.User) {
 	ctx := r.Context()
 	userContent, err := contentForUser(ctx, u)
 	if err != nil {
@@ -68,10 +43,8 @@ func getSettingDistrict(w http.ResponseWriter, r *http.Request, u *models.User) 
 		return
 	}
 	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-	var district contentDistrict
-	gid := int32(0)
-	if org.ImportDistrictGid.IsValue() {
-		gid = org.ImportDistrictGid.MustGet()
+	/*
+		var district contentDistrict
 		district, err = bob.One[contentDistrict](ctx, db.PGInstance.BobDB, psql.Select(
 			sm.From("import.district"),
 			sm.Columns(
@@ -100,13 +73,13 @@ func getSettingDistrict(w http.ResponseWriter, r *http.Request, u *models.User) 
 			respondError(w, "Failed to get extents", err, http.StatusInternalServerError)
 			return
 		}
+	*/
+	data := contentSettingOrganization{
+		Organization: org,
+		URL:          newContentURL(),
+		User:         userContent,
 	}
-	data := contentSettingDistrict{
-		District: district,
-		URL:      newContentURL(),
-		User:     userContent,
-	}
-	html.RenderOrError(w, "sync/setting-district.html", data)
+	html.RenderOrError(w, "sync/setting-organization.html", data)
 }
 func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.User) {
 	ctx := r.Context()

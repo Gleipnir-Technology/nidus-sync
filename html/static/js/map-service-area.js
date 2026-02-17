@@ -1,5 +1,5 @@
 // A test of maplibre-gl in a custom element
-class MapDistrict extends HTMLElement {
+class MapServiceArea extends HTMLElement {
 	constructor() {
 		super();
 
@@ -31,7 +31,7 @@ class MapDistrict extends HTMLElement {
 		const apiKey = this.getAttribute("api-key");
 		const centroid = JSON.parse(this.getAttribute("centroid"));
 		const csv_file = this.getAttribute("csv-file");
-		const district_id = this.getAttribute("district-id");
+		const organization_id = this.getAttribute("organization-id");
 		const lat = Number(this.getAttribute("latitude") || 36.2);
 		const lng = Number(this.getAttribute("longitude") || -119.2);
 		const mapElement = this.shadowRoot.querySelector("#map");
@@ -55,14 +55,12 @@ class MapDistrict extends HTMLElement {
 		this._map.on("load", () => {
 			this._map.addSource("tegola-nidus", {
 				type: "vector",
-				tiles: [
-					`${tegola}maps/district/{z}/{x}/{y}?district_id=${district_id}`,
-				],
+				tiles: [`${tegola}maps/nidus/{z}/{x}/{y}?id=${organization_id}`],
 			});
 			this._map.addLayer({
-				id: "bounds",
+				id: "service-area",
 				source: "tegola-nidus",
-				"source-layer": "bounds",
+				"source-layer": "service-area-bounds",
 				type: "fill",
 				paint: {
 					"fill-opacity": 0.4,
@@ -132,4 +130,4 @@ class MapDistrict extends HTMLElement {
 	}
 }
 
-customElements.define("map-district", MapDistrict);
+customElements.define("map-service-area", MapServiceArea);

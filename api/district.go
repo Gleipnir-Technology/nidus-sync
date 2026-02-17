@@ -33,20 +33,20 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, errRender(fmt.Errorf("Failed to parse lng as float: %w", err)))
 		return
 	}
-	district, _, err := platform.DistrictForLocation(r.Context(), lng, lat)
+	org, err := platform.DistrictForLocation(r.Context(), lng, lat)
 	if err != nil {
 		render.Render(w, r, errRender(fmt.Errorf("Failed to get district: %w", err)))
 		return
 	}
-	if district == nil {
+	if org == nil {
 		http.NotFound(w, r)
 		return
 	}
 	d := ResponseDistrict{
-		Agency:  district.Agency.GetOr(""),
-		Manager: district.GeneralMG.GetOr(""),
-		Phone:   district.Phone1.GetOr(""),
-		Website: district.Website.GetOr(""),
+		Agency:  org.Name,
+		Manager: org.GeneralManagerName.GetOr(""),
+		Phone:   org.OfficePhone.GetOr(""),
+		Website: org.Website.GetOr(""),
 	}
 	if err := render.Render(w, r, d); err != nil {
 		render.Render(w, r, errRender(err))

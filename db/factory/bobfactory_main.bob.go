@@ -66,7 +66,6 @@ type Factory struct {
 	baseGeometryColumnMods                    GeometryColumnModSlice
 	baseGooseDBVersionMods                    GooseDBVersionModSlice
 	baseH3AggregationMods                     H3AggregationModSlice
-	baseImportDistrictMods                    ImportDistrictModSlice
 	baseNoteAudioMods                         NoteAudioModSlice
 	baseNoteAudioBreadcrumbMods               NoteAudioBreadcrumbModSlice
 	baseNoteAudioDatumMods                    NoteAudioDatumModSlice
@@ -2581,60 +2580,6 @@ func (f *Factory) FromExistingH3Aggregation(m *models.H3Aggregation) *H3Aggregat
 	return o
 }
 
-func (f *Factory) NewImportDistrict(mods ...ImportDistrictMod) *ImportDistrictTemplate {
-	return f.NewImportDistrictWithContext(context.Background(), mods...)
-}
-
-func (f *Factory) NewImportDistrictWithContext(ctx context.Context, mods ...ImportDistrictMod) *ImportDistrictTemplate {
-	o := &ImportDistrictTemplate{f: f}
-
-	if f != nil {
-		f.baseImportDistrictMods.Apply(ctx, o)
-	}
-
-	ImportDistrictModSlice(mods).Apply(ctx, o)
-
-	return o
-}
-
-func (f *Factory) FromExistingImportDistrict(m *models.ImportDistrict) *ImportDistrictTemplate {
-	o := &ImportDistrictTemplate{f: f, alreadyPersisted: true}
-
-	o.Gid = func() int32 { return m.Gid }
-	o.ID = func() null.Val[decimal.Decimal] { return m.ID }
-	o.Website = func() null.Val[string] { return m.Website }
-	o.Contact = func() null.Val[string] { return m.Contact }
-	o.Address = func() null.Val[string] { return m.Address }
-	o.Regionid = func() null.Val[decimal.Decimal] { return m.Regionid }
-	o.PostalCod = func() null.Val[decimal.Decimal] { return m.PostalCod }
-	o.Phone1 = func() null.Val[string] { return m.Phone1 }
-	o.Fax1 = func() null.Val[string] { return m.Fax1 }
-	o.Agency = func() null.Val[string] { return m.Agency }
-	o.Code1 = func() null.Val[string] { return m.Code1 }
-	o.City1 = func() null.Val[string] { return m.City1 }
-	o.ShapeLeng = func() null.Val[decimal.Decimal] { return m.ShapeLeng }
-	o.Address2 = func() null.Val[string] { return m.Address2 }
-	o.GeneralMG = func() null.Val[string] { return m.GeneralMG }
-	o.City2 = func() null.Val[string] { return m.City2 }
-	o.PostalC1 = func() null.Val[decimal.Decimal] { return m.PostalC1 }
-	o.Fax2 = func() null.Val[string] { return m.Fax2 }
-	o.Phone2 = func() null.Val[string] { return m.Phone2 }
-	o.ShapeLe1 = func() null.Val[decimal.Decimal] { return m.ShapeLe1 }
-	o.ShapeArea = func() null.Val[decimal.Decimal] { return m.ShapeArea }
-	o.Geom = func() null.Val[string] { return m.Geom }
-	o.Geom4326 = func() null.Val[string] { return m.Geom4326 }
-	o.Centroid4326 = func() null.Val[string] { return m.Centroid4326 }
-	o.Extent4326 = func() null.Val[string] { return m.Extent4326 }
-	o.Area4326SQM = func() null.Val[decimal.Decimal] { return m.Area4326SQM }
-
-	ctx := context.Background()
-	if m.R.ImportDistrictGidOrganization != nil {
-		ImportDistrictMods.WithExistingImportDistrictGidOrganization(m.R.ImportDistrictGidOrganization).Apply(ctx, o)
-	}
-
-	return o
-}
-
 func (f *Factory) NewNoteAudio(mods ...NoteAudioMod) *NoteAudioTemplate {
 	return f.NewNoteAudioWithContext(context.Background(), mods...)
 }
@@ -2966,6 +2911,24 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.Website = func() null.Val[string] { return m.Website }
 	o.LogoUUID = func() null.Val[uuid.UUID] { return m.LogoUUID }
 	o.Slug = func() null.Val[string] { return m.Slug }
+	o.GeneralManagerName = func() null.Val[string] { return m.GeneralManagerName }
+	o.MailingAddressCity = func() null.Val[string] { return m.MailingAddressCity }
+	o.MailingAddressPostalCode = func() null.Val[string] { return m.MailingAddressPostalCode }
+	o.MailingAddressStreet = func() null.Val[string] { return m.MailingAddressStreet }
+	o.OfficeAddressCity = func() null.Val[string] { return m.OfficeAddressCity }
+	o.OfficeAddressPostalCode = func() null.Val[string] { return m.OfficeAddressPostalCode }
+	o.OfficeAddressStreet = func() null.Val[string] { return m.OfficeAddressStreet }
+	o.ServiceAreaGeometry = func() null.Val[string] { return m.ServiceAreaGeometry }
+	o.ServiceAreaSquareMeters = func() null.Val[decimal.Decimal] { return m.ServiceAreaSquareMeters }
+	o.ServiceAreaCentroid = func() null.Val[string] { return m.ServiceAreaCentroid }
+	o.ServiceAreaExtent = func() null.Val[string] { return m.ServiceAreaExtent }
+	o.OfficeFax = func() null.Val[string] { return m.OfficeFax }
+	o.OfficePhone = func() null.Val[string] { return m.OfficePhone }
+	o.ServiceAreaXmin = func() null.Val[float64] { return m.ServiceAreaXmin }
+	o.ServiceAreaYmin = func() null.Val[float64] { return m.ServiceAreaYmin }
+	o.ServiceAreaXmax = func() null.Val[float64] { return m.ServiceAreaXmax }
+	o.ServiceAreaYmax = func() null.Val[float64] { return m.ServiceAreaYmax }
+	o.ServiceAreaCentroidGeojson = func() null.Val[string] { return m.ServiceAreaCentroidGeojson }
 
 	ctx := context.Background()
 	if len(m.R.EmailContacts) > 0 {
@@ -3072,9 +3035,6 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.NoteImages) > 0 {
 		OrganizationMods.AddExistingNoteImages(m.R.NoteImages...).Apply(ctx, o)
-	}
-	if m.R.ImportDistrictGidDistrict != nil {
-		OrganizationMods.WithExistingImportDistrictGidDistrict(m.R.ImportDistrictGidDistrict).Apply(ctx, o)
 	}
 	if len(m.R.Nuisances) > 0 {
 		OrganizationMods.AddExistingNuisances(m.R.Nuisances...).Apply(ctx, o)
@@ -4254,14 +4214,6 @@ func (f *Factory) ClearBaseH3AggregationMods() {
 
 func (f *Factory) AddBaseH3AggregationMod(mods ...H3AggregationMod) {
 	f.baseH3AggregationMods = append(f.baseH3AggregationMods, mods...)
-}
-
-func (f *Factory) ClearBaseImportDistrictMods() {
-	f.baseImportDistrictMods = nil
-}
-
-func (f *Factory) AddBaseImportDistrictMod(mods ...ImportDistrictMod) {
-	f.baseImportDistrictMods = append(f.baseImportDistrictMods, mods...)
 }
 
 func (f *Factory) ClearBaseNoteAudioMods() {
