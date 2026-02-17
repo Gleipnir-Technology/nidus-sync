@@ -10,10 +10,10 @@ import (
 
 // Base URLs and API constants
 const (
-	BaseURL = "https://api.tomtom.com"
+	BaseURL          = "https://api.tomtom.com"
+	RouteTypeFastest = "fastest"
+	TravelModeCar    = "car"
 )
-
-// Common structs
 
 // Coordinates represents latitude and longitude values
 type Coordinates struct {
@@ -42,66 +42,6 @@ type SupportingPoint struct {
 type Client struct {
 	APIKey     string
 	HTTPClient *http.Client
-}
-
-// CalculateRoute API structures
-
-// CalculateRouteParams holds the parameters for the Calculate Route API
-type CalculateRouteParams struct {
-	// Path parameters
-	VersionNumber int
-	Locations     string
-	ContentType   string // "json" or "jsonp"
-
-	// Query parameters
-	MaxAlternatives                              *int
-	AlternativeType                              string
-	MinDeviationDistance                         *int
-	MinDeviationTime                             *int
-	InstructionsType                             string
-	Language                                     string
-	ComputeBestOrder                             *bool
-	RouteRepresentation                          string
-	ComputeTravelTimeFor                         string
-	VehicleHeading                               *int
-	SectionType                                  []string
-	IncludeTollPaymentTypes                      string
-	Callback                                     string
-	Report                                       string
-	DepartAt                                     string
-	ArriveAt                                     string
-	RouteType                                    string
-	Traffic                                      *bool
-	Avoid                                        []string
-	TravelMode                                   string
-	Hilliness                                    string
-	Windingness                                  string
-	VehicleMaxSpeed                              *int
-	VehicleWeight                                *int
-	VehicleAxleWeight                            *int
-	VehicleNumberOfAxles                         *int
-	VehicleLength                                *float64
-	VehicleWidth                                 *float64
-	VehicleHeight                                *float64
-	VehicleCommercial                            *bool
-	VehicleLoadType                              []string
-	VehicleAdrTunnelRestrictionCode              string
-	VehicleHasElectricTollCollectionTransponder  string
-	VehicleEngineType                            string
-	ConstantSpeedConsumptionInLitersPerHundredkm string
-	CurrentFuelInLiters                          *float64
-	AuxiliaryPowerInLitersPerHour                *float64
-	FuelEnergyDensityInMJoulesPerLiter           *float64
-	AccelerationEfficiency                       *float64
-	DecelerationEfficiency                       *float64
-	UphillEfficiency                             *float64
-	DownhillEfficiency                           *float64
-	ConsumptionInkWhPerkmAltitudeGain            *float64
-	RecuperationInkWhPerkmAltitudeLoss           *float64
-	ConstantSpeedConsumptionInkWhPerHundredkm    string
-	CurrentChargeInkWh                           *float64
-	MaxChargeInkWh                               *float64
-	AuxiliaryPowerInkW                           *float64
 }
 
 // CalculateRoutePostData represents the POST body for Calculate Route API
@@ -153,9 +93,8 @@ type CalculateRouteResponse struct {
 // CalculateReachableRangeParams holds the parameters for the Calculate Reachable Range API
 type CalculateReachableRangeParams struct {
 	// Path parameters
-	VersionNumber int
-	Origin        string
-	ContentType   string // "json" or "jsonp"
+	Origin      string
+	ContentType string // "json" or "jsonp"
 
 	// Query parameters
 	FuelBudgetInLiters                           *float64
@@ -232,7 +171,6 @@ type CalculateReachableRangeResponse struct {
 func (req *CalculateReachableRangeRequest) BuildURL(apiKey string) (string, error) {
 	baseURL := fmt.Sprintf("%s/routing/%d/calculateReachableRange/%s/%s",
 		BaseURL,
-		req.Params.VersionNumber,
 		req.Params.Origin,
 		req.Params.ContentType)
 

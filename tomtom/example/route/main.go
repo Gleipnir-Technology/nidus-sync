@@ -13,14 +13,13 @@ func main() {
 	// Example 1: Calculate a simple route
 	traffic := false
 	routeRequest := &tomtom.CalculateRouteRequest{
-		Params: tomtom.CalculateRouteParams{
-			VersionNumber: 1,
-			Locations:     "52.50931,13.42936:52.50274,13.43872",
-			ContentType:   "json",
-			Traffic:       &traffic,
-			TravelMode:    "car",
-			RouteType:     "fastest",
+		Locations: []tomtom.Point{
+			tomtom.P(52.50931, 13.42936),
+			tomtom.P(52.50274, 13.43872),
 		},
+		Traffic:    &traffic,
+		TravelMode: tomtom.TravelModeCar,
+		RouteType:  tomtom.RouteTypeFastest,
 	}
 
 	routeResp, err := client.CalculateRoute(routeRequest)
