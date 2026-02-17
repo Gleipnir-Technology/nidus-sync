@@ -20,7 +20,22 @@
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
 		<script>
-			var tooltipByElementId = {};
+			function setTooltipsForSidebar() {
+				const sidebarTooltips = document.querySelectorAll(
+					'#sidebar [data-bs-toggle="tooltip"]',
+				);
+				const isExpanded = document
+					.getElementById("content")
+					.classList.contains("expanded");
+				sidebarTooltips.forEach((t) => {
+					const tooltip = bootstrap.Tooltip.getOrCreateInstance(t);
+					if (isExpanded) {
+						tooltip.enable();
+					} else {
+						tooltip.disable();
+					}
+				});
+			}
 			document.addEventListener("DOMContentLoaded", function () {
 				var popoverTriggerList = [].slice.call(
 					document.querySelectorAll('[data-bs-toggle="popover"]'),
@@ -35,13 +50,10 @@
 				);
 				var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
 					let t = new bootstrap.Tooltip(tooltipTriggerEl);
-					if (tooltipTriggerEl.id != "") {
-						tooltipByElementId[tooltipTriggerEl.id] = t;
-						console.log("added tooltip to", tooltipTriggerEl.id);
-					}
 					return t;
 				});
 				console.log("Initialized ", tooltipTriggerList.length, " tooltips");
+				setTooltipsForSidebar();
 			});
 		</script>
 	</head>
@@ -58,12 +70,11 @@
 		</div>
 		<script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
 		<script>
-			document
-				.getElementById("sidebarToggle")
-				.addEventListener("click", function () {
-					document.getElementById("sidebar").classList.toggle("collapsed");
-					document.getElementById("content").classList.toggle("expanded");
-				});
+			document.getElementById("sidebarToggle").addEventListener("click", () => {
+				document.getElementById("sidebar").classList.toggle("collapsed");
+				document.getElementById("content").classList.toggle("expanded");
+				setTooltipsForSidebar();
+			});
 		</script>
 	</body>
 </html>
