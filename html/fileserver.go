@@ -8,16 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
 
-// FileServer conveniently sets up a http.FileServer handler to serve
+// fileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
-func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
+func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
@@ -68,7 +67,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 		crw := &customResponseWriter{ResponseWriter: w}
 
 		// Serve the file
-		http.ServeContent(crw, r, requestedPath, time.Time{}, fileToServe)
+		http.ServeContent(crw, r, requestedPath, startedTime, fileToServe)
 
 		// Close the file
 		fileToServe.Close()

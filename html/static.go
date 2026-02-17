@@ -16,5 +16,5 @@ func AddStaticRoute(r chi.Router, path string) {
 	if localFS == "" {
 		localFS = http.Dir("./html/static")
 	}
-	FileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
+	fileServer(r, "/static", localFS, EmbeddedStaticFS, "static")
 }
