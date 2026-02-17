@@ -47,6 +47,7 @@ type ContentDashboard struct {
 	IsSyncOngoing        bool
 	LastSync             *time.Time
 	MapData              ComponentMap
+	Organization         *models.Organization
 	RecentRequests       []ServiceRequestSummary
 	URL                  ContentURL
 	User                 User
@@ -217,6 +218,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, user *models.User) {
 		MapData: ComponentMap{
 			MapboxToken: config.MapboxToken,
 		},
+		Organization:   org,
 		RecentRequests: requests,
 		URL:            newContentURL(),
 		User:           userContent,

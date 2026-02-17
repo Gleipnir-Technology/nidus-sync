@@ -47,7 +47,7 @@ function onLoad() {
 			}
 		});
 		map.addLayer({
-			"id": "clear-service-area",
+			"id": "service-area",
 			"source": "tegola-nidus",
 			"source-layer": "service-area-bounds",
 			"type": "line",
@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
 				ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
 			></map-libre-test>
-			const CENTROID=;
 		</div>
 		<div class="card mb-4">
 			<div

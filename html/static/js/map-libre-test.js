@@ -43,8 +43,8 @@ class MapLibreTest extends HTMLElement {
 		const mapElement = this.shadowRoot.querySelector("#map");
 
 		this._map = new maplibregl.Map({
-			container: mapElement,
 			center: centroid.coordinates,
+			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json", // Style URL; see our documentation for more options
 		}).fitBounds(bounds, {
 			padding: { top: 10, bottom: 10, left: 10, right: 10 },

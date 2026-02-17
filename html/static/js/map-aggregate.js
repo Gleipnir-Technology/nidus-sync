@@ -8,7 +8,6 @@ class MapAggregate extends HTMLElement {
 		// Create a shadow DOM
 		this.attachShadow({ mode: "open" });
 
-		this._markers = [];
 		// Initial render
 		this.render();
 	}
@@ -25,70 +24,32 @@ class MapAggregate extends HTMLElement {
 		}
 	}
 
-	// Lifecycle: watch these attributes for changes
-	static get observedAttributes() {
-		return [
-			"api-key",
-			"latitude",
-			"longitude",
-			"organization-id",
-			"tegola",
-			"zoom",
-		];
-	}
-
-	// Lifecycle: respond to attribute changes
-	attributeChangedCallback(name, oldValue, newValue) {
-		// Only handle if map exists and values actually changed
-		if (!this._map || oldValue === newValue) return;
-
-		if (name === "api-key") {
-			this._apiKey = newValue;
-		}
-
-		if (name === "latitude" || name === "longitude") {
-			if (this.hasAttribute("latitude") && this.hasAttribute("longitude")) {
-				const lat = Number(this.getAttribute("latitude"));
-				const lng = Number(this.getAttribute("longitude"));
-				this._map.setCenter([lat, lng]);
-			}
-		}
-
-		if (name === "organization-id") {
-			this._organizationID = newValue;
-		}
-
-		if (name === "tegola") {
-			this._tegola = newValue;
-		}
-
-		if (name === "zoom") {
-			this._map.setZoom(Number(newValue));
-		}
-	}
-
 	_initializeMap() {
-		const lat = Number(this.getAttribute("latitude") || 36.2);
-		const lng = Number(this.getAttribute("longitude") || -119.2);
+		const centroid = JSON.parse(this.getAttribute("centroid"));
 		const organization_id = Number(this.getAttribute("organization-id") || 0);
 		const tegola = this.getAttribute("tegola");
-		const zoom = Number(this.getAttribute("zoom") || 15);
+		const xmin = parseFloat(this.getAttribute("xmin"));
+		const ymin = parseFloat(this.getAttribute("ymin"));
+		const xmax = parseFloat(this.getAttribute("xmax"));
+		const ymax = parseFloat(this.getAttribute("ymax"));
+		const bounds = [
+			[xmin, ymin],
+			[xmax, ymax],
+		];
 
 		const mapElement = this.shadowRoot.querySelector("#map");
 		this._map = new maplibregl.Map({
+			center: centroid.coordinates,
 			container: mapElement,
-			center: {
-				lat: lat,
-				lng: lng,
-			},
 			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
-			zoom: zoom,
+		}).fitBounds(bounds, {
+			padding: { top: 10, bottom: 10, left: 10, right: 10 },
 		});
 		this._map.on("load", () => {
 			this._map.addSource("tegola", {
 				type: "vector",
 				tiles: [
-					`${tegola}maps/nidus/{z}/{x}/{y}?organization_id=${organization_id}`,
+					`${tegola}maps/nidus/{z}/{x}/{y}?id=${organization_id}&organization_id=${organization_id}`,
 				],
 			});
 			this._map.addLayer({
@@ -134,6 +95,15 @@ class MapAggregate extends HTMLElement {
 				paint: {
 					"fill-opacity": 0.4,
 					"fill-color": "#0dcaf0",
+				},
+			});
+			this._map.addLayer({
+				id: "service-area",
+				source: "tegola",
+				"source-layer": "service-area-bounds",
+				type: "line",
+				paint: {
+					"line-color": "#f00",
 				},
 			});
 			this._map.on("mouseenter", "mosquito_source", (e) => {
@@ -194,31 +164,6 @@ class MapAggregate extends HTMLElement {
 
 	jumpTo(args) {
 		this._map.jumpTo(args);
-	}
-
-	setMarker(coords) {
-		console.log("Setting map marker", coords);
-		this._map.jumpTo({
-			center: coords,
-			zoom: 14,
-		});
-		this._markers.forEach((marker) => marker.remove());
-
-		const marker = new maplibregl.Marker({
-			color: "#FF0000",
-			draggable: true,
-		})
-			.setLngLat(coords)
-			.addTo(this._map);
-		marker.on("dragend", function (e) {
-			const markerDraggedEvent = new CustomEvent("markerdragend", {
-				detail: {
-					marker: marker,
-				},
-			});
-			mapContainer.dispatchEvent(markerDraggedEvent);
-		});
-		this._markers = [marker];
 	}
 }
 

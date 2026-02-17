@@ -143,11 +143,15 @@
 	<div class="row">
 		<div class="col-12">
 			<map-aggregate
-				latitude="36.3"
-				longitude="-119.2"
-				organization-id="{{ .User.Organization.ID }}"
+				centroid="{{ if .Organization.ServiceAreaCentroidGeojson.IsValue }}
+					{{ .Organization.ServiceAreaCentroidGeojson.MustGet|json }}
+				{{ end }}"
+				organization-id="{{ .Organization.ID }}"
 				tegola="{{ .URL.Tegola }}"
-				zoom="9"
+				xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
+				ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
+				xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
+				ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
 			/>
 		</div>
 	</div>
