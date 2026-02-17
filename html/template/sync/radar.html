@@ -6,16 +6,14 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-aggregate.js"></script>
+	<script src="/static/js/map-routing.js"></script>
 	<script>
 		function onLoad() {
-			const map = document.querySelector("map-aggregate");
+			const map = document.querySelector("map-routing");
 			map.addEventListener("cell-click", (event) => {
 				window.location.href = "/cell/" + event.detail.cell;
 			});
-		}
-		window.addEventListener("load", onLoad);
-		document.addEventListener("DOMContentLoaded", function () {
+
 			const checkboxes = document.querySelectorAll(".route-select");
 			const switchBtn = document.getElementById("switchRoutesBtn");
 
@@ -37,7 +35,8 @@
 				alert(`Switching routes ${selectedRoutes[0]} and ${selectedRoutes[1]}`);
 				// In a real application, this would trigger the route switching logic
 			});
-		});
+		}
+		document.addEventListener("DOMContentLoaded", onLoad);
 	</script>
 	<style>
 		.main-container {
@@ -89,17 +88,17 @@
 			<h2 class="h4 mb-0">Route Map</h2>
 		</div>
 		<div class="card-body p-2">
-			<div
-				class="map-container d-flex align-items-center justify-content-center"
-			>
-				<div class="text-center">
-					<i class="bi bi-map fs-1 text-muted"></i>
-					<h3 class="text-muted">Interactive Map View</h3>
-					<p class="text-muted">
-						Routes are color-coded by technician assignment
-					</p>
-				</div>
-			</div>
+			<map-routing
+				centroid="{{ if .C.Organization.ServiceAreaCentroidGeojson.IsValue }}
+					{{ .C.Organization.ServiceAreaCentroidGeojson.MustGet|json }}
+				{{ end }}"
+				organization-id="{{ .C.Organization.ID }}"
+				tegola="{{ .URL.Tegola }}"
+				xmin="{{ .C.Organization.ServiceAreaXmin.GetOr 0 }}"
+				ymin="{{ .C.Organization.ServiceAreaYmin.GetOr 0 }}"
+				xmax="{{ .C.Organization.ServiceAreaXmax.GetOr 0 }}"
+				ymax="{{ .C.Organization.ServiceAreaYmax.GetOr 0 }}"
+			/>
 		</div>
 	</div>
 

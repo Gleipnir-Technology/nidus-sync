@@ -1,27 +1,23 @@
 package sync
 
 import (
-	"net/http"
+	"context"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 )
 
 type contentRadar struct {
-	URL  ContentURL
-	User User
+	Organization *models.Organization
 }
 
-func getRadar(w http.ResponseWriter, r *http.Request, u *models.User) {
-	ctx := r.Context()
-	userContent, err := contentForUser(ctx, u)
+func getRadar(ctx context.Context, user *models.User) (string, contentRadar, *errorWithStatus) {
+	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
-		return
+		return "", contentRadar{}, newError("get org: %w", err)
 	}
 	data := contentRadar{
-		URL:  newContentURL(),
-		User: userContent,
+		Organization: org,
 	}
-	html.RenderOrError(w, "sync/radar.html", data)
+	return "sync/radar.html", data, nil
 }

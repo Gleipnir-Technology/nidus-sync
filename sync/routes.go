@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/api"
@@ -53,7 +54,7 @@ func Router() chi.Router {
 	r.Method("GET", "/pool/upload", auth.NewEnsureAuth(getPoolUpload))
 	r.Method("GET", "/pool/upload/{id}", auth.NewEnsureAuth(getPoolUploadByID))
 	r.Method("POST", "/pool/upload", auth.NewEnsureAuth(postPoolUpload))
-	r.Method("GET", "/radar", auth.NewEnsureAuth(getRadar))
+	r.Method("GET", "/radar", authenticatedHandler(getRadar))
 	r.Method("GET", "/service-request", authenticatedHandler(getServiceRequestList))
 	r.Method("GET", "/service-request/{id}", authenticatedHandler(getServiceRequestDetail))
 	r.Method("GET", "/setting", auth.NewEnsureAuth(getSetting))
@@ -81,6 +82,13 @@ type errorWithStatus struct {
 
 func (e *errorWithStatus) Error() string {
 	return e.Message
+}
+func newError(mesg_format string, args ...interface{}) *errorWithStatus {
+	w := fmt.Errorf(mesg_format, args...)
+	return &errorWithStatus{
+		Message: w.Error(),
+		Status:  http.StatusInternalServerError,
+	}
 }
 
 type handlerFunction[T any] func(context.Context, *models.User) (string, T, *errorWithStatus)
