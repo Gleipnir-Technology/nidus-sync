@@ -30,7 +30,6 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/evidence", "sync/mock/report-evidence.html")
 	addMock(r, "/mock/report/{code}/schedule", "sync/mock/report-schedule.html")
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
-	addMock(r, "/mock/service-request/{code}", "sync/mock/service-request-detail.html")
 
 	// Utility endpoints
 	r.Get("/oauth/refresh", getOAuthRefresh)
@@ -56,6 +55,7 @@ func Router() chi.Router {
 	r.Method("POST", "/pool/upload", auth.NewEnsureAuth(postPoolUpload))
 	r.Method("GET", "/radar", auth.NewEnsureAuth(getRadar))
 	r.Method("GET", "/service-request", authenticatedHandler(getServiceRequestList))
+	r.Method("GET", "/service-request/{id}", authenticatedHandler(getServiceRequestDetail))
 	r.Method("GET", "/setting", auth.NewEnsureAuth(getSetting))
 	r.Method("GET", "/setting/organization", auth.NewEnsureAuth(getSettingOrganization))
 	r.Method("GET", "/setting/integration", auth.NewEnsureAuth(getSettingIntegration))
@@ -83,16 +83,16 @@ func (e *errorWithStatus) Error() string {
 	return e.Message
 }
 
-type handlerFunction func(context.Context, *models.User) (string, interface{}, *errorWithStatus)
+type handlerFunction[T any] func(context.Context, *models.User) (string, T, *errorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
-type contentAuthenticated struct {
-	C    interface{}
+type contentAuthenticated[T any] struct {
+	C    T
 	URL  ContentURL
 	User User
 }
 
 // w http.ResponseWriter, r *http.Request, u *models.User) {
-func authenticatedHandler(f handlerFunction) http.Handler {
+func authenticatedHandler[T any](f handlerFunction[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
 		ctx := r.Context()
 		userContent, err := contentForUser(ctx, u)
@@ -106,7 +106,7 @@ func authenticatedHandler(f handlerFunction) http.Handler {
 			http.Error(w, err.Error(), e.Status)
 			return
 		}
-		html.RenderOrError(w, template, contentAuthenticated{
+		html.RenderOrError(w, template, contentAuthenticated[T]{
 			C:    content,
 			URL:  newContentURL(),
 			User: userContent,

@@ -137,134 +137,82 @@
 									</tr>
 								</thead>
 								<tbody>
-									<tr>
-										<td>2 hours ago</td>
-										<td>2 hours ago</td>
-										<td>
-											<span class="badge bg-warning text-dark"
-												>Schedule Appointment</span
-											>
-										</td>
-										<td>123 Main St, Anytown</td>
-										<td><i class="bi bi-image me-1"></i>3</td>
-										<td>
-											<span class="badge badge-nuisance text-white"
-												>Biting Nuisance</span
-											>
-										</td>
-										<td>
-											<button class="btn btn-sm btn-outline-primary">
-												<i class="bi bi-pencil"></i>
-											</button>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>5 hours ago</td>
-										<td>1 hour ago</td>
-										<td>
-											<span class="badge bg-info text-dark"
-												>Answer Question</span
-											>
-										</td>
-										<td>456 Elm St, Anytown</td>
-										<td><i class="bi bi-image me-1"></i>1</td>
-										<td>
-											<span class="badge badge-standing text-white"
-												>Standing Water</span
-											>
-										</td>
-										<td>
-											<button class="btn btn-sm btn-outline-primary">
-												<i class="bi bi-pencil"></i>
-											</button>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>1 day ago</td>
-										<td>3 hours ago</td>
-										<td><span class="badge bg-success">Add to Route</span></td>
-										<td>789 Oak Ave, Anytown</td>
-										<td><i class="bi bi-image me-1"></i>4</td>
-										<td>
-											<span class="badge badge-breeding text-white"
-												>Active Breeding</span
-											>
-										</td>
-										<td>
-											<button class="btn btn-sm btn-outline-primary">
-												<i class="bi bi-pencil"></i>
-											</button>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>2 days ago</td>
-										<td>6 hours ago</td>
-										<td><span class="badge bg-secondary">Review</span></td>
-										<td>101 Pine Lane, Anytown</td>
-										<td><i class="bi bi-image me-1"></i>2</td>
-										<td>
-											<span class="badge badge-standing text-white"
-												>Standing Water</span
-											>
-										</td>
-										<td>
-											<button class="btn btn-sm btn-outline-primary">
-												<i class="bi bi-pencil"></i>
-											</button>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>3 days ago</td>
-										<td>1 day ago</td>
-										<td>
-											<span class="badge bg-danger">Confirm Details</span>
-										</td>
-										<td>202 Maple Dr, Anytown</td>
-										<td><i class="bi bi-image me-1"></i>0</td>
-										<td>
-											<span class="badge badge-nuisance text-white"
-												>Biting Nuisance</span
-											>
-										</td>
-										<td>
-											<button class="btn btn-sm btn-outline-primary">
-												<i class="bi bi-pencil"></i>
-											</button>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
+									{{ range .C.ActiveRequests }}
+										<tr>
+											<td>{{ .Created|timeRelative }}</td>
+											<td>{{ .LastAction|timeRelative }}</td>
+											{{ if eq .NextStep "schedule-appointment" }}
+												<td>
+													<span class="badge bg-warning text-dark"
+														>Schedule Appointment</span
+													>
+												</td>
+											{{ else if eq .NextStep "answer-question" }}
+												<td>
+													<span class="badge bg-info text-dark"></span>Answer
+													Question
+												</td>
+											{{ else if eq .NextStep "add-to-route" }}
+												<td>
+													<span class="badge bg-success text-dark"></span>Add to
+													Route
+												</td>
+											{{ else if eq .NextStep "review" }}
+												<td>
+													<span class="badge bg-secondary text-dark"></span
+													>Review
+												</td>
+											{{ else if eq .NextStep "confirm-details" }}
+												<td>
+													<span class="badge bg-danger text-dark"></span>Confirm
+													Details
+												</td>
+											{{ else }}
+												<td>
+													<span class="badge bg-light text-dark"></span>Unknown
+												</td>
+											{{ end }}
+											<td>{{ .Address }}</td>
+											<td><i class="bi bi-image me-1"></i>{{ .PhotoCount }}</td>
+											{{ if eq .Type "biting-nuisance" }}
+												<td>
+													<span class="badge badge-nuisance text-white"
+														>Biting Nuisance</span
+													>
+												</td>
+											{{ else if eq .Type "standing-water" }}
+												<td>
+													<span class="badge badge-standing text-white"
+														>Standing Water</span
+													>
+												</td>
+											{{ else if eq .Type "active-breeding" }}
+												<td>
+													<span class="badge badge-standing text-white"
+														>Active Breeding</span
+													>
+												</td>
+											{{ else }}
+												<td>
+													<span class="badge badge-unknown text-white"
+														>Unknown</span
+													>
+												</td>
+											{{ end }}
+
+
+											<td>
+												<a
+													href="{{ .URLDetail }}"
+													class="btn btn-sm btn-outline-info"
+													><i class="bi bi-eye"></i
+												></a>
+											</td>
+										</tr>
+									{{ end }}
 								</tbody>
 							</table>
 						</div>
-						<nav>
-							<ul class="pagination pagination-sm justify-content-end">
-								<li class="page-item disabled">
-									<a class="page-link" href="#">Previous</a>
-								</li>
-								<li class="page-item active">
-									<a class="page-link" href="#">1</a>
-								</li>
-								<li class="page-item"><a class="page-link" href="#">2</a></li>
-								<li class="page-item"><a class="page-link" href="#">3</a></li>
-								<li class="page-item">
-									<a class="page-link" href="#">Next</a>
-								</li>
-							</ul>
-						</nav>
 					</div>
 				</div>
 			</div>
@@ -290,90 +238,53 @@
 									</tr>
 								</thead>
 								<tbody>
-									<tr>
-										<td>
-											<div class="d-flex align-items-center">
-												<i class="bi bi-person-circle me-2 fs-5"></i>
-												<span>John Smith</span>
-											</div>
-										</td>
-										<td>
-											<span class="badge badge-standing text-white"
-												>Standing Water</span
-											>
-										</td>
-										<td>1 day ago</td>
-										<td>303 Cedar St, Anytown</td>
-										<td>3 days</td>
-										<td>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="d-flex align-items-center">
-												<i class="bi bi-person-circle me-2 fs-5"></i>
-												<span>Maria Garcia</span>
-											</div>
-										</td>
-										<td>
-											<span class="badge badge-nuisance text-white"
-												>Biting Nuisance</span
-											>
-										</td>
-										<td>2 days ago</td>
-										<td>404 Birch Ave, Anytown</td>
-										<td>1 day</td>
-										<td>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="d-flex align-items-center">
-												<i class="bi bi-person-circle me-2 fs-5"></i>
-												<span>Robert Johnson</span>
-											</div>
-										</td>
-										<td>
-											<span class="badge badge-breeding text-white"
-												>Active Breeding</span
-											>
-										</td>
-										<td>4 days ago</td>
-										<td>505 Spruce Ct, Anytown</td>
-										<td>5 days</td>
-										<td>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
-									<tr>
-										<td>
-											<div class="d-flex align-items-center">
-												<i class="bi bi-person-circle me-2 fs-5"></i>
-												<span>Sarah Lee</span>
-											</div>
-										</td>
-										<td>
-											<span class="badge badge-standing text-white"
-												>Standing Water</span
-											>
-										</td>
-										<td>1 week ago</td>
-										<td>606 Willow Way, Anytown</td>
-										<td>2 days</td>
-										<td>
-											<button class="btn btn-sm btn-outline-info">
-												<i class="bi bi-eye"></i>
-											</button>
-										</td>
-									</tr>
+									{{ range .C.ClosedRequests }}
+										<tr>
+											<td>
+												<div class="d-flex align-items-center">
+													<i class="bi bi-person-circle me-2 fs-5"></i>
+													<span>{{ .Employee }}</span>
+												</div>
+											</td>
+											{{ if eq .Type "standing-water" }}
+												<td>
+													<span class="badge badge-standing text-white"
+														>Standing Water</span
+													>
+												</td>
+											{{ else if eq .Type "biting-nuisance" }}
+												<td>
+													<span class="badge badge-nuisance text-white"
+														>Biting Nuisance</span
+													>
+												</td>
+											{{ else if eq .Type "active-breeding" }}
+												<td>
+													<span class="badge badge-breeding text-white"
+														>Active Breeding</span
+													>
+												</td>
+											{{ else }}
+												<td>
+													<span class="badge badge-unknown text-white"
+														>Unknown</span
+													>
+												</td>
+											{{ end }}
+
+
+											<td>{{ .Closed|timeRelative }}</td>
+											<td>{{ .Address }}/td></td>
+											<td>{{ .TimeToResolution|duration }}</td>
+											<td>
+												<a
+													href="{{ .URLDetail }}"
+													class="btn btn-sm btn-outline-info"
+													><i class="bi bi-eye"></i
+												></a>
+											</td>
+										</tr>
+									{{ end }}
 								</tbody>
 							</table>
 						</div>

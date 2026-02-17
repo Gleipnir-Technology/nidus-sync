@@ -20,6 +20,7 @@ import (
 func addFuncMap(t *template.Template) {
 	funcMap := template.FuncMap{
 		"bigNumber":          bigNumber,
+		"duration":           duration,
 		"hasPassed":          hasPassed,
 		"html":               unescapeHTML,
 		"json":               unescapeJS,
@@ -53,6 +54,54 @@ func bigNumber(n int) string {
 	return result.String()
 }
 
+func duration(d time.Duration) string {
+	seconds := int(d.Seconds())
+
+	if seconds < 60 {
+		if seconds == 1 {
+			return "1 second ago"
+		}
+		return fmt.Sprintf("%d seconds ago", seconds)
+	}
+
+	minutes := int(d.Minutes())
+	if minutes < 60 {
+		if minutes == 1 {
+			return "1 minute ago"
+		}
+		return fmt.Sprintf("%d minutes ago", minutes)
+	}
+
+	hours := int(d.Hours())
+	if hours < 24 {
+		if hours == 1 {
+			return "1 hour ago"
+		}
+		return fmt.Sprintf("%d hours ago", hours)
+	}
+
+	days := hours / 24
+	if days < 30 {
+		if days == 1 {
+			return "1 day ago"
+		}
+		return fmt.Sprintf("%d days ago", days)
+	}
+
+	months := days / 30
+	if months < 12 {
+		if months == 1 {
+			return "1 month ago"
+		}
+		return fmt.Sprintf("%d months ago", months)
+	}
+
+	years := days / 365
+	if years == 1 {
+		return "1 year ago"
+	}
+	return fmt.Sprintf("%d years ago", years)
+}
 func publicReportID(s string) string {
 	if len(s) != 12 {
 		return s
