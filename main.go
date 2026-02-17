@@ -143,7 +143,6 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start openAI client")
 		os.Exit(8)
 	}
-	http.SetStartedTime()
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,

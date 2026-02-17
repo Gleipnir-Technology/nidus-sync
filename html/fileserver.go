@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,8 @@ import (
 
 // fileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
+var startedTime time.Time = time.Now()
+
 func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
@@ -66,6 +69,18 @@ func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 		// Create a custom ResponseWriter that allows us to modify headers
 		crw := &customResponseWriter{ResponseWriter: w}
 
+		// Add caching headers
+		if config.IsProductionEnvironment() {
+			ext := filepath.Ext(requestedPath)
+			switch ext {
+			case ".css", ".js", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
+				// Cache for 1 week (604800 seconds)
+				crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
+			default:
+				// Other files, 1 hour
+				crw.Header().Set("Cache-Control", "public, max-age=3600")
+			}
+		}
 		// Serve the file
 		http.ServeContent(crw, r, requestedPath, startedTime, fileToServe)
 

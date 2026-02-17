@@ -199,7 +199,7 @@ class AddressOrReportInput extends HTMLElement {
 		this.shadowRoot.innerHTML = `
 			<style>
 				@import url('/static/css/bootstrap.css');
-				@import url('/static/css/bootstrap-icons.css');
+				@import url('/static/vendor/css/bootstrap-icons.min.css');
 				.detail-label {
 					font-size: 0.8rem;
 					text-transform: uppercase;
