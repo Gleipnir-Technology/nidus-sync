@@ -1,0 +1,385 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Service Requests{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.map-container {
+			height: 400px;
+			background-color: #e9ecef;
+			border-radius: 5px;
+			position: relative;
+		}
+		.map-pin {
+			position: absolute;
+			font-size: 1.5rem;
+		}
+		.pin-nuisance {
+			color: #dc3545;
+		}
+		.pin-standing {
+			color: #0d6efd;
+		}
+		.pin-breeding {
+			color: #6f42c1;
+		}
+		.badge-nuisance {
+			background-color: #dc3545;
+		}
+		.badge-standing {
+			background-color: #0d6efd;
+		}
+		.badge-breeding {
+			background-color: #6f42c1;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container-fluid mt-4">
+		<div class="row mb-4">
+			<div class="col">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h2><i class="bi bi-clipboard-check me-2"></i>Service Requests</h2>
+					<button class="btn btn-primary">
+						<i class="bi bi-plus-circle me-1"></i>New Request
+					</button>
+				</div>
+
+				<div class="card">
+					<div class="card-header">
+						<div class="d-flex justify-content-between align-items-center">
+							<h5 class="mb-0">District Map View</h5>
+							<div>
+								<button class="btn btn-sm btn-outline-secondary">
+									<i class="bi bi-arrows-fullscreen me-1"></i>Expand
+								</button>
+								<button class="btn btn-sm btn-outline-secondary ms-2">
+									<i class="bi bi-filter me-1"></i>Filter
+								</button>
+							</div>
+						</div>
+					</div>
+					<div class="card-body p-0">
+						<!-- Mock map container - in a real application this would be a map -->
+						<div class="map-container">
+							<!-- Map pins representing service requests -->
+							<i
+								class="bi bi-geo-alt-fill map-pin pin-nuisance"
+								style="top: 150px; left: 120px;"
+							></i>
+							<i
+								class="bi bi-geo-alt-fill map-pin pin-standing"
+								style="top: 100px; left: 250px;"
+							></i>
+							<i
+								class="bi bi-geo-alt-fill map-pin pin-standing"
+								style="top: 220px; left: 180px;"
+							></i>
+							<i
+								class="bi bi-geo-alt-fill map-pin pin-breeding"
+								style="top: 180px; left: 320px;"
+							></i>
+							<i
+								class="bi bi-geo-alt-fill map-pin pin-nuisance"
+								style="top: 250px; left: 400px;"
+							></i>
+							<div
+								class="position-absolute bottom-0 end-0 m-2 bg-white p-2 rounded shadow-sm"
+							>
+								<div class="d-flex align-items-center mb-1">
+									<i class="bi bi-geo-alt-fill pin-nuisance me-2"></i> Biting
+									Nuisance
+								</div>
+								<div class="d-flex align-items-center mb-1">
+									<i class="bi bi-geo-alt-fill pin-standing me-2"></i> Standing
+									Water
+								</div>
+								<div class="d-flex align-items-center">
+									<i class="bi bi-geo-alt-fill pin-breeding me-2"></i> Active
+									Breeding
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row mb-4">
+			<div class="col">
+				<div class="card">
+					<div class="card-header">
+						<div class="d-flex justify-content-between align-items-center">
+							<h5 class="mb-0">Active Service Requests</h5>
+							<div class="input-group w-25">
+								<input
+									type="text"
+									class="form-control form-control-sm"
+									placeholder="Search requests..."
+								/>
+								<button class="btn btn-outline-secondary btn-sm">
+									<i class="bi bi-search"></i>
+								</button>
+							</div>
+						</div>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover">
+								<thead>
+									<tr>
+										<th scope="col">Created</th>
+										<th scope="col">Last Action</th>
+										<th scope="col">Next Step</th>
+										<th scope="col">Address</th>
+										<th scope="col">Photos</th>
+										<th scope="col">Type</th>
+										<th scope="col">Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>2 hours ago</td>
+										<td>2 hours ago</td>
+										<td>
+											<span class="badge bg-warning text-dark"
+												>Schedule Appointment</span
+											>
+										</td>
+										<td>123 Main St, Anytown</td>
+										<td><i class="bi bi-image me-1"></i>3</td>
+										<td>
+											<span class="badge badge-nuisance text-white"
+												>Biting Nuisance</span
+											>
+										</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary">
+												<i class="bi bi-pencil"></i>
+											</button>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>5 hours ago</td>
+										<td>1 hour ago</td>
+										<td>
+											<span class="badge bg-info text-dark"
+												>Answer Question</span
+											>
+										</td>
+										<td>456 Elm St, Anytown</td>
+										<td><i class="bi bi-image me-1"></i>1</td>
+										<td>
+											<span class="badge badge-standing text-white"
+												>Standing Water</span
+											>
+										</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary">
+												<i class="bi bi-pencil"></i>
+											</button>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>1 day ago</td>
+										<td>3 hours ago</td>
+										<td><span class="badge bg-success">Add to Route</span></td>
+										<td>789 Oak Ave, Anytown</td>
+										<td><i class="bi bi-image me-1"></i>4</td>
+										<td>
+											<span class="badge badge-breeding text-white"
+												>Active Breeding</span
+											>
+										</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary">
+												<i class="bi bi-pencil"></i>
+											</button>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>2 days ago</td>
+										<td>6 hours ago</td>
+										<td><span class="badge bg-secondary">Review</span></td>
+										<td>101 Pine Lane, Anytown</td>
+										<td><i class="bi bi-image me-1"></i>2</td>
+										<td>
+											<span class="badge badge-standing text-white"
+												>Standing Water</span
+											>
+										</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary">
+												<i class="bi bi-pencil"></i>
+											</button>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>3 days ago</td>
+										<td>1 day ago</td>
+										<td>
+											<span class="badge bg-danger">Confirm Details</span>
+										</td>
+										<td>202 Maple Dr, Anytown</td>
+										<td><i class="bi bi-image me-1"></i>0</td>
+										<td>
+											<span class="badge badge-nuisance text-white"
+												>Biting Nuisance</span
+											>
+										</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary">
+												<i class="bi bi-pencil"></i>
+											</button>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<nav>
+							<ul class="pagination pagination-sm justify-content-end">
+								<li class="page-item disabled">
+									<a class="page-link" href="#">Previous</a>
+								</li>
+								<li class="page-item active">
+									<a class="page-link" href="#">1</a>
+								</li>
+								<li class="page-item"><a class="page-link" href="#">2</a></li>
+								<li class="page-item"><a class="page-link" href="#">3</a></li>
+								<li class="page-item">
+									<a class="page-link" href="#">Next</a>
+								</li>
+							</ul>
+						</nav>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row mb-4">
+			<div class="col">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="mb-0">Recently Closed Requests (Past 2 Weeks)</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover">
+								<thead>
+									<tr>
+										<th scope="col">Employee</th>
+										<th scope="col">Type</th>
+										<th scope="col">Closed</th>
+										<th scope="col">Address</th>
+										<th scope="col">Time to Resolution</th>
+										<th scope="col">Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>
+											<div class="d-flex align-items-center">
+												<i class="bi bi-person-circle me-2 fs-5"></i>
+												<span>John Smith</span>
+											</div>
+										</td>
+										<td>
+											<span class="badge badge-standing text-white"
+												>Standing Water</span
+											>
+										</td>
+										<td>1 day ago</td>
+										<td>303 Cedar St, Anytown</td>
+										<td>3 days</td>
+										<td>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="d-flex align-items-center">
+												<i class="bi bi-person-circle me-2 fs-5"></i>
+												<span>Maria Garcia</span>
+											</div>
+										</td>
+										<td>
+											<span class="badge badge-nuisance text-white"
+												>Biting Nuisance</span
+											>
+										</td>
+										<td>2 days ago</td>
+										<td>404 Birch Ave, Anytown</td>
+										<td>1 day</td>
+										<td>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="d-flex align-items-center">
+												<i class="bi bi-person-circle me-2 fs-5"></i>
+												<span>Robert Johnson</span>
+											</div>
+										</td>
+										<td>
+											<span class="badge badge-breeding text-white"
+												>Active Breeding</span
+											>
+										</td>
+										<td>4 days ago</td>
+										<td>505 Spruce Ct, Anytown</td>
+										<td>5 days</td>
+										<td>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="d-flex align-items-center">
+												<i class="bi bi-person-circle me-2 fs-5"></i>
+												<span>Sarah Lee</span>
+											</div>
+										</td>
+										<td>
+											<span class="badge badge-standing text-white"
+												>Standing Water</span
+											>
+										</td>
+										<td>1 week ago</td>
+										<td>606 Willow Way, Anytown</td>
+										<td>2 days</td>
+										<td>
+											<button class="btn btn-sm btn-outline-info">
+												<i class="bi bi-eye"></i>
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

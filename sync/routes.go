@@ -55,6 +55,7 @@ func Router() chi.Router {
 	r.Method("GET", "/pool/upload/{id}", auth.NewEnsureAuth(getPoolUploadByID))
 	r.Method("POST", "/pool/upload", auth.NewEnsureAuth(postPoolUpload))
 	r.Method("GET", "/radar", auth.NewEnsureAuth(getRadar))
+	r.Method("GET", "/service-request", authenticatedHandler(getServiceRequestList))
 	r.Method("GET", "/setting", auth.NewEnsureAuth(getSetting))
 	r.Method("GET", "/setting/organization", auth.NewEnsureAuth(getSettingOrganization))
 	r.Method("GET", "/setting/integration", auth.NewEnsureAuth(getSettingIntegration))
