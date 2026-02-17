@@ -47,6 +47,7 @@ func Router() chi.Router {
 	r.Route("/api", api.AddRoutes)
 	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", auth.NewEnsureAuth(getCellDetails))
+	r.Method("GET", "/download", authenticatedHandler(getDownloadList))
 	r.Method("GET", "/layout-test", auth.NewEnsureAuth(getLayoutTest))
 	r.Method("GET", "/message", authenticatedHandler(getMessageList))
 	r.Method("GET", "/notification", auth.NewEnsureAuth(getNotificationList))
@@ -67,6 +68,7 @@ func Router() chi.Router {
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))
 	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
 	r.Method("GET", "/text/{destination}", auth.NewEnsureAuth(getTextMessages))
+	r.Method("GET", "/upload", authenticatedHandler(getUploadList))
 
 	html.AddStaticRoute(r, "/static")
 	return r

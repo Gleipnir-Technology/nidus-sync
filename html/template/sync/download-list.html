@@ -1,0 +1,174 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Downloads{{ end }}
+{{ define "extraheader" }}
+	<style>
+		.report-card {
+			transition: all 0.3s;
+			border-radius: 10px;
+		}
+		.report-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+		}
+		.card-header {
+			border-radius: 10px 10px 0 0 !important;
+		}
+		.report-item {
+			padding: 12px;
+			border-left: 4px solid transparent;
+			transition: all 0.2s;
+		}
+		.report-item:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+			border-left: 4px solid #0d6efd;
+		}
+		body {
+			background-color: #f8f9fa;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="container py-5">
+		<div class="row g-4">
+			<!-- Technician Supervision -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-primary text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-person-workspace me-2"></i>Technician Supervision
+						</h3>
+					</div>
+					<div class="card-body">
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-activity fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Recent Activity</h5>
+								<p class="text-muted small mb-0">Activity logs by technician</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-map fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Coverage Maps</h5>
+								<p class="text-muted small mb-0">Area coverage by region</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-graph-up fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Performance</h5>
+								<p class="text-muted small mb-0">
+									Staff evaluations and metrics
+								</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Inventory Management -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-success text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-boxes me-2"></i>Inventory Management
+						</h3>
+					</div>
+					<div class="card-body">
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-cart-check fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Recent Orders</h5>
+								<p class="text-muted small mb-0">
+									Purchase orders and deliveries
+								</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-box-seam fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Current Stock</h5>
+								<p class="text-muted small mb-0">Inventory levels and status</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-bar-chart-line fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Usage Rates</h5>
+								<p class="text-muted small mb-0">Consumption analytics</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Lab Reports -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-info text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-clipboard-data me-2"></i>Lab Reports
+						</h3>
+					</div>
+					<div class="card-body">
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-bug fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Trap Counts</h5>
+								<p class="text-muted small mb-0">Regional trap data analysis</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-arrow-up-right fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Rate Changes</h5>
+								<p class="text-muted small mb-0">Population fluctuation data</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-virus fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Disease Propagation</h5>
+								<p class="text-muted small mb-0">Health risk assessment data</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
