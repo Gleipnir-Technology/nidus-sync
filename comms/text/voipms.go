@@ -48,6 +48,9 @@ func sendTextVoipms(ctx context.Context, to string, content string, media ...str
 	if err != nil {
 		return "", fmt.Errorf("Failed to send MMS: %w", err)
 	}
+	if response.Status == "ip_not_enabled" {
+		return "", fmt.Errorf("Failed to send SMS: the IP address of the server is not enabled with voip.ms. You'll need to enable this server's IP with them.")
+	}
 	log.Info().Str("status", response.Status).Int("mms", response.MMS).Msg("Sent MMS message")
 	return strconv.Itoa(response.MMS), nil
 }
