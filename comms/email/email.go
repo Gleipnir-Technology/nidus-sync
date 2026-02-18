@@ -86,7 +86,16 @@ func Send(ctx context.Context, email Request) (result emailResponse, err error) 
 	}
 
 	if r.IsError() {
-		log.Error().Int("status", err_resp.StatusCode).Str("error", err_resp.Error).Str("msg", err_resp.Message).Msg("Email send error")
+		log.Error().
+			Int("status", err_resp.StatusCode).
+			Str("error", err_resp.Error).
+			Str("msg", err_resp.Message).
+			Str("email.from", email.From).
+			Str("email.sender", email.Sender).
+			Str("email.subject", email.Subject).
+			Str("email.to", email.To).
+			Str("email.text", email.Text).
+			Msg("Email send error")
 		return result, fmt.Errorf("Error response %d from email service: %s (%s)", err_resp.StatusCode, err_resp.Message, err_resp.Error)
 	}
 	return result, nil

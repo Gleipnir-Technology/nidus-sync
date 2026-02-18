@@ -61,7 +61,7 @@ func postSudoEmail(ctx context.Context, u *models.User, e FormEmail) (string, *e
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to send email")
 	} else {
-		log.Info().Str("id", resp.ID).Msg("Sent Email...?")
+		log.Info().Str("id", resp.ID).Str("to", e.To).Msg("Sent Email")
 	}
 	return "/sudo", nil
 }
