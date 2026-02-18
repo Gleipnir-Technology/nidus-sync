@@ -1,15 +1,12 @@
 package email
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/rs/zerolog/log"
+	"resty.dev/v3"
 )
 
 type attachmentRequest struct {
@@ -37,6 +34,11 @@ type emailEnvelope struct {
 	To   []string `json:"to"`
 }
 
+type emailResponseError struct {
+	StatusCode int    `json:"statusCode"`
+	Error      string `json:"error"`
+	Message    string `json:"message"`
+}
 type emailResponse struct {
 	IsRedacted     bool              `json:"is_redacted"`
 	CreatedAt      string            `json:"created_at"`
@@ -66,26 +68,26 @@ type emailResponse struct {
 
 var FORWARDEMAIL_EMAIL_POST_API = "https://api.forwardemail.net/v1/emails"
 
-func Send(ctx context.Context, email Request) (response emailResponse, err error) {
-	payload, err := json.Marshal(email)
+func Send(ctx context.Context, email Request) (result emailResponse, err error) {
+	client := resty.New()
+
+	var err_resp emailResponseError
+	r, err := client.R().
+		SetBasicAuth(config.ForwardEmailAPIToken, "").
+		SetBody(email).
+		SetContext(ctx).
+		SetError(&err_resp).
+		SetHeader("Content-Type", "application/json").
+		SetResult(&result).
+		Post(FORWARDEMAIL_EMAIL_POST_API)
+
 	if err != nil {
-		return response, fmt.Errorf("Failed to marshal email request: %w", err)
+		return result, fmt.Errorf("Failed to marshal email request: %w", err)
 	}
 
-	req, _ := http.NewRequest("POST", FORWARDEMAIL_EMAIL_POST_API, bytes.NewReader(payload))
-	req.SetBasicAuth(config.ForwardEmailAPIToken, "")
-	req.Header.Add("Content-Type", "application/json")
-
-	res, _ := http.DefaultClient.Do(req)
-
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
-
-	// Parse the JSON response
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		log.Warn().Str("status", res.Status).Str("response_body", string(body)).Msg("Attempted to send email but couldn't parse the resulting JSON")
-		return response, fmt.Errorf("Failed to unmarshal JSON response: %w", err)
+	if r.IsError() {
+		log.Error().Int("status", err_resp.StatusCode).Str("error", err_resp.Error).Str("msg", err_resp.Message).Msg("Email send error")
+		return result, fmt.Errorf("Error response %d from email service: %s (%s)", err_resp.StatusCode, err_resp.Message, err_resp.Error)
 	}
-	return response, nil
+	return result, nil
 }
