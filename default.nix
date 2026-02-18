@@ -9,7 +9,7 @@ pkgs.buildGoModule rec {
         subPackages = [];
         version = "0.0.11";
         # Needs to be updated after every modification of go.mod/go.sum
-        vendorHash = "sha256-ax4suxqagDNBIRk/j2M3bMw3D/GXMmIKsALWrsf9zAA=";
+        vendorHash = "sha256-FLK/CiaAzci3mhurtrTpTb87DCgCu4jn7cUajJfY3cs=";
 
 	nativeBuildInputs = [ pkgs.dart-sass ];
 
