@@ -106,6 +106,7 @@ func contentForUser(ctx context.Context, user *models.User) (User, error) {
 		Initials:      extractInitials(user.DisplayName),
 		Notifications: notifications,
 		Organization:  organization,
+		Role:          user.Role.String(),
 		Username:      user.Username,
 	}, nil
 

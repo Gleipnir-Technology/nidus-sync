@@ -85,5 +85,6 @@ type User struct {
 	Initials      string
 	Notifications []notification.Notification
 	Organization  Organization
+	Role          string
 	Username      string
 }

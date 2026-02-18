@@ -143,6 +143,19 @@
 					<span class="menu-text ms-2">Help</span>
 				</a>
 			</li>
+			{{ if eq .Role "root" }}
+				<li>
+					<a
+						href="/sudo"
+						data-bs-toggle="tooltip"
+						data-bs-placement="right"
+						title="Sudo"
+					>
+						<div class="menu-icon">{{ template "god.svg" }}</div>
+						<span class="menu-text ms-2">Sudo</span>
+					</a>
+				</li>
+			{{ end }}
 		</ul>
 	</div>
 {{ end }}

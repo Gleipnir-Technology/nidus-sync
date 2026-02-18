@@ -83,7 +83,10 @@
 	display: flex;
 	justify-content: center;
 }
-
+.sidebar-menu .menu-icon svg {
+	width: 1em;
+	height: 1em;
+}
 .sidebar-menu .menu-text {
 	transition: opacity 0.3s;
 }
