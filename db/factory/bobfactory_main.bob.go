@@ -3804,6 +3804,7 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	o.Username = func() string { return m.Username }
 	o.PasswordHashType = func() enums.Hashtype { return m.PasswordHashType }
 	o.PasswordHash = func() string { return m.PasswordHash }
+	o.Role = func() enums.Userrole { return m.Role }
 
 	ctx := context.Background()
 	if len(m.R.PublicUserUser) > 0 {

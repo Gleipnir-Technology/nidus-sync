@@ -123,6 +123,15 @@ var Users = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Role: column{
+			Name:      "role",
+			DBType:    "public.userrole",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: userIndexes{
 		UserPkey: index{
@@ -200,11 +209,12 @@ type userColumns struct {
 	Username                  column
 	PasswordHashType          column
 	PasswordHash              column
+	Role                      column
 }
 
 func (c userColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username, c.PasswordHashType, c.PasswordHash,
+		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username, c.PasswordHashType, c.PasswordHash, c.Role,
 	}
 }
 

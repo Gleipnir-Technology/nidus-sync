@@ -2,6 +2,6 @@
 -- This file is meant to be re-generated in place and/or deleted at any time.
 
 -- UserByUsername
-SELECT "user_"."id" AS "id", "user_"."arcgis_access_token" AS "arcgis_access_token", "user_"."arcgis_license" AS "arcgis_license", "user_"."arcgis_refresh_token" AS "arcgis_refresh_token", "user_"."arcgis_refresh_token_expires" AS "arcgis_refresh_token_expires", "user_"."arcgis_role" AS "arcgis_role", "user_"."display_name" AS "display_name", "user_"."email" AS "email", "user_"."organization_id" AS "organization_id", "user_"."username" AS "username", "user_"."password_hash_type" AS "password_hash_type", "user_"."password_hash" AS "password_hash" FROM public.user_ WHERE
+SELECT "user_"."id" AS "id", "user_"."arcgis_access_token" AS "arcgis_access_token", "user_"."arcgis_license" AS "arcgis_license", "user_"."arcgis_refresh_token" AS "arcgis_refresh_token", "user_"."arcgis_refresh_token_expires" AS "arcgis_refresh_token_expires", "user_"."arcgis_role" AS "arcgis_role", "user_"."display_name" AS "display_name", "user_"."email" AS "email", "user_"."organization_id" AS "organization_id", "user_"."username" AS "username", "user_"."password_hash_type" AS "password_hash_type", "user_"."password_hash" AS "password_hash", "user_"."role" AS "role" FROM public.user_ WHERE
 	username = $1 AND
 	password_hash_type = 'bcrypt-14';

@@ -151,6 +151,7 @@ func SignupUser(ctx context.Context, username string, name string, password stri
 		OrganizationID:   omit.From(o.ID),
 		PasswordHash:     omit.From(passwordHash),
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
+		Role:             omit.From(enums.UserroleAccountOwner),
 		Username:         omit.From(username),
 	}
 	u, err := models.Users.Insert(&u_setter).One(ctx, db.PGInstance.BobDB)

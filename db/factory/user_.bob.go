@@ -50,6 +50,7 @@ type UserTemplate struct {
 	Username                  func() string
 	PasswordHashType          func() enums.Hashtype
 	PasswordHash              func() string
+	Role                      func() enums.Userrole
 
 	r userR
 	f *Factory
@@ -298,6 +299,10 @@ func (o UserTemplate) BuildSetter() *models.UserSetter {
 		val := o.PasswordHash()
 		m.PasswordHash = omit.From(val)
 	}
+	if o.Role != nil {
+		val := o.Role()
+		m.Role = omit.From(val)
+	}
 
 	return m
 }
@@ -356,6 +361,9 @@ func (o UserTemplate) Build() *models.User {
 	if o.PasswordHash != nil {
 		m.PasswordHash = o.PasswordHash()
 	}
+	if o.Role != nil {
+		m.Role = o.Role()
+	}
 
 	o.setModelRels(m)
 
@@ -395,6 +403,10 @@ func ensureCreatableUser(m *models.UserSetter) {
 	if !(m.PasswordHash.IsValue()) {
 		val := random_string(nil)
 		m.PasswordHash = omit.From(val)
+	}
+	if !(m.Role.IsValue()) {
+		val := random_enums_Userrole(nil)
+		m.Role = omit.From(val)
 	}
 }
 
@@ -707,6 +719,7 @@ func (m userMods) RandomizeAllColumns(f *faker.Faker) UserMod {
 		UserMods.RandomUsername(f),
 		UserMods.RandomPasswordHashType(f),
 		UserMods.RandomPasswordHash(f),
+		UserMods.RandomRole(f),
 	}
 }
 
@@ -1210,6 +1223,37 @@ func (m userMods) RandomPasswordHash(f *faker.Faker) UserMod {
 	return UserModFunc(func(_ context.Context, o *UserTemplate) {
 		o.PasswordHash = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m userMods) Role(val enums.Userrole) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.Role = func() enums.Userrole { return val }
+	})
+}
+
+// Set the Column from the function
+func (m userMods) RoleFunc(f func() enums.Userrole) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.Role = f
+	})
+}
+
+// Clear any values for the column
+func (m userMods) UnsetRole() UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.Role = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m userMods) RandomRole(f *faker.Faker) UserMod {
+	return UserModFunc(func(_ context.Context, o *UserTemplate) {
+		o.Role = func() enums.Userrole {
+			return random_enums_Userrole(f)
 		}
 	})
 }

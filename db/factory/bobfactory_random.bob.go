@@ -231,6 +231,16 @@ func random_enums_PublicreportReportstatustype(f *faker.Faker, limits ...string)
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Userrole(f *faker.Faker, limits ...string) enums.Userrole {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Userrole
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_float32(f *faker.Faker, limits ...string) float32 {
 	if f == nil {
 		f = &defaultFaker

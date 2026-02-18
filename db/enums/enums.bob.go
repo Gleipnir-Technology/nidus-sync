@@ -1437,3 +1437,75 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 
 	return nil
 }
+
+// Enum values for Userrole
+const (
+	UserroleRoot         Userrole = "root"
+	UserroleAccountOwner Userrole = "account-owner"
+)
+
+func AllUserrole() []Userrole {
+	return []Userrole{
+		UserroleRoot,
+		UserroleAccountOwner,
+	}
+}
+
+type Userrole string
+
+func (e Userrole) String() string {
+	return string(e)
+}
+
+func (e Userrole) Valid() bool {
+	switch e {
+	case UserroleRoot, UserroleAccountOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Userrole) All() []Userrole {
+	return AllUserrole()
+}
+
+func (e Userrole) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Userrole) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Userrole) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Userrole) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Userrole) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Userrole) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Userrole(x)
+	case []byte:
+		*e = Userrole(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Userrole")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Userrole value: %s", *e)
+	}
+
+	return nil
+}

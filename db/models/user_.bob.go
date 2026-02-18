@@ -39,6 +39,7 @@ type User struct {
 	Username                  string                            `db:"username" `
 	PasswordHashType          enums.Hashtype                    `db:"password_hash_type" `
 	PasswordHash              string                            `db:"password_hash" `
+	Role                      enums.Userrole                    `db:"role" `
 
 	R userR `db:"-" `
 
@@ -72,7 +73,7 @@ type userR struct {
 func buildUserColumns(alias string) userColumns {
 	return userColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "arcgis_access_token", "arcgis_license", "arcgis_refresh_token", "arcgis_refresh_token_expires", "arcgis_role", "display_name", "email", "organization_id", "username", "password_hash_type", "password_hash",
+			"id", "arcgis_access_token", "arcgis_license", "arcgis_refresh_token", "arcgis_refresh_token_expires", "arcgis_role", "display_name", "email", "organization_id", "username", "password_hash_type", "password_hash", "role",
 		).WithParent("user_"),
 		tableAlias:                alias,
 		ID:                        psql.Quote(alias, "id"),
@@ -87,6 +88,7 @@ func buildUserColumns(alias string) userColumns {
 		Username:                  psql.Quote(alias, "username"),
 		PasswordHashType:          psql.Quote(alias, "password_hash_type"),
 		PasswordHash:              psql.Quote(alias, "password_hash"),
+		Role:                      psql.Quote(alias, "role"),
 	}
 }
 
@@ -105,6 +107,7 @@ type userColumns struct {
 	Username                  psql.Expression
 	PasswordHashType          psql.Expression
 	PasswordHash              psql.Expression
+	Role                      psql.Expression
 }
 
 func (c userColumns) Alias() string {
@@ -131,10 +134,11 @@ type UserSetter struct {
 	Username                  omit.Val[string]                      `db:"username" `
 	PasswordHashType          omit.Val[enums.Hashtype]              `db:"password_hash_type" `
 	PasswordHash              omit.Val[string]                      `db:"password_hash" `
+	Role                      omit.Val[enums.Userrole]              `db:"role" `
 }
 
 func (s UserSetter) SetColumns() []string {
-	vals := make([]string, 0, 12)
+	vals := make([]string, 0, 13)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -170,6 +174,9 @@ func (s UserSetter) SetColumns() []string {
 	}
 	if s.PasswordHash.IsValue() {
 		vals = append(vals, "password_hash")
+	}
+	if s.Role.IsValue() {
+		vals = append(vals, "role")
 	}
 	return vals
 }
@@ -211,6 +218,9 @@ func (s UserSetter) Overwrite(t *User) {
 	if s.PasswordHash.IsValue() {
 		t.PasswordHash = s.PasswordHash.MustGet()
 	}
+	if s.Role.IsValue() {
+		t.Role = s.Role.MustGet()
+	}
 }
 
 func (s *UserSetter) Apply(q *dialect.InsertQuery) {
@@ -219,7 +229,7 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 12)
+		vals := make([]bob.Expression, 13)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -292,6 +302,12 @@ func (s *UserSetter) Apply(q *dialect.InsertQuery) {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
+		if s.Role.IsValue() {
+			vals[12] = psql.Arg(s.Role.MustGet())
+		} else {
+			vals[12] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -301,7 +317,7 @@ func (s UserSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 12)
+	exprs := make([]bob.Expression, 0, 13)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -384,6 +400,13 @@ func (s UserSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "password_hash")...),
 			psql.Arg(s.PasswordHash),
+		}})
+	}
+
+	if s.Role.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "role")...),
+			psql.Arg(s.Role),
 		}})
 	}
 
@@ -1526,6 +1549,7 @@ type userWhere[Q psql.Filterable] struct {
 	Username                  psql.WhereMod[Q, string]
 	PasswordHashType          psql.WhereMod[Q, enums.Hashtype]
 	PasswordHash              psql.WhereMod[Q, string]
+	Role                      psql.WhereMod[Q, enums.Userrole]
 }
 
 func (userWhere[Q]) AliasedAs(alias string) userWhere[Q] {
@@ -1546,6 +1570,7 @@ func buildUserWhere[Q psql.Filterable](cols userColumns) userWhere[Q] {
 		Username:                  psql.Where[Q, string](cols.Username),
 		PasswordHashType:          psql.Where[Q, enums.Hashtype](cols.PasswordHashType),
 		PasswordHash:              psql.Where[Q, string](cols.PasswordHash),
+		Role:                      psql.Where[Q, enums.Userrole](cols.Role),
 	}
 }
 

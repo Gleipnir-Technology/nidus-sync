@@ -22,7 +22,7 @@ import (
 //go:embed user_by_username.bob.sql
 var formattedQueries_user_by_username string
 
-var userByUsernameSQL = formattedQueries_user_by_username[152:780]
+var userByUsernameSQL = formattedQueries_user_by_username[152:806]
 
 type UserByUsernameQuery = orm.ModQuery[*dialect.SelectQuery, userByUsername, UserByUsernameRow, []UserByUsernameRow, userByUsernameTransformer]
 
@@ -55,6 +55,7 @@ func UserByUsername(Username string) *UserByUsernameQuery {
 						row.ScheduleScanByIndex(9, &t.Username)
 						row.ScheduleScanByIndex(10, &t.PasswordHashType)
 						row.ScheduleScanByIndex(11, &t.PasswordHash)
+						row.ScheduleScanByIndex(12, &t.Role)
 						return &t, nil
 					}, func(v any) (UserByUsernameRow, error) {
 						return *(v.(*UserByUsernameRow)), nil
@@ -62,9 +63,9 @@ func UserByUsername(Username string) *UserByUsernameQuery {
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendSelect(expressionTypArgs.subExpr(7, 551))
-			q.SetTable(expressionTypArgs.subExpr(557, 569))
-			q.AppendWhere(expressionTypArgs.subExpr(577, 628))
+			q.AppendSelect(expressionTypArgs.subExpr(7, 577))
+			q.SetTable(expressionTypArgs.subExpr(583, 595))
+			q.AppendWhere(expressionTypArgs.subExpr(603, 654))
 		}),
 	}
 }
@@ -82,6 +83,7 @@ type UserByUsernameRow = struct {
 	Username                  string                            `db:"username"`
 	PasswordHashType          enums.Hashtype                    `db:"password_hash_type"`
 	PasswordHash              string                            `db:"password_hash"`
+	Role                      enums.Userrole                    `db:"role"`
 }
 
 type userByUsernameTransformer = bob.SliceTransformer[UserByUsernameRow, []UserByUsernameRow]
@@ -94,8 +96,8 @@ func (o userByUsername) args() iter.Seq[orm.ArgWithPosition] {
 	return func(yield func(arg orm.ArgWithPosition) bool) {
 		if !yield(orm.ArgWithPosition{
 			Name:       "username",
-			Start:      588,
-			Stop:       590,
+			Start:      614,
+			Stop:       616,
 			Expression: o.Username,
 		}) {
 			return
