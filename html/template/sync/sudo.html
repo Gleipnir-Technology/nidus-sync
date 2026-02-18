@@ -1,6 +1,6 @@
 {{ template "sync/layout/authenticated.html" . }}
 
-{{ define "title" }}Dash{{ end }}
+{{ define "title" }}Sudo{{ end }}
 {{ define "extraheader" }}
 {{ end }}
 {{ define "content" }}
@@ -16,7 +16,7 @@
 						<i class="bi bi-chat-dots"></i> SMS Testing
 					</div>
 					<div class="card-body">
-						<form>
+						<form action="/sudo/sms" method="POST">
 							<div class="mb-3">
 								<label for="smsPhone" class="form-label"
 									>Recipient Phone Number</label
@@ -25,6 +25,7 @@
 									type="tel"
 									class="form-control"
 									id="smsPhone"
+									name="smsPhone"
 									placeholder="+1 (555) 123-4567"
 								/>
 							</div>
@@ -33,7 +34,9 @@
 								<textarea
 									class="form-control"
 									id="smsMessage"
+									name="smsMessage"
 									rows="3"
+									maxlength="130"
 									placeholder="Enter your SMS message here"
 								></textarea>
 							</div>
