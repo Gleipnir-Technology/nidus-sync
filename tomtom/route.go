@@ -68,6 +68,10 @@ func (sgr CalculateRouteRequest) toQueryParams() (url.Values, error) {
 	return query.Values(sgr)
 }
 
+type CalculateRouteResponse struct {
+	Routes []Route `json:"routes"`
+}
+
 // CalculateRoute sends a route calculation request to TomTom API
 func (c *TomTom) CalculateRoute(req *CalculateRouteRequest) (*CalculateRouteResponse, error) {
 	/*url, err := req.BuildURL(c.APIKey)

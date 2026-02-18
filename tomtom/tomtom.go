@@ -14,11 +14,8 @@ type TomTom struct {
 }
 
 func NewClient() *TomTom {
-	//logger := NewLogger(log.Logger)
-	//r := resty.New().SetLogger(logger).SetDebug(true)
-	r := resty.New().SetDebug(true)
 	api_key := os.Getenv("TOMTOM_API_KEY")
-	//r := resty.New()
+	r := resty.New()
 	return &TomTom{
 		APIKey:  api_key,
 		client:  r,
@@ -28,4 +25,13 @@ func NewClient() *TomTom {
 
 func (s *TomTom) Close() {
 	s.client.Close()
+}
+
+func (s *TomTom) SetDebug(enabled bool) {
+	s.client.Close()
+	if enabled {
+		s.client = resty.New().SetDebug(true)
+	} else {
+		s.client = resty.New().SetDebug(false)
+	}
 }

@@ -68,24 +68,14 @@ type Point struct {
 	Longitude float64 `json:"longitude"`
 }
 
-type Polyline struct {
-	Points []Point `json:"points"`
-}
-
 type Leg struct {
-	Summary  Summary  `json:"summary"`
-	Points   []Point  `json:"points,omitempty"`
-	Polyline Polyline `json:"polyline,omitempty"`
+	Summary Summary `json:"summary"`
+	Points  []Point `json:"points,omitempty"`
 }
 
 type Route struct {
-	Summary  Summary  `json:"summary"`
-	Legs     []Leg    `json:"legs,omitempty"`
-	Polyline Polyline `json:"polyline,omitempty"`
-}
-
-type CalculateRouteResponse struct {
-	Routes []Route `json:"routes"`
+	Summary Summary `json:"summary"`
+	Legs    []Leg   `json:"legs,omitempty"`
 }
 
 // CalculateReachableRange API structures
