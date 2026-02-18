@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 func Router() chi.Router {
@@ -110,9 +111,10 @@ func authenticatedHandler[T any](f handlerFunction[T]) http.Handler {
 			return
 		}
 		template, content, e := f(ctx, u)
-		if err != nil {
-			//log.Warn().Int("status", s).Err(e).Str("user message", m).Msg("Responding with an error from sync pages")
-			http.Error(w, err.Error(), e.Status)
+		//log.Info().Str("template", template).Err(e).Msg("handler done")
+		if e != nil {
+			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from sync pages")
+			http.Error(w, e.Error(), e.Status)
 			return
 		}
 		html.RenderOrError(w, template, contentAuthenticated[T]{
