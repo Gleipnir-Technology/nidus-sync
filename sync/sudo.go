@@ -30,20 +30,13 @@ type FormSMS struct {
 	Phone   string `schema:"smsPhone"`
 }
 
-func postSudoSMS(w http.ResponseWriter, r *http.Request, u *models.User) {
-	err := r.ParseForm()
-	if err != nil {
-		respondError(w, "Failed to parse form", err, http.StatusInternalServerError)
-		return
-	}
-
-	var sms FormSMS
-
-	err = decoder.Decode(&sms, r.PostForm)
-	if err != nil {
-		respondError(w, "Failed to decode form", err, http.StatusInternalServerError)
-		return
+func postSudoSMS(ctx context.Context, u *models.User, sms FormSMS) (string, *errorWithStatus) {
+	if u.Role != enums.UserroleRoot {
+		return "", &errorWithStatus{
+			Message: "You must have sudo powers to do this",
+			Status:  http.StatusForbidden,
+		}
 	}
 	log.Info().Str("msg", sms.Message).Str("phone", sms.Phone).Msg("Got SMS")
-	http.Redirect(w, r, "/sudo", http.StatusFound)
+	return "/sudo", nil
 }

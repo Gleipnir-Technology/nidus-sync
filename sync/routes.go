@@ -69,7 +69,7 @@ func Router() chi.Router {
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))
 	r.Method("GET", "/sudo", authenticatedHandler(getSudo))
-	r.Method("POST", "/sudo/sms", auth.NewEnsureAuth(postSudoSMS))
+	r.Method("POST", "/sudo/sms", authenticatedHandlerPost(postSudoSMS))
 	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
 	r.Method("GET", "/text/{destination}", auth.NewEnsureAuth(getTextMessages))
 	r.Method("GET", "/upload", authenticatedHandler(getUploadList))
@@ -94,7 +94,7 @@ func newError(mesg_format string, args ...interface{}) *errorWithStatus {
 	}
 }
 
-type handlerFunction[T any] func(context.Context, *models.User) (string, T, *errorWithStatus)
+type handlerFunctionGet[T any] func(context.Context, *models.User) (string, T, *errorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {
 	C    T
@@ -103,7 +103,7 @@ type contentAuthenticated[T any] struct {
 }
 
 // w http.ResponseWriter, r *http.Request, u *models.User) {
-func authenticatedHandler[T any](f handlerFunction[T]) http.Handler {
+func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
 		ctx := r.Context()
 		userContent, err := contentForUser(ctx, u)
@@ -123,5 +123,32 @@ func authenticatedHandler[T any](f handlerFunction[T]) http.Handler {
 			URL:  newContentURL(),
 			User: userContent,
 		})
+	})
+}
+
+type handlerFunctionPost[T any] func(context.Context, *models.User, T) (string, *errorWithStatus)
+
+func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
+		err := r.ParseForm()
+		if err != nil {
+			respondError(w, "Failed to parse form", err, http.StatusBadRequest)
+			return
+		}
+
+		var content T
+
+		err = decoder.Decode(&content, r.PostForm)
+		if err != nil {
+			respondError(w, "Failed to decode form", err, http.StatusBadRequest)
+			return
+		}
+		ctx := r.Context()
+		path, e := f(ctx, u, content)
+		if e != nil {
+			http.Error(w, e.Error(), e.Status)
+			return
+		}
+		http.Redirect(w, r, path, http.StatusFound)
 	})
 }
