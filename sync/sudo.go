@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/gorilla/schema"
@@ -37,6 +39,11 @@ func postSudoSMS(ctx context.Context, u *models.User, sms FormSMS) (string, *err
 			Status:  http.StatusForbidden,
 		}
 	}
-	log.Info().Str("msg", sms.Message).Str("phone", sms.Phone).Msg("Got SMS")
+	id, err := text.SendText(ctx, config.VoipMSNumber, sms.Phone, sms.Message)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to send SMS")
+	} else {
+		log.Info().Str("id", id).Msg("Sent SMS")
+	}
 	return "/sudo", nil
 }
