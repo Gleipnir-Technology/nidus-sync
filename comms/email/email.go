@@ -9,7 +9,6 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/rs/zerolog/log"
 )
 
@@ -67,7 +66,7 @@ type emailResponse struct {
 
 var FORWARDEMAIL_API = "https://api.forwardemail.net/v1/emails"
 
-func Send(ctx context.Context, email Request, t enums.CommsMessagetypeemail) (response emailResponse, err error) {
+func Send(ctx context.Context, email Request) (response emailResponse, err error) {
 	payload, err := json.Marshal(email)
 	if err != nil {
 		return response, fmt.Errorf("Failed to marshal email request: %w", err)

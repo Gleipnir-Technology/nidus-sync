@@ -52,7 +52,7 @@ func urlUnsubscribe(email string) string {
 func sendEmailInitialContact(ctx context.Context, destination string) error {
 	//data := pgtypes.HStore{}
 	data := make(map[string]string, 0)
-	source := config.ForwardEmailReportAddress
+	source := config.ForwardEmailRMOAddress
 	data["Destination"] = destination
 	data["Source"] = source
 	data["URLLogo"] = config.MakeURLReport("/static/img/nidus-logo-no-lettering-64.png")
@@ -78,7 +78,7 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 		Subject: subject,
 		Text:    text,
 		To:      destination,
-	}, enums.CommsMessagetypeemailInitialContact)
+	})
 
 	if err != nil {
 		return fmt.Errorf("Failed to send email to %s: %w", err)

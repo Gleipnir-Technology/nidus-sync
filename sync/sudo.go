@@ -2,8 +2,10 @@ package sync
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -12,7 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type contentSudo struct{}
+type contentSudo struct {
+	ForwardEmailRMOAddress   string
+	ForwardEmailNidusAddress string
+}
 
 func getSudo(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
 	if user.Role != enums.UserroleRoot {
@@ -21,11 +26,45 @@ func getSudo(ctx context.Context, user *models.User) (string, interface{}, *erro
 			Status:  http.StatusForbidden,
 		}
 	}
-	content := contentAdminDash{}
+	content := contentSudo{
+		ForwardEmailRMOAddress:   config.ForwardEmailRMOAddress,
+		ForwardEmailNidusAddress: config.ForwardEmailNidusAddress,
+	}
 	return "sync/sudo.html", content, nil
 }
 
 var decoder = schema.NewDecoder()
+
+type FormEmail struct {
+	Body    string `schema:"emailBody"`
+	From    string `schema:"emailFrom"`
+	Subject string `schema:"emailSubject"`
+	To      string `schema:"emailTo"`
+}
+
+func postSudoEmail(ctx context.Context, u *models.User, e FormEmail) (string, *errorWithStatus) {
+	if u.Role != enums.UserroleRoot {
+		return "", &errorWithStatus{
+			Message: "You must have sudo powers to do this",
+			Status:  http.StatusForbidden,
+		}
+	}
+	request := email.Request{
+		From:    e.From,
+		HTML:    fmt.Sprintf("<html><p>%s</p></html>", e.Body),
+		Sender:  e.From,
+		Subject: e.Subject,
+		To:      e.To,
+		Text:    e.Body,
+	}
+	resp, err := email.Send(ctx, request)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to send email")
+	} else {
+		log.Info().Str("id", resp.ID).Msg("Sent Email...?")
+	}
+	return "/sudo", nil
+}
 
 type FormSMS struct {
 	Message string `schema:"smsMessage"`

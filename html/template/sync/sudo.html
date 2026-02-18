@@ -149,10 +149,12 @@
 							<div class="mb-3">
 								<label for="emailFrom" class="form-label">From Account</label>
 								<select class="form-select" id="emailFrom">
-									<option value="support">support@example.com</option>
-									<option value="noreply">noreply@example.com</option>
-									<option value="billing">billing@example.com</option>
-									<option value="marketing">marketing@example.com</option>
+									<option value="{{ .C.ForwardEmailRMOAddress }}">
+										{{ .C.ForwardEmailRMOAddress }}
+									</option>
+									<option value="{{ .C.ForwardEmailNidusAddress }}">
+										{{ .C.ForwardEmailNidusAddress }}
+									</option>
 								</select>
 							</div>
 							<div class="mb-3">

@@ -70,17 +70,17 @@ func sendEmailReportConfirmation(ctx context.Context, job Job) error {
 		return fmt.Errorf("Failed to render email report notification template: %w", err)
 	}
 	subject := fmt.Sprintf("Mosquito Report Submission - %s", report_id_str)
-	err = insertEmailLog(ctx, data, j.destination(), public_id, config.ForwardEmailReportAddress, subject, templateReportNotificationConfirmationID)
+	err = insertEmailLog(ctx, data, j.destination(), public_id, config.ForwardEmailRMOAddress, subject, templateReportNotificationConfirmationID)
 	if err != nil {
 		return fmt.Errorf("Failed to store email log: %w", err)
 	}
 	resp, err := email.Send(ctx, email.Request{
-		From:    config.ForwardEmailReportAddress,
+		From:    config.ForwardEmailRMOAddress,
 		HTML:    html,
 		Subject: subject,
 		Text:    text,
 		To:      j.destination(),
-	}, enums.CommsMessagetypeemailReportNotificationConfirmation)
+	})
 	if err != nil {
 		return fmt.Errorf("Failed to send email report confirmation to %s for report %s: %w", j.dest, j.reportID, err)
 	}

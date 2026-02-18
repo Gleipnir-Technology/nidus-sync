@@ -20,9 +20,12 @@ var (
 	FilesDirectory             string
 	FieldseekerSchemaDirectory string
 	ForwardEmailAPIToken       string
-	ForwardEmailReportAddress  string
-	ForwardEmailReportPassword string
-	ForwardEmailReportUsername string
+	ForwardEmailRMOAddress     string
+	ForwardEmailRMOPassword    string
+	ForwardEmailRMOUsername    string
+	ForwardEmailNidusAddress   string
+	ForwardEmailNidusPassword  string
+	ForwardEmailNidusUsername  string
 	MapboxToken                string
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
@@ -105,21 +108,33 @@ func Parse() (err error) {
 	if FilesDirectory == "" {
 		return fmt.Errorf("You must specify a non-empty FILES_DIRECTORY")
 	}
-	ForwardEmailReportAddress = os.Getenv("FORWARDEMAIL_REPORT_ADDRESS")
-	if ForwardEmailReportAddress == "" {
-		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_ADDRESS")
-	}
 	ForwardEmailAPIToken = os.Getenv("FORWARDEMAIL_API_TOKEN")
 	if ForwardEmailAPIToken == "" {
 		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_API_TOKEN")
 	}
-	ForwardEmailReportUsername = os.Getenv("FORWARDEMAIL_REPORT_USERNAME")
-	if ForwardEmailReportUsername == "" {
-		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_USERNAME")
+	ForwardEmailRMOAddress = os.Getenv("FORWARDEMAIL_RMO_ADDRESS")
+	if ForwardEmailRMOAddress == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_RMO_ADDRESS")
 	}
-	ForwardEmailReportPassword = os.Getenv("FORWARDEMAIL_REPORT_PASSWORD")
-	if ForwardEmailReportPassword == "" {
-		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_REPORT_PASSWORD")
+	ForwardEmailRMOUsername = os.Getenv("FORWARDEMAIL_RMO_USERNAME")
+	if ForwardEmailRMOUsername == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_RMO_USERNAME")
+	}
+	ForwardEmailRMOPassword = os.Getenv("FORWARDEMAIL_RMO_PASSWORD")
+	if ForwardEmailRMOPassword == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_RMO_PASSWORD")
+	}
+	ForwardEmailNidusAddress = os.Getenv("FORWARDEMAIL_NIDUS_ADDRESS")
+	if ForwardEmailNidusAddress == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_NIDUS_ADDRESS")
+	}
+	ForwardEmailNidusUsername = os.Getenv("FORWARDEMAIL_NIDUS_USERNAME")
+	if ForwardEmailNidusUsername == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_NIDUS_USERNAME")
+	}
+	ForwardEmailNidusPassword = os.Getenv("FORWARDEMAIL_NIDUS_PASSWORD")
+	if ForwardEmailNidusPassword == "" {
+		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_NIDUS_PASSWORD")
 	}
 	MapboxToken = os.Getenv("MAPBOX_TOKEN")
 	if MapboxToken == "" {
