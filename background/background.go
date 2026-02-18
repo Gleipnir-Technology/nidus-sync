@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	commsemail "github.com/Gleipnir-Technology/nidus-sync/comms/email"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -22,6 +24,12 @@ func Start(ctx context.Context) {
 	channelJobImportCSVPool = make(chan jobImportCSVPool, 100) // Buffered channel to prevent blocking
 	channelJobEmail = make(chan email.Job, 100)                // Buffered channel to prevent blocking
 	channelJobText = make(chan text.Job, 100)                  // Buffered channel to prevent blocking
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		commsemail.StartWebsocket(ctx, config.ForwardEmailAPIToken)
+	}()
 
 	waitGroup.Add(1)
 	go func() {

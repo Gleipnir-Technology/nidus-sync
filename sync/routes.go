@@ -69,6 +69,7 @@ func Router() chi.Router {
 	r.Method("GET", "/source/{globalid}", auth.NewEnsureAuth(getSource))
 	r.Method("GET", "/stadia", auth.NewEnsureAuth(getStadia))
 	r.Method("GET", "/sudo", authenticatedHandler(getSudo))
+	r.Method("POST", "/sudo/email", authenticatedHandlerPost(postSudoEmail))
 	r.Method("POST", "/sudo/sms", authenticatedHandlerPost(postSudoSMS))
 	r.Method("GET", "/trap/{globalid}", auth.NewEnsureAuth(getTrap))
 	r.Method("GET", "/text/{destination}", auth.NewEnsureAuth(getTextMessages))

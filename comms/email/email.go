@@ -64,7 +64,7 @@ type emailResponse struct {
 	Message        string            `json:"message"`
 }
 
-var FORWARDEMAIL_API = "https://api.forwardemail.net/v1/emails"
+var FORWARDEMAIL_EMAIL_POST_API = "https://api.forwardemail.net/v1/emails"
 
 func Send(ctx context.Context, email Request) (response emailResponse, err error) {
 	payload, err := json.Marshal(email)
@@ -72,7 +72,7 @@ func Send(ctx context.Context, email Request) (response emailResponse, err error
 		return response, fmt.Errorf("Failed to marshal email request: %w", err)
 	}
 
-	req, _ := http.NewRequest("POST", FORWARDEMAIL_API, bytes.NewReader(payload))
+	req, _ := http.NewRequest("POST", FORWARDEMAIL_EMAIL_POST_API, bytes.NewReader(payload))
 	req.SetBasicAuth(config.ForwardEmailAPIToken, "")
 	req.Header.Add("Content-Type", "application/json")
 

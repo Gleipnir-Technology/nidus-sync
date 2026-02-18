@@ -145,7 +145,7 @@
 						<i class="bi bi-envelope"></i> Email Testing
 					</div>
 					<div class="card-body">
-						<form>
+						<form action="/sudo/email" method="POST">
 							<div class="mb-3">
 								<label for="emailFrom" class="form-label">From Account</label>
 								<select class="form-select" id="emailFrom">
@@ -163,6 +163,7 @@
 									type="email"
 									class="form-control"
 									id="emailTo"
+									name="emailTo"
 									placeholder="user@example.com"
 								/>
 							</div>
@@ -172,6 +173,7 @@
 									type="text"
 									class="form-control"
 									id="emailSubject"
+									name="emailSubject"
 									placeholder="Email Subject"
 								/>
 							</div>
@@ -180,8 +182,9 @@
 								<textarea
 									class="form-control"
 									id="emailBody"
-									rows="3"
+									name="emailBody"
 									placeholder="Enter your email message here"
+									rows="3"
 								></textarea>
 							</div>
 							<button type="submit" class="btn btn-warning text-dark">
