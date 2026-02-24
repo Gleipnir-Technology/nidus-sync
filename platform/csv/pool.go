@@ -91,6 +91,10 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 	if err != nil {
 		return fmt.Errorf("bulk geocode: %w", err)
 	}
+	file.Update(ctx, txn, &models.FileuploadFileSetter{
+		Status: omit.From(enums.FileuploadFilestatustypeParsed),
+	})
+	log.Info().Int32("file.ID", file.ID).Msg("Set file to parsed")
 	txn.Commit(ctx)
 	return nil
 }
@@ -205,10 +209,6 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 		row, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
-				file.Update(ctx, txn, &models.FileuploadFileSetter{
-					Status: omit.From(enums.FileuploadFilestatustypeParsed),
-				})
-				log.Info().Int32("file.ID", file.ID).Msg("Set file to parsed")
 				return pools, nil
 			}
 			return pools, fmt.Errorf("Failed to read all CSV records for file %d: %w", file.ID, err)
