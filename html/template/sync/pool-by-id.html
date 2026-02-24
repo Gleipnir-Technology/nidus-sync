@@ -8,7 +8,7 @@
 	></script>
 	<script src="/static/js/map-libre-test.js"></script>
 	<script>
-const CSV_FILE_ID={{.CSVFileID}};
+const CSV_FILE_ID={{.C.CSVFileID}};
 const ORG_ID={{.Organization.ID}};
 function handleShowIssuesOnly() {
 	const checkboxShowIssuesOnly = document.getElementById("showIssuesOnly");
@@ -68,31 +68,20 @@ document.addEventListener('DOMContentLoaded', onLoad);
 {{ define "content" }}
 	<div class="container mt-4 results-container">
 		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h2>Upload Results: {{ .Upload.Name }}</h2>
-			{{ if eq .Upload.Status "parsed" }}
-				<span class="badge bg-success rounded-pill">
-					<i class="bi bi-check-circle me-1"></i> File Parsed Successfully
-				</span>
-			{{ else if eq .Upload.Status "error" }}
-				<span class="badge bg-danger rounded-pill">
-					<i class="bi bi-exclamation me-1"></i> File Has Problems
-				</span>
-			{{ else if eq .Upload.Status "uploaded" }}
-				<span class="badge bg-info rounded-pill">
-					<i class="bi bi-arrow-clockwise me-1"></i> File Is Processing
-				</span>
-			{{ else }}
-				<span class="badge bg-warning rounded-pill">
-					<i class="bi bi-question me-1"></i> Unknown status
-				</span>
-			{{ end }}
+			<h2>Upload Results: {{ .C.Upload.Name }}</h2>
+			<span class="badge rounded-pill {{ .C.Upload.Status }}">
+				<i class="bi {{ .C.Upload.Status|iconUploadStatus }} me-1"></i
+				>{{ .C.Upload.Status|displayUploadStatus }}
+			</span>
 		</div>
 
 		<div class="row mb-4">
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-primary">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-primary">{{ .Upload.CountExisting }}</h1>
+						<h1 class="display-4 text-primary">
+							{{ .C.Upload.CountExisting }}
+						</h1>
 						<h5>Existing Pools</h5>
 						<p class="text-muted">Matches found in previous records</p>
 					</div>
@@ -101,7 +90,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-success">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-success">{{ .Upload.CountNew }}</h1>
+						<h1 class="display-4 text-success">{{ .C.Upload.CountNew }}</h1>
 						<h5>New Pools</h5>
 						<p class="text-muted">Not found in existing records</p>
 					</div>
@@ -110,7 +99,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-warning">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-warning">{{ .Upload.CountOutside }}</h1>
+						<h1 class="display-4 text-warning">{{ .C.Upload.CountOutside }}</h1>
 						<h5>Outside District</h5>
 						<p class="text-muted">Potential geocoding errors</p>
 					</div>
@@ -143,20 +132,20 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				</div>
 			</div>
 			<div class="card-body">
-				{{ range .Upload.Errors }}
+				{{ range .C.Upload.Errors }}
 					<div class="alert alert-danger" role="alert">
 						<i class="bi bi-exclamation-triangle me-2"></i>
 						<strong>Error:</strong>{{ .Message }}
 					</div>
 				{{ end }}
-				{{ if eq .Upload.Status "uploaded" }}
+				{{ if eq .C.Upload.Status "uploaded" }}
 					<div class="alert alert-info" role="alert">
 						<i class="bi bi-exclamation-triangle me-2"></i>
 						<strong>Working:</strong> File is still processing... refresh this
 						page in a bit to see updates.
 					</div>
 				{{ else }}
-					{{ if eq (len .Upload.Pools) 0 }}
+					{{ if eq (len .C.Upload.Pools) 0 }}
 						<div class="alert alert-warning" role="alert">
 							<i class="bi bi-exclamation-triangle me-2"></i>
 							<strong>Warning:</strong> No pools could be understood from your
@@ -177,7 +166,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 									</tr>
 								</thead>
 								<tbody>
-									{{ range .Upload.Pools }}
+									{{ range .C.Upload.Pools }}
 										<tr {{ if gt (len .Errors) 0 }}class="has-error"{{ end }}>
 											<td>
 												{{ if gt (len .Errors) 0 }}

@@ -50,7 +50,7 @@ func getUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organ
 	data := contentUploadPoolCreate{}
 	return newResponse("sync/pool-csv-upload.html", data), nil
 }
-func getUploadPoolByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentPoolDetail], *errorWithStatus) {
+func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentPoolDetail], *errorWithStatus) {
 	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, newError("Failed to get organization: %w", err)

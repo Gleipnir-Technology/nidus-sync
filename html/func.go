@@ -27,6 +27,7 @@ func addFuncMap(t *template.Template) {
 		"duration":            duration,
 		"hasPassed":           hasPassed,
 		"html":                unescapeHTML,
+		"iconUploadStatus":    iconUploadStatus,
 		"json":                unescapeJS,
 		"GISStatement":        gisStatement,
 		"latLngDisplay":       latLngDisplay,
@@ -138,6 +139,19 @@ func timeAsRelativeDate(d time.Time) string {
 
 func hasPassed(t time.Time) bool {
 	return t.Before(time.Now())
+}
+
+func iconUploadStatus(s string) string {
+	switch s {
+	case "error":
+		return "bi-exclamation"
+	case "parsed":
+		return "bi-check-circle"
+	case "uploaded":
+		return "bi-arrow-clockwise"
+	default:
+		return "bi-question"
+	}
 }
 
 // FormatTimeDuration returns a human-readable string representing a time.Duration

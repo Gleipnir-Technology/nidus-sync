@@ -77,7 +77,7 @@ func Router() chi.Router {
 	r.Method("GET", "/upload/pool", authenticatedHandler(getUploadPoolList))
 	r.Method("GET", "/upload/pool/create", authenticatedHandler(getUploadPoolCreate))
 	r.Method("POST", "/upload/pool/create", authenticatedHandlerPostMultipart(postUploadPoolCreate))
-	r.Method("GET", "/upload/pool/upload/{id}", authenticatedHandler(getUploadPoolByID))
+	r.Method("GET", "/upload/{id}", authenticatedHandler(getUploadByID))
 
 	html.AddStaticRoute(r, "/static")
 	return r
