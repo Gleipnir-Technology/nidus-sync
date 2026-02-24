@@ -651,9 +651,11 @@ func (e *FileuploadCsvtype) Scan(value any) error {
 
 // Enum values for FileuploadFilestatustype
 const (
-	FileuploadFilestatustypeError    FileuploadFilestatustype = "error"
-	FileuploadFilestatustypeParsed   FileuploadFilestatustype = "parsed"
-	FileuploadFilestatustypeUploaded FileuploadFilestatustype = "uploaded"
+	FileuploadFilestatustypeError     FileuploadFilestatustype = "error"
+	FileuploadFilestatustypeParsed    FileuploadFilestatustype = "parsed"
+	FileuploadFilestatustypeUploaded  FileuploadFilestatustype = "uploaded"
+	FileuploadFilestatustypeCommitted FileuploadFilestatustype = "committed"
+	FileuploadFilestatustypeDiscarded FileuploadFilestatustype = "discarded"
 )
 
 func AllFileuploadFilestatustype() []FileuploadFilestatustype {
@@ -661,6 +663,8 @@ func AllFileuploadFilestatustype() []FileuploadFilestatustype {
 		FileuploadFilestatustypeError,
 		FileuploadFilestatustypeParsed,
 		FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeCommitted,
+		FileuploadFilestatustypeDiscarded,
 	}
 }
 
@@ -674,7 +678,9 @@ func (e FileuploadFilestatustype) Valid() bool {
 	switch e {
 	case FileuploadFilestatustypeError,
 		FileuploadFilestatustypeParsed,
-		FileuploadFilestatustypeUploaded:
+		FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeCommitted,
+		FileuploadFilestatustypeDiscarded:
 		return true
 	default:
 		return false
@@ -727,11 +733,12 @@ func (e *FileuploadFilestatustype) Scan(value any) error {
 
 // Enum values for FileuploadPoolconditiontype
 const (
-	FileuploadPoolconditiontypeGreen   FileuploadPoolconditiontype = "green"
-	FileuploadPoolconditiontypeMurky   FileuploadPoolconditiontype = "murky"
-	FileuploadPoolconditiontypeBlue    FileuploadPoolconditiontype = "blue"
-	FileuploadPoolconditiontypeEmpty   FileuploadPoolconditiontype = "empty"
-	FileuploadPoolconditiontypeUnknown FileuploadPoolconditiontype = "unknown"
+	FileuploadPoolconditiontypeGreen     FileuploadPoolconditiontype = "green"
+	FileuploadPoolconditiontypeMurky     FileuploadPoolconditiontype = "murky"
+	FileuploadPoolconditiontypeBlue      FileuploadPoolconditiontype = "blue"
+	FileuploadPoolconditiontypeDry       FileuploadPoolconditiontype = "dry"
+	FileuploadPoolconditiontypeFalsePool FileuploadPoolconditiontype = "false pool"
+	FileuploadPoolconditiontypeUnknown   FileuploadPoolconditiontype = "unknown"
 )
 
 func AllFileuploadPoolconditiontype() []FileuploadPoolconditiontype {
@@ -739,7 +746,8 @@ func AllFileuploadPoolconditiontype() []FileuploadPoolconditiontype {
 		FileuploadPoolconditiontypeGreen,
 		FileuploadPoolconditiontypeMurky,
 		FileuploadPoolconditiontypeBlue,
-		FileuploadPoolconditiontypeEmpty,
+		FileuploadPoolconditiontypeDry,
+		FileuploadPoolconditiontypeFalsePool,
 		FileuploadPoolconditiontypeUnknown,
 	}
 }
@@ -755,7 +763,8 @@ func (e FileuploadPoolconditiontype) Valid() bool {
 	case FileuploadPoolconditiontypeGreen,
 		FileuploadPoolconditiontypeMurky,
 		FileuploadPoolconditiontypeBlue,
-		FileuploadPoolconditiontypeEmpty,
+		FileuploadPoolconditiontypeDry,
+		FileuploadPoolconditiontypeFalsePool,
 		FileuploadPoolconditiontypeUnknown:
 		return true
 	default:
