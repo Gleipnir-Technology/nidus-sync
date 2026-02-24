@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -25,10 +26,22 @@ func getUploadList(ctx context.Context, r *http.Request, org *models.Organizatio
 	}), newErrorMaybe("get upload list: %w", err)
 }
 
-type contentPoolDetail struct {
+type contentUploadURL struct {
+	Discard string // URL for discarding the upload
+}
+
+func newContentUploadURL(id int32) contentUploadURL {
+	id_str := strconv.FormatInt(int64(id), 10)
+	return contentUploadURL{
+		Discard: config.MakeURLNidus("/upload/%s/discard", id_str),
+	}
+}
+
+type contentUploadDetail struct {
 	CSVFileID    int32
 	Organization *models.Organization
 	Upload       platform.UploadPoolDetail
+	URL          contentUploadURL
 }
 type contentUploadPoolList struct {
 	Uploads []platform.PoolUpload
@@ -50,24 +63,26 @@ func getUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organ
 	data := contentUploadPoolCreate{}
 	return newResponse("sync/pool-csv-upload.html", data), nil
 }
-func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentPoolDetail], *errorWithStatus) {
+func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadDetail], *errorWithStatus) {
 	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, newError("Failed to get organization: %w", err)
 	}
 	file_id_str := chi.URLParam(r, "id")
-	file_id, err := strconv.ParseInt(file_id_str, 10, 32)
+	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
 		return nil, newError("Failed to parse file_id: %w", err)
 	}
-	detail, err := platform.GetUploadPoolDetail(ctx, u.OrganizationID, int32(file_id))
+	file_id := int32(file_id_)
+	detail, err := platform.GetUploadPoolDetail(ctx, u.OrganizationID, file_id)
 	if err != nil {
 		return nil, newError("Failed to get pool: %w", err)
 	}
-	data := contentPoolDetail{
-		CSVFileID:    int32(file_id),
+	data := contentUploadDetail{
+		CSVFileID:    file_id,
 		Organization: org,
 		Upload:       detail,
+		URL:          newContentUploadURL(file_id),
 	}
 	return newResponse("sync/upload-by-id.html", data), nil
 }
