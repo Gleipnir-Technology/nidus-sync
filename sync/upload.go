@@ -69,7 +69,7 @@ func getUploadByID(ctx context.Context, r *http.Request, org *models.Organizatio
 		Organization: org,
 		Upload:       detail,
 	}
-	return newResponse("sync/pool-by-id.html", data), nil
+	return newResponse("sync/upload-by-id.html", data), nil
 }
 
 type FormUploadPool struct{}

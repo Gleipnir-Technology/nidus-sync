@@ -15,7 +15,7 @@ function handleShowIssuesOnly() {
 	const allRows = document.querySelectorAll('tr');
 	if (checkboxShowIssuesOnly.checked) {
 		allRows.forEach(row => {
-			if (!row.classList.contains("has-error")) {
+			if (!(row.classList.contains("has-error") || row.classList.contains("header"))) {
 				row.style.display = "none";
 			}
 		});
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 						<div class="table-responsive">
 							<table class="table table-hover table-striped">
 								<thead class="table-light">
-									<tr>
+									<tr class="header">
 										<th></th>
 										<th>Street</th>
 										<th>City</th>
