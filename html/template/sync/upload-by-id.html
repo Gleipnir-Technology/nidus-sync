@@ -182,32 +182,14 @@ document.addEventListener('DOMContentLoaded', onLoad);
 											<td>{{ .Street }}</td>
 											<td>{{ .City }}</td>
 											<td>{{ .PostalCode }}</td>
-											{{ if eq .Status "new" }}
-												<td>
-													<span class="badge bg-success status-badge">New</span>
-												</td>
-											{{ else if eq .Status "existing" }}
-												<td>
-													<span class="badge bg-primary status-badge"
-														>Existing</span
-													>
-												</td>
-											{{ else if eq .Status "outside" }}
-												<td>
-													<span class="badge bg-warning status-badge"
-														>Outside</span
-													>
-												</td>
-											{{ else }}
-												<td>
-													<span class="badge bg-warning status-badge"
-														>{{ .Status }}</span
-													>
-												</td>
-											{{ end }}
 											<td>
-												<span class="badge bg-{{ .Condition }} status-badge"
-													>{{ .Condition }}</span
+												<span class="badge status {{ .Status }}"
+													>{{ .Status|title }}</span
+												>
+											</td>
+											<td>
+												<span class="badge condition {{ .Condition }}"
+													>{{ .Condition|title }}</span
 												>
 											</td>
 											<td>{{ len .Tags }}</td>
