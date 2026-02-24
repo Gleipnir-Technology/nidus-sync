@@ -25,16 +25,6 @@
 
 {{ define "content" }}
 	<div class="container mb-5">
-		<div class="row mb-4">
-			<div class="col-md-12">
-				<div class="alert alert-info">
-					<i class="bi bi-info-circle-fill me-2"></i>
-					Select a data type below to import information into the system.
-					Supported file formats include CSV, Excel, and PDF documents.
-				</div>
-			</div>
-		</div>
-
 		<div class="row">
 			<!-- Green Pool Management -->
 			<div class="col-md-4">
@@ -73,6 +63,7 @@
 							Import employee data including names, contact information, and
 							responsibilities for system user creation.
 						</p>
+						<!--
 						<p class="text-muted small">Supported formats: .xlsx, .csv</p>
 						<div class="mb-3">
 							<label for="employeeFile" class="form-label"
@@ -80,9 +71,10 @@
 							>
 							<input class="form-control" type="file" id="employeeFile" />
 						</div>
-						<button type="button" class="btn btn-primary">
+						<button type="button" class="btn btn-primary disabled" disabled>
 							<i class="bi bi-upload me-2"></i>Upload Employee Data
 						</button>
+						-->
 					</div>
 					<div class="card-footer bg-white text-muted">
 						<small><i class="bi bi-clock"></i> Last import: 03/01/2023</small>
@@ -100,6 +92,7 @@
 							Upload scanned technician field notebooks to digitize information
 							about breeding sources they've identified.
 						</p>
+						<!--
 						<p class="text-muted small">Supported formats: .pdf, .jpg, .png</p>
 						<div class="mb-3">
 							<label for="notebookFile" class="form-label"
@@ -110,6 +103,7 @@
 						<button type="button" class="btn btn-warning text-white">
 							<i class="bi bi-upload me-2"></i>Upload Notebook Data
 						</button>
+						-->
 					</div>
 					<div class="card-footer bg-white text-muted">
 						<small><i class="bi bi-clock"></i> Last import: 03/15/2023</small>
@@ -134,36 +128,26 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td>03/15/2023 09:32 AM</td>
-							<td>Field Notebooks</td>
-							<td>march-field-notes.pdf</td>
-							<td><span class="badge bg-success">Complete</span></td>
-							<td>42 entries</td>
-							<td>
-								<button class="btn btn-sm btn-outline-primary">View</button>
-							</td>
-						</tr>
-						<tr>
-							<td>03/01/2023 02:15 PM</td>
-							<td>Employee Information</td>
-							<td>staff-2023-update.xlsx</td>
-							<td><span class="badge bg-success">Complete</span></td>
-							<td>18 employees</td>
-							<td>
-								<button class="btn btn-sm btn-outline-primary">View</button>
-							</td>
-						</tr>
-						<tr>
-							<td>02/15/2023 10:45 AM</td>
-							<td>Green Pool Management</td>
-							<td>feb-pools.csv</td>
-							<td><span class="badge bg-success">Complete</span></td>
-							<td>157 properties</td>
-							<td>
-								<button class="btn btn-sm btn-outline-primary">View</button>
-							</td>
-						</tr>
+						{{ range .C.RecentUploads }}
+							<tr>
+								<td>{{ .Created|timeRelative }}</td>
+								<td>{{ .Type|displayUploadType }}</td>
+								<td>{{ .Filename }}</td>
+								<td>
+									<span class="badge bg-success {{ .Status }}"
+										>{{ .Status|displayUploadStatus }}</span
+									>
+								</td>
+								<td>{{ .RecordCount }} entries</td>
+								<td>
+									<a
+										class="btn btn-sm btn-outline-primary"
+										href="/upload/{{ .ID }}"
+										>View</a
+									>
+								</td>
+							</tr>
+						{{ end }}
 					</tbody>
 				</table>
 			</div>

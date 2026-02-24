@@ -15,25 +15,30 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func addFuncMap(t *template.Template) {
 	funcMap := template.FuncMap{
-		"bigNumber":          bigNumber,
-		"duration":           duration,
-		"hasPassed":          hasPassed,
-		"html":               unescapeHTML,
-		"json":               unescapeJS,
-		"GISStatement":       gisStatement,
-		"latLngDisplay":      latLngDisplay,
-		"publicReportID":     publicReportID,
-		"timeAsRelativeDate": timeAsRelativeDate,
-		"timeDelta":          timeDelta,
-		"timeElapsed":        timeElapsed,
-		"timeInterval":       timeInterval,
-		"timeRelative":       timeRelative,
-		"timeRelativePtr":    timeRelativePtr,
-		"uuidShort":          uuidShort,
+		"bigNumber":           bigNumber,
+		"displayUploadStatus": displayUploadStatus,
+		"displayUploadType":   displayUploadType,
+		"duration":            duration,
+		"hasPassed":           hasPassed,
+		"html":                unescapeHTML,
+		"json":                unescapeJS,
+		"GISStatement":        gisStatement,
+		"latLngDisplay":       latLngDisplay,
+		"publicReportID":      publicReportID,
+		"timeAsRelativeDate":  timeAsRelativeDate,
+		"timeDelta":           timeDelta,
+		"timeElapsed":         timeElapsed,
+		"timeInterval":        timeInterval,
+		"timeRelative":        timeRelative,
+		"timeRelativePtr":     timeRelativePtr,
+		"title":               title,
+		"uuidShort":           uuidShort,
 	}
 	t.Funcs(funcMap)
 }
@@ -53,7 +58,26 @@ func bigNumber(n int) string {
 
 	return result.String()
 }
-
+func displayUploadStatus(s string) string {
+	switch s {
+	case "error":
+		return "Bad upload"
+	case "parsed":
+		return "Waiting for review"
+	case "uploaded":
+		return "Processing"
+	default:
+		return "Unknown status type"
+	}
+}
+func displayUploadType(s string) string {
+	switch s {
+	case "PoolList":
+		return "Green Pool List"
+	default:
+		return "Unknown upload type"
+	}
+}
 func duration(d time.Duration) string {
 	seconds := int(d.Seconds())
 
@@ -264,6 +288,9 @@ func timeRelativePtr(t *time.Time) string {
 		return "never"
 	}
 	return timeRelative(*t)
+}
+func title(s string) string {
+	return cases.Title(language.AmericanEnglish).String(s)
 }
 func unescapeHTML(s string) template.HTML {
 	return template.HTML(s)

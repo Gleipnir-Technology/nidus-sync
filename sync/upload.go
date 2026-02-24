@@ -13,11 +13,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type contentUploadList struct {
+	RecentUploads []platform.UploadSummary
+}
 type contentUploadPlaceholder struct{}
 
-func getUploadList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentUploadPlaceholder], *errorWithStatus) {
-	content := contentUploadPlaceholder{}
-	return newResponse("sync/upload-list.html", content), nil
+func getUploadList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentUploadList], *errorWithStatus) {
+	rows, err := platform.UploadSummaryList(ctx, org)
+	return newResponse("sync/upload-list.html", contentUploadList{
+		RecentUploads: rows,
+	}), newErrorMaybe("get upload list: %w", err)
 }
 
 type contentPoolDetail struct {
