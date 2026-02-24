@@ -104,5 +104,5 @@ func postUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Orga
 	if err != nil {
 		return "", newError("Failed to create new pool: %w", err)
 	}
-	return fmt.Sprintf("/pool/upload/%d", pool_upload.ID), nil
+	return fmt.Sprintf("/upload/%d", pool_upload.ID), nil
 }

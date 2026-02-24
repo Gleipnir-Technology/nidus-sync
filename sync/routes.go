@@ -75,7 +75,7 @@ func Router() chi.Router {
 	r.Method("GET", "/text/{destination}", authenticatedHandler(getTextMessages))
 	r.Method("GET", "/upload", authenticatedHandler(getUploadList))
 	r.Method("GET", "/upload/pool", authenticatedHandler(getUploadPoolCreate))
-	r.Method("POST", "/upload/pool/create", authenticatedHandlerPostMultipart(postUploadPoolCreate))
+	r.Method("POST", "/upload/pool", authenticatedHandlerPostMultipart(postUploadPoolCreate))
 	r.Method("GET", "/upload/{id}", authenticatedHandler(getUploadByID))
 	r.Method("POST", "/upload/{id}/discard", authenticatedHandlerPost(postUploadDiscard))
 
