@@ -154,8 +154,6 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		errors, ok := errors_by_line[r.LineNumber]
 		if !ok {
 			errors = []UploadPoolError{}
-		} else {
-			log.Info().Int32("line", r.LineNumber).Int32("id", r.ID).Msg("Found errors in errors_by_line")
 		}
 		pools = append(pools, UploadPoolRow{
 			City:       r.AddressCity,
