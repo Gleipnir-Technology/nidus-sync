@@ -94,6 +94,13 @@ func (e *errorWithStatus) Error() string {
 func newError(mesg_format string, args ...interface{}) *errorWithStatus {
 	return newErrorStatus(http.StatusInternalServerError, mesg_format, args...)
 }
+func newErrorMaybe(mesg_format string, err error, args ...interface{}) *errorWithStatus {
+	if err == nil {
+		return nil
+	}
+	allArgs := append([]interface{}{err}, args...)
+	return newErrorStatus(http.StatusInternalServerError, mesg_format, allArgs...)
+}
 func newErrorStatus(status int, mesg_format string, args ...interface{}) *errorWithStatus {
 	w := fmt.Errorf(mesg_format, args...)
 	return &errorWithStatus{
