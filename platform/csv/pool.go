@@ -82,7 +82,7 @@ func ProcessJob(ctx context.Context, file_id int32) error {
 	_, err = psql.Update(
 		um.Table("fileupload.csv"),
 		um.SetCol("rowcount").ToArg(len(pools)),
-		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
+		um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
 	).Exec(ctx, txn)
 	if err != nil {
 		return fmt.Errorf("update csv row: %w", err)
