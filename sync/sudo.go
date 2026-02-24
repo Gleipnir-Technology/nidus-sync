@@ -42,7 +42,7 @@ type FormEmail struct {
 	To      string `schema:"emailTo"`
 }
 
-func postSudoEmail(ctx context.Context, r *http.Request, u *models.User, e FormEmail) (string, *errorWithStatus) {
+func postSudoEmail(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, e FormEmail) (string, *errorWithStatus) {
 	if u.Role != enums.UserroleRoot {
 		return "", &errorWithStatus{
 			Message: "You must have sudo powers to do this",
@@ -71,7 +71,7 @@ type FormSMS struct {
 	Phone   string `schema:"smsPhone"`
 }
 
-func postSudoSMS(ctx context.Context, r *http.Request, u *models.User, sms FormSMS) (string, *errorWithStatus) {
+func postSudoSMS(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, sms FormSMS) (string, *errorWithStatus) {
 	if u.Role != enums.UserroleRoot {
 		return "", &errorWithStatus{
 			Message: "You must have sudo powers to do this",

@@ -78,6 +78,7 @@ func Router() chi.Router {
 	r.Method("GET", "/upload/pool/create", authenticatedHandler(getUploadPoolCreate))
 	r.Method("POST", "/upload/pool/create", authenticatedHandlerPostMultipart(postUploadPoolCreate))
 	r.Method("GET", "/upload/{id}", authenticatedHandler(getUploadByID))
+	r.Method("POST", "/upload/{id}/discard", authenticatedHandlerPost(postUploadDiscard))
 
 	html.AddStaticRoute(r, "/static")
 	return r
@@ -165,7 +166,7 @@ func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
 	})
 }
 
-type handlerFunctionPost[T any] func(context.Context, *http.Request, *models.User, T) (string, *errorWithStatus)
+type handlerFunctionPost[T any] func(context.Context, *http.Request, *models.Organization, *models.User, T) (string, *errorWithStatus)
 
 func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
@@ -183,7 +184,12 @@ func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, u, content)
+		org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		path, e := f(ctx, r, org, u, content)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return
@@ -207,7 +213,12 @@ func authenticatedHandlerPostMultipart[T any](f handlerFunctionPost[T]) http.Han
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, u, content)
+		org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		path, e := f(ctx, r, org, u, content)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return

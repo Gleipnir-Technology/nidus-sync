@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -64,10 +63,6 @@ func getUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organ
 	return newResponse("sync/pool-csv-upload.html", data), nil
 }
 func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadDetail], *errorWithStatus) {
-	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, newError("Failed to get organization: %w", err)
-	}
 	file_id_str := chi.URLParam(r, "id")
 	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
@@ -87,9 +82,24 @@ func getUploadByID(ctx context.Context, r *http.Request, org *models.Organizatio
 	return newResponse("sync/upload-by-id.html", data), nil
 }
 
+type FormUploadDiscard struct{}
+
+func postUploadDiscard(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f FormUploadDiscard) (string, *errorWithStatus) {
+	file_id_str := chi.URLParam(r, "id")
+	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
+	if err != nil {
+		return "", newError("Failed to parse file_id: %w", err)
+	}
+	err = platform.UploadDiscard(ctx, org, int32(file_id_))
+	if err != nil {
+		return "", newError("Failed to mark discarded: %w", err)
+	}
+	return "/upload", nil
+}
+
 type FormUploadPool struct{}
 
-func postUploadPoolCreate(ctx context.Context, r *http.Request, u *models.User, f FormUploadPool) (string, *errorWithStatus) {
+func postUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f FormUploadPool) (string, *errorWithStatus) {
 	uploads, err := userfile.SaveFileUpload(r, "csvfile", userfile.CollectionCSV)
 	if err != nil {
 		return "", newError("Failed to extract image uploads: %s", err)
