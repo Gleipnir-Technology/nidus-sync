@@ -30,7 +30,8 @@ func getSignout(w http.ResponseWriter, r *http.Request, user *models.User) {
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
-	signup(w, r.URL.Path)
+	data := ContentSignup{}
+	html.RenderOrError(w, "sync/signup.html", data)
 }
 
 func postSignin(w http.ResponseWriter, r *http.Request) {
@@ -104,9 +105,4 @@ func signin(w http.ResponseWriter, errorCode string, next string) {
 		Next:               next,
 	}
 	html.RenderOrError(w, "sync/signin.html", data)
-}
-
-func signup(w http.ResponseWriter, path string) {
-	data := ContentSignup{}
-	html.RenderOrError(w, "sync/signup.html", data)
 }

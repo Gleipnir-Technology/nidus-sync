@@ -19,9 +19,9 @@ type contentSudo struct {
 	ForwardEmailNidusAddress string
 }
 
-func getSudo(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getSudo(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSudo], *errorWithStatus) {
 	if user.Role != enums.UserroleRoot {
-		return "", nil, &errorWithStatus{
+		return nil, &errorWithStatus{
 			Message: "You have to be a root user to access this",
 			Status:  http.StatusForbidden,
 		}
@@ -30,7 +30,7 @@ func getSudo(ctx context.Context, user *models.User) (string, interface{}, *erro
 		ForwardEmailRMOAddress:   config.ForwardEmailRMOAddress,
 		ForwardEmailNidusAddress: config.ForwardEmailNidusAddress,
 	}
-	return "sync/sudo.html", content, nil
+	return newResponse("sync/sudo.html", content), nil
 }
 
 var decoder = schema.NewDecoder()
@@ -42,7 +42,7 @@ type FormEmail struct {
 	To      string `schema:"emailTo"`
 }
 
-func postSudoEmail(ctx context.Context, u *models.User, e FormEmail) (string, *errorWithStatus) {
+func postSudoEmail(ctx context.Context, r *http.Request, u *models.User, e FormEmail) (string, *errorWithStatus) {
 	if u.Role != enums.UserroleRoot {
 		return "", &errorWithStatus{
 			Message: "You must have sudo powers to do this",
@@ -71,7 +71,7 @@ type FormSMS struct {
 	Phone   string `schema:"smsPhone"`
 }
 
-func postSudoSMS(ctx context.Context, u *models.User, sms FormSMS) (string, *errorWithStatus) {
+func postSudoSMS(ctx context.Context, r *http.Request, u *models.User, sms FormSMS) (string, *errorWithStatus) {
 	if u.Role != enums.UserroleRoot {
 		return "", &errorWithStatus{
 			Message: "You must have sudo powers to do this",

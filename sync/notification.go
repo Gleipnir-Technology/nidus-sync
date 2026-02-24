@@ -1,14 +1,13 @@
 package sync
 
 import (
-	//"context"
+	"context"
 	//"fmt"
 	"net/http"
 	//"strings"
 	//"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	//"github.com/Gleipnir-Technology/bob"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -21,22 +20,14 @@ import (
 
 type contentNotificationList struct {
 	Notifications []notification.Notification
-	User          User
 }
 
-func getNotificationList(w http.ResponseWriter, r *http.Request, u *models.User) {
-	userContent, err := contentForUser(r.Context(), u)
-	if err != nil {
-		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
-		return
-	}
-	ctx := r.Context()
+func getNotificationList(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentNotificationList], *errorWithStatus) {
 	notifications, err := notification.ForUser(ctx, u)
 	if err != nil {
-		respondError(w, "Failed to get notifications", err, http.StatusInternalServerError)
+		return nil, newError("Failed to get notifications: %w", err)
 	}
-	html.RenderOrError(w, "sync/notification-list.html", &contentNotificationList{
+	return newResponse("sync/notification-list.html", contentNotificationList{
 		Notifications: notifications,
-		User:          userContent,
-	})
+	}), nil
 }

@@ -25,10 +25,6 @@ type ComponentMap struct {
 	Markers     []MapMarker
 	Zoom        int
 }
-type ContentAuthenticatedPlaceholder struct {
-	URL  ContentURL
-	User User
-}
 type ContentMockURLs struct {
 	Dispatch            string
 	DispatchResults     string

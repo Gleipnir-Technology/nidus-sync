@@ -48,6 +48,9 @@
 				setTooltipsForSidebar();
 			});
 		</script>
+		{{ if not .Config.IsProductionEnvironment }}
+			<script src="/.flogo/injector.js"></script>
+		{{ end }}
 	</head>
 	<body>
 		{{ template "sync/component/icons.html" }}
@@ -60,6 +63,7 @@
 		<div id="content">
 			{{ template "content" . }}
 		</div>
+		<div id="flogo"></div>
 		<script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
 		<script>
 			document.getElementById("sidebarToggle").addEventListener("click", () => {

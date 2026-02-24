@@ -11,9 +11,13 @@
 		<!-- favicon -->
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
+		{{ if not .Config.IsProductionEnvironment }}
+			<script src="/.flogo/injector.js"></script>
+		{{ end }}
 	</head>
 	<body>
 		{{ template "content" . }}
+		<div id="flogo"></div>
 		<script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
 	</body>
 </html>

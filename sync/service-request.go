@@ -2,6 +2,7 @@ package sync
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -31,11 +32,11 @@ type contentServiceRequestList struct {
 	ClosedRequests []contentClosedServiceRequest
 }
 
-func getServiceRequestDetail(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getServiceRequestDetail(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentServiceRequestDetail], *errorWithStatus) {
 	content := contentServiceRequestDetail{}
-	return "sync/service-request-detail.html", content, nil
+	return newResponse("sync/service-request-detail.html", content), nil
 }
-func getServiceRequestList(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getServiceRequestList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentServiceRequestList], *errorWithStatus) {
 	now := time.Now()
 	content := contentServiceRequestList{
 		ActiveRequests: []contentActiveServiceRequest{
@@ -111,5 +112,5 @@ func getServiceRequestList(ctx context.Context, user *models.User) (string, inte
 			},
 		},
 	}
-	return "sync/service-request-list.html", content, nil
+	return newResponse("sync/service-request-list.html", content), nil
 }

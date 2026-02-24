@@ -51,7 +51,7 @@ func (ts templateSystemDisk) renderOrError(w http.ResponseWriter, template_name 
 	buf := &bytes.Buffer{}
 	err = t.Execute(buf, context)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to render template")
+		log.Error().Err(err).Str("name", template_name).Msg("Failed to render template")
 		RespondError(w, "Failed to render template", err, http.StatusInternalServerError)
 		return
 	}

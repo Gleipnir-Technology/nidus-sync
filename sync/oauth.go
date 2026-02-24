@@ -13,9 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContextOauthPrompt struct {
-	User User
-}
+type ContextOauthPrompt struct{}
 
 // Build the ArcGIS authorization URL with PKCE
 func buildArcGISAuthURL(clientID string) string {
@@ -77,13 +75,6 @@ func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func oauthPrompt(w http.ResponseWriter, r *http.Request, user *models.User) {
-	userContent, err := contentForUser(r.Context(), user)
-	if err != nil {
-		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContextOauthPrompt{
-		User: userContent,
-	}
+	data := ContextOauthPrompt{}
 	html.RenderOrError(w, "sync/oauth-prompt.html", data)
 }

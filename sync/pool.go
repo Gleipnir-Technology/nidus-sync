@@ -1,123 +1,20 @@
 package sync
 
 import (
-	"fmt"
+	"context"
 	"net/http"
-	"strconv"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
-	"github.com/go-chi/chi/v5"
 )
 
-type contentPoolDetail struct {
-	CSVFileID    int32
-	Organization *models.Organization
-	Upload       platform.UploadPoolDetail
-	URL          ContentURL
-	User         User
-}
-type ContentPoolList struct {
-	Uploads []platform.PoolUpload
-	URL     ContentURL
-	User    User
-}
-type ContentPoolUpload struct {
-	URL  ContentURL
-	User User
-}
+type contentPoolList struct{}
 
-func getPoolList(w http.ResponseWriter, r *http.Request, u *models.User) {
-	ctx := r.Context()
-	userContent, err := contentForUser(ctx, u)
-	if err != nil {
-		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
-		return
-	}
-	uploads, err := platform.PoolUploadList(ctx, u.OrganizationID)
-	if err != nil {
-		respondError(w, "Failed to get uploads", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContentPoolList{
-		Uploads: uploads,
-		URL:     newContentURL(),
-		User:    userContent,
-	}
-	html.RenderOrError(w, "sync/pool-list.html", data)
+func getPoolList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentPoolList], *errorWithStatus) {
+	return newResponse("sync/pool-list.html", contentPoolList{}), nil
 }
-
-func getPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
-	userContent, err := contentForUser(r.Context(), u)
-	if err != nil {
-		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContentPoolUpload{
-		URL:  newContentURL(),
-		User: userContent,
-	}
-	html.RenderOrError(w, "sync/pool-csv-upload.html", data)
+func getPoolCreate(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentPoolList], *errorWithStatus) {
+	return newResponse("sync/pool-upload.html", contentPoolList{}), nil
 }
-func getPoolUploadByID(w http.ResponseWriter, r *http.Request, u *models.User) {
-	ctx := r.Context()
-	userContent, err := contentForUser(ctx, u)
-	if err != nil {
-		respondError(w, "Failed to get user", err, http.StatusInternalServerError)
-		return
-	}
-	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		respondError(w, "Failed to get organization", err, http.StatusInternalServerError)
-		return
-	}
-	file_id_str := chi.URLParam(r, "id")
-	file_id, err := strconv.ParseInt(file_id_str, 10, 32)
-	if err != nil {
-		respondError(w, "Failed to parse file_id", err, http.StatusInternalServerError)
-		return
-	}
-	detail, err := platform.GetUploadPoolDetail(ctx, u.OrganizationID, int32(file_id))
-	if err != nil {
-		respondError(w, "Failed to get pool", err, http.StatusInternalServerError)
-		return
-	}
-	data := contentPoolDetail{
-		CSVFileID:    int32(file_id),
-		Organization: org,
-		Upload:       detail,
-		URL:          newContentURL(),
-		User:         userContent,
-	}
-	html.RenderOrError(w, "sync/pool-by-id.html", data)
-}
-func postPoolUpload(w http.ResponseWriter, r *http.Request, u *models.User) {
-	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
-	if err != nil {
-		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
-		return
-	}
-	uploads, err := userfile.SaveFileUpload(r, "csvfile", userfile.CollectionCSV)
-	if err != nil {
-		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
-		return
-	}
-	if len(uploads) == 0 {
-		respondError(w, "No upload found", nil, http.StatusBadRequest)
-		return
-	}
-	if len(uploads) != 1 {
-		respondError(w, "You must only submit one file at a time", nil, http.StatusBadRequest)
-		return
-	}
-	upload := uploads[0]
-	pool_upload, err := platform.NewPoolUpload(r.Context(), u, upload)
-	if err != nil {
-		respondError(w, "Failed to create new pool", err, http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, fmt.Sprintf("/pool/upload/%d", pool_upload.ID), http.StatusFound)
+func getPoolByID(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentPoolList], *errorWithStatus) {
+	return newResponse("sync/pool-by-id.html", contentPoolList{}), nil
 }

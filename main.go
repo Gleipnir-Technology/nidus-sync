@@ -75,7 +75,12 @@ func main() {
 	defer sentryWriter.Close()
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter)).Level(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
+	if os.Getenv("VERBOSE") != "" {
+		log.Logger = log.Logger.Level(zerolog.DebugLevel)
+	} else {
+		log.Logger = log.Logger.Level(zerolog.InfoLevel)
+	}
 
 	err = db.InitializeDatabase(context.TODO(), config.PGDSN)
 	if err != nil {

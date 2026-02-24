@@ -7,42 +7,29 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 	//"github.com/rs/zerolog/log"
 )
 
 type contentSettingOrganization struct {
 	Organization *models.Organization
-	URL          ContentURL
-	User         User
 }
 
 type contentSettingIntegration struct {
 	ArcGISOAuth *models.OauthToken
-	URL         ContentURL
-	User        User
 }
 
-func getSetting(w http.ResponseWriter, r *http.Request, u *models.User) {
-	userContent, err := contentForUser(r.Context(), u)
-	if err != nil {
-		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
-		return
-	}
-	data := ContentAuthenticatedPlaceholder{
-		URL:  newContentURL(),
-		User: userContent,
-	}
-	html.RenderOrError(w, "sync/settings.html", data)
+type contentAuthenticatedPlaceholder struct {
 }
-func getSettingOrganization(w http.ResponseWriter, r *http.Request, u *models.User) {
-	ctx := r.Context()
-	userContent, err := contentForUser(ctx, u)
-	if err != nil {
-		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
-		return
-	}
+
+func getSetting(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentAuthenticatedPlaceholder], *errorWithStatus) {
+	data := contentAuthenticatedPlaceholder{}
+	return newResponse("sync/settings.html", data), nil
+}
+func getSettingOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingOrganization], *errorWithStatus) {
 	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, newError("get organization: %w", err)
+	}
 	/*
 		var district contentDistrict
 		district, err = bob.One[contentDistrict](ctx, db.PGInstance.BobDB, psql.Select(
@@ -76,46 +63,35 @@ func getSettingOrganization(w http.ResponseWriter, r *http.Request, u *models.Us
 	*/
 	data := contentSettingOrganization{
 		Organization: org,
-		URL:          newContentURL(),
-		User:         userContent,
 	}
-	html.RenderOrError(w, "sync/setting-organization.html", data)
+	return newResponse("sync/setting-organization.html", data), nil
 }
-func getSettingIntegration(w http.ResponseWriter, r *http.Request, u *models.User) {
-	ctx := r.Context()
-	userContent, err := contentForUser(ctx, u)
-	if err != nil {
-		respondError(w, "Failed to get user content", err, http.StatusInternalServerError)
-		return
-	}
+func getSettingIntegration(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingIntegration], *errorWithStatus) {
 	oauth, err := arcgis.GetOAuthForUser(ctx, u)
 	if err != nil {
-		respondError(w, "Failed to get oauth", err, http.StatusInternalServerError)
-		return
+		return nil, newError("Failed to get oauth: %w", err)
 	}
 	data := contentSettingIntegration{
 		ArcGISOAuth: oauth,
-		URL:         newContentURL(),
-		User:        userContent,
 	}
-	html.RenderOrError(w, "sync/setting-integration.html", data)
+	return newResponse("sync/setting-integration.html", data), nil
 }
 
 type contentSettingPlaceholder struct{}
 
-func getSettingPesticide(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getSettingPesticide(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return "sync/setting-pesticide.html", content, nil
+	return newResponse("sync/setting-pesticide.html", content), nil
 }
-func getSettingPesticideAdd(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getSettingPesticideAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return "sync/setting-pesticide-add.html", content, nil
+	return newResponse("sync/setting-pesticide-add.html", content), nil
 }
-func getSettingUserAdd(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getSettingUserAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return "sync/setting-user-add.html", content, nil
+	return newResponse("sync/setting-user-add.html", content), nil
 }
-func getSettingUserList(ctx context.Context, user *models.User) (string, interface{}, *errorWithStatus) {
+func getSettingUserList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return "sync/setting-user-list.html", content, nil
+	return newResponse("sync/setting-user-list.html", content), nil
 }
