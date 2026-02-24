@@ -36,16 +36,9 @@
 							Upload spreadsheets with addresses and contact information of
 							unmaintained pools that may breed mosquitoes.
 						</p>
-						<p class="text-muted small">Supported formats: .xlsx, .csv, .xls</p>
-						<div class="mb-3">
-							<label for="greenPoolFile" class="form-label"
-								>Select file to import</label
-							>
-							<input class="form-control" type="file" id="greenPoolFile" />
-						</div>
-						<button type="button" class="btn btn-success">
-							<i class="bi bi-upload me-2"></i>Upload Green Pool Data
-						</button>
+						<a class="btn btn-primary" href="{{ .URL.UploadCSVPool }}">
+							<i class="bi bi-upload me-2"></i>Upload Green Pool Data</a
+						>
 					</div>
 					<div class="card-footer bg-white text-muted">
 						<small><i class="bi bi-clock"></i> Last import: 02/15/2023</small>

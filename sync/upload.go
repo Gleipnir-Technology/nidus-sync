@@ -47,20 +47,9 @@ type contentUploadPoolList struct {
 }
 type contentUploadPoolCreate struct{}
 
-func getUploadPoolList(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPoolList], *errorWithStatus) {
-	uploads, err := platform.PoolUploadList(ctx, u.OrganizationID)
-	if err != nil {
-		return nil, newError("Failed to get uploads: %w", err)
-	}
-	data := contentUploadPoolList{
-		Uploads: uploads,
-	}
-	return newResponse("sync/pool-list.html", data), nil
-}
-
 func getUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPoolCreate], *errorWithStatus) {
 	data := contentUploadPoolCreate{}
-	return newResponse("sync/pool-csv-upload.html", data), nil
+	return newResponse("sync/upload-csv-pool.html", data), nil
 }
 func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadDetail], *errorWithStatus) {
 	file_id_str := chi.URLParam(r, "id")
