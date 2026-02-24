@@ -253,7 +253,13 @@ func parseFile(ctx context.Context, txn bob.Tx, file models.FileuploadFile) ([]*
 				setter.AddressStreet = omit.From(col)
 			case headerCondition:
 				var condition enums.FileuploadPoolconditiontype
-				err := condition.Scan(strings.ToLower(col))
+				col_l := strings.ToLower(col)
+				col_translated := col_l
+				switch col_l {
+				case "empty":
+					col_translated = "dry"
+				}
+				err := condition.Scan(col_translated)
 				if err != nil {
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
 					setter.Condition = omit.From(enums.FileuploadPoolconditiontypeUnknown)
