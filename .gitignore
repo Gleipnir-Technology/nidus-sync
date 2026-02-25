@@ -1,5 +1,12 @@
-nidus-sync
+.sass-cache/
+cmd/geocode-test/geocode-test
+districts/
+flogo.log
 html/static/css/bootstrap.css
 html/static/css/bootstrap.css.map
-.sass-cache/
+nidus-sync
+nidus-sync.log
+result
+stadia/cmd/bulk-geocode/bulk-geocode
+stadia/cmd/structured-geocode/structured-geocode
 tmp/
