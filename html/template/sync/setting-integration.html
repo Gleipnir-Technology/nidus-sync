@@ -48,17 +48,17 @@
 			</div>
 		</div>
 
-		<!-- FieldSeeker GIS Integration -->
-		<div class="card mb-4 integration-card fieldseeker">
+		<!-- Esri ArcGIS Integration -->
+		<div class="card mb-4 integration-card arcgis">
 			<div
 				class="card-header d-flex justify-content-between align-items-center"
 			>
 				<div>
-					<h2 class="h5 mb-0">Frontier Precision's FieldSeeker GIS</h2>
+					<h2 class="h5 mb-0">Esri's ArcGIS</h2>
 				</div>
 				<img
-					src="https://via.placeholder.com/100x40?text=FieldSeeker"
-					alt="FieldSeeker Logo"
+					src="https://via.placeholder.com/100x40?text=ArcGIS"
+					alt="ArcGIS Logo"
 					height="40"
 				/>
 			</div>
@@ -103,10 +103,33 @@
 					<a class="btn btn-primary" href="{{ .URL.OAuthRefreshArcGIS }}">
 						<i class="bi bi-arrow-repeat me-2"></i>Refresh OAuth Token
 					</a>
-					<button class="btn btn-outline-danger">
-						<i class="bi bi-trash me-2"></i>Delete Token
-					</button>
+					<a class="btn btn-outline-danger" href="{{ .URL.Setting.ArcGIS }}">
+						<i class="bi bi-gear me-2"></i>Configure
+					</a>
 				</div>
+			</div>
+		</div>
+		<!-- FieldSeeker GIS Integration -->
+		<div class="card mb-4 integration-card fieldseeker">
+			<div
+				class="card-header d-flex justify-content-between align-items-center"
+			>
+				<div>
+					<h2 class="h5 mb-0">Frontier Precision's FieldSeeker GIS</h2>
+				</div>
+				<img
+					src="https://via.placeholder.com/100x40?text=FieldSeeker"
+					alt="FieldSeeker Logo"
+					height="40"
+				/>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive mb-3">
+					<table class="table table-borderless">
+						<tbody></tbody>
+					</table>
+				</div>
+				<div class="d-flex gap-2"></div>
 			</div>
 		</div>
 

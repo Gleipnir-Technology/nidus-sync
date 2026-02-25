@@ -15,6 +15,7 @@ type contentURL struct {
 }
 
 type contentURLSetting struct {
+	ArcGIS       string
 	Fieldseeker  string
 	Integration  string
 	Organization string
@@ -38,6 +39,7 @@ func newContentURL() contentURL {
 }
 func newContentURLSetting() contentURLSetting {
 	return contentURLSetting{
+		ArcGIS:       config.MakeURLNidus("/setting/integration/arcgis"),
 		Fieldseeker:  config.MakeURLNidus("/setting/integration/fieldseeker"),
 		Integration:  config.MakeURLNidus("/setting/integration"),
 		Organization: config.MakeURLNidus("/setting/organization"),

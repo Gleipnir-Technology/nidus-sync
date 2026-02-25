@@ -76,6 +76,16 @@ func getSettingIntegration(ctx context.Context, r *http.Request, org *models.Org
 	}
 	return newResponse("sync/setting-integration.html", data), nil
 }
+func getSettingIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingIntegration], *errorWithStatus) {
+	oauth, err := arcgis.GetOAuthForUser(ctx, u)
+	if err != nil {
+		return nil, newError("Failed to get oauth: %w", err)
+	}
+	data := contentSettingIntegration{
+		ArcGISOAuth: oauth,
+	}
+	return newResponse("sync/setting-integration-arcgis.html", data), nil
+}
 
 type contentSettingPlaceholder struct{}
 

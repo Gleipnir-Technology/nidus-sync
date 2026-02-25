@@ -1,0 +1,237 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Settings - Integrations{{ end }}
+{{ define "extraheader" }}
+{{ end }}
+{{ define "content" }}
+	<div class="container py-5">
+		<div class="row justify-content-center">
+			<div class="col-lg-8">
+				<!-- Header -->
+				<div class="d-flex align-items-center mb-4">
+					<i class="bi bi-globe2 text-primary fs-1 me-3"></i>
+					<div>
+						<h1 class="mb-0">ArcGIS Integration</h1>
+						<p class="text-muted mb-0">Configure your Esri ArcGIS connection</p>
+					</div>
+				</div>
+
+				<!-- Main Card -->
+				<div class="card shadow-sm">
+					<div class="card-body p-4">
+						<form>
+							<!-- OAuth Authentication Section -->
+							<div class="mb-4">
+								<h5 class="card-title border-bottom pb-2 mb-3">
+									<i class="bi bi-key-fill text-success me-2"></i>OAuth
+									Authentication
+								</h5>
+
+								<div class="row g-3">
+									<div class="col-md-6">
+										<label class="form-label fw-semibold">ArcGIS ID</label>
+										<input
+											type="text"
+											class="form-control"
+											value="{{ .Organization.ArcgisID.GetOr "" }}"
+											readonly
+										/>
+									</div>
+
+									<div class="col-md-6">
+										<label class="form-label fw-semibold"
+											>Organization Name</label
+										>
+										<input
+											type="text"
+											class="form-control"
+											value="{{ .Organization.ArcgisName.GetOr "" }}"
+											readonly
+										/>
+									</div>
+
+									<div class="col-md-12">
+										<label class="form-label fw-semibold">Authorized By</label>
+										<input
+											type="text"
+											class="form-control"
+											value="{{ .C.ArcGISOAuth.Username }}"
+											readonly
+										/>
+									</div>
+
+									<div class="col-md-6">
+										<label class="form-label fw-semibold">Token Age</label>
+										<input
+											type="text"
+											class="form-control"
+											value="{{ .C.ArcGISOAuth.Created|timeRelative }}"
+											readonly
+										/>
+									</div>
+
+									<div class="col-md-6">
+										<label class="form-label fw-semibold"
+											>Token Expiration</label
+										>
+										<input
+											type="text"
+											class="form-control"
+											value="{{ .C.ArcGISOAuth.RefreshTokenExpires|timeRelative }}"
+											readonly
+										/>
+									</div>
+								</div>
+
+								<!-- Token Actions -->
+								<div class="mt-3 d-flex gap-2">
+									<button type="button" class="btn btn-outline-primary">
+										<i class="bi bi-arrow-clockwise me-1"></i>Refresh Token
+									</button>
+									<button
+										type="button"
+										class="btn btn-outline-danger"
+										data-bs-toggle="modal"
+										data-bs-target="#deleteModal"
+									>
+										<i class="bi bi-trash me-1"></i>Delete Token
+									</button>
+								</div>
+							</div>
+
+							<hr class="my-4" />
+
+							<!-- Feature Layers Section -->
+							<div class="mb-4">
+								<h5 class="card-title border-bottom pb-2 mb-3">
+									<i class="bi bi-layers-fill text-info me-2"></i>Feature Layer
+									Configuration
+								</h5>
+
+								<div class="row g-3">
+									<div class="col-md-12">
+										<label for="satelliteLayer" class="form-label fw-semibold">
+											Satellite Imagery Layer
+											<span class="text-danger">*</span>
+										</label>
+										<select class="form-select" id="satelliteLayer" required>
+											<option value="">-- Select a feature layer --</option>
+											<option value="layer1" selected>
+												World Imagery (Clarity)
+											</option>
+											<option value="layer2">
+												Sentinel-2 Satellite Imagery
+											</option>
+											<option value="layer3">NAIP Aerial Imagery</option>
+											<option value="layer4">Landsat 8 Multispectral</option>
+											<option value="layer5">
+												High Resolution Ortho Imagery
+											</option>
+										</select>
+										<div class="form-text">
+											Select the feature layer for satellite imagery data
+										</div>
+									</div>
+
+									<div class="col-md-12">
+										<label for="parcelLayer" class="form-label fw-semibold">
+											Parcel Data Layer
+											<span class="text-danger">*</span>
+										</label>
+										<select class="form-select" id="parcelLayer" required>
+											<option value="">-- Select a feature layer --</option>
+											<option value="parcel1" selected>
+												County Parcel Boundaries 2024
+											</option>
+											<option value="parcel2">Tax Assessor Parcels</option>
+											<option value="parcel3">
+												Property Ownership Records
+											</option>
+											<option value="parcel4">
+												Zoning and Land Use Parcels
+											</option>
+											<option value="parcel5">Cadastral Parcel Dataset</option>
+										</select>
+										<div class="form-text">
+											Select the feature layer for parcel boundary data
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Save Button -->
+							<div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+								<button type="button" class="btn btn-secondary me-md-2">
+									Cancel
+								</button>
+								<button type="submit" class="btn btn-primary">
+									<i class="bi bi-save me-1"></i>Save Configuration
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				<!-- Info Alert -->
+				<div
+					class="alert alert-info mt-3 d-flex align-items-start"
+					role="alert"
+				>
+					<i class="bi bi-info-circle-fill me-2 flex-shrink-0"></i>
+					<div>
+						<strong>Note:</strong> Changes to feature layer selections will take
+						effect immediately after saving. Refreshing the OAuth token will
+						require re-authentication with your ArcGIS account.
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Delete Confirmation Modal -->
+	<div
+		class="modal fade"
+		id="deleteModal"
+		tabindex="-1"
+		aria-labelledby="deleteModalLabel"
+		aria-hidden="true"
+	>
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header bg-danger text-white">
+					<h5 class="modal-title" id="deleteModalLabel">
+						<i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Delete
+					</h5>
+					<button
+						type="button"
+						class="btn-close btn-close-white"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
+				<div class="modal-body">
+					<p class="mb-2">
+						Are you sure you want to delete the OAuth token and disable the
+						ArcGIS integration?
+					</p>
+					<p class="text-muted mb-0">
+						<strong>This action cannot be undone.</strong> You will need to
+						re-authenticate to restore the integration.
+					</p>
+				</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Cancel
+					</button>
+					<button type="button" class="btn btn-danger">
+						<i class="bi bi-trash me-1"></i>Delete Token
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
