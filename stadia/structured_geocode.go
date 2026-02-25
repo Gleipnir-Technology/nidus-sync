@@ -20,14 +20,23 @@ type StructuredGeocodeRequest struct {
 	PostalCode    *string `url:"postalcode,omitempty" json:"postalcode,omitempty"`
 	Country       *string `url:"country,omitempty" json:"country,omitempty"`
 
-	// Focus point
-	FocusPoint *FocusPoint `url:",omitempty" json:",omitempty"`
+	// Boundary circle parameters
+	BoundaryCircleLat    *float64 `url:"boundary.circle.lat,omitempty"`
+	BoundaryCircleLon    *float64 `url:"boundary.circle.lon,omitempty"`
+	BoundaryCircleRadius *float64 `url:"boundary.circle.radius,omitempty"`
 
+	BoundaryCountry []string `url:"boundary.country,omitempty,comma" json:"boundary.country,omitempty,comma"`
+
+	BoundaryGid *string `url:"boundary.gid,omitempty" json:"boundary.gid,omitempty"`
 	// Boundary parameters
-	BoundaryRect    *BoundaryRect   `url:",omitempty" json:",omitempty"`
-	BoundaryCircle  *BoundaryCircle `url:",omitempty" json:",omitempty"`
-	BoundaryCountry []string        `url:"boundary.country,omitempty,comma" json:"boundary.country,omitempty,comma"`
-	BoundaryGid     *string         `url:"boundary.gid,omitempty" json:"boundary.gid,omitempty"`
+	BoundaryRectMaxLat *float64 `url:"boundary.rect.max_lat,omitempty"`
+	BoundaryRectMinLat *float64 `url:"boundary.rect.min_lat,omitempty"`
+	BoundaryRectMaxLon *float64 `url:"boundary.rect.max_lon,omitempty"`
+	BoundaryRectMinLon *float64 `url:"boundary.rect.min_lon,omitempty"`
+
+	// Focus point
+	FocusPointLat *float64 `url:"focus.point.lat,omitempty" json:",omitempty"`
+	FocusPointLng *float64 `url:"focus.point.lon,omitempty" json:",omitempty"`
 
 	// Other parameters
 	Layers  []string `url:"layers,omitempty,comma" json:"layers,omitempty,comma"`
