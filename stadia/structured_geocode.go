@@ -3,7 +3,6 @@ package stadia
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/google/go-querystring/query"
 )
@@ -58,7 +57,6 @@ func (s *StadiaMaps) StructuredGeocode(ctx context.Context, req StructuredGeocod
 	resp, err := s.client.R().
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
-		SetError(&result).
 		SetResult(&result).
 		SetPathParam("urlBase", s.urlBase).
 		SetQueryParam("api_key", s.APIKey).
@@ -68,24 +66,7 @@ func (s *StadiaMaps) StructuredGeocode(ctx context.Context, req StructuredGeocod
 	}
 
 	if !resp.IsSuccess() {
-		/*
-			if api_error.Error() != "" {
-				return nil, &api_error
-			}
-			content, err := io.ReadAll(resp.Body)
-			if err != nil {
-				return nil, fmt.Errorf("read all failure: %w", err)
-			}
-		*/
-		fmt.Printf("geocoding error: %s\n", result.Geocode.Error)
-		if len(result.Geocode.Errors) > 0 {
-			joined := strings.Join(result.Geocode.Errors, ", ")
-			return nil, fmt.Errorf("structured geocoding failure: %d '%s'", resp.StatusCode(), joined)
-		} else if result.Geocode.Error != "" {
-			return nil, fmt.Errorf("structured geocoding failure: %d '%s'", resp.StatusCode(), result.Geocode.Error)
-		} else {
-			return nil, fmt.Errorf("structured geocoding failure: %d", resp.StatusCode())
-		}
+		return nil, parseError(resp)
 	}
 	return &result, nil
 }

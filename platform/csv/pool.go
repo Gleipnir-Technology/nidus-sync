@@ -379,20 +379,29 @@ func errorMissingHeader(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV
 	return addError(ctx, txn, c, 0, 0, msg)
 }
 func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
-	if org.ServiceAreaXmax.IsNull() ||
-		org.ServiceAreaYmax.IsNull() ||
-		org.ServiceAreaXmin.IsNull() ||
-		org.ServiceAreaYmin.IsNull() {
+	/*
+		if org.ServiceAreaXmax.IsNull() ||
+			org.ServiceAreaYmax.IsNull() ||
+			org.ServiceAreaXmin.IsNull() ||
+			org.ServiceAreaYmin.IsNull() {
+			return
+		}
+		xmax := org.ServiceAreaXmax.MustGet()
+		ymax := org.ServiceAreaYmax.MustGet()
+		xmin := org.ServiceAreaXmin.MustGet()
+		ymin := org.ServiceAreaYmin.MustGet()
+		req.BoundaryRectMaxLon = &xmax
+		req.BoundaryRectMaxLat = &ymax
+		req.BoundaryRectMinLon = &xmin
+		req.BoundaryRectMinLat = &ymin
+	*/
+	if org.ServiceAreaCentroidX.IsNull() || org.ServiceAreaCentroidY.IsNull() {
 		return
 	}
-	xmax := org.ServiceAreaXmax.MustGet()
-	ymax := org.ServiceAreaYmax.MustGet()
-	xmin := org.ServiceAreaXmin.MustGet()
-	ymin := org.ServiceAreaYmin.MustGet()
-	req.BoundaryRectMaxLon = &xmax
-	req.BoundaryRectMaxLat = &ymax
-	req.BoundaryRectMinLon = &xmin
-	req.BoundaryRectMinLat = &ymin
+	centroid_x := org.ServiceAreaCentroidX.MustGet()
+	centroid_y := org.ServiceAreaCentroidY.MustGet()
+	req.FocusPointLat = &centroid_y
+	req.FocusPointLng = &centroid_x
 }
 func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 	result_enums := make([]headerPoolEnum, 0)

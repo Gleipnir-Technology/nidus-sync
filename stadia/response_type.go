@@ -1,18 +1,9 @@
 package stadia
 
-type Error struct {
-	ErrorMessage string   `json:"error"`
-	Errors       []string `json:"errors"`
-}
-
-func (e *Error) Error() string {
-	return e.ErrorMessage
-}
-
 // GeocodeResponse represents the top-level response from the geocoding API
 type GeocodeResponse struct {
 	BBox         []float64        `json:"bbox"` // [W, S, E, N]
-	ErrorMessage string           `json:"error"`
+	ErrorMessage string           `json:"error,omitempty"`
 	Features     []GeocodeFeature `json:"features"`
 	Geocode      GeocodeMeta      `json:"geocoding"`
 	Type         string           `json:"type"` // Should be "FeatureCollection"

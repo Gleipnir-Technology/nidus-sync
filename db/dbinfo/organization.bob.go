@@ -258,6 +258,24 @@ var Organizations = Table[
 			Generated: true,
 			AutoIncr:  false,
 		},
+		ServiceAreaCentroidX: column{
+			Name:      "service_area_centroid_x",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		ServiceAreaCentroidY: column{
+			Name:      "service_area_centroid_y",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -372,11 +390,13 @@ type organizationColumns struct {
 	ServiceAreaXmax            column
 	ServiceAreaYmax            column
 	ServiceAreaCentroidGeojson column
+	ServiceAreaCentroidX       column
+	ServiceAreaCentroidY       column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson,
+		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY,
 	}
 }
 

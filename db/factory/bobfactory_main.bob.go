@@ -2929,6 +2929,8 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.ServiceAreaXmax = func() null.Val[float64] { return m.ServiceAreaXmax }
 	o.ServiceAreaYmax = func() null.Val[float64] { return m.ServiceAreaYmax }
 	o.ServiceAreaCentroidGeojson = func() null.Val[string] { return m.ServiceAreaCentroidGeojson }
+	o.ServiceAreaCentroidX = func() null.Val[float64] { return m.ServiceAreaCentroidX }
+	o.ServiceAreaCentroidY = func() null.Val[float64] { return m.ServiceAreaCentroidY }
 
 	ctx := context.Background()
 	if len(m.R.EmailContacts) > 0 {

@@ -65,6 +65,8 @@ type OrganizationTemplate struct {
 	ServiceAreaXmax            func() null.Val[float64]
 	ServiceAreaYmax            func() null.Val[float64]
 	ServiceAreaCentroidGeojson func() null.Val[string]
+	ServiceAreaCentroidX       func() null.Val[float64]
+	ServiceAreaCentroidY       func() null.Val[float64]
 
 	r organizationR
 	f *Factory
@@ -970,6 +972,12 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.ServiceAreaCentroidGeojson != nil {
 		m.ServiceAreaCentroidGeojson = o.ServiceAreaCentroidGeojson()
+	}
+	if o.ServiceAreaCentroidX != nil {
+		m.ServiceAreaCentroidX = o.ServiceAreaCentroidX()
+	}
+	if o.ServiceAreaCentroidY != nil {
+		m.ServiceAreaCentroidY = o.ServiceAreaCentroidY()
 	}
 
 	o.setModelRels(m)
@@ -1902,6 +1910,8 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomServiceAreaXmax(f),
 		OrganizationMods.RandomServiceAreaYmax(f),
 		OrganizationMods.RandomServiceAreaCentroidGeojson(f),
+		OrganizationMods.RandomServiceAreaCentroidX(f),
+		OrganizationMods.RandomServiceAreaCentroidY(f),
 	}
 }
 
@@ -3287,6 +3297,112 @@ func (m organizationMods) RandomServiceAreaCentroidGeojsonNotNull(f *faker.Faker
 			}
 
 			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaCentroidX(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidX = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaCentroidXFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidX = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaCentroidX() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidX = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaCentroidX(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidX = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaCentroidXNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidX = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ServiceAreaCentroidY(val null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidY = func() null.Val[float64] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ServiceAreaCentroidYFunc(f func() null.Val[float64]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidY = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetServiceAreaCentroidY() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidY = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomServiceAreaCentroidY(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidY = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomServiceAreaCentroidYNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ServiceAreaCentroidY = func() null.Val[float64] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_float64(f)
 			return null.From(val)
 		}
 	})

@@ -56,6 +56,8 @@ type Organization struct {
 	ServiceAreaXmax            null.Val[float64]         `db:"service_area_xmax,generated" `
 	ServiceAreaYmax            null.Val[float64]         `db:"service_area_ymax,generated" `
 	ServiceAreaCentroidGeojson null.Val[string]          `db:"service_area_centroid_geojson,generated" `
+	ServiceAreaCentroidX       null.Val[float64]         `db:"service_area_centroid_x,generated" `
+	ServiceAreaCentroidY       null.Val[float64]         `db:"service_area_centroid_y,generated" `
 
 	R organizationR `db:"-" `
 
@@ -118,7 +120,7 @@ type organizationR struct {
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson",
+			"id", "name", "arcgis_id", "arcgis_name", "fieldseeker_url", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson", "service_area_centroid_x", "service_area_centroid_y",
 		).WithParent("organization"),
 		tableAlias:                 alias,
 		ID:                         psql.Quote(alias, "id"),
@@ -148,6 +150,8 @@ func buildOrganizationColumns(alias string) organizationColumns {
 		ServiceAreaXmax:            psql.Quote(alias, "service_area_xmax"),
 		ServiceAreaYmax:            psql.Quote(alias, "service_area_ymax"),
 		ServiceAreaCentroidGeojson: psql.Quote(alias, "service_area_centroid_geojson"),
+		ServiceAreaCentroidX:       psql.Quote(alias, "service_area_centroid_x"),
+		ServiceAreaCentroidY:       psql.Quote(alias, "service_area_centroid_y"),
 	}
 }
 
@@ -181,6 +185,8 @@ type organizationColumns struct {
 	ServiceAreaXmax            psql.Expression
 	ServiceAreaYmax            psql.Expression
 	ServiceAreaCentroidGeojson psql.Expression
+	ServiceAreaCentroidX       psql.Expression
+	ServiceAreaCentroidY       psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -4449,6 +4455,8 @@ type organizationWhere[Q psql.Filterable] struct {
 	ServiceAreaXmax            psql.WhereNullMod[Q, float64]
 	ServiceAreaYmax            psql.WhereNullMod[Q, float64]
 	ServiceAreaCentroidGeojson psql.WhereNullMod[Q, string]
+	ServiceAreaCentroidX       psql.WhereNullMod[Q, float64]
+	ServiceAreaCentroidY       psql.WhereNullMod[Q, float64]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -4484,6 +4492,8 @@ func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organiz
 		ServiceAreaXmax:            psql.WhereNull[Q, float64](cols.ServiceAreaXmax),
 		ServiceAreaYmax:            psql.WhereNull[Q, float64](cols.ServiceAreaYmax),
 		ServiceAreaCentroidGeojson: psql.WhereNull[Q, string](cols.ServiceAreaCentroidGeojson),
+		ServiceAreaCentroidX:       psql.WhereNull[Q, float64](cols.ServiceAreaCentroidX),
+		ServiceAreaCentroidY:       psql.WhereNull[Q, float64](cols.ServiceAreaCentroidY),
 	}
 }
 

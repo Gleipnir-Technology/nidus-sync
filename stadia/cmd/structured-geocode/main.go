@@ -16,6 +16,7 @@ func main() {
 	boundaryRectMinLat := flag.Float64("boundary-rect-min-lat", 0, "The min lat of the boundary")
 	boundaryRectMaxLon := flag.Float64("boundary-rect-max-lng", 0, "The max lon of the boundary")
 	boundaryRectMinLon := flag.Float64("boundary-rect-min-lng", 0, "The min lon of the boundary")
+	city := flag.String("city", "", "City address to geocode")
 	postalCode := flag.String("postal-code", "", "Postal code")
 	focusLat := flag.Float64("focus-lat", 0, "The latitude of the focus point")
 	focusLng := flag.Float64("focus-lng", 0, "The longitude of the focus point")
@@ -35,23 +36,23 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	if focusLat != nil && focusLng == nil {
+	if *focusLat != 0 && *focusLng == 0 {
 		log.Println("Error: you must specify both focus-lat and focus-lng together, not just focus-lat")
 		flag.Usage()
 		os.Exit(1)
 	}
-	if focusLat == nil && focusLng != nil {
+	if *focusLat == 0 && *focusLng != 0 {
 		log.Println("Error: you must specify both focus-lat and focus-lng together, not just focus-lng")
 		flag.Usage()
 		os.Exit(1)
 	}
-	if (boundaryRectMaxLat != nil ||
-		boundaryRectMinLat != nil ||
-		boundaryRectMaxLon != nil ||
-		boundaryRectMinLon != nil) && (boundaryRectMaxLat == nil ||
-		boundaryRectMinLat == nil ||
-		boundaryRectMaxLon == nil ||
-		boundaryRectMinLon == nil) {
+	if (*boundaryRectMaxLat != 0 ||
+		*boundaryRectMinLat != 0 ||
+		*boundaryRectMaxLon != 0 ||
+		*boundaryRectMinLon != 0) && (*boundaryRectMaxLat == 0 ||
+		*boundaryRectMinLat == 0 ||
+		*boundaryRectMaxLon == 0 ||
+		*boundaryRectMinLon == 0) {
 		log.Println("If you specify one of boundary-rect you need to specify them all")
 		os.Exit(1)
 	}
@@ -68,15 +69,18 @@ func main() {
 		Address:    address,
 		PostalCode: postalCode,
 	}
-	if focusLat != nil && focusLng != nil {
+	if *focusLat != 0 && *focusLng != 0 {
 		req.FocusPointLat = focusLat
 		req.FocusPointLng = focusLng
 	}
-	if boundaryRectMaxLat != nil {
+	if *boundaryRectMaxLat != 0 {
 		req.BoundaryRectMaxLat = boundaryRectMaxLat
 		req.BoundaryRectMinLat = boundaryRectMinLat
 		req.BoundaryRectMaxLon = boundaryRectMaxLon
 		req.BoundaryRectMinLon = boundaryRectMinLon
+	}
+	if *city != "" {
+		req.Locality = city
 	}
 	resp, err := client.StructuredGeocode(ctx, req)
 	if err != nil {
@@ -86,7 +90,7 @@ func main() {
 	log.Printf("type: %s, features: %d\n", resp.Type, len(resp.Features))
 	for i, feature := range resp.Features {
 		log.Printf("feature %d: type %s\n", i, feature.Type)
-		log.Printf("\tgeometry %s\n", feature.Geometry.Type)
+		log.Printf("\tgeometry %s (%f %f)\n", feature.Geometry.Type, feature.Geometry.Coordinates[0], feature.Geometry.Coordinates[1])
 		log.Printf("\tproperties %s\n", feature.Properties.Layer)
 	}
 }
