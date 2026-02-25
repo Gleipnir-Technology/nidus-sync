@@ -56,7 +56,7 @@
 		{{ template "sync/component/icons.html" }}
 		<div class="d-flex">
 			{{ if .User }}
-				{{ template "sync/component/sidebar.html" .User }}
+				{{ template "sync/component/sidebar.html" . }}
 			{{ end }}
 		</div>
 

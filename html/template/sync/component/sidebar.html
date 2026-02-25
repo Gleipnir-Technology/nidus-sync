@@ -51,14 +51,14 @@
 					title="Notifications"
 				>
 					<div class="menu-icon"><i class="bi bi-bell"></i></div>
-					{{ if gt (len .Notifications) 0 }}
+					{{ if gt (len .User.Notifications) 0 }}
 						<span
 							class="position-absolute translate-middle badge rounded-pill bg-primary"
 						>
-							{{ if gt (len .Notifications) 99 }}
+							{{ if gt (len .User.Notifications) 99 }}
 								99+
 							{{ else }}
-								{{ len .Notifications }}
+								{{ len .User.Notifications }}
 							{{ end }}
 							<span class="visually-hidden">unread notifications</span>
 						</span>
@@ -112,7 +112,7 @@
 			</li>
 			<li>
 				<a
-					href="/setting"
+					href="{{ .URL.Setting.Root }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
 					title="Settings"
@@ -143,7 +143,7 @@
 					<span class="menu-text ms-2">Help</span>
 				</a>
 			</li>
-			{{ if eq .Role "root" }}
+			{{ if eq .User.Role "root" }}
 				<li>
 					<a
 						href="/sudo"
