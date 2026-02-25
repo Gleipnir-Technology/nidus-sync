@@ -2,6 +2,7 @@ package stadia
 
 import (
 	"fmt"
+	"io"
 )
 
 type BulkGeocodeQuery interface {
@@ -32,12 +33,13 @@ func (s *StadiaMaps) BulkGeocode(requests []BulkGeocodeQuery) ([]BulkGeocodeResp
 		})
 	}
 	var results []BulkGeocodeResponseItem
-
+	var api_error Error
 	resp, err := s.client.R().
 		SetBody(body).
 		SetContentType("application/json").
 		SetPathParam("urlBase", s.urlBase).
 		SetQueryParam("api_key", s.APIKey).
+		SetError(&api_error).
 		SetResult(&results).
 		Post("https://{urlBase}/geocoding/v1/search/bulk")
 
@@ -46,7 +48,14 @@ func (s *StadiaMaps) BulkGeocode(requests []BulkGeocodeQuery) ([]BulkGeocodeResp
 	}
 
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("bulk geocoding request failed with status code: %d", resp.StatusCode())
+		if api_error.Error() != "" {
+			return nil, &api_error
+		}
+		content, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("read all failure: %w", err)
+		}
+		return nil, fmt.Errorf("bulk geocoding request failed with status code: %d: %s", resp.StatusCode(), content)
 	}
 
 	return results, nil

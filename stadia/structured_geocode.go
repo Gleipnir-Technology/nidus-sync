@@ -1,8 +1,9 @@
 package stadia
 
 import (
+	"context"
 	"fmt"
-	"net/url"
+	"strings"
 
 	"github.com/google/go-querystring/query"
 )
@@ -35,17 +36,20 @@ type StructuredGeocodeRequest struct {
 	Lang    *string  `url:"lang,omitempty" json:"lang,omitempty"`
 }
 
-func (s *StadiaMaps) StructuredGeocode(req StructuredGeocodeRequest) (*GeocodeResponse, error) {
+func (s *StadiaMaps) StructuredGeocode(ctx context.Context, req StructuredGeocodeRequest) (*GeocodeResponse, error) {
 	// https://docs.stadiamaps.com/geocoding-search-autocomplete/structured-search/
 	// curl "https://api.stadiamaps.com/geocoding/v1/search/structured?address=P%C3%B5hja%20pst%2027a&region=Harju&country=EE&api_key=YOUR-API-KEY"
 	var result GeocodeResponse
 
-	query, err := req.toQueryParams()
+	query, err := query.Values(req)
 	if err != nil {
 		return nil, fmt.Errorf("structured geocode query: %w", err)
 	}
+	//var api_error Error
 	resp, err := s.client.R().
 		SetQueryParamsFromValues(query).
+		SetContext(ctx).
+		SetError(&result).
 		SetResult(&result).
 		SetPathParam("urlBase", s.urlBase).
 		SetQueryParam("api_key", s.APIKey).
@@ -55,14 +59,28 @@ func (s *StadiaMaps) StructuredGeocode(req StructuredGeocodeRequest) (*GeocodeRe
 	}
 
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("structude geocoding status: %w", err)
+		/*
+			if api_error.Error() != "" {
+				return nil, &api_error
+			}
+			content, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, fmt.Errorf("read all failure: %w", err)
+			}
+		*/
+		fmt.Printf("geocoding error: %s\n", result.Geocode.Error)
+		if len(result.Geocode.Errors) > 0 {
+			joined := strings.Join(result.Geocode.Errors, ", ")
+			return nil, fmt.Errorf("structured geocoding failure: %d '%s'", resp.StatusCode(), joined)
+		} else if result.Geocode.Error != "" {
+			return nil, fmt.Errorf("structured geocoding failure: %d '%s'", resp.StatusCode(), result.Geocode.Error)
+		} else {
+			return nil, fmt.Errorf("structured geocoding failure: %d", resp.StatusCode())
+		}
 	}
 	return &result, nil
 }
 
 func (sgr StructuredGeocodeRequest) endpoint() string {
 	return "/v1/search/structured"
-}
-func (sgr StructuredGeocodeRequest) toQueryParams() (url.Values, error) {
-	return query.Values(sgr)
 }

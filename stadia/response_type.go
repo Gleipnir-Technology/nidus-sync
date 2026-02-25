@@ -1,20 +1,30 @@
 package stadia
 
+type Error struct {
+	ErrorMessage string   `json:"error"`
+	Errors       []string `json:"errors"`
+}
+
+func (e *Error) Error() string {
+	return e.ErrorMessage
+}
+
 // GeocodeResponse represents the top-level response from the geocoding API
 type GeocodeResponse struct {
-	Geocode  GeocodeMeta      `json:"geocoding"`
-	Type     string           `json:"type"` // Should be "FeatureCollection"
-	BBox     []float64        `json:"bbox"` // [W, S, E, N]
-	Features []GeocodeFeature `json:"features"`
+	BBox         []float64        `json:"bbox"` // [W, S, E, N]
+	ErrorMessage string           `json:"error"`
+	Features     []GeocodeFeature `json:"features"`
+	Geocode      GeocodeMeta      `json:"geocoding"`
+	Type         string           `json:"type"` // Should be "FeatureCollection"
 }
 
 // GeocodeMeta contains metadata about the geocoding request
 type GeocodeMeta struct {
 	Attribution string                 `json:"attribution"`
+	Error       string                 `json:"error,omitempty"`  // v2
+	Errors      []string               `json:"errors,omitempty"` // v1
 	Query       map[string]interface{} `json:"query,omitempty"`
 	Warnings    []string               `json:"warnings,omitempty"`
-	Errors      []string               `json:"errors,omitempty"` // v1
-	Error       string                 `json:"error,omitempty"`  // v2
 }
 
 // GeocodeFeature represents a GeoJSON feature in the response
