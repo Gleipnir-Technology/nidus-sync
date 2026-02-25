@@ -1,6 +1,8 @@
 package stadia
 
 import (
+	"crypto/tls"
+	"os"
 	"resty.dev/v3"
 	//"github.com/rs/zerolog/log"
 )
@@ -17,6 +19,11 @@ func NewStadiaMaps(api_key string) *StadiaMaps {
 	//r := resty.New().SetLogger(logger).SetDebug(true)
 	//r := resty.New().SetDebug(true)
 	r := resty.New()
+	if os.Getenv("STADIA_INSECURE_SKIP_VERIFY") != "" {
+		r.SetTLSClientConfig(&tls.Config{
+			InsecureSkipVerify: true,
+		})
+	}
 	return &StadiaMaps{
 		APIKey:  api_key,
 		client:  r,
