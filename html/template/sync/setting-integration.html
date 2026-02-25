@@ -73,7 +73,7 @@
 										<span class="status-inactive">
 											<i class="bi bi-x-circle-fill me-1"></i> Invalidated
 										</span>
-									{{ else if hasPassed .ArcGISOAuth.AccessTokenExpires }}
+									{{ else if hasPassed .C.ArcGISOAuth.AccessTokenExpires }}
 										<span class="status-inactive">
 											<i class="bi bi-x-circle-fill me-1"></i> Expired
 										</span>
