@@ -12,11 +12,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContentSignin struct {
+type contentSignin struct {
 	InvalidCredentials bool
 	Next               string
 }
-type ContentSignup struct{}
+type contentSignup struct{}
 
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
@@ -30,7 +30,7 @@ func getSignout(w http.ResponseWriter, r *http.Request, user *models.User) {
 }
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
-	data := ContentSignup{}
+	data := contentSignup{}
 	html.RenderOrError(w, "sync/signup.html", data)
 }
 
@@ -96,13 +96,23 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+type contentUnauthenticated[T any] struct {
+	C      T
+	Config contentConfig
+	URL    contentURL
+}
+
 func signin(w http.ResponseWriter, errorCode string, next string) {
 	if next == "" {
 		next = "/"
 	}
-	data := ContentSignin{
-		InvalidCredentials: errorCode == "invalid-credentials",
-		Next:               next,
+	data := contentUnauthenticated[contentSignin]{
+		C: contentSignin{
+			InvalidCredentials: errorCode == "invalid-credentials",
+			Next:               next,
+		},
+		Config: newContentConfig(),
+		URL:    newContentURL(),
 	}
 	html.RenderOrError(w, "sync/signin.html", data)
 }

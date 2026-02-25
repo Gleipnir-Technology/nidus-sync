@@ -4,7 +4,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 )
 
-type ContentURL struct {
+type contentURL struct {
 	OAuthRefreshArcGIS  string
 	Root                string
 	Route               string
@@ -20,8 +20,8 @@ type ContentURL struct {
 	UploadCSVPool       string
 }
 
-func newContentURL() ContentURL {
-	return ContentURL{
+func newContentURL() contentURL {
+	return contentURL{
 		OAuthRefreshArcGIS:  config.MakeURLNidus("/arcgis/oauth/begin"),
 		Root:                config.MakeURLNidus("/"),
 		Route:               config.MakeURLNidus("/route"),

@@ -38,7 +38,7 @@
 					</div>
 
 					<form method="POST" action="/signin">
-						<input type="hidden" name="next" value="{{ .Next }}" />
+						<input type="hidden" name="next" value="{{ .C.Next }}" />
 						<div class="mb-3">
 							<label for="username" class="form-label">Username</label>
 							<input
@@ -59,7 +59,7 @@
 							/>
 						</div>
 
-						{{ if .InvalidCredentials }}
+						{{ if .C.InvalidCredentials }}
 							<div class="alert alert-danger" role="alert">
 								The credentials you provided weren't recognized.
 							</div>

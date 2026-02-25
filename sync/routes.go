@@ -127,7 +127,7 @@ type contentAuthenticated[T any] struct {
 	C            T
 	Config       contentConfig
 	Organization *models.Organization
-	URL          ContentURL
+	URL          contentURL
 	User         User
 }
 
@@ -158,6 +158,7 @@ func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
 		}
 		html.RenderOrError(w, resp.template, contentAuthenticated[T]{
 			C:            resp.content,
+			Config:       newContentConfig(),
 			Organization: org,
 			URL:          newContentURL(),
 			User:         userContent,
