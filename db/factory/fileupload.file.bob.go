@@ -61,6 +61,7 @@ type fileuploadFileR struct {
 	ErrorFiles   []*fileuploadFileRErrorFilesR
 	CreatorUser  *fileuploadFileRCreatorUserR
 	Organization *fileuploadFileROrganizationR
+	Sites        []*fileuploadFileRSitesR
 }
 
 type fileuploadFileRCSVR struct {
@@ -75,6 +76,10 @@ type fileuploadFileRCreatorUserR struct {
 }
 type fileuploadFileROrganizationR struct {
 	o *OrganizationTemplate
+}
+type fileuploadFileRSitesR struct {
+	number int
+	o      *SiteTemplate
 }
 
 // Apply mods to the FileuploadFileTemplate
@@ -119,6 +124,19 @@ func (t FileuploadFileTemplate) setModelRels(o *models.FileuploadFile) {
 		rel.R.Files = append(rel.R.Files, o)
 		o.OrganizationID = rel.ID // h2
 		o.R.Organization = rel
+	}
+
+	if t.r.Sites != nil {
+		rel := models.SiteSlice{}
+		for _, r := range t.r.Sites {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.FileID = null.From(o.ID) // h2
+				rel.R.File = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Sites = rel
 	}
 }
 
@@ -311,6 +329,26 @@ func (o *FileuploadFileTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 				}
 
 				err = m.AttachErrorFiles(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isSitesDone, _ := fileuploadFileRelSitesCtx.Value(ctx)
+	if !isSitesDone && o.r.Sites != nil {
+		ctx = fileuploadFileRelSitesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Sites {
+			if r.o.alreadyPersisted {
+				m.R.Sites = append(m.R.Sites, r.o.Build())
+			} else {
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachSites(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -951,5 +989,53 @@ func (m fileuploadFileMods) AddExistingErrorFiles(existingModels ...*models.File
 func (m fileuploadFileMods) WithoutErrorFiles() FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
 		o.r.ErrorFiles = nil
+	})
+}
+
+func (m fileuploadFileMods) WithSites(number int, related *SiteTemplate) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Sites = []*fileuploadFileRSitesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m fileuploadFileMods) WithNewSites(number int, mods ...SiteMod) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.WithSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadFileMods) AddSites(number int, related *SiteTemplate) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Sites = append(o.r.Sites, &fileuploadFileRSitesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m fileuploadFileMods) AddNewSites(number int, mods ...SiteMod) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.AddSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadFileMods) AddExistingSites(existingModels ...*models.Site) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		for _, em := range existingModels {
+			o.r.Sites = append(o.r.Sites, &fileuploadFileRSitesR{
+				o: o.f.FromExistingSite(em),
+			})
+		}
+	})
+}
+
+func (m fileuploadFileMods) WithoutSites() FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.Sites = nil
 	})
 }

@@ -61,13 +61,15 @@ type UserTemplate struct {
 type userR struct {
 	PublicUserUser    []*userRPublicUserUserR
 	CreatorFiles      []*userRCreatorFilesR
-	CreatorPools      []*userRCreatorPoolsR
+	FileuploadPool    []*userRFileuploadPoolR
 	CreatorNoteAudios []*userRCreatorNoteAudiosR
 	DeletorNoteAudios []*userRDeletorNoteAudiosR
 	CreatorNoteImages []*userRCreatorNoteImagesR
 	DeletorNoteImages []*userRDeletorNoteImagesR
 	UserNotifications []*userRUserNotificationsR
 	UserOauthTokens   []*userRUserOauthTokensR
+	CreatorPools      []*userRCreatorPoolsR
+	CreatorSites      []*userRCreatorSitesR
 	Organization      *userROrganizationR
 }
 
@@ -79,7 +81,7 @@ type userRCreatorFilesR struct {
 	number int
 	o      *FileuploadFileTemplate
 }
-type userRCreatorPoolsR struct {
+type userRFileuploadPoolR struct {
 	number int
 	o      *FileuploadPoolTemplate
 }
@@ -106,6 +108,14 @@ type userRUserNotificationsR struct {
 type userRUserOauthTokensR struct {
 	number int
 	o      *OauthTokenTemplate
+}
+type userRCreatorPoolsR struct {
+	number int
+	o      *PoolTemplate
+}
+type userRCreatorSitesR struct {
+	number int
+	o      *SiteTemplate
 }
 type userROrganizationR struct {
 	o *OrganizationTemplate
@@ -147,9 +157,9 @@ func (t UserTemplate) setModelRels(o *models.User) {
 		o.R.CreatorFiles = rel
 	}
 
-	if t.r.CreatorPools != nil {
+	if t.r.FileuploadPool != nil {
 		rel := models.FileuploadPoolSlice{}
-		for _, r := range t.r.CreatorPools {
+		for _, r := range t.r.FileuploadPool {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
 				rel.CreatorID = o.ID // h2
@@ -157,7 +167,7 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			}
 			rel = append(rel, related...)
 		}
-		o.R.CreatorPools = rel
+		o.R.FileuploadPool = rel
 	}
 
 	if t.r.CreatorNoteAudios != nil {
@@ -236,6 +246,32 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.UserOauthTokens = rel
+	}
+
+	if t.r.CreatorPools != nil {
+		rel := models.PoolSlice{}
+		for _, r := range t.r.CreatorPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CreatorID = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorPools = rel
+	}
+
+	if t.r.CreatorSites != nil {
+		rel := models.SiteSlice{}
+		for _, r := range t.r.CreatorSites {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.CreatorID = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorSites = rel
 	}
 
 	if t.r.Organization != nil {
@@ -456,19 +492,19 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
-	isCreatorPoolsDone, _ := userRelCreatorPoolsCtx.Value(ctx)
-	if !isCreatorPoolsDone && o.r.CreatorPools != nil {
-		ctx = userRelCreatorPoolsCtx.WithValue(ctx, true)
-		for _, r := range o.r.CreatorPools {
+	isFileuploadPoolDone, _ := userRelFileuploadPoolCtx.Value(ctx)
+	if !isFileuploadPoolDone && o.r.FileuploadPool != nil {
+		ctx = userRelFileuploadPoolCtx.WithValue(ctx, true)
+		for _, r := range o.r.FileuploadPool {
 			if r.o.alreadyPersisted {
-				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
+				m.R.FileuploadPool = append(m.R.FileuploadPool, r.o.Build())
 			} else {
 				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorPools(ctx, exec, rel2...)
+				err = m.AttachFileuploadPool(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -596,6 +632,46 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
+	isCreatorPoolsDone, _ := userRelCreatorPoolsCtx.Value(ctx)
+	if !isCreatorPoolsDone && o.r.CreatorPools != nil {
+		ctx = userRelCreatorPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorPools {
+			if r.o.alreadyPersisted {
+				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
+			} else {
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorPools(ctx, exec, rel9...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isCreatorSitesDone, _ := userRelCreatorSitesCtx.Value(ctx)
+	if !isCreatorSitesDone && o.r.CreatorSites != nil {
+		ctx = userRelCreatorSitesCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorSites {
+			if r.o.alreadyPersisted {
+				m.R.CreatorSites = append(m.R.CreatorSites, r.o.Build())
+			} else {
+				rel10, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorSites(ctx, exec, rel10...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return err
 }
 
@@ -610,25 +686,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel9 *models.Organization
+	var rel11 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel9 = o.r.Organization.o.Build()
+		rel11 = o.r.Organization.o.Build()
 	} else {
-		rel9, err = o.r.Organization.o.Create(ctx, exec)
+		rel11, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel9.ID)
+	opt.OrganizationID = omit.From(rel11.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel9
+	m.R.Organization = rel11
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1398,51 +1474,51 @@ func (m userMods) WithoutCreatorFiles() UserMod {
 	})
 }
 
-func (m userMods) WithCreatorPools(number int, related *FileuploadPoolTemplate) UserMod {
+func (m userMods) WithFileuploadPool(number int, related *FileuploadPoolTemplate) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = []*userRCreatorPoolsR{{
+		o.r.FileuploadPool = []*userRFileuploadPoolR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m userMods) WithNewCreatorPools(number int, mods ...FileuploadPoolMod) UserMod {
+func (m userMods) WithNewFileuploadPool(number int, mods ...FileuploadPoolMod) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
-		m.WithCreatorPools(number, related).Apply(ctx, o)
+		m.WithFileuploadPool(number, related).Apply(ctx, o)
 	})
 }
 
-func (m userMods) AddCreatorPools(number int, related *FileuploadPoolTemplate) UserMod {
+func (m userMods) AddFileuploadPool(number int, related *FileuploadPoolTemplate) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+		o.r.FileuploadPool = append(o.r.FileuploadPool, &userRFileuploadPoolR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m userMods) AddNewCreatorPools(number int, mods ...FileuploadPoolMod) UserMod {
+func (m userMods) AddNewFileuploadPool(number int, mods ...FileuploadPoolMod) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		related := o.f.NewFileuploadPoolWithContext(ctx, mods...)
-		m.AddCreatorPools(number, related).Apply(ctx, o)
+		m.AddFileuploadPool(number, related).Apply(ctx, o)
 	})
 }
 
-func (m userMods) AddExistingCreatorPools(existingModels ...*models.FileuploadPool) UserMod {
+func (m userMods) AddExistingFileuploadPool(existingModels ...*models.FileuploadPool) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		for _, em := range existingModels {
-			o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+			o.r.FileuploadPool = append(o.r.FileuploadPool, &userRFileuploadPoolR{
 				o: o.f.FromExistingFileuploadPool(em),
 			})
 		}
 	})
 }
 
-func (m userMods) WithoutCreatorPools() UserMod {
+func (m userMods) WithoutFileuploadPool() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorPools = nil
+		o.r.FileuploadPool = nil
 	})
 }
 
@@ -1731,5 +1807,101 @@ func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.OauthToke
 func (m userMods) WithoutUserOauthTokens() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.UserOauthTokens = nil
+	})
+}
+
+func (m userMods) WithCreatorPools(number int, related *PoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = []*userRCreatorPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorPools(number int, mods ...PoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.WithCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorPools(number int, related *PoolTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorPools(number int, mods ...PoolMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.AddCreatorPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorPools(existingModels ...*models.Pool) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorPools = append(o.r.CreatorPools, &userRCreatorPoolsR{
+				o: o.f.FromExistingPool(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorPools() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorPools = nil
+	})
+}
+
+func (m userMods) WithCreatorSites(number int, related *SiteTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSites = []*userRCreatorSitesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorSites(number int, mods ...SiteMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.WithCreatorSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorSites(number int, related *SiteTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSites = append(o.r.CreatorSites, &userRCreatorSitesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorSites(number int, mods ...SiteMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.AddCreatorSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorSites(existingModels ...*models.Site) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorSites = append(o.r.CreatorSites, &userRCreatorSitesR{
+				o: o.f.FromExistingSite(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorSites() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSites = nil
 	})
 }

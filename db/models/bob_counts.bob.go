@@ -21,6 +21,9 @@ var (
 )
 
 type preloadCounts struct {
+	ArcgisFeatureService arcgisFeatureServiceCountPreloader
+	ArcgisLayer          arcgisLayerCountPreloader
+	ArcgisLayerField     arcgisLayerFieldCountPreloader
 	ArcgisUser           arcgisuserCountPreloader
 	CommsEmailContact    commsEmailContactCountPreloader
 	CommsEmailTemplate   commsEmailTemplateCountPreloader
@@ -39,6 +42,9 @@ type preloadCounts struct {
 
 func getPreloadCount() preloadCounts {
 	return preloadCounts{
+		ArcgisFeatureService: buildArcgisFeatureServiceCountPreloader(),
+		ArcgisLayer:          buildArcgisLayerCountPreloader(),
+		ArcgisLayerField:     buildArcgisLayerFieldCountPreloader(),
 		ArcgisUser:           buildArcgisUserCountPreloader(),
 		CommsEmailContact:    buildCommsEmailContactCountPreloader(),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountPreloader(),
@@ -57,6 +63,9 @@ func getPreloadCount() preloadCounts {
 }
 
 type thenLoadCounts[Q orm.Loadable] struct {
+	ArcgisFeatureService arcgisFeatureServiceCountThenLoader[Q]
+	ArcgisLayer          arcgisLayerCountThenLoader[Q]
+	ArcgisLayerField     arcgisLayerFieldCountThenLoader[Q]
 	ArcgisUser           arcgisuserCountThenLoader[Q]
 	CommsEmailContact    commsEmailContactCountThenLoader[Q]
 	CommsEmailTemplate   commsEmailTemplateCountThenLoader[Q]
@@ -75,6 +84,9 @@ type thenLoadCounts[Q orm.Loadable] struct {
 
 func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 	return thenLoadCounts[Q]{
+		ArcgisFeatureService: buildArcgisFeatureServiceCountThenLoader[Q](),
+		ArcgisLayer:          buildArcgisLayerCountThenLoader[Q](),
+		ArcgisLayerField:     buildArcgisLayerFieldCountThenLoader[Q](),
 		ArcgisUser:           buildArcgisUserCountThenLoader[Q](),
 		CommsEmailContact:    buildCommsEmailContactCountThenLoader[Q](),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountThenLoader[Q](),

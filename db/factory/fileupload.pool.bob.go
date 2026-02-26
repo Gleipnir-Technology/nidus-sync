@@ -104,7 +104,7 @@ func (o *FileuploadPoolTemplate) Apply(ctx context.Context, mods ...FileuploadPo
 func (t FileuploadPoolTemplate) setModelRels(o *models.FileuploadPool) {
 	if t.r.CreatorUser != nil {
 		rel := t.r.CreatorUser.o.Build()
-		rel.R.CreatorPools = append(rel.R.CreatorPools, o)
+		rel.R.FileuploadPool = append(rel.R.FileuploadPool, o)
 		o.CreatorID = rel.ID // h2
 		o.R.CreatorUser = rel
 	}

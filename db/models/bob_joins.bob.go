@@ -32,6 +32,12 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 }
 
 type joins[Q dialect.Joinable] struct {
+	Addresses                          joinSet[addressJoins[Q]]
+	ArcgisAddressMappings              joinSet[arcgisAddressMappingJoins[Q]]
+	ArcgisFeatureServices              joinSet[arcgisFeatureServiceJoins[Q]]
+	ArcgisLayers                       joinSet[arcgisLayerJoins[Q]]
+	ArcgisLayerFields                  joinSet[arcgisLayerFieldJoins[Q]]
+	ArcgisParcelMappings               joinSet[arcgisParcelMappingJoins[Q]]
 	ArcgisUsers                        joinSet[arcgisuserJoins[Q]]
 	ArcgisUserPrivileges               joinSet[arcgisUserPrivilegeJoins[Q]]
 	CommsEmailContacts                 joinSet[commsEmailContactJoins[Q]]
@@ -85,6 +91,7 @@ type joins[Q dialect.Joinable] struct {
 	Notifications                      joinSet[notificationJoins[Q]]
 	OauthTokens                        joinSet[oauthTokenJoins[Q]]
 	Organizations                      joinSet[organizationJoins[Q]]
+	Pools                              joinSet[poolJoins[Q]]
 	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
 	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
 	PublicreportNotifyEmailNuisances   joinSet[publicreportNotifyEmailNuisanceJoins[Q]]
@@ -99,6 +106,7 @@ type joins[Q dialect.Joinable] struct {
 	PublicreportQuickImages            joinSet[publicreportQuickImageJoins[Q]]
 	PublicreportSubscribeEmails        joinSet[publicreportSubscribeEmailJoins[Q]]
 	PublicreportSubscribePhones        joinSet[publicreportSubscribePhoneJoins[Q]]
+	Sites                              joinSet[siteJoins[Q]]
 	Users                              joinSet[userJoins[Q]]
 }
 
@@ -112,6 +120,12 @@ func buildJoinSet[Q interface{ aliasedAs(string) Q }, C any, F func(C, string) Q
 
 func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
+		Addresses:                          buildJoinSet[addressJoins[Q]](Addresses.Columns, buildAddressJoins),
+		ArcgisAddressMappings:              buildJoinSet[arcgisAddressMappingJoins[Q]](ArcgisAddressMappings.Columns, buildArcgisAddressMappingJoins),
+		ArcgisFeatureServices:              buildJoinSet[arcgisFeatureServiceJoins[Q]](ArcgisFeatureServices.Columns, buildArcgisFeatureServiceJoins),
+		ArcgisLayers:                       buildJoinSet[arcgisLayerJoins[Q]](ArcgisLayers.Columns, buildArcgisLayerJoins),
+		ArcgisLayerFields:                  buildJoinSet[arcgisLayerFieldJoins[Q]](ArcgisLayerFields.Columns, buildArcgisLayerFieldJoins),
+		ArcgisParcelMappings:               buildJoinSet[arcgisParcelMappingJoins[Q]](ArcgisParcelMappings.Columns, buildArcgisParcelMappingJoins),
 		ArcgisUsers:                        buildJoinSet[arcgisuserJoins[Q]](ArcgisUsers.Columns, buildArcgisUserJoins),
 		ArcgisUserPrivileges:               buildJoinSet[arcgisUserPrivilegeJoins[Q]](ArcgisUserPrivileges.Columns, buildArcgisUserPrivilegeJoins),
 		CommsEmailContacts:                 buildJoinSet[commsEmailContactJoins[Q]](CommsEmailContacts.Columns, buildCommsEmailContactJoins),
@@ -165,6 +179,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		Notifications:                      buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
 		OauthTokens:                        buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		Pools:                              buildJoinSet[poolJoins[Q]](Pools.Columns, buildPoolJoins),
 		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
 		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
 		PublicreportNotifyEmailNuisances:   buildJoinSet[publicreportNotifyEmailNuisanceJoins[Q]](PublicreportNotifyEmailNuisances.Columns, buildPublicreportNotifyEmailNuisanceJoins),
@@ -179,6 +194,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		PublicreportQuickImages:            buildJoinSet[publicreportQuickImageJoins[Q]](PublicreportQuickImages.Columns, buildPublicreportQuickImageJoins),
 		PublicreportSubscribeEmails:        buildJoinSet[publicreportSubscribeEmailJoins[Q]](PublicreportSubscribeEmails.Columns, buildPublicreportSubscribeEmailJoins),
 		PublicreportSubscribePhones:        buildJoinSet[publicreportSubscribePhoneJoins[Q]](PublicreportSubscribePhones.Columns, buildPublicreportSubscribePhoneJoins),
+		Sites:                              buildJoinSet[siteJoins[Q]](Sites.Columns, buildSiteJoins),
 		Users:                              buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}
 }

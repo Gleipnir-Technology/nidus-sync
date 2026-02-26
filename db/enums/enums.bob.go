@@ -8,6 +8,270 @@ import (
 	"fmt"
 )
 
+// Enum values for ArcgisFieldtype
+const (
+	ArcgisFieldtypeEsrifieldtypesmallinteger ArcgisFieldtype = "esriFieldTypeSmallInteger"
+	ArcgisFieldtypeEsrifieldtypeinteger      ArcgisFieldtype = "esriFieldTypeInteger"
+	ArcgisFieldtypeEsrifieldtypesingle       ArcgisFieldtype = "esriFieldTypeSingle"
+	ArcgisFieldtypeEsrifieldtypedouble       ArcgisFieldtype = "esriFieldTypeDouble"
+	ArcgisFieldtypeEsrifieldtypestring       ArcgisFieldtype = "esriFieldTypeString"
+	ArcgisFieldtypeEsrifieldtypedate         ArcgisFieldtype = "esriFieldTypeDate"
+	ArcgisFieldtypeEsrifieldtypeoid          ArcgisFieldtype = "esriFieldTypeOID"
+	ArcgisFieldtypeEsrifieldtypegeometry     ArcgisFieldtype = "esriFieldTypeGeometry"
+	ArcgisFieldtypeEsrifieldtypeblob         ArcgisFieldtype = "esriFieldTypeBlob"
+	ArcgisFieldtypeEsrifieldtyperaster       ArcgisFieldtype = "esriFieldTypeRaster"
+	ArcgisFieldtypeEsrifieldtypeguid         ArcgisFieldtype = "esriFieldTypeGUID"
+	ArcgisFieldtypeEsrifieldtypeglobalid     ArcgisFieldtype = "esriFieldTypeGlobalID"
+	ArcgisFieldtypeEsrifieldtypexml          ArcgisFieldtype = "esriFieldTypeXML"
+	ArcgisFieldtypeEsrifieldtypebiginteger   ArcgisFieldtype = "esriFieldTypeBigInteger"
+)
+
+func AllArcgisFieldtype() []ArcgisFieldtype {
+	return []ArcgisFieldtype{
+		ArcgisFieldtypeEsrifieldtypesmallinteger,
+		ArcgisFieldtypeEsrifieldtypeinteger,
+		ArcgisFieldtypeEsrifieldtypesingle,
+		ArcgisFieldtypeEsrifieldtypedouble,
+		ArcgisFieldtypeEsrifieldtypestring,
+		ArcgisFieldtypeEsrifieldtypedate,
+		ArcgisFieldtypeEsrifieldtypeoid,
+		ArcgisFieldtypeEsrifieldtypegeometry,
+		ArcgisFieldtypeEsrifieldtypeblob,
+		ArcgisFieldtypeEsrifieldtyperaster,
+		ArcgisFieldtypeEsrifieldtypeguid,
+		ArcgisFieldtypeEsrifieldtypeglobalid,
+		ArcgisFieldtypeEsrifieldtypexml,
+		ArcgisFieldtypeEsrifieldtypebiginteger,
+	}
+}
+
+type ArcgisFieldtype string
+
+func (e ArcgisFieldtype) String() string {
+	return string(e)
+}
+
+func (e ArcgisFieldtype) Valid() bool {
+	switch e {
+	case ArcgisFieldtypeEsrifieldtypesmallinteger,
+		ArcgisFieldtypeEsrifieldtypeinteger,
+		ArcgisFieldtypeEsrifieldtypesingle,
+		ArcgisFieldtypeEsrifieldtypedouble,
+		ArcgisFieldtypeEsrifieldtypestring,
+		ArcgisFieldtypeEsrifieldtypedate,
+		ArcgisFieldtypeEsrifieldtypeoid,
+		ArcgisFieldtypeEsrifieldtypegeometry,
+		ArcgisFieldtypeEsrifieldtypeblob,
+		ArcgisFieldtypeEsrifieldtyperaster,
+		ArcgisFieldtypeEsrifieldtypeguid,
+		ArcgisFieldtypeEsrifieldtypeglobalid,
+		ArcgisFieldtypeEsrifieldtypexml,
+		ArcgisFieldtypeEsrifieldtypebiginteger:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e ArcgisFieldtype) All() []ArcgisFieldtype {
+	return AllArcgisFieldtype()
+}
+
+func (e ArcgisFieldtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisFieldtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e ArcgisFieldtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisFieldtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e ArcgisFieldtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *ArcgisFieldtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = ArcgisFieldtype(x)
+	case []byte:
+		*e = ArcgisFieldtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into ArcgisFieldtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid ArcgisFieldtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for ArcgisMappingdestinationaddress
+const (
+	ArcgisMappingdestinationaddressCountry    ArcgisMappingdestinationaddress = "country"
+	ArcgisMappingdestinationaddressLocality   ArcgisMappingdestinationaddress = "locality"
+	ArcgisMappingdestinationaddressPostalCode ArcgisMappingdestinationaddress = "postal_code"
+	ArcgisMappingdestinationaddressStreet     ArcgisMappingdestinationaddress = "street"
+	ArcgisMappingdestinationaddressUnit       ArcgisMappingdestinationaddress = "unit"
+)
+
+func AllArcgisMappingdestinationaddress() []ArcgisMappingdestinationaddress {
+	return []ArcgisMappingdestinationaddress{
+		ArcgisMappingdestinationaddressCountry,
+		ArcgisMappingdestinationaddressLocality,
+		ArcgisMappingdestinationaddressPostalCode,
+		ArcgisMappingdestinationaddressStreet,
+		ArcgisMappingdestinationaddressUnit,
+	}
+}
+
+type ArcgisMappingdestinationaddress string
+
+func (e ArcgisMappingdestinationaddress) String() string {
+	return string(e)
+}
+
+func (e ArcgisMappingdestinationaddress) Valid() bool {
+	switch e {
+	case ArcgisMappingdestinationaddressCountry,
+		ArcgisMappingdestinationaddressLocality,
+		ArcgisMappingdestinationaddressPostalCode,
+		ArcgisMappingdestinationaddressStreet,
+		ArcgisMappingdestinationaddressUnit:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e ArcgisMappingdestinationaddress) All() []ArcgisMappingdestinationaddress {
+	return AllArcgisMappingdestinationaddress()
+}
+
+func (e ArcgisMappingdestinationaddress) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisMappingdestinationaddress) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e ArcgisMappingdestinationaddress) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisMappingdestinationaddress) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e ArcgisMappingdestinationaddress) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *ArcgisMappingdestinationaddress) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = ArcgisMappingdestinationaddress(x)
+	case []byte:
+		*e = ArcgisMappingdestinationaddress(x)
+	case nil:
+		return fmt.Errorf("cannot nil into ArcgisMappingdestinationaddress")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid ArcgisMappingdestinationaddress value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for ArcgisMappingdestinationparcel
+const (
+	ArcgisMappingdestinationparcelApn         ArcgisMappingdestinationparcel = "apn"
+	ArcgisMappingdestinationparcelDescription ArcgisMappingdestinationparcel = "description"
+)
+
+func AllArcgisMappingdestinationparcel() []ArcgisMappingdestinationparcel {
+	return []ArcgisMappingdestinationparcel{
+		ArcgisMappingdestinationparcelApn,
+		ArcgisMappingdestinationparcelDescription,
+	}
+}
+
+type ArcgisMappingdestinationparcel string
+
+func (e ArcgisMappingdestinationparcel) String() string {
+	return string(e)
+}
+
+func (e ArcgisMappingdestinationparcel) Valid() bool {
+	switch e {
+	case ArcgisMappingdestinationparcelApn,
+		ArcgisMappingdestinationparcelDescription:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e ArcgisMappingdestinationparcel) All() []ArcgisMappingdestinationparcel {
+	return AllArcgisMappingdestinationparcel()
+}
+
+func (e ArcgisMappingdestinationparcel) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisMappingdestinationparcel) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e ArcgisMappingdestinationparcel) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *ArcgisMappingdestinationparcel) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e ArcgisMappingdestinationparcel) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *ArcgisMappingdestinationparcel) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = ArcgisMappingdestinationparcel(x)
+	case []byte:
+		*e = ArcgisMappingdestinationparcel(x)
+	case nil:
+		return fmt.Errorf("cannot nil into ArcgisMappingdestinationparcel")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid ArcgisMappingdestinationparcel value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Arcgislicensetype
 const (
 	ArcgislicensetypeAdvancedut             Arcgislicensetype = "advancedUT"
@@ -579,6 +843,76 @@ func (e *CommsTextorigin) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Countrytype
+const (
+	CountrytypeUsa Countrytype = "usa"
+)
+
+func AllCountrytype() []Countrytype {
+	return []Countrytype{
+		CountrytypeUsa,
+	}
+}
+
+type Countrytype string
+
+func (e Countrytype) String() string {
+	return string(e)
+}
+
+func (e Countrytype) Valid() bool {
+	switch e {
+	case CountrytypeUsa:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Countrytype) All() []Countrytype {
+	return AllCountrytype()
+}
+
+func (e Countrytype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Countrytype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Countrytype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Countrytype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Countrytype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Countrytype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Countrytype(x)
+	case []byte:
+		*e = Countrytype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Countrytype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Countrytype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for FileuploadCsvtype
 const (
 	FileuploadCsvtypePoollist FileuploadCsvtype = "PoolList"
@@ -1099,6 +1433,88 @@ func (e *Notificationtype) Scan(value any) error {
 
 	if !e.Valid() {
 		return fmt.Errorf("invalid Notificationtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for Poolconditiontype
+const (
+	PoolconditiontypeBlue      Poolconditiontype = "blue"
+	PoolconditiontypeDry       Poolconditiontype = "dry"
+	PoolconditiontypeFalsePool Poolconditiontype = "false pool"
+	PoolconditiontypeGreen     Poolconditiontype = "green"
+	PoolconditiontypeMurky     Poolconditiontype = "murky"
+)
+
+func AllPoolconditiontype() []Poolconditiontype {
+	return []Poolconditiontype{
+		PoolconditiontypeBlue,
+		PoolconditiontypeDry,
+		PoolconditiontypeFalsePool,
+		PoolconditiontypeGreen,
+		PoolconditiontypeMurky,
+	}
+}
+
+type Poolconditiontype string
+
+func (e Poolconditiontype) String() string {
+	return string(e)
+}
+
+func (e Poolconditiontype) Valid() bool {
+	switch e {
+	case PoolconditiontypeBlue,
+		PoolconditiontypeDry,
+		PoolconditiontypeFalsePool,
+		PoolconditiontypeGreen,
+		PoolconditiontypeMurky:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Poolconditiontype) All() []Poolconditiontype {
+	return AllPoolconditiontype()
+}
+
+func (e Poolconditiontype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Poolconditiontype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Poolconditiontype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Poolconditiontype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Poolconditiontype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Poolconditiontype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Poolconditiontype(x)
+	case []byte:
+		*e = Poolconditiontype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Poolconditiontype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Poolconditiontype value: %s", *e)
 	}
 
 	return nil

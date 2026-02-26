@@ -8,6 +8,35 @@ import "context"
 type contextKey string
 
 var (
+	// Relationship Contexts for address
+	addressWithParentsCascadingCtx = newContextual[bool]("addressWithParentsCascading")
+	addressRelSiteCtx              = newContextual[bool]("address.site.site.site_address_id_fkey")
+
+	// Relationship Contexts for arcgis.address_mapping
+	arcgisAddressMappingWithParentsCascadingCtx = newContextual[bool]("arcgisAddressMappingWithParentsCascading")
+	arcgisAddressMappingRelLayerFieldCtx        = newContextual[bool]("arcgis.address_mapping.arcgis.layer_field.arcgis.address_mapping.address_mapping_layer_feature_service_item_id_layer_index__fkey")
+	arcgisAddressMappingRelOrganizationCtx      = newContextual[bool]("arcgis.address_mapping.organization.arcgis.address_mapping.address_mapping_organization_id_fkey")
+
+	// Relationship Contexts for arcgis.feature_service
+	arcgisFeatureServiceWithParentsCascadingCtx        = newContextual[bool]("arcgisFeatureServiceWithParentsCascading")
+	arcgisFeatureServiceRelFeatureServiceItemLayersCtx = newContextual[bool]("arcgis.feature_service.arcgis.layer.arcgis.layer.layer_feature_service_item_id_fkey")
+
+	// Relationship Contexts for arcgis.layer
+	arcgisLayerWithParentsCascadingCtx                = newContextual[bool]("arcgisLayerWithParentsCascading")
+	arcgisLayerRelFeatureServiceItemFeatureServiceCtx = newContextual[bool]("arcgis.feature_service.arcgis.layer.arcgis.layer.layer_feature_service_item_id_fkey")
+	arcgisLayerRelLayerFieldsCtx                      = newContextual[bool]("arcgis.layer.arcgis.layer_field.arcgis.layer_field.layer_field_layer_feature_service_item_id_layer_index_fkey")
+
+	// Relationship Contexts for arcgis.layer_field
+	arcgisLayerFieldWithParentsCascadingCtx = newContextual[bool]("arcgisLayerFieldWithParentsCascading")
+	arcgisLayerFieldRelAddressMappingsCtx   = newContextual[bool]("arcgis.address_mapping.arcgis.layer_field.arcgis.address_mapping.address_mapping_layer_feature_service_item_id_layer_index__fkey")
+	arcgisLayerFieldRelLayerCtx             = newContextual[bool]("arcgis.layer.arcgis.layer_field.arcgis.layer_field.layer_field_layer_feature_service_item_id_layer_index_fkey")
+	arcgisLayerFieldRelParcelMappingsCtx    = newContextual[bool]("arcgis.layer_field.arcgis.parcel_mapping.arcgis.parcel_mapping.parcel_mapping_layer_feature_service_item_id_layer_index_l_fkey")
+
+	// Relationship Contexts for arcgis.parcel_mapping
+	arcgisParcelMappingWithParentsCascadingCtx = newContextual[bool]("arcgisParcelMappingWithParentsCascading")
+	arcgisParcelMappingRelLayerFieldCtx        = newContextual[bool]("arcgis.layer_field.arcgis.parcel_mapping.arcgis.parcel_mapping.parcel_mapping_layer_feature_service_item_id_layer_index_l_fkey")
+	arcgisParcelMappingRelOrganizationCtx      = newContextual[bool]("arcgis.parcel_mapping.organization.arcgis.parcel_mapping.parcel_mapping_organization_id_fkey")
+
 	// Relationship Contexts for arcgis.user_
 	arcgisuserWithParentsCascadingCtx  = newContextual[bool]("arcgisuserWithParentsCascading")
 	arcgisuserRelPublicUserUserCtx     = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
@@ -197,6 +226,7 @@ var (
 	fileuploadFileRelErrorFilesCtx        = newContextual[bool]("fileupload.error_file.fileupload.file.fileupload.error_file.error_file_file_id_fkey")
 	fileuploadFileRelCreatorUserCtx       = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
 	fileuploadFileRelOrganizationCtx      = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
+	fileuploadFileRelSitesCtx             = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
 
 	// Relationship Contexts for fileupload.pool
 	fileuploadPoolWithParentsCascadingCtx           = newContextual[bool]("fileuploadPoolWithParentsCascading")
@@ -261,6 +291,8 @@ var (
 
 	// Relationship Contexts for organization
 	organizationWithParentsCascadingCtx       = newContextual[bool]("organizationWithParentsCascading")
+	organizationRelAddressMappingsCtx         = newContextual[bool]("arcgis.address_mapping.organization.arcgis.address_mapping.address_mapping_organization_id_fkey")
+	organizationRelParcelMappingsCtx          = newContextual[bool]("arcgis.parcel_mapping.organization.arcgis.parcel_mapping.parcel_mapping_organization_id_fkey")
 	organizationRelEmailContactsCtx           = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
 	organizationRelPhonesCtx                  = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
 	organizationRelContainerrelatesCtx        = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")
@@ -300,6 +332,13 @@ var (
 	organizationRelPublicreportPoolCtx        = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
 	organizationRelQuicksCtx                  = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
 	organizationRelUserCtx                    = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
+
+	// Relationship Contexts for parcel
+	parcelWithParentsCascadingCtx = newContextual[bool]("parcelWithParentsCascading")
+
+	// Relationship Contexts for pool
+	poolWithParentsCascadingCtx = newContextual[bool]("poolWithParentsCascading")
+	poolRelCreatorUserCtx       = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
 
 	// Relationship Contexts for publicreport.image
 	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
@@ -386,6 +425,12 @@ var (
 	// Relationship Contexts for sessions
 	sessionWithParentsCascadingCtx = newContextual[bool]("sessionWithParentsCascading")
 
+	// Relationship Contexts for site
+	siteWithParentsCascadingCtx = newContextual[bool]("siteWithParentsCascading")
+	siteRelAddressCtx           = newContextual[bool]("address.site.site.site_address_id_fkey")
+	siteRelCreatorUserCtx       = newContextual[bool]("site.user_.site.site_creator_id_fkey")
+	siteRelFileCtx              = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
+
 	// Relationship Contexts for spatial_ref_sys
 	spatialRefSyWithParentsCascadingCtx = newContextual[bool]("spatialRefSyWithParentsCascading")
 
@@ -393,13 +438,15 @@ var (
 	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
 	userRelPublicUserUserCtx    = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
 	userRelCreatorFilesCtx      = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
-	userRelCreatorPoolsCtx      = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
+	userRelFileuploadPoolCtx    = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
 	userRelCreatorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_creator_id_fkey")
 	userRelDeletorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_deletor_id_fkey")
 	userRelCreatorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_creator_id_fkey")
 	userRelDeletorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_deletor_id_fkey")
 	userRelUserNotificationsCtx = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
 	userRelUserOauthTokensCtx   = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
+	userRelCreatorPoolsCtx      = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
+	userRelCreatorSitesCtx      = newContextual[bool]("site.user_.site.site_creator_id_fkey")
 	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )
 

@@ -984,7 +984,7 @@ func (fileuploadPool0 *FileuploadPool) InsertCreatorUser(ctx context.Context, ex
 
 	fileuploadPool0.R.CreatorUser = user1
 
-	user1.R.CreatorPools = append(user1.R.CreatorPools, fileuploadPool0)
+	user1.R.FileuploadPool = append(user1.R.FileuploadPool, fileuploadPool0)
 
 	return nil
 }
@@ -999,7 +999,7 @@ func (fileuploadPool0 *FileuploadPool) AttachCreatorUser(ctx context.Context, ex
 
 	fileuploadPool0.R.CreatorUser = user1
 
-	user1.R.CreatorPools = append(user1.R.CreatorPools, fileuploadPool0)
+	user1.R.FileuploadPool = append(user1.R.FileuploadPool, fileuploadPool0)
 
 	return nil
 }
@@ -1267,7 +1267,7 @@ func (o *FileuploadPool) Preload(name string, retrieved any) error {
 		o.R.CreatorUser = rel
 
 		if rel != nil {
-			rel.R.CreatorPools = FileuploadPoolSlice{o}
+			rel.R.FileuploadPool = FileuploadPoolSlice{o}
 		}
 		return nil
 	case "CSVFileCSV":
@@ -1474,7 +1474,7 @@ func (o *FileuploadPool) LoadCreatorUser(ctx context.Context, exec bob.Executor,
 		return err
 	}
 
-	related.R.CreatorPools = FileuploadPoolSlice{o}
+	related.R.FileuploadPool = FileuploadPoolSlice{o}
 
 	o.R.CreatorUser = related
 	return nil
@@ -1502,7 +1502,7 @@ func (os FileuploadPoolSlice) LoadCreatorUser(ctx context.Context, exec bob.Exec
 				continue
 			}
 
-			rel.R.CreatorPools = append(rel.R.CreatorPools, o)
+			rel.R.FileuploadPool = append(rel.R.FileuploadPool, o)
 
 			o.R.CreatorUser = rel
 			break

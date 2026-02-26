@@ -75,6 +75,8 @@ type OrganizationTemplate struct {
 }
 
 type organizationR struct {
+	AddressMappings         []*organizationRAddressMappingsR
+	ParcelMappings          []*organizationRParcelMappingsR
 	EmailContacts           []*organizationREmailContactsR
 	Phones                  []*organizationRPhonesR
 	Containerrelates        []*organizationRContainerrelatesR
@@ -116,6 +118,14 @@ type organizationR struct {
 	User                    []*organizationRUserR
 }
 
+type organizationRAddressMappingsR struct {
+	number int
+	o      *ArcgisAddressMappingTemplate
+}
+type organizationRParcelMappingsR struct {
+	number int
+	o      *ArcgisParcelMappingTemplate
+}
 type organizationREmailContactsR struct {
 	number int
 	o      *CommsEmailContactTemplate
@@ -283,6 +293,32 @@ func (o *OrganizationTemplate) Apply(ctx context.Context, mods ...OrganizationMo
 // setModelRels creates and sets the relationships on *models.Organization
 // according to the relationships in the template. Nothing is inserted into the db
 func (t OrganizationTemplate) setModelRels(o *models.Organization) {
+	if t.r.AddressMappings != nil {
+		rel := models.ArcgisAddressMappingSlice{}
+		for _, r := range t.r.AddressMappings {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.AddressMappings = rel
+	}
+
+	if t.r.ParcelMappings != nil {
+		rel := models.ArcgisParcelMappingSlice{}
+		for _, r := range t.r.ParcelMappings {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.ParcelMappings = rel
+	}
+
 	if t.r.EmailContacts != nil {
 		rel := models.CommsEmailContactSlice{}
 		for _, r := range t.r.EmailContacts {
@@ -1011,6 +1047,46 @@ func ensureCreatableOrganization(m *models.OrganizationSetter) {
 func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Organization) error {
 	var err error
 
+	isAddressMappingsDone, _ := organizationRelAddressMappingsCtx.Value(ctx)
+	if !isAddressMappingsDone && o.r.AddressMappings != nil {
+		ctx = organizationRelAddressMappingsCtx.WithValue(ctx, true)
+		for _, r := range o.r.AddressMappings {
+			if r.o.alreadyPersisted {
+				m.R.AddressMappings = append(m.R.AddressMappings, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachAddressMappings(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isParcelMappingsDone, _ := organizationRelParcelMappingsCtx.Value(ctx)
+	if !isParcelMappingsDone && o.r.ParcelMappings != nil {
+		ctx = organizationRelParcelMappingsCtx.WithValue(ctx, true)
+		for _, r := range o.r.ParcelMappings {
+			if r.o.alreadyPersisted {
+				m.R.ParcelMappings = append(m.R.ParcelMappings, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachParcelMappings(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isEmailContactsDone, _ := organizationRelEmailContactsCtx.Value(ctx)
 	if !isEmailContactsDone && o.r.EmailContacts != nil {
 		ctx = organizationRelEmailContactsCtx.WithValue(ctx, true)
@@ -1018,12 +1094,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.EmailContacts = append(m.R.EmailContacts, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachEmailContacts(ctx, exec, rel0...)
+				err = m.AttachEmailContacts(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -1038,12 +1114,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Phones = append(m.R.Phones, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPhones(ctx, exec, rel1...)
+				err = m.AttachPhones(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -1058,12 +1134,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Containerrelates = append(m.R.Containerrelates, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachContainerrelates(ctx, exec, rel2...)
+				err = m.AttachContainerrelates(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -1078,12 +1154,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Fieldscoutinglogs = append(m.R.Fieldscoutinglogs, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldscoutinglogs(ctx, exec, rel3...)
+				err = m.AttachFieldscoutinglogs(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -1098,12 +1174,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Habitatrelates = append(m.R.Habitatrelates, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachHabitatrelates(ctx, exec, rel4...)
+				err = m.AttachHabitatrelates(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -1118,12 +1194,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Inspectionsamples = append(m.R.Inspectionsamples, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachInspectionsamples(ctx, exec, rel5...)
+				err = m.AttachInspectionsamples(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -1138,12 +1214,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Inspectionsampledetails = append(m.R.Inspectionsampledetails, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachInspectionsampledetails(ctx, exec, rel6...)
+				err = m.AttachInspectionsampledetails(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -1158,12 +1234,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Linelocations = append(m.R.Linelocations, r.o.Build())
 			} else {
-				rel7, err := r.o.CreateMany(ctx, exec, r.number)
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachLinelocations(ctx, exec, rel7...)
+				err = m.AttachLinelocations(ctx, exec, rel9...)
 				if err != nil {
 					return err
 				}
@@ -1178,12 +1254,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Locationtrackings = append(m.R.Locationtrackings, r.o.Build())
 			} else {
-				rel8, err := r.o.CreateMany(ctx, exec, r.number)
+				rel10, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachLocationtrackings(ctx, exec, rel8...)
+				err = m.AttachLocationtrackings(ctx, exec, rel10...)
 				if err != nil {
 					return err
 				}
@@ -1198,12 +1274,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Mosquitoinspections = append(m.R.Mosquitoinspections, r.o.Build())
 			} else {
-				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				rel11, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachMosquitoinspections(ctx, exec, rel9...)
+				err = m.AttachMosquitoinspections(ctx, exec, rel11...)
 				if err != nil {
 					return err
 				}
@@ -1218,12 +1294,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pointlocations = append(m.R.Pointlocations, r.o.Build())
 			} else {
-				rel10, err := r.o.CreateMany(ctx, exec, r.number)
+				rel12, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPointlocations(ctx, exec, rel10...)
+				err = m.AttachPointlocations(ctx, exec, rel12...)
 				if err != nil {
 					return err
 				}
@@ -1238,12 +1314,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Polygonlocations = append(m.R.Polygonlocations, r.o.Build())
 			} else {
-				rel11, err := r.o.CreateMany(ctx, exec, r.number)
+				rel13, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPolygonlocations(ctx, exec, rel11...)
+				err = m.AttachPolygonlocations(ctx, exec, rel13...)
 				if err != nil {
 					return err
 				}
@@ -1258,12 +1334,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.FieldseekerPool = append(m.R.FieldseekerPool, r.o.Build())
 			} else {
-				rel12, err := r.o.CreateMany(ctx, exec, r.number)
+				rel14, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldseekerPool(ctx, exec, rel12...)
+				err = m.AttachFieldseekerPool(ctx, exec, rel14...)
 				if err != nil {
 					return err
 				}
@@ -1278,12 +1354,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pooldetails = append(m.R.Pooldetails, r.o.Build())
 			} else {
-				rel13, err := r.o.CreateMany(ctx, exec, r.number)
+				rel15, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPooldetails(ctx, exec, rel13...)
+				err = m.AttachPooldetails(ctx, exec, rel15...)
 				if err != nil {
 					return err
 				}
@@ -1298,12 +1374,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Proposedtreatmentareas = append(m.R.Proposedtreatmentareas, r.o.Build())
 			} else {
-				rel14, err := r.o.CreateMany(ctx, exec, r.number)
+				rel16, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachProposedtreatmentareas(ctx, exec, rel14...)
+				err = m.AttachProposedtreatmentareas(ctx, exec, rel16...)
 				if err != nil {
 					return err
 				}
@@ -1318,12 +1394,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Qamosquitoinspections = append(m.R.Qamosquitoinspections, r.o.Build())
 			} else {
-				rel15, err := r.o.CreateMany(ctx, exec, r.number)
+				rel17, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQamosquitoinspections(ctx, exec, rel15...)
+				err = m.AttachQamosquitoinspections(ctx, exec, rel17...)
 				if err != nil {
 					return err
 				}
@@ -1338,12 +1414,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Rodentlocations = append(m.R.Rodentlocations, r.o.Build())
 			} else {
-				rel16, err := r.o.CreateMany(ctx, exec, r.number)
+				rel18, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachRodentlocations(ctx, exec, rel16...)
+				err = m.AttachRodentlocations(ctx, exec, rel18...)
 				if err != nil {
 					return err
 				}
@@ -1358,12 +1434,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Samplecollections = append(m.R.Samplecollections, r.o.Build())
 			} else {
-				rel17, err := r.o.CreateMany(ctx, exec, r.number)
+				rel19, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSamplecollections(ctx, exec, rel17...)
+				err = m.AttachSamplecollections(ctx, exec, rel19...)
 				if err != nil {
 					return err
 				}
@@ -1378,12 +1454,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Samplelocations = append(m.R.Samplelocations, r.o.Build())
 			} else {
-				rel18, err := r.o.CreateMany(ctx, exec, r.number)
+				rel20, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSamplelocations(ctx, exec, rel18...)
+				err = m.AttachSamplelocations(ctx, exec, rel20...)
 				if err != nil {
 					return err
 				}
@@ -1398,12 +1474,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Servicerequests = append(m.R.Servicerequests, r.o.Build())
 			} else {
-				rel19, err := r.o.CreateMany(ctx, exec, r.number)
+				rel21, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachServicerequests(ctx, exec, rel19...)
+				err = m.AttachServicerequests(ctx, exec, rel21...)
 				if err != nil {
 					return err
 				}
@@ -1418,12 +1494,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Speciesabundances = append(m.R.Speciesabundances, r.o.Build())
 			} else {
-				rel20, err := r.o.CreateMany(ctx, exec, r.number)
+				rel22, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSpeciesabundances(ctx, exec, rel20...)
+				err = m.AttachSpeciesabundances(ctx, exec, rel22...)
 				if err != nil {
 					return err
 				}
@@ -1438,12 +1514,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Stormdrains = append(m.R.Stormdrains, r.o.Build())
 			} else {
-				rel21, err := r.o.CreateMany(ctx, exec, r.number)
+				rel23, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachStormdrains(ctx, exec, rel21...)
+				err = m.AttachStormdrains(ctx, exec, rel23...)
 				if err != nil {
 					return err
 				}
@@ -1458,12 +1534,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Timecards = append(m.R.Timecards, r.o.Build())
 			} else {
-				rel22, err := r.o.CreateMany(ctx, exec, r.number)
+				rel24, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTimecards(ctx, exec, rel22...)
+				err = m.AttachTimecards(ctx, exec, rel24...)
 				if err != nil {
 					return err
 				}
@@ -1478,12 +1554,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Trapdata = append(m.R.Trapdata, r.o.Build())
 			} else {
-				rel23, err := r.o.CreateMany(ctx, exec, r.number)
+				rel25, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTrapdata(ctx, exec, rel23...)
+				err = m.AttachTrapdata(ctx, exec, rel25...)
 				if err != nil {
 					return err
 				}
@@ -1498,12 +1574,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Traplocations = append(m.R.Traplocations, r.o.Build())
 			} else {
-				rel24, err := r.o.CreateMany(ctx, exec, r.number)
+				rel26, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTraplocations(ctx, exec, rel24...)
+				err = m.AttachTraplocations(ctx, exec, rel26...)
 				if err != nil {
 					return err
 				}
@@ -1518,12 +1594,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Treatments = append(m.R.Treatments, r.o.Build())
 			} else {
-				rel25, err := r.o.CreateMany(ctx, exec, r.number)
+				rel27, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTreatments(ctx, exec, rel25...)
+				err = m.AttachTreatments(ctx, exec, rel27...)
 				if err != nil {
 					return err
 				}
@@ -1538,12 +1614,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Treatmentareas = append(m.R.Treatmentareas, r.o.Build())
 			} else {
-				rel26, err := r.o.CreateMany(ctx, exec, r.number)
+				rel28, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTreatmentareas(ctx, exec, rel26...)
+				err = m.AttachTreatmentareas(ctx, exec, rel28...)
 				if err != nil {
 					return err
 				}
@@ -1558,12 +1634,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Zones = append(m.R.Zones, r.o.Build())
 			} else {
-				rel27, err := r.o.CreateMany(ctx, exec, r.number)
+				rel29, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachZones(ctx, exec, rel27...)
+				err = m.AttachZones(ctx, exec, rel29...)
 				if err != nil {
 					return err
 				}
@@ -1578,12 +1654,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Zones2s = append(m.R.Zones2s, r.o.Build())
 			} else {
-				rel28, err := r.o.CreateMany(ctx, exec, r.number)
+				rel30, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachZones2s(ctx, exec, rel28...)
+				err = m.AttachZones2s(ctx, exec, rel30...)
 				if err != nil {
 					return err
 				}
@@ -1598,12 +1674,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.FieldseekerSyncs = append(m.R.FieldseekerSyncs, r.o.Build())
 			} else {
-				rel29, err := r.o.CreateMany(ctx, exec, r.number)
+				rel31, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldseekerSyncs(ctx, exec, rel29...)
+				err = m.AttachFieldseekerSyncs(ctx, exec, rel31...)
 				if err != nil {
 					return err
 				}
@@ -1618,12 +1694,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Files = append(m.R.Files, r.o.Build())
 			} else {
-				rel30, err := r.o.CreateMany(ctx, exec, r.number)
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFiles(ctx, exec, rel30...)
+				err = m.AttachFiles(ctx, exec, rel32...)
 				if err != nil {
 					return err
 				}
@@ -1638,12 +1714,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pools = append(m.R.Pools, r.o.Build())
 			} else {
-				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				rel33, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPools(ctx, exec, rel31...)
+				err = m.AttachPools(ctx, exec, rel33...)
 				if err != nil {
 					return err
 				}
@@ -1658,12 +1734,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.H3Aggregations = append(m.R.H3Aggregations, r.o.Build())
 			} else {
-				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				rel34, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachH3Aggregations(ctx, exec, rel32...)
+				err = m.AttachH3Aggregations(ctx, exec, rel34...)
 				if err != nil {
 					return err
 				}
@@ -1678,12 +1754,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel33, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel33...)
+				err = m.AttachNoteAudios(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1698,12 +1774,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel34, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel34...)
+				err = m.AttachNoteImages(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1718,12 +1794,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel35...)
+				err = m.AttachNuisances(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1738,12 +1814,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel38, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel36...)
+				err = m.AttachPublicreportPool(ctx, exec, rel38...)
 				if err != nil {
 					return err
 				}
@@ -1758,12 +1834,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel39, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel37...)
+				err = m.AttachQuicks(ctx, exec, rel39...)
 				if err != nil {
 					return err
 				}
@@ -1778,12 +1854,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel38, err := r.o.CreateMany(ctx, exec, r.number)
+				rel40, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel38...)
+				err = m.AttachUser(ctx, exec, rel40...)
 				if err != nil {
 					return err
 				}
@@ -3414,6 +3490,102 @@ func (m organizationMods) WithParentsCascading() OrganizationMod {
 			return
 		}
 		ctx = organizationWithParentsCascadingCtx.WithValue(ctx, true)
+	})
+}
+
+func (m organizationMods) WithAddressMappings(number int, related *ArcgisAddressMappingTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.AddressMappings = []*organizationRAddressMappingsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewAddressMappings(number int, mods ...ArcgisAddressMappingMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisAddressMappingWithContext(ctx, mods...)
+		m.WithAddressMappings(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddAddressMappings(number int, related *ArcgisAddressMappingTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.AddressMappings = append(o.r.AddressMappings, &organizationRAddressMappingsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewAddressMappings(number int, mods ...ArcgisAddressMappingMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisAddressMappingWithContext(ctx, mods...)
+		m.AddAddressMappings(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingAddressMappings(existingModels ...*models.ArcgisAddressMapping) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.AddressMappings = append(o.r.AddressMappings, &organizationRAddressMappingsR{
+				o: o.f.FromExistingArcgisAddressMapping(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutAddressMappings() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.AddressMappings = nil
+	})
+}
+
+func (m organizationMods) WithParcelMappings(number int, related *ArcgisParcelMappingTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ParcelMappings = []*organizationRParcelMappingsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewParcelMappings(number int, mods ...ArcgisParcelMappingMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisParcelMappingWithContext(ctx, mods...)
+		m.WithParcelMappings(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddParcelMappings(number int, related *ArcgisParcelMappingTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ParcelMappings = append(o.r.ParcelMappings, &organizationRParcelMappingsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewParcelMappings(number int, mods ...ArcgisParcelMappingMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisParcelMappingWithContext(ctx, mods...)
+		m.AddParcelMappings(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingParcelMappings(existingModels ...*models.ArcgisParcelMapping) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.ParcelMappings = append(o.r.ParcelMappings, &organizationRParcelMappingsR{
+				o: o.f.FromExistingArcgisParcelMapping(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutParcelMappings() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ParcelMappings = nil
 	})
 }
 

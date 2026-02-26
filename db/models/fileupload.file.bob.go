@@ -60,6 +60,7 @@ type fileuploadFileR struct {
 	ErrorFiles   FileuploadErrorFileSlice // fileupload.error_file.error_file_file_id_fkey
 	CreatorUser  *User                    // fileupload.file.file_creator_id_fkey
 	Organization *Organization            // fileupload.file.file_organization_id_fkey
+	Sites        SiteSlice                // site.site_file_id_fkey
 }
 
 func buildFileuploadFileColumns(alias string) fileuploadFileColumns {
@@ -658,6 +659,30 @@ func (os FileuploadFileSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]
 	)...)
 }
 
+// Sites starts a query for related objects on site
+func (o *FileuploadFile) Sites(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	return Sites.Query(append(mods,
+		sm.Where(Sites.Columns.FileID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os FileuploadFileSlice) Sites(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Sites.Query(append(mods,
+		sm.Where(psql.Group(Sites.Columns.FileID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertFileuploadFileCSV0(ctx context.Context, exec bob.Executor, fileuploadCSV1 *FileuploadCSVSetter, fileuploadFile0 *FileuploadFile) (*FileuploadCSV, error) {
 	fileuploadCSV1.FileID = omit.From(fileuploadFile0.ID)
 
@@ -876,6 +901,74 @@ func (fileuploadFile0 *FileuploadFile) AttachOrganization(ctx context.Context, e
 	return nil
 }
 
+func insertFileuploadFileSites0(ctx context.Context, exec bob.Executor, sites1 []*SiteSetter, fileuploadFile0 *FileuploadFile) (SiteSlice, error) {
+	for i := range sites1 {
+		sites1[i].FileID = omitnull.From(fileuploadFile0.ID)
+	}
+
+	ret, err := Sites.Insert(bob.ToMods(sites1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertFileuploadFileSites0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachFileuploadFileSites0(ctx context.Context, exec bob.Executor, count int, sites1 SiteSlice, fileuploadFile0 *FileuploadFile) (SiteSlice, error) {
+	setter := &SiteSetter{
+		FileID: omitnull.From(fileuploadFile0.ID),
+	}
+
+	err := sites1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachFileuploadFileSites0: %w", err)
+	}
+
+	return sites1, nil
+}
+
+func (fileuploadFile0 *FileuploadFile) InsertSites(ctx context.Context, exec bob.Executor, related ...*SiteSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	sites1, err := insertFileuploadFileSites0(ctx, exec, related, fileuploadFile0)
+	if err != nil {
+		return err
+	}
+
+	fileuploadFile0.R.Sites = append(fileuploadFile0.R.Sites, sites1...)
+
+	for _, rel := range sites1 {
+		rel.R.File = fileuploadFile0
+	}
+	return nil
+}
+
+func (fileuploadFile0 *FileuploadFile) AttachSites(ctx context.Context, exec bob.Executor, related ...*Site) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	sites1 := SiteSlice(related)
+
+	_, err = attachFileuploadFileSites0(ctx, exec, len(related), sites1, fileuploadFile0)
+	if err != nil {
+		return err
+	}
+
+	fileuploadFile0.R.Sites = append(fileuploadFile0.R.Sites, sites1...)
+
+	for _, rel := range related {
+		rel.R.File = fileuploadFile0
+	}
+
+	return nil
+}
+
 type fileuploadFileWhere[Q psql.Filterable] struct {
 	ID             psql.WhereMod[Q, int32]
 	ContentType    psql.WhereMod[Q, string]
@@ -964,6 +1057,20 @@ func (o *FileuploadFile) Preload(name string, retrieved any) error {
 			rel.R.Files = FileuploadFileSlice{o}
 		}
 		return nil
+	case "Sites":
+		rels, ok := retrieved.(SiteSlice)
+		if !ok {
+			return fmt.Errorf("fileuploadFile cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Sites = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.File = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("fileuploadFile has no relationship %q", name)
 	}
@@ -1024,6 +1131,7 @@ type fileuploadFileThenLoader[Q orm.Loadable] struct {
 	ErrorFiles   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Sites        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q] {
@@ -1038,6 +1146,9 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SitesLoadInterface interface {
+		LoadSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return fileuploadFileThenLoader[Q]{
@@ -1063,6 +1174,12 @@ func buildFileuploadFileThenLoader[Q orm.Loadable]() fileuploadFileThenLoader[Q]
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+		Sites: thenLoadBuilder[Q](
+			"Sites",
+			func(ctx context.Context, exec bob.Executor, retrieved SitesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSites(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1285,9 +1402,74 @@ func (os FileuploadFileSlice) LoadOrganization(ctx context.Context, exec bob.Exe
 	return nil
 }
 
+// LoadSites loads the fileuploadFile's Sites into the .R struct
+func (o *FileuploadFile) LoadSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Sites = nil
+
+	related, err := o.Sites(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.File = o
+	}
+
+	o.R.Sites = related
+	return nil
+}
+
+// LoadSites loads the fileuploadFile's Sites into the .R struct
+func (os FileuploadFileSlice) LoadSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	sites, err := os.Sites(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Sites = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range sites {
+
+			if !rel.FileID.IsValue() {
+				continue
+			}
+			if !(rel.FileID.IsValue() && o.ID == rel.FileID.MustGet()) {
+				continue
+			}
+
+			rel.R.File = o
+
+			o.R.Sites = append(o.R.Sites, rel)
+		}
+	}
+
+	return nil
+}
+
 // fileuploadFileC is where relationship counts are stored.
 type fileuploadFileC struct {
 	ErrorFiles *int64
+	Sites      *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1299,12 +1481,15 @@ func (o *FileuploadFile) PreloadCount(name string, count int64) error {
 	switch name {
 	case "ErrorFiles":
 		o.C.ErrorFiles = &count
+	case "Sites":
+		o.C.Sites = &count
 	}
 	return nil
 }
 
 type fileuploadFileCountPreloader struct {
 	ErrorFiles func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Sites      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildFileuploadFileCountPreloader() fileuploadFileCountPreloader {
@@ -1326,16 +1511,37 @@ func buildFileuploadFileCountPreloader() fileuploadFileCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Sites: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*FileuploadFile]("Sites", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = FileuploadFiles.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Sites.Name()),
+					sm.Where(psql.Quote(Sites.Alias(), "file_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
 type fileuploadFileCountThenLoader[Q orm.Loadable] struct {
 	ErrorFiles func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Sites      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadFileCountThenLoader[Q orm.Loadable]() fileuploadFileCountThenLoader[Q] {
 	type ErrorFilesCountInterface interface {
 		LoadCountErrorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SitesCountInterface interface {
+		LoadCountSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return fileuploadFileCountThenLoader[Q]{
@@ -1343,6 +1549,12 @@ func buildFileuploadFileCountThenLoader[Q orm.Loadable]() fileuploadFileCountThe
 			"ErrorFiles",
 			func(ctx context.Context, exec bob.Executor, retrieved ErrorFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountErrorFiles(ctx, exec, mods...)
+			},
+		),
+		Sites: countThenLoadBuilder[Q](
+			"Sites",
+			func(ctx context.Context, exec bob.Executor, retrieved SitesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountSites(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1378,12 +1590,43 @@ func (os FileuploadFileSlice) LoadCountErrorFiles(ctx context.Context, exec bob.
 	return nil
 }
 
+// LoadCountSites loads the count of Sites into the C struct
+func (o *FileuploadFile) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Sites(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Sites = &count
+	return nil
+}
+
+// LoadCountSites loads the count of Sites for a slice
+func (os FileuploadFileSlice) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountSites(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type fileuploadFileJoins[Q dialect.Joinable] struct {
 	typ          string
 	CSV          modAs[Q, fileuploadCSVColumns]
 	ErrorFiles   modAs[Q, fileuploadErrorFileColumns]
 	CreatorUser  modAs[Q, userColumns]
 	Organization modAs[Q, organizationColumns]
+	Sites        modAs[Q, siteColumns]
 }
 
 func (j fileuploadFileJoins[Q]) aliasedAs(alias string) fileuploadFileJoins[Q] {
@@ -1443,6 +1686,20 @@ func buildFileuploadFileJoins[Q dialect.Joinable](cols fileuploadFileColumns, ty
 				{
 					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.OrganizationID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Sites: modAs[Q, siteColumns]{
+			c: Sites.Columns,
+			f: func(to siteColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
+						to.FileID.EQ(cols.ID),
 					))
 				}
 

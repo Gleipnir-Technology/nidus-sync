@@ -71,6 +71,36 @@ func random_decimal_Decimal(f *faker.Faker, limits ...string) decimal.Decimal {
 	return val
 }
 
+func random_enums_ArcgisFieldtype(f *faker.Faker, limits ...string) enums.ArcgisFieldtype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.ArcgisFieldtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_ArcgisMappingdestinationaddress(f *faker.Faker, limits ...string) enums.ArcgisMappingdestinationaddress {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.ArcgisMappingdestinationaddress
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_ArcgisMappingdestinationparcel(f *faker.Faker, limits ...string) enums.ArcgisMappingdestinationparcel {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.ArcgisMappingdestinationparcel
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_Arcgislicensetype(f *faker.Faker, limits ...string) enums.Arcgislicensetype {
 	if f == nil {
 		f = &defaultFaker
@@ -141,6 +171,16 @@ func random_enums_CommsTextorigin(f *faker.Faker, limits ...string) enums.CommsT
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Countrytype(f *faker.Faker, limits ...string) enums.Countrytype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Countrytype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_FileuploadCsvtype(f *faker.Faker, limits ...string) enums.FileuploadCsvtype {
 	if f == nil {
 		f = &defaultFaker
@@ -197,6 +237,16 @@ func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notif
 	}
 
 	var e enums.Notificationtype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_Poolconditiontype(f *faker.Faker, limits ...string) enums.Poolconditiontype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Poolconditiontype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

@@ -19,6 +19,12 @@ import (
 )
 
 type Factory struct {
+	baseAddressMods                           AddressModSlice
+	baseArcgisAddressMappingMods              ArcgisAddressMappingModSlice
+	baseArcgisFeatureServiceMods              ArcgisFeatureServiceModSlice
+	baseArcgisLayerMods                       ArcgisLayerModSlice
+	baseArcgisLayerFieldMods                  ArcgisLayerFieldModSlice
+	baseArcgisParcelMappingMods               ArcgisParcelMappingModSlice
 	baseArcgisUserMods                        ArcgisUserModSlice
 	baseArcgisUserPrivilegeMods               ArcgisUserPrivilegeModSlice
 	baseCommsEmailContactMods                 CommsEmailContactModSlice
@@ -75,6 +81,8 @@ type Factory struct {
 	baseNotificationMods                      NotificationModSlice
 	baseOauthTokenMods                        OauthTokenModSlice
 	baseOrganizationMods                      OrganizationModSlice
+	baseParcelMods                            ParcelModSlice
+	basePoolMods                              PoolModSlice
 	basePublicreportImageMods                 PublicreportImageModSlice
 	basePublicreportImageExifMods             PublicreportImageExifModSlice
 	basePublicreportNotifyEmailNuisanceMods   PublicreportNotifyEmailNuisanceModSlice
@@ -93,12 +101,227 @@ type Factory struct {
 	baseRasterColumnMods                      RasterColumnModSlice
 	baseRasterOverviewMods                    RasterOverviewModSlice
 	baseSessionMods                           SessionModSlice
+	baseSiteMods                              SiteModSlice
 	baseSpatialRefSyMods                      SpatialRefSyModSlice
 	baseUserMods                              UserModSlice
 }
 
 func New() *Factory {
 	return &Factory{}
+}
+
+func (f *Factory) NewAddress(mods ...AddressMod) *AddressTemplate {
+	return f.NewAddressWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewAddressWithContext(ctx context.Context, mods ...AddressMod) *AddressTemplate {
+	o := &AddressTemplate{f: f}
+
+	if f != nil {
+		f.baseAddressMods.Apply(ctx, o)
+	}
+
+	AddressModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingAddress(m *models.Address) *AddressTemplate {
+	o := &AddressTemplate{f: f, alreadyPersisted: true}
+
+	o.Country = func() enums.Countrytype { return m.Country }
+	o.Created = func() time.Time { return m.Created }
+	o.Geom = func() string { return m.Geom }
+	o.H3cell = func() string { return m.H3cell }
+	o.ID = func() int32 { return m.ID }
+	o.Locality = func() string { return m.Locality }
+	o.Number = func() int32 { return m.Number }
+	o.PostalCode = func() string { return m.PostalCode }
+	o.Street = func() string { return m.Street }
+	o.Unit = func() string { return m.Unit }
+
+	ctx := context.Background()
+	if m.R.Site != nil {
+		AddressMods.WithExistingSite(m.R.Site).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewArcgisAddressMapping(mods ...ArcgisAddressMappingMod) *ArcgisAddressMappingTemplate {
+	return f.NewArcgisAddressMappingWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewArcgisAddressMappingWithContext(ctx context.Context, mods ...ArcgisAddressMappingMod) *ArcgisAddressMappingTemplate {
+	o := &ArcgisAddressMappingTemplate{f: f}
+
+	if f != nil {
+		f.baseArcgisAddressMappingMods.Apply(ctx, o)
+	}
+
+	ArcgisAddressMappingModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingArcgisAddressMapping(m *models.ArcgisAddressMapping) *ArcgisAddressMappingTemplate {
+	o := &ArcgisAddressMappingTemplate{f: f, alreadyPersisted: true}
+
+	o.Destination = func() enums.ArcgisMappingdestinationaddress { return m.Destination }
+	o.LayerFeatureServiceItemID = func() string { return m.LayerFeatureServiceItemID }
+	o.LayerIndex = func() int32 { return m.LayerIndex }
+	o.LayerFieldName = func() string { return m.LayerFieldName }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.LayerField != nil {
+		ArcgisAddressMappingMods.WithExistingLayerField(m.R.LayerField).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		ArcgisAddressMappingMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewArcgisFeatureService(mods ...ArcgisFeatureServiceMod) *ArcgisFeatureServiceTemplate {
+	return f.NewArcgisFeatureServiceWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewArcgisFeatureServiceWithContext(ctx context.Context, mods ...ArcgisFeatureServiceMod) *ArcgisFeatureServiceTemplate {
+	o := &ArcgisFeatureServiceTemplate{f: f}
+
+	if f != nil {
+		f.baseArcgisFeatureServiceMods.Apply(ctx, o)
+	}
+
+	ArcgisFeatureServiceModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingArcgisFeatureService(m *models.ArcgisFeatureService) *ArcgisFeatureServiceTemplate {
+	o := &ArcgisFeatureServiceTemplate{f: f, alreadyPersisted: true}
+
+	o.Extent = func() string { return m.Extent }
+	o.ItemID = func() string { return m.ItemID }
+	o.SpatialReference = func() int32 { return m.SpatialReference }
+	o.URL = func() string { return m.URL }
+
+	ctx := context.Background()
+	if len(m.R.FeatureServiceItemLayers) > 0 {
+		ArcgisFeatureServiceMods.AddExistingFeatureServiceItemLayers(m.R.FeatureServiceItemLayers...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewArcgisLayer(mods ...ArcgisLayerMod) *ArcgisLayerTemplate {
+	return f.NewArcgisLayerWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewArcgisLayerWithContext(ctx context.Context, mods ...ArcgisLayerMod) *ArcgisLayerTemplate {
+	o := &ArcgisLayerTemplate{f: f}
+
+	if f != nil {
+		f.baseArcgisLayerMods.Apply(ctx, o)
+	}
+
+	ArcgisLayerModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingArcgisLayer(m *models.ArcgisLayer) *ArcgisLayerTemplate {
+	o := &ArcgisLayerTemplate{f: f, alreadyPersisted: true}
+
+	o.Extent = func() string { return m.Extent }
+	o.FeatureServiceItemID = func() string { return m.FeatureServiceItemID }
+	o.Index = func() int32 { return m.Index }
+
+	ctx := context.Background()
+	if m.R.FeatureServiceItemFeatureService != nil {
+		ArcgisLayerMods.WithExistingFeatureServiceItemFeatureService(m.R.FeatureServiceItemFeatureService).Apply(ctx, o)
+	}
+	if len(m.R.LayerFields) > 0 {
+		ArcgisLayerMods.AddExistingLayerFields(m.R.LayerFields...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewArcgisLayerField(mods ...ArcgisLayerFieldMod) *ArcgisLayerFieldTemplate {
+	return f.NewArcgisLayerFieldWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewArcgisLayerFieldWithContext(ctx context.Context, mods ...ArcgisLayerFieldMod) *ArcgisLayerFieldTemplate {
+	o := &ArcgisLayerFieldTemplate{f: f}
+
+	if f != nil {
+		f.baseArcgisLayerFieldMods.Apply(ctx, o)
+	}
+
+	ArcgisLayerFieldModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingArcgisLayerField(m *models.ArcgisLayerField) *ArcgisLayerFieldTemplate {
+	o := &ArcgisLayerFieldTemplate{f: f, alreadyPersisted: true}
+
+	o.LayerFeatureServiceItemID = func() string { return m.LayerFeatureServiceItemID }
+	o.LayerIndex = func() int32 { return m.LayerIndex }
+	o.Name = func() string { return m.Name }
+	o.Type = func() enums.ArcgisFieldtype { return m.Type }
+
+	ctx := context.Background()
+	if len(m.R.AddressMappings) > 0 {
+		ArcgisLayerFieldMods.AddExistingAddressMappings(m.R.AddressMappings...).Apply(ctx, o)
+	}
+	if m.R.Layer != nil {
+		ArcgisLayerFieldMods.WithExistingLayer(m.R.Layer).Apply(ctx, o)
+	}
+	if len(m.R.ParcelMappings) > 0 {
+		ArcgisLayerFieldMods.AddExistingParcelMappings(m.R.ParcelMappings...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewArcgisParcelMapping(mods ...ArcgisParcelMappingMod) *ArcgisParcelMappingTemplate {
+	return f.NewArcgisParcelMappingWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewArcgisParcelMappingWithContext(ctx context.Context, mods ...ArcgisParcelMappingMod) *ArcgisParcelMappingTemplate {
+	o := &ArcgisParcelMappingTemplate{f: f}
+
+	if f != nil {
+		f.baseArcgisParcelMappingMods.Apply(ctx, o)
+	}
+
+	ArcgisParcelMappingModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingArcgisParcelMapping(m *models.ArcgisParcelMapping) *ArcgisParcelMappingTemplate {
+	o := &ArcgisParcelMappingTemplate{f: f, alreadyPersisted: true}
+
+	o.Destination = func() enums.ArcgisMappingdestinationparcel { return m.Destination }
+	o.LayerFeatureServiceItemID = func() string { return m.LayerFeatureServiceItemID }
+	o.LayerIndex = func() int32 { return m.LayerIndex }
+	o.LayerFieldName = func() string { return m.LayerFieldName }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.LayerField != nil {
+		ArcgisParcelMappingMods.WithExistingLayerField(m.R.LayerField).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		ArcgisParcelMappingMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+
+	return o
 }
 
 func (f *Factory) NewArcgisUser(mods ...ArcgisUserMod) *ArcgisUserTemplate {
@@ -2392,6 +2615,9 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	if m.R.Organization != nil {
 		FileuploadFileMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
+	if len(m.R.Sites) > 0 {
+		FileuploadFileMods.AddExistingSites(m.R.Sites...).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -2933,6 +3159,12 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	o.ServiceAreaCentroidY = func() null.Val[float64] { return m.ServiceAreaCentroidY }
 
 	ctx := context.Background()
+	if len(m.R.AddressMappings) > 0 {
+		OrganizationMods.AddExistingAddressMappings(m.R.AddressMappings...).Apply(ctx, o)
+	}
+	if len(m.R.ParcelMappings) > 0 {
+		OrganizationMods.AddExistingParcelMappings(m.R.ParcelMappings...).Apply(ctx, o)
+	}
 	if len(m.R.EmailContacts) > 0 {
 		OrganizationMods.AddExistingEmailContacts(m.R.EmailContacts...).Apply(ctx, o)
 	}
@@ -3049,6 +3281,66 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewParcel(mods ...ParcelMod) *ParcelTemplate {
+	return f.NewParcelWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewParcelWithContext(ctx context.Context, mods ...ParcelMod) *ParcelTemplate {
+	o := &ParcelTemplate{f: f}
+
+	if f != nil {
+		f.baseParcelMods.Apply(ctx, o)
+	}
+
+	ParcelModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingParcel(m *models.Parcel) *ParcelTemplate {
+	o := &ParcelTemplate{f: f, alreadyPersisted: true}
+
+	o.Apn = func() string { return m.Apn }
+	o.Description = func() string { return m.Description }
+	o.ID = func() int32 { return m.ID }
+	o.Geometry = func() string { return m.Geometry }
+
+	return o
+}
+
+func (f *Factory) NewPool(mods ...PoolMod) *PoolTemplate {
+	return f.NewPoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewPoolWithContext(ctx context.Context, mods ...PoolMod) *PoolTemplate {
+	o := &PoolTemplate{f: f}
+
+	if f != nil {
+		f.basePoolMods.Apply(ctx, o)
+	}
+
+	PoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingPool(m *models.Pool) *PoolTemplate {
+	o := &PoolTemplate{f: f, alreadyPersisted: true}
+
+	o.Condition = func() enums.Poolconditiontype { return m.Condition }
+	o.Created = func() time.Time { return m.Created }
+	o.CreatorID = func() int32 { return m.CreatorID }
+	o.ID = func() int32 { return m.ID }
+	o.SiteID = func() null.Val[int32] { return m.SiteID }
+
+	ctx := context.Background()
+	if m.R.CreatorUser != nil {
+		PoolMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
 	}
 
 	return o
@@ -3747,6 +4039,53 @@ func (f *Factory) FromExistingSession(m *models.Session) *SessionTemplate {
 	return o
 }
 
+func (f *Factory) NewSite(mods ...SiteMod) *SiteTemplate {
+	return f.NewSiteWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewSiteWithContext(ctx context.Context, mods ...SiteMod) *SiteTemplate {
+	o := &SiteTemplate{f: f}
+
+	if f != nil {
+		f.baseSiteMods.Apply(ctx, o)
+	}
+
+	SiteModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingSite(m *models.Site) *SiteTemplate {
+	o := &SiteTemplate{f: f, alreadyPersisted: true}
+
+	o.AddressID = func() int32 { return m.AddressID }
+	o.Created = func() time.Time { return m.Created }
+	o.CreatorID = func() int32 { return m.CreatorID }
+	o.FileID = func() null.Val[int32] { return m.FileID }
+	o.ID = func() int32 { return m.ID }
+	o.Notes = func() string { return m.Notes }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.OwnerName = func() string { return m.OwnerName }
+	o.OwnerPhoneE164 = func() null.Val[string] { return m.OwnerPhoneE164 }
+	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
+	o.ResidentPhoneE164 = func() null.Val[string] { return m.ResidentPhoneE164 }
+	o.Tags = func() pgtypes.HStore { return m.Tags }
+	o.Version = func() int32 { return m.Version }
+
+	ctx := context.Background()
+	if m.R.Address != nil {
+		SiteMods.WithExistingAddress(m.R.Address).Apply(ctx, o)
+	}
+	if m.R.CreatorUser != nil {
+		SiteMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.File != nil {
+		SiteMods.WithExistingFile(m.R.File).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewSpatialRefSy(mods ...SpatialRefSyMod) *SpatialRefSyTemplate {
 	return f.NewSpatialRefSyWithContext(context.Background(), mods...)
 }
@@ -3815,8 +4154,8 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.CreatorFiles) > 0 {
 		UserMods.AddExistingCreatorFiles(m.R.CreatorFiles...).Apply(ctx, o)
 	}
-	if len(m.R.CreatorPools) > 0 {
-		UserMods.AddExistingCreatorPools(m.R.CreatorPools...).Apply(ctx, o)
+	if len(m.R.FileuploadPool) > 0 {
+		UserMods.AddExistingFileuploadPool(m.R.FileuploadPool...).Apply(ctx, o)
 	}
 	if len(m.R.CreatorNoteAudios) > 0 {
 		UserMods.AddExistingCreatorNoteAudios(m.R.CreatorNoteAudios...).Apply(ctx, o)
@@ -3836,11 +4175,65 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.UserOauthTokens) > 0 {
 		UserMods.AddExistingUserOauthTokens(m.R.UserOauthTokens...).Apply(ctx, o)
 	}
+	if len(m.R.CreatorPools) > 0 {
+		UserMods.AddExistingCreatorPools(m.R.CreatorPools...).Apply(ctx, o)
+	}
+	if len(m.R.CreatorSites) > 0 {
+		UserMods.AddExistingCreatorSites(m.R.CreatorSites...).Apply(ctx, o)
+	}
 	if m.R.Organization != nil {
 		UserMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
 
 	return o
+}
+
+func (f *Factory) ClearBaseAddressMods() {
+	f.baseAddressMods = nil
+}
+
+func (f *Factory) AddBaseAddressMod(mods ...AddressMod) {
+	f.baseAddressMods = append(f.baseAddressMods, mods...)
+}
+
+func (f *Factory) ClearBaseArcgisAddressMappingMods() {
+	f.baseArcgisAddressMappingMods = nil
+}
+
+func (f *Factory) AddBaseArcgisAddressMappingMod(mods ...ArcgisAddressMappingMod) {
+	f.baseArcgisAddressMappingMods = append(f.baseArcgisAddressMappingMods, mods...)
+}
+
+func (f *Factory) ClearBaseArcgisFeatureServiceMods() {
+	f.baseArcgisFeatureServiceMods = nil
+}
+
+func (f *Factory) AddBaseArcgisFeatureServiceMod(mods ...ArcgisFeatureServiceMod) {
+	f.baseArcgisFeatureServiceMods = append(f.baseArcgisFeatureServiceMods, mods...)
+}
+
+func (f *Factory) ClearBaseArcgisLayerMods() {
+	f.baseArcgisLayerMods = nil
+}
+
+func (f *Factory) AddBaseArcgisLayerMod(mods ...ArcgisLayerMod) {
+	f.baseArcgisLayerMods = append(f.baseArcgisLayerMods, mods...)
+}
+
+func (f *Factory) ClearBaseArcgisLayerFieldMods() {
+	f.baseArcgisLayerFieldMods = nil
+}
+
+func (f *Factory) AddBaseArcgisLayerFieldMod(mods ...ArcgisLayerFieldMod) {
+	f.baseArcgisLayerFieldMods = append(f.baseArcgisLayerFieldMods, mods...)
+}
+
+func (f *Factory) ClearBaseArcgisParcelMappingMods() {
+	f.baseArcgisParcelMappingMods = nil
+}
+
+func (f *Factory) AddBaseArcgisParcelMappingMod(mods ...ArcgisParcelMappingMod) {
+	f.baseArcgisParcelMappingMods = append(f.baseArcgisParcelMappingMods, mods...)
 }
 
 func (f *Factory) ClearBaseArcgisUserMods() {
@@ -4291,6 +4684,22 @@ func (f *Factory) AddBaseOrganizationMod(mods ...OrganizationMod) {
 	f.baseOrganizationMods = append(f.baseOrganizationMods, mods...)
 }
 
+func (f *Factory) ClearBaseParcelMods() {
+	f.baseParcelMods = nil
+}
+
+func (f *Factory) AddBaseParcelMod(mods ...ParcelMod) {
+	f.baseParcelMods = append(f.baseParcelMods, mods...)
+}
+
+func (f *Factory) ClearBasePoolMods() {
+	f.basePoolMods = nil
+}
+
+func (f *Factory) AddBasePoolMod(mods ...PoolMod) {
+	f.basePoolMods = append(f.basePoolMods, mods...)
+}
+
 func (f *Factory) ClearBasePublicreportImageMods() {
 	f.basePublicreportImageMods = nil
 }
@@ -4433,6 +4842,14 @@ func (f *Factory) ClearBaseSessionMods() {
 
 func (f *Factory) AddBaseSessionMod(mods ...SessionMod) {
 	f.baseSessionMods = append(f.baseSessionMods, mods...)
+}
+
+func (f *Factory) ClearBaseSiteMods() {
+	f.baseSiteMods = nil
+}
+
+func (f *Factory) AddBaseSiteMod(mods ...SiteMod) {
+	f.baseSiteMods = append(f.baseSiteMods, mods...)
 }
 
 func (f *Factory) ClearBaseSpatialRefSyMods() {

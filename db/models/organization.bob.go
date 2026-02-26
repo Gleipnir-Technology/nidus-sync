@@ -76,6 +76,8 @@ type OrganizationsQuery = *psql.ViewQuery[*Organization, OrganizationSlice]
 
 // organizationR is where relationships are stored.
 type organizationR struct {
+	AddressMappings         ArcgisAddressMappingSlice              // arcgis.address_mapping.address_mapping_organization_id_fkey
+	ParcelMappings          ArcgisParcelMappingSlice               // arcgis.parcel_mapping.parcel_mapping_organization_id_fkey
 	EmailContacts           CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
 	Phones                  CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
 	Containerrelates        FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
@@ -833,6 +835,54 @@ func (o OrganizationSlice) ReloadAll(ctx context.Context, exec bob.Executor) err
 	o.copyMatchingRows(o2...)
 
 	return nil
+}
+
+// AddressMappings starts a query for related objects on arcgis.address_mapping
+func (o *Organization) AddressMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAddressMappingsQuery {
+	return ArcgisAddressMappings.Query(append(mods,
+		sm.Where(ArcgisAddressMappings.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) AddressMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAddressMappingsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ArcgisAddressMappings.Query(append(mods,
+		sm.Where(psql.Group(ArcgisAddressMappings.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ParcelMappings starts a query for related objects on arcgis.parcel_mapping
+func (o *Organization) ParcelMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisParcelMappingsQuery {
+	return ArcgisParcelMappings.Query(append(mods,
+		sm.Where(ArcgisParcelMappings.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) ParcelMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisParcelMappingsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ArcgisParcelMappings.Query(append(mods,
+		sm.Where(psql.Group(ArcgisParcelMappings.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
 }
 
 // EmailContacts starts a query for related objects on comms.email_contact
@@ -1779,6 +1829,142 @@ func (os OrganizationSlice) User(mods ...bob.Mod[*dialect.SelectQuery]) UsersQue
 	return Users.Query(append(mods,
 		sm.Where(psql.Group(Users.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertOrganizationAddressMappings0(ctx context.Context, exec bob.Executor, arcgisAddressMappings1 []*ArcgisAddressMappingSetter, organization0 *Organization) (ArcgisAddressMappingSlice, error) {
+	for i := range arcgisAddressMappings1 {
+		arcgisAddressMappings1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := ArcgisAddressMappings.Insert(bob.ToMods(arcgisAddressMappings1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationAddressMappings0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationAddressMappings0(ctx context.Context, exec bob.Executor, count int, arcgisAddressMappings1 ArcgisAddressMappingSlice, organization0 *Organization) (ArcgisAddressMappingSlice, error) {
+	setter := &ArcgisAddressMappingSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := arcgisAddressMappings1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationAddressMappings0: %w", err)
+	}
+
+	return arcgisAddressMappings1, nil
+}
+
+func (organization0 *Organization) InsertAddressMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisAddressMappingSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	arcgisAddressMappings1, err := insertOrganizationAddressMappings0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.AddressMappings = append(organization0.R.AddressMappings, arcgisAddressMappings1...)
+
+	for _, rel := range arcgisAddressMappings1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachAddressMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisAddressMapping) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	arcgisAddressMappings1 := ArcgisAddressMappingSlice(related)
+
+	_, err = attachOrganizationAddressMappings0(ctx, exec, len(related), arcgisAddressMappings1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.AddressMappings = append(organization0.R.AddressMappings, arcgisAddressMappings1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
+func insertOrganizationParcelMappings0(ctx context.Context, exec bob.Executor, arcgisParcelMappings1 []*ArcgisParcelMappingSetter, organization0 *Organization) (ArcgisParcelMappingSlice, error) {
+	for i := range arcgisParcelMappings1 {
+		arcgisParcelMappings1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := ArcgisParcelMappings.Insert(bob.ToMods(arcgisParcelMappings1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationParcelMappings0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationParcelMappings0(ctx context.Context, exec bob.Executor, count int, arcgisParcelMappings1 ArcgisParcelMappingSlice, organization0 *Organization) (ArcgisParcelMappingSlice, error) {
+	setter := &ArcgisParcelMappingSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := arcgisParcelMappings1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationParcelMappings0: %w", err)
+	}
+
+	return arcgisParcelMappings1, nil
+}
+
+func (organization0 *Organization) InsertParcelMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisParcelMappingSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	arcgisParcelMappings1, err := insertOrganizationParcelMappings0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ParcelMappings = append(organization0.R.ParcelMappings, arcgisParcelMappings1...)
+
+	for _, rel := range arcgisParcelMappings1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachParcelMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisParcelMapping) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	arcgisParcelMappings1 := ArcgisParcelMappingSlice(related)
+
+	_, err = attachOrganizationParcelMappings0(ctx, exec, len(related), arcgisParcelMappings1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ParcelMappings = append(organization0.R.ParcelMappings, arcgisParcelMappings1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
 }
 
 func attachOrganizationEmailContacts0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, commsEmailContacts2 CommsEmailContactSlice) (DistrictSubscriptionEmailSlice, error) {
@@ -4503,6 +4689,34 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "AddressMappings":
+		rels, ok := retrieved.(ArcgisAddressMappingSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.AddressMappings = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
+	case "ParcelMappings":
+		rels, ok := retrieved.(ArcgisParcelMappingSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ParcelMappings = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "EmailContacts":
 		rels, ok := retrieved.(CommsEmailContactSlice)
 		if !ok {
@@ -5061,6 +5275,8 @@ func buildOrganizationPreloader() organizationPreloader {
 }
 
 type organizationThenLoader[Q orm.Loadable] struct {
+	AddressMappings         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ParcelMappings          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -5103,6 +5319,12 @@ type organizationThenLoader[Q orm.Loadable] struct {
 }
 
 func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
+	type AddressMappingsLoadInterface interface {
+		LoadAddressMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ParcelMappingsLoadInterface interface {
+		LoadParcelMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type EmailContactsLoadInterface interface {
 		LoadEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -5222,6 +5444,18 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 
 	return organizationThenLoader[Q]{
+		AddressMappings: thenLoadBuilder[Q](
+			"AddressMappings",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressMappingsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadAddressMappings(ctx, exec, mods...)
+			},
+		),
+		ParcelMappings: thenLoadBuilder[Q](
+			"ParcelMappings",
+			func(ctx context.Context, exec bob.Executor, retrieved ParcelMappingsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadParcelMappings(ctx, exec, mods...)
+			},
+		),
 		EmailContacts: thenLoadBuilder[Q](
 			"EmailContacts",
 			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -5457,6 +5691,128 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadAddressMappings loads the organization's AddressMappings into the .R struct
+func (o *Organization) LoadAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.AddressMappings = nil
+
+	related, err := o.AddressMappings(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.AddressMappings = related
+	return nil
+}
+
+// LoadAddressMappings loads the organization's AddressMappings into the .R struct
+func (os OrganizationSlice) LoadAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	arcgisAddressMappings, err := os.AddressMappings(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.AddressMappings = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range arcgisAddressMappings {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.AddressMappings = append(o.R.AddressMappings, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadParcelMappings loads the organization's ParcelMappings into the .R struct
+func (o *Organization) LoadParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ParcelMappings = nil
+
+	related, err := o.ParcelMappings(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.ParcelMappings = related
+	return nil
+}
+
+// LoadParcelMappings loads the organization's ParcelMappings into the .R struct
+func (os OrganizationSlice) LoadParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	arcgisParcelMappings, err := os.ParcelMappings(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ParcelMappings = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range arcgisParcelMappings {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.ParcelMappings = append(o.R.ParcelMappings, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadEmailContacts loads the organization's EmailContacts into the .R struct
@@ -7889,6 +8245,8 @@ func (os OrganizationSlice) LoadUser(ctx context.Context, exec bob.Executor, mod
 
 // organizationC is where relationship counts are stored.
 type organizationC struct {
+	AddressMappings         *int64
+	ParcelMappings          *int64
 	EmailContacts           *int64
 	Phones                  *int64
 	Containerrelates        *int64
@@ -7937,6 +8295,10 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "AddressMappings":
+		o.C.AddressMappings = &count
+	case "ParcelMappings":
+		o.C.ParcelMappings = &count
 	case "EmailContacts":
 		o.C.EmailContacts = &count
 	case "Phones":
@@ -8020,6 +8382,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 }
 
 type organizationCountPreloader struct {
+	AddressMappings         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	ParcelMappings          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Phones                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -8063,6 +8427,40 @@ type organizationCountPreloader struct {
 
 func buildOrganizationCountPreloader() organizationCountPreloader {
 	return organizationCountPreloader{
+		AddressMappings: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("AddressMappings", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(ArcgisAddressMappings.Name()),
+					sm.Where(psql.Quote(ArcgisAddressMappings.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		ParcelMappings: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("ParcelMappings", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(ArcgisParcelMappings.Name()),
+					sm.Where(psql.Quote(ArcgisParcelMappings.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		EmailContacts: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("EmailContacts", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -8736,6 +9134,8 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 }
 
 type organizationCountThenLoader[Q orm.Loadable] struct {
+	AddressMappings         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ParcelMappings          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -8778,6 +9178,12 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 }
 
 func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoader[Q] {
+	type AddressMappingsCountInterface interface {
+		LoadCountAddressMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ParcelMappingsCountInterface interface {
+		LoadCountParcelMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type EmailContactsCountInterface interface {
 		LoadCountEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -8897,6 +9303,18 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 
 	return organizationCountThenLoader[Q]{
+		AddressMappings: countThenLoadBuilder[Q](
+			"AddressMappings",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressMappingsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountAddressMappings(ctx, exec, mods...)
+			},
+		),
+		ParcelMappings: countThenLoadBuilder[Q](
+			"ParcelMappings",
+			func(ctx context.Context, exec bob.Executor, retrieved ParcelMappingsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountParcelMappings(ctx, exec, mods...)
+			},
+		),
 		EmailContacts: countThenLoadBuilder[Q](
 			"EmailContacts",
 			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -9132,6 +9550,66 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			},
 		),
 	}
+}
+
+// LoadCountAddressMappings loads the count of AddressMappings into the C struct
+func (o *Organization) LoadCountAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.AddressMappings(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.AddressMappings = &count
+	return nil
+}
+
+// LoadCountAddressMappings loads the count of AddressMappings for a slice
+func (os OrganizationSlice) LoadCountAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountAddressMappings(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountParcelMappings loads the count of ParcelMappings into the C struct
+func (o *Organization) LoadCountParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.ParcelMappings(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.ParcelMappings = &count
+	return nil
+}
+
+// LoadCountParcelMappings loads the count of ParcelMappings for a slice
+func (os OrganizationSlice) LoadCountParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountParcelMappings(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountEmailContacts loads the count of EmailContacts into the C struct
@@ -10306,6 +10784,8 @@ func (os OrganizationSlice) LoadCountUser(ctx context.Context, exec bob.Executor
 
 type organizationJoins[Q dialect.Joinable] struct {
 	typ                     string
+	AddressMappings         modAs[Q, arcgisAddressMappingColumns]
+	ParcelMappings          modAs[Q, arcgisParcelMappingColumns]
 	EmailContacts           modAs[Q, commsEmailContactColumns]
 	Phones                  modAs[Q, commsPhoneColumns]
 	Containerrelates        modAs[Q, fieldseekerContainerrelateColumns]
@@ -10354,6 +10834,34 @@ func (j organizationJoins[Q]) aliasedAs(alias string) organizationJoins[Q] {
 func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ string) organizationJoins[Q] {
 	return organizationJoins[Q]{
 		typ: typ,
+		AddressMappings: modAs[Q, arcgisAddressMappingColumns]{
+			c: ArcgisAddressMappings.Columns,
+			f: func(to arcgisAddressMappingColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, ArcgisAddressMappings.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		ParcelMappings: modAs[Q, arcgisParcelMappingColumns]{
+			c: ArcgisParcelMappings.Columns,
+			f: func(to arcgisParcelMappingColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, ArcgisParcelMappings.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		EmailContacts: modAs[Q, commsEmailContactColumns]{
 			c: CommsEmailContacts.Columns,
 			f: func(to commsEmailContactColumns) bob.Mod[Q] {
