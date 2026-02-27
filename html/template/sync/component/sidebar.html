@@ -12,7 +12,7 @@
 		<ul class="sidebar-menu">
 			<li>
 				<a
-					href="/"
+					href="{{ .URL.Root }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
 					title="Home"
@@ -23,34 +23,24 @@
 			</li>
 			<li>
 				<a
-					href="/admin"
+					href="{{ .URL.Sidebar.Intelligence }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Admin Dashboard"
+					title="Intelligence"
 				>
-					<div class="menu-icon"><i class="bi bi-headset"></i></div>
-					<span class="menu-text ms-2">Admin</span>
+					<div class="menu-icon">{{ template "brain.svg" }}</div>
+					<span class="menu-text ms-2">Intelligence</span>
 				</a>
 			</li>
 			<li>
 				<a
-					href="/download"
+					href="{{ .URL.Sidebar.Communication }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Upload"
+					title="Communication"
 				>
-					<div class="menu-icon"><i class="bi bi-download"></i></div>
-					<span class="menu-text ms-2">Download</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="/notification"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Notifications"
-				>
-					<div class="menu-icon"><i class="bi bi-bell"></i></div>
+					<div class="menu-icon">{{ template "messaging.svg" }}</div>
+					<span class="menu-text ms-2">Communication</span>
 					{{ if gt (len .User.Notifications) 0 }}
 						<span
 							class="position-absolute translate-middle badge rounded-pill bg-primary"
@@ -63,84 +53,50 @@
 							<span class="visually-hidden">unread notifications</span>
 						</span>
 					{{ end }}
-					<span class="menu-text ms-2">Notifications</span>
 				</a>
 			</li>
 			<li>
 				<a
-					href="/message"
+					href="{{ .URL.Sidebar.Planning }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Messages"
+					title="Planning"
 				>
-					<div class="menu-icon"><i class="bi bi-chat-dots"></i></div>
-					<span class="menu-text ms-2">Messages</span>
+					<div class="menu-icon">{{ template "strategy.svg" }}</div>
+					<span class="menu-text ms-2">Planning</span>
 				</a>
 			</li>
 			<li>
 				<a
-					href="/pool"
+					href="{{ .URL.Sidebar.Operations }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Pools"
+					title="Operations"
 				>
-					<div class="menu-icon"><i class="bi bi-water"></i></div>
-					<span class="menu-text ms-2">Pool</span>
+					<div class="menu-icon">{{ template "assign.svg" }}</div>
+					<span class="menu-text ms-2">Operations</span>
 				</a>
 			</li>
 			<li>
 				<a
-					href="/radar"
+					href="{{ .URL.Sidebar.Review }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Radar"
+					title="Review"
 				>
-					<div class="menu-icon"><i class="bi bi-radar"></i></div>
-					<span class="menu-text ms-2">Radar</span>
+					<div class="menu-icon">{{ template "review.svg" }}</div>
+					<span class="menu-text ms-2">Review</span>
 				</a>
 			</li>
 			<li>
 				<a
-					href="/service-request"
+					href="{{ .URL.Sidebar.Configuration }}"
 					data-bs-toggle="tooltip"
 					data-bs-placement="right"
-					title="Service Requests"
+					title="Configuration"
 				>
-					<div class="menu-icon"><i class="bi bi-person-raised-hand"></i></div>
-					<span class="menu-text ms-2">Service Requests</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="{{ .URL.Setting.Root }}"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Settings"
-				>
-					<div class="menu-icon"><i class="bi bi-gear"></i></div>
-					<span class="menu-text ms-2">Settings</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="/upload"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Upload"
-				>
-					<div class="menu-icon"><i class="bi bi-upload"></i></div>
-					<span class="menu-text ms-2">Upload</span>
-				</a>
-			</li>
-			<li>
-				<a
-					href="#"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Help"
-				>
-					<div class="menu-icon"><i class="bi bi-question-circle"></i></div>
-					<span class="menu-text ms-2">Help</span>
+					<div class="menu-icon">{{ template "settings.svg" }}</div>
+					<span class="menu-text ms-2">Configuration</span>
 				</a>
 			</li>
 			{{ if eq .User.Role "root" }}
