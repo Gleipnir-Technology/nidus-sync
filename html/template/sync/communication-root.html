@@ -1,0 +1,302 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Planning{{ end }}
+{{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script>
+		function onLoad() {}
+		window.addEventListener("load", onLoad);
+	</script>
+	<script>
+		const DATA = [
+			{
+				id: "PR-1",
+				type: "Adult",
+				unread: true,
+				narrative: "Large number of mosquitoes in backyard.",
+				messages: [
+					{ dir: "inbound", author: "Public", text: "Mosquitoes everywhere." },
+					{
+						dir: "outbound",
+						author: "Admin",
+						text: "We are reviewing your report.",
+					},
+				],
+			},
+			{
+				id: "PR-2",
+				type: "Standing Water",
+				unread: false,
+				narrative: "Green pool visible.",
+				messages: [
+					{
+						dir: "inbound",
+						author: "Public",
+						text: "Pool has been untreated.",
+					},
+				],
+			},
+		];
+
+		function renderInbox() {
+			const list = document.getElementById("inboxList");
+			list.innerHTML = "";
+			DATA.forEach((r) => {
+				const item = document.createElement("div");
+				item.className = "list-group-item";
+				if (r.unread) item.classList.add("unread");
+				item.innerHTML = `${r.unread ? '<span class="badge-dot"></span>' : ""}${r.id} <div class="small-muted">${r.type}</div>`;
+				item.onclick = () => selectThread(r.id);
+				list.appendChild(item);
+			});
+		}
+
+		function selectThread(id) {
+			const r = DATA.find((x) => x.id === id);
+			if (!r) return;
+			r.unread = false;
+			document.getElementById("threadTitle").textContent =
+				`${r.id} (${r.type})`;
+			document.getElementById("reportNarrative").textContent = r.narrative;
+
+			const thread = document.getElementById("threadMessages");
+			thread.innerHTML = "";
+
+			r.messages.forEach((m) => {
+				const div = document.createElement("div");
+				div.className = "timeline-msg " + (m.dir || "internal");
+				div.innerHTML = `<strong>${m.author}</strong>: ${m.text}`;
+				thread.appendChild(div);
+			});
+
+			renderInbox();
+		}
+
+		renderInbox();
+	</script>
+
+	<style>
+		.app {
+			height: 100vh;
+			display: grid;
+			grid-template-columns: 360px 1fr 420px;
+			gap: 12px;
+			padding: 12px;
+		}
+		.panel {
+			background: #fff;
+			border: 1px solid rgba(0, 0, 0, 0.08);
+			border-radius: 12px;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+		.header {
+			padding: 12px 14px;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+			font-weight: 600;
+		}
+		.body {
+			padding: 14px;
+			overflow: auto;
+		}
+		.section-title {
+			font-size: 13px;
+			font-weight: 600;
+			margin-bottom: 6px;
+			text-transform: uppercase;
+			color: rgba(0, 0, 0, 0.6);
+		}
+		.card-lite {
+			border: 1px solid rgba(0, 0, 0, 0.08);
+			border-radius: 10px;
+			padding: 10px;
+			margin-bottom: 10px;
+			background: #fff;
+		}
+		.unread {
+			font-weight: 600;
+		}
+		.badge-dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #0d6efd;
+			display: inline-block;
+			margin-right: 6px;
+		}
+		.small-muted {
+			font-size: 12px;
+			color: rgba(0, 0, 0, 0.55);
+		}
+		.timeline-msg {
+			padding: 8px;
+			border-radius: 8px;
+			margin-bottom: 6px;
+			font-size: 14px;
+		}
+		.inbound {
+			background: #eef5ff;
+		}
+		.outbound {
+			background: #e9fbe9;
+		}
+		.internal {
+			background: #f3f3f3;
+		}
+		.map-preview {
+			height: 200px;
+			border-radius: 10px;
+			border: 1px dashed rgba(0, 0, 0, 0.25);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-bottom: 16px;
+			background: linear-gradient(
+				180deg,
+				rgba(13, 110, 253, 0.06),
+				rgba(13, 110, 253, 0.01)
+			);
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<div class="app">
+		<!-- LEFT: INBOX / SIGNAL FEED -->
+		<section class="panel">
+			<div class="header">Signal Feed</div>
+			<div class="body">
+				<div class="btn-group btn-group-sm w-100 mb-2">
+					<button class="btn btn-outline-secondary active">All Coms</button>
+					<button class="btn btn-outline-secondary">Reports</button>
+					<button class="btn btn-outline-secondary">Internal</button>
+					<button class="btn btn-outline-secondary">System</button>
+				</div>
+
+				<div class="form-check form-switch mb-3">
+					<input class="form-check-input" type="checkbox" />
+					<label class="form-check-label">Show archived</label>
+				</div>
+
+				<div class="list-group" id="inboxList"></div>
+			</div>
+		</section>
+
+		<!-- CENTER: SIGNAL DETAIL -->
+		<section class="panel">
+			<div class="header" id="threadTitle">Select a signal</div>
+			<div class="body">
+				<!-- Map Preview -->
+				<div class="map-preview">Map Preview</div>
+
+				<div class="row g-3">
+					<!-- LEFT HALF: CONVERSATION + REPLY -->
+					<div class="col-md-6">
+						<div class="section-title">Report Narrative</div>
+						<div id="reportNarrative" class="mb-3"></div>
+
+						<div class="section-title">Conversation</div>
+						<div id="threadMessages" class="mb-3"></div>
+
+						<textarea
+							class="form-control"
+							rows="4"
+							placeholder="Reply to reporter..."
+						></textarea>
+						<button class="btn btn-outline-primary btn-sm mt-2 w-100">
+							Send Reply
+						</button>
+					</div>
+
+					<!-- RIGHT HALF: CONTEXT -->
+					<div class="col-md-6">
+						<div class="section-title">Context Summary</div>
+
+						<div class="card-lite">
+							<strong>Signal Type</strong>
+							<div class="small-muted">Adult / Standing Water</div>
+						</div>
+
+						<div class="card-lite">
+							<strong>Site Attachment</strong>
+							<div class="small-muted">1234 Maple Ave</div>
+							<button class="btn btn-sm btn-outline-secondary mt-2">
+								Attach / Modify Site
+							</button>
+						</div>
+
+						<div class="card-lite">
+							<strong>Nearby Reports (7 day window)</strong>
+							<div class="small-muted">3 related adult reports</div>
+							<button class="btn btn-sm btn-outline-secondary mt-2">
+								View Related
+							</button>
+						</div>
+
+						<div class="card-lite">
+							<strong>Existing Lead Suggestions</strong>
+							<div class="small-muted">
+								💡 Possible matching lead in same H3
+							</div>
+							<button class="btn btn-sm btn-outline-secondary mt-2">
+								Review Leads
+							</button>
+						</div>
+
+						<div class="card-lite">
+							<strong>Reporter Reliability</strong>
+							<div class="small-muted">High , 12 prior reports</div>
+							<button class="btn btn-sm btn-outline-secondary mt-2">
+								View Reporter History
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- RIGHT: SIGNAL SHAPING TO LEAD -->
+		<section class="panel">
+			<div class="header">Signal , Lead Tools</div>
+			<div class="body">
+				<div class="section-title">Lead Formation</div>
+				<button class="btn btn-primary w-100 mb-2">Create Lead</button>
+				<button class="btn btn-outline-secondary w-100 mb-2">
+					Add to Existing Lead 💡
+				</button>
+				<button class="btn btn-outline-secondary w-100 mb-3">
+					Merge with Similar Signals
+				</button>
+
+				<div class="section-title">Communication Routing</div>
+				<button class="btn btn-outline-secondary w-100 mb-2">
+					Forward / Ping Planner
+				</button>
+				<button class="btn btn-outline-secondary w-100 mb-2">
+					Forward / Ping Technician
+				</button>
+				<button class="btn btn-outline-secondary w-100 mb-3">
+					Forward / Ping Supervisor
+				</button>
+
+				<div class="form-check form-switch mb-3">
+					<input class="form-check-input" type="checkbox" />
+					<label class="form-check-label">Requires More Information</label>
+				</div>
+
+				<hr />
+
+				<div class="section-title">Disposition</div>
+				<button class="btn btn-outline-warning btn-sm w-100 mb-2">
+					Defer (with reason)
+				</button>
+				<button class="btn btn-outline-danger btn-sm w-100">
+					Archive (when resolved)
+				</button>
+			</div>
+		</section>
+	</div>
+{{ end }}

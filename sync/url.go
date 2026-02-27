@@ -5,6 +5,7 @@ import (
 )
 
 type contentURL struct {
+	Configuration      contentURLConfiguration
 	OAuthRefreshArcGIS string
 	Root               string
 	Route              string
@@ -17,6 +18,7 @@ type contentURL struct {
 
 func newContentURL() contentURL {
 	return contentURL{
+		Configuration:      newContentURLConfiguration(),
 		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
 		Root:               config.MakeURLNidus("/"),
 		Route:              config.MakeURLNidus("/route"),
@@ -25,6 +27,16 @@ func newContentURL() contentURL {
 		Sidebar:            newContentURLSidebar(),
 		Tegola:             config.MakeURLTegola("/"),
 		UploadCSVPool:      config.MakeURLNidus("/upload/pool"),
+	}
+}
+
+type contentURLConfiguration struct {
+	Upload string
+}
+
+func newContentURLConfiguration() contentURLConfiguration {
+	return contentURLConfiguration{
+		Upload: config.MakeURLNidus("/configuration/upload"),
 	}
 }
 

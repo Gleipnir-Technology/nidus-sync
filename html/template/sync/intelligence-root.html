@@ -1,0 +1,295 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Planning{{ end }}
+{{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script src="/static/js/map-aggregate.js"></script>
+	<script>
+		function onLoad() {}
+		window.addEventListener("load", onLoad);
+	</script>
+	<style>
+		.pane-header {
+			font-weight: 600;
+		}
+		.workbench-map {
+			height: 320px;
+			background-color: #e9ecef;
+			border: 1px dashed #adb5bd;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			font-weight: 500;
+			color: #6c757d;
+		}
+		.scroll-pane {
+			max-height: 75vh;
+			overflow-y: auto;
+		}
+		.signal-item:hover {
+			background-color: #f1f3f5;
+			cursor: pointer;
+		}
+		.tool-button {
+			width: 100%;
+			margin-bottom: 0.5rem;
+		}
+		.filter-label {
+			font-size: 0.75rem;
+			text-transform: uppercase;
+			color: #6c757d;
+			font-weight: 600;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+
+	<!-- Header -->
+	<div class="row mb-3">
+		<div class="col">
+			<h3 class="mb-1">Daily Planning Workbench</h3>
+			<div class="text-muted small">
+				Signals and leads enter from the left, are investigated in the center,
+				and transformed into structured field assignments using tools on the
+				right.
+			</div>
+		</div>
+	</div>
+
+	<div class="row g-3">
+		<!-- LEFT: Incoming Signals & Leads -->
+		<div class="col-xl-3">
+			<div class="card shadow-sm h-100">
+				<div class="card-header bg-white pane-header">
+					Incoming Signals & Leads
+				</div>
+				<div class="card-body scroll-pane">
+					<!-- FILTERS -->
+					<div class="mb-3">
+						<div class="filter-label mb-1">Species</div>
+						<select class="form-select form-select-sm mb-2">
+							<option>All Species</option>
+							<option>Aedes aegypti</option>
+							<option>Aedes albopictus</option>
+							<option>Culex pipiens</option>
+							<option>Culex tarsalis</option>
+						</select>
+
+						<div class="filter-label mb-1">Signal Type</div>
+						<select class="form-select form-select-sm mb-2">
+							<option>All Types</option>
+							<option>Public Report</option>
+							<option>Trap Spike</option>
+							<option>Surveillance Observation</option>
+							<option>Residual Expiring</option>
+							<option>Plan Follow-Up</option>
+						</select>
+
+						<div class="filter-label mb-1">Sort By</div>
+						<select class="form-select form-select-sm">
+							<option>Newest First</option>
+							<option>Highest Priority</option>
+							<option>Most Signals Linked</option>
+							<option>Strongest Species Signal</option>
+						</select>
+					</div>
+
+					<hr />
+
+					<!-- Signals -->
+					<div class="mb-3">
+						<div class="fw-semibold mb-2">Signals</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">
+								Public Report – Service Request #1024
+							</div>
+							<div class="text-muted small">
+								Aedes aegypti • Standing Water Complaint
+							</div>
+						</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">
+								Trap Spike – H3 8828308281fffff
+							</div>
+							<div class="text-muted small">Culex pipiens • Adult Surge</div>
+						</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">
+								Residual Expiring – Parcel 45-233-01
+							</div>
+							<div class="text-muted small">Reinspection Due</div>
+						</div>
+					</div>
+
+					<hr />
+
+					<!-- Mosquito Control Plan Followups -->
+					<div class="mb-3">
+						<div class="fw-semibold mb-2">Mosquito Control Plan Follow-Ups</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">
+								Plan Follow-Up – Greenway HOA Basin
+							</div>
+							<div class="text-muted small">
+								Residential Section • Verification Required
+							</div>
+							<span class="badge bg-secondary">Plan</span>
+						</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">
+								Plan Follow-Up – Ag Irrigation Canal 7B
+							</div>
+							<div class="text-muted small">Ag Section • Monitoring Window</div>
+							<span class="badge bg-secondary">Plan</span>
+						</div>
+					</div>
+
+					<hr />
+
+					<!-- Leads -->
+					<div>
+						<div class="fw-semibold mb-2">Existing Leads</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">Lead #L-204</div>
+							<div class="text-muted small">3 Signals • Aedes aegypti</div>
+						</div>
+
+						<div class="border rounded p-2 mb-2 signal-item">
+							<div class="small fw-semibold">Lead #L-198</div>
+							<div class="text-muted small">2 Signals • Culex pipiens</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- CENTER: Active Workbench -->
+		<div class="col-xl-6">
+			<div class="card shadow-sm mb-3">
+				<div class="card-header bg-white pane-header">
+					Active Investigation Workbench
+				</div>
+				<div class="card-body">
+					<div class="workbench-map mb-3">
+						Map Placeholder<br />
+						H3 Cells • Parcels • Signal Density • Lead Clusters
+					</div>
+
+					<div class="row g-3">
+						<div class="col-md-6">
+							<div class="card border">
+								<div class="card-body">
+									<div class="fw-semibold">Selected Signals</div>
+									<div class="text-muted small">3 Signals Selected</div>
+									<ul class="small mt-2">
+										<li>Public Report – Aedes aegypti</li>
+										<li>Trap Spike – Culex pipiens</li>
+										<li>Plan Follow-Up – HOA Basin</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-6">
+							<div class="card border">
+								<div class="card-body">
+									<div class="fw-semibold">Derived Lead Strength</div>
+									<div class="text-muted small">Signal Convergence Score</div>
+									<div class="mt-2">
+										<span class="badge bg-danger">High Confidence</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-6">
+							<div class="card border">
+								<div class="card-body">
+									<div class="fw-semibold">Related Communications</div>
+									<div class="text-muted small">Inbound & outbound contact</div>
+									<ul class="small mt-2">
+										<li>Resident follow-up requested</li>
+										<li>HOA notification sent</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-md-6">
+							<div class="card border">
+								<div class="card-body">
+									<div class="fw-semibold">Priority Context</div>
+									<div class="text-muted small">Risk synthesis</div>
+									<span class="badge bg-warning text-dark"
+										>Elevated Aedes Risk</span
+									>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- RIGHT: Transformation Tools -->
+		<div class="col-xl-3">
+			<div class="card shadow-sm h-100">
+				<div class="card-header bg-white pane-header">Transformation Tools</div>
+				<div class="card-body scroll-pane">
+					<div class="mb-3">
+						<div class="text-muted small mb-2">Signal → Lead</div>
+						<button class="btn btn-outline-primary tool-button">
+							Create New Lead from Selection
+						</button>
+						<button class="btn btn-outline-secondary tool-button">
+							Add Signals to Existing Lead
+						</button>
+						<button class="btn btn-outline-secondary tool-button">
+							Mark Signal as Addressed
+						</button>
+					</div>
+
+					<hr />
+
+					<div class="mb-3">
+						<div class="text-muted small mb-2">Lead → Field Assignment</div>
+						<button class="btn btn-outline-success tool-button">
+							Create Proposed Assignment
+						</button>
+						<button class="btn btn-outline-secondary tool-button">
+							Add Leads to Existing Assignment
+						</button>
+						<button class="btn btn-outline-secondary tool-button">
+							Split Lead
+						</button>
+					</div>
+
+					<hr />
+
+					<div class="mb-3">
+						<div class="text-muted small mb-2">Assignment Controls</div>
+						<button class="btn btn-outline-dark tool-button">
+							Set Priority
+						</button>
+						<button class="btn btn-outline-dark tool-button">
+							Estimate Effort
+						</button>
+						<button class="btn btn-outline-dark tool-button">
+							Send to Operations
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}

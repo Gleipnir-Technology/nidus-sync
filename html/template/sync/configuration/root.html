@@ -1,6 +1,6 @@
 {{ template "sync/layout/authenticated.html" . }}
 
-{{ define "title" }}Settings{{ end }}
+{{ define "title" }}Planning{{ end }}
 {{ define "extraheader" }}
 {{ end }}
 {{ define "content" }}
@@ -110,21 +110,24 @@
 				</div>
 			</div>
 
-			<!-- Notifications Card -->
+			<!-- Import Card -->
 			<div class="col-12 col-md-6 col-lg-4">
 				<div class="card settings-card border-0 shadow-sm">
 					<div class="card-body p-4">
 						<div class="settings-icon icon-notifications">
-							<i class="bi bi-bell-fill"></i>
+							<i class="bi bi-upload"></i>
 						</div>
-						<h2 class="h4 mb-2">Notifications</h2>
+						<h2 class="h4 mb-2">Uploads</h2>
 						<p class="text-muted mb-4">
-							Configure email alerts, SMS notifications, and reporting
-							preferences.
+							Upload files (spreadsheets, scans, notes) to make the data
+							available to Nidus
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a class="btn btn-outline-warning disabled" disabled>
-								Manage Notifications
+							<a
+								class="btn btn-outline-warning"
+								href="{{ .URL.Configuration.Upload }}"
+							>
+								Manage Uploads
 								<i class="bi bi-arrow-right ms-1"></i>
 							</a>
 						</div>

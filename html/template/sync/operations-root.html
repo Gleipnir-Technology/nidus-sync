@@ -1,0 +1,432 @@
+{{ template "sync/layout/authenticated.html" . }}
+
+{{ define "title" }}Planning{{ end }}
+{{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script src="/static/js/map-aggregate.js"></script>
+	<script>
+		function onLoad() {}
+		window.addEventListener("load", onLoad);
+	</script>
+	<style>
+		.card {
+			box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+		}
+		.status-dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			display: inline-block;
+			margin-right: 6px;
+		}
+		.overload {
+			border-left: 4px solid #dc3545;
+		}
+		.map-placeholder {
+			height: 520px;
+			background: #e9ecef;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 600;
+			color: #6c757d;
+		}
+		.live-map {
+			height: 620px;
+			background: #dee2e6;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 600;
+			color: #6c757d;
+		}
+		.scroll-panel {
+			max-height: 500px;
+			overflow-y: auto;
+		}
+		.mode-toggle .nav-link {
+			font-weight: 600;
+		}
+		.route-card {
+			border-left: 4px solid #0d6efd;
+		}
+		.send-routes-btn {
+			font-size: 1.1rem;
+			padding: 0.75rem 1.5rem;
+		}
+		.selection-counter.valid {
+			color: #198754;
+		}
+		.selection-counter.invalid {
+			color: #dc3545;
+		}
+		.selection-counter.warning {
+			color: #fd7e14;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+
+	<!-- HEADER -->
+	<div class="row mb-3 align-items-center">
+		<div class="col-md-6">
+			<h4 class="fw-bold mb-0">Operations Command Center</h4>
+		</div>
+		<div class="col-md-6 text-end">
+			<button class="btn btn-outline-primary me-2">
+				Add Emergent Assignment
+			</button>
+			<button class="btn btn-outline-danger">Close Day</button>
+		</div>
+	</div>
+
+	<!-- MODE TOGGLE -->
+	<ul class="nav nav-tabs mode-toggle mb-4" role="tablist">
+		<li class="nav-item">
+			<button
+				class="nav-link active"
+				data-bs-toggle="tab"
+				data-bs-target="#planning"
+			>
+				Planning Mode
+			</button>
+		</li>
+		<li class="nav-item">
+			<button class="nav-link" data-bs-toggle="tab" data-bs-target="#live">
+				Live Mode
+			</button>
+		</li>
+	</ul>
+
+	<div class="tab-content">
+		<!-- ================= PLANNING MODE ================= -->
+		<div class="tab-pane fade show active" id="planning">
+			<div class="row mb-3">
+				<!-- LEFT: ASSIGNMENTS -->
+				<div class="col-lg-3">
+					<div class="card">
+						<div
+							class="card-header d-flex justify-content-between align-items-center fw-semibold"
+						>
+							<span>Assignments & Work Requests</span>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" />
+								<label class="form-check-label small">Select All</label>
+							</div>
+						</div>
+						<div class="card-body scroll-panel">
+							<input
+								class="form-control form-control-sm mb-2"
+								placeholder="Filter by section, equipment, expertise"
+							/>
+							<div class="list-group">
+								<div class="list-group-item d-flex">
+									<div class="form-check me-2">
+										<input class="form-check-input" type="checkbox" />
+									</div>
+									<div>
+										<div class="d-flex justify-content-between">
+											<strong>Larval Habitat Inspection</strong>
+											<span class="badge bg-primary">Planned</span>
+										</div>
+										<small>Residential · Backpack Blower</small>
+									</div>
+								</div>
+								<div class="list-group-item d-flex">
+									<div class="form-check me-2">
+										<input class="form-check-input" type="checkbox" />
+									</div>
+									<div>
+										<div class="d-flex justify-content-between">
+											<strong>Green Pool Treatment</strong>
+											<span class="badge bg-warning text-dark">Emergent</span>
+										</div>
+										<small>Residential · Larvicide · Access Clearance</small>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- CENTER: MAP -->
+				<div class="col-lg-6">
+					<div class="card">
+						<div class="card-header fw-semibold">Routing Map</div>
+						<div class="map-placeholder">
+							Map: Selected Assignments, Selected Technicians, Proposed Routes
+						</div>
+						<div
+							class="card-footer d-flex justify-content-between align-items-center"
+						>
+							<div class="selection-counter warning small">
+								12 Assignments Selected · 5 Technicians Selected
+							</div>
+							<div>
+								<button class="btn btn-success">Compute Optimal Routes</button>
+								<button class="btn btn-outline-primary">
+									Manual Assignment
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- RIGHT: TECHNICIANS -->
+				<div class="col-lg-3">
+					<div class="card">
+						<div
+							class="card-header d-flex justify-content-between align-items-center fw-semibold"
+						>
+							<span>Technicians</span>
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" />
+								<label class="form-check-label small">Select All</label>
+							</div>
+						</div>
+						<div class="card-body scroll-panel">
+							<input
+								class="form-control form-control-sm mb-2"
+								placeholder="Filter technicians"
+							/>
+							<div class="list-group">
+								<div class="list-group-item d-flex">
+									<div class="form-check me-2">
+										<input class="form-check-input" type="checkbox" />
+									</div>
+									<div>
+										<div class="d-flex justify-content-between">
+											<strong>Technician A</strong>
+											<span
+												><span class="status-dot bg-success"></span
+												>Available</span
+											>
+										</div>
+										<small>Residential · ULV · Backpack</small>
+										<div class="mt-2">
+											<label class="form-label form-label-sm mb-1"
+												>Assigned Vehicle</label
+											>
+											<select class="form-select form-select-sm">
+												<option selected>
+													Truck 12 · ULV · Backpack · Larvicide Kit
+												</option>
+												<option>ATV 3 · Dipper · Granular Spreader</option>
+												<option>Reserve Vehicle · Minimal Equipment</option>
+											</select>
+										</div>
+									</div>
+								</div>
+								<div class="list-group-item overload d-flex">
+									<div class="form-check me-2">
+										<input class="form-check-input" type="checkbox" />
+									</div>
+									<div>
+										<div class="d-flex justify-content-between">
+											<strong>Technician B</strong>
+											<span
+												><span class="status-dot bg-warning"></span>In
+												Field</span
+											>
+										</div>
+										<small>Agricultural · Capacity Exceeded</small>
+										<div class="mt-2">
+											<label class="form-label form-label-sm mb-1"
+												>Assigned Vehicle</label
+											>
+											<select class="form-select form-select-sm">
+												<option>
+													Truck 12 · ULV · Backpack · Larvicide Kit
+												</option>
+												<option selected>
+													ATV 3 · Dipper · Granular Spreader
+												</option>
+												<option>Reserve Vehicle · Minimal Equipment</option>
+											</select>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ROUTES LIST (STACKED) -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="card">
+						<div class="card-header fw-semibold">Proposed Routes</div>
+						<div class="card-body">
+							<div class="card route-card p-3 mb-3">
+								<strong>Route: Technician A</strong><br />
+								<small
+									>5 Assignments · Est. 4.5 hrs · Equipment: Backpack</small
+								>
+								<div class="mt-2">
+									<button class="btn btn-sm btn-outline-secondary">
+										View Assignments
+									</button>
+									<button class="btn btn-sm btn-outline-primary">
+										Modify Route
+									</button>
+									<button class="btn btn-sm btn-outline-secondary">
+										Shift Assignment
+									</button>
+									<button class="btn btn-sm btn-outline-secondary">
+										Swap Technician
+									</button>
+								</div>
+							</div>
+							<div class="card route-card p-3">
+								<strong>Route: Technician B</strong><br />
+								<small>6 Assignments · Est. 6 hrs · Equipment: ATV</small>
+								<div class="mt-2">
+									<button class="btn btn-sm btn-outline-secondary">
+										View Assignments
+									</button>
+									<button class="btn btn-sm btn-outline-primary">
+										Modify Route
+									</button>
+									<button class="btn btn-sm btn-outline-secondary">
+										Shift Assignment
+									</button>
+									<button class="btn btn-sm btn-outline-secondary">
+										Swap Technician
+									</button>
+								</div>
+							</div>
+						</div>
+						<div class="card-footer text-end">
+							<button class="btn btn-primary send-routes-btn">
+								Send Routes to Technicians and Begin Live Operations
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ================= LIVE MODE ================= -->
+		<div class="tab-pane fade" id="live">
+			<div class="row mb-3">
+				<!-- LEFT: ASSIGNMENTS IN ROUTE ORDER -->
+				<div class="col-lg-3">
+					<div class="card">
+						<div class="card-header fw-semibold">
+							Assignments in Route Order
+						</div>
+						<div class="card-body scroll-panel">
+							<div class="alert alert-warning">
+								<strong>Unassigned Assignments</strong><br />
+								2 awaiting routing
+							</div>
+							<ul class="list-group list-group-flush">
+								<li class="list-group-item">
+									<strong>Green Pool Reinspection</strong><br />
+									Communication Pending
+								</li>
+								<li class="list-group-item">
+									<strong>Storm Drain Treatment</strong><br />
+									In Progress
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<!-- CENTER: LIVE MAP -->
+				<div class="col-lg-6">
+					<div class="live-map">
+						Live Map: Active Routes, Technician Position, Route Progress
+					</div>
+				</div>
+
+				<!-- RIGHT: TECHNICIAN STATUS -->
+				<div class="col-lg-3">
+					<div class="card">
+						<div class="card-header fw-semibold">Technician Status</div>
+						<div class="card-body scroll-panel">
+							<div class="list-group">
+								<div class="list-group-item">
+									<div class="d-flex justify-content-between">
+										<strong>Technician A</strong>
+										<span class="badge bg-success">On Track</span>
+									</div>
+									<small>72% Complete · 1.5 hrs Remaining</small>
+								</div>
+								<div class="list-group-item">
+									<div class="d-flex justify-content-between">
+										<strong>Technician C</strong>
+										<span class="badge bg-danger">Support Requested</span>
+									</div>
+									<small>Equipment Issue</small>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- ROUTE INTELLIGENCE -->
+			<div class="row">
+				<div class="col-12">
+					<div class="card">
+						<div class="card-header fw-semibold">
+							Active Routes Intelligence
+						</div>
+						<div class="card-body">
+							<table class="table table-sm align-middle">
+								<thead>
+									<tr>
+										<th>Technician</th>
+										<th>Assignments</th>
+										<th>Estimated Completion</th>
+										<th>Remaining Time</th>
+										<th>Status</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>Technician A</td>
+										<td>5</td>
+										<td>3:45 PM</td>
+										<td>1 hr 30 min</td>
+										<td><span class="badge bg-success">On Track</span></td>
+										<td>
+											<button class="btn btn-sm btn-outline-secondary">
+												View Route
+											</button>
+											<button class="btn btn-sm btn-outline-primary">
+												Reallocate
+											</button>
+										</td>
+									</tr>
+									<tr>
+										<td>Technician C</td>
+										<td>4</td>
+										<td>4:30 PM</td>
+										<td>2 hrs</td>
+										<td><span class="badge bg-danger">Blocked</span></td>
+										<td>
+											<button class="btn btn-sm btn-outline-secondary">
+												View Route
+											</button>
+											<button class="btn btn-sm btn-outline-primary">
+												Assist
+											</button>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{{ end }}
