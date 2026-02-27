@@ -9,9 +9,43 @@ type contentURL struct {
 	Root               string
 	Route              string
 	SamplePoolCSV      string
+	Sidebar            contentURLSidebar
 	Setting            contentURLSetting
 	Tegola             string
 	UploadCSVPool      string
+}
+
+func newContentURL() contentURL {
+	return contentURL{
+		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
+		Root:               config.MakeURLNidus("/"),
+		Route:              config.MakeURLNidus("/route"),
+		SamplePoolCSV:      config.MakeURLNidus("/static/file/sample-pool.csv"),
+		Setting:            newContentURLSetting(),
+		Sidebar:            newContentURLSidebar(),
+		Tegola:             config.MakeURLTegola("/"),
+		UploadCSVPool:      config.MakeURLNidus("/upload/pool"),
+	}
+}
+
+type contentURLSidebar struct {
+	Communication string
+	Configuration string
+	Intelligence  string
+	Operations    string
+	Planning      string
+	Review        string
+}
+
+func newContentURLSidebar() contentURLSidebar {
+	return contentURLSidebar{
+		Communication: config.MakeURLNidus("/communication"),
+		Configuration: config.MakeURLNidus("/configuration"),
+		Intelligence:  config.MakeURLNidus("/intelligence"),
+		Operations:    config.MakeURLNidus("/operations"),
+		Planning:      config.MakeURLNidus("/planning"),
+		Review:        config.MakeURLNidus("/review"),
+	}
 }
 
 type contentURLSetting struct {
@@ -26,17 +60,6 @@ type contentURLSetting struct {
 	UserAdd      string
 }
 
-func newContentURL() contentURL {
-	return contentURL{
-		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
-		Root:               config.MakeURLNidus("/"),
-		Route:              config.MakeURLNidus("/route"),
-		SamplePoolCSV:      config.MakeURLNidus("/static/file/sample-pool.csv"),
-		Setting:            newContentURLSetting(),
-		Tegola:             config.MakeURLTegola("/"),
-		UploadCSVPool:      config.MakeURLNidus("/upload/pool"),
-	}
-}
 func newContentURLSetting() contentURLSetting {
 	return contentURLSetting{
 		ArcGIS:       config.MakeURLNidus("/setting/integration/arcgis"),

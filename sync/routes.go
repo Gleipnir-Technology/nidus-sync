@@ -52,6 +52,7 @@ func Router() chi.Router {
 	r.Method("GET", "/layout-test", authenticatedHandler(getLayoutTest))
 	r.Method("GET", "/message", authenticatedHandler(getMessageList))
 	r.Method("GET", "/notification", authenticatedHandler(getNotificationList))
+	r.Method("GET", "/planning", authenticatedHandler(getPlanningRoot))
 	r.Method("GET", "/pool", authenticatedHandler(getPoolList))
 	r.Method("GET", "/pool/create", authenticatedHandler(getPoolCreate))
 	r.Method("GET", "/pool/{id}", authenticatedHandler(getPoolByID))
