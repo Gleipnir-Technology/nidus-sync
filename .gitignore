@@ -1,5 +1,6 @@
 .sass-cache/
 cmd/geocode-test/geocode-test
+cmd/passwordgen/passwordgen
 districts/
 flogo.log
 html/static/css/bootstrap.css
