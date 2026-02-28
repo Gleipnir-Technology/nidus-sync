@@ -22,6 +22,7 @@ func AddRoutes(r chi.Router) {
 	// Unauthenticated endpoints
 	r.Get("/district", apiGetDistrict)
 	r.Get("/district/{slug}/logo", apiGetDistrictLogo)
+	r.Get("/compliance-request/image/pool/{public_id}", getComplianceRequestImagePool)
 	r.Post("/signin", postSignin)
 	r.Post("/twilio/call", twilioCallPost)
 	r.Post("/twilio/call/status", twilioCallStatusPost)

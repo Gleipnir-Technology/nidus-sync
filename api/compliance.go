@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,10 +45,14 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Info().Int("len", len(*envelope)).Msg("got envelope")
-	level := uint(12)
 	ring := (*envelope)[0]
+	log.Info().Int("len", len(ring)).Msg("got ring")
 	p := ring[0]
-	img, err := imagetile.ImageAtPoint(ctx, org, level, p[0], p[1])
+	log.Info().Int("len", len(p)).Msg("got point")
+	writeImage(ctx, w, org, 14, p[0], p[1])
+}
+func writeImage(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, x, y float64) {
+	img, err := imagetile.ImageAtPoint(ctx, org, level, x, y)
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img)))
 	_, err = io.Copy(w, bytes.NewBuffer(img))
