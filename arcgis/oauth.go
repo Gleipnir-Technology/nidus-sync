@@ -8,8 +8,15 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 )
 
-func GetOAuthForUser(ctx context.Context, user *models.User) (*models.OauthToken, error) {
-	return user.UserOauthTokens(
+func GetOAuthForUser(ctx context.Context, user *models.User) (*models.ArcgisOauthToken, error) {
+	oauth, err := user.UserOauthTokens(
 		sm.OrderBy("created").Desc(),
 	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return oauth, nil
 }
