@@ -1,5 +1,6 @@
 package db
 
+/*
 import (
 	"context"
 	"fmt"
@@ -19,43 +20,35 @@ import (
 func SaveOrUpdateAerialSpraySession(ctx context.Context, org *models.Organization, fs []*fslayer.AerialSpraySession) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring AerialSpraySession data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "AerialSpraySession", "fieldseeker.insert_aerialspraysession", func(row *fslayer.AerialSpraySession) ([]SqlParam, error) {
 			return []SqlParam{
 				//Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateAerialSprayLine(ctx context.Context, org *models.Organization, fs []*fslayer.AerialSprayLine) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring AerialSprayLine data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "AerialSprayLine", "fieldseeker.insert_aerialsprayline", func(row *fslayer.AerialSprayLine) ([]SqlParam, error) {
 			return []SqlParam{
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateBarrierSpray(ctx context.Context, org *models.Organization, fs []*fslayer.BarrierSpray) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring BarrierSpray data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "BarrierSpray", "fieldseeker.insert_barrierspray", func(row *fslayer.BarrierSpray) ([]SqlParam, error) {
 			return []SqlParam{
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateBarrierSprayRoute(ctx context.Context, org *models.Organization, fs []*fslayer.BarrierSprayRoute) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring BarrierSprayRoute data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "BarrierSprayRoute", "fieldseeker.insert_barriersprayroute", func(row *fslayer.BarrierSprayRoute) ([]SqlParam, error) {
 			return []SqlParam{
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateContainerRelate(ctx context.Context, org *models.Organization, fs []*fslayer.ContainerRelate) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "ContainerRelate", "fieldseeker.insert_containerrelate", func(row *fslayer.ContainerRelate) ([]SqlParam, error) {
@@ -205,24 +198,20 @@ func SaveOrUpdateInspectionSampleDetail(ctx context.Context, org *models.Organiz
 func SaveOrUpdateLandingCount(ctx context.Context, org *models.Organization, fs []*fslayer.LandingCount) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring LandingCount data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "LandingCount", "fieldseeker.insert_landingcount", func(row *fslayer.LandingCount) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateLandingCountLocation(ctx context.Context, org *models.Organization, fs []*fslayer.LandingCountLocation) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring LandingCountLocation data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "LandingCountLocation", "fieldseeker.insert_landingcountlocation", func(row *fslayer.LandingCountLocation) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateLineLocation(ctx context.Context, org *models.Organization, fs []*fslayer.LineLocation) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "LineLocation", "fieldseeker.insert_linelocation", func(row *fslayer.LineLocation) ([]SqlParam, error) {
@@ -385,13 +374,11 @@ func SaveOrUpdateMosquitoInspection(ctx context.Context, org *models.Organizatio
 func SaveOrUpdateOfflineMapAreas(ctx context.Context, org *models.Organization, fs []*fslayer.OfflineMapAreas) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring OfflineMapAreas data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "OfflineMapAreas", "fieldseeker.insert_offlinemapareas", func(row *fslayer.OfflineMapAreas) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateProposedTreatmentArea(ctx context.Context, org *models.Organization, fs []*fslayer.ProposedTreatmentArea) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "ProposedTreatmentArea", "fieldseeker.insert_proposedtreatmentarea", func(row *fslayer.ProposedTreatmentArea) ([]SqlParam, error) {
@@ -632,24 +619,20 @@ func SaveOrUpdatePool(ctx context.Context, org *models.Organization, fs []*fslay
 func SaveOrUpdatePoolBuffer(ctx context.Context, org *models.Organization, fs []*fslayer.PoolBuffer) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring PoolBuffer data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "PoolBuffer", "fieldseeker.insert_poolbuffer", func(row *fslayer.PoolBuffer) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateQALarvCount(ctx context.Context, org *models.Organization, fs []*fslayer.QALarvCount) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring QALarvCount data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "QALarvCount", "fieldseeker.insert_qalarvcount", func(row *fslayer.QALarvCount) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateQAMosquitoInspection(ctx context.Context, org *models.Organization, fs []*fslayer.QAMosquitoInspection) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "QAMosquitoInspection", "fieldseeker.insert_qamosquitoinspection", func(row *fslayer.QAMosquitoInspection) ([]SqlParam, error) {
@@ -730,24 +713,20 @@ func SaveOrUpdateQAMosquitoInspection(ctx context.Context, org *models.Organizat
 func SaveOrUpdateQAProductObservation(ctx context.Context, org *models.Organization, fs []*fslayer.QAProductObservation) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring QAProductObservation data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "QAProductObservation", "fieldseeker.insert_qaproductobservation", func(row *fslayer.QAProductObservation) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateRestrictedArea(ctx context.Context, org *models.Organization, fs []*fslayer.RestrictedArea) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring RestrictedArea data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "RestrictedArea", "fieldseeker.insert_restrictedarea", func(row *fslayer.RestrictedArea) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateRodentInspection(ctx context.Context, org *models.Organization, fs []*fslayer.RodentInspection) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring RodentInspection data")
@@ -758,7 +737,6 @@ func SaveOrUpdateRodentInspection(ctx context.Context, org *models.Organization,
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateRodentLocation(ctx context.Context, org *models.Organization, fs []*fslayer.RodentLocation) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "RodentLocation", "fieldseeker.insert_rodentlocation", func(row *fslayer.RodentLocation) ([]SqlParam, error) {
@@ -1076,13 +1054,11 @@ func SaveOrUpdateStormDrain(ctx context.Context, org *models.Organization, fs []
 func SaveOrUpdateTracklog(ctx context.Context, org *models.Organization, fs []*fslayer.Tracklog) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring RodentInspection data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "Tracklog", "fieldseeker.insert_tracklog", func(row *fslayer.Tracklog) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateTrapLocation(ctx context.Context, org *models.Organization, fs []*fslayer.TrapLocation) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "TrapLocation", "fieldseeker.insert_traplocation", func(row *fslayer.TrapLocation) ([]SqlParam, error) {
@@ -1328,13 +1304,11 @@ func SaveOrUpdateTreatmentArea(ctx context.Context, org *models.Organization, fs
 func SaveOrUpdateULVSprayRoute(ctx context.Context, org *models.Organization, fs []*fslayer.ULVSprayRoute) (inserts uint, updates uint, err error) {
 	log.Warn().Msg("Ignoring RodentInspection data")
 	return 0, 0, nil
-	/*
 		return doUpdatesViaFunction(ctx, org, fs, "ULVSprayRoute", "fieldseeker.insert_ulvsprayroute", func(row *fslayer.ULVSprayRoute) ([]SqlParam, error) {
 			return []SqlParam{
 				Uint("p_objectid", row.ObjectID),
 			}, nil
 		})
-	*/
 }
 func SaveOrUpdateZones(ctx context.Context, org *models.Organization, fs []*fslayer.Zones) (inserts uint, updates uint, err error) {
 	return doUpdatesViaFunction(ctx, org, fs, "Zones", "fieldseeker.insert_zones", func(row *fslayer.Zones) ([]SqlParam, error) {
@@ -1442,3 +1416,4 @@ func toUUID(u googleuuid.UUID) omitnull.Val[uuid.UUID] {
 func toObjectID(o uint) omit.Val[int64] {
 	return omit.From[int64](int64(o))
 }
+*/

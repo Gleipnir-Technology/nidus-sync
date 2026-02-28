@@ -1,6 +1,8 @@
 -- OrgByOauthId
-SELECT o.id AS organization_id, o.arcgis_id AS arcgis_id, o.fieldseeker_url AS fieldseeker_url
-FROM oauth_token ot
+SELECT o.id AS organization_id, aa.id AS arcgis_id, asf.url AS fieldseeker_url
+FROM arcgis.oauth_token ot
 JOIN user_ u ON ot.user_id = u.id
 JOIN organization o ON u.organization_id = o.id
+JOIN arcgis.account aa ON aa.id = o.arcgis_account_id
+JOIN arcgis.service_feature asf ON asf.item_id = o.fieldseeker_service_feature_item_id
 WHERE ot.id = $1

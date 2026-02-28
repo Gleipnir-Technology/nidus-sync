@@ -10,6 +10,7 @@ import (
 	"time"
 
 	fslayer "github.com/Gleipnir-Technology/arcgis-go/fieldseeker/layer"
+	"github.com/Gleipnir-Technology/arcgis-go/response"
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/google/uuid"
@@ -81,48 +82,49 @@ func TestPreparedQueryOld(ctx context.Context) error {
 	return nil
 }
 func TestPreparedQuery(ctx context.Context, row *fslayer.RodentLocation) error {
-	q := queryStoredProcedure("fieldseeker.insert_rodentlocation",
-		Uint("p_objectid", row.ObjectID),
-		String("p_locationname", row.LocationName),
-		String("p_zone", row.Zone),
-		String("p_zone2", row.Zone2),
-		String("p_habitat", row.Habitat),
-		String("p_priority", row.Priority),
-		String("p_usetype", row.Usetype),
-		Int16("p_active", row.Active),
-		String("p_description", row.Description),
-		String("p_accessdesc", row.Accessdesc),
-		String("p_comments", row.Comments),
-		String("p_symbology", row.Symbology),
-		String("p_externalid", row.ExternalID),
-		Timestamp("p_nextactiondatescheduled", row.Nextactiondatescheduled),
-		Int32("p_locationnumber", row.Locationnumber),
-		Timestamp("p_lastinspectdate", row.LastInspectionDate),
-		String("p_lastinspectspecies", row.LastInspectionSpecies),
-		String("p_lastinspectaction", row.LastInspectionAction),
-		String("p_lastinspectconditions", row.LastInspectionConditions),
-		String("p_lastinspectrodentevidence", row.LastInspectionRodentEvidence),
-		UUID("p_globalid", row.GlobalID),
-		String("p_created_user", row.CreatedUser),
-		Timestamp("p_created_date", row.CreatedDate),
-		String("p_last_edited_user", row.LastEditedUser),
-		Timestamp("p_last_edited_date", row.LastEditedDate),
-		Timestamp("p_creationdate", row.CreationDate),
-		String("p_creator", row.Creator),
-		Timestamp("p_editdate", row.EditDate),
-		String("p_editor", row.Editor),
-		String("p_jurisdiction", row.Jurisdiction),
-	)
-	query := psql.RawQuery(q)
-	log.Info().Str("query", q).Msg("querying")
-	result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
-	if err != nil {
-		return fmt.Errorf("Failed to execute test function: %w", err)
-	}
-	//log.Info().Int("version", result.NextVersion).Msg("got result")
-	//log.Info().Bool("added", result.Row.Added).Int("version", result.Row.Version).Msg("done")
-	log.Info().Bool("inserted", result.Inserted).Int("version", result.Version).Msg("done")
-
+	/*
+		q := queryStoredProcedure("fieldseeker.insert_rodentlocation",
+			Uint("p_objectid", row.ObjectID),
+			String("p_locationname", row.LocationName),
+			String("p_zone", row.Zone),
+			String("p_zone2", row.Zone2),
+			String("p_habitat", row.Habitat),
+			String("p_priority", row.Priority),
+			String("p_usetype", row.Usetype),
+			Int16("p_active", row.Active),
+			String("p_description", row.Description),
+			String("p_accessdesc", row.Accessdesc),
+			String("p_comments", row.Comments),
+			String("p_symbology", row.Symbology),
+			String("p_externalid", row.ExternalID),
+			Timestamp("p_nextactiondatescheduled", row.Nextactiondatescheduled),
+			Int32("p_locationnumber", row.Locationnumber),
+			Timestamp("p_lastinspectdate", row.LastInspectionDate),
+			String("p_lastinspectspecies", row.LastInspectionSpecies),
+			String("p_lastinspectaction", row.LastInspectionAction),
+			String("p_lastinspectconditions", row.LastInspectionConditions),
+			String("p_lastinspectrodentevidence", row.LastInspectionRodentEvidence),
+			UUID("p_globalid", row.GlobalID),
+			String("p_created_user", row.CreatedUser),
+			Timestamp("p_created_date", row.CreatedDate),
+			String("p_last_edited_user", row.LastEditedUser),
+			Timestamp("p_last_edited_date", row.LastEditedDate),
+			Timestamp("p_creationdate", row.CreationDate),
+			String("p_creator", row.Creator),
+			Timestamp("p_editdate", row.EditDate),
+			String("p_editor", row.Editor),
+			String("p_jurisdiction", row.Jurisdiction),
+		)
+		query := psql.RawQuery(q)
+		log.Info().Str("query", q).Msg("querying")
+		result, err := bob.One[InsertResultRow](ctx, PGInstance.BobDB, query, scan.StructMapper[InsertResultRow]())
+		if err != nil {
+			return fmt.Errorf("Failed to execute test function: %w", err)
+		}
+		//log.Info().Int("version", result.NextVersion).Msg("got result")
+		//log.Info().Bool("added", result.Row.Added).Int("version", result.Row.Version).Msg("done")
+		log.Info().Bool("inserted", result.Inserted).Int("version", result.Version).Msg("done")
+	*/
 	return nil
 }
 
@@ -511,16 +513,22 @@ func lineOrNull(msg json.RawMessage) (SqlParam, error) {
 	return GISLine("p_geospatial", geo, 3857), nil
 }
 
-func pointOrNull(msg json.RawMessage) (SqlParam, error) {
-	// Surprisingly some geos are actually empty
-	if len(msg) == 0 {
-		return NullParam{"p_geospatial"}, nil
+func pointOrNull(geo response.Geometry) (SqlParam, error) {
+	switch geo.Type() {
+	case "esriGeometryPoint":
+		p, ok := geo.(response.Point)
+		if !ok {
+			return nil, fmt.Errorf("point that isn't a point")
+		}
+		return GISPoint("p_geospatial", GeometryPoint{
+			X: p.X,
+			Y: p.Y,
+		}, 3857), nil
+	default:
+		log.Warn().Str("type", geo.Type()).Msg("expected point, got something else")
+		return nil, nil
 	}
-	geo, err := parsePoint(msg)
-	if err != nil {
-		return NullParam{"p_geospatial"}, fmt.Errorf("Failed to pepare GISPoint: %w", err)
-	}
-	return GISPoint("p_geospatial", geo, 3857), nil
+
 }
 
 func polygonOrNull(msg json.RawMessage) (SqlParam, error) {
