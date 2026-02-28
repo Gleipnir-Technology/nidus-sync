@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -136,10 +135,7 @@ func SignupUser(ctx context.Context, username string, name string, password stri
 		return nil, fmt.Errorf("Cannot signup user, failed to create hashed password: %w", err)
 	}
 	o_setter := models.OrganizationSetter{
-		Name:           omit.From(fmt.Sprintf("%s's organization", username)),
-		ArcgisID:       omitnull.From(""),
-		ArcgisName:     omitnull.From(""),
-		FieldseekerURL: omitnull.From(""),
+		Name: omit.From(fmt.Sprintf("%s's organization", username)),
 	}
 	o, err := models.Organizations.Insert(&o_setter).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
