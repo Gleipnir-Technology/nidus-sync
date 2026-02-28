@@ -10,6 +10,8 @@ require (
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alitto/pond/v2 v2.5.0
+	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327
+	github.com/chromedp/chromedp v0.14.2
 	github.com/getsentry/sentry-go v0.42.0
 	github.com/getsentry/sentry-go/zerolog v0.42.0
 	github.com/go-chi/chi/v5 v5.2.3
@@ -18,12 +20,15 @@ require (
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/google/go-querystring v1.2.0
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/schema v1.4.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jaswdr/faker/v2 v2.8.1
 	github.com/lib/pq v1.10.9
 	github.com/maruel/genai v0.0.0-20251221000642-77279d1194c1
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/nyaruka/phonenumbers v1.6.8
+	github.com/paulmach/orb v0.12.0
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/rs/zerolog v1.34.0
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
@@ -34,6 +39,7 @@ require (
 	github.com/twilio/twilio-go v1.29.1
 	github.com/uber/h3-go/v4 v4.4.0
 	golang.org/x/crypto v0.47.0
+	golang.org/x/text v0.33.0
 	resty.dev/v3 v3.0.0-beta.6
 )
 
@@ -43,12 +49,15 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
+	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/gorilla/schema v1.4.1 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -76,15 +85,17 @@ require (
 	github.com/tidwall/rtree v1.3.1 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
+	github.com/twpayne/go-proj/v11 v11.0.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
+	go.mongodb.org/mongo-driver v1.11.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
+replace github.com/Gleipnir-Technology/arcgis-go v0.0.8 => ./arcgis-go
