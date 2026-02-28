@@ -9,18 +9,14 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/geojson"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
-	//"github.com/rs/zerolog/log"
 )
 
-func ParcelEnvelope(ctx context.Context, parcel_id int32) (*orb.Polygon, error) {
+func ParcelEnvelope(ctx context.Context, parcel_id int32) (*geojson.Polygon, error) {
 	type _Row struct {
-		Apn         string
-		Description string
-		ID          int
-		Geometry    string
-		Envelope    string
+		Envelope string `db:"st_asgeojson"`
 	}
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -32,7 +28,8 @@ func ParcelEnvelope(ctx context.Context, parcel_id int32) (*orb.Polygon, error) 
 	if err != nil {
 		return nil, fmt.Errorf("query parcel: %w", err)
 	}
-	var polygon orb.Polygon
+	var polygon geojson.Polygon
+	log.Info().Str("envelope", row.Envelope).Msg("about to unmarshal")
 	err = json.Unmarshal([]byte(row.Envelope), &polygon)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal json: %w", err)
