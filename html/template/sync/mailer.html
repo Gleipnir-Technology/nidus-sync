@@ -1,0 +1,401 @@
+{{ template "sync/layout/base.html" . }}
+
+{{ define "title" }}Mailer{{ end }}
+{{ define "extraheader" }}
+	<style>
+		@page {
+			size: Letter;
+			margin: 0;
+		}
+		html,
+		body {
+			height: 100%;
+		}
+		body {
+			margin: 0;
+			padding: 0;
+			background: #fff;
+		}
+
+		.page {
+			width: 8.5in;
+			height: 11in;
+			position: relative;
+			overflow: hidden;
+			background: #ffffff;
+			font-family: Arial, Helvetica, sans-serif;
+			color: #2b2b2b;
+			page-break-after: always;
+		}
+
+		:root {
+			--peach: #fbe2d6;
+			--left-blue: #f4f9fd;
+			--right-cyan: #caeefb;
+			--action-strip: #cfdfe6;
+		}
+
+		.hdr-peach {
+			position: absolute;
+			left: 4.015in;
+			top: 0.24in;
+			width: 4.22in;
+			height: 2.35in;
+			background: var(--peach);
+			box-sizing: border-box;
+			padding: 0.18in 0.22in 0.14in 0.22in;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.hdr-top {
+			display: flex;
+			gap: 0.18in;
+			align-items: flex-start;
+		}
+
+		.left-panel {
+			position: absolute;
+			left: 0.255in;
+			top: 2.78in;
+			width: 4.995in;
+			height: 7.95in;
+			background: var(--left-blue);
+			border-radius: 0.28in;
+			padding: 0.38in 0.42in 0.35in 0.42in;
+			box-sizing: border-box;
+		}
+
+		.right-panel {
+			position: absolute;
+			left: 5.45in;
+			top: 2.78in;
+			width: 2.795in;
+			height: 7.95in;
+			background: var(--right-cyan);
+			border-radius: 0.12in;
+			padding: 0.28in 0.3in;
+			box-sizing: border-box;
+		}
+
+		.hdr-text {
+			width: 1.95in;
+			font-size: 10.5pt;
+			line-height: 1.15;
+		}
+
+		/* Spanish scaling adjustments */
+		.page[lang="es"] .hdr-text {
+			font-size: 9.8pt;
+			line-height: 1.1;
+		}
+		.page[lang="es"] .lp-body {
+			font-size: 10.4pt;
+			line-height: 1.28;
+		}
+		.page[lang="es"] .lp-action {
+			font-size: 10.4pt;
+			line-height: 1.28;
+			padding: 0.13in 0.16in;
+		}
+		.page[lang="es"] .lp-greeting {
+			font-size: 11pt;
+		}
+		.page[lang="es"] .rp-steps {
+			font-size: 10.4pt;
+			line-height: 1.28;
+		}
+		.page[lang="es"] .rp-tips {
+			font-size: 10.4pt;
+			line-height: 1.28;
+		}
+		.hdr-docid {
+			margin-top: auto;
+			text-align: center;
+			font-size: 9.5pt;
+			padding-top: 0.08in;
+		}
+
+		.lp-greeting {
+			font-size: 11.5pt;
+			margin: 0 0 0.14in 0;
+		}
+		.lp-body {
+			font-size: 11pt;
+			line-height: 1.38;
+			margin: 0;
+		}
+		.lp-action {
+			margin: 0.18in 0 0.16in 0;
+			background: var(--action-strip);
+			border-radius: 0.22in;
+			padding: 0.15in 0.18in;
+			font-size: 11pt;
+			line-height: 1.38;
+		}
+		.lp-action b {
+			display: block;
+			margin-bottom: 0.04in;
+		}
+
+		.lp-signoff {
+			margin-top: 0.2in;
+			font-size: 11pt;
+			line-height: 1.35;
+		}
+		.lp-signoff b {
+			font-weight: 700;
+		}
+
+		.rp-title {
+			font-size: 20pt;
+			font-weight: 800;
+			margin: 0 0 0.16in 0;
+		}
+		.rp-steps {
+			font-size: 11pt;
+			line-height: 1.35;
+			margin: 0 0 0.18in 0;
+			font-weight: 600;
+		}
+		.rp-steps em {
+			font-style: italic;
+			font-weight: 700;
+			display: block;
+			margin-bottom: 0.06in;
+		}
+		.rp-steps ol {
+			margin: 0.06in 0 0.06in 1.05em;
+		}
+
+		.rp-tips-title {
+			font-size: 12pt;
+			font-weight: 800;
+			margin: 0.1in 0 0.06in 0;
+		}
+		.rp-tips {
+			margin: 0 0 0.12in 1em;
+			padding: 0;
+			font-size: 11pt;
+			line-height: 1.35;
+			font-weight: 700;
+		}
+		.rp-foot {
+			margin-top: 0.06in;
+			font-size: 11pt;
+			line-height: 1.35;
+			font-weight: 700;
+		}
+
+		.hdr-photo-img {
+			width: 1.77in;
+			height: 1.83in;
+			object-fit: cover;
+			display: block;
+		}
+		.rp-qr-img {
+			width: 2.205in;
+			height: 2.205in;
+			object-fit: contain;
+			display: block;
+			margin: 0 auto 0.18in auto;
+		}
+		.lp-logo-img {
+			position: absolute;
+			right: 0.42in;
+			bottom: 0.32in;
+			width: 0.95in;
+			height: 0.95in;
+			object-fit: contain;
+			display: block;
+		}
+
+		* {
+			-webkit-print-color-adjust: exact !important;
+			print-color-adjust: exact !important;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+
+	<!-- ENGLISH PAGE -->
+	<div class="page">
+		<div class="hdr-peach">
+			<div class="hdr-top">
+				<div class="hdr-text">
+					Aerial review indicates<br />
+					possible standing water at<br />
+					this address.<br /><br />
+					Upload a photo to confirm<br />
+					conditions and close this<br />
+					case.<br /><br />
+					Not your property? Please<br />
+					let us know.
+				</div>
+				<img class="hdr-photo-img" src="{{ .PoolImageURL }}" alt="Pool photo" />
+			</div>
+			<div class="hdr-docid">id {{ .DocumentID }}</div>
+		</div>
+
+		<div class="left-panel">
+			<p class="lp-greeting">Dear Resident,</p>
+			<p class="lp-body">
+				The {{ .Organization.Name }} is contacting you because recent aerial
+				imagery indicates that your swimming pool may be holding standing water.
+				When water sits without circulation or treatment, mosquitoes can develop
+				quickly and affect the surrounding neighborhood.
+			</p>
+			<div class="lp-action">
+				<b>Action requested</b>
+				Please scan the QR code on this letter and upload a current photo of
+				your pool. The image should clearly show the deep end and overall water
+				condition. We request a photo whether the water appears clear, cloudy,
+				or green so we can accurately assess the situation and close the matter
+				if no issue exists.
+			</div>
+			<p class="lp-body">
+				If your pool has started to look more like a pond than a pool, that is
+				more common than most people realize. Standing water creates ideal
+				conditions for mosquito production. If treatment is needed, we can
+				coordinate access while longer-term maintenance or repairs are
+				addressed.
+				<br /><br />
+				Our objective is to prevent mosquito production and protect your
+				neighborhood. A quick photo response through the QR code is the fastest
+				way to resolve this.
+				<br /><br />
+				If you are unable to use the QR code, please visit {{ .ReportURL }} or
+				contact our office for assistance.
+			</p>
+			<div class="lp-signoff">
+				Sincerely,<br />
+				<b>{{ .Organization.Name }}</b><br />
+				{{ .Organization.OfficeAddressStreet.GetOr "" }} -
+				{{ .Organization.OfficeAddressCity.GetOr "" }},
+				{{ .Organization.OfficeAddressState.GetOr "" }}
+				{{ .Organization.OfficeAddressPostalCode.GetOr "" }}<br />
+				Phone:
+				{{ .Organization.OfficePhone.GetOr "" }}
+			</div>
+			<img class="lp-logo-img" src="{{ .LogoURL }}" alt="District logo" />
+		</div>
+
+		<div class="right-panel">
+			<div class="rp-title">Scan. Snap. Done.</div>
+			<img class="rp-qr-img" src="{{ .QRCodeURL }}" alt="QR code" />
+			<div class="rp-steps">
+				<em>Takes less than 60 seconds.</em>
+				<ol>
+					<li>Scan the QR code</li>
+					<li>Upload one pool<br />photo</li>
+					<li>Case closed if clear</li>
+				</ol>
+				If treatment is needed, we<br />coordinate next steps.
+			</div>
+			<div class="rp-tips-title">Clear photo tips</div>
+			<ul class="rp-tips">
+				<li>Show the full pool</li>
+				<li>Deep end visible</li>
+				<li>Take in daylight</li>
+				<li>Avoid glare</li>
+			</ul>
+			<div class="rp-foot">Clear photos allow faster<br />review.</div>
+		</div>
+	</div>
+
+	<!-- SPANISH PAGE -->
+	<div class="page" lang="es">
+		<div class="hdr-peach">
+			<div class="hdr-top">
+				<div class="hdr-text">
+					La revisión aérea indica<br />
+					posible agua estancada en<br />
+					esta dirección.<br /><br />
+					Suba una foto para confirmar<br />
+					las condiciones y cerrar este<br />
+					caso.<br /><br />
+					¿No es su propiedad? Por favor<br />
+					infórmenos.
+				</div>
+				<img
+					class="hdr-photo-img"
+					src="{{ .PoolImageURL }}"
+					alt="Foto de la piscina"
+				/>
+			</div>
+			<div class="hdr-docid">id {{ .DocumentID }}</div>
+		</div>
+
+		<div class="left-panel">
+			<p class="lp-greeting">Estimado Residente,</p>
+			<p class="lp-body">
+				El Distrito de Control de Mosquitos y Vectores del Delta se comunica con
+				usted porque imágenes aéreas recientes indican que su piscina puede
+				estar reteniendo agua estancada. Cuando el agua permanece sin
+				circulación o tratamiento, los mosquitos pueden desarrollarse
+				rápidamente y afectar al vecindario.
+			</p>
+			<div class="lp-action">
+				<b>Acción requerida</b>
+				Por favor escanee el código QR en esta carta y suba una foto actual de
+				su piscina. La imagen debe mostrar claramente la parte profunda y la
+				condición general del agua. Solicitamos una foto ya sea que el agua esté
+				clara, turbia o verde para poder evaluar la situación y cerrar el caso
+				si no existe ningún problema.
+			</div>
+			<p class="lp-body">
+				Si su piscina ha comenzado a parecer más un estanque que una piscina, es
+				más común de lo que muchos creen. El agua estancada crea condiciones
+				ideales para la producción de mosquitos. Si se necesita tratamiento,
+				podemos coordinar el acceso mientras se realizan reparaciones o
+				mantenimiento a largo plazo.
+				<br /><br />
+				Nuestro objetivo es prevenir la producción de mosquitos y proteger su
+				vecindario. Una respuesta rápida con una foto a través del código QR es
+				la manera más rápida de resolver esto.
+				<br /><br />
+				Si no puede usar el código QR, visite {{ .ReportURL }} o comuníquese con
+				nuestra oficina para recibir ayuda.
+			</p>
+			<div class="lp-signoff">
+				Atentamente,<br />
+				<b>{{ .Organization.Name }}</b><br />
+				{{ .Organization.OfficeAddressStreet.GetOr "" }} -
+				{{ .Organization.OfficeAddressCity.GetOr "" }},
+				{{ .Organization.OfficeAddressState.GetOr "" }}
+				{{ .Organization.OfficeAddressPostalCode.GetOr "" }}<br />
+				Teléfono:
+				{{ .Organization.OfficePhone.GetOr "" }}
+			</div>
+			<img
+				class="lp-logo-img"
+				src="{{ .LogoURL }}"
+				alt="Logotipo del distrito"
+			/>
+		</div>
+
+		<div class="right-panel">
+			<div class="rp-title">Escanee. Tome foto. Listo.</div>
+			<img class="rp-qr-img" src="{{ .QRCodeURL }}" alt="Código QR" />
+			<div class="rp-steps">
+				<em>Toma menos de 60 segundos.</em>
+				<ol>
+					<li>Escanee el código QR</li>
+					<li>Suba una foto de la<br />piscina</li>
+					<li>Caso cerrado si está claro</li>
+				</ol>
+				Si se necesita tratamiento,<br />coordinamos los siguientes pasos.
+			</div>
+			<div class="rp-tips-title">Consejos para la foto</div>
+			<ul class="rp-tips">
+				<li>Muestre toda la piscina</li>
+				<li>Parte profunda visible</li>
+				<li>Tome la foto de día</li>
+				<li>Evite reflejos</li>
+			</ul>
+			<div class="rp-foot">
+				Fotos claras permiten una<br />revisión más rápida.
+			</div>
+		</div>
+	</div>
+{{ end }}
