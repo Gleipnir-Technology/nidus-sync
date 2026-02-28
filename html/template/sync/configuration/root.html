@@ -28,7 +28,10 @@
 							organization.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a href="{{ .URL.Setting.User }}" class="btn btn-outline-primary">
+							<a
+								href="{{ .URL.Configuration.User }}"
+								class="btn btn-outline-primary"
+							>
 								Manage Users
 								<i class="bi bi-arrow-right ms-1"></i>
 							</a>
@@ -50,7 +53,7 @@
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
 							<a
-								href="{{ .URL.Setting.Pesticide }}"
+								href="{{ .URL.Configuration.Pesticide }}"
 								class="btn btn-outline-success"
 							>
 								Manage Products
@@ -75,7 +78,7 @@
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
 							<a
-								href="{{ .URL.Setting.Integration }}"
+								href="{{ .URL.Configuration.Integration }}"
 								class="btn btn-outline-primary"
 							>
 								Manage Integrations
@@ -99,7 +102,7 @@
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
 							<a
-								href="{{ .URL.Setting.Organization }}"
+								href="{{ .URL.Configuration.Organization }}"
 								class="btn btn-outline-danger"
 							>
 								Manage Organization

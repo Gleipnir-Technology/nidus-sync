@@ -66,36 +66,43 @@
 				<div class="table-responsive mb-3">
 					<table class="table table-borderless">
 						<tbody>
-							<tr>
-								<td width="30%"><strong>OAuth Token Status</strong></td>
-								<td>
-									{{ if not .C.ArcGISOAuth.InvalidatedAt.IsNull }}
-										<span class="status-inactive">
-											<i class="bi bi-x-circle-fill me-1"></i> Invalidated
-										</span>
-									{{ else if hasPassed .C.ArcGISOAuth.AccessTokenExpires }}
-										<span class="status-inactive">
-											<i class="bi bi-x-circle-fill me-1"></i> Expired
-										</span>
-									{{ else }}
-										<span class="status-active">
-											<i class="bi bi-check-circle-fill me-1"></i> Active
-										</span>
-									{{ end }}
-								</td>
-							</tr>
-							<tr>
-								<td><strong>Token Expiration</strong></td>
-								<td>{{ .C.ArcGISOAuth.AccessTokenExpires|timeRelative }}</td>
-							</tr>
-							<tr>
-								<td><strong>Integration Method</strong></td>
-								<td>Polling</td>
-							</tr>
-							<tr>
-								<td><strong>Permission Level</strong></td>
-								<td>Read</td>
-							</tr>
+							{{ if not .C.ArcGISOAuth }}
+								<tr>
+									<td>Not integrated</td>
+								</tr>
+							{{ else }}
+								<tr>
+									<td width="30%"><strong>OAuth Token Status</strong></td>
+									<td>None</td>
+									<td>
+										{{ if not .C.ArcGISOAuth.InvalidatedAt.IsNull }}
+											<span class="status-inactive">
+												<i class="bi bi-x-circle-fill me-1"></i> Invalidated
+											</span>
+										{{ else if hasPassed .C.ArcGISOAuth.AccessTokenExpires }}
+											<span class="status-inactive">
+												<i class="bi bi-x-circle-fill me-1"></i> Expired
+											</span>
+										{{ else }}
+											<span class="status-active">
+												<i class="bi bi-check-circle-fill me-1"></i> Active
+											</span>
+										{{ end }}
+									</td>
+								</tr>
+								<tr>
+									<td><strong>Token Expiration</strong></td>
+									<td>{{ .C.ArcGISOAuth.AccessTokenExpires|timeRelative }}</td>
+								</tr>
+								<tr>
+									<td><strong>Integration Method</strong></td>
+									<td>Polling</td>
+								</tr>
+								<tr>
+									<td><strong>Permission Level</strong></td>
+									<td>Read</td>
+								</tr>
+							{{ end }}
 						</tbody>
 					</table>
 				</div>
@@ -103,7 +110,10 @@
 					<a class="btn btn-primary" href="{{ .URL.OAuthRefreshArcGIS }}">
 						<i class="bi bi-arrow-repeat me-2"></i>Refresh OAuth Token
 					</a>
-					<a class="btn btn-outline-danger" href="{{ .URL.Setting.ArcGIS }}">
+					<a
+						class="btn btn-outline-danger"
+						href="{{ .URL.Configuration.ArcGIS }}"
+					>
 						<i class="bi bi-gear me-2"></i>Configure
 					</a>
 				</div>
