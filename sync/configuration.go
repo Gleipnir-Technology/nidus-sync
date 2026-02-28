@@ -32,7 +32,7 @@ type contentSettingOrganization struct {
 }
 
 type contentSettingIntegration struct {
-	ArcGISOAuth *models.OauthToken
+	ArcGISOAuth *models.ArcgisOauthToken
 }
 
 func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingOrganization], *errorWithStatus) {

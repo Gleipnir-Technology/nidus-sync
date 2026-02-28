@@ -11,7 +11,6 @@ type contentURL struct {
 	Route              string
 	SamplePoolCSV      string
 	Sidebar            contentURLSidebar
-	Setting            contentURLSetting
 	Tegola             string
 	UploadCSVPool      string
 }

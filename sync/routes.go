@@ -22,6 +22,8 @@ func Router() chi.Router {
 	// Unauthenticated endpoints
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
+	r.Get("/mailer/{code}", getMailer)
+	r.Get("/mailer/{code}/preview", getMailerPreview)
 	r.Get("/district", getDistrict)
 
 	// Mock endpoints
@@ -35,9 +37,9 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 
 	// Utility endpoints
-	r.Get("/oauth/refresh", getOAuthRefresh)
 	r.Get("/privacy", getPrivacy)
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
+	r.Get("/qr-code/mailer/{code}", getQRCodeMailer)
 	r.Get("/signin", getSignin)
 	r.Post("/signin", postSignin)
 	r.Get("/signup", getSignup)
@@ -60,7 +62,9 @@ func Router() chi.Router {
 	r.Method("GET", "/layout-test", authenticatedHandler(getLayoutTest))
 	r.Method("GET", "/message", authenticatedHandler(getMessageList))
 	r.Method("GET", "/notification", authenticatedHandler(getNotificationList))
+	r.Method("GET", "/oauth/refresh", authenticatedHandler(getOAuthRefresh))
 	r.Method("GET", "/operations", authenticatedHandler(getOperationsRoot))
+	r.Method("GET", "/parcel", authenticatedHandler(getParcel))
 	r.Method("GET", "/planning", authenticatedHandler(getPlanningRoot))
 	r.Method("GET", "/pool", authenticatedHandler(getPoolList))
 	r.Method("GET", "/pool/create", authenticatedHandler(getPoolCreate))

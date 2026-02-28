@@ -83,23 +83,13 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 		signin(w, errorCode, "/")
 		return
 	} else {
-		has, err := background.HasFieldseekerConnection(ctx, user)
+		org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
 		if err != nil {
-			respondError(w, "Failed to check for ArcGIS connection", err, http.StatusInternalServerError)
+			respondError(w, "Failed to get organization", err, http.StatusInternalServerError)
 			return
 		}
-		if has {
-			org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
-			if err != nil {
-				respondError(w, "Failed to get organization", err, http.StatusInternalServerError)
-				return
-			}
-			dashboard(ctx, w, org, user)
-			return
-		} else {
-			oauthPrompt(w, r, user)
-			return
-		}
+		dashboard(ctx, w, org, user)
+		return
 	}
 }
 

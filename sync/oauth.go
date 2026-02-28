@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -9,11 +10,10 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
 
-type ContextOauthPrompt struct{}
+type contentOauthPrompt struct{}
 
 // Build the ArcGIS authorization URL with PKCE
 func buildArcGISAuthURL(clientID string) string {
@@ -65,16 +65,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.MakeURLNidus("/"), http.StatusFound)
 }
 
-func getOAuthRefresh(w http.ResponseWriter, r *http.Request) {
-	user, err := auth.GetAuthenticatedUser(r)
-	if err != nil {
-		http.Redirect(w, r, "/?next=/oauth/refresh", http.StatusFound)
-		return
-	}
-	oauthPrompt(w, r, user)
-}
-
-func oauthPrompt(w http.ResponseWriter, r *http.Request, user *models.User) {
-	data := ContextOauthPrompt{}
-	html.RenderOrError(w, "sync/oauth-prompt.html", data)
+func getOAuthRefresh(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentOauthPrompt], *errorWithStatus) {
+	data := contentOauthPrompt{}
+	return newResponse("sync/oauth-prompt.html", data), nil
 }
