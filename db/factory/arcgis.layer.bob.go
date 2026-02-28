@@ -45,12 +45,12 @@ type ArcgisLayerTemplate struct {
 }
 
 type arcgisLayerR struct {
-	FeatureServiceItemFeatureService *arcgisLayerRFeatureServiceItemFeatureServiceR
+	FeatureServiceItemServiceFeature *arcgisLayerRFeatureServiceItemServiceFeatureR
 	LayerFields                      []*arcgisLayerRLayerFieldsR
 }
 
-type arcgisLayerRFeatureServiceItemFeatureServiceR struct {
-	o *ArcgisFeatureServiceTemplate
+type arcgisLayerRFeatureServiceItemServiceFeatureR struct {
+	o *ArcgisServiceFeatureTemplate
 }
 type arcgisLayerRLayerFieldsR struct {
 	number int
@@ -67,11 +67,11 @@ func (o *ArcgisLayerTemplate) Apply(ctx context.Context, mods ...ArcgisLayerMod)
 // setModelRels creates and sets the relationships on *models.ArcgisLayer
 // according to the relationships in the template. Nothing is inserted into the db
 func (t ArcgisLayerTemplate) setModelRels(o *models.ArcgisLayer) {
-	if t.r.FeatureServiceItemFeatureService != nil {
-		rel := t.r.FeatureServiceItemFeatureService.o.Build()
+	if t.r.FeatureServiceItemServiceFeature != nil {
+		rel := t.r.FeatureServiceItemServiceFeature.o.Build()
 		rel.R.FeatureServiceItemLayers = append(rel.R.FeatureServiceItemLayers, o)
 		o.FeatureServiceItemID = rel.ItemID // h2
-		o.R.FeatureServiceItemFeatureService = rel
+		o.R.FeatureServiceItemServiceFeature = rel
 	}
 
 	if t.r.LayerFields != nil {
@@ -207,16 +207,16 @@ func (o *ArcgisLayerTemplate) Create(ctx context.Context, exec bob.Executor) (*m
 	opt := o.BuildSetter()
 	ensureCreatableArcgisLayer(opt)
 
-	if o.r.FeatureServiceItemFeatureService == nil {
-		ArcgisLayerMods.WithNewFeatureServiceItemFeatureService().Apply(ctx, o)
+	if o.r.FeatureServiceItemServiceFeature == nil {
+		ArcgisLayerMods.WithNewFeatureServiceItemServiceFeature().Apply(ctx, o)
 	}
 
-	var rel0 *models.ArcgisFeatureService
+	var rel0 *models.ArcgisServiceFeature
 
-	if o.r.FeatureServiceItemFeatureService.o.alreadyPersisted {
-		rel0 = o.r.FeatureServiceItemFeatureService.o.Build()
+	if o.r.FeatureServiceItemServiceFeature.o.alreadyPersisted {
+		rel0 = o.r.FeatureServiceItemServiceFeature.o.Build()
 	} else {
-		rel0, err = o.r.FeatureServiceItemFeatureService.o.Create(ctx, exec)
+		rel0, err = o.r.FeatureServiceItemServiceFeature.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +229,7 @@ func (o *ArcgisLayerTemplate) Create(ctx context.Context, exec bob.Executor) (*m
 		return nil, err
 	}
 
-	m.R.FeatureServiceItemFeatureService = rel0
+	m.R.FeatureServiceItemServiceFeature = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -415,39 +415,39 @@ func (m arcgisLayerMods) WithParentsCascading() ArcgisLayerMod {
 		ctx = arcgisLayerWithParentsCascadingCtx.WithValue(ctx, true)
 		{
 
-			related := o.f.NewArcgisFeatureServiceWithContext(ctx, ArcgisFeatureServiceMods.WithParentsCascading())
-			m.WithFeatureServiceItemFeatureService(related).Apply(ctx, o)
+			related := o.f.NewArcgisServiceFeatureWithContext(ctx, ArcgisServiceFeatureMods.WithParentsCascading())
+			m.WithFeatureServiceItemServiceFeature(related).Apply(ctx, o)
 		}
 	})
 }
 
-func (m arcgisLayerMods) WithFeatureServiceItemFeatureService(rel *ArcgisFeatureServiceTemplate) ArcgisLayerMod {
+func (m arcgisLayerMods) WithFeatureServiceItemServiceFeature(rel *ArcgisServiceFeatureTemplate) ArcgisLayerMod {
 	return ArcgisLayerModFunc(func(ctx context.Context, o *ArcgisLayerTemplate) {
-		o.r.FeatureServiceItemFeatureService = &arcgisLayerRFeatureServiceItemFeatureServiceR{
+		o.r.FeatureServiceItemServiceFeature = &arcgisLayerRFeatureServiceItemServiceFeatureR{
 			o: rel,
 		}
 	})
 }
 
-func (m arcgisLayerMods) WithNewFeatureServiceItemFeatureService(mods ...ArcgisFeatureServiceMod) ArcgisLayerMod {
+func (m arcgisLayerMods) WithNewFeatureServiceItemServiceFeature(mods ...ArcgisServiceFeatureMod) ArcgisLayerMod {
 	return ArcgisLayerModFunc(func(ctx context.Context, o *ArcgisLayerTemplate) {
-		related := o.f.NewArcgisFeatureServiceWithContext(ctx, mods...)
+		related := o.f.NewArcgisServiceFeatureWithContext(ctx, mods...)
 
-		m.WithFeatureServiceItemFeatureService(related).Apply(ctx, o)
+		m.WithFeatureServiceItemServiceFeature(related).Apply(ctx, o)
 	})
 }
 
-func (m arcgisLayerMods) WithExistingFeatureServiceItemFeatureService(em *models.ArcgisFeatureService) ArcgisLayerMod {
+func (m arcgisLayerMods) WithExistingFeatureServiceItemServiceFeature(em *models.ArcgisServiceFeature) ArcgisLayerMod {
 	return ArcgisLayerModFunc(func(ctx context.Context, o *ArcgisLayerTemplate) {
-		o.r.FeatureServiceItemFeatureService = &arcgisLayerRFeatureServiceItemFeatureServiceR{
-			o: o.f.FromExistingArcgisFeatureService(em),
+		o.r.FeatureServiceItemServiceFeature = &arcgisLayerRFeatureServiceItemServiceFeatureR{
+			o: o.f.FromExistingArcgisServiceFeature(em),
 		}
 	})
 }
 
-func (m arcgisLayerMods) WithoutFeatureServiceItemFeatureService() ArcgisLayerMod {
+func (m arcgisLayerMods) WithoutFeatureServiceItemServiceFeature() ArcgisLayerMod {
 	return ArcgisLayerModFunc(func(ctx context.Context, o *ArcgisLayerTemplate) {
-		o.r.FeatureServiceItemFeatureService = nil
+		o.r.FeatureServiceItemServiceFeature = nil
 	})
 }
 

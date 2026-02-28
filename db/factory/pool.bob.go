@@ -11,9 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -38,11 +36,12 @@ func (mods PoolModSlice) Apply(ctx context.Context, n *PoolTemplate) {
 // PoolTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type PoolTemplate struct {
-	Condition func() enums.Poolconditiontype
-	Created   func() time.Time
-	CreatorID func() int32
-	ID        func() int32
-	SiteID    func() null.Val[int32]
+	Condition   func() enums.Poolconditiontype
+	Created     func() time.Time
+	CreatorID   func() int32
+	ID          func() int32
+	SiteID      func() int32
+	SiteVersion func() int32
 
 	r poolR
 	f *Factory
@@ -52,10 +51,14 @@ type PoolTemplate struct {
 
 type poolR struct {
 	CreatorUser *poolRCreatorUserR
+	Site        *poolRSiteR
 }
 
 type poolRCreatorUserR struct {
 	o *UserTemplate
+}
+type poolRSiteR struct {
+	o *SiteTemplate
 }
 
 // Apply mods to the PoolTemplate
@@ -73,6 +76,14 @@ func (t PoolTemplate) setModelRels(o *models.Pool) {
 		rel.R.CreatorPools = append(rel.R.CreatorPools, o)
 		o.CreatorID = rel.ID // h2
 		o.R.CreatorUser = rel
+	}
+
+	if t.r.Site != nil {
+		rel := t.r.Site.o.Build()
+		rel.R.Pools = append(rel.R.Pools, o)
+		o.SiteID = rel.ID           // h2
+		o.SiteVersion = rel.Version // h2
+		o.R.Site = rel
 	}
 }
 
@@ -99,7 +110,11 @@ func (o PoolTemplate) BuildSetter() *models.PoolSetter {
 	}
 	if o.SiteID != nil {
 		val := o.SiteID()
-		m.SiteID = omitnull.FromNull(val)
+		m.SiteID = omit.From(val)
+	}
+	if o.SiteVersion != nil {
+		val := o.SiteVersion()
+		m.SiteVersion = omit.From(val)
 	}
 
 	return m
@@ -138,6 +153,9 @@ func (o PoolTemplate) Build() *models.Pool {
 	if o.SiteID != nil {
 		m.SiteID = o.SiteID()
 	}
+	if o.SiteVersion != nil {
+		m.SiteVersion = o.SiteVersion()
+	}
 
 	o.setModelRels(m)
 
@@ -169,6 +187,14 @@ func ensureCreatablePool(m *models.PoolSetter) {
 	if !(m.CreatorID.IsValue()) {
 		val := random_int32(nil)
 		m.CreatorID = omit.From(val)
+	}
+	if !(m.SiteID.IsValue()) {
+		val := random_int32(nil)
+		m.SiteID = omit.From(val)
+	}
+	if !(m.SiteVersion.IsValue()) {
+		val := random_int32(nil)
+		m.SiteVersion = omit.From(val)
 	}
 }
 
@@ -205,12 +231,31 @@ func (o *PoolTemplate) Create(ctx context.Context, exec bob.Executor) (*models.P
 
 	opt.CreatorID = omit.From(rel0.ID)
 
+	if o.r.Site == nil {
+		PoolMods.WithNewSite().Apply(ctx, o)
+	}
+
+	var rel1 *models.Site
+
+	if o.r.Site.o.alreadyPersisted {
+		rel1 = o.r.Site.o.Build()
+	} else {
+		rel1, err = o.r.Site.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.SiteID = omit.From(rel1.ID)
+	opt.SiteVersion = omit.From(rel1.Version)
+
 	m, err := models.Pools.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
 	m.R.CreatorUser = rel0
+	m.R.Site = rel1
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -294,6 +339,7 @@ func (m poolMods) RandomizeAllColumns(f *faker.Faker) PoolMod {
 		PoolMods.RandomCreatorID(f),
 		PoolMods.RandomID(f),
 		PoolMods.RandomSiteID(f),
+		PoolMods.RandomSiteVersion(f),
 	}
 }
 
@@ -422,14 +468,14 @@ func (m poolMods) RandomID(f *faker.Faker) PoolMod {
 }
 
 // Set the model columns to this value
-func (m poolMods) SiteID(val null.Val[int32]) PoolMod {
+func (m poolMods) SiteID(val int32) PoolMod {
 	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
-		o.SiteID = func() null.Val[int32] { return val }
+		o.SiteID = func() int32 { return val }
 	})
 }
 
 // Set the Column from the function
-func (m poolMods) SiteIDFunc(f func() null.Val[int32]) PoolMod {
+func (m poolMods) SiteIDFunc(f func() int32) PoolMod {
 	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
 		o.SiteID = f
 	})
@@ -444,32 +490,41 @@ func (m poolMods) UnsetSiteID() PoolMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is sometimes null
 func (m poolMods) RandomSiteID(f *faker.Faker) PoolMod {
 	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
-		o.SiteID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.SiteID = func() int32 {
+			return random_int32(f)
 		}
+	})
+}
+
+// Set the model columns to this value
+func (m poolMods) SiteVersion(val int32) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.SiteVersion = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m poolMods) SiteVersionFunc(f func() int32) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.SiteVersion = f
+	})
+}
+
+// Clear any values for the column
+func (m poolMods) UnsetSiteVersion() PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.SiteVersion = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-// The generated value is never null
-func (m poolMods) RandomSiteIDNotNull(f *faker.Faker) PoolMod {
+func (m poolMods) RandomSiteVersion(f *faker.Faker) PoolMod {
 	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
-		o.SiteID = func() null.Val[int32] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_int32(f)
-			return null.From(val)
+		o.SiteVersion = func() int32 {
+			return random_int32(f)
 		}
 	})
 }
@@ -484,6 +539,11 @@ func (m poolMods) WithParentsCascading() PoolMod {
 
 			related := o.f.NewUserWithContext(ctx, UserMods.WithParentsCascading())
 			m.WithCreatorUser(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewSiteWithContext(ctx, SiteMods.WithParentsCascading())
+			m.WithSite(related).Apply(ctx, o)
 		}
 	})
 }
@@ -515,5 +575,35 @@ func (m poolMods) WithExistingCreatorUser(em *models.User) PoolMod {
 func (m poolMods) WithoutCreatorUser() PoolMod {
 	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
 		o.r.CreatorUser = nil
+	})
+}
+
+func (m poolMods) WithSite(rel *SiteTemplate) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.Site = &poolRSiteR{
+			o: rel,
+		}
+	})
+}
+
+func (m poolMods) WithNewSite(mods ...SiteMod) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+
+		m.WithSite(related).Apply(ctx, o)
+	})
+}
+
+func (m poolMods) WithExistingSite(em *models.Site) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.Site = &poolRSiteR{
+			o: o.f.FromExistingSite(em),
+		}
+	})
+}
+
+func (m poolMods) WithoutSite() PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.Site = nil
 	})
 }

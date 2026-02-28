@@ -20,18 +20,17 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 )
 
 // Pool is an object representing the database table.
 type Pool struct {
-	Condition enums.Poolconditiontype `db:"condition" `
-	Created   time.Time               `db:"created" `
-	CreatorID int32                   `db:"creator_id" `
-	ID        int32                   `db:"id,pk" `
-	SiteID    null.Val[int32]         `db:"site_id" `
+	Condition   enums.Poolconditiontype `db:"condition" `
+	Created     time.Time               `db:"created" `
+	CreatorID   int32                   `db:"creator_id" `
+	ID          int32                   `db:"id,pk" `
+	SiteID      int32                   `db:"site_id" `
+	SiteVersion int32                   `db:"site_version" `
 
 	R poolR `db:"-" `
 }
@@ -49,30 +48,33 @@ type PoolsQuery = *psql.ViewQuery[*Pool, PoolSlice]
 // poolR is where relationships are stored.
 type poolR struct {
 	CreatorUser *User // pool.pool_creator_id_fkey
+	Site        *Site // pool.pool_site_id_site_version_fkey
 }
 
 func buildPoolColumns(alias string) poolColumns {
 	return poolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"condition", "created", "creator_id", "id", "site_id",
+			"condition", "created", "creator_id", "id", "site_id", "site_version",
 		).WithParent("pool"),
-		tableAlias: alias,
-		Condition:  psql.Quote(alias, "condition"),
-		Created:    psql.Quote(alias, "created"),
-		CreatorID:  psql.Quote(alias, "creator_id"),
-		ID:         psql.Quote(alias, "id"),
-		SiteID:     psql.Quote(alias, "site_id"),
+		tableAlias:  alias,
+		Condition:   psql.Quote(alias, "condition"),
+		Created:     psql.Quote(alias, "created"),
+		CreatorID:   psql.Quote(alias, "creator_id"),
+		ID:          psql.Quote(alias, "id"),
+		SiteID:      psql.Quote(alias, "site_id"),
+		SiteVersion: psql.Quote(alias, "site_version"),
 	}
 }
 
 type poolColumns struct {
 	expr.ColumnsExpr
-	tableAlias string
-	Condition  psql.Expression
-	Created    psql.Expression
-	CreatorID  psql.Expression
-	ID         psql.Expression
-	SiteID     psql.Expression
+	tableAlias  string
+	Condition   psql.Expression
+	Created     psql.Expression
+	CreatorID   psql.Expression
+	ID          psql.Expression
+	SiteID      psql.Expression
+	SiteVersion psql.Expression
 }
 
 func (c poolColumns) Alias() string {
@@ -87,15 +89,16 @@ func (poolColumns) AliasedAs(alias string) poolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PoolSetter struct {
-	Condition omit.Val[enums.Poolconditiontype] `db:"condition" `
-	Created   omit.Val[time.Time]               `db:"created" `
-	CreatorID omit.Val[int32]                   `db:"creator_id" `
-	ID        omit.Val[int32]                   `db:"id,pk" `
-	SiteID    omitnull.Val[int32]               `db:"site_id" `
+	Condition   omit.Val[enums.Poolconditiontype] `db:"condition" `
+	Created     omit.Val[time.Time]               `db:"created" `
+	CreatorID   omit.Val[int32]                   `db:"creator_id" `
+	ID          omit.Val[int32]                   `db:"id,pk" `
+	SiteID      omit.Val[int32]                   `db:"site_id" `
+	SiteVersion omit.Val[int32]                   `db:"site_version" `
 }
 
 func (s PoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 5)
+	vals := make([]string, 0, 6)
 	if s.Condition.IsValue() {
 		vals = append(vals, "condition")
 	}
@@ -108,8 +111,11 @@ func (s PoolSetter) SetColumns() []string {
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
-	if !s.SiteID.IsUnset() {
+	if s.SiteID.IsValue() {
 		vals = append(vals, "site_id")
+	}
+	if s.SiteVersion.IsValue() {
+		vals = append(vals, "site_version")
 	}
 	return vals
 }
@@ -127,8 +133,11 @@ func (s PoolSetter) Overwrite(t *Pool) {
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
 	}
-	if !s.SiteID.IsUnset() {
-		t.SiteID = s.SiteID.MustGetNull()
+	if s.SiteID.IsValue() {
+		t.SiteID = s.SiteID.MustGet()
+	}
+	if s.SiteVersion.IsValue() {
+		t.SiteVersion = s.SiteVersion.MustGet()
 	}
 }
 
@@ -138,7 +147,7 @@ func (s *PoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 5)
+		vals := make([]bob.Expression, 6)
 		if s.Condition.IsValue() {
 			vals[0] = psql.Arg(s.Condition.MustGet())
 		} else {
@@ -163,10 +172,16 @@ func (s *PoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SiteID.IsUnset() {
-			vals[4] = psql.Arg(s.SiteID.MustGetNull())
+		if s.SiteID.IsValue() {
+			vals[4] = psql.Arg(s.SiteID.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
+		}
+
+		if s.SiteVersion.IsValue() {
+			vals[5] = psql.Arg(s.SiteVersion.MustGet())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -178,7 +193,7 @@ func (s PoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 5)
+	exprs := make([]bob.Expression, 0, 6)
 
 	if s.Condition.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -208,10 +223,17 @@ func (s PoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.SiteID.IsUnset() {
+	if s.SiteID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_id")...),
 			psql.Arg(s.SiteID),
+		}})
+	}
+
+	if s.SiteVersion.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "site_version")...),
+			psql.Arg(s.SiteVersion),
 		}})
 	}
 
@@ -465,6 +487,34 @@ func (os PoolSlice) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuer
 	)...)
 }
 
+// Site starts a query for related objects on site
+func (o *Pool) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	return Sites.Query(append(mods,
+		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))), sm.Where(Sites.Columns.Version.EQ(psql.Arg(o.SiteVersion))),
+	)...)
+}
+
+func (os PoolSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	pkSiteID := make(pgtypes.Array[int32], 0, len(os))
+
+	pkSiteVersion := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkSiteID = append(pkSiteID, o.SiteID)
+		pkSiteVersion = append(pkSiteVersion, o.SiteVersion)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkSiteID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkSiteVersion), "integer[]")),
+	))
+
+	return Sites.Query(append(mods,
+		sm.Where(psql.Group(Sites.Columns.ID, Sites.Columns.Version).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachPoolCreatorUser0(ctx context.Context, exec bob.Executor, count int, pool0 *Pool, user1 *User) (*Pool, error) {
 	setter := &PoolSetter{
 		CreatorID: omit.From(user1.ID),
@@ -513,12 +563,62 @@ func (pool0 *Pool) AttachCreatorUser(ctx context.Context, exec bob.Executor, use
 	return nil
 }
 
+func attachPoolSite0(ctx context.Context, exec bob.Executor, count int, pool0 *Pool, site1 *Site) (*Pool, error) {
+	setter := &PoolSetter{
+		SiteID:      omit.From(site1.ID),
+		SiteVersion: omit.From(site1.Version),
+	}
+
+	err := pool0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPoolSite0: %w", err)
+	}
+
+	return pool0, nil
+}
+
+func (pool0 *Pool) InsertSite(ctx context.Context, exec bob.Executor, related *SiteSetter) error {
+	var err error
+
+	site1, err := Sites.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPoolSite0(ctx, exec, 1, pool0, site1)
+	if err != nil {
+		return err
+	}
+
+	pool0.R.Site = site1
+
+	site1.R.Pools = append(site1.R.Pools, pool0)
+
+	return nil
+}
+
+func (pool0 *Pool) AttachSite(ctx context.Context, exec bob.Executor, site1 *Site) error {
+	var err error
+
+	_, err = attachPoolSite0(ctx, exec, 1, pool0, site1)
+	if err != nil {
+		return err
+	}
+
+	pool0.R.Site = site1
+
+	site1.R.Pools = append(site1.R.Pools, pool0)
+
+	return nil
+}
+
 type poolWhere[Q psql.Filterable] struct {
-	Condition psql.WhereMod[Q, enums.Poolconditiontype]
-	Created   psql.WhereMod[Q, time.Time]
-	CreatorID psql.WhereMod[Q, int32]
-	ID        psql.WhereMod[Q, int32]
-	SiteID    psql.WhereNullMod[Q, int32]
+	Condition   psql.WhereMod[Q, enums.Poolconditiontype]
+	Created     psql.WhereMod[Q, time.Time]
+	CreatorID   psql.WhereMod[Q, int32]
+	ID          psql.WhereMod[Q, int32]
+	SiteID      psql.WhereMod[Q, int32]
+	SiteVersion psql.WhereMod[Q, int32]
 }
 
 func (poolWhere[Q]) AliasedAs(alias string) poolWhere[Q] {
@@ -527,11 +627,12 @@ func (poolWhere[Q]) AliasedAs(alias string) poolWhere[Q] {
 
 func buildPoolWhere[Q psql.Filterable](cols poolColumns) poolWhere[Q] {
 	return poolWhere[Q]{
-		Condition: psql.Where[Q, enums.Poolconditiontype](cols.Condition),
-		Created:   psql.Where[Q, time.Time](cols.Created),
-		CreatorID: psql.Where[Q, int32](cols.CreatorID),
-		ID:        psql.Where[Q, int32](cols.ID),
-		SiteID:    psql.WhereNull[Q, int32](cols.SiteID),
+		Condition:   psql.Where[Q, enums.Poolconditiontype](cols.Condition),
+		Created:     psql.Where[Q, time.Time](cols.Created),
+		CreatorID:   psql.Where[Q, int32](cols.CreatorID),
+		ID:          psql.Where[Q, int32](cols.ID),
+		SiteID:      psql.Where[Q, int32](cols.SiteID),
+		SiteVersion: psql.Where[Q, int32](cols.SiteVersion),
 	}
 }
 
@@ -553,6 +654,18 @@ func (o *Pool) Preload(name string, retrieved any) error {
 			rel.R.CreatorPools = PoolSlice{o}
 		}
 		return nil
+	case "Site":
+		rel, ok := retrieved.(*Site)
+		if !ok {
+			return fmt.Errorf("pool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Site = rel
+
+		if rel != nil {
+			rel.R.Pools = PoolSlice{o}
+		}
+		return nil
 	default:
 		return fmt.Errorf("pool has no relationship %q", name)
 	}
@@ -560,6 +673,7 @@ func (o *Pool) Preload(name string, retrieved any) error {
 
 type poolPreloader struct {
 	CreatorUser func(...psql.PreloadOption) psql.Preloader
+	Site        func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPoolPreloader() poolPreloader {
@@ -577,16 +691,33 @@ func buildPoolPreloader() poolPreloader {
 				},
 			}, Users.Columns.Names(), opts...)
 		},
+		Site: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Site, SiteSlice](psql.PreloadRel{
+				Name: "Site",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Pools,
+						To:          Sites,
+						FromColumns: []string{"site_id", "site_version"},
+						ToColumns:   []string{"id", "version"},
+					},
+				},
+			}, Sites.Columns.Names(), opts...)
+		},
 	}
 }
 
 type poolThenLoader[Q orm.Loadable] struct {
 	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Site        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPoolThenLoader[Q orm.Loadable]() poolThenLoader[Q] {
 	type CreatorUserLoadInterface interface {
 		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SiteLoadInterface interface {
+		LoadSite(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return poolThenLoader[Q]{
@@ -594,6 +725,12 @@ func buildPoolThenLoader[Q orm.Loadable]() poolThenLoader[Q] {
 			"CreatorUser",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorUser(ctx, exec, mods...)
+			},
+		),
+		Site: thenLoadBuilder[Q](
+			"Site",
+			func(ctx context.Context, exec bob.Executor, retrieved SiteLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSite(ctx, exec, mods...)
 			},
 		),
 	}
@@ -651,9 +788,66 @@ func (os PoolSlice) LoadCreatorUser(ctx context.Context, exec bob.Executor, mods
 	return nil
 }
 
+// LoadSite loads the pool's Site into the .R struct
+func (o *Pool) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Site = nil
+
+	related, err := o.Site(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Pools = PoolSlice{o}
+
+	o.R.Site = related
+	return nil
+}
+
+// LoadSite loads the pool's Site into the .R struct
+func (os PoolSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	sites, err := os.Site(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range sites {
+
+			if !(o.SiteID == rel.ID) {
+				continue
+			}
+
+			if !(o.SiteVersion == rel.Version) {
+				continue
+			}
+
+			rel.R.Pools = append(rel.R.Pools, o)
+
+			o.R.Site = rel
+			break
+		}
+	}
+
+	return nil
+}
+
 type poolJoins[Q dialect.Joinable] struct {
 	typ         string
 	CreatorUser modAs[Q, userColumns]
+	Site        modAs[Q, siteColumns]
 }
 
 func (j poolJoins[Q]) aliasedAs(alias string) poolJoins[Q] {
@@ -671,6 +865,20 @@ func buildPoolJoins[Q dialect.Joinable](cols poolColumns, typ string) poolJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.CreatorID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Site: modAs[Q, siteColumns]{
+			c: Sites.Columns,
+			f: func(to siteColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.SiteID), to.Version.EQ(cols.SiteVersion),
 					))
 				}
 

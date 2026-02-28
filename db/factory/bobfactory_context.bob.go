@@ -10,20 +10,25 @@ type contextKey string
 var (
 	// Relationship Contexts for address
 	addressWithParentsCascadingCtx = newContextual[bool]("addressWithParentsCascading")
+	addressRelResidentsCtx         = newContextual[bool]("address.resident.resident.resident_address_id_fkey")
 	addressRelSiteCtx              = newContextual[bool]("address.site.site.site_address_id_fkey")
+
+	// Relationship Contexts for arcgis.account
+	arcgisAccountWithParentsCascadingCtx          = newContextual[bool]("arcgisAccountWithParentsCascading")
+	arcgisAccountRelOrganizationCtx               = newContextual[bool]("arcgis.account.organization.arcgis.account.account_organization_id_fkey")
+	arcgisAccountRelArcgisAccountOauthTokensCtx   = newContextual[bool]("arcgis.account.arcgis.oauth_token.arcgis.oauth_token.oauth_token_arcgis_account_id_fkey")
+	arcgisAccountRelServiceFeaturesCtx            = newContextual[bool]("arcgis.account.arcgis.service_feature.arcgis.service_feature.service_feature_account_id_fkey")
+	arcgisAccountRelServiceMapsCtx                = newContextual[bool]("arcgis.account.arcgis.service_map.arcgis.service_map.service_map_account_id_fkey")
+	arcgisAccountRelArcgisAccountOrganizationsCtx = newContextual[bool]("arcgis.account.organization.organization.organization_arcgis_account_id_fkey")
 
 	// Relationship Contexts for arcgis.address_mapping
 	arcgisAddressMappingWithParentsCascadingCtx = newContextual[bool]("arcgisAddressMappingWithParentsCascading")
 	arcgisAddressMappingRelLayerFieldCtx        = newContextual[bool]("arcgis.address_mapping.arcgis.layer_field.arcgis.address_mapping.address_mapping_layer_feature_service_item_id_layer_index__fkey")
 	arcgisAddressMappingRelOrganizationCtx      = newContextual[bool]("arcgis.address_mapping.organization.arcgis.address_mapping.address_mapping_organization_id_fkey")
 
-	// Relationship Contexts for arcgis.feature_service
-	arcgisFeatureServiceWithParentsCascadingCtx        = newContextual[bool]("arcgisFeatureServiceWithParentsCascading")
-	arcgisFeatureServiceRelFeatureServiceItemLayersCtx = newContextual[bool]("arcgis.feature_service.arcgis.layer.arcgis.layer.layer_feature_service_item_id_fkey")
-
 	// Relationship Contexts for arcgis.layer
 	arcgisLayerWithParentsCascadingCtx                = newContextual[bool]("arcgisLayerWithParentsCascading")
-	arcgisLayerRelFeatureServiceItemFeatureServiceCtx = newContextual[bool]("arcgis.feature_service.arcgis.layer.arcgis.layer.layer_feature_service_item_id_fkey")
+	arcgisLayerRelFeatureServiceItemServiceFeatureCtx = newContextual[bool]("arcgis.layer.arcgis.service_feature.arcgis.layer.layer_feature_service_item_id_fkey")
 	arcgisLayerRelLayerFieldsCtx                      = newContextual[bool]("arcgis.layer.arcgis.layer_field.arcgis.layer_field.layer_field_layer_feature_service_item_id_layer_index_fkey")
 
 	// Relationship Contexts for arcgis.layer_field
@@ -32,10 +37,25 @@ var (
 	arcgisLayerFieldRelLayerCtx             = newContextual[bool]("arcgis.layer.arcgis.layer_field.arcgis.layer_field.layer_field_layer_feature_service_item_id_layer_index_fkey")
 	arcgisLayerFieldRelParcelMappingsCtx    = newContextual[bool]("arcgis.layer_field.arcgis.parcel_mapping.arcgis.parcel_mapping.parcel_mapping_layer_feature_service_item_id_layer_index_l_fkey")
 
+	// Relationship Contexts for arcgis.oauth_token
+	arcgisOauthTokenWithParentsCascadingCtx    = newContextual[bool]("arcgisOauthTokenWithParentsCascading")
+	arcgisOauthTokenRelArcgisAccountAccountCtx = newContextual[bool]("arcgis.account.arcgis.oauth_token.arcgis.oauth_token.oauth_token_arcgis_account_id_fkey")
+	arcgisOauthTokenRelUserUserCtx             = newContextual[bool]("arcgis.oauth_token.user_.arcgis.oauth_token.oauth_token_user_id_fkey")
+
 	// Relationship Contexts for arcgis.parcel_mapping
 	arcgisParcelMappingWithParentsCascadingCtx = newContextual[bool]("arcgisParcelMappingWithParentsCascading")
 	arcgisParcelMappingRelLayerFieldCtx        = newContextual[bool]("arcgis.layer_field.arcgis.parcel_mapping.arcgis.parcel_mapping.parcel_mapping_layer_feature_service_item_id_layer_index_l_fkey")
 	arcgisParcelMappingRelOrganizationCtx      = newContextual[bool]("arcgis.parcel_mapping.organization.arcgis.parcel_mapping.parcel_mapping_organization_id_fkey")
+
+	// Relationship Contexts for arcgis.service_feature
+	arcgisServiceFeatureWithParentsCascadingCtx                          = newContextual[bool]("arcgisServiceFeatureWithParentsCascading")
+	arcgisServiceFeatureRelFeatureServiceItemLayersCtx                   = newContextual[bool]("arcgis.layer.arcgis.service_feature.arcgis.layer.layer_feature_service_item_id_fkey")
+	arcgisServiceFeatureRelAccountCtx                                    = newContextual[bool]("arcgis.account.arcgis.service_feature.arcgis.service_feature.service_feature_account_id_fkey")
+	arcgisServiceFeatureRelFieldseekerServiceFeatureItemOrganizationsCtx = newContextual[bool]("arcgis.service_feature.organization.organization.organization_fieldseeker_service_feature_item_id_fkey")
+
+	// Relationship Contexts for arcgis.service_map
+	arcgisServiceMapWithParentsCascadingCtx = newContextual[bool]("arcgisServiceMapWithParentsCascading")
+	arcgisServiceMapRelAccountCtx           = newContextual[bool]("arcgis.account.arcgis.service_map.arcgis.service_map.service_map_account_id_fkey")
 
 	// Relationship Contexts for arcgis.user_
 	arcgisuserWithParentsCascadingCtx  = newContextual[bool]("arcgisuserWithParentsCascading")
@@ -63,6 +83,9 @@ var (
 	commsEmailTemplateWithParentsCascadingCtx = newContextual[bool]("commsEmailTemplateWithParentsCascading")
 	commsEmailTemplateRelTemplateEmailLogsCtx = newContextual[bool]("comms.email_log.comms.email_template.comms.email_log.email_log_template_id_fkey")
 
+	// Relationship Contexts for comms.mailer
+	commsMailerWithParentsCascadingCtx = newContextual[bool]("commsMailerWithParentsCascading")
+
 	// Relationship Contexts for comms.phone
 	commsPhoneWithParentsCascadingCtx             = newContextual[bool]("commsPhoneWithParentsCascading")
 	commsPhoneRelDestinationTextJobsCtx           = newContextual[bool]("comms.phone.comms.text_job.comms.text_job.text_job_destination_fkey")
@@ -74,6 +97,7 @@ var (
 	commsPhoneRelPhoneE164NotifyPhoneNuisancesCtx = newContextual[bool]("comms.phone.publicreport.notify_phone_nuisance.publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey")
 	commsPhoneRelPhoneE164NotifyPhonePoolsCtx     = newContextual[bool]("comms.phone.publicreport.notify_phone_pool.publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey")
 	commsPhoneRelPhoneE164SubscribePhonesCtx      = newContextual[bool]("comms.phone.publicreport.subscribe_phone.publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey")
+	commsPhoneRelPhoneMobileResidentsCtx          = newContextual[bool]("comms.phone.resident.resident.resident_phone_mobile_fkey")
 
 	// Relationship Contexts for comms.text_job
 	commsTextJobWithParentsCascadingCtx = newContextual[bool]("commsTextJobWithParentsCascading")
@@ -83,6 +107,11 @@ var (
 	commsTextLogWithParentsCascadingCtx = newContextual[bool]("commsTextLogWithParentsCascading")
 	commsTextLogRelDestinationPhoneCtx  = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_destination_fkey")
 	commsTextLogRelSourcePhoneCtx       = newContextual[bool]("comms.phone.comms.text_log.comms.text_log.text_log_source_fkey")
+
+	// Relationship Contexts for compliance_report_request
+	complianceReportRequestWithParentsCascadingCtx = newContextual[bool]("complianceReportRequestWithParentsCascading")
+	complianceReportRequestRelCreatorUserCtx       = newContextual[bool]("compliance_report_request.user_.compliance_report_request.compliance_report_request_creator_fkey")
+	complianceReportRequestRelSiteCtx              = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
 
 	// Relationship Contexts for district_subscription_email
 	districtSubscriptionEmailWithParentsCascadingCtx               = newContextual[bool]("districtSubscriptionEmailWithParentsCascading")
@@ -285,60 +314,61 @@ var (
 	notificationWithParentsCascadingCtx = newContextual[bool]("notificationWithParentsCascading")
 	notificationRelUserUserCtx          = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
 
-	// Relationship Contexts for oauth_token
-	oauthTokenWithParentsCascadingCtx = newContextual[bool]("oauthTokenWithParentsCascading")
-	oauthTokenRelUserUserCtx          = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
-
 	// Relationship Contexts for organization
-	organizationWithParentsCascadingCtx       = newContextual[bool]("organizationWithParentsCascading")
-	organizationRelAddressMappingsCtx         = newContextual[bool]("arcgis.address_mapping.organization.arcgis.address_mapping.address_mapping_organization_id_fkey")
-	organizationRelParcelMappingsCtx          = newContextual[bool]("arcgis.parcel_mapping.organization.arcgis.parcel_mapping.parcel_mapping_organization_id_fkey")
-	organizationRelEmailContactsCtx           = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
-	organizationRelPhonesCtx                  = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
-	organizationRelContainerrelatesCtx        = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")
-	organizationRelFieldscoutinglogsCtx       = newContextual[bool]("fieldseeker.fieldscoutinglog.organization.fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey")
-	organizationRelHabitatrelatesCtx          = newContextual[bool]("fieldseeker.habitatrelate.organization.fieldseeker.habitatrelate.habitatrelate_organization_id_fkey")
-	organizationRelInspectionsamplesCtx       = newContextual[bool]("fieldseeker.inspectionsample.organization.fieldseeker.inspectionsample.inspectionsample_organization_id_fkey")
-	organizationRelInspectionsampledetailsCtx = newContextual[bool]("fieldseeker.inspectionsampledetail.organization.fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey")
-	organizationRelLinelocationsCtx           = newContextual[bool]("fieldseeker.linelocation.organization.fieldseeker.linelocation.linelocation_organization_id_fkey")
-	organizationRelLocationtrackingsCtx       = newContextual[bool]("fieldseeker.locationtracking.organization.fieldseeker.locationtracking.locationtracking_organization_id_fkey")
-	organizationRelMosquitoinspectionsCtx     = newContextual[bool]("fieldseeker.mosquitoinspection.organization.fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey")
-	organizationRelPointlocationsCtx          = newContextual[bool]("fieldseeker.pointlocation.organization.fieldseeker.pointlocation.pointlocation_organization_id_fkey")
-	organizationRelPolygonlocationsCtx        = newContextual[bool]("fieldseeker.polygonlocation.organization.fieldseeker.polygonlocation.polygonlocation_organization_id_fkey")
-	organizationRelFieldseekerPoolCtx         = newContextual[bool]("fieldseeker.pool.organization.fieldseeker.pool.pool_organization_id_fkey")
-	organizationRelPooldetailsCtx             = newContextual[bool]("fieldseeker.pooldetail.organization.fieldseeker.pooldetail.pooldetail_organization_id_fkey")
-	organizationRelProposedtreatmentareasCtx  = newContextual[bool]("fieldseeker.proposedtreatmentarea.organization.fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey")
-	organizationRelQamosquitoinspectionsCtx   = newContextual[bool]("fieldseeker.qamosquitoinspection.organization.fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey")
-	organizationRelRodentlocationsCtx         = newContextual[bool]("fieldseeker.rodentlocation.organization.fieldseeker.rodentlocation.rodentlocation_organization_id_fkey")
-	organizationRelSamplecollectionsCtx       = newContextual[bool]("fieldseeker.samplecollection.organization.fieldseeker.samplecollection.samplecollection_organization_id_fkey")
-	organizationRelSamplelocationsCtx         = newContextual[bool]("fieldseeker.samplelocation.organization.fieldseeker.samplelocation.samplelocation_organization_id_fkey")
-	organizationRelServicerequestsCtx         = newContextual[bool]("fieldseeker.servicerequest.organization.fieldseeker.servicerequest.servicerequest_organization_id_fkey")
-	organizationRelSpeciesabundancesCtx       = newContextual[bool]("fieldseeker.speciesabundance.organization.fieldseeker.speciesabundance.speciesabundance_organization_id_fkey")
-	organizationRelStormdrainsCtx             = newContextual[bool]("fieldseeker.stormdrain.organization.fieldseeker.stormdrain.stormdrain_organization_id_fkey")
-	organizationRelTimecardsCtx               = newContextual[bool]("fieldseeker.timecard.organization.fieldseeker.timecard.timecard_organization_id_fkey")
-	organizationRelTrapdataCtx                = newContextual[bool]("fieldseeker.trapdata.organization.fieldseeker.trapdata.trapdata_organization_id_fkey")
-	organizationRelTraplocationsCtx           = newContextual[bool]("fieldseeker.traplocation.organization.fieldseeker.traplocation.traplocation_organization_id_fkey")
-	organizationRelTreatmentsCtx              = newContextual[bool]("fieldseeker.treatment.organization.fieldseeker.treatment.treatment_organization_id_fkey")
-	organizationRelTreatmentareasCtx          = newContextual[bool]("fieldseeker.treatmentarea.organization.fieldseeker.treatmentarea.treatmentarea_organization_id_fkey")
-	organizationRelZonesCtx                   = newContextual[bool]("fieldseeker.zones.organization.fieldseeker.zones.zones_organization_id_fkey")
-	organizationRelZones2sCtx                 = newContextual[bool]("fieldseeker.zones2.organization.fieldseeker.zones2.zones2_organization_id_fkey")
-	organizationRelFieldseekerSyncsCtx        = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
-	organizationRelFilesCtx                   = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
-	organizationRelPoolsCtx                   = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
-	organizationRelH3AggregationsCtx          = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
-	organizationRelNoteAudiosCtx              = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
-	organizationRelNoteImagesCtx              = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")
-	organizationRelNuisancesCtx               = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
-	organizationRelPublicreportPoolCtx        = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
-	organizationRelQuicksCtx                  = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
-	organizationRelUserCtx                    = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
+	organizationWithParentsCascadingCtx                           = newContextual[bool]("organizationWithParentsCascading")
+	organizationRelAccountsCtx                                    = newContextual[bool]("arcgis.account.organization.arcgis.account.account_organization_id_fkey")
+	organizationRelAddressMappingsCtx                             = newContextual[bool]("arcgis.address_mapping.organization.arcgis.address_mapping.address_mapping_organization_id_fkey")
+	organizationRelParcelMappingsCtx                              = newContextual[bool]("arcgis.parcel_mapping.organization.arcgis.parcel_mapping.parcel_mapping_organization_id_fkey")
+	organizationRelEmailContactsCtx                               = newContextual[bool]("comms.email_contact.organization.district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey")
+	organizationRelPhonesCtx                                      = newContextual[bool]("comms.phone.organization.district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey")
+	organizationRelContainerrelatesCtx                            = newContextual[bool]("fieldseeker.containerrelate.organization.fieldseeker.containerrelate.containerrelate_organization_id_fkey")
+	organizationRelFieldscoutinglogsCtx                           = newContextual[bool]("fieldseeker.fieldscoutinglog.organization.fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey")
+	organizationRelHabitatrelatesCtx                              = newContextual[bool]("fieldseeker.habitatrelate.organization.fieldseeker.habitatrelate.habitatrelate_organization_id_fkey")
+	organizationRelInspectionsamplesCtx                           = newContextual[bool]("fieldseeker.inspectionsample.organization.fieldseeker.inspectionsample.inspectionsample_organization_id_fkey")
+	organizationRelInspectionsampledetailsCtx                     = newContextual[bool]("fieldseeker.inspectionsampledetail.organization.fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey")
+	organizationRelLinelocationsCtx                               = newContextual[bool]("fieldseeker.linelocation.organization.fieldseeker.linelocation.linelocation_organization_id_fkey")
+	organizationRelLocationtrackingsCtx                           = newContextual[bool]("fieldseeker.locationtracking.organization.fieldseeker.locationtracking.locationtracking_organization_id_fkey")
+	organizationRelMosquitoinspectionsCtx                         = newContextual[bool]("fieldseeker.mosquitoinspection.organization.fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey")
+	organizationRelPointlocationsCtx                              = newContextual[bool]("fieldseeker.pointlocation.organization.fieldseeker.pointlocation.pointlocation_organization_id_fkey")
+	organizationRelPolygonlocationsCtx                            = newContextual[bool]("fieldseeker.polygonlocation.organization.fieldseeker.polygonlocation.polygonlocation_organization_id_fkey")
+	organizationRelFieldseekerPoolCtx                             = newContextual[bool]("fieldseeker.pool.organization.fieldseeker.pool.pool_organization_id_fkey")
+	organizationRelPooldetailsCtx                                 = newContextual[bool]("fieldseeker.pooldetail.organization.fieldseeker.pooldetail.pooldetail_organization_id_fkey")
+	organizationRelProposedtreatmentareasCtx                      = newContextual[bool]("fieldseeker.proposedtreatmentarea.organization.fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey")
+	organizationRelQamosquitoinspectionsCtx                       = newContextual[bool]("fieldseeker.qamosquitoinspection.organization.fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey")
+	organizationRelRodentlocationsCtx                             = newContextual[bool]("fieldseeker.rodentlocation.organization.fieldseeker.rodentlocation.rodentlocation_organization_id_fkey")
+	organizationRelSamplecollectionsCtx                           = newContextual[bool]("fieldseeker.samplecollection.organization.fieldseeker.samplecollection.samplecollection_organization_id_fkey")
+	organizationRelSamplelocationsCtx                             = newContextual[bool]("fieldseeker.samplelocation.organization.fieldseeker.samplelocation.samplelocation_organization_id_fkey")
+	organizationRelServicerequestsCtx                             = newContextual[bool]("fieldseeker.servicerequest.organization.fieldseeker.servicerequest.servicerequest_organization_id_fkey")
+	organizationRelSpeciesabundancesCtx                           = newContextual[bool]("fieldseeker.speciesabundance.organization.fieldseeker.speciesabundance.speciesabundance_organization_id_fkey")
+	organizationRelStormdrainsCtx                                 = newContextual[bool]("fieldseeker.stormdrain.organization.fieldseeker.stormdrain.stormdrain_organization_id_fkey")
+	organizationRelTimecardsCtx                                   = newContextual[bool]("fieldseeker.timecard.organization.fieldseeker.timecard.timecard_organization_id_fkey")
+	organizationRelTrapdataCtx                                    = newContextual[bool]("fieldseeker.trapdata.organization.fieldseeker.trapdata.trapdata_organization_id_fkey")
+	organizationRelTraplocationsCtx                               = newContextual[bool]("fieldseeker.traplocation.organization.fieldseeker.traplocation.traplocation_organization_id_fkey")
+	organizationRelTreatmentsCtx                                  = newContextual[bool]("fieldseeker.treatment.organization.fieldseeker.treatment.treatment_organization_id_fkey")
+	organizationRelTreatmentareasCtx                              = newContextual[bool]("fieldseeker.treatmentarea.organization.fieldseeker.treatmentarea.treatmentarea_organization_id_fkey")
+	organizationRelZonesCtx                                       = newContextual[bool]("fieldseeker.zones.organization.fieldseeker.zones.zones_organization_id_fkey")
+	organizationRelZones2sCtx                                     = newContextual[bool]("fieldseeker.zones2.organization.fieldseeker.zones2.zones2_organization_id_fkey")
+	organizationRelFieldseekerSyncsCtx                            = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
+	organizationRelFilesCtx                                       = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
+	organizationRelPoolsCtx                                       = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
+	organizationRelH3AggregationsCtx                              = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
+	organizationRelNoteAudiosCtx                                  = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
+	organizationRelNoteImagesCtx                                  = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")
+	organizationRelArcgisAccountAccountCtx                        = newContextual[bool]("arcgis.account.organization.organization.organization_arcgis_account_id_fkey")
+	organizationRelFieldseekerServiceFeatureItemServiceFeatureCtx = newContextual[bool]("arcgis.service_feature.organization.organization.organization_fieldseeker_service_feature_item_id_fkey")
+	organizationRelNuisancesCtx                                   = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
+	organizationRelPublicreportPoolCtx                            = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
+	organizationRelQuicksCtx                                      = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
+	organizationRelUserCtx                                        = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
 	// Relationship Contexts for parcel
 	parcelWithParentsCascadingCtx = newContextual[bool]("parcelWithParentsCascading")
+	parcelRelSitesCtx             = newContextual[bool]("parcel.site.site.site_parcel_id_fkey")
 
 	// Relationship Contexts for pool
 	poolWithParentsCascadingCtx = newContextual[bool]("poolWithParentsCascading")
 	poolRelCreatorUserCtx       = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
+	poolRelSiteCtx              = newContextual[bool]("pool.site.pool.pool_site_id_site_version_fkey")
 
 	// Relationship Contexts for publicreport.image
 	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
@@ -422,32 +452,45 @@ var (
 	// Relationship Contexts for raster_overviews
 	rasterOverviewWithParentsCascadingCtx = newContextual[bool]("rasterOverviewWithParentsCascading")
 
+	// Relationship Contexts for resident
+	residentWithParentsCascadingCtx = newContextual[bool]("residentWithParentsCascading")
+	residentRelAddressCtx           = newContextual[bool]("address.resident.resident.resident_address_id_fkey")
+	residentRelCreatorUserCtx       = newContextual[bool]("resident.user_.resident.resident_creator_fkey")
+	residentRelPhoneMobilePhoneCtx  = newContextual[bool]("comms.phone.resident.resident.resident_phone_mobile_fkey")
+	residentRelSiteCtx              = newContextual[bool]("resident.site.resident.resident_site_id_site_version_fkey")
+
 	// Relationship Contexts for sessions
 	sessionWithParentsCascadingCtx = newContextual[bool]("sessionWithParentsCascading")
 
 	// Relationship Contexts for site
-	siteWithParentsCascadingCtx = newContextual[bool]("siteWithParentsCascading")
-	siteRelAddressCtx           = newContextual[bool]("address.site.site.site_address_id_fkey")
-	siteRelCreatorUserCtx       = newContextual[bool]("site.user_.site.site_creator_id_fkey")
-	siteRelFileCtx              = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
+	siteWithParentsCascadingCtx        = newContextual[bool]("siteWithParentsCascading")
+	siteRelComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
+	siteRelPoolsCtx                    = newContextual[bool]("pool.site.pool.pool_site_id_site_version_fkey")
+	siteRelResidentsCtx                = newContextual[bool]("resident.site.resident.resident_site_id_site_version_fkey")
+	siteRelAddressCtx                  = newContextual[bool]("address.site.site.site_address_id_fkey")
+	siteRelCreatorUserCtx              = newContextual[bool]("site.user_.site.site_creator_id_fkey")
+	siteRelFileCtx                     = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
+	siteRelParcelCtx                   = newContextual[bool]("parcel.site.site.site_parcel_id_fkey")
 
 	// Relationship Contexts for spatial_ref_sys
 	spatialRefSyWithParentsCascadingCtx = newContextual[bool]("spatialRefSyWithParentsCascading")
 
 	// Relationship Contexts for user_
-	userWithParentsCascadingCtx = newContextual[bool]("userWithParentsCascading")
-	userRelPublicUserUserCtx    = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
-	userRelCreatorFilesCtx      = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
-	userRelFileuploadPoolCtx    = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
-	userRelCreatorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_creator_id_fkey")
-	userRelDeletorNoteAudiosCtx = newContextual[bool]("note_audio.user_.note_audio.note_audio_deletor_id_fkey")
-	userRelCreatorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_creator_id_fkey")
-	userRelDeletorNoteImagesCtx = newContextual[bool]("note_image.user_.note_image.note_image_deletor_id_fkey")
-	userRelUserNotificationsCtx = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
-	userRelUserOauthTokensCtx   = newContextual[bool]("oauth_token.user_.oauth_token.oauth_token_user_id_fkey")
-	userRelCreatorPoolsCtx      = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
-	userRelCreatorSitesCtx      = newContextual[bool]("site.user_.site.site_creator_id_fkey")
-	userRelOrganizationCtx      = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
+	userWithParentsCascadingCtx               = newContextual[bool]("userWithParentsCascading")
+	userRelUserOauthTokensCtx                 = newContextual[bool]("arcgis.oauth_token.user_.arcgis.oauth_token.oauth_token_user_id_fkey")
+	userRelPublicUserUserCtx                  = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
+	userRelCreatorComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.user_.compliance_report_request.compliance_report_request_creator_fkey")
+	userRelCreatorFilesCtx                    = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
+	userRelFileuploadPoolCtx                  = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
+	userRelCreatorNoteAudiosCtx               = newContextual[bool]("note_audio.user_.note_audio.note_audio_creator_id_fkey")
+	userRelDeletorNoteAudiosCtx               = newContextual[bool]("note_audio.user_.note_audio.note_audio_deletor_id_fkey")
+	userRelCreatorNoteImagesCtx               = newContextual[bool]("note_image.user_.note_image.note_image_creator_id_fkey")
+	userRelDeletorNoteImagesCtx               = newContextual[bool]("note_image.user_.note_image.note_image_deletor_id_fkey")
+	userRelUserNotificationsCtx               = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
+	userRelCreatorPoolsCtx                    = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
+	userRelCreatorResidentsCtx                = newContextual[bool]("resident.user_.resident.resident_creator_fkey")
+	userRelCreatorSitesCtx                    = newContextual[bool]("site.user_.site.site_creator_id_fkey")
+	userRelOrganizationCtx                    = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )
 
 // Contextual is a convienience wrapper around context.WithValue and context.Value

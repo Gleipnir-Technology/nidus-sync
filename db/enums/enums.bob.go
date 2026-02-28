@@ -457,6 +457,76 @@ func (e *Audiodatatype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for CommsMailertype
+const (
+	CommsMailertypeGreenPool CommsMailertype = "green-pool"
+)
+
+func AllCommsMailertype() []CommsMailertype {
+	return []CommsMailertype{
+		CommsMailertypeGreenPool,
+	}
+}
+
+type CommsMailertype string
+
+func (e CommsMailertype) String() string {
+	return string(e)
+}
+
+func (e CommsMailertype) Valid() bool {
+	switch e {
+	case CommsMailertypeGreenPool:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e CommsMailertype) All() []CommsMailertype {
+	return AllCommsMailertype()
+}
+
+func (e CommsMailertype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsMailertype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e CommsMailertype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *CommsMailertype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e CommsMailertype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *CommsMailertype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = CommsMailertype(x)
+	case []byte:
+		*e = CommsMailertype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into CommsMailertype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid CommsMailertype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for CommsMessagetypeemail
 const (
 	CommsMessagetypeemailInitialContact                 CommsMessagetypeemail = "initial-contact"

@@ -33,33 +33,6 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ArcgisID: column{
-			Name:      "arcgis_id",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ArcgisName: column{
-			Name:      "arcgis_name",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		FieldseekerURL: column{
-			Name:      "fieldseeker_url",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		ImportDistrictGid: column{
 			Name:      "import_district_gid",
 			DBType:    "integer",
@@ -276,6 +249,60 @@ var Organizations = Table[
 			Generated: true,
 			AutoIncr:  false,
 		},
+		MailingAddressCountry: column{
+			Name:      "mailing_address_country",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		MailingAddressState: column{
+			Name:      "mailing_address_state",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficeAddressCountry: column{
+			Name:      "office_address_country",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OfficeAddressState: column{
+			Name:      "office_address_state",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ArcgisAccountID: column{
+			Name:      "arcgis_account_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		FieldseekerServiceFeatureItemID: column{
+			Name:      "fieldseeker_service_feature_item_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -336,6 +363,24 @@ var Organizations = Table[
 		Comment: "",
 	},
 	ForeignKeys: organizationForeignKeys{
+		OrganizationOrganizationArcgisAccountIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "organization.organization_arcgis_account_id_fkey",
+				Columns: []string{"arcgis_account_id"},
+				Comment: "",
+			},
+			ForeignTable:   "arcgis.account",
+			ForeignColumns: []string{"id"},
+		},
+		OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "organization.organization_fieldseeker_service_feature_item_id_fkey",
+				Columns: []string{"fieldseeker_service_feature_item_id"},
+				Comment: "",
+			},
+			ForeignTable:   "arcgis.service_feature",
+			ForeignColumns: []string{"item_id"},
+		},
 		OrganizationOrganizationImportDistrictGidFkey: foreignKey{
 			constraint: constraint{
 				Name:    "organization.organization_import_district_gid_fkey",
@@ -363,40 +408,43 @@ var Organizations = Table[
 }
 
 type organizationColumns struct {
-	ID                         column
-	Name                       column
-	ArcgisID                   column
-	ArcgisName                 column
-	FieldseekerURL             column
-	ImportDistrictGid          column
-	Website                    column
-	LogoUUID                   column
-	Slug                       column
-	GeneralManagerName         column
-	MailingAddressCity         column
-	MailingAddressPostalCode   column
-	MailingAddressStreet       column
-	OfficeAddressCity          column
-	OfficeAddressPostalCode    column
-	OfficeAddressStreet        column
-	ServiceAreaGeometry        column
-	ServiceAreaSquareMeters    column
-	ServiceAreaCentroid        column
-	ServiceAreaExtent          column
-	OfficeFax                  column
-	OfficePhone                column
-	ServiceAreaXmin            column
-	ServiceAreaYmin            column
-	ServiceAreaXmax            column
-	ServiceAreaYmax            column
-	ServiceAreaCentroidGeojson column
-	ServiceAreaCentroidX       column
-	ServiceAreaCentroidY       column
+	ID                              column
+	Name                            column
+	ImportDistrictGid               column
+	Website                         column
+	LogoUUID                        column
+	Slug                            column
+	GeneralManagerName              column
+	MailingAddressCity              column
+	MailingAddressPostalCode        column
+	MailingAddressStreet            column
+	OfficeAddressCity               column
+	OfficeAddressPostalCode         column
+	OfficeAddressStreet             column
+	ServiceAreaGeometry             column
+	ServiceAreaSquareMeters         column
+	ServiceAreaCentroid             column
+	ServiceAreaExtent               column
+	OfficeFax                       column
+	OfficePhone                     column
+	ServiceAreaXmin                 column
+	ServiceAreaYmin                 column
+	ServiceAreaXmax                 column
+	ServiceAreaYmax                 column
+	ServiceAreaCentroidGeojson      column
+	ServiceAreaCentroidX            column
+	ServiceAreaCentroidY            column
+	MailingAddressCountry           column
+	MailingAddressState             column
+	OfficeAddressCountry            column
+	OfficeAddressState              column
+	ArcgisAccountID                 column
+	FieldseekerServiceFeatureItemID column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ArcgisID, c.ArcgisName, c.FieldseekerURL, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY,
+		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID,
 	}
 }
 
@@ -413,12 +461,14 @@ func (i organizationIndexes) AsSlice() []index {
 }
 
 type organizationForeignKeys struct {
-	OrganizationOrganizationImportDistrictGidFkey foreignKey
+	OrganizationOrganizationArcgisAccountIDFkey                 foreignKey
+	OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey foreignKey
+	OrganizationOrganizationImportDistrictGidFkey               foreignKey
 }
 
 func (f organizationForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.OrganizationOrganizationImportDistrictGidFkey,
+		f.OrganizationOrganizationArcgisAccountIDFkey, f.OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey, f.OrganizationOrganizationImportDistrictGidFkey,
 	}
 }
 

@@ -79,7 +79,7 @@ var ArcgisLayers = Table[
 				Columns: []string{"feature_service_item_id"},
 				Comment: "",
 			},
-			ForeignTable:   "arcgis.feature_service",
+			ForeignTable:   "arcgis.service_feature",
 			ForeignColumns: []string{"item_id"},
 		},
 	},

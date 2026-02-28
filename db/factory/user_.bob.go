@@ -59,23 +59,33 @@ type UserTemplate struct {
 }
 
 type userR struct {
-	PublicUserUser    []*userRPublicUserUserR
-	CreatorFiles      []*userRCreatorFilesR
-	FileuploadPool    []*userRFileuploadPoolR
-	CreatorNoteAudios []*userRCreatorNoteAudiosR
-	DeletorNoteAudios []*userRDeletorNoteAudiosR
-	CreatorNoteImages []*userRCreatorNoteImagesR
-	DeletorNoteImages []*userRDeletorNoteImagesR
-	UserNotifications []*userRUserNotificationsR
-	UserOauthTokens   []*userRUserOauthTokensR
-	CreatorPools      []*userRCreatorPoolsR
-	CreatorSites      []*userRCreatorSitesR
-	Organization      *userROrganizationR
+	UserOauthTokens                 []*userRUserOauthTokensR
+	PublicUserUser                  []*userRPublicUserUserR
+	CreatorComplianceReportRequests []*userRCreatorComplianceReportRequestsR
+	CreatorFiles                    []*userRCreatorFilesR
+	FileuploadPool                  []*userRFileuploadPoolR
+	CreatorNoteAudios               []*userRCreatorNoteAudiosR
+	DeletorNoteAudios               []*userRDeletorNoteAudiosR
+	CreatorNoteImages               []*userRCreatorNoteImagesR
+	DeletorNoteImages               []*userRDeletorNoteImagesR
+	UserNotifications               []*userRUserNotificationsR
+	CreatorPools                    []*userRCreatorPoolsR
+	CreatorResidents                []*userRCreatorResidentsR
+	CreatorSites                    []*userRCreatorSitesR
+	Organization                    *userROrganizationR
 }
 
+type userRUserOauthTokensR struct {
+	number int
+	o      *ArcgisOauthTokenTemplate
+}
 type userRPublicUserUserR struct {
 	number int
 	o      *ArcgisUserTemplate
+}
+type userRCreatorComplianceReportRequestsR struct {
+	number int
+	o      *ComplianceReportRequestTemplate
 }
 type userRCreatorFilesR struct {
 	number int
@@ -105,13 +115,13 @@ type userRUserNotificationsR struct {
 	number int
 	o      *NotificationTemplate
 }
-type userRUserOauthTokensR struct {
-	number int
-	o      *OauthTokenTemplate
-}
 type userRCreatorPoolsR struct {
 	number int
 	o      *PoolTemplate
+}
+type userRCreatorResidentsR struct {
+	number int
+	o      *ResidentTemplate
 }
 type userRCreatorSitesR struct {
 	number int
@@ -131,6 +141,19 @@ func (o *UserTemplate) Apply(ctx context.Context, mods ...UserMod) {
 // setModelRels creates and sets the relationships on *models.User
 // according to the relationships in the template. Nothing is inserted into the db
 func (t UserTemplate) setModelRels(o *models.User) {
+	if t.r.UserOauthTokens != nil {
+		rel := models.ArcgisOauthTokenSlice{}
+		for _, r := range t.r.UserOauthTokens {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.UserID = o.ID // h2
+				rel.R.UserUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.UserOauthTokens = rel
+	}
+
 	if t.r.PublicUserUser != nil {
 		rel := models.ArcgisUserSlice{}
 		for _, r := range t.r.PublicUserUser {
@@ -142,6 +165,19 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.PublicUserUser = rel
+	}
+
+	if t.r.CreatorComplianceReportRequests != nil {
+		rel := models.ComplianceReportRequestSlice{}
+		for _, r := range t.r.CreatorComplianceReportRequests {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.Creator = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorComplianceReportRequests = rel
 	}
 
 	if t.r.CreatorFiles != nil {
@@ -235,19 +271,6 @@ func (t UserTemplate) setModelRels(o *models.User) {
 		o.R.UserNotifications = rel
 	}
 
-	if t.r.UserOauthTokens != nil {
-		rel := models.OauthTokenSlice{}
-		for _, r := range t.r.UserOauthTokens {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.UserID = o.ID // h2
-				rel.R.UserUser = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.UserOauthTokens = rel
-	}
-
 	if t.r.CreatorPools != nil {
 		rel := models.PoolSlice{}
 		for _, r := range t.r.CreatorPools {
@@ -259,6 +282,19 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.CreatorPools = rel
+	}
+
+	if t.r.CreatorResidents != nil {
+		rel := models.ResidentSlice{}
+		for _, r := range t.r.CreatorResidents {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.Creator = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorResidents = rel
 	}
 
 	if t.r.CreatorSites != nil {
@@ -452,6 +488,26 @@ func ensureCreatableUser(m *models.UserSetter) {
 func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.User) error {
 	var err error
 
+	isUserOauthTokensDone, _ := userRelUserOauthTokensCtx.Value(ctx)
+	if !isUserOauthTokensDone && o.r.UserOauthTokens != nil {
+		ctx = userRelUserOauthTokensCtx.WithValue(ctx, true)
+		for _, r := range o.r.UserOauthTokens {
+			if r.o.alreadyPersisted {
+				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachUserOauthTokens(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isPublicUserUserDone, _ := userRelPublicUserUserCtx.Value(ctx)
 	if !isPublicUserUserDone && o.r.PublicUserUser != nil {
 		ctx = userRelPublicUserUserCtx.WithValue(ctx, true)
@@ -459,12 +515,32 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.PublicUserUser = append(m.R.PublicUserUser, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicUserUser(ctx, exec, rel0...)
+				err = m.AttachPublicUserUser(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isCreatorComplianceReportRequestsDone, _ := userRelCreatorComplianceReportRequestsCtx.Value(ctx)
+	if !isCreatorComplianceReportRequestsDone && o.r.CreatorComplianceReportRequests != nil {
+		ctx = userRelCreatorComplianceReportRequestsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorComplianceReportRequests {
+			if r.o.alreadyPersisted {
+				m.R.CreatorComplianceReportRequests = append(m.R.CreatorComplianceReportRequests, r.o.Build())
+			} else {
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorComplianceReportRequests(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -479,12 +555,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorFiles = append(m.R.CreatorFiles, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorFiles(ctx, exec, rel1...)
+				err = m.AttachCreatorFiles(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -499,12 +575,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.FileuploadPool = append(m.R.FileuploadPool, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFileuploadPool(ctx, exec, rel2...)
+				err = m.AttachFileuploadPool(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -519,12 +595,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteAudios = append(m.R.CreatorNoteAudios, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteAudios(ctx, exec, rel3...)
+				err = m.AttachCreatorNoteAudios(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -539,12 +615,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteAudios = append(m.R.DeletorNoteAudios, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteAudios(ctx, exec, rel4...)
+				err = m.AttachDeletorNoteAudios(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -559,12 +635,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteImages = append(m.R.CreatorNoteImages, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteImages(ctx, exec, rel5...)
+				err = m.AttachCreatorNoteImages(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -579,12 +655,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteImages = append(m.R.DeletorNoteImages, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteImages(ctx, exec, rel6...)
+				err = m.AttachDeletorNoteImages(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -599,32 +675,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserNotifications = append(m.R.UserNotifications, r.o.Build())
 			} else {
-				rel7, err := r.o.CreateMany(ctx, exec, r.number)
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserNotifications(ctx, exec, rel7...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	isUserOauthTokensDone, _ := userRelUserOauthTokensCtx.Value(ctx)
-	if !isUserOauthTokensDone && o.r.UserOauthTokens != nil {
-		ctx = userRelUserOauthTokensCtx.WithValue(ctx, true)
-		for _, r := range o.r.UserOauthTokens {
-			if r.o.alreadyPersisted {
-				m.R.UserOauthTokens = append(m.R.UserOauthTokens, r.o.Build())
-			} else {
-				rel8, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachUserOauthTokens(ctx, exec, rel8...)
+				err = m.AttachUserNotifications(ctx, exec, rel9...)
 				if err != nil {
 					return err
 				}
@@ -639,12 +695,32 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
 			} else {
-				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				rel10, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorPools(ctx, exec, rel9...)
+				err = m.AttachCreatorPools(ctx, exec, rel10...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isCreatorResidentsDone, _ := userRelCreatorResidentsCtx.Value(ctx)
+	if !isCreatorResidentsDone && o.r.CreatorResidents != nil {
+		ctx = userRelCreatorResidentsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorResidents {
+			if r.o.alreadyPersisted {
+				m.R.CreatorResidents = append(m.R.CreatorResidents, r.o.Build())
+			} else {
+				rel11, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorResidents(ctx, exec, rel11...)
 				if err != nil {
 					return err
 				}
@@ -659,12 +735,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorSites = append(m.R.CreatorSites, r.o.Build())
 			} else {
-				rel10, err := r.o.CreateMany(ctx, exec, r.number)
+				rel12, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorSites(ctx, exec, rel10...)
+				err = m.AttachCreatorSites(ctx, exec, rel12...)
 				if err != nil {
 					return err
 				}
@@ -686,25 +762,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel11 *models.Organization
+	var rel13 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel11 = o.r.Organization.o.Build()
+		rel13 = o.r.Organization.o.Build()
 	} else {
-		rel11, err = o.r.Organization.o.Create(ctx, exec)
+		rel13, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel11.ID)
+	opt.OrganizationID = omit.From(rel13.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel11
+	m.R.Organization = rel13
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1378,6 +1454,54 @@ func (m userMods) WithoutOrganization() UserMod {
 	})
 }
 
+func (m userMods) WithUserOauthTokens(number int, related *ArcgisOauthTokenTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = []*userRUserOauthTokensR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewUserOauthTokens(number int, mods ...ArcgisOauthTokenMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewArcgisOauthTokenWithContext(ctx, mods...)
+		m.WithUserOauthTokens(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddUserOauthTokens(number int, related *ArcgisOauthTokenTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewUserOauthTokens(number int, mods ...ArcgisOauthTokenMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewArcgisOauthTokenWithContext(ctx, mods...)
+		m.AddUserOauthTokens(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.ArcgisOauthToken) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
+				o: o.f.FromExistingArcgisOauthToken(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutUserOauthTokens() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.UserOauthTokens = nil
+	})
+}
+
 func (m userMods) WithPublicUserUser(number int, related *ArcgisUserTemplate) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.PublicUserUser = []*userRPublicUserUserR{{
@@ -1423,6 +1547,54 @@ func (m userMods) AddExistingPublicUserUser(existingModels ...*models.ArcgisUser
 func (m userMods) WithoutPublicUserUser() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.PublicUserUser = nil
+	})
+}
+
+func (m userMods) WithCreatorComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorComplianceReportRequests = []*userRCreatorComplianceReportRequestsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.WithCreatorComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorComplianceReportRequests = append(o.r.CreatorComplianceReportRequests, &userRCreatorComplianceReportRequestsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.AddCreatorComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorComplianceReportRequests(existingModels ...*models.ComplianceReportRequest) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorComplianceReportRequests = append(o.r.CreatorComplianceReportRequests, &userRCreatorComplianceReportRequestsR{
+				o: o.f.FromExistingComplianceReportRequest(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorComplianceReportRequests() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorComplianceReportRequests = nil
 	})
 }
 
@@ -1762,54 +1934,6 @@ func (m userMods) WithoutUserNotifications() UserMod {
 	})
 }
 
-func (m userMods) WithUserOauthTokens(number int, related *OauthTokenTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.UserOauthTokens = []*userRUserOauthTokensR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m userMods) WithNewUserOauthTokens(number int, mods ...OauthTokenMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewOauthTokenWithContext(ctx, mods...)
-		m.WithUserOauthTokens(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddUserOauthTokens(number int, related *OauthTokenTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m userMods) AddNewUserOauthTokens(number int, mods ...OauthTokenMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewOauthTokenWithContext(ctx, mods...)
-		m.AddUserOauthTokens(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddExistingUserOauthTokens(existingModels ...*models.OauthToken) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		for _, em := range existingModels {
-			o.r.UserOauthTokens = append(o.r.UserOauthTokens, &userRUserOauthTokensR{
-				o: o.f.FromExistingOauthToken(em),
-			})
-		}
-	})
-}
-
-func (m userMods) WithoutUserOauthTokens() UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.UserOauthTokens = nil
-	})
-}
-
 func (m userMods) WithCreatorPools(number int, related *PoolTemplate) UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.CreatorPools = []*userRCreatorPoolsR{{
@@ -1855,6 +1979,54 @@ func (m userMods) AddExistingCreatorPools(existingModels ...*models.Pool) UserMo
 func (m userMods) WithoutCreatorPools() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.CreatorPools = nil
+	})
+}
+
+func (m userMods) WithCreatorResidents(number int, related *ResidentTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorResidents = []*userRCreatorResidentsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorResidents(number int, mods ...ResidentMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.WithCreatorResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorResidents(number int, related *ResidentTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorResidents = append(o.r.CreatorResidents, &userRCreatorResidentsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorResidents(number int, mods ...ResidentMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.AddCreatorResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorResidents(existingModels ...*models.Resident) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorResidents = append(o.r.CreatorResidents, &userRCreatorResidentsR{
+				o: o.f.FromExistingResident(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorResidents() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorResidents = nil
 	})
 }
 

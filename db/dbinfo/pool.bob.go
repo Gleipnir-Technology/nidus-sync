@@ -54,9 +54,18 @@ var Pools = Table[
 		SiteID: column{
 			Name:      "site_id",
 			DBType:    "integer",
-			Default:   "NULL",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SiteVersion: column{
+			Name:      "site_version",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -95,22 +104,32 @@ var Pools = Table[
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
+		PoolPoolSiteIDSiteVersionFkey: foreignKey{
+			constraint: constraint{
+				Name:    "pool.pool_site_id_site_version_fkey",
+				Columns: []string{"site_id", "site_version"},
+				Comment: "",
+			},
+			ForeignTable:   "site",
+			ForeignColumns: []string{"id", "version"},
+		},
 	},
 
 	Comment: "",
 }
 
 type poolColumns struct {
-	Condition column
-	Created   column
-	CreatorID column
-	ID        column
-	SiteID    column
+	Condition   column
+	Created     column
+	CreatorID   column
+	ID          column
+	SiteID      column
+	SiteVersion column
 }
 
 func (c poolColumns) AsSlice() []column {
 	return []column{
-		c.Condition, c.Created, c.CreatorID, c.ID, c.SiteID,
+		c.Condition, c.Created, c.CreatorID, c.ID, c.SiteID, c.SiteVersion,
 	}
 }
 
@@ -125,12 +144,13 @@ func (i poolIndexes) AsSlice() []index {
 }
 
 type poolForeignKeys struct {
-	PoolPoolCreatorIDFkey foreignKey
+	PoolPoolCreatorIDFkey         foreignKey
+	PoolPoolSiteIDSiteVersionFkey foreignKey
 }
 
 func (f poolForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PoolPoolCreatorIDFkey,
+		f.PoolPoolCreatorIDFkey, f.PoolPoolSiteIDSiteVersionFkey,
 	}
 }
 

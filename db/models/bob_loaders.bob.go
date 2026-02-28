@@ -18,11 +18,14 @@ var Preload = getPreloaders()
 
 type preloaders struct {
 	Address                           addressPreloader
+	ArcgisAccount                     arcgisAccountPreloader
 	ArcgisAddressMapping              arcgisAddressMappingPreloader
-	ArcgisFeatureService              arcgisFeatureServicePreloader
 	ArcgisLayer                       arcgisLayerPreloader
 	ArcgisLayerField                  arcgisLayerFieldPreloader
+	ArcgisOauthToken                  arcgisOauthTokenPreloader
 	ArcgisParcelMapping               arcgisParcelMappingPreloader
+	ArcgisServiceFeature              arcgisServiceFeaturePreloader
+	ArcgisServiceMap                  arcgisServiceMapPreloader
 	ArcgisUser                        arcgisuserPreloader
 	ArcgisUserPrivilege               arcgisUserPrivilegePreloader
 	CommsEmailContact                 commsEmailContactPreloader
@@ -31,6 +34,7 @@ type preloaders struct {
 	CommsPhone                        commsPhonePreloader
 	CommsTextJob                      commsTextJobPreloader
 	CommsTextLog                      commsTextLogPreloader
+	ComplianceReportRequest           complianceReportRequestPreloader
 	DistrictSubscriptionEmail         districtSubscriptionEmailPreloader
 	DistrictSubscriptionPhone         districtSubscriptionPhonePreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
@@ -74,8 +78,8 @@ type preloaders struct {
 	NoteImageBreadcrumb               noteImageBreadcrumbPreloader
 	NoteImageDatum                    noteImageDatumPreloader
 	Notification                      notificationPreloader
-	OauthToken                        oauthTokenPreloader
 	Organization                      organizationPreloader
+	Parcel                            parcelPreloader
 	Pool                              poolPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
@@ -91,6 +95,7 @@ type preloaders struct {
 	PublicreportQuickImage            publicreportQuickImagePreloader
 	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
+	Resident                          residentPreloader
 	Site                              sitePreloader
 	User                              userPreloader
 }
@@ -98,11 +103,14 @@ type preloaders struct {
 func getPreloaders() preloaders {
 	return preloaders{
 		Address:                           buildAddressPreloader(),
+		ArcgisAccount:                     buildArcgisAccountPreloader(),
 		ArcgisAddressMapping:              buildArcgisAddressMappingPreloader(),
-		ArcgisFeatureService:              buildArcgisFeatureServicePreloader(),
 		ArcgisLayer:                       buildArcgisLayerPreloader(),
 		ArcgisLayerField:                  buildArcgisLayerFieldPreloader(),
+		ArcgisOauthToken:                  buildArcgisOauthTokenPreloader(),
 		ArcgisParcelMapping:               buildArcgisParcelMappingPreloader(),
+		ArcgisServiceFeature:              buildArcgisServiceFeaturePreloader(),
+		ArcgisServiceMap:                  buildArcgisServiceMapPreloader(),
 		ArcgisUser:                        buildArcgisUserPreloader(),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegePreloader(),
 		CommsEmailContact:                 buildCommsEmailContactPreloader(),
@@ -111,6 +119,7 @@ func getPreloaders() preloaders {
 		CommsPhone:                        buildCommsPhonePreloader(),
 		CommsTextJob:                      buildCommsTextJobPreloader(),
 		CommsTextLog:                      buildCommsTextLogPreloader(),
+		ComplianceReportRequest:           buildComplianceReportRequestPreloader(),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailPreloader(),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhonePreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
@@ -154,8 +163,8 @@ func getPreloaders() preloaders {
 		NoteImageBreadcrumb:               buildNoteImageBreadcrumbPreloader(),
 		NoteImageDatum:                    buildNoteImageDatumPreloader(),
 		Notification:                      buildNotificationPreloader(),
-		OauthToken:                        buildOauthTokenPreloader(),
 		Organization:                      buildOrganizationPreloader(),
+		Parcel:                            buildParcelPreloader(),
 		Pool:                              buildPoolPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
@@ -171,6 +180,7 @@ func getPreloaders() preloaders {
 		PublicreportQuickImage:            buildPublicreportQuickImagePreloader(),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
+		Resident:                          buildResidentPreloader(),
 		Site:                              buildSitePreloader(),
 		User:                              buildUserPreloader(),
 	}
@@ -184,11 +194,14 @@ var (
 
 type thenLoaders[Q orm.Loadable] struct {
 	Address                           addressThenLoader[Q]
+	ArcgisAccount                     arcgisAccountThenLoader[Q]
 	ArcgisAddressMapping              arcgisAddressMappingThenLoader[Q]
-	ArcgisFeatureService              arcgisFeatureServiceThenLoader[Q]
 	ArcgisLayer                       arcgisLayerThenLoader[Q]
 	ArcgisLayerField                  arcgisLayerFieldThenLoader[Q]
+	ArcgisOauthToken                  arcgisOauthTokenThenLoader[Q]
 	ArcgisParcelMapping               arcgisParcelMappingThenLoader[Q]
+	ArcgisServiceFeature              arcgisServiceFeatureThenLoader[Q]
+	ArcgisServiceMap                  arcgisServiceMapThenLoader[Q]
 	ArcgisUser                        arcgisuserThenLoader[Q]
 	ArcgisUserPrivilege               arcgisUserPrivilegeThenLoader[Q]
 	CommsEmailContact                 commsEmailContactThenLoader[Q]
@@ -197,6 +210,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsPhone                        commsPhoneThenLoader[Q]
 	CommsTextJob                      commsTextJobThenLoader[Q]
 	CommsTextLog                      commsTextLogThenLoader[Q]
+	ComplianceReportRequest           complianceReportRequestThenLoader[Q]
 	DistrictSubscriptionEmail         districtSubscriptionEmailThenLoader[Q]
 	DistrictSubscriptionPhone         districtSubscriptionPhoneThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
@@ -240,8 +254,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	NoteImageBreadcrumb               noteImageBreadcrumbThenLoader[Q]
 	NoteImageDatum                    noteImageDatumThenLoader[Q]
 	Notification                      notificationThenLoader[Q]
-	OauthToken                        oauthTokenThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
+	Parcel                            parcelThenLoader[Q]
 	Pool                              poolThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
@@ -257,6 +271,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportQuickImage            publicreportQuickImageThenLoader[Q]
 	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
+	Resident                          residentThenLoader[Q]
 	Site                              siteThenLoader[Q]
 	User                              userThenLoader[Q]
 }
@@ -264,11 +279,14 @@ type thenLoaders[Q orm.Loadable] struct {
 func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
 		Address:                           buildAddressThenLoader[Q](),
+		ArcgisAccount:                     buildArcgisAccountThenLoader[Q](),
 		ArcgisAddressMapping:              buildArcgisAddressMappingThenLoader[Q](),
-		ArcgisFeatureService:              buildArcgisFeatureServiceThenLoader[Q](),
 		ArcgisLayer:                       buildArcgisLayerThenLoader[Q](),
 		ArcgisLayerField:                  buildArcgisLayerFieldThenLoader[Q](),
+		ArcgisOauthToken:                  buildArcgisOauthTokenThenLoader[Q](),
 		ArcgisParcelMapping:               buildArcgisParcelMappingThenLoader[Q](),
+		ArcgisServiceFeature:              buildArcgisServiceFeatureThenLoader[Q](),
+		ArcgisServiceMap:                  buildArcgisServiceMapThenLoader[Q](),
 		ArcgisUser:                        buildArcgisUserThenLoader[Q](),
 		ArcgisUserPrivilege:               buildArcgisUserPrivilegeThenLoader[Q](),
 		CommsEmailContact:                 buildCommsEmailContactThenLoader[Q](),
@@ -277,6 +295,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
 		CommsTextJob:                      buildCommsTextJobThenLoader[Q](),
 		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
+		ComplianceReportRequest:           buildComplianceReportRequestThenLoader[Q](),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailThenLoader[Q](),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhoneThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
@@ -320,8 +339,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		NoteImageBreadcrumb:               buildNoteImageBreadcrumbThenLoader[Q](),
 		NoteImageDatum:                    buildNoteImageDatumThenLoader[Q](),
 		Notification:                      buildNotificationThenLoader[Q](),
-		OauthToken:                        buildOauthTokenThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
+		Parcel:                            buildParcelThenLoader[Q](),
 		Pool:                              buildPoolThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
@@ -337,6 +356,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportQuickImage:            buildPublicreportQuickImageThenLoader[Q](),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
+		Resident:                          buildResidentThenLoader[Q](),
 		Site:                              buildSiteThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}

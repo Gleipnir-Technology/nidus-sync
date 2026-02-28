@@ -37,6 +37,8 @@ type Address struct {
 	Unit       string            `db:"unit" `
 
 	R addressR `db:"-" `
+
+	C addressC `db:"-" `
 }
 
 // AddressSlice is an alias for a slice of pointers to Address.
@@ -51,7 +53,8 @@ type AddressesQuery = *psql.ViewQuery[*Address, AddressSlice]
 
 // addressR is where relationships are stored.
 type addressR struct {
-	Site *Site // site.site_address_id_fkey
+	Residents ResidentSlice // resident.resident_address_id_fkey
+	Site      *Site         // site.site_address_id_fkey
 }
 
 func buildAddressColumns(alias string) addressColumns {
@@ -554,6 +557,30 @@ func (o AddressSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// Residents starts a query for related objects on resident
+func (o *Address) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	return Residents.Query(append(mods,
+		sm.Where(Residents.Columns.AddressID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os AddressSlice) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Residents.Query(append(mods,
+		sm.Where(psql.Group(Residents.Columns.AddressID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Site starts a query for related objects on site
 func (o *Address) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
@@ -576,6 +603,74 @@ func (os AddressSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
 		sm.Where(psql.Group(Sites.Columns.AddressID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertAddressResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, address0 *Address) (ResidentSlice, error) {
+	for i := range residents1 {
+		residents1[i].AddressID = omit.From(address0.ID)
+	}
+
+	ret, err := Residents.Insert(bob.ToMods(residents1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertAddressResidents0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachAddressResidents0(ctx context.Context, exec bob.Executor, count int, residents1 ResidentSlice, address0 *Address) (ResidentSlice, error) {
+	setter := &ResidentSetter{
+		AddressID: omit.From(address0.ID),
+	}
+
+	err := residents1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachAddressResidents0: %w", err)
+	}
+
+	return residents1, nil
+}
+
+func (address0 *Address) InsertResidents(ctx context.Context, exec bob.Executor, related ...*ResidentSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	residents1, err := insertAddressResidents0(ctx, exec, related, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Residents = append(address0.R.Residents, residents1...)
+
+	for _, rel := range residents1 {
+		rel.R.Address = address0
+	}
+	return nil
+}
+
+func (address0 *Address) AttachResidents(ctx context.Context, exec bob.Executor, related ...*Resident) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	residents1 := ResidentSlice(related)
+
+	_, err = attachAddressResidents0(ctx, exec, len(related), residents1, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Residents = append(address0.R.Residents, residents1...)
+
+	for _, rel := range related {
+		rel.R.Address = address0
+	}
+
+	return nil
 }
 
 func insertAddressSite0(ctx context.Context, exec bob.Executor, site1 *SiteSetter, address0 *Address) (*Site, error) {
@@ -670,6 +765,20 @@ func (o *Address) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Residents":
+		rels, ok := retrieved.(ResidentSlice)
+		if !ok {
+			return fmt.Errorf("address cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Residents = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Address = o
+			}
+		}
+		return nil
 	case "Site":
 		rel, ok := retrieved.(*Site)
 		if !ok {
@@ -710,15 +819,25 @@ func buildAddressPreloader() addressPreloader {
 }
 
 type addressThenLoader[Q orm.Loadable] struct {
-	Site func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Site      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
+	type ResidentsLoadInterface interface {
+		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type SiteLoadInterface interface {
 		LoadSite(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return addressThenLoader[Q]{
+		Residents: thenLoadBuilder[Q](
+			"Residents",
+			func(ctx context.Context, exec bob.Executor, retrieved ResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadResidents(ctx, exec, mods...)
+			},
+		),
 		Site: thenLoadBuilder[Q](
 			"Site",
 			func(ctx context.Context, exec bob.Executor, retrieved SiteLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -726,6 +845,67 @@ func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadResidents loads the address's Residents into the .R struct
+func (o *Address) LoadResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Residents = nil
+
+	related, err := o.Residents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Address = o
+	}
+
+	o.R.Residents = related
+	return nil
+}
+
+// LoadResidents loads the address's Residents into the .R struct
+func (os AddressSlice) LoadResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	residents, err := os.Residents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Residents = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range residents {
+
+			if !(o.ID == rel.AddressID) {
+				continue
+			}
+
+			rel.R.Address = o
+
+			o.R.Residents = append(o.R.Residents, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadSite loads the address's Site into the .R struct
@@ -780,9 +960,103 @@ func (os AddressSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...
 	return nil
 }
 
+// addressC is where relationship counts are stored.
+type addressC struct {
+	Residents *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *Address) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "Residents":
+		o.C.Residents = &count
+	}
+	return nil
+}
+
+type addressCountPreloader struct {
+	Residents func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildAddressCountPreloader() addressCountPreloader {
+	return addressCountPreloader{
+		Residents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Address]("Residents", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Addresses.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Residents.Name()),
+					sm.Where(psql.Quote(Residents.Alias(), "address_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type addressCountThenLoader[Q orm.Loadable] struct {
+	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildAddressCountThenLoader[Q orm.Loadable]() addressCountThenLoader[Q] {
+	type ResidentsCountInterface interface {
+		LoadCountResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return addressCountThenLoader[Q]{
+		Residents: countThenLoadBuilder[Q](
+			"Residents",
+			func(ctx context.Context, exec bob.Executor, retrieved ResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountResidents(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountResidents loads the count of Residents into the C struct
+func (o *Address) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Residents(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Residents = &count
+	return nil
+}
+
+// LoadCountResidents loads the count of Residents for a slice
+func (os AddressSlice) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountResidents(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type addressJoins[Q dialect.Joinable] struct {
-	typ  string
-	Site modAs[Q, siteColumns]
+	typ       string
+	Residents modAs[Q, residentColumns]
+	Site      modAs[Q, siteColumns]
 }
 
 func (j addressJoins[Q]) aliasedAs(alias string) addressJoins[Q] {
@@ -792,6 +1066,20 @@ func (j addressJoins[Q]) aliasedAs(alias string) addressJoins[Q] {
 func buildAddressJoins[Q dialect.Joinable](cols addressColumns, typ string) addressJoins[Q] {
 	return addressJoins[Q]{
 		typ: typ,
+		Residents: modAs[Q, residentColumns]{
+			c: Residents.Columns,
+			f: func(to residentColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
+						to.AddressID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Site: modAs[Q, siteColumns]{
 			c: Sites.Columns,
 			f: func(to siteColumns) bob.Mod[Q] {

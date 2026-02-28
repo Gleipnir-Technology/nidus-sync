@@ -56,6 +56,7 @@ type commsPhoneR struct {
 	PhoneE164NotifyPhoneNuisances []*commsPhoneRPhoneE164NotifyPhoneNuisancesR
 	PhoneE164NotifyPhonePools     []*commsPhoneRPhoneE164NotifyPhonePoolsR
 	PhoneE164SubscribePhones      []*commsPhoneRPhoneE164SubscribePhonesR
+	PhoneMobileResidents          []*commsPhoneRPhoneMobileResidentsR
 }
 
 type commsPhoneRDestinationTextJobsR struct {
@@ -93,6 +94,10 @@ type commsPhoneRPhoneE164NotifyPhonePoolsR struct {
 type commsPhoneRPhoneE164SubscribePhonesR struct {
 	number int
 	o      *PublicreportSubscribePhoneTemplate
+}
+type commsPhoneRPhoneMobileResidentsR struct {
+	number int
+	o      *ResidentTemplate
 }
 
 // Apply mods to the CommsPhoneTemplate
@@ -219,6 +224,19 @@ func (t CommsPhoneTemplate) setModelRels(o *models.CommsPhone) {
 			rel = append(rel, related...)
 		}
 		o.R.PhoneE164SubscribePhones = rel
+	}
+
+	if t.r.PhoneMobileResidents != nil {
+		rel := models.ResidentSlice{}
+		for _, r := range t.r.PhoneMobileResidents {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PhoneMobile = null.From(o.E164) // h2
+				rel.R.PhoneMobilePhone = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.PhoneMobileResidents = rel
 	}
 }
 
@@ -483,6 +501,26 @@ func (o *CommsPhoneTemplate) insertOptRels(ctx context.Context, exec bob.Executo
 				}
 
 				err = m.AttachPhoneE164SubscribePhones(ctx, exec, rel8...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPhoneMobileResidentsDone, _ := commsPhoneRelPhoneMobileResidentsCtx.Value(ctx)
+	if !isPhoneMobileResidentsDone && o.r.PhoneMobileResidents != nil {
+		ctx = commsPhoneRelPhoneMobileResidentsCtx.WithValue(ctx, true)
+		for _, r := range o.r.PhoneMobileResidents {
+			if r.o.alreadyPersisted {
+				m.R.PhoneMobileResidents = append(m.R.PhoneMobileResidents, r.o.Build())
+			} else {
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPhoneMobileResidents(ctx, exec, rel9...)
 				if err != nil {
 					return err
 				}
@@ -1119,5 +1157,53 @@ func (m commsPhoneMods) AddExistingPhoneE164SubscribePhones(existingModels ...*m
 func (m commsPhoneMods) WithoutPhoneE164SubscribePhones() CommsPhoneMod {
 	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
 		o.r.PhoneE164SubscribePhones = nil
+	})
+}
+
+func (m commsPhoneMods) WithPhoneMobileResidents(number int, related *ResidentTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneMobileResidents = []*commsPhoneRPhoneMobileResidentsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsPhoneMods) WithNewPhoneMobileResidents(number int, mods ...ResidentMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.WithPhoneMobileResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddPhoneMobileResidents(number int, related *ResidentTemplate) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneMobileResidents = append(o.r.PhoneMobileResidents, &commsPhoneRPhoneMobileResidentsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsPhoneMods) AddNewPhoneMobileResidents(number int, mods ...ResidentMod) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.AddPhoneMobileResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsPhoneMods) AddExistingPhoneMobileResidents(existingModels ...*models.Resident) CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		for _, em := range existingModels {
+			o.r.PhoneMobileResidents = append(o.r.PhoneMobileResidents, &commsPhoneRPhoneMobileResidentsR{
+				o: o.f.FromExistingResident(em),
+			})
+		}
+	})
+}
+
+func (m commsPhoneMods) WithoutPhoneMobileResidents() CommsPhoneMod {
+	return CommsPhoneModFunc(func(ctx context.Context, o *CommsPhoneTemplate) {
+		o.r.PhoneMobileResidents = nil
 	})
 }

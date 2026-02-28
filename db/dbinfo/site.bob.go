@@ -96,18 +96,18 @@ var Sites = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ResidentOwned: column{
-			Name:      "resident_owned",
-			DBType:    "boolean",
-			Default:   "NULL",
+		ParcelID: column{
+			Name:      "parcel_id",
+			DBType:    "integer",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
-		ResidentPhoneE164: column{
-			Name:      "resident_phone_e164",
-			DBType:    "text",
+		ResidentOwned: column{
+			Name:      "resident_owned",
+			DBType:    "boolean",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -207,6 +207,15 @@ var Sites = Table[
 			ForeignTable:   "fileupload.file",
 			ForeignColumns: []string{"id"},
 		},
+		SiteSiteParcelIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "site.site_parcel_id_fkey",
+				Columns: []string{"parcel_id"},
+				Comment: "",
+			},
+			ForeignTable:   "parcel",
+			ForeignColumns: []string{"id"},
+		},
 	},
 	Uniques: siteUniques{
 		SiteAddressIDKey: constraint{
@@ -220,24 +229,24 @@ var Sites = Table[
 }
 
 type siteColumns struct {
-	AddressID         column
-	Created           column
-	CreatorID         column
-	FileID            column
-	ID                column
-	Notes             column
-	OrganizationID    column
-	OwnerName         column
-	OwnerPhoneE164    column
-	ResidentOwned     column
-	ResidentPhoneE164 column
-	Tags              column
-	Version           column
+	AddressID      column
+	Created        column
+	CreatorID      column
+	FileID         column
+	ID             column
+	Notes          column
+	OrganizationID column
+	OwnerName      column
+	OwnerPhoneE164 column
+	ParcelID       column
+	ResidentOwned  column
+	Tags           column
+	Version        column
 }
 
 func (c siteColumns) AsSlice() []column {
 	return []column{
-		c.AddressID, c.Created, c.CreatorID, c.FileID, c.ID, c.Notes, c.OrganizationID, c.OwnerName, c.OwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.Tags, c.Version,
+		c.AddressID, c.Created, c.CreatorID, c.FileID, c.ID, c.Notes, c.OrganizationID, c.OwnerName, c.OwnerPhoneE164, c.ParcelID, c.ResidentOwned, c.Tags, c.Version,
 	}
 }
 
@@ -256,11 +265,12 @@ type siteForeignKeys struct {
 	SiteSiteAddressIDFkey foreignKey
 	SiteSiteCreatorIDFkey foreignKey
 	SiteSiteFileIDFkey    foreignKey
+	SiteSiteParcelIDFkey  foreignKey
 }
 
 func (f siteForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.SiteSiteAddressIDFkey, f.SiteSiteCreatorIDFkey, f.SiteSiteFileIDFkey,
+		f.SiteSiteAddressIDFkey, f.SiteSiteCreatorIDFkey, f.SiteSiteFileIDFkey, f.SiteSiteParcelIDFkey,
 	}
 }
 

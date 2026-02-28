@@ -38,19 +38,19 @@ func (mods SiteModSlice) Apply(ctx context.Context, n *SiteTemplate) {
 // SiteTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type SiteTemplate struct {
-	AddressID         func() int32
-	Created           func() time.Time
-	CreatorID         func() int32
-	FileID            func() null.Val[int32]
-	ID                func() int32
-	Notes             func() string
-	OrganizationID    func() int32
-	OwnerName         func() string
-	OwnerPhoneE164    func() null.Val[string]
-	ResidentOwned     func() null.Val[bool]
-	ResidentPhoneE164 func() null.Val[string]
-	Tags              func() pgtypes.HStore
-	Version           func() int32
+	AddressID      func() int32
+	Created        func() time.Time
+	CreatorID      func() int32
+	FileID         func() null.Val[int32]
+	ID             func() int32
+	Notes          func() string
+	OrganizationID func() int32
+	OwnerName      func() string
+	OwnerPhoneE164 func() null.Val[string]
+	ParcelID       func() int32
+	ResidentOwned  func() null.Val[bool]
+	Tags           func() pgtypes.HStore
+	Version        func() int32
 
 	r siteR
 	f *Factory
@@ -59,11 +59,27 @@ type SiteTemplate struct {
 }
 
 type siteR struct {
-	Address     *siteRAddressR
-	CreatorUser *siteRCreatorUserR
-	File        *siteRFileR
+	ComplianceReportRequests []*siteRComplianceReportRequestsR
+	Pools                    []*siteRPoolsR
+	Residents                []*siteRResidentsR
+	Address                  *siteRAddressR
+	CreatorUser              *siteRCreatorUserR
+	File                     *siteRFileR
+	Parcel                   *siteRParcelR
 }
 
+type siteRComplianceReportRequestsR struct {
+	number int
+	o      *ComplianceReportRequestTemplate
+}
+type siteRPoolsR struct {
+	number int
+	o      *PoolTemplate
+}
+type siteRResidentsR struct {
+	number int
+	o      *ResidentTemplate
+}
 type siteRAddressR struct {
 	o *AddressTemplate
 }
@@ -72,6 +88,9 @@ type siteRCreatorUserR struct {
 }
 type siteRFileR struct {
 	o *FileuploadFileTemplate
+}
+type siteRParcelR struct {
+	o *ParcelTemplate
 }
 
 // Apply mods to the SiteTemplate
@@ -84,6 +103,48 @@ func (o *SiteTemplate) Apply(ctx context.Context, mods ...SiteMod) {
 // setModelRels creates and sets the relationships on *models.Site
 // according to the relationships in the template. Nothing is inserted into the db
 func (t SiteTemplate) setModelRels(o *models.Site) {
+	if t.r.ComplianceReportRequests != nil {
+		rel := models.ComplianceReportRequestSlice{}
+		for _, r := range t.r.ComplianceReportRequests {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.SiteID = o.ID           // h2
+				rel.SiteVersion = o.Version // h2
+				rel.R.Site = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.ComplianceReportRequests = rel
+	}
+
+	if t.r.Pools != nil {
+		rel := models.PoolSlice{}
+		for _, r := range t.r.Pools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.SiteID = o.ID           // h2
+				rel.SiteVersion = o.Version // h2
+				rel.R.Site = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Pools = rel
+	}
+
+	if t.r.Residents != nil {
+		rel := models.ResidentSlice{}
+		for _, r := range t.r.Residents {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.SiteID = o.ID           // h2
+				rel.SiteVersion = o.Version // h2
+				rel.R.Site = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Residents = rel
+	}
+
 	if t.r.Address != nil {
 		rel := t.r.Address.o.Build()
 		rel.R.Site = o
@@ -103,6 +164,13 @@ func (t SiteTemplate) setModelRels(o *models.Site) {
 		rel.R.Sites = append(rel.R.Sites, o)
 		o.FileID = null.From(rel.ID) // h2
 		o.R.File = rel
+	}
+
+	if t.r.Parcel != nil {
+		rel := t.r.Parcel.o.Build()
+		rel.R.Sites = append(rel.R.Sites, o)
+		o.ParcelID = rel.ID // h2
+		o.R.Parcel = rel
 	}
 }
 
@@ -147,13 +215,13 @@ func (o SiteTemplate) BuildSetter() *models.SiteSetter {
 		val := o.OwnerPhoneE164()
 		m.OwnerPhoneE164 = omitnull.FromNull(val)
 	}
+	if o.ParcelID != nil {
+		val := o.ParcelID()
+		m.ParcelID = omit.From(val)
+	}
 	if o.ResidentOwned != nil {
 		val := o.ResidentOwned()
 		m.ResidentOwned = omitnull.FromNull(val)
-	}
-	if o.ResidentPhoneE164 != nil {
-		val := o.ResidentPhoneE164()
-		m.ResidentPhoneE164 = omitnull.FromNull(val)
 	}
 	if o.Tags != nil {
 		val := o.Tags()
@@ -212,11 +280,11 @@ func (o SiteTemplate) Build() *models.Site {
 	if o.OwnerPhoneE164 != nil {
 		m.OwnerPhoneE164 = o.OwnerPhoneE164()
 	}
+	if o.ParcelID != nil {
+		m.ParcelID = o.ParcelID()
+	}
 	if o.ResidentOwned != nil {
 		m.ResidentOwned = o.ResidentOwned()
-	}
-	if o.ResidentPhoneE164 != nil {
-		m.ResidentPhoneE164 = o.ResidentPhoneE164()
 	}
 	if o.Tags != nil {
 		m.Tags = o.Tags()
@@ -268,6 +336,10 @@ func ensureCreatableSite(m *models.SiteSetter) {
 		val := random_string(nil)
 		m.OwnerName = omit.From(val)
 	}
+	if !(m.ParcelID.IsValue()) {
+		val := random_int32(nil)
+		m.ParcelID = omit.From(val)
+	}
 	if !(m.Tags.IsValue()) {
 		val := random_pgtypes_HStore(nil)
 		m.Tags = omit.From(val)
@@ -284,18 +356,78 @@ func ensureCreatableSite(m *models.SiteSetter) {
 func (o *SiteTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Site) error {
 	var err error
 
+	isComplianceReportRequestsDone, _ := siteRelComplianceReportRequestsCtx.Value(ctx)
+	if !isComplianceReportRequestsDone && o.r.ComplianceReportRequests != nil {
+		ctx = siteRelComplianceReportRequestsCtx.WithValue(ctx, true)
+		for _, r := range o.r.ComplianceReportRequests {
+			if r.o.alreadyPersisted {
+				m.R.ComplianceReportRequests = append(m.R.ComplianceReportRequests, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachComplianceReportRequests(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isPoolsDone, _ := siteRelPoolsCtx.Value(ctx)
+	if !isPoolsDone && o.r.Pools != nil {
+		ctx = siteRelPoolsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Pools {
+			if r.o.alreadyPersisted {
+				m.R.Pools = append(m.R.Pools, r.o.Build())
+			} else {
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachPools(ctx, exec, rel1...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isResidentsDone, _ := siteRelResidentsCtx.Value(ctx)
+	if !isResidentsDone && o.r.Residents != nil {
+		ctx = siteRelResidentsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Residents {
+			if r.o.alreadyPersisted {
+				m.R.Residents = append(m.R.Residents, r.o.Build())
+			} else {
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachResidents(ctx, exec, rel2...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isFileDone, _ := siteRelFileCtx.Value(ctx)
 	if !isFileDone && o.r.File != nil {
 		ctx = siteRelFileCtx.WithValue(ctx, true)
 		if o.r.File.o.alreadyPersisted {
 			m.R.File = o.r.File.o.Build()
 		} else {
-			var rel2 *models.FileuploadFile
-			rel2, err = o.r.File.o.Create(ctx, exec)
+			var rel5 *models.FileuploadFile
+			rel5, err = o.r.File.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachFile(ctx, exec, rel2)
+			err = m.AttachFile(ctx, exec, rel5)
 			if err != nil {
 				return err
 			}
@@ -317,43 +449,61 @@ func (o *SiteTemplate) Create(ctx context.Context, exec bob.Executor) (*models.S
 		SiteMods.WithNewAddress().Apply(ctx, o)
 	}
 
-	var rel0 *models.Address
+	var rel3 *models.Address
 
 	if o.r.Address.o.alreadyPersisted {
-		rel0 = o.r.Address.o.Build()
+		rel3 = o.r.Address.o.Build()
 	} else {
-		rel0, err = o.r.Address.o.Create(ctx, exec)
+		rel3, err = o.r.Address.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.AddressID = omit.From(rel0.ID)
+	opt.AddressID = omit.From(rel3.ID)
 
 	if o.r.CreatorUser == nil {
 		SiteMods.WithNewCreatorUser().Apply(ctx, o)
 	}
 
-	var rel1 *models.User
+	var rel4 *models.User
 
 	if o.r.CreatorUser.o.alreadyPersisted {
-		rel1 = o.r.CreatorUser.o.Build()
+		rel4 = o.r.CreatorUser.o.Build()
 	} else {
-		rel1, err = o.r.CreatorUser.o.Create(ctx, exec)
+		rel4, err = o.r.CreatorUser.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.CreatorID = omit.From(rel1.ID)
+	opt.CreatorID = omit.From(rel4.ID)
+
+	if o.r.Parcel == nil {
+		SiteMods.WithNewParcel().Apply(ctx, o)
+	}
+
+	var rel6 *models.Parcel
+
+	if o.r.Parcel.o.alreadyPersisted {
+		rel6 = o.r.Parcel.o.Build()
+	} else {
+		rel6, err = o.r.Parcel.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.ParcelID = omit.From(rel6.ID)
 
 	m, err := models.Sites.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Address = rel0
-	m.R.CreatorUser = rel1
+	m.R.Address = rel3
+	m.R.CreatorUser = rel4
+	m.R.Parcel = rel6
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -441,8 +591,8 @@ func (m siteMods) RandomizeAllColumns(f *faker.Faker) SiteMod {
 		SiteMods.RandomOrganizationID(f),
 		SiteMods.RandomOwnerName(f),
 		SiteMods.RandomOwnerPhoneE164(f),
+		SiteMods.RandomParcelID(f),
 		SiteMods.RandomResidentOwned(f),
-		SiteMods.RandomResidentPhoneE164(f),
 		SiteMods.RandomTags(f),
 		SiteMods.RandomVersion(f),
 	}
@@ -772,6 +922,37 @@ func (m siteMods) RandomOwnerPhoneE164NotNull(f *faker.Faker) SiteMod {
 }
 
 // Set the model columns to this value
+func (m siteMods) ParcelID(val int32) SiteMod {
+	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
+		o.ParcelID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m siteMods) ParcelIDFunc(f func() int32) SiteMod {
+	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
+		o.ParcelID = f
+	})
+}
+
+// Clear any values for the column
+func (m siteMods) UnsetParcelID() SiteMod {
+	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
+		o.ParcelID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m siteMods) RandomParcelID(f *faker.Faker) SiteMod {
+	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
+		o.ParcelID = func() int32 {
+			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
 func (m siteMods) ResidentOwned(val null.Val[bool]) SiteMod {
 	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
 		o.ResidentOwned = func() null.Val[bool] { return val }
@@ -819,59 +1000,6 @@ func (m siteMods) RandomResidentOwnedNotNull(f *faker.Faker) SiteMod {
 			}
 
 			val := random_bool(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m siteMods) ResidentPhoneE164(val null.Val[string]) SiteMod {
-	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ResidentPhoneE164 = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m siteMods) ResidentPhoneE164Func(f func() null.Val[string]) SiteMod {
-	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ResidentPhoneE164 = f
-	})
-}
-
-// Clear any values for the column
-func (m siteMods) UnsetResidentPhoneE164() SiteMod {
-	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ResidentPhoneE164 = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m siteMods) RandomResidentPhoneE164(f *faker.Faker) SiteMod {
-	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ResidentPhoneE164 = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m siteMods) RandomResidentPhoneE164NotNull(f *faker.Faker) SiteMod {
-	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ResidentPhoneE164 = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
 			return null.From(val)
 		}
 	})
@@ -959,6 +1087,11 @@ func (m siteMods) WithParentsCascading() SiteMod {
 
 			related := o.f.NewFileuploadFileWithContext(ctx, FileuploadFileMods.WithParentsCascading())
 			m.WithFile(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewParcelWithContext(ctx, ParcelMods.WithParentsCascading())
+			m.WithParcel(related).Apply(ctx, o)
 		}
 	})
 }
@@ -1050,5 +1183,179 @@ func (m siteMods) WithExistingFile(em *models.FileuploadFile) SiteMod {
 func (m siteMods) WithoutFile() SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
 		o.r.File = nil
+	})
+}
+
+func (m siteMods) WithParcel(rel *ParcelTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Parcel = &siteRParcelR{
+			o: rel,
+		}
+	})
+}
+
+func (m siteMods) WithNewParcel(mods ...ParcelMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewParcelWithContext(ctx, mods...)
+
+		m.WithParcel(related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) WithExistingParcel(em *models.Parcel) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Parcel = &siteRParcelR{
+			o: o.f.FromExistingParcel(em),
+		}
+	})
+}
+
+func (m siteMods) WithoutParcel() SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Parcel = nil
+	})
+}
+
+func (m siteMods) WithComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.ComplianceReportRequests = []*siteRComplianceReportRequestsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m siteMods) WithNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.WithComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &siteRComplianceReportRequestsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m siteMods) AddNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.AddComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddExistingComplianceReportRequests(existingModels ...*models.ComplianceReportRequest) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		for _, em := range existingModels {
+			o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &siteRComplianceReportRequestsR{
+				o: o.f.FromExistingComplianceReportRequest(em),
+			})
+		}
+	})
+}
+
+func (m siteMods) WithoutComplianceReportRequests() SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.ComplianceReportRequests = nil
+	})
+}
+
+func (m siteMods) WithPools(number int, related *PoolTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Pools = []*siteRPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m siteMods) WithNewPools(number int, mods ...PoolMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.WithPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddPools(number int, related *PoolTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Pools = append(o.r.Pools, &siteRPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m siteMods) AddNewPools(number int, mods ...PoolMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewPoolWithContext(ctx, mods...)
+		m.AddPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddExistingPools(existingModels ...*models.Pool) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		for _, em := range existingModels {
+			o.r.Pools = append(o.r.Pools, &siteRPoolsR{
+				o: o.f.FromExistingPool(em),
+			})
+		}
+	})
+}
+
+func (m siteMods) WithoutPools() SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Pools = nil
+	})
+}
+
+func (m siteMods) WithResidents(number int, related *ResidentTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Residents = []*siteRResidentsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m siteMods) WithNewResidents(number int, mods ...ResidentMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.WithResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddResidents(number int, related *ResidentTemplate) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Residents = append(o.r.Residents, &siteRResidentsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m siteMods) AddNewResidents(number int, mods ...ResidentMod) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.AddResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m siteMods) AddExistingResidents(existingModels ...*models.Resident) SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		for _, em := range existingModels {
+			o.r.Residents = append(o.r.Residents, &siteRResidentsR{
+				o: o.f.FromExistingResident(em),
+			})
+		}
+	})
+}
+
+func (m siteMods) WithoutResidents() SiteMod {
+	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
+		o.r.Residents = nil
 	})
 }

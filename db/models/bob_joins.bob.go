@@ -33,11 +33,14 @@ func (j joinSet[Q]) AliasedAs(alias string) joinSet[Q] {
 
 type joins[Q dialect.Joinable] struct {
 	Addresses                          joinSet[addressJoins[Q]]
+	ArcgisAccounts                     joinSet[arcgisAccountJoins[Q]]
 	ArcgisAddressMappings              joinSet[arcgisAddressMappingJoins[Q]]
-	ArcgisFeatureServices              joinSet[arcgisFeatureServiceJoins[Q]]
 	ArcgisLayers                       joinSet[arcgisLayerJoins[Q]]
 	ArcgisLayerFields                  joinSet[arcgisLayerFieldJoins[Q]]
+	ArcgisOauthTokens                  joinSet[arcgisOauthTokenJoins[Q]]
 	ArcgisParcelMappings               joinSet[arcgisParcelMappingJoins[Q]]
+	ArcgisServiceFeatures              joinSet[arcgisServiceFeatureJoins[Q]]
+	ArcgisServiceMaps                  joinSet[arcgisServiceMapJoins[Q]]
 	ArcgisUsers                        joinSet[arcgisuserJoins[Q]]
 	ArcgisUserPrivileges               joinSet[arcgisUserPrivilegeJoins[Q]]
 	CommsEmailContacts                 joinSet[commsEmailContactJoins[Q]]
@@ -46,6 +49,7 @@ type joins[Q dialect.Joinable] struct {
 	CommsPhones                        joinSet[commsPhoneJoins[Q]]
 	CommsTextJobs                      joinSet[commsTextJobJoins[Q]]
 	CommsTextLogs                      joinSet[commsTextLogJoins[Q]]
+	ComplianceReportRequests           joinSet[complianceReportRequestJoins[Q]]
 	DistrictSubscriptionEmails         joinSet[districtSubscriptionEmailJoins[Q]]
 	DistrictSubscriptionPhones         joinSet[districtSubscriptionPhoneJoins[Q]]
 	FieldseekerContainerrelates        joinSet[fieldseekerContainerrelateJoins[Q]]
@@ -89,8 +93,8 @@ type joins[Q dialect.Joinable] struct {
 	NoteImageBreadcrumbs               joinSet[noteImageBreadcrumbJoins[Q]]
 	NoteImageData                      joinSet[noteImageDatumJoins[Q]]
 	Notifications                      joinSet[notificationJoins[Q]]
-	OauthTokens                        joinSet[oauthTokenJoins[Q]]
 	Organizations                      joinSet[organizationJoins[Q]]
+	Parcels                            joinSet[parcelJoins[Q]]
 	Pools                              joinSet[poolJoins[Q]]
 	PublicreportImages                 joinSet[publicreportImageJoins[Q]]
 	PublicreportImageExifs             joinSet[publicreportImageExifJoins[Q]]
@@ -106,6 +110,7 @@ type joins[Q dialect.Joinable] struct {
 	PublicreportQuickImages            joinSet[publicreportQuickImageJoins[Q]]
 	PublicreportSubscribeEmails        joinSet[publicreportSubscribeEmailJoins[Q]]
 	PublicreportSubscribePhones        joinSet[publicreportSubscribePhoneJoins[Q]]
+	Residents                          joinSet[residentJoins[Q]]
 	Sites                              joinSet[siteJoins[Q]]
 	Users                              joinSet[userJoins[Q]]
 }
@@ -121,11 +126,14 @@ func buildJoinSet[Q interface{ aliasedAs(string) Q }, C any, F func(C, string) Q
 func getJoins[Q dialect.Joinable]() joins[Q] {
 	return joins[Q]{
 		Addresses:                          buildJoinSet[addressJoins[Q]](Addresses.Columns, buildAddressJoins),
+		ArcgisAccounts:                     buildJoinSet[arcgisAccountJoins[Q]](ArcgisAccounts.Columns, buildArcgisAccountJoins),
 		ArcgisAddressMappings:              buildJoinSet[arcgisAddressMappingJoins[Q]](ArcgisAddressMappings.Columns, buildArcgisAddressMappingJoins),
-		ArcgisFeatureServices:              buildJoinSet[arcgisFeatureServiceJoins[Q]](ArcgisFeatureServices.Columns, buildArcgisFeatureServiceJoins),
 		ArcgisLayers:                       buildJoinSet[arcgisLayerJoins[Q]](ArcgisLayers.Columns, buildArcgisLayerJoins),
 		ArcgisLayerFields:                  buildJoinSet[arcgisLayerFieldJoins[Q]](ArcgisLayerFields.Columns, buildArcgisLayerFieldJoins),
+		ArcgisOauthTokens:                  buildJoinSet[arcgisOauthTokenJoins[Q]](ArcgisOauthTokens.Columns, buildArcgisOauthTokenJoins),
 		ArcgisParcelMappings:               buildJoinSet[arcgisParcelMappingJoins[Q]](ArcgisParcelMappings.Columns, buildArcgisParcelMappingJoins),
+		ArcgisServiceFeatures:              buildJoinSet[arcgisServiceFeatureJoins[Q]](ArcgisServiceFeatures.Columns, buildArcgisServiceFeatureJoins),
+		ArcgisServiceMaps:                  buildJoinSet[arcgisServiceMapJoins[Q]](ArcgisServiceMaps.Columns, buildArcgisServiceMapJoins),
 		ArcgisUsers:                        buildJoinSet[arcgisuserJoins[Q]](ArcgisUsers.Columns, buildArcgisUserJoins),
 		ArcgisUserPrivileges:               buildJoinSet[arcgisUserPrivilegeJoins[Q]](ArcgisUserPrivileges.Columns, buildArcgisUserPrivilegeJoins),
 		CommsEmailContacts:                 buildJoinSet[commsEmailContactJoins[Q]](CommsEmailContacts.Columns, buildCommsEmailContactJoins),
@@ -134,6 +142,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		CommsPhones:                        buildJoinSet[commsPhoneJoins[Q]](CommsPhones.Columns, buildCommsPhoneJoins),
 		CommsTextJobs:                      buildJoinSet[commsTextJobJoins[Q]](CommsTextJobs.Columns, buildCommsTextJobJoins),
 		CommsTextLogs:                      buildJoinSet[commsTextLogJoins[Q]](CommsTextLogs.Columns, buildCommsTextLogJoins),
+		ComplianceReportRequests:           buildJoinSet[complianceReportRequestJoins[Q]](ComplianceReportRequests.Columns, buildComplianceReportRequestJoins),
 		DistrictSubscriptionEmails:         buildJoinSet[districtSubscriptionEmailJoins[Q]](DistrictSubscriptionEmails.Columns, buildDistrictSubscriptionEmailJoins),
 		DistrictSubscriptionPhones:         buildJoinSet[districtSubscriptionPhoneJoins[Q]](DistrictSubscriptionPhones.Columns, buildDistrictSubscriptionPhoneJoins),
 		FieldseekerContainerrelates:        buildJoinSet[fieldseekerContainerrelateJoins[Q]](FieldseekerContainerrelates.Columns, buildFieldseekerContainerrelateJoins),
@@ -177,8 +186,8 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		NoteImageBreadcrumbs:               buildJoinSet[noteImageBreadcrumbJoins[Q]](NoteImageBreadcrumbs.Columns, buildNoteImageBreadcrumbJoins),
 		NoteImageData:                      buildJoinSet[noteImageDatumJoins[Q]](NoteImageData.Columns, buildNoteImageDatumJoins),
 		Notifications:                      buildJoinSet[notificationJoins[Q]](Notifications.Columns, buildNotificationJoins),
-		OauthTokens:                        buildJoinSet[oauthTokenJoins[Q]](OauthTokens.Columns, buildOauthTokenJoins),
 		Organizations:                      buildJoinSet[organizationJoins[Q]](Organizations.Columns, buildOrganizationJoins),
+		Parcels:                            buildJoinSet[parcelJoins[Q]](Parcels.Columns, buildParcelJoins),
 		Pools:                              buildJoinSet[poolJoins[Q]](Pools.Columns, buildPoolJoins),
 		PublicreportImages:                 buildJoinSet[publicreportImageJoins[Q]](PublicreportImages.Columns, buildPublicreportImageJoins),
 		PublicreportImageExifs:             buildJoinSet[publicreportImageExifJoins[Q]](PublicreportImageExifs.Columns, buildPublicreportImageExifJoins),
@@ -194,6 +203,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		PublicreportQuickImages:            buildJoinSet[publicreportQuickImageJoins[Q]](PublicreportQuickImages.Columns, buildPublicreportQuickImageJoins),
 		PublicreportSubscribeEmails:        buildJoinSet[publicreportSubscribeEmailJoins[Q]](PublicreportSubscribeEmails.Columns, buildPublicreportSubscribeEmailJoins),
 		PublicreportSubscribePhones:        buildJoinSet[publicreportSubscribePhoneJoins[Q]](PublicreportSubscribePhones.Columns, buildPublicreportSubscribePhoneJoins),
+		Residents:                          buildJoinSet[residentJoins[Q]](Residents.Columns, buildResidentJoins),
 		Sites:                              buildJoinSet[siteJoins[Q]](Sites.Columns, buildSiteJoins),
 		Users:                              buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}

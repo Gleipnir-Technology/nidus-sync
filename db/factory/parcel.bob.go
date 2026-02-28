@@ -9,7 +9,9 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -34,14 +36,24 @@ func (mods ParcelModSlice) Apply(ctx context.Context, n *ParcelTemplate) {
 // ParcelTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type ParcelTemplate struct {
-	Apn         func() string
-	Description func() string
+	Apn         func() null.Val[string]
+	Description func() null.Val[string]
 	ID          func() int32
 	Geometry    func() string
 
+	r parcelR
 	f *Factory
 
 	alreadyPersisted bool
+}
+
+type parcelR struct {
+	Sites []*parcelRSitesR
+}
+
+type parcelRSitesR struct {
+	number int
+	o      *SiteTemplate
 }
 
 // Apply mods to the ParcelTemplate
@@ -53,7 +65,20 @@ func (o *ParcelTemplate) Apply(ctx context.Context, mods ...ParcelMod) {
 
 // setModelRels creates and sets the relationships on *models.Parcel
 // according to the relationships in the template. Nothing is inserted into the db
-func (t ParcelTemplate) setModelRels(o *models.Parcel) {}
+func (t ParcelTemplate) setModelRels(o *models.Parcel) {
+	if t.r.Sites != nil {
+		rel := models.SiteSlice{}
+		for _, r := range t.r.Sites {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.ParcelID = o.ID // h2
+				rel.R.Parcel = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Sites = rel
+	}
+}
 
 // BuildSetter returns an *models.ParcelSetter
 // this does nothing with the relationship templates
@@ -62,11 +87,11 @@ func (o ParcelTemplate) BuildSetter() *models.ParcelSetter {
 
 	if o.Apn != nil {
 		val := o.Apn()
-		m.Apn = omit.From(val)
+		m.Apn = omitnull.FromNull(val)
 	}
 	if o.Description != nil {
 		val := o.Description()
-		m.Description = omit.From(val)
+		m.Description = omitnull.FromNull(val)
 	}
 	if o.ID != nil {
 		val := o.ID()
@@ -130,14 +155,6 @@ func (o ParcelTemplate) BuildMany(number int) models.ParcelSlice {
 }
 
 func ensureCreatableParcel(m *models.ParcelSetter) {
-	if !(m.Apn.IsValue()) {
-		val := random_string(nil)
-		m.Apn = omit.From(val)
-	}
-	if !(m.Description.IsValue()) {
-		val := random_string(nil)
-		m.Description = omit.From(val)
-	}
 	if !(m.Geometry.IsValue()) {
 		val := random_string(nil)
 		m.Geometry = omit.From(val)
@@ -149,6 +166,26 @@ func ensureCreatableParcel(m *models.ParcelSetter) {
 // any required relationship should have already exist on the model
 func (o *ParcelTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Parcel) error {
 	var err error
+
+	isSitesDone, _ := parcelRelSitesCtx.Value(ctx)
+	if !isSitesDone && o.r.Sites != nil {
+		ctx = parcelRelSitesCtx.WithValue(ctx, true)
+		for _, r := range o.r.Sites {
+			if r.o.alreadyPersisted {
+				m.R.Sites = append(m.R.Sites, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachSites(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 
 	return err
 }
@@ -250,14 +287,14 @@ func (m parcelMods) RandomizeAllColumns(f *faker.Faker) ParcelMod {
 }
 
 // Set the model columns to this value
-func (m parcelMods) Apn(val string) ParcelMod {
+func (m parcelMods) Apn(val null.Val[string]) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
-		o.Apn = func() string { return val }
+		o.Apn = func() null.Val[string] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m parcelMods) ApnFunc(f func() string) ParcelMod {
+func (m parcelMods) ApnFunc(f func() null.Val[string]) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
 		o.Apn = f
 	})
@@ -272,23 +309,45 @@ func (m parcelMods) UnsetApn() ParcelMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m parcelMods) RandomApn(f *faker.Faker) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
-		o.Apn = func() string {
-			return random_string(f)
+		o.Apn = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m parcelMods) RandomApnNotNull(f *faker.Faker) ParcelMod {
+	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
+		o.Apn = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
 
 // Set the model columns to this value
-func (m parcelMods) Description(val string) ParcelMod {
+func (m parcelMods) Description(val null.Val[string]) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
-		o.Description = func() string { return val }
+		o.Description = func() null.Val[string] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m parcelMods) DescriptionFunc(f func() string) ParcelMod {
+func (m parcelMods) DescriptionFunc(f func() null.Val[string]) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
 		o.Description = f
 	})
@@ -303,10 +362,32 @@ func (m parcelMods) UnsetDescription() ParcelMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m parcelMods) RandomDescription(f *faker.Faker) ParcelMod {
 	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
-		o.Description = func() string {
-			return random_string(f)
+		o.Description = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m parcelMods) RandomDescriptionNotNull(f *faker.Faker) ParcelMod {
+	return ParcelModFunc(func(_ context.Context, o *ParcelTemplate) {
+		o.Description = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }
@@ -379,5 +460,53 @@ func (m parcelMods) WithParentsCascading() ParcelMod {
 			return
 		}
 		ctx = parcelWithParentsCascadingCtx.WithValue(ctx, true)
+	})
+}
+
+func (m parcelMods) WithSites(number int, related *SiteTemplate) ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		o.r.Sites = []*parcelRSitesR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m parcelMods) WithNewSites(number int, mods ...SiteMod) ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.WithSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m parcelMods) AddSites(number int, related *SiteTemplate) ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		o.r.Sites = append(o.r.Sites, &parcelRSitesR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m parcelMods) AddNewSites(number int, mods ...SiteMod) ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		related := o.f.NewSiteWithContext(ctx, mods...)
+		m.AddSites(number, related).Apply(ctx, o)
+	})
+}
+
+func (m parcelMods) AddExistingSites(existingModels ...*models.Site) ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		for _, em := range existingModels {
+			o.r.Sites = append(o.r.Sites, &parcelRSitesR{
+				o: o.f.FromExistingSite(em),
+			})
+		}
+	})
+}
+
+func (m parcelMods) WithoutSites() ParcelMod {
+	return ParcelModFunc(func(ctx context.Context, o *ParcelTemplate) {
+		o.r.Sites = nil
 	})
 }

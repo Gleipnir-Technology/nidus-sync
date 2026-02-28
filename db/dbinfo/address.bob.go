@@ -124,9 +124,9 @@ var Addresses = Table[
 			Where:         "",
 			Include:       []string{},
 		},
-		AddressCountryLocalityNumberStreetKey: index{
+		AddressCountryLocalityUnitNumberStreetKey: index{
 			Type: "btree",
-			Name: "address_country_locality_number__street_key",
+			Name: "address_country_locality_unit_number__street_key",
 			Columns: []indexColumn{
 				{
 					Name:         "country",
@@ -135,6 +135,11 @@ var Addresses = Table[
 				},
 				{
 					Name:         "locality",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+				{
+					Name:         "unit",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -151,7 +156,7 @@ var Addresses = Table[
 			},
 			Unique:        true,
 			Comment:       "",
-			NullsFirst:    []bool{false, false, false, false},
+			NullsFirst:    []bool{false, false, false, false, false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -164,9 +169,9 @@ var Addresses = Table[
 	},
 
 	Uniques: addressUniques{
-		AddressCountryLocalityNumberStreetKey: constraint{
-			Name:    "address_country_locality_number__street_key",
-			Columns: []string{"country", "locality", "number_", "street"},
+		AddressCountryLocalityUnitNumberStreetKey: constraint{
+			Name:    "address_country_locality_unit_number__street_key",
+			Columns: []string{"country", "locality", "unit", "number_", "street"},
 			Comment: "",
 		},
 	},
@@ -194,13 +199,13 @@ func (c addressColumns) AsSlice() []column {
 }
 
 type addressIndexes struct {
-	AddressPkey                           index
-	AddressCountryLocalityNumberStreetKey index
+	AddressPkey                               index
+	AddressCountryLocalityUnitNumberStreetKey index
 }
 
 func (i addressIndexes) AsSlice() []index {
 	return []index{
-		i.AddressPkey, i.AddressCountryLocalityNumberStreetKey,
+		i.AddressPkey, i.AddressCountryLocalityUnitNumberStreetKey,
 	}
 }
 
@@ -211,12 +216,12 @@ func (f addressForeignKeys) AsSlice() []foreignKey {
 }
 
 type addressUniques struct {
-	AddressCountryLocalityNumberStreetKey constraint
+	AddressCountryLocalityUnitNumberStreetKey constraint
 }
 
 func (u addressUniques) AsSlice() []constraint {
 	return []constraint{
-		u.AddressCountryLocalityNumberStreetKey,
+		u.AddressCountryLocalityUnitNumberStreetKey,
 	}
 }
 

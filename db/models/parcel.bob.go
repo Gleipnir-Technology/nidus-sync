@@ -5,6 +5,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -14,15 +15,24 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
+	"github.com/Gleipnir-Technology/bob/mods"
+	"github.com/Gleipnir-Technology/bob/orm"
+	"github.com/Gleipnir-Technology/bob/types/pgtypes"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // Parcel is an object representing the database table.
 type Parcel struct {
-	Apn         string `db:"apn" `
-	Description string `db:"description" `
-	ID          int32  `db:"id,pk" `
-	Geometry    string `db:"geometry" `
+	Apn         null.Val[string] `db:"apn" `
+	Description null.Val[string] `db:"description" `
+	ID          int32            `db:"id,pk" `
+	Geometry    string           `db:"geometry" `
+
+	R parcelR `db:"-" `
+
+	C parcelC `db:"-" `
 }
 
 // ParcelSlice is an alias for a slice of pointers to Parcel.
@@ -34,6 +44,11 @@ var Parcels = psql.NewTablex[*Parcel, ParcelSlice, *ParcelSetter]("", "parcel", 
 
 // ParcelsQuery is a query on the parcel table
 type ParcelsQuery = *psql.ViewQuery[*Parcel, ParcelSlice]
+
+// parcelR is where relationships are stored.
+type parcelR struct {
+	Sites SiteSlice // site.site_parcel_id_fkey
+}
 
 func buildParcelColumns(alias string) parcelColumns {
 	return parcelColumns{
@@ -69,18 +84,18 @@ func (parcelColumns) AliasedAs(alias string) parcelColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type ParcelSetter struct {
-	Apn         omit.Val[string] `db:"apn" `
-	Description omit.Val[string] `db:"description" `
-	ID          omit.Val[int32]  `db:"id,pk" `
-	Geometry    omit.Val[string] `db:"geometry" `
+	Apn         omitnull.Val[string] `db:"apn" `
+	Description omitnull.Val[string] `db:"description" `
+	ID          omit.Val[int32]      `db:"id,pk" `
+	Geometry    omit.Val[string]     `db:"geometry" `
 }
 
 func (s ParcelSetter) SetColumns() []string {
 	vals := make([]string, 0, 4)
-	if s.Apn.IsValue() {
+	if !s.Apn.IsUnset() {
 		vals = append(vals, "apn")
 	}
-	if s.Description.IsValue() {
+	if !s.Description.IsUnset() {
 		vals = append(vals, "description")
 	}
 	if s.ID.IsValue() {
@@ -93,11 +108,11 @@ func (s ParcelSetter) SetColumns() []string {
 }
 
 func (s ParcelSetter) Overwrite(t *Parcel) {
-	if s.Apn.IsValue() {
-		t.Apn = s.Apn.MustGet()
+	if !s.Apn.IsUnset() {
+		t.Apn = s.Apn.MustGetNull()
 	}
-	if s.Description.IsValue() {
-		t.Description = s.Description.MustGet()
+	if !s.Description.IsUnset() {
+		t.Description = s.Description.MustGetNull()
 	}
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
@@ -114,14 +129,14 @@ func (s *ParcelSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 4)
-		if s.Apn.IsValue() {
-			vals[0] = psql.Arg(s.Apn.MustGet())
+		if !s.Apn.IsUnset() {
+			vals[0] = psql.Arg(s.Apn.MustGetNull())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.Description.IsValue() {
-			vals[1] = psql.Arg(s.Description.MustGet())
+		if !s.Description.IsUnset() {
+			vals[1] = psql.Arg(s.Description.MustGetNull())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
@@ -149,14 +164,14 @@ func (s ParcelSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s ParcelSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 4)
 
-	if s.Apn.IsValue() {
+	if !s.Apn.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "apn")...),
 			psql.Arg(s.Apn),
 		}})
 	}
 
-	if s.Description.IsValue() {
+	if !s.Description.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "description")...),
 			psql.Arg(s.Description),
@@ -238,6 +253,7 @@ func (o *Parcel) Update(ctx context.Context, exec bob.Executor, s *ParcelSetter)
 		return err
 	}
 
+	o.R = v.R
 	*o = *v
 
 	return nil
@@ -257,7 +273,7 @@ func (o *Parcel) Reload(ctx context.Context, exec bob.Executor) error {
 	if err != nil {
 		return err
 	}
-
+	o2.R = o.R
 	*o = *o2
 
 	return nil
@@ -304,7 +320,7 @@ func (o ParcelSlice) copyMatchingRows(from ...*Parcel) {
 			if new.ID != old.ID {
 				continue
 			}
-
+			new.R = old.R
 			o[i] = new
 			break
 		}
@@ -402,9 +418,101 @@ func (o ParcelSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// Sites starts a query for related objects on site
+func (o *Parcel) Sites(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	return Sites.Query(append(mods,
+		sm.Where(Sites.Columns.ParcelID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os ParcelSlice) Sites(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Sites.Query(append(mods,
+		sm.Where(psql.Group(Sites.Columns.ParcelID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+func insertParcelSites0(ctx context.Context, exec bob.Executor, sites1 []*SiteSetter, parcel0 *Parcel) (SiteSlice, error) {
+	for i := range sites1 {
+		sites1[i].ParcelID = omit.From(parcel0.ID)
+	}
+
+	ret, err := Sites.Insert(bob.ToMods(sites1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertParcelSites0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachParcelSites0(ctx context.Context, exec bob.Executor, count int, sites1 SiteSlice, parcel0 *Parcel) (SiteSlice, error) {
+	setter := &SiteSetter{
+		ParcelID: omit.From(parcel0.ID),
+	}
+
+	err := sites1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachParcelSites0: %w", err)
+	}
+
+	return sites1, nil
+}
+
+func (parcel0 *Parcel) InsertSites(ctx context.Context, exec bob.Executor, related ...*SiteSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	sites1, err := insertParcelSites0(ctx, exec, related, parcel0)
+	if err != nil {
+		return err
+	}
+
+	parcel0.R.Sites = append(parcel0.R.Sites, sites1...)
+
+	for _, rel := range sites1 {
+		rel.R.Parcel = parcel0
+	}
+	return nil
+}
+
+func (parcel0 *Parcel) AttachSites(ctx context.Context, exec bob.Executor, related ...*Site) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	sites1 := SiteSlice(related)
+
+	_, err = attachParcelSites0(ctx, exec, len(related), sites1, parcel0)
+	if err != nil {
+		return err
+	}
+
+	parcel0.R.Sites = append(parcel0.R.Sites, sites1...)
+
+	for _, rel := range related {
+		rel.R.Parcel = parcel0
+	}
+
+	return nil
+}
+
 type parcelWhere[Q psql.Filterable] struct {
-	Apn         psql.WhereMod[Q, string]
-	Description psql.WhereMod[Q, string]
+	Apn         psql.WhereNullMod[Q, string]
+	Description psql.WhereNullMod[Q, string]
 	ID          psql.WhereMod[Q, int32]
 	Geometry    psql.WhereMod[Q, string]
 }
@@ -415,9 +523,242 @@ func (parcelWhere[Q]) AliasedAs(alias string) parcelWhere[Q] {
 
 func buildParcelWhere[Q psql.Filterable](cols parcelColumns) parcelWhere[Q] {
 	return parcelWhere[Q]{
-		Apn:         psql.Where[Q, string](cols.Apn),
-		Description: psql.Where[Q, string](cols.Description),
+		Apn:         psql.WhereNull[Q, string](cols.Apn),
+		Description: psql.WhereNull[Q, string](cols.Description),
 		ID:          psql.Where[Q, int32](cols.ID),
 		Geometry:    psql.Where[Q, string](cols.Geometry),
+	}
+}
+
+func (o *Parcel) Preload(name string, retrieved any) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "Sites":
+		rels, ok := retrieved.(SiteSlice)
+		if !ok {
+			return fmt.Errorf("parcel cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Sites = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Parcel = o
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("parcel has no relationship %q", name)
+	}
+}
+
+type parcelPreloader struct{}
+
+func buildParcelPreloader() parcelPreloader {
+	return parcelPreloader{}
+}
+
+type parcelThenLoader[Q orm.Loadable] struct {
+	Sites func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildParcelThenLoader[Q orm.Loadable]() parcelThenLoader[Q] {
+	type SitesLoadInterface interface {
+		LoadSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return parcelThenLoader[Q]{
+		Sites: thenLoadBuilder[Q](
+			"Sites",
+			func(ctx context.Context, exec bob.Executor, retrieved SitesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSites(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadSites loads the parcel's Sites into the .R struct
+func (o *Parcel) LoadSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Sites = nil
+
+	related, err := o.Sites(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Parcel = o
+	}
+
+	o.R.Sites = related
+	return nil
+}
+
+// LoadSites loads the parcel's Sites into the .R struct
+func (os ParcelSlice) LoadSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	sites, err := os.Sites(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Sites = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range sites {
+
+			if !(o.ID == rel.ParcelID) {
+				continue
+			}
+
+			rel.R.Parcel = o
+
+			o.R.Sites = append(o.R.Sites, rel)
+		}
+	}
+
+	return nil
+}
+
+// parcelC is where relationship counts are stored.
+type parcelC struct {
+	Sites *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *Parcel) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "Sites":
+		o.C.Sites = &count
+	}
+	return nil
+}
+
+type parcelCountPreloader struct {
+	Sites func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildParcelCountPreloader() parcelCountPreloader {
+	return parcelCountPreloader{
+		Sites: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Parcel]("Sites", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Parcels.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Sites.Name()),
+					sm.Where(psql.Quote(Sites.Alias(), "parcel_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type parcelCountThenLoader[Q orm.Loadable] struct {
+	Sites func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildParcelCountThenLoader[Q orm.Loadable]() parcelCountThenLoader[Q] {
+	type SitesCountInterface interface {
+		LoadCountSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return parcelCountThenLoader[Q]{
+		Sites: countThenLoadBuilder[Q](
+			"Sites",
+			func(ctx context.Context, exec bob.Executor, retrieved SitesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountSites(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountSites loads the count of Sites into the C struct
+func (o *Parcel) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Sites(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Sites = &count
+	return nil
+}
+
+// LoadCountSites loads the count of Sites for a slice
+func (os ParcelSlice) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountSites(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type parcelJoins[Q dialect.Joinable] struct {
+	typ   string
+	Sites modAs[Q, siteColumns]
+}
+
+func (j parcelJoins[Q]) aliasedAs(alias string) parcelJoins[Q] {
+	return buildParcelJoins[Q](buildParcelColumns(alias), j.typ)
+}
+
+func buildParcelJoins[Q dialect.Joinable](cols parcelColumns, typ string) parcelJoins[Q] {
+	return parcelJoins[Q]{
+		typ: typ,
+		Sites: modAs[Q, siteColumns]{
+			c: Sites.Columns,
+			f: func(to siteColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
+						to.ParcelID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 	}
 }

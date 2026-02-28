@@ -13,14 +13,13 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/orm"
-	"github.com/aarondl/opt/null"
 	"github.com/stephenafamo/scan"
 )
 
 //go:embed org_by_oauth_id.bob.sql
 var formattedQueries_org_by_oauth_id string
 
-var orgByOauthIdSQL = formattedQueries_org_by_oauth_id[150:363]
+var orgByOauthIdSQL = formattedQueries_org_by_oauth_id[150:495]
 
 type OrgByOauthIdQuery = orm.ModQuery[*dialect.SelectQuery, orgByOauthId, OrgByOauthIdRow, []OrgByOauthIdRow, orgByOauthIdTransformer]
 
@@ -51,17 +50,17 @@ func OrgByOauthId(ID int32) *OrgByOauthIdQuery {
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendSelect(expressionTypArgs.subExpr(7, 94))
-			q.SetTable(expressionTypArgs.subExpr(100, 196))
-			q.AppendWhere(expressionTypArgs.subExpr(203, 213))
+			q.AppendSelect(expressionTypArgs.subExpr(7, 78))
+			q.SetTable(expressionTypArgs.subExpr(84, 328))
+			q.AppendWhere(expressionTypArgs.subExpr(335, 345))
 		}),
 	}
 }
 
 type OrgByOauthIdRow = struct {
-	OrganizationID int32            `db:"organization_id"`
-	ArcgisID       null.Val[string] `db:"arcgis_id"`
-	FieldseekerURL null.Val[string] `db:"fieldseeker_url"`
+	OrganizationID int32  `db:"organization_id"`
+	ArcgisID       string `db:"arcgis_id"`
+	FieldseekerURL string `db:"fieldseeker_url"`
 }
 
 type orgByOauthIdTransformer = bob.SliceTransformer[OrgByOauthIdRow, []OrgByOauthIdRow]
@@ -74,8 +73,8 @@ func (o orgByOauthId) args() iter.Seq[orm.ArgWithPosition] {
 	return func(yield func(arg orm.ArgWithPosition) bool) {
 		if !yield(orm.ArgWithPosition{
 			Name:       "id",
-			Start:      211,
-			Stop:       213,
+			Start:      343,
+			Stop:       345,
 			Expression: o.ID,
 		}) {
 			return

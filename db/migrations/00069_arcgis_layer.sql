@@ -66,10 +66,12 @@ CREATE TABLE arcgis.address_mapping (
 	FOREIGN KEY(layer_feature_service_item_id, layer_index, layer_field_name) REFERENCES arcgis.layer_field(layer_feature_service_item_id, layer_index, name),
 	PRIMARY KEY(organization_id, destination)
 );
-CREATE TABLE parcel (
-	apn TEXT NOT NULL,
-	description TEXT NOT NULL,
-	id SERIAL NOT NULL,
-	geometry geometry(Polygon, 4326) NOT NULL,
-	PRIMARY KEY(id)
-);
+-- +goose Down
+DROP TABLE arcgis.address_mapping;
+DROP TYPE arcgis.MappingDestinationAddress;
+DROP TABLE arcgis.parcel_mapping;
+DROP TYPE arcgis.MappingDestinationParcel;
+DROP TABLE arcgis.layer_field;
+DROP TYPE arcgis.FieldType;
+DROP TABLE arcgis.layer;
+DROP TABLE arcgis.feature_service;

@@ -57,6 +57,7 @@ type commsPhoneR struct {
 	PhoneE164NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey
 	PhoneE164NotifyPhonePools     PublicreportNotifyPhonePoolSlice     // publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey
 	PhoneE164SubscribePhones      PublicreportSubscribePhoneSlice      // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
+	PhoneMobileResidents          ResidentSlice                        // resident.resident_phone_mobile_fkey
 }
 
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
@@ -623,6 +624,30 @@ func (os CommsPhoneSlice) PhoneE164SubscribePhones(mods ...bob.Mod[*dialect.Sele
 
 	return PublicreportSubscribePhones.Query(append(mods,
 		sm.Where(psql.Group(PublicreportSubscribePhones.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// PhoneMobileResidents starts a query for related objects on resident
+func (o *CommsPhone) PhoneMobileResidents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	return Residents.Query(append(mods,
+		sm.Where(Residents.Columns.PhoneMobile.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) PhoneMobileResidents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return Residents.Query(append(mods,
+		sm.Where(psql.Group(Residents.Columns.PhoneMobile).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1235,6 +1260,74 @@ func (commsPhone0 *CommsPhone) AttachPhoneE164SubscribePhones(ctx context.Contex
 	return nil
 }
 
+func insertCommsPhonePhoneMobileResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, commsPhone0 *CommsPhone) (ResidentSlice, error) {
+	for i := range residents1 {
+		residents1[i].PhoneMobile = omitnull.From(commsPhone0.E164)
+	}
+
+	ret, err := Residents.Insert(bob.ToMods(residents1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneMobileResidents0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneMobileResidents0(ctx context.Context, exec bob.Executor, count int, residents1 ResidentSlice, commsPhone0 *CommsPhone) (ResidentSlice, error) {
+	setter := &ResidentSetter{
+		PhoneMobile: omitnull.From(commsPhone0.E164),
+	}
+
+	err := residents1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneMobileResidents0: %w", err)
+	}
+
+	return residents1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneMobileResidents(ctx context.Context, exec bob.Executor, related ...*ResidentSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	residents1, err := insertCommsPhonePhoneMobileResidents0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneMobileResidents = append(commsPhone0.R.PhoneMobileResidents, residents1...)
+
+	for _, rel := range residents1 {
+		rel.R.PhoneMobilePhone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneMobileResidents(ctx context.Context, exec bob.Executor, related ...*Resident) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	residents1 := ResidentSlice(related)
+
+	_, err = attachCommsPhonePhoneMobileResidents0(ctx, exec, len(related), residents1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneMobileResidents = append(commsPhone0.R.PhoneMobileResidents, residents1...)
+
+	for _, rel := range related {
+		rel.R.PhoneMobilePhone = commsPhone0
+	}
+
+	return nil
+}
+
 type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
 	IsSubscribed psql.WhereMod[Q, bool]
@@ -1385,6 +1478,20 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "PhoneMobileResidents":
+		rels, ok := retrieved.(ResidentSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PhoneMobileResidents = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.PhoneMobilePhone = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("commsPhone has no relationship %q", name)
 	}
@@ -1406,6 +1513,7 @@ type commsPhoneThenLoader[Q orm.Loadable] struct {
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneMobileResidents          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
@@ -1435,6 +1543,9 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	}
 	type PhoneE164SubscribePhonesLoadInterface interface {
 		LoadPhoneE164SubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneMobileResidentsLoadInterface interface {
+		LoadPhoneMobileResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneThenLoader[Q]{
@@ -1490,6 +1601,12 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 			"PhoneE164SubscribePhones",
 			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164SubscribePhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPhoneE164SubscribePhones(ctx, exec, mods...)
+			},
+		),
+		PhoneMobileResidents: thenLoadBuilder[Q](
+			"PhoneMobileResidents",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneMobileResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneMobileResidents(ctx, exec, mods...)
 			},
 		),
 	}
@@ -2070,6 +2187,70 @@ func (os CommsPhoneSlice) LoadPhoneE164SubscribePhones(ctx context.Context, exec
 	return nil
 }
 
+// LoadPhoneMobileResidents loads the commsPhone's PhoneMobileResidents into the .R struct
+func (o *CommsPhone) LoadPhoneMobileResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PhoneMobileResidents = nil
+
+	related, err := o.PhoneMobileResidents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.PhoneMobilePhone = o
+	}
+
+	o.R.PhoneMobileResidents = related
+	return nil
+}
+
+// LoadPhoneMobileResidents loads the commsPhone's PhoneMobileResidents into the .R struct
+func (os CommsPhoneSlice) LoadPhoneMobileResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	residents, err := os.PhoneMobileResidents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PhoneMobileResidents = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range residents {
+
+			if !rel.PhoneMobile.IsValue() {
+				continue
+			}
+			if !(rel.PhoneMobile.IsValue() && o.E164 == rel.PhoneMobile.MustGet()) {
+				continue
+			}
+
+			rel.R.PhoneMobilePhone = o
+
+			o.R.PhoneMobileResidents = append(o.R.PhoneMobileResidents, rel)
+		}
+	}
+
+	return nil
+}
+
 // commsPhoneC is where relationship counts are stored.
 type commsPhoneC struct {
 	DestinationTextJobs           *int64
@@ -2081,6 +2262,7 @@ type commsPhoneC struct {
 	PhoneE164NotifyPhoneNuisances *int64
 	PhoneE164NotifyPhonePools     *int64
 	PhoneE164SubscribePhones      *int64
+	PhoneMobileResidents          *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -2108,6 +2290,8 @@ func (o *CommsPhone) PreloadCount(name string, count int64) error {
 		o.C.PhoneE164NotifyPhonePools = &count
 	case "PhoneE164SubscribePhones":
 		o.C.PhoneE164SubscribePhones = &count
+	case "PhoneMobileResidents":
+		o.C.PhoneMobileResidents = &count
 	}
 	return nil
 }
@@ -2122,6 +2306,7 @@ type commsPhoneCountPreloader struct {
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PhoneMobileResidents          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
@@ -2282,6 +2467,23 @@ func buildCommsPhoneCountPreloader() commsPhoneCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		PhoneMobileResidents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*CommsPhone]("PhoneMobileResidents", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = CommsPhones.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Residents.Name()),
+					sm.Where(psql.Quote(Residents.Alias(), "phone_mobile").EQ(psql.Quote(parent, "e164"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 	}
 }
 
@@ -2295,6 +2497,7 @@ type commsPhoneCountThenLoader[Q orm.Loadable] struct {
 	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164NotifyPhonePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneMobileResidents          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[Q] {
@@ -2324,6 +2527,9 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 	}
 	type PhoneE164SubscribePhonesCountInterface interface {
 		LoadCountPhoneE164SubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneMobileResidentsCountInterface interface {
+		LoadCountPhoneMobileResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsPhoneCountThenLoader[Q]{
@@ -2379,6 +2585,12 @@ func buildCommsPhoneCountThenLoader[Q orm.Loadable]() commsPhoneCountThenLoader[
 			"PhoneE164SubscribePhones",
 			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164SubscribePhonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountPhoneE164SubscribePhones(ctx, exec, mods...)
+			},
+		),
+		PhoneMobileResidents: countThenLoadBuilder[Q](
+			"PhoneMobileResidents",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneMobileResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPhoneMobileResidents(ctx, exec, mods...)
 			},
 		),
 	}
@@ -2654,6 +2866,36 @@ func (os CommsPhoneSlice) LoadCountPhoneE164SubscribePhones(ctx context.Context,
 	return nil
 }
 
+// LoadCountPhoneMobileResidents loads the count of PhoneMobileResidents into the C struct
+func (o *CommsPhone) LoadCountPhoneMobileResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.PhoneMobileResidents(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.PhoneMobileResidents = &count
+	return nil
+}
+
+// LoadCountPhoneMobileResidents loads the count of PhoneMobileResidents for a slice
+func (os CommsPhoneSlice) LoadCountPhoneMobileResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPhoneMobileResidents(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type commsPhoneJoins[Q dialect.Joinable] struct {
 	typ                           string
 	DestinationTextJobs           modAs[Q, commsTextJobColumns]
@@ -2665,6 +2907,7 @@ type commsPhoneJoins[Q dialect.Joinable] struct {
 	PhoneE164NotifyPhoneNuisances modAs[Q, publicreportNotifyPhoneNuisanceColumns]
 	PhoneE164NotifyPhonePools     modAs[Q, publicreportNotifyPhonePoolColumns]
 	PhoneE164SubscribePhones      modAs[Q, publicreportSubscribePhoneColumns]
+	PhoneMobileResidents          modAs[Q, residentColumns]
 }
 
 func (j commsPhoneJoins[Q]) aliasedAs(alias string) commsPhoneJoins[Q] {
@@ -2802,6 +3045,20 @@ func buildCommsPhoneJoins[Q dialect.Joinable](cols commsPhoneColumns, typ string
 				{
 					mods = append(mods, dialect.Join[Q](typ, PublicreportSubscribePhones.Name().As(to.Alias())).On(
 						to.PhoneE164.EQ(cols.E164),
+					))
+				}
+
+				return mods
+			},
+		},
+		PhoneMobileResidents: modAs[Q, residentColumns]{
+			c: Residents.Columns,
+			f: func(to residentColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
+						to.PhoneMobile.EQ(cols.E164),
 					))
 				}
 

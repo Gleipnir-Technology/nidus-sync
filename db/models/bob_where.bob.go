@@ -18,19 +18,24 @@ var (
 
 func Where[Q psql.Filterable]() struct {
 	Addresses                          addressWhere[Q]
+	ArcgisAccounts                     arcgisAccountWhere[Q]
 	ArcgisAddressMappings              arcgisAddressMappingWhere[Q]
-	ArcgisFeatureServices              arcgisFeatureServiceWhere[Q]
 	ArcgisLayers                       arcgisLayerWhere[Q]
 	ArcgisLayerFields                  arcgisLayerFieldWhere[Q]
+	ArcgisOauthTokens                  arcgisOauthTokenWhere[Q]
 	ArcgisParcelMappings               arcgisParcelMappingWhere[Q]
+	ArcgisServiceFeatures              arcgisServiceFeatureWhere[Q]
+	ArcgisServiceMaps                  arcgisServiceMapWhere[Q]
 	ArcgisUsers                        arcgisuserWhere[Q]
 	ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
 	CommsEmailContacts                 commsEmailContactWhere[Q]
 	CommsEmailLogs                     commsEmailLogWhere[Q]
 	CommsEmailTemplates                commsEmailTemplateWhere[Q]
+	CommsMailers                       commsMailerWhere[Q]
 	CommsPhones                        commsPhoneWhere[Q]
 	CommsTextJobs                      commsTextJobWhere[Q]
 	CommsTextLogs                      commsTextLogWhere[Q]
+	ComplianceReportRequests           complianceReportRequestWhere[Q]
 	DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
 	DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
@@ -77,7 +82,6 @@ func Where[Q psql.Filterable]() struct {
 	NoteImageBreadcrumbs               noteImageBreadcrumbWhere[Q]
 	NoteImageData                      noteImageDatumWhere[Q]
 	Notifications                      notificationWhere[Q]
-	OauthTokens                        oauthTokenWhere[Q]
 	Organizations                      organizationWhere[Q]
 	Parcels                            parcelWhere[Q]
 	Pools                              poolWhere[Q]
@@ -98,6 +102,7 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
+	Residents                          residentWhere[Q]
 	Sessions                           sessionWhere[Q]
 	Sites                              siteWhere[Q]
 	SpatialRefSys                      spatialRefSyWhere[Q]
@@ -105,19 +110,24 @@ func Where[Q psql.Filterable]() struct {
 } {
 	return struct {
 		Addresses                          addressWhere[Q]
+		ArcgisAccounts                     arcgisAccountWhere[Q]
 		ArcgisAddressMappings              arcgisAddressMappingWhere[Q]
-		ArcgisFeatureServices              arcgisFeatureServiceWhere[Q]
 		ArcgisLayers                       arcgisLayerWhere[Q]
 		ArcgisLayerFields                  arcgisLayerFieldWhere[Q]
+		ArcgisOauthTokens                  arcgisOauthTokenWhere[Q]
 		ArcgisParcelMappings               arcgisParcelMappingWhere[Q]
+		ArcgisServiceFeatures              arcgisServiceFeatureWhere[Q]
+		ArcgisServiceMaps                  arcgisServiceMapWhere[Q]
 		ArcgisUsers                        arcgisuserWhere[Q]
 		ArcgisUserPrivileges               arcgisUserPrivilegeWhere[Q]
 		CommsEmailContacts                 commsEmailContactWhere[Q]
 		CommsEmailLogs                     commsEmailLogWhere[Q]
 		CommsEmailTemplates                commsEmailTemplateWhere[Q]
+		CommsMailers                       commsMailerWhere[Q]
 		CommsPhones                        commsPhoneWhere[Q]
 		CommsTextJobs                      commsTextJobWhere[Q]
 		CommsTextLogs                      commsTextLogWhere[Q]
+		ComplianceReportRequests           complianceReportRequestWhere[Q]
 		DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
 		DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
@@ -164,7 +174,6 @@ func Where[Q psql.Filterable]() struct {
 		NoteImageBreadcrumbs               noteImageBreadcrumbWhere[Q]
 		NoteImageData                      noteImageDatumWhere[Q]
 		Notifications                      notificationWhere[Q]
-		OauthTokens                        oauthTokenWhere[Q]
 		Organizations                      organizationWhere[Q]
 		Parcels                            parcelWhere[Q]
 		Pools                              poolWhere[Q]
@@ -185,25 +194,31 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
+		Residents                          residentWhere[Q]
 		Sessions                           sessionWhere[Q]
 		Sites                              siteWhere[Q]
 		SpatialRefSys                      spatialRefSyWhere[Q]
 		Users                              userWhere[Q]
 	}{
 		Addresses:                          buildAddressWhere[Q](Addresses.Columns),
+		ArcgisAccounts:                     buildArcgisAccountWhere[Q](ArcgisAccounts.Columns),
 		ArcgisAddressMappings:              buildArcgisAddressMappingWhere[Q](ArcgisAddressMappings.Columns),
-		ArcgisFeatureServices:              buildArcgisFeatureServiceWhere[Q](ArcgisFeatureServices.Columns),
 		ArcgisLayers:                       buildArcgisLayerWhere[Q](ArcgisLayers.Columns),
 		ArcgisLayerFields:                  buildArcgisLayerFieldWhere[Q](ArcgisLayerFields.Columns),
+		ArcgisOauthTokens:                  buildArcgisOauthTokenWhere[Q](ArcgisOauthTokens.Columns),
 		ArcgisParcelMappings:               buildArcgisParcelMappingWhere[Q](ArcgisParcelMappings.Columns),
+		ArcgisServiceFeatures:              buildArcgisServiceFeatureWhere[Q](ArcgisServiceFeatures.Columns),
+		ArcgisServiceMaps:                  buildArcgisServiceMapWhere[Q](ArcgisServiceMaps.Columns),
 		ArcgisUsers:                        buildArcgisUserWhere[Q](ArcgisUsers.Columns),
 		ArcgisUserPrivileges:               buildArcgisUserPrivilegeWhere[Q](ArcgisUserPrivileges.Columns),
 		CommsEmailContacts:                 buildCommsEmailContactWhere[Q](CommsEmailContacts.Columns),
 		CommsEmailLogs:                     buildCommsEmailLogWhere[Q](CommsEmailLogs.Columns),
 		CommsEmailTemplates:                buildCommsEmailTemplateWhere[Q](CommsEmailTemplates.Columns),
+		CommsMailers:                       buildCommsMailerWhere[Q](CommsMailers.Columns),
 		CommsPhones:                        buildCommsPhoneWhere[Q](CommsPhones.Columns),
 		CommsTextJobs:                      buildCommsTextJobWhere[Q](CommsTextJobs.Columns),
 		CommsTextLogs:                      buildCommsTextLogWhere[Q](CommsTextLogs.Columns),
+		ComplianceReportRequests:           buildComplianceReportRequestWhere[Q](ComplianceReportRequests.Columns),
 		DistrictSubscriptionEmails:         buildDistrictSubscriptionEmailWhere[Q](DistrictSubscriptionEmails.Columns),
 		DistrictSubscriptionPhones:         buildDistrictSubscriptionPhoneWhere[Q](DistrictSubscriptionPhones.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
@@ -250,7 +265,6 @@ func Where[Q psql.Filterable]() struct {
 		NoteImageBreadcrumbs:               buildNoteImageBreadcrumbWhere[Q](NoteImageBreadcrumbs.Columns),
 		NoteImageData:                      buildNoteImageDatumWhere[Q](NoteImageData.Columns),
 		Notifications:                      buildNotificationWhere[Q](Notifications.Columns),
-		OauthTokens:                        buildOauthTokenWhere[Q](OauthTokens.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
 		Parcels:                            buildParcelWhere[Q](Parcels.Columns),
 		Pools:                              buildPoolWhere[Q](Pools.Columns),
@@ -271,6 +285,7 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportSubscribePhones:        buildPublicreportSubscribePhoneWhere[Q](PublicreportSubscribePhones.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
+		Residents:                          buildResidentWhere[Q](Residents.Columns),
 		Sessions:                           buildSessionWhere[Q](Sessions.Columns),
 		Sites:                              buildSiteWhere[Q](Sites.Columns),
 		SpatialRefSys:                      buildSpatialRefSyWhere[Q](SpatialRefSys.Columns),

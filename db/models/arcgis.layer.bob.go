@@ -44,7 +44,7 @@ type ArcgisLayersQuery = *psql.ViewQuery[*ArcgisLayer, ArcgisLayerSlice]
 
 // arcgisLayerR is where relationships are stored.
 type arcgisLayerR struct {
-	FeatureServiceItemFeatureService *ArcgisFeatureService // arcgis.layer.layer_feature_service_item_id_fkey
+	FeatureServiceItemServiceFeature *ArcgisServiceFeature // arcgis.layer.layer_feature_service_item_id_fkey
 	LayerFields                      ArcgisLayerFieldSlice // arcgis.layer_field.layer_field_layer_feature_service_item_id_layer_index_fkey
 }
 
@@ -404,14 +404,14 @@ func (o ArcgisLayerSlice) ReloadAll(ctx context.Context, exec bob.Executor) erro
 	return nil
 }
 
-// FeatureServiceItemFeatureService starts a query for related objects on arcgis.feature_service
-func (o *ArcgisLayer) FeatureServiceItemFeatureService(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisFeatureServicesQuery {
-	return ArcgisFeatureServices.Query(append(mods,
-		sm.Where(ArcgisFeatureServices.Columns.ItemID.EQ(psql.Arg(o.FeatureServiceItemID))),
+// FeatureServiceItemServiceFeature starts a query for related objects on arcgis.service_feature
+func (o *ArcgisLayer) FeatureServiceItemServiceFeature(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceFeaturesQuery {
+	return ArcgisServiceFeatures.Query(append(mods,
+		sm.Where(ArcgisServiceFeatures.Columns.ItemID.EQ(psql.Arg(o.FeatureServiceItemID))),
 	)...)
 }
 
-func (os ArcgisLayerSlice) FeatureServiceItemFeatureService(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisFeatureServicesQuery {
+func (os ArcgisLayerSlice) FeatureServiceItemServiceFeature(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceFeaturesQuery {
 	pkFeatureServiceItemID := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -423,8 +423,8 @@ func (os ArcgisLayerSlice) FeatureServiceItemFeatureService(mods ...bob.Mod[*dia
 		psql.F("unnest", psql.Cast(psql.Arg(pkFeatureServiceItemID), "text[]")),
 	))
 
-	return ArcgisFeatureServices.Query(append(mods,
-		sm.Where(psql.Group(ArcgisFeatureServices.Columns.ItemID).OP("IN", PKArgExpr)),
+	return ArcgisServiceFeatures.Query(append(mods,
+		sm.Where(psql.Group(ArcgisServiceFeatures.Columns.ItemID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -456,50 +456,50 @@ func (os ArcgisLayerSlice) LayerFields(mods ...bob.Mod[*dialect.SelectQuery]) Ar
 	)...)
 }
 
-func attachArcgisLayerFeatureServiceItemFeatureService0(ctx context.Context, exec bob.Executor, count int, arcgisLayer0 *ArcgisLayer, arcgisFeatureService1 *ArcgisFeatureService) (*ArcgisLayer, error) {
+func attachArcgisLayerFeatureServiceItemServiceFeature0(ctx context.Context, exec bob.Executor, count int, arcgisLayer0 *ArcgisLayer, arcgisServiceFeature1 *ArcgisServiceFeature) (*ArcgisLayer, error) {
 	setter := &ArcgisLayerSetter{
-		FeatureServiceItemID: omit.From(arcgisFeatureService1.ItemID),
+		FeatureServiceItemID: omit.From(arcgisServiceFeature1.ItemID),
 	}
 
 	err := arcgisLayer0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachArcgisLayerFeatureServiceItemFeatureService0: %w", err)
+		return nil, fmt.Errorf("attachArcgisLayerFeatureServiceItemServiceFeature0: %w", err)
 	}
 
 	return arcgisLayer0, nil
 }
 
-func (arcgisLayer0 *ArcgisLayer) InsertFeatureServiceItemFeatureService(ctx context.Context, exec bob.Executor, related *ArcgisFeatureServiceSetter) error {
+func (arcgisLayer0 *ArcgisLayer) InsertFeatureServiceItemServiceFeature(ctx context.Context, exec bob.Executor, related *ArcgisServiceFeatureSetter) error {
 	var err error
 
-	arcgisFeatureService1, err := ArcgisFeatureServices.Insert(related).One(ctx, exec)
+	arcgisServiceFeature1, err := ArcgisServiceFeatures.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachArcgisLayerFeatureServiceItemFeatureService0(ctx, exec, 1, arcgisLayer0, arcgisFeatureService1)
+	_, err = attachArcgisLayerFeatureServiceItemServiceFeature0(ctx, exec, 1, arcgisLayer0, arcgisServiceFeature1)
 	if err != nil {
 		return err
 	}
 
-	arcgisLayer0.R.FeatureServiceItemFeatureService = arcgisFeatureService1
+	arcgisLayer0.R.FeatureServiceItemServiceFeature = arcgisServiceFeature1
 
-	arcgisFeatureService1.R.FeatureServiceItemLayers = append(arcgisFeatureService1.R.FeatureServiceItemLayers, arcgisLayer0)
+	arcgisServiceFeature1.R.FeatureServiceItemLayers = append(arcgisServiceFeature1.R.FeatureServiceItemLayers, arcgisLayer0)
 
 	return nil
 }
 
-func (arcgisLayer0 *ArcgisLayer) AttachFeatureServiceItemFeatureService(ctx context.Context, exec bob.Executor, arcgisFeatureService1 *ArcgisFeatureService) error {
+func (arcgisLayer0 *ArcgisLayer) AttachFeatureServiceItemServiceFeature(ctx context.Context, exec bob.Executor, arcgisServiceFeature1 *ArcgisServiceFeature) error {
 	var err error
 
-	_, err = attachArcgisLayerFeatureServiceItemFeatureService0(ctx, exec, 1, arcgisLayer0, arcgisFeatureService1)
+	_, err = attachArcgisLayerFeatureServiceItemServiceFeature0(ctx, exec, 1, arcgisLayer0, arcgisServiceFeature1)
 	if err != nil {
 		return err
 	}
 
-	arcgisLayer0.R.FeatureServiceItemFeatureService = arcgisFeatureService1
+	arcgisLayer0.R.FeatureServiceItemServiceFeature = arcgisServiceFeature1
 
-	arcgisFeatureService1.R.FeatureServiceItemLayers = append(arcgisFeatureService1.R.FeatureServiceItemLayers, arcgisLayer0)
+	arcgisServiceFeature1.R.FeatureServiceItemLayers = append(arcgisServiceFeature1.R.FeatureServiceItemLayers, arcgisLayer0)
 
 	return nil
 }
@@ -598,13 +598,13 @@ func (o *ArcgisLayer) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "FeatureServiceItemFeatureService":
-		rel, ok := retrieved.(*ArcgisFeatureService)
+	case "FeatureServiceItemServiceFeature":
+		rel, ok := retrieved.(*ArcgisServiceFeature)
 		if !ok {
 			return fmt.Errorf("arcgisLayer cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.FeatureServiceItemFeatureService = rel
+		o.R.FeatureServiceItemServiceFeature = rel
 
 		if rel != nil {
 			rel.R.FeatureServiceItemLayers = ArcgisLayerSlice{o}
@@ -630,45 +630,45 @@ func (o *ArcgisLayer) Preload(name string, retrieved any) error {
 }
 
 type arcgisLayerPreloader struct {
-	FeatureServiceItemFeatureService func(...psql.PreloadOption) psql.Preloader
+	FeatureServiceItemServiceFeature func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildArcgisLayerPreloader() arcgisLayerPreloader {
 	return arcgisLayerPreloader{
-		FeatureServiceItemFeatureService: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ArcgisFeatureService, ArcgisFeatureServiceSlice](psql.PreloadRel{
-				Name: "FeatureServiceItemFeatureService",
+		FeatureServiceItemServiceFeature: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*ArcgisServiceFeature, ArcgisServiceFeatureSlice](psql.PreloadRel{
+				Name: "FeatureServiceItemServiceFeature",
 				Sides: []psql.PreloadSide{
 					{
 						From:        ArcgisLayers,
-						To:          ArcgisFeatureServices,
+						To:          ArcgisServiceFeatures,
 						FromColumns: []string{"feature_service_item_id"},
 						ToColumns:   []string{"item_id"},
 					},
 				},
-			}, ArcgisFeatureServices.Columns.Names(), opts...)
+			}, ArcgisServiceFeatures.Columns.Names(), opts...)
 		},
 	}
 }
 
 type arcgisLayerThenLoader[Q orm.Loadable] struct {
-	FeatureServiceItemFeatureService func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FeatureServiceItemServiceFeature func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	LayerFields                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildArcgisLayerThenLoader[Q orm.Loadable]() arcgisLayerThenLoader[Q] {
-	type FeatureServiceItemFeatureServiceLoadInterface interface {
-		LoadFeatureServiceItemFeatureService(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type FeatureServiceItemServiceFeatureLoadInterface interface {
+		LoadFeatureServiceItemServiceFeature(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type LayerFieldsLoadInterface interface {
 		LoadLayerFields(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return arcgisLayerThenLoader[Q]{
-		FeatureServiceItemFeatureService: thenLoadBuilder[Q](
-			"FeatureServiceItemFeatureService",
-			func(ctx context.Context, exec bob.Executor, retrieved FeatureServiceItemFeatureServiceLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadFeatureServiceItemFeatureService(ctx, exec, mods...)
+		FeatureServiceItemServiceFeature: thenLoadBuilder[Q](
+			"FeatureServiceItemServiceFeature",
+			func(ctx context.Context, exec bob.Executor, retrieved FeatureServiceItemServiceFeatureLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFeatureServiceItemServiceFeature(ctx, exec, mods...)
 			},
 		),
 		LayerFields: thenLoadBuilder[Q](
@@ -680,33 +680,33 @@ func buildArcgisLayerThenLoader[Q orm.Loadable]() arcgisLayerThenLoader[Q] {
 	}
 }
 
-// LoadFeatureServiceItemFeatureService loads the arcgisLayer's FeatureServiceItemFeatureService into the .R struct
-func (o *ArcgisLayer) LoadFeatureServiceItemFeatureService(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadFeatureServiceItemServiceFeature loads the arcgisLayer's FeatureServiceItemServiceFeature into the .R struct
+func (o *ArcgisLayer) LoadFeatureServiceItemServiceFeature(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.FeatureServiceItemFeatureService = nil
+	o.R.FeatureServiceItemServiceFeature = nil
 
-	related, err := o.FeatureServiceItemFeatureService(mods...).One(ctx, exec)
+	related, err := o.FeatureServiceItemServiceFeature(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	related.R.FeatureServiceItemLayers = ArcgisLayerSlice{o}
 
-	o.R.FeatureServiceItemFeatureService = related
+	o.R.FeatureServiceItemServiceFeature = related
 	return nil
 }
 
-// LoadFeatureServiceItemFeatureService loads the arcgisLayer's FeatureServiceItemFeatureService into the .R struct
-func (os ArcgisLayerSlice) LoadFeatureServiceItemFeatureService(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadFeatureServiceItemServiceFeature loads the arcgisLayer's FeatureServiceItemServiceFeature into the .R struct
+func (os ArcgisLayerSlice) LoadFeatureServiceItemServiceFeature(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	arcgisFeatureServices, err := os.FeatureServiceItemFeatureService(mods...).All(ctx, exec)
+	arcgisServiceFeatures, err := os.FeatureServiceItemServiceFeature(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -716,7 +716,7 @@ func (os ArcgisLayerSlice) LoadFeatureServiceItemFeatureService(ctx context.Cont
 			continue
 		}
 
-		for _, rel := range arcgisFeatureServices {
+		for _, rel := range arcgisServiceFeatures {
 
 			if !(o.FeatureServiceItemID == rel.ItemID) {
 				continue
@@ -724,7 +724,7 @@ func (os ArcgisLayerSlice) LoadFeatureServiceItemFeatureService(ctx context.Cont
 
 			rel.R.FeatureServiceItemLayers = append(rel.R.FeatureServiceItemLayers, o)
 
-			o.R.FeatureServiceItemFeatureService = rel
+			o.R.FeatureServiceItemServiceFeature = rel
 			break
 		}
 	}
@@ -893,7 +893,7 @@ func (os ArcgisLayerSlice) LoadCountLayerFields(ctx context.Context, exec bob.Ex
 
 type arcgisLayerJoins[Q dialect.Joinable] struct {
 	typ                              string
-	FeatureServiceItemFeatureService modAs[Q, arcgisFeatureServiceColumns]
+	FeatureServiceItemServiceFeature modAs[Q, arcgisServiceFeatureColumns]
 	LayerFields                      modAs[Q, arcgisLayerFieldColumns]
 }
 
@@ -904,13 +904,13 @@ func (j arcgisLayerJoins[Q]) aliasedAs(alias string) arcgisLayerJoins[Q] {
 func buildArcgisLayerJoins[Q dialect.Joinable](cols arcgisLayerColumns, typ string) arcgisLayerJoins[Q] {
 	return arcgisLayerJoins[Q]{
 		typ: typ,
-		FeatureServiceItemFeatureService: modAs[Q, arcgisFeatureServiceColumns]{
-			c: ArcgisFeatureServices.Columns,
-			f: func(to arcgisFeatureServiceColumns) bob.Mod[Q] {
+		FeatureServiceItemServiceFeature: modAs[Q, arcgisServiceFeatureColumns]{
+			c: ArcgisServiceFeatures.Columns,
+			f: func(to arcgisServiceFeatureColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisFeatureServices.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, ArcgisServiceFeatures.Name().As(to.Alias())).On(
 						to.ItemID.EQ(cols.FeatureServiceItemID),
 					))
 				}

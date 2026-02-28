@@ -54,9 +54,14 @@ type AddressTemplate struct {
 }
 
 type addressR struct {
-	Site *addressRSiteR
+	Residents []*addressRResidentsR
+	Site      *addressRSiteR
 }
 
+type addressRResidentsR struct {
+	number int
+	o      *ResidentTemplate
+}
 type addressRSiteR struct {
 	o *SiteTemplate
 }
@@ -71,6 +76,19 @@ func (o *AddressTemplate) Apply(ctx context.Context, mods ...AddressMod) {
 // setModelRels creates and sets the relationships on *models.Address
 // according to the relationships in the template. Nothing is inserted into the db
 func (t AddressTemplate) setModelRels(o *models.Address) {
+	if t.r.Residents != nil {
+		rel := models.ResidentSlice{}
+		for _, r := range t.r.Residents {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.AddressID = o.ID // h2
+				rel.R.Address = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Residents = rel
+	}
+
 	if t.r.Site != nil {
 		rel := t.r.Site.o.Build()
 		rel.R.Address = o
@@ -240,18 +258,38 @@ func ensureCreatableAddress(m *models.AddressSetter) {
 func (o *AddressTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Address) error {
 	var err error
 
+	isResidentsDone, _ := addressRelResidentsCtx.Value(ctx)
+	if !isResidentsDone && o.r.Residents != nil {
+		ctx = addressRelResidentsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Residents {
+			if r.o.alreadyPersisted {
+				m.R.Residents = append(m.R.Residents, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachResidents(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isSiteDone, _ := addressRelSiteCtx.Value(ctx)
 	if !isSiteDone && o.r.Site != nil {
 		ctx = addressRelSiteCtx.WithValue(ctx, true)
 		if o.r.Site.o.alreadyPersisted {
 			m.R.Site = o.r.Site.o.Build()
 		} else {
-			var rel0 *models.Site
-			rel0, err = o.r.Site.o.Create(ctx, exec)
+			var rel1 *models.Site
+			rel1, err = o.r.Site.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachSite(ctx, exec, rel0)
+			err = m.AttachSite(ctx, exec, rel1)
 			if err != nil {
 				return err
 			}
@@ -715,5 +753,53 @@ func (m addressMods) WithExistingSite(em *models.Site) AddressMod {
 func (m addressMods) WithoutSite() AddressMod {
 	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
 		o.r.Site = nil
+	})
+}
+
+func (m addressMods) WithResidents(number int, related *ResidentTemplate) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Residents = []*addressRResidentsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m addressMods) WithNewResidents(number int, mods ...ResidentMod) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.WithResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m addressMods) AddResidents(number int, related *ResidentTemplate) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Residents = append(o.r.Residents, &addressRResidentsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m addressMods) AddNewResidents(number int, mods ...ResidentMod) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		related := o.f.NewResidentWithContext(ctx, mods...)
+		m.AddResidents(number, related).Apply(ctx, o)
+	})
+}
+
+func (m addressMods) AddExistingResidents(existingModels ...*models.Resident) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		for _, em := range existingModels {
+			o.r.Residents = append(o.r.Residents, &addressRResidentsR{
+				o: o.f.FromExistingResident(em),
+			})
+		}
+	})
+}
+
+func (m addressMods) WithoutResidents() AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Residents = nil
 	})
 }

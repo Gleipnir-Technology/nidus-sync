@@ -26,21 +26,23 @@ import (
 
 // Site is an object representing the database table.
 type Site struct {
-	AddressID         int32            `db:"address_id" `
-	Created           time.Time        `db:"created" `
-	CreatorID         int32            `db:"creator_id" `
-	FileID            null.Val[int32]  `db:"file_id" `
-	ID                int32            `db:"id,pk" `
-	Notes             string           `db:"notes" `
-	OrganizationID    int32            `db:"organization_id" `
-	OwnerName         string           `db:"owner_name" `
-	OwnerPhoneE164    null.Val[string] `db:"owner_phone_e164" `
-	ResidentOwned     null.Val[bool]   `db:"resident_owned" `
-	ResidentPhoneE164 null.Val[string] `db:"resident_phone_e164" `
-	Tags              pgtypes.HStore   `db:"tags" `
-	Version           int32            `db:"version,pk" `
+	AddressID      int32            `db:"address_id" `
+	Created        time.Time        `db:"created" `
+	CreatorID      int32            `db:"creator_id" `
+	FileID         null.Val[int32]  `db:"file_id" `
+	ID             int32            `db:"id,pk" `
+	Notes          string           `db:"notes" `
+	OrganizationID int32            `db:"organization_id" `
+	OwnerName      string           `db:"owner_name" `
+	OwnerPhoneE164 null.Val[string] `db:"owner_phone_e164" `
+	ParcelID       int32            `db:"parcel_id" `
+	ResidentOwned  null.Val[bool]   `db:"resident_owned" `
+	Tags           pgtypes.HStore   `db:"tags" `
+	Version        int32            `db:"version,pk" `
 
 	R siteR `db:"-" `
+
+	C siteC `db:"-" `
 }
 
 // SiteSlice is an alias for a slice of pointers to Site.
@@ -55,49 +57,53 @@ type SitesQuery = *psql.ViewQuery[*Site, SiteSlice]
 
 // siteR is where relationships are stored.
 type siteR struct {
-	Address     *Address        // site.site_address_id_fkey
-	CreatorUser *User           // site.site_creator_id_fkey
-	File        *FileuploadFile // site.site_file_id_fkey
+	ComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_site_id_site_version_fkey
+	Pools                    PoolSlice                    // pool.pool_site_id_site_version_fkey
+	Residents                ResidentSlice                // resident.resident_site_id_site_version_fkey
+	Address                  *Address                     // site.site_address_id_fkey
+	CreatorUser              *User                        // site.site_creator_id_fkey
+	File                     *FileuploadFile              // site.site_file_id_fkey
+	Parcel                   *Parcel                      // site.site_parcel_id_fkey
 }
 
 func buildSiteColumns(alias string) siteColumns {
 	return siteColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_id", "created", "creator_id", "file_id", "id", "notes", "organization_id", "owner_name", "owner_phone_e164", "resident_owned", "resident_phone_e164", "tags", "version",
+			"address_id", "created", "creator_id", "file_id", "id", "notes", "organization_id", "owner_name", "owner_phone_e164", "parcel_id", "resident_owned", "tags", "version",
 		).WithParent("site"),
-		tableAlias:        alias,
-		AddressID:         psql.Quote(alias, "address_id"),
-		Created:           psql.Quote(alias, "created"),
-		CreatorID:         psql.Quote(alias, "creator_id"),
-		FileID:            psql.Quote(alias, "file_id"),
-		ID:                psql.Quote(alias, "id"),
-		Notes:             psql.Quote(alias, "notes"),
-		OrganizationID:    psql.Quote(alias, "organization_id"),
-		OwnerName:         psql.Quote(alias, "owner_name"),
-		OwnerPhoneE164:    psql.Quote(alias, "owner_phone_e164"),
-		ResidentOwned:     psql.Quote(alias, "resident_owned"),
-		ResidentPhoneE164: psql.Quote(alias, "resident_phone_e164"),
-		Tags:              psql.Quote(alias, "tags"),
-		Version:           psql.Quote(alias, "version"),
+		tableAlias:     alias,
+		AddressID:      psql.Quote(alias, "address_id"),
+		Created:        psql.Quote(alias, "created"),
+		CreatorID:      psql.Quote(alias, "creator_id"),
+		FileID:         psql.Quote(alias, "file_id"),
+		ID:             psql.Quote(alias, "id"),
+		Notes:          psql.Quote(alias, "notes"),
+		OrganizationID: psql.Quote(alias, "organization_id"),
+		OwnerName:      psql.Quote(alias, "owner_name"),
+		OwnerPhoneE164: psql.Quote(alias, "owner_phone_e164"),
+		ParcelID:       psql.Quote(alias, "parcel_id"),
+		ResidentOwned:  psql.Quote(alias, "resident_owned"),
+		Tags:           psql.Quote(alias, "tags"),
+		Version:        psql.Quote(alias, "version"),
 	}
 }
 
 type siteColumns struct {
 	expr.ColumnsExpr
-	tableAlias        string
-	AddressID         psql.Expression
-	Created           psql.Expression
-	CreatorID         psql.Expression
-	FileID            psql.Expression
-	ID                psql.Expression
-	Notes             psql.Expression
-	OrganizationID    psql.Expression
-	OwnerName         psql.Expression
-	OwnerPhoneE164    psql.Expression
-	ResidentOwned     psql.Expression
-	ResidentPhoneE164 psql.Expression
-	Tags              psql.Expression
-	Version           psql.Expression
+	tableAlias     string
+	AddressID      psql.Expression
+	Created        psql.Expression
+	CreatorID      psql.Expression
+	FileID         psql.Expression
+	ID             psql.Expression
+	Notes          psql.Expression
+	OrganizationID psql.Expression
+	OwnerName      psql.Expression
+	OwnerPhoneE164 psql.Expression
+	ParcelID       psql.Expression
+	ResidentOwned  psql.Expression
+	Tags           psql.Expression
+	Version        psql.Expression
 }
 
 func (c siteColumns) Alias() string {
@@ -112,19 +118,19 @@ func (siteColumns) AliasedAs(alias string) siteColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type SiteSetter struct {
-	AddressID         omit.Val[int32]          `db:"address_id" `
-	Created           omit.Val[time.Time]      `db:"created" `
-	CreatorID         omit.Val[int32]          `db:"creator_id" `
-	FileID            omitnull.Val[int32]      `db:"file_id" `
-	ID                omit.Val[int32]          `db:"id,pk" `
-	Notes             omit.Val[string]         `db:"notes" `
-	OrganizationID    omit.Val[int32]          `db:"organization_id" `
-	OwnerName         omit.Val[string]         `db:"owner_name" `
-	OwnerPhoneE164    omitnull.Val[string]     `db:"owner_phone_e164" `
-	ResidentOwned     omitnull.Val[bool]       `db:"resident_owned" `
-	ResidentPhoneE164 omitnull.Val[string]     `db:"resident_phone_e164" `
-	Tags              omit.Val[pgtypes.HStore] `db:"tags" `
-	Version           omit.Val[int32]          `db:"version,pk" `
+	AddressID      omit.Val[int32]          `db:"address_id" `
+	Created        omit.Val[time.Time]      `db:"created" `
+	CreatorID      omit.Val[int32]          `db:"creator_id" `
+	FileID         omitnull.Val[int32]      `db:"file_id" `
+	ID             omit.Val[int32]          `db:"id,pk" `
+	Notes          omit.Val[string]         `db:"notes" `
+	OrganizationID omit.Val[int32]          `db:"organization_id" `
+	OwnerName      omit.Val[string]         `db:"owner_name" `
+	OwnerPhoneE164 omitnull.Val[string]     `db:"owner_phone_e164" `
+	ParcelID       omit.Val[int32]          `db:"parcel_id" `
+	ResidentOwned  omitnull.Val[bool]       `db:"resident_owned" `
+	Tags           omit.Val[pgtypes.HStore] `db:"tags" `
+	Version        omit.Val[int32]          `db:"version,pk" `
 }
 
 func (s SiteSetter) SetColumns() []string {
@@ -156,11 +162,11 @@ func (s SiteSetter) SetColumns() []string {
 	if !s.OwnerPhoneE164.IsUnset() {
 		vals = append(vals, "owner_phone_e164")
 	}
+	if s.ParcelID.IsValue() {
+		vals = append(vals, "parcel_id")
+	}
 	if !s.ResidentOwned.IsUnset() {
 		vals = append(vals, "resident_owned")
-	}
-	if !s.ResidentPhoneE164.IsUnset() {
-		vals = append(vals, "resident_phone_e164")
 	}
 	if s.Tags.IsValue() {
 		vals = append(vals, "tags")
@@ -199,11 +205,11 @@ func (s SiteSetter) Overwrite(t *Site) {
 	if !s.OwnerPhoneE164.IsUnset() {
 		t.OwnerPhoneE164 = s.OwnerPhoneE164.MustGetNull()
 	}
+	if s.ParcelID.IsValue() {
+		t.ParcelID = s.ParcelID.MustGet()
+	}
 	if !s.ResidentOwned.IsUnset() {
 		t.ResidentOwned = s.ResidentOwned.MustGetNull()
-	}
-	if !s.ResidentPhoneE164.IsUnset() {
-		t.ResidentPhoneE164 = s.ResidentPhoneE164.MustGetNull()
 	}
 	if s.Tags.IsValue() {
 		t.Tags = s.Tags.MustGet()
@@ -274,14 +280,14 @@ func (s *SiteSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentOwned.IsUnset() {
-			vals[9] = psql.Arg(s.ResidentOwned.MustGetNull())
+		if s.ParcelID.IsValue() {
+			vals[9] = psql.Arg(s.ParcelID.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentPhoneE164.IsUnset() {
-			vals[10] = psql.Arg(s.ResidentPhoneE164.MustGetNull())
+		if !s.ResidentOwned.IsUnset() {
+			vals[10] = psql.Arg(s.ResidentOwned.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
@@ -372,17 +378,17 @@ func (s SiteSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.ParcelID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "parcel_id")...),
+			psql.Arg(s.ParcelID),
+		}})
+	}
+
 	if !s.ResidentOwned.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "resident_owned")...),
 			psql.Arg(s.ResidentOwned),
-		}})
-	}
-
-	if !s.ResidentPhoneE164.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "resident_phone_e164")...),
-			psql.Arg(s.ResidentPhoneE164),
 		}})
 	}
 
@@ -636,6 +642,90 @@ func (o SiteSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// ComplianceReportRequests starts a query for related objects on compliance_report_request
+func (o *Site) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+	return ComplianceReportRequests.Query(append(mods,
+		sm.Where(ComplianceReportRequests.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(ComplianceReportRequests.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+	)...)
+}
+
+func (os SiteSlice) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+
+	pkVersion := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+		pkVersion = append(pkVersion, o.Version)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
+	))
+
+	return ComplianceReportRequests.Query(append(mods,
+		sm.Where(psql.Group(ComplianceReportRequests.Columns.SiteID, ComplianceReportRequests.Columns.SiteVersion).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Pools starts a query for related objects on pool
+func (o *Site) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	return Pools.Query(append(mods,
+		sm.Where(Pools.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Pools.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+	)...)
+}
+
+func (os SiteSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+
+	pkVersion := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+		pkVersion = append(pkVersion, o.Version)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
+	))
+
+	return Pools.Query(append(mods,
+		sm.Where(psql.Group(Pools.Columns.SiteID, Pools.Columns.SiteVersion).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Residents starts a query for related objects on resident
+func (o *Site) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	return Residents.Query(append(mods,
+		sm.Where(Residents.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Residents.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+	)...)
+}
+
+func (os SiteSlice) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+
+	pkVersion := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+		pkVersion = append(pkVersion, o.Version)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
+	))
+
+	return Residents.Query(append(mods,
+		sm.Where(psql.Group(Residents.Columns.SiteID, Residents.Columns.SiteVersion).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Address starts a query for related objects on address
 func (o *Site) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
 	return Addresses.Query(append(mods,
@@ -706,6 +796,240 @@ func (os SiteSlice) File(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQ
 	return FileuploadFiles.Query(append(mods,
 		sm.Where(psql.Group(FileuploadFiles.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+// Parcel starts a query for related objects on parcel
+func (o *Site) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
+	return Parcels.Query(append(mods,
+		sm.Where(Parcels.Columns.ID.EQ(psql.Arg(o.ParcelID))),
+	)...)
+}
+
+func (os SiteSlice) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
+	pkParcelID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkParcelID = append(pkParcelID, o.ParcelID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkParcelID), "integer[]")),
+	))
+
+	return Parcels.Query(append(mods,
+		sm.Where(psql.Group(Parcels.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+func insertSiteComplianceReportRequests0(ctx context.Context, exec bob.Executor, complianceReportRequests1 []*ComplianceReportRequestSetter, site0 *Site) (ComplianceReportRequestSlice, error) {
+	for i := range complianceReportRequests1 {
+		complianceReportRequests1[i].SiteID = omit.From(site0.ID)
+		complianceReportRequests1[i].SiteVersion = omit.From(site0.Version)
+	}
+
+	ret, err := ComplianceReportRequests.Insert(bob.ToMods(complianceReportRequests1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertSiteComplianceReportRequests0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachSiteComplianceReportRequests0(ctx context.Context, exec bob.Executor, count int, complianceReportRequests1 ComplianceReportRequestSlice, site0 *Site) (ComplianceReportRequestSlice, error) {
+	setter := &ComplianceReportRequestSetter{
+		SiteID:      omit.From(site0.ID),
+		SiteVersion: omit.From(site0.Version),
+	}
+
+	err := complianceReportRequests1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSiteComplianceReportRequests0: %w", err)
+	}
+
+	return complianceReportRequests1, nil
+}
+
+func (site0 *Site) InsertComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequestSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	complianceReportRequests1, err := insertSiteComplianceReportRequests0(ctx, exec, related, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.ComplianceReportRequests = append(site0.R.ComplianceReportRequests, complianceReportRequests1...)
+
+	for _, rel := range complianceReportRequests1 {
+		rel.R.Site = site0
+	}
+	return nil
+}
+
+func (site0 *Site) AttachComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequest) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	complianceReportRequests1 := ComplianceReportRequestSlice(related)
+
+	_, err = attachSiteComplianceReportRequests0(ctx, exec, len(related), complianceReportRequests1, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.ComplianceReportRequests = append(site0.R.ComplianceReportRequests, complianceReportRequests1...)
+
+	for _, rel := range related {
+		rel.R.Site = site0
+	}
+
+	return nil
+}
+
+func insertSitePools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, site0 *Site) (PoolSlice, error) {
+	for i := range pools1 {
+		pools1[i].SiteID = omit.From(site0.ID)
+		pools1[i].SiteVersion = omit.From(site0.Version)
+	}
+
+	ret, err := Pools.Insert(bob.ToMods(pools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertSitePools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachSitePools0(ctx context.Context, exec bob.Executor, count int, pools1 PoolSlice, site0 *Site) (PoolSlice, error) {
+	setter := &PoolSetter{
+		SiteID:      omit.From(site0.ID),
+		SiteVersion: omit.From(site0.Version),
+	}
+
+	err := pools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSitePools0: %w", err)
+	}
+
+	return pools1, nil
+}
+
+func (site0 *Site) InsertPools(ctx context.Context, exec bob.Executor, related ...*PoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	pools1, err := insertSitePools0(ctx, exec, related, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Pools = append(site0.R.Pools, pools1...)
+
+	for _, rel := range pools1 {
+		rel.R.Site = site0
+	}
+	return nil
+}
+
+func (site0 *Site) AttachPools(ctx context.Context, exec bob.Executor, related ...*Pool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	pools1 := PoolSlice(related)
+
+	_, err = attachSitePools0(ctx, exec, len(related), pools1, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Pools = append(site0.R.Pools, pools1...)
+
+	for _, rel := range related {
+		rel.R.Site = site0
+	}
+
+	return nil
+}
+
+func insertSiteResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, site0 *Site) (ResidentSlice, error) {
+	for i := range residents1 {
+		residents1[i].SiteID = omit.From(site0.ID)
+		residents1[i].SiteVersion = omit.From(site0.Version)
+	}
+
+	ret, err := Residents.Insert(bob.ToMods(residents1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertSiteResidents0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachSiteResidents0(ctx context.Context, exec bob.Executor, count int, residents1 ResidentSlice, site0 *Site) (ResidentSlice, error) {
+	setter := &ResidentSetter{
+		SiteID:      omit.From(site0.ID),
+		SiteVersion: omit.From(site0.Version),
+	}
+
+	err := residents1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSiteResidents0: %w", err)
+	}
+
+	return residents1, nil
+}
+
+func (site0 *Site) InsertResidents(ctx context.Context, exec bob.Executor, related ...*ResidentSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	residents1, err := insertSiteResidents0(ctx, exec, related, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Residents = append(site0.R.Residents, residents1...)
+
+	for _, rel := range residents1 {
+		rel.R.Site = site0
+	}
+	return nil
+}
+
+func (site0 *Site) AttachResidents(ctx context.Context, exec bob.Executor, related ...*Resident) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	residents1 := ResidentSlice(related)
+
+	_, err = attachSiteResidents0(ctx, exec, len(related), residents1, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Residents = append(site0.R.Residents, residents1...)
+
+	for _, rel := range related {
+		rel.R.Site = site0
+	}
+
+	return nil
 }
 
 func attachSiteAddress0(ctx context.Context, exec bob.Executor, count int, site0 *Site, address1 *Address) (*Site, error) {
@@ -852,20 +1176,68 @@ func (site0 *Site) AttachFile(ctx context.Context, exec bob.Executor, fileupload
 	return nil
 }
 
+func attachSiteParcel0(ctx context.Context, exec bob.Executor, count int, site0 *Site, parcel1 *Parcel) (*Site, error) {
+	setter := &SiteSetter{
+		ParcelID: omit.From(parcel1.ID),
+	}
+
+	err := site0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSiteParcel0: %w", err)
+	}
+
+	return site0, nil
+}
+
+func (site0 *Site) InsertParcel(ctx context.Context, exec bob.Executor, related *ParcelSetter) error {
+	var err error
+
+	parcel1, err := Parcels.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachSiteParcel0(ctx, exec, 1, site0, parcel1)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Parcel = parcel1
+
+	parcel1.R.Sites = append(parcel1.R.Sites, site0)
+
+	return nil
+}
+
+func (site0 *Site) AttachParcel(ctx context.Context, exec bob.Executor, parcel1 *Parcel) error {
+	var err error
+
+	_, err = attachSiteParcel0(ctx, exec, 1, site0, parcel1)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Parcel = parcel1
+
+	parcel1.R.Sites = append(parcel1.R.Sites, site0)
+
+	return nil
+}
+
 type siteWhere[Q psql.Filterable] struct {
-	AddressID         psql.WhereMod[Q, int32]
-	Created           psql.WhereMod[Q, time.Time]
-	CreatorID         psql.WhereMod[Q, int32]
-	FileID            psql.WhereNullMod[Q, int32]
-	ID                psql.WhereMod[Q, int32]
-	Notes             psql.WhereMod[Q, string]
-	OrganizationID    psql.WhereMod[Q, int32]
-	OwnerName         psql.WhereMod[Q, string]
-	OwnerPhoneE164    psql.WhereNullMod[Q, string]
-	ResidentOwned     psql.WhereNullMod[Q, bool]
-	ResidentPhoneE164 psql.WhereNullMod[Q, string]
-	Tags              psql.WhereMod[Q, pgtypes.HStore]
-	Version           psql.WhereMod[Q, int32]
+	AddressID      psql.WhereMod[Q, int32]
+	Created        psql.WhereMod[Q, time.Time]
+	CreatorID      psql.WhereMod[Q, int32]
+	FileID         psql.WhereNullMod[Q, int32]
+	ID             psql.WhereMod[Q, int32]
+	Notes          psql.WhereMod[Q, string]
+	OrganizationID psql.WhereMod[Q, int32]
+	OwnerName      psql.WhereMod[Q, string]
+	OwnerPhoneE164 psql.WhereNullMod[Q, string]
+	ParcelID       psql.WhereMod[Q, int32]
+	ResidentOwned  psql.WhereNullMod[Q, bool]
+	Tags           psql.WhereMod[Q, pgtypes.HStore]
+	Version        psql.WhereMod[Q, int32]
 }
 
 func (siteWhere[Q]) AliasedAs(alias string) siteWhere[Q] {
@@ -874,19 +1246,19 @@ func (siteWhere[Q]) AliasedAs(alias string) siteWhere[Q] {
 
 func buildSiteWhere[Q psql.Filterable](cols siteColumns) siteWhere[Q] {
 	return siteWhere[Q]{
-		AddressID:         psql.Where[Q, int32](cols.AddressID),
-		Created:           psql.Where[Q, time.Time](cols.Created),
-		CreatorID:         psql.Where[Q, int32](cols.CreatorID),
-		FileID:            psql.WhereNull[Q, int32](cols.FileID),
-		ID:                psql.Where[Q, int32](cols.ID),
-		Notes:             psql.Where[Q, string](cols.Notes),
-		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
-		OwnerName:         psql.Where[Q, string](cols.OwnerName),
-		OwnerPhoneE164:    psql.WhereNull[Q, string](cols.OwnerPhoneE164),
-		ResidentOwned:     psql.WhereNull[Q, bool](cols.ResidentOwned),
-		ResidentPhoneE164: psql.WhereNull[Q, string](cols.ResidentPhoneE164),
-		Tags:              psql.Where[Q, pgtypes.HStore](cols.Tags),
-		Version:           psql.Where[Q, int32](cols.Version),
+		AddressID:      psql.Where[Q, int32](cols.AddressID),
+		Created:        psql.Where[Q, time.Time](cols.Created),
+		CreatorID:      psql.Where[Q, int32](cols.CreatorID),
+		FileID:         psql.WhereNull[Q, int32](cols.FileID),
+		ID:             psql.Where[Q, int32](cols.ID),
+		Notes:          psql.Where[Q, string](cols.Notes),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
+		OwnerName:      psql.Where[Q, string](cols.OwnerName),
+		OwnerPhoneE164: psql.WhereNull[Q, string](cols.OwnerPhoneE164),
+		ParcelID:       psql.Where[Q, int32](cols.ParcelID),
+		ResidentOwned:  psql.WhereNull[Q, bool](cols.ResidentOwned),
+		Tags:           psql.Where[Q, pgtypes.HStore](cols.Tags),
+		Version:        psql.Where[Q, int32](cols.Version),
 	}
 }
 
@@ -896,6 +1268,48 @@ func (o *Site) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "ComplianceReportRequests":
+		rels, ok := retrieved.(ComplianceReportRequestSlice)
+		if !ok {
+			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ComplianceReportRequests = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Site = o
+			}
+		}
+		return nil
+	case "Pools":
+		rels, ok := retrieved.(PoolSlice)
+		if !ok {
+			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Pools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Site = o
+			}
+		}
+		return nil
+	case "Residents":
+		rels, ok := retrieved.(ResidentSlice)
+		if !ok {
+			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Residents = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Site = o
+			}
+		}
+		return nil
 	case "Address":
 		rel, ok := retrieved.(*Address)
 		if !ok {
@@ -932,6 +1346,18 @@ func (o *Site) Preload(name string, retrieved any) error {
 			rel.R.Sites = SiteSlice{o}
 		}
 		return nil
+	case "Parcel":
+		rel, ok := retrieved.(*Parcel)
+		if !ok {
+			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Parcel = rel
+
+		if rel != nil {
+			rel.R.Sites = SiteSlice{o}
+		}
+		return nil
 	default:
 		return fmt.Errorf("site has no relationship %q", name)
 	}
@@ -941,6 +1367,7 @@ type sitePreloader struct {
 	Address     func(...psql.PreloadOption) psql.Preloader
 	CreatorUser func(...psql.PreloadOption) psql.Preloader
 	File        func(...psql.PreloadOption) psql.Preloader
+	Parcel      func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildSitePreloader() sitePreloader {
@@ -984,16 +1411,42 @@ func buildSitePreloader() sitePreloader {
 				},
 			}, FileuploadFiles.Columns.Names(), opts...)
 		},
+		Parcel: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Parcel, ParcelSlice](psql.PreloadRel{
+				Name: "Parcel",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Sites,
+						To:          Parcels,
+						FromColumns: []string{"parcel_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Parcels.Columns.Names(), opts...)
+		},
 	}
 }
 
 type siteThenLoader[Q orm.Loadable] struct {
-	Address     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	File        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Residents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorUser              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	File                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Parcel                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
+	type ComplianceReportRequestsLoadInterface interface {
+		LoadComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PoolsLoadInterface interface {
+		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ResidentsLoadInterface interface {
+		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type AddressLoadInterface interface {
 		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -1003,8 +1456,29 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 	type FileLoadInterface interface {
 		LoadFile(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type ParcelLoadInterface interface {
+		LoadParcel(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 
 	return siteThenLoader[Q]{
+		ComplianceReportRequests: thenLoadBuilder[Q](
+			"ComplianceReportRequests",
+			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadComplianceReportRequests(ctx, exec, mods...)
+			},
+		),
+		Pools: thenLoadBuilder[Q](
+			"Pools",
+			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPools(ctx, exec, mods...)
+			},
+		),
+		Residents: thenLoadBuilder[Q](
+			"Residents",
+			func(ctx context.Context, exec bob.Executor, retrieved ResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadResidents(ctx, exec, mods...)
+			},
+		),
 		Address: thenLoadBuilder[Q](
 			"Address",
 			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1023,7 +1497,208 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 				return retrieved.LoadFile(ctx, exec, mods...)
 			},
 		),
+		Parcel: thenLoadBuilder[Q](
+			"Parcel",
+			func(ctx context.Context, exec bob.Executor, retrieved ParcelLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadParcel(ctx, exec, mods...)
+			},
+		),
 	}
+}
+
+// LoadComplianceReportRequests loads the site's ComplianceReportRequests into the .R struct
+func (o *Site) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ComplianceReportRequests = nil
+
+	related, err := o.ComplianceReportRequests(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Site = o
+	}
+
+	o.R.ComplianceReportRequests = related
+	return nil
+}
+
+// LoadComplianceReportRequests loads the site's ComplianceReportRequests into the .R struct
+func (os SiteSlice) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	complianceReportRequests, err := os.ComplianceReportRequests(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ComplianceReportRequests = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range complianceReportRequests {
+
+			if !(o.ID == rel.SiteID) {
+				continue
+			}
+
+			if !(o.Version == rel.SiteVersion) {
+				continue
+			}
+
+			rel.R.Site = o
+
+			o.R.ComplianceReportRequests = append(o.R.ComplianceReportRequests, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPools loads the site's Pools into the .R struct
+func (o *Site) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Pools = nil
+
+	related, err := o.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Site = o
+	}
+
+	o.R.Pools = related
+	return nil
+}
+
+// LoadPools loads the site's Pools into the .R struct
+func (os SiteSlice) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	pools, err := os.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Pools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range pools {
+
+			if !(o.ID == rel.SiteID) {
+				continue
+			}
+
+			if !(o.Version == rel.SiteVersion) {
+				continue
+			}
+
+			rel.R.Site = o
+
+			o.R.Pools = append(o.R.Pools, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadResidents loads the site's Residents into the .R struct
+func (o *Site) LoadResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Residents = nil
+
+	related, err := o.Residents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Site = o
+	}
+
+	o.R.Residents = related
+	return nil
+}
+
+// LoadResidents loads the site's Residents into the .R struct
+func (os SiteSlice) LoadResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	residents, err := os.Residents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Residents = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range residents {
+
+			if !(o.ID == rel.SiteID) {
+				continue
+			}
+
+			if !(o.Version == rel.SiteVersion) {
+				continue
+			}
+
+			rel.R.Site = o
+
+			o.R.Residents = append(o.R.Residents, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadAddress loads the site's Address into the .R struct
@@ -1185,11 +1860,285 @@ func (os SiteSlice) LoadFile(ctx context.Context, exec bob.Executor, mods ...bob
 	return nil
 }
 
+// LoadParcel loads the site's Parcel into the .R struct
+func (o *Site) LoadParcel(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Parcel = nil
+
+	related, err := o.Parcel(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Sites = SiteSlice{o}
+
+	o.R.Parcel = related
+	return nil
+}
+
+// LoadParcel loads the site's Parcel into the .R struct
+func (os SiteSlice) LoadParcel(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	parcels, err := os.Parcel(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range parcels {
+
+			if !(o.ParcelID == rel.ID) {
+				continue
+			}
+
+			rel.R.Sites = append(rel.R.Sites, o)
+
+			o.R.Parcel = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// siteC is where relationship counts are stored.
+type siteC struct {
+	ComplianceReportRequests *int64
+	Pools                    *int64
+	Residents                *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *Site) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "ComplianceReportRequests":
+		o.C.ComplianceReportRequests = &count
+	case "Pools":
+		o.C.Pools = &count
+	case "Residents":
+		o.C.Residents = &count
+	}
+	return nil
+}
+
+type siteCountPreloader struct {
+	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Pools                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Residents                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildSiteCountPreloader() siteCountPreloader {
+	return siteCountPreloader{
+		ComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Site]("ComplianceReportRequests", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Sites.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(ComplianceReportRequests.Name()),
+					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
+					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		Pools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Site]("Pools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Sites.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Pools.Name()),
+					sm.Where(psql.Quote(Pools.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
+					sm.Where(psql.Quote(Pools.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		Residents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Site]("Residents", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Sites.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Residents.Name()),
+					sm.Where(psql.Quote(Residents.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
+					sm.Where(psql.Quote(Residents.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type siteCountThenLoader[Q orm.Loadable] struct {
+	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Residents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildSiteCountThenLoader[Q orm.Loadable]() siteCountThenLoader[Q] {
+	type ComplianceReportRequestsCountInterface interface {
+		LoadCountComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PoolsCountInterface interface {
+		LoadCountPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ResidentsCountInterface interface {
+		LoadCountResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return siteCountThenLoader[Q]{
+		ComplianceReportRequests: countThenLoadBuilder[Q](
+			"ComplianceReportRequests",
+			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountComplianceReportRequests(ctx, exec, mods...)
+			},
+		),
+		Pools: countThenLoadBuilder[Q](
+			"Pools",
+			func(ctx context.Context, exec bob.Executor, retrieved PoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountPools(ctx, exec, mods...)
+			},
+		),
+		Residents: countThenLoadBuilder[Q](
+			"Residents",
+			func(ctx context.Context, exec bob.Executor, retrieved ResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountResidents(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests into the C struct
+func (o *Site) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.ComplianceReportRequests(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.ComplianceReportRequests = &count
+	return nil
+}
+
+// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests for a slice
+func (os SiteSlice) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountComplianceReportRequests(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountPools loads the count of Pools into the C struct
+func (o *Site) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Pools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Pools = &count
+	return nil
+}
+
+// LoadCountPools loads the count of Pools for a slice
+func (os SiteSlice) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountResidents loads the count of Residents into the C struct
+func (o *Site) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Residents(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Residents = &count
+	return nil
+}
+
+// LoadCountResidents loads the count of Residents for a slice
+func (os SiteSlice) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountResidents(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type siteJoins[Q dialect.Joinable] struct {
-	typ         string
-	Address     modAs[Q, addressColumns]
-	CreatorUser modAs[Q, userColumns]
-	File        modAs[Q, fileuploadFileColumns]
+	typ                      string
+	ComplianceReportRequests modAs[Q, complianceReportRequestColumns]
+	Pools                    modAs[Q, poolColumns]
+	Residents                modAs[Q, residentColumns]
+	Address                  modAs[Q, addressColumns]
+	CreatorUser              modAs[Q, userColumns]
+	File                     modAs[Q, fileuploadFileColumns]
+	Parcel                   modAs[Q, parcelColumns]
 }
 
 func (j siteJoins[Q]) aliasedAs(alias string) siteJoins[Q] {
@@ -1199,6 +2148,48 @@ func (j siteJoins[Q]) aliasedAs(alias string) siteJoins[Q] {
 func buildSiteJoins[Q dialect.Joinable](cols siteColumns, typ string) siteJoins[Q] {
 	return siteJoins[Q]{
 		typ: typ,
+		ComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
+			c: ComplianceReportRequests.Columns,
+			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
+						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
+					))
+				}
+
+				return mods
+			},
+		},
+		Pools: modAs[Q, poolColumns]{
+			c: Pools.Columns,
+			f: func(to poolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
+						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
+					))
+				}
+
+				return mods
+			},
+		},
+		Residents: modAs[Q, residentColumns]{
+			c: Residents.Columns,
+			f: func(to residentColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
+						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
+					))
+				}
+
+				return mods
+			},
+		},
 		Address: modAs[Q, addressColumns]{
 			c: Addresses.Columns,
 			f: func(to addressColumns) bob.Mod[Q] {
@@ -1235,6 +2226,20 @@ func buildSiteJoins[Q dialect.Joinable](cols siteColumns, typ string) siteJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.FileID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Parcel: modAs[Q, parcelColumns]{
+			c: Parcels.Columns,
+			f: func(to parcelColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Parcels.Name().As(to.Alias())).On(
+						to.ID.EQ(cols.ParcelID),
 					))
 				}
 

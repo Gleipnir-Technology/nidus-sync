@@ -58,18 +58,20 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	PublicUserUser    ArcgisUserSlice     // arcgis.user_.user__public_user_id_fkey
-	CreatorFiles      FileuploadFileSlice // fileupload.file.file_creator_id_fkey
-	FileuploadPool    FileuploadPoolSlice // fileupload.pool.pool_creator_id_fkey
-	CreatorNoteAudios NoteAudioSlice      // note_audio.note_audio_creator_id_fkey
-	DeletorNoteAudios NoteAudioSlice      // note_audio.note_audio_deletor_id_fkey
-	CreatorNoteImages NoteImageSlice      // note_image.note_image_creator_id_fkey
-	DeletorNoteImages NoteImageSlice      // note_image.note_image_deletor_id_fkey
-	UserNotifications NotificationSlice   // notification.notification_user_id_fkey
-	UserOauthTokens   OauthTokenSlice     // oauth_token.oauth_token_user_id_fkey
-	CreatorPools      PoolSlice           // pool.pool_creator_id_fkey
-	CreatorSites      SiteSlice           // site.site_creator_id_fkey
-	Organization      *Organization       // user_.user__organization_id_fkey
+	UserOauthTokens                 ArcgisOauthTokenSlice        // arcgis.oauth_token.oauth_token_user_id_fkey
+	PublicUserUser                  ArcgisUserSlice              // arcgis.user_.user__public_user_id_fkey
+	CreatorComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
+	CreatorFiles                    FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
+	FileuploadPool                  FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
+	CreatorNoteAudios               NoteAudioSlice               // note_audio.note_audio_creator_id_fkey
+	DeletorNoteAudios               NoteAudioSlice               // note_audio.note_audio_deletor_id_fkey
+	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
+	DeletorNoteImages               NoteImageSlice               // note_image.note_image_deletor_id_fkey
+	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
+	CreatorPools                    PoolSlice                    // pool.pool_creator_id_fkey
+	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
+	CreatorSites                    SiteSlice                    // site.site_creator_id_fkey
+	Organization                    *Organization                // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -638,6 +640,30 @@ func (o UserSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// UserOauthTokens starts a query for related objects on arcgis.oauth_token
+func (o *User) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisOauthTokensQuery {
+	return ArcgisOauthTokens.Query(append(mods,
+		sm.Where(ArcgisOauthTokens.Columns.UserID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisOauthTokensQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ArcgisOauthTokens.Query(append(mods,
+		sm.Where(psql.Group(ArcgisOauthTokens.Columns.UserID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // PublicUserUser starts a query for related objects on arcgis.user_
 func (o *User) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisUsersQuery {
 	return ArcgisUsers.Query(append(mods,
@@ -659,6 +685,30 @@ func (os UserSlice) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) Arcgis
 
 	return ArcgisUsers.Query(append(mods,
 		sm.Where(psql.Group(ArcgisUsers.Columns.PublicUserID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// CreatorComplianceReportRequests starts a query for related objects on compliance_report_request
+func (o *User) CreatorComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+	return ComplianceReportRequests.Query(append(mods,
+		sm.Where(ComplianceReportRequests.Columns.Creator.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ComplianceReportRequests.Query(append(mods,
+		sm.Where(psql.Group(ComplianceReportRequests.Columns.Creator).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -830,30 +880,6 @@ func (os UserSlice) UserNotifications(mods ...bob.Mod[*dialect.SelectQuery]) Not
 	)...)
 }
 
-// UserOauthTokens starts a query for related objects on oauth_token
-func (o *User) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) OauthTokensQuery {
-	return OauthTokens.Query(append(mods,
-		sm.Where(OauthTokens.Columns.UserID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os UserSlice) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) OauthTokensQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return OauthTokens.Query(append(mods,
-		sm.Where(psql.Group(OauthTokens.Columns.UserID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 // CreatorPools starts a query for related objects on pool
 func (o *User) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
 	return Pools.Query(append(mods,
@@ -875,6 +901,30 @@ func (os UserSlice) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQue
 
 	return Pools.Query(append(mods,
 		sm.Where(psql.Group(Pools.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// CreatorResidents starts a query for related objects on resident
+func (o *User) CreatorResidents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	return Residents.Query(append(mods,
+		sm.Where(Residents.Columns.Creator.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorResidents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Residents.Query(append(mods,
+		sm.Where(psql.Group(Residents.Columns.Creator).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -924,6 +974,74 @@ func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 	return Organizations.Query(append(mods,
 		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertUserUserOauthTokens0(ctx context.Context, exec bob.Executor, arcgisOauthTokens1 []*ArcgisOauthTokenSetter, user0 *User) (ArcgisOauthTokenSlice, error) {
+	for i := range arcgisOauthTokens1 {
+		arcgisOauthTokens1[i].UserID = omit.From(user0.ID)
+	}
+
+	ret, err := ArcgisOauthTokens.Insert(bob.ToMods(arcgisOauthTokens1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserUserOauthTokens0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserUserOauthTokens0(ctx context.Context, exec bob.Executor, count int, arcgisOauthTokens1 ArcgisOauthTokenSlice, user0 *User) (ArcgisOauthTokenSlice, error) {
+	setter := &ArcgisOauthTokenSetter{
+		UserID: omit.From(user0.ID),
+	}
+
+	err := arcgisOauthTokens1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserUserOauthTokens0: %w", err)
+	}
+
+	return arcgisOauthTokens1, nil
+}
+
+func (user0 *User) InsertUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*ArcgisOauthTokenSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	arcgisOauthTokens1, err := insertUserUserOauthTokens0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, arcgisOauthTokens1...)
+
+	for _, rel := range arcgisOauthTokens1 {
+		rel.R.UserUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*ArcgisOauthToken) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	arcgisOauthTokens1 := ArcgisOauthTokenSlice(related)
+
+	_, err = attachUserUserOauthTokens0(ctx, exec, len(related), arcgisOauthTokens1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, arcgisOauthTokens1...)
+
+	for _, rel := range related {
+		rel.R.UserUser = user0
+	}
+
+	return nil
 }
 
 func insertUserPublicUserUser0(ctx context.Context, exec bob.Executor, arcgisusers1 []*ArcgisUserSetter, user0 *User) (ArcgisUserSlice, error) {
@@ -989,6 +1107,74 @@ func (user0 *User) AttachPublicUserUser(ctx context.Context, exec bob.Executor, 
 
 	for _, rel := range related {
 		rel.R.PublicUserUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorComplianceReportRequests0(ctx context.Context, exec bob.Executor, complianceReportRequests1 []*ComplianceReportRequestSetter, user0 *User) (ComplianceReportRequestSlice, error) {
+	for i := range complianceReportRequests1 {
+		complianceReportRequests1[i].Creator = omit.From(user0.ID)
+	}
+
+	ret, err := ComplianceReportRequests.Insert(bob.ToMods(complianceReportRequests1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorComplianceReportRequests0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorComplianceReportRequests0(ctx context.Context, exec bob.Executor, count int, complianceReportRequests1 ComplianceReportRequestSlice, user0 *User) (ComplianceReportRequestSlice, error) {
+	setter := &ComplianceReportRequestSetter{
+		Creator: omit.From(user0.ID),
+	}
+
+	err := complianceReportRequests1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorComplianceReportRequests0: %w", err)
+	}
+
+	return complianceReportRequests1, nil
+}
+
+func (user0 *User) InsertCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequestSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	complianceReportRequests1, err := insertUserCreatorComplianceReportRequests0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorComplianceReportRequests = append(user0.R.CreatorComplianceReportRequests, complianceReportRequests1...)
+
+	for _, rel := range complianceReportRequests1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequest) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	complianceReportRequests1 := ComplianceReportRequestSlice(related)
+
+	_, err = attachUserCreatorComplianceReportRequests0(ctx, exec, len(related), complianceReportRequests1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorComplianceReportRequests = append(user0.R.CreatorComplianceReportRequests, complianceReportRequests1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
 	}
 
 	return nil
@@ -1470,74 +1656,6 @@ func (user0 *User) AttachUserNotifications(ctx context.Context, exec bob.Executo
 	return nil
 }
 
-func insertUserUserOauthTokens0(ctx context.Context, exec bob.Executor, oauthTokens1 []*OauthTokenSetter, user0 *User) (OauthTokenSlice, error) {
-	for i := range oauthTokens1 {
-		oauthTokens1[i].UserID = omit.From(user0.ID)
-	}
-
-	ret, err := OauthTokens.Insert(bob.ToMods(oauthTokens1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertUserUserOauthTokens0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachUserUserOauthTokens0(ctx context.Context, exec bob.Executor, count int, oauthTokens1 OauthTokenSlice, user0 *User) (OauthTokenSlice, error) {
-	setter := &OauthTokenSetter{
-		UserID: omit.From(user0.ID),
-	}
-
-	err := oauthTokens1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachUserUserOauthTokens0: %w", err)
-	}
-
-	return oauthTokens1, nil
-}
-
-func (user0 *User) InsertUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*OauthTokenSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	oauthTokens1, err := insertUserUserOauthTokens0(ctx, exec, related, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, oauthTokens1...)
-
-	for _, rel := range oauthTokens1 {
-		rel.R.UserUser = user0
-	}
-	return nil
-}
-
-func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*OauthToken) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	oauthTokens1 := OauthTokenSlice(related)
-
-	_, err = attachUserUserOauthTokens0(ctx, exec, len(related), oauthTokens1, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, oauthTokens1...)
-
-	for _, rel := range related {
-		rel.R.UserUser = user0
-	}
-
-	return nil
-}
-
 func insertUserCreatorPools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, user0 *User) (PoolSlice, error) {
 	for i := range pools1 {
 		pools1[i].CreatorID = omit.From(user0.ID)
@@ -1598,6 +1716,74 @@ func (user0 *User) AttachCreatorPools(ctx context.Context, exec bob.Executor, re
 	}
 
 	user0.R.CreatorPools = append(user0.R.CreatorPools, pools1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, user0 *User) (ResidentSlice, error) {
+	for i := range residents1 {
+		residents1[i].Creator = omit.From(user0.ID)
+	}
+
+	ret, err := Residents.Insert(bob.ToMods(residents1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorResidents0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorResidents0(ctx context.Context, exec bob.Executor, count int, residents1 ResidentSlice, user0 *User) (ResidentSlice, error) {
+	setter := &ResidentSetter{
+		Creator: omit.From(user0.ID),
+	}
+
+	err := residents1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorResidents0: %w", err)
+	}
+
+	return residents1, nil
+}
+
+func (user0 *User) InsertCreatorResidents(ctx context.Context, exec bob.Executor, related ...*ResidentSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	residents1, err := insertUserCreatorResidents0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorResidents = append(user0.R.CreatorResidents, residents1...)
+
+	for _, rel := range residents1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorResidents(ctx context.Context, exec bob.Executor, related ...*Resident) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	residents1 := ResidentSlice(related)
+
+	_, err = attachUserCreatorResidents0(ctx, exec, len(related), residents1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorResidents = append(user0.R.CreatorResidents, residents1...)
 
 	for _, rel := range related {
 		rel.R.CreatorUser = user0
@@ -1766,6 +1952,20 @@ func (o *User) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "UserOauthTokens":
+		rels, ok := retrieved.(ArcgisOauthTokenSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.UserOauthTokens = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.UserUser = o
+			}
+		}
+		return nil
 	case "PublicUserUser":
 		rels, ok := retrieved.(ArcgisUserSlice)
 		if !ok {
@@ -1777,6 +1977,20 @@ func (o *User) Preload(name string, retrieved any) error {
 		for _, rel := range rels {
 			if rel != nil {
 				rel.R.PublicUserUser = o
+			}
+		}
+		return nil
+	case "CreatorComplianceReportRequests":
+		rels, ok := retrieved.(ComplianceReportRequestSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorComplianceReportRequests = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
 			}
 		}
 		return nil
@@ -1878,20 +2092,6 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "UserOauthTokens":
-		rels, ok := retrieved.(OauthTokenSlice)
-		if !ok {
-			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.UserOauthTokens = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.UserUser = o
-			}
-		}
-		return nil
 	case "CreatorPools":
 		rels, ok := retrieved.(PoolSlice)
 		if !ok {
@@ -1899,6 +2099,20 @@ func (o *User) Preload(name string, retrieved any) error {
 		}
 
 		o.R.CreatorPools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
+	case "CreatorResidents":
+		rels, ok := retrieved.(ResidentSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorResidents = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1960,23 +2174,31 @@ func buildUserPreloader() userPreloader {
 }
 
 type userThenLoader[Q orm.Loadable] struct {
-	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FileuploadPool    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSites      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
+	type UserOauthTokensLoadInterface interface {
+		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type PublicUserUserLoadInterface interface {
 		LoadPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorComplianceReportRequestsLoadInterface interface {
+		LoadCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorFilesLoadInterface interface {
 		LoadCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1999,11 +2221,11 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	type UserNotificationsLoadInterface interface {
 		LoadUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type UserOauthTokensLoadInterface interface {
-		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type CreatorPoolsLoadInterface interface {
 		LoadCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorResidentsLoadInterface interface {
+		LoadCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorSitesLoadInterface interface {
 		LoadCreatorSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2013,10 +2235,22 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 
 	return userThenLoader[Q]{
+		UserOauthTokens: thenLoadBuilder[Q](
+			"UserOauthTokens",
+			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadUserOauthTokens(ctx, exec, mods...)
+			},
+		),
 		PublicUserUser: thenLoadBuilder[Q](
 			"PublicUserUser",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPublicUserUser(ctx, exec, mods...)
+			},
+		),
+		CreatorComplianceReportRequests: thenLoadBuilder[Q](
+			"CreatorComplianceReportRequests",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorComplianceReportRequestsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorComplianceReportRequests(ctx, exec, mods...)
 			},
 		),
 		CreatorFiles: thenLoadBuilder[Q](
@@ -2061,16 +2295,16 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 				return retrieved.LoadUserNotifications(ctx, exec, mods...)
 			},
 		),
-		UserOauthTokens: thenLoadBuilder[Q](
-			"UserOauthTokens",
-			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadUserOauthTokens(ctx, exec, mods...)
-			},
-		),
 		CreatorPools: thenLoadBuilder[Q](
 			"CreatorPools",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorPools(ctx, exec, mods...)
+			},
+		),
+		CreatorResidents: thenLoadBuilder[Q](
+			"CreatorResidents",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorResidents(ctx, exec, mods...)
 			},
 		),
 		CreatorSites: thenLoadBuilder[Q](
@@ -2086,6 +2320,67 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
+func (o *User) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.UserOauthTokens = nil
+
+	related, err := o.UserOauthTokens(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.UserUser = o
+	}
+
+	o.R.UserOauthTokens = related
+	return nil
+}
+
+// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
+func (os UserSlice) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	arcgisOauthTokens, err := os.UserOauthTokens(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.UserOauthTokens = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range arcgisOauthTokens {
+
+			if !(o.ID == rel.UserID) {
+				continue
+			}
+
+			rel.R.UserUser = o
+
+			o.R.UserOauthTokens = append(o.R.UserOauthTokens, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadPublicUserUser loads the user's PublicUserUser into the .R struct
@@ -2143,6 +2438,67 @@ func (os UserSlice) LoadPublicUserUser(ctx context.Context, exec bob.Executor, m
 			rel.R.PublicUserUser = o
 
 			o.R.PublicUserUser = append(o.R.PublicUserUser, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorComplianceReportRequests loads the user's CreatorComplianceReportRequests into the .R struct
+func (o *User) LoadCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorComplianceReportRequests = nil
+
+	related, err := o.CreatorComplianceReportRequests(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorComplianceReportRequests = related
+	return nil
+}
+
+// LoadCreatorComplianceReportRequests loads the user's CreatorComplianceReportRequests into the .R struct
+func (os UserSlice) LoadCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	complianceReportRequests, err := os.CreatorComplianceReportRequests(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorComplianceReportRequests = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range complianceReportRequests {
+
+			if !(o.ID == rel.Creator) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorComplianceReportRequests = append(o.R.CreatorComplianceReportRequests, rel)
 		}
 	}
 
@@ -2582,67 +2938,6 @@ func (os UserSlice) LoadUserNotifications(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
-func (o *User) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.UserOauthTokens = nil
-
-	related, err := o.UserOauthTokens(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.UserUser = o
-	}
-
-	o.R.UserOauthTokens = related
-	return nil
-}
-
-// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
-func (os UserSlice) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	oauthTokens, err := os.UserOauthTokens(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.UserOauthTokens = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range oauthTokens {
-
-			if !(o.ID == rel.UserID) {
-				continue
-			}
-
-			rel.R.UserUser = o
-
-			o.R.UserOauthTokens = append(o.R.UserOauthTokens, rel)
-		}
-	}
-
-	return nil
-}
-
 // LoadCreatorPools loads the user's CreatorPools into the .R struct
 func (o *User) LoadCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -2698,6 +2993,67 @@ func (os UserSlice) LoadCreatorPools(ctx context.Context, exec bob.Executor, mod
 			rel.R.CreatorUser = o
 
 			o.R.CreatorPools = append(o.R.CreatorPools, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorResidents loads the user's CreatorResidents into the .R struct
+func (o *User) LoadCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorResidents = nil
+
+	related, err := o.CreatorResidents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorResidents = related
+	return nil
+}
+
+// LoadCreatorResidents loads the user's CreatorResidents into the .R struct
+func (os UserSlice) LoadCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	residents, err := os.CreatorResidents(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorResidents = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range residents {
+
+			if !(o.ID == rel.Creator) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorResidents = append(o.R.CreatorResidents, rel)
 		}
 	}
 
@@ -2819,17 +3175,19 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 
 // userC is where relationship counts are stored.
 type userC struct {
-	PublicUserUser    *int64
-	CreatorFiles      *int64
-	FileuploadPool    *int64
-	CreatorNoteAudios *int64
-	DeletorNoteAudios *int64
-	CreatorNoteImages *int64
-	DeletorNoteImages *int64
-	UserNotifications *int64
-	UserOauthTokens   *int64
-	CreatorPools      *int64
-	CreatorSites      *int64
+	UserOauthTokens                 *int64
+	PublicUserUser                  *int64
+	CreatorComplianceReportRequests *int64
+	CreatorFiles                    *int64
+	FileuploadPool                  *int64
+	CreatorNoteAudios               *int64
+	DeletorNoteAudios               *int64
+	CreatorNoteImages               *int64
+	DeletorNoteImages               *int64
+	UserNotifications               *int64
+	CreatorPools                    *int64
+	CreatorResidents                *int64
+	CreatorSites                    *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -2839,8 +3197,12 @@ func (o *User) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "UserOauthTokens":
+		o.C.UserOauthTokens = &count
 	case "PublicUserUser":
 		o.C.PublicUserUser = &count
+	case "CreatorComplianceReportRequests":
+		o.C.CreatorComplianceReportRequests = &count
 	case "CreatorFiles":
 		o.C.CreatorFiles = &count
 	case "FileuploadPool":
@@ -2855,10 +3217,10 @@ func (o *User) PreloadCount(name string, count int64) error {
 		o.C.DeletorNoteImages = &count
 	case "UserNotifications":
 		o.C.UserNotifications = &count
-	case "UserOauthTokens":
-		o.C.UserOauthTokens = &count
 	case "CreatorPools":
 		o.C.CreatorPools = &count
+	case "CreatorResidents":
+		o.C.CreatorResidents = &count
 	case "CreatorSites":
 		o.C.CreatorSites = &count
 	}
@@ -2866,21 +3228,40 @@ func (o *User) PreloadCount(name string, count int64) error {
 }
 
 type userCountPreloader struct {
-	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	FileuploadPool    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorSites      func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildUserCountPreloader() userCountPreloader {
 	return userCountPreloader{
+		UserOauthTokens: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("UserOauthTokens", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(ArcgisOauthTokens.Name()),
+					sm.Where(psql.Quote(ArcgisOauthTokens.Alias(), "user_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		PublicUserUser: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*User]("PublicUserUser", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -2893,6 +3274,23 @@ func buildUserCountPreloader() userCountPreloader {
 
 					sm.From(ArcgisUsers.Name()),
 					sm.Where(psql.Quote(ArcgisUsers.Alias(), "public_user_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		CreatorComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorComplianceReportRequests", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(ComplianceReportRequests.Name()),
+					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -3017,23 +3415,6 @@ func buildUserCountPreloader() userCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
-		UserOauthTokens: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("UserOauthTokens", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(OauthTokens.Name()),
-					sm.Where(psql.Quote(OauthTokens.Alias(), "user_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
 		CreatorPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*User]("CreatorPools", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -3046,6 +3427,23 @@ func buildUserCountPreloader() userCountPreloader {
 
 					sm.From(Pools.Name()),
 					sm.Where(psql.Quote(Pools.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		CreatorResidents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorResidents", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Residents.Name()),
+					sm.Where(psql.Quote(Residents.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -3072,22 +3470,30 @@ func buildUserCountPreloader() userCountPreloader {
 }
 
 type userCountThenLoader[Q orm.Loadable] struct {
-	PublicUserUser    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorFiles      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FileuploadPool    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteAudios func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteImages func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserNotifications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserOauthTokens   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorPools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSites      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
+	type UserOauthTokensCountInterface interface {
+		LoadCountUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type PublicUserUserCountInterface interface {
 		LoadCountPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorComplianceReportRequestsCountInterface interface {
+		LoadCountCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorFilesCountInterface interface {
 		LoadCountCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3110,21 +3516,33 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 	type UserNotificationsCountInterface interface {
 		LoadCountUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type UserOauthTokensCountInterface interface {
-		LoadCountUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type CreatorPoolsCountInterface interface {
 		LoadCountCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorResidentsCountInterface interface {
+		LoadCountCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorSitesCountInterface interface {
 		LoadCountCreatorSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return userCountThenLoader[Q]{
+		UserOauthTokens: countThenLoadBuilder[Q](
+			"UserOauthTokens",
+			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountUserOauthTokens(ctx, exec, mods...)
+			},
+		),
 		PublicUserUser: countThenLoadBuilder[Q](
 			"PublicUserUser",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountPublicUserUser(ctx, exec, mods...)
+			},
+		),
+		CreatorComplianceReportRequests: countThenLoadBuilder[Q](
+			"CreatorComplianceReportRequests",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorComplianceReportRequests(ctx, exec, mods...)
 			},
 		),
 		CreatorFiles: countThenLoadBuilder[Q](
@@ -3169,16 +3587,16 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 				return retrieved.LoadCountUserNotifications(ctx, exec, mods...)
 			},
 		),
-		UserOauthTokens: countThenLoadBuilder[Q](
-			"UserOauthTokens",
-			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountUserOauthTokens(ctx, exec, mods...)
-			},
-		),
 		CreatorPools: countThenLoadBuilder[Q](
 			"CreatorPools",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountCreatorPools(ctx, exec, mods...)
+			},
+		),
+		CreatorResidents: countThenLoadBuilder[Q](
+			"CreatorResidents",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorResidents(ctx, exec, mods...)
 			},
 		),
 		CreatorSites: countThenLoadBuilder[Q](
@@ -3188,6 +3606,36 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadCountUserOauthTokens loads the count of UserOauthTokens into the C struct
+func (o *User) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.UserOauthTokens(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.UserOauthTokens = &count
+	return nil
+}
+
+// LoadCountUserOauthTokens loads the count of UserOauthTokens for a slice
+func (os UserSlice) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountUserOauthTokens(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountPublicUserUser loads the count of PublicUserUser into the C struct
@@ -3213,6 +3661,36 @@ func (os UserSlice) LoadCountPublicUserUser(ctx context.Context, exec bob.Execut
 
 	for _, o := range os {
 		if err := o.LoadCountPublicUserUser(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountCreatorComplianceReportRequests loads the count of CreatorComplianceReportRequests into the C struct
+func (o *User) LoadCountCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorComplianceReportRequests(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorComplianceReportRequests = &count
+	return nil
+}
+
+// LoadCountCreatorComplianceReportRequests loads the count of CreatorComplianceReportRequests for a slice
+func (os UserSlice) LoadCountCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorComplianceReportRequests(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -3430,36 +3908,6 @@ func (os UserSlice) LoadCountUserNotifications(ctx context.Context, exec bob.Exe
 	return nil
 }
 
-// LoadCountUserOauthTokens loads the count of UserOauthTokens into the C struct
-func (o *User) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.UserOauthTokens(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.UserOauthTokens = &count
-	return nil
-}
-
-// LoadCountUserOauthTokens loads the count of UserOauthTokens for a slice
-func (os UserSlice) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountUserOauthTokens(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // LoadCountCreatorPools loads the count of CreatorPools into the C struct
 func (o *User) LoadCountCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -3483,6 +3931,36 @@ func (os UserSlice) LoadCountCreatorPools(ctx context.Context, exec bob.Executor
 
 	for _, o := range os {
 		if err := o.LoadCountCreatorPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountCreatorResidents loads the count of CreatorResidents into the C struct
+func (o *User) LoadCountCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorResidents(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorResidents = &count
+	return nil
+}
+
+// LoadCountCreatorResidents loads the count of CreatorResidents for a slice
+func (os UserSlice) LoadCountCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorResidents(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -3521,19 +3999,21 @@ func (os UserSlice) LoadCountCreatorSites(ctx context.Context, exec bob.Executor
 }
 
 type userJoins[Q dialect.Joinable] struct {
-	typ               string
-	PublicUserUser    modAs[Q, arcgisuserColumns]
-	CreatorFiles      modAs[Q, fileuploadFileColumns]
-	FileuploadPool    modAs[Q, fileuploadPoolColumns]
-	CreatorNoteAudios modAs[Q, noteAudioColumns]
-	DeletorNoteAudios modAs[Q, noteAudioColumns]
-	CreatorNoteImages modAs[Q, noteImageColumns]
-	DeletorNoteImages modAs[Q, noteImageColumns]
-	UserNotifications modAs[Q, notificationColumns]
-	UserOauthTokens   modAs[Q, oauthTokenColumns]
-	CreatorPools      modAs[Q, poolColumns]
-	CreatorSites      modAs[Q, siteColumns]
-	Organization      modAs[Q, organizationColumns]
+	typ                             string
+	UserOauthTokens                 modAs[Q, arcgisOauthTokenColumns]
+	PublicUserUser                  modAs[Q, arcgisuserColumns]
+	CreatorComplianceReportRequests modAs[Q, complianceReportRequestColumns]
+	CreatorFiles                    modAs[Q, fileuploadFileColumns]
+	FileuploadPool                  modAs[Q, fileuploadPoolColumns]
+	CreatorNoteAudios               modAs[Q, noteAudioColumns]
+	DeletorNoteAudios               modAs[Q, noteAudioColumns]
+	CreatorNoteImages               modAs[Q, noteImageColumns]
+	DeletorNoteImages               modAs[Q, noteImageColumns]
+	UserNotifications               modAs[Q, notificationColumns]
+	CreatorPools                    modAs[Q, poolColumns]
+	CreatorResidents                modAs[Q, residentColumns]
+	CreatorSites                    modAs[Q, siteColumns]
+	Organization                    modAs[Q, organizationColumns]
 }
 
 func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
@@ -3543,6 +4023,20 @@ func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
 func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[Q] {
 	return userJoins[Q]{
 		typ: typ,
+		UserOauthTokens: modAs[Q, arcgisOauthTokenColumns]{
+			c: ArcgisOauthTokens.Columns,
+			f: func(to arcgisOauthTokenColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, ArcgisOauthTokens.Name().As(to.Alias())).On(
+						to.UserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		PublicUserUser: modAs[Q, arcgisuserColumns]{
 			c: ArcgisUsers.Columns,
 			f: func(to arcgisuserColumns) bob.Mod[Q] {
@@ -3551,6 +4045,20 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, ArcgisUsers.Name().As(to.Alias())).On(
 						to.PublicUserID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
+			c: ComplianceReportRequests.Columns,
+			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
+						to.Creator.EQ(cols.ID),
 					))
 				}
 
@@ -3655,20 +4163,6 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 				return mods
 			},
 		},
-		UserOauthTokens: modAs[Q, oauthTokenColumns]{
-			c: OauthTokens.Columns,
-			f: func(to oauthTokenColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, OauthTokens.Name().As(to.Alias())).On(
-						to.UserID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
 		CreatorPools: modAs[Q, poolColumns]{
 			c: Pools.Columns,
 			f: func(to poolColumns) bob.Mod[Q] {
@@ -3677,6 +4171,20 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
 						to.CreatorID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorResidents: modAs[Q, residentColumns]{
+			c: Residents.Columns,
+			f: func(to residentColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
+						to.Creator.EQ(cols.ID),
 					))
 				}
 

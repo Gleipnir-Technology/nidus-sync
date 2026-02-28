@@ -21,9 +21,11 @@ var (
 )
 
 type preloadCounts struct {
-	ArcgisFeatureService arcgisFeatureServiceCountPreloader
+	Address              addressCountPreloader
+	ArcgisAccount        arcgisAccountCountPreloader
 	ArcgisLayer          arcgisLayerCountPreloader
 	ArcgisLayerField     arcgisLayerFieldCountPreloader
+	ArcgisServiceFeature arcgisServiceFeatureCountPreloader
 	ArcgisUser           arcgisuserCountPreloader
 	CommsEmailContact    commsEmailContactCountPreloader
 	CommsEmailTemplate   commsEmailTemplateCountPreloader
@@ -33,18 +35,22 @@ type preloadCounts struct {
 	NoteAudio            noteAudioCountPreloader
 	NoteImage            noteImageCountPreloader
 	Organization         organizationCountPreloader
+	Parcel               parcelCountPreloader
 	PublicreportImage    publicreportImageCountPreloader
 	PublicreportNuisance publicreportNuisanceCountPreloader
 	PublicreportPool     publicreportPoolCountPreloader
 	PublicreportQuick    publicreportQuickCountPreloader
+	Site                 siteCountPreloader
 	User                 userCountPreloader
 }
 
 func getPreloadCount() preloadCounts {
 	return preloadCounts{
-		ArcgisFeatureService: buildArcgisFeatureServiceCountPreloader(),
+		Address:              buildAddressCountPreloader(),
+		ArcgisAccount:        buildArcgisAccountCountPreloader(),
 		ArcgisLayer:          buildArcgisLayerCountPreloader(),
 		ArcgisLayerField:     buildArcgisLayerFieldCountPreloader(),
+		ArcgisServiceFeature: buildArcgisServiceFeatureCountPreloader(),
 		ArcgisUser:           buildArcgisUserCountPreloader(),
 		CommsEmailContact:    buildCommsEmailContactCountPreloader(),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountPreloader(),
@@ -54,18 +60,22 @@ func getPreloadCount() preloadCounts {
 		NoteAudio:            buildNoteAudioCountPreloader(),
 		NoteImage:            buildNoteImageCountPreloader(),
 		Organization:         buildOrganizationCountPreloader(),
+		Parcel:               buildParcelCountPreloader(),
 		PublicreportImage:    buildPublicreportImageCountPreloader(),
 		PublicreportNuisance: buildPublicreportNuisanceCountPreloader(),
 		PublicreportPool:     buildPublicreportPoolCountPreloader(),
 		PublicreportQuick:    buildPublicreportQuickCountPreloader(),
+		Site:                 buildSiteCountPreloader(),
 		User:                 buildUserCountPreloader(),
 	}
 }
 
 type thenLoadCounts[Q orm.Loadable] struct {
-	ArcgisFeatureService arcgisFeatureServiceCountThenLoader[Q]
+	Address              addressCountThenLoader[Q]
+	ArcgisAccount        arcgisAccountCountThenLoader[Q]
 	ArcgisLayer          arcgisLayerCountThenLoader[Q]
 	ArcgisLayerField     arcgisLayerFieldCountThenLoader[Q]
+	ArcgisServiceFeature arcgisServiceFeatureCountThenLoader[Q]
 	ArcgisUser           arcgisuserCountThenLoader[Q]
 	CommsEmailContact    commsEmailContactCountThenLoader[Q]
 	CommsEmailTemplate   commsEmailTemplateCountThenLoader[Q]
@@ -75,18 +85,22 @@ type thenLoadCounts[Q orm.Loadable] struct {
 	NoteAudio            noteAudioCountThenLoader[Q]
 	NoteImage            noteImageCountThenLoader[Q]
 	Organization         organizationCountThenLoader[Q]
+	Parcel               parcelCountThenLoader[Q]
 	PublicreportImage    publicreportImageCountThenLoader[Q]
 	PublicreportNuisance publicreportNuisanceCountThenLoader[Q]
 	PublicreportPool     publicreportPoolCountThenLoader[Q]
 	PublicreportQuick    publicreportQuickCountThenLoader[Q]
+	Site                 siteCountThenLoader[Q]
 	User                 userCountThenLoader[Q]
 }
 
 func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 	return thenLoadCounts[Q]{
-		ArcgisFeatureService: buildArcgisFeatureServiceCountThenLoader[Q](),
+		Address:              buildAddressCountThenLoader[Q](),
+		ArcgisAccount:        buildArcgisAccountCountThenLoader[Q](),
 		ArcgisLayer:          buildArcgisLayerCountThenLoader[Q](),
 		ArcgisLayerField:     buildArcgisLayerFieldCountThenLoader[Q](),
+		ArcgisServiceFeature: buildArcgisServiceFeatureCountThenLoader[Q](),
 		ArcgisUser:           buildArcgisUserCountThenLoader[Q](),
 		CommsEmailContact:    buildCommsEmailContactCountThenLoader[Q](),
 		CommsEmailTemplate:   buildCommsEmailTemplateCountThenLoader[Q](),
@@ -96,10 +110,12 @@ func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 		NoteAudio:            buildNoteAudioCountThenLoader[Q](),
 		NoteImage:            buildNoteImageCountThenLoader[Q](),
 		Organization:         buildOrganizationCountThenLoader[Q](),
+		Parcel:               buildParcelCountThenLoader[Q](),
 		PublicreportImage:    buildPublicreportImageCountThenLoader[Q](),
 		PublicreportNuisance: buildPublicreportNuisanceCountThenLoader[Q](),
 		PublicreportPool:     buildPublicreportPoolCountThenLoader[Q](),
 		PublicreportQuick:    buildPublicreportQuickCountThenLoader[Q](),
+		Site:                 buildSiteCountThenLoader[Q](),
 		User:                 buildUserCountThenLoader[Q](),
 	}
 }

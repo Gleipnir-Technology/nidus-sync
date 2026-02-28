@@ -38,35 +38,38 @@ func (mods OrganizationModSlice) Apply(ctx context.Context, n *OrganizationTempl
 // OrganizationTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type OrganizationTemplate struct {
-	ID                         func() int32
-	Name                       func() string
-	ArcgisID                   func() null.Val[string]
-	ArcgisName                 func() null.Val[string]
-	FieldseekerURL             func() null.Val[string]
-	ImportDistrictGid          func() null.Val[int32]
-	Website                    func() null.Val[string]
-	LogoUUID                   func() null.Val[uuid.UUID]
-	Slug                       func() null.Val[string]
-	GeneralManagerName         func() null.Val[string]
-	MailingAddressCity         func() null.Val[string]
-	MailingAddressPostalCode   func() null.Val[string]
-	MailingAddressStreet       func() null.Val[string]
-	OfficeAddressCity          func() null.Val[string]
-	OfficeAddressPostalCode    func() null.Val[string]
-	OfficeAddressStreet        func() null.Val[string]
-	ServiceAreaGeometry        func() null.Val[string]
-	ServiceAreaSquareMeters    func() null.Val[decimal.Decimal]
-	ServiceAreaCentroid        func() null.Val[string]
-	ServiceAreaExtent          func() null.Val[string]
-	OfficeFax                  func() null.Val[string]
-	OfficePhone                func() null.Val[string]
-	ServiceAreaXmin            func() null.Val[float64]
-	ServiceAreaYmin            func() null.Val[float64]
-	ServiceAreaXmax            func() null.Val[float64]
-	ServiceAreaYmax            func() null.Val[float64]
-	ServiceAreaCentroidGeojson func() null.Val[string]
-	ServiceAreaCentroidX       func() null.Val[float64]
-	ServiceAreaCentroidY       func() null.Val[float64]
+	ID                              func() int32
+	Name                            func() string
+	ImportDistrictGid               func() null.Val[int32]
+	Website                         func() null.Val[string]
+	LogoUUID                        func() null.Val[uuid.UUID]
+	Slug                            func() null.Val[string]
+	GeneralManagerName              func() null.Val[string]
+	MailingAddressCity              func() null.Val[string]
+	MailingAddressPostalCode        func() null.Val[string]
+	MailingAddressStreet            func() null.Val[string]
+	OfficeAddressCity               func() null.Val[string]
+	OfficeAddressPostalCode         func() null.Val[string]
+	OfficeAddressStreet             func() null.Val[string]
+	ServiceAreaGeometry             func() null.Val[string]
+	ServiceAreaSquareMeters         func() null.Val[decimal.Decimal]
+	ServiceAreaCentroid             func() null.Val[string]
+	ServiceAreaExtent               func() null.Val[string]
+	OfficeFax                       func() null.Val[string]
+	OfficePhone                     func() null.Val[string]
+	ServiceAreaXmin                 func() null.Val[float64]
+	ServiceAreaYmin                 func() null.Val[float64]
+	ServiceAreaXmax                 func() null.Val[float64]
+	ServiceAreaYmax                 func() null.Val[float64]
+	ServiceAreaCentroidGeojson      func() null.Val[string]
+	ServiceAreaCentroidX            func() null.Val[float64]
+	ServiceAreaCentroidY            func() null.Val[float64]
+	MailingAddressCountry           func() null.Val[string]
+	MailingAddressState             func() null.Val[string]
+	OfficeAddressCountry            func() null.Val[string]
+	OfficeAddressState              func() null.Val[string]
+	ArcgisAccountID                 func() null.Val[string]
+	FieldseekerServiceFeatureItemID func() null.Val[string]
 
 	r organizationR
 	f *Factory
@@ -75,49 +78,56 @@ type OrganizationTemplate struct {
 }
 
 type organizationR struct {
-	AddressMappings         []*organizationRAddressMappingsR
-	ParcelMappings          []*organizationRParcelMappingsR
-	EmailContacts           []*organizationREmailContactsR
-	Phones                  []*organizationRPhonesR
-	Containerrelates        []*organizationRContainerrelatesR
-	Fieldscoutinglogs       []*organizationRFieldscoutinglogsR
-	Habitatrelates          []*organizationRHabitatrelatesR
-	Inspectionsamples       []*organizationRInspectionsamplesR
-	Inspectionsampledetails []*organizationRInspectionsampledetailsR
-	Linelocations           []*organizationRLinelocationsR
-	Locationtrackings       []*organizationRLocationtrackingsR
-	Mosquitoinspections     []*organizationRMosquitoinspectionsR
-	Pointlocations          []*organizationRPointlocationsR
-	Polygonlocations        []*organizationRPolygonlocationsR
-	FieldseekerPool         []*organizationRFieldseekerPoolR
-	Pooldetails             []*organizationRPooldetailsR
-	Proposedtreatmentareas  []*organizationRProposedtreatmentareasR
-	Qamosquitoinspections   []*organizationRQamosquitoinspectionsR
-	Rodentlocations         []*organizationRRodentlocationsR
-	Samplecollections       []*organizationRSamplecollectionsR
-	Samplelocations         []*organizationRSamplelocationsR
-	Servicerequests         []*organizationRServicerequestsR
-	Speciesabundances       []*organizationRSpeciesabundancesR
-	Stormdrains             []*organizationRStormdrainsR
-	Timecards               []*organizationRTimecardsR
-	Trapdata                []*organizationRTrapdataR
-	Traplocations           []*organizationRTraplocationsR
-	Treatments              []*organizationRTreatmentsR
-	Treatmentareas          []*organizationRTreatmentareasR
-	Zones                   []*organizationRZonesR
-	Zones2s                 []*organizationRZones2sR
-	FieldseekerSyncs        []*organizationRFieldseekerSyncsR
-	Files                   []*organizationRFilesR
-	Pools                   []*organizationRPoolsR
-	H3Aggregations          []*organizationRH3AggregationsR
-	NoteAudios              []*organizationRNoteAudiosR
-	NoteImages              []*organizationRNoteImagesR
-	Nuisances               []*organizationRNuisancesR
-	PublicreportPool        []*organizationRPublicreportPoolR
-	Quicks                  []*organizationRQuicksR
-	User                    []*organizationRUserR
+	Accounts                                    []*organizationRAccountsR
+	AddressMappings                             []*organizationRAddressMappingsR
+	ParcelMappings                              []*organizationRParcelMappingsR
+	EmailContacts                               []*organizationREmailContactsR
+	Phones                                      []*organizationRPhonesR
+	Containerrelates                            []*organizationRContainerrelatesR
+	Fieldscoutinglogs                           []*organizationRFieldscoutinglogsR
+	Habitatrelates                              []*organizationRHabitatrelatesR
+	Inspectionsamples                           []*organizationRInspectionsamplesR
+	Inspectionsampledetails                     []*organizationRInspectionsampledetailsR
+	Linelocations                               []*organizationRLinelocationsR
+	Locationtrackings                           []*organizationRLocationtrackingsR
+	Mosquitoinspections                         []*organizationRMosquitoinspectionsR
+	Pointlocations                              []*organizationRPointlocationsR
+	Polygonlocations                            []*organizationRPolygonlocationsR
+	FieldseekerPool                             []*organizationRFieldseekerPoolR
+	Pooldetails                                 []*organizationRPooldetailsR
+	Proposedtreatmentareas                      []*organizationRProposedtreatmentareasR
+	Qamosquitoinspections                       []*organizationRQamosquitoinspectionsR
+	Rodentlocations                             []*organizationRRodentlocationsR
+	Samplecollections                           []*organizationRSamplecollectionsR
+	Samplelocations                             []*organizationRSamplelocationsR
+	Servicerequests                             []*organizationRServicerequestsR
+	Speciesabundances                           []*organizationRSpeciesabundancesR
+	Stormdrains                                 []*organizationRStormdrainsR
+	Timecards                                   []*organizationRTimecardsR
+	Trapdata                                    []*organizationRTrapdataR
+	Traplocations                               []*organizationRTraplocationsR
+	Treatments                                  []*organizationRTreatmentsR
+	Treatmentareas                              []*organizationRTreatmentareasR
+	Zones                                       []*organizationRZonesR
+	Zones2s                                     []*organizationRZones2sR
+	FieldseekerSyncs                            []*organizationRFieldseekerSyncsR
+	Files                                       []*organizationRFilesR
+	Pools                                       []*organizationRPoolsR
+	H3Aggregations                              []*organizationRH3AggregationsR
+	NoteAudios                                  []*organizationRNoteAudiosR
+	NoteImages                                  []*organizationRNoteImagesR
+	ArcgisAccountAccount                        *organizationRArcgisAccountAccountR
+	FieldseekerServiceFeatureItemServiceFeature *organizationRFieldseekerServiceFeatureItemServiceFeatureR
+	Nuisances                                   []*organizationRNuisancesR
+	PublicreportPool                            []*organizationRPublicreportPoolR
+	Quicks                                      []*organizationRQuicksR
+	User                                        []*organizationRUserR
 }
 
+type organizationRAccountsR struct {
+	number int
+	o      *ArcgisAccountTemplate
+}
 type organizationRAddressMappingsR struct {
 	number int
 	o      *ArcgisAddressMappingTemplate
@@ -266,6 +276,12 @@ type organizationRNoteImagesR struct {
 	number int
 	o      *NoteImageTemplate
 }
+type organizationRArcgisAccountAccountR struct {
+	o *ArcgisAccountTemplate
+}
+type organizationRFieldseekerServiceFeatureItemServiceFeatureR struct {
+	o *ArcgisServiceFeatureTemplate
+}
 type organizationRNuisancesR struct {
 	number int
 	o      *PublicreportNuisanceTemplate
@@ -293,6 +309,19 @@ func (o *OrganizationTemplate) Apply(ctx context.Context, mods ...OrganizationMo
 // setModelRels creates and sets the relationships on *models.Organization
 // according to the relationships in the template. Nothing is inserted into the db
 func (t OrganizationTemplate) setModelRels(o *models.Organization) {
+	if t.r.Accounts != nil {
+		rel := models.ArcgisAccountSlice{}
+		for _, r := range t.r.Accounts {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Accounts = rel
+	}
+
 	if t.r.AddressMappings != nil {
 		rel := models.ArcgisAddressMappingSlice{}
 		for _, r := range t.r.AddressMappings {
@@ -772,6 +801,20 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 		o.R.NoteImages = rel
 	}
 
+	if t.r.ArcgisAccountAccount != nil {
+		rel := t.r.ArcgisAccountAccount.o.Build()
+		rel.R.ArcgisAccountOrganizations = append(rel.R.ArcgisAccountOrganizations, o)
+		o.ArcgisAccountID = null.From(rel.ID) // h2
+		o.R.ArcgisAccountAccount = rel
+	}
+
+	if t.r.FieldseekerServiceFeatureItemServiceFeature != nil {
+		rel := t.r.FieldseekerServiceFeatureItemServiceFeature.o.Build()
+		rel.R.FieldseekerServiceFeatureItemOrganizations = append(rel.R.FieldseekerServiceFeatureItemOrganizations, o)
+		o.FieldseekerServiceFeatureItemID = null.From(rel.ItemID) // h2
+		o.R.FieldseekerServiceFeatureItemServiceFeature = rel
+	}
+
 	if t.r.Nuisances != nil {
 		rel := models.PublicreportNuisanceSlice{}
 		for _, r := range t.r.Nuisances {
@@ -838,18 +881,6 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.Name()
 		m.Name = omit.From(val)
 	}
-	if o.ArcgisID != nil {
-		val := o.ArcgisID()
-		m.ArcgisID = omitnull.FromNull(val)
-	}
-	if o.ArcgisName != nil {
-		val := o.ArcgisName()
-		m.ArcgisName = omitnull.FromNull(val)
-	}
-	if o.FieldseekerURL != nil {
-		val := o.FieldseekerURL()
-		m.FieldseekerURL = omitnull.FromNull(val)
-	}
 	if o.ImportDistrictGid != nil {
 		val := o.ImportDistrictGid()
 		m.ImportDistrictGid = omitnull.FromNull(val)
@@ -906,6 +937,30 @@ func (o OrganizationTemplate) BuildSetter() *models.OrganizationSetter {
 		val := o.OfficePhone()
 		m.OfficePhone = omitnull.FromNull(val)
 	}
+	if o.MailingAddressCountry != nil {
+		val := o.MailingAddressCountry()
+		m.MailingAddressCountry = omitnull.FromNull(val)
+	}
+	if o.MailingAddressState != nil {
+		val := o.MailingAddressState()
+		m.MailingAddressState = omitnull.FromNull(val)
+	}
+	if o.OfficeAddressCountry != nil {
+		val := o.OfficeAddressCountry()
+		m.OfficeAddressCountry = omitnull.FromNull(val)
+	}
+	if o.OfficeAddressState != nil {
+		val := o.OfficeAddressState()
+		m.OfficeAddressState = omitnull.FromNull(val)
+	}
+	if o.ArcgisAccountID != nil {
+		val := o.ArcgisAccountID()
+		m.ArcgisAccountID = omitnull.FromNull(val)
+	}
+	if o.FieldseekerServiceFeatureItemID != nil {
+		val := o.FieldseekerServiceFeatureItemID()
+		m.FieldseekerServiceFeatureItemID = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -933,15 +988,6 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	}
 	if o.Name != nil {
 		m.Name = o.Name()
-	}
-	if o.ArcgisID != nil {
-		m.ArcgisID = o.ArcgisID()
-	}
-	if o.ArcgisName != nil {
-		m.ArcgisName = o.ArcgisName()
-	}
-	if o.FieldseekerURL != nil {
-		m.FieldseekerURL = o.FieldseekerURL()
 	}
 	if o.ImportDistrictGid != nil {
 		m.ImportDistrictGid = o.ImportDistrictGid()
@@ -1015,6 +1061,24 @@ func (o OrganizationTemplate) Build() *models.Organization {
 	if o.ServiceAreaCentroidY != nil {
 		m.ServiceAreaCentroidY = o.ServiceAreaCentroidY()
 	}
+	if o.MailingAddressCountry != nil {
+		m.MailingAddressCountry = o.MailingAddressCountry()
+	}
+	if o.MailingAddressState != nil {
+		m.MailingAddressState = o.MailingAddressState()
+	}
+	if o.OfficeAddressCountry != nil {
+		m.OfficeAddressCountry = o.OfficeAddressCountry()
+	}
+	if o.OfficeAddressState != nil {
+		m.OfficeAddressState = o.OfficeAddressState()
+	}
+	if o.ArcgisAccountID != nil {
+		m.ArcgisAccountID = o.ArcgisAccountID()
+	}
+	if o.FieldseekerServiceFeatureItemID != nil {
+		m.FieldseekerServiceFeatureItemID = o.FieldseekerServiceFeatureItemID()
+	}
 
 	o.setModelRels(m)
 
@@ -1047,6 +1111,26 @@ func ensureCreatableOrganization(m *models.OrganizationSetter) {
 func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Organization) error {
 	var err error
 
+	isAccountsDone, _ := organizationRelAccountsCtx.Value(ctx)
+	if !isAccountsDone && o.r.Accounts != nil {
+		ctx = organizationRelAccountsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Accounts {
+			if r.o.alreadyPersisted {
+				m.R.Accounts = append(m.R.Accounts, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachAccounts(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isAddressMappingsDone, _ := organizationRelAddressMappingsCtx.Value(ctx)
 	if !isAddressMappingsDone && o.r.AddressMappings != nil {
 		ctx = organizationRelAddressMappingsCtx.WithValue(ctx, true)
@@ -1054,12 +1138,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.AddressMappings = append(m.R.AddressMappings, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachAddressMappings(ctx, exec, rel0...)
+				err = m.AttachAddressMappings(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -1074,12 +1158,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.ParcelMappings = append(m.R.ParcelMappings, r.o.Build())
 			} else {
-				rel1, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachParcelMappings(ctx, exec, rel1...)
+				err = m.AttachParcelMappings(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -1094,12 +1178,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.EmailContacts = append(m.R.EmailContacts, r.o.Build())
 			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
+				rel3, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachEmailContacts(ctx, exec, rel2...)
+				err = m.AttachEmailContacts(ctx, exec, rel3...)
 				if err != nil {
 					return err
 				}
@@ -1114,12 +1198,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Phones = append(m.R.Phones, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPhones(ctx, exec, rel3...)
+				err = m.AttachPhones(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -1134,12 +1218,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Containerrelates = append(m.R.Containerrelates, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachContainerrelates(ctx, exec, rel4...)
+				err = m.AttachContainerrelates(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -1154,12 +1238,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Fieldscoutinglogs = append(m.R.Fieldscoutinglogs, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldscoutinglogs(ctx, exec, rel5...)
+				err = m.AttachFieldscoutinglogs(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -1174,12 +1258,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Habitatrelates = append(m.R.Habitatrelates, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachHabitatrelates(ctx, exec, rel6...)
+				err = m.AttachHabitatrelates(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -1194,12 +1278,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Inspectionsamples = append(m.R.Inspectionsamples, r.o.Build())
 			} else {
-				rel7, err := r.o.CreateMany(ctx, exec, r.number)
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachInspectionsamples(ctx, exec, rel7...)
+				err = m.AttachInspectionsamples(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -1214,12 +1298,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Inspectionsampledetails = append(m.R.Inspectionsampledetails, r.o.Build())
 			} else {
-				rel8, err := r.o.CreateMany(ctx, exec, r.number)
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachInspectionsampledetails(ctx, exec, rel8...)
+				err = m.AttachInspectionsampledetails(ctx, exec, rel9...)
 				if err != nil {
 					return err
 				}
@@ -1234,12 +1318,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Linelocations = append(m.R.Linelocations, r.o.Build())
 			} else {
-				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				rel10, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachLinelocations(ctx, exec, rel9...)
+				err = m.AttachLinelocations(ctx, exec, rel10...)
 				if err != nil {
 					return err
 				}
@@ -1254,12 +1338,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Locationtrackings = append(m.R.Locationtrackings, r.o.Build())
 			} else {
-				rel10, err := r.o.CreateMany(ctx, exec, r.number)
+				rel11, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachLocationtrackings(ctx, exec, rel10...)
+				err = m.AttachLocationtrackings(ctx, exec, rel11...)
 				if err != nil {
 					return err
 				}
@@ -1274,12 +1358,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Mosquitoinspections = append(m.R.Mosquitoinspections, r.o.Build())
 			} else {
-				rel11, err := r.o.CreateMany(ctx, exec, r.number)
+				rel12, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachMosquitoinspections(ctx, exec, rel11...)
+				err = m.AttachMosquitoinspections(ctx, exec, rel12...)
 				if err != nil {
 					return err
 				}
@@ -1294,12 +1378,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pointlocations = append(m.R.Pointlocations, r.o.Build())
 			} else {
-				rel12, err := r.o.CreateMany(ctx, exec, r.number)
+				rel13, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPointlocations(ctx, exec, rel12...)
+				err = m.AttachPointlocations(ctx, exec, rel13...)
 				if err != nil {
 					return err
 				}
@@ -1314,12 +1398,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Polygonlocations = append(m.R.Polygonlocations, r.o.Build())
 			} else {
-				rel13, err := r.o.CreateMany(ctx, exec, r.number)
+				rel14, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPolygonlocations(ctx, exec, rel13...)
+				err = m.AttachPolygonlocations(ctx, exec, rel14...)
 				if err != nil {
 					return err
 				}
@@ -1334,12 +1418,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.FieldseekerPool = append(m.R.FieldseekerPool, r.o.Build())
 			} else {
-				rel14, err := r.o.CreateMany(ctx, exec, r.number)
+				rel15, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldseekerPool(ctx, exec, rel14...)
+				err = m.AttachFieldseekerPool(ctx, exec, rel15...)
 				if err != nil {
 					return err
 				}
@@ -1354,12 +1438,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pooldetails = append(m.R.Pooldetails, r.o.Build())
 			} else {
-				rel15, err := r.o.CreateMany(ctx, exec, r.number)
+				rel16, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPooldetails(ctx, exec, rel15...)
+				err = m.AttachPooldetails(ctx, exec, rel16...)
 				if err != nil {
 					return err
 				}
@@ -1374,12 +1458,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Proposedtreatmentareas = append(m.R.Proposedtreatmentareas, r.o.Build())
 			} else {
-				rel16, err := r.o.CreateMany(ctx, exec, r.number)
+				rel17, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachProposedtreatmentareas(ctx, exec, rel16...)
+				err = m.AttachProposedtreatmentareas(ctx, exec, rel17...)
 				if err != nil {
 					return err
 				}
@@ -1394,12 +1478,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Qamosquitoinspections = append(m.R.Qamosquitoinspections, r.o.Build())
 			} else {
-				rel17, err := r.o.CreateMany(ctx, exec, r.number)
+				rel18, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQamosquitoinspections(ctx, exec, rel17...)
+				err = m.AttachQamosquitoinspections(ctx, exec, rel18...)
 				if err != nil {
 					return err
 				}
@@ -1414,12 +1498,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Rodentlocations = append(m.R.Rodentlocations, r.o.Build())
 			} else {
-				rel18, err := r.o.CreateMany(ctx, exec, r.number)
+				rel19, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachRodentlocations(ctx, exec, rel18...)
+				err = m.AttachRodentlocations(ctx, exec, rel19...)
 				if err != nil {
 					return err
 				}
@@ -1434,12 +1518,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Samplecollections = append(m.R.Samplecollections, r.o.Build())
 			} else {
-				rel19, err := r.o.CreateMany(ctx, exec, r.number)
+				rel20, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSamplecollections(ctx, exec, rel19...)
+				err = m.AttachSamplecollections(ctx, exec, rel20...)
 				if err != nil {
 					return err
 				}
@@ -1454,12 +1538,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Samplelocations = append(m.R.Samplelocations, r.o.Build())
 			} else {
-				rel20, err := r.o.CreateMany(ctx, exec, r.number)
+				rel21, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSamplelocations(ctx, exec, rel20...)
+				err = m.AttachSamplelocations(ctx, exec, rel21...)
 				if err != nil {
 					return err
 				}
@@ -1474,12 +1558,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Servicerequests = append(m.R.Servicerequests, r.o.Build())
 			} else {
-				rel21, err := r.o.CreateMany(ctx, exec, r.number)
+				rel22, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachServicerequests(ctx, exec, rel21...)
+				err = m.AttachServicerequests(ctx, exec, rel22...)
 				if err != nil {
 					return err
 				}
@@ -1494,12 +1578,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Speciesabundances = append(m.R.Speciesabundances, r.o.Build())
 			} else {
-				rel22, err := r.o.CreateMany(ctx, exec, r.number)
+				rel23, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSpeciesabundances(ctx, exec, rel22...)
+				err = m.AttachSpeciesabundances(ctx, exec, rel23...)
 				if err != nil {
 					return err
 				}
@@ -1514,12 +1598,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Stormdrains = append(m.R.Stormdrains, r.o.Build())
 			} else {
-				rel23, err := r.o.CreateMany(ctx, exec, r.number)
+				rel24, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachStormdrains(ctx, exec, rel23...)
+				err = m.AttachStormdrains(ctx, exec, rel24...)
 				if err != nil {
 					return err
 				}
@@ -1534,12 +1618,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Timecards = append(m.R.Timecards, r.o.Build())
 			} else {
-				rel24, err := r.o.CreateMany(ctx, exec, r.number)
+				rel25, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTimecards(ctx, exec, rel24...)
+				err = m.AttachTimecards(ctx, exec, rel25...)
 				if err != nil {
 					return err
 				}
@@ -1554,12 +1638,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Trapdata = append(m.R.Trapdata, r.o.Build())
 			} else {
-				rel25, err := r.o.CreateMany(ctx, exec, r.number)
+				rel26, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTrapdata(ctx, exec, rel25...)
+				err = m.AttachTrapdata(ctx, exec, rel26...)
 				if err != nil {
 					return err
 				}
@@ -1574,12 +1658,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Traplocations = append(m.R.Traplocations, r.o.Build())
 			} else {
-				rel26, err := r.o.CreateMany(ctx, exec, r.number)
+				rel27, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTraplocations(ctx, exec, rel26...)
+				err = m.AttachTraplocations(ctx, exec, rel27...)
 				if err != nil {
 					return err
 				}
@@ -1594,12 +1678,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Treatments = append(m.R.Treatments, r.o.Build())
 			} else {
-				rel27, err := r.o.CreateMany(ctx, exec, r.number)
+				rel28, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTreatments(ctx, exec, rel27...)
+				err = m.AttachTreatments(ctx, exec, rel28...)
 				if err != nil {
 					return err
 				}
@@ -1614,12 +1698,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Treatmentareas = append(m.R.Treatmentareas, r.o.Build())
 			} else {
-				rel28, err := r.o.CreateMany(ctx, exec, r.number)
+				rel29, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachTreatmentareas(ctx, exec, rel28...)
+				err = m.AttachTreatmentareas(ctx, exec, rel29...)
 				if err != nil {
 					return err
 				}
@@ -1634,12 +1718,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Zones = append(m.R.Zones, r.o.Build())
 			} else {
-				rel29, err := r.o.CreateMany(ctx, exec, r.number)
+				rel30, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachZones(ctx, exec, rel29...)
+				err = m.AttachZones(ctx, exec, rel30...)
 				if err != nil {
 					return err
 				}
@@ -1654,12 +1738,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Zones2s = append(m.R.Zones2s, r.o.Build())
 			} else {
-				rel30, err := r.o.CreateMany(ctx, exec, r.number)
+				rel31, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachZones2s(ctx, exec, rel30...)
+				err = m.AttachZones2s(ctx, exec, rel31...)
 				if err != nil {
 					return err
 				}
@@ -1674,12 +1758,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.FieldseekerSyncs = append(m.R.FieldseekerSyncs, r.o.Build())
 			} else {
-				rel31, err := r.o.CreateMany(ctx, exec, r.number)
+				rel32, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFieldseekerSyncs(ctx, exec, rel31...)
+				err = m.AttachFieldseekerSyncs(ctx, exec, rel32...)
 				if err != nil {
 					return err
 				}
@@ -1694,12 +1778,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Files = append(m.R.Files, r.o.Build())
 			} else {
-				rel32, err := r.o.CreateMany(ctx, exec, r.number)
+				rel33, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFiles(ctx, exec, rel32...)
+				err = m.AttachFiles(ctx, exec, rel33...)
 				if err != nil {
 					return err
 				}
@@ -1714,12 +1798,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pools = append(m.R.Pools, r.o.Build())
 			} else {
-				rel33, err := r.o.CreateMany(ctx, exec, r.number)
+				rel34, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPools(ctx, exec, rel33...)
+				err = m.AttachPools(ctx, exec, rel34...)
 				if err != nil {
 					return err
 				}
@@ -1734,12 +1818,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.H3Aggregations = append(m.R.H3Aggregations, r.o.Build())
 			} else {
-				rel34, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachH3Aggregations(ctx, exec, rel34...)
+				err = m.AttachH3Aggregations(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1754,12 +1838,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel35...)
+				err = m.AttachNoteAudios(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1774,17 +1858,55 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel36...)
+				err = m.AttachNoteImages(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
 			}
 		}
+	}
+
+	isArcgisAccountAccountDone, _ := organizationRelArcgisAccountAccountCtx.Value(ctx)
+	if !isArcgisAccountAccountDone && o.r.ArcgisAccountAccount != nil {
+		ctx = organizationRelArcgisAccountAccountCtx.WithValue(ctx, true)
+		if o.r.ArcgisAccountAccount.o.alreadyPersisted {
+			m.R.ArcgisAccountAccount = o.r.ArcgisAccountAccount.o.Build()
+		} else {
+			var rel38 *models.ArcgisAccount
+			rel38, err = o.r.ArcgisAccountAccount.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachArcgisAccountAccount(ctx, exec, rel38)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
+	isFieldseekerServiceFeatureItemServiceFeatureDone, _ := organizationRelFieldseekerServiceFeatureItemServiceFeatureCtx.Value(ctx)
+	if !isFieldseekerServiceFeatureItemServiceFeatureDone && o.r.FieldseekerServiceFeatureItemServiceFeature != nil {
+		ctx = organizationRelFieldseekerServiceFeatureItemServiceFeatureCtx.WithValue(ctx, true)
+		if o.r.FieldseekerServiceFeatureItemServiceFeature.o.alreadyPersisted {
+			m.R.FieldseekerServiceFeatureItemServiceFeature = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Build()
+		} else {
+			var rel39 *models.ArcgisServiceFeature
+			rel39, err = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachFieldseekerServiceFeatureItemServiceFeature(ctx, exec, rel39)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	isNuisancesDone, _ := organizationRelNuisancesCtx.Value(ctx)
@@ -1794,12 +1916,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel40, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel37...)
+				err = m.AttachNuisances(ctx, exec, rel40...)
 				if err != nil {
 					return err
 				}
@@ -1814,12 +1936,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel38, err := r.o.CreateMany(ctx, exec, r.number)
+				rel41, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel38...)
+				err = m.AttachPublicreportPool(ctx, exec, rel41...)
 				if err != nil {
 					return err
 				}
@@ -1834,12 +1956,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel39, err := r.o.CreateMany(ctx, exec, r.number)
+				rel42, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel39...)
+				err = m.AttachQuicks(ctx, exec, rel42...)
 				if err != nil {
 					return err
 				}
@@ -1854,12 +1976,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel40, err := r.o.CreateMany(ctx, exec, r.number)
+				rel43, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel40...)
+				err = m.AttachUser(ctx, exec, rel43...)
 				if err != nil {
 					return err
 				}
@@ -1961,9 +2083,6 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 	return OrganizationModSlice{
 		OrganizationMods.RandomID(f),
 		OrganizationMods.RandomName(f),
-		OrganizationMods.RandomArcgisID(f),
-		OrganizationMods.RandomArcgisName(f),
-		OrganizationMods.RandomFieldseekerURL(f),
 		OrganizationMods.RandomImportDistrictGid(f),
 		OrganizationMods.RandomWebsite(f),
 		OrganizationMods.RandomLogoUUID(f),
@@ -1988,6 +2107,12 @@ func (m organizationMods) RandomizeAllColumns(f *faker.Faker) OrganizationMod {
 		OrganizationMods.RandomServiceAreaCentroidGeojson(f),
 		OrganizationMods.RandomServiceAreaCentroidX(f),
 		OrganizationMods.RandomServiceAreaCentroidY(f),
+		OrganizationMods.RandomMailingAddressCountry(f),
+		OrganizationMods.RandomMailingAddressState(f),
+		OrganizationMods.RandomOfficeAddressCountry(f),
+		OrganizationMods.RandomOfficeAddressState(f),
+		OrganizationMods.RandomArcgisAccountID(f),
+		OrganizationMods.RandomFieldseekerServiceFeatureItemID(f),
 	}
 }
 
@@ -2049,165 +2174,6 @@ func (m organizationMods) RandomName(f *faker.Faker) OrganizationMod {
 	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
 		o.Name = func() string {
 			return random_string(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m organizationMods) ArcgisID(val null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisID = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m organizationMods) ArcgisIDFunc(f func() null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisID = f
-	})
-}
-
-// Clear any values for the column
-func (m organizationMods) UnsetArcgisID() OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisID = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m organizationMods) RandomArcgisID(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisID = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m organizationMods) RandomArcgisIDNotNull(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisID = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m organizationMods) ArcgisName(val null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisName = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m organizationMods) ArcgisNameFunc(f func() null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisName = f
-	})
-}
-
-// Clear any values for the column
-func (m organizationMods) UnsetArcgisName() OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisName = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m organizationMods) RandomArcgisName(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisName = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m organizationMods) RandomArcgisNameNotNull(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.ArcgisName = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m organizationMods) FieldseekerURL(val null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.FieldseekerURL = func() null.Val[string] { return val }
-	})
-}
-
-// Set the Column from the function
-func (m organizationMods) FieldseekerURLFunc(f func() null.Val[string]) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.FieldseekerURL = f
-	})
-}
-
-// Clear any values for the column
-func (m organizationMods) UnsetFieldseekerURL() OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.FieldseekerURL = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is sometimes null
-func (m organizationMods) RandomFieldseekerURL(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.FieldseekerURL = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
-		}
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-// The generated value is never null
-func (m organizationMods) RandomFieldseekerURLNotNull(f *faker.Faker) OrganizationMod {
-	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
-		o.FieldseekerURL = func() null.Val[string] {
-			if f == nil {
-				f = &defaultFaker
-			}
-
-			val := random_string(f)
-			return null.From(val)
 		}
 	})
 }
@@ -3484,12 +3450,448 @@ func (m organizationMods) RandomServiceAreaCentroidYNotNull(f *faker.Faker) Orga
 	})
 }
 
+// Set the model columns to this value
+func (m organizationMods) MailingAddressCountry(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCountry = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) MailingAddressCountryFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCountry = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetMailingAddressCountry() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCountry = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomMailingAddressCountry(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCountry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomMailingAddressCountryNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressCountry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) MailingAddressState(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressState = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) MailingAddressStateFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressState = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetMailingAddressState() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressState = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomMailingAddressState(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressState = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomMailingAddressStateNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.MailingAddressState = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeAddressCountry(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCountry = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeAddressCountryFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCountry = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeAddressCountry() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCountry = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeAddressCountry(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCountry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeAddressCountryNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressCountry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) OfficeAddressState(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressState = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) OfficeAddressStateFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressState = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetOfficeAddressState() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressState = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomOfficeAddressState(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressState = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomOfficeAddressStateNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.OfficeAddressState = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) ArcgisAccountID(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisAccountID = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) ArcgisAccountIDFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisAccountID = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetArcgisAccountID() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisAccountID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomArcgisAccountID(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisAccountID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomArcgisAccountIDNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.ArcgisAccountID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m organizationMods) FieldseekerServiceFeatureItemID(val null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.FieldseekerServiceFeatureItemID = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m organizationMods) FieldseekerServiceFeatureItemIDFunc(f func() null.Val[string]) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.FieldseekerServiceFeatureItemID = f
+	})
+}
+
+// Clear any values for the column
+func (m organizationMods) UnsetFieldseekerServiceFeatureItemID() OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.FieldseekerServiceFeatureItemID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m organizationMods) RandomFieldseekerServiceFeatureItemID(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.FieldseekerServiceFeatureItemID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m organizationMods) RandomFieldseekerServiceFeatureItemIDNotNull(f *faker.Faker) OrganizationMod {
+	return OrganizationModFunc(func(_ context.Context, o *OrganizationTemplate) {
+		o.FieldseekerServiceFeatureItemID = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m organizationMods) WithParentsCascading() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		if isDone, _ := organizationWithParentsCascadingCtx.Value(ctx); isDone {
 			return
 		}
 		ctx = organizationWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewArcgisAccountWithContext(ctx, ArcgisAccountMods.WithParentsCascading())
+			m.WithArcgisAccountAccount(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewArcgisServiceFeatureWithContext(ctx, ArcgisServiceFeatureMods.WithParentsCascading())
+			m.WithFieldseekerServiceFeatureItemServiceFeature(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m organizationMods) WithArcgisAccountAccount(rel *ArcgisAccountTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ArcgisAccountAccount = &organizationRArcgisAccountAccountR{
+			o: rel,
+		}
+	})
+}
+
+func (m organizationMods) WithNewArcgisAccountAccount(mods ...ArcgisAccountMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisAccountWithContext(ctx, mods...)
+
+		m.WithArcgisAccountAccount(related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) WithExistingArcgisAccountAccount(em *models.ArcgisAccount) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ArcgisAccountAccount = &organizationRArcgisAccountAccountR{
+			o: o.f.FromExistingArcgisAccount(em),
+		}
+	})
+}
+
+func (m organizationMods) WithoutArcgisAccountAccount() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.ArcgisAccountAccount = nil
+	})
+}
+
+func (m organizationMods) WithFieldseekerServiceFeatureItemServiceFeature(rel *ArcgisServiceFeatureTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.FieldseekerServiceFeatureItemServiceFeature = &organizationRFieldseekerServiceFeatureItemServiceFeatureR{
+			o: rel,
+		}
+	})
+}
+
+func (m organizationMods) WithNewFieldseekerServiceFeatureItemServiceFeature(mods ...ArcgisServiceFeatureMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisServiceFeatureWithContext(ctx, mods...)
+
+		m.WithFieldseekerServiceFeatureItemServiceFeature(related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) WithExistingFieldseekerServiceFeatureItemServiceFeature(em *models.ArcgisServiceFeature) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.FieldseekerServiceFeatureItemServiceFeature = &organizationRFieldseekerServiceFeatureItemServiceFeatureR{
+			o: o.f.FromExistingArcgisServiceFeature(em),
+		}
+	})
+}
+
+func (m organizationMods) WithoutFieldseekerServiceFeatureItemServiceFeature() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.FieldseekerServiceFeatureItemServiceFeature = nil
+	})
+}
+
+func (m organizationMods) WithAccounts(number int, related *ArcgisAccountTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Accounts = []*organizationRAccountsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewAccounts(number int, mods ...ArcgisAccountMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisAccountWithContext(ctx, mods...)
+		m.WithAccounts(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddAccounts(number int, related *ArcgisAccountTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Accounts = append(o.r.Accounts, &organizationRAccountsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewAccounts(number int, mods ...ArcgisAccountMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewArcgisAccountWithContext(ctx, mods...)
+		m.AddAccounts(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingAccounts(existingModels ...*models.ArcgisAccount) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Accounts = append(o.r.Accounts, &organizationRAccountsR{
+				o: o.f.FromExistingArcgisAccount(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutAccounts() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Accounts = nil
 	})
 }
 
