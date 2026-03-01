@@ -46,7 +46,7 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 	}
 	ring := (*envelope)[0]
 	p := ring[0]
-	err = writeImage(ctx, w, org, 22, p[1], p[0])
+	err = writeImage(ctx, w, org, 19, p[1], p[0])
 	if err != nil {
 		log.Error().Err(err).Msg("write image")
 		http.Error(w, "failed to write image", http.StatusInternalServerError)
