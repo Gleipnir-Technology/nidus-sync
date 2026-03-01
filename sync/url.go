@@ -9,10 +9,9 @@ type contentURL struct {
 	OAuthRefreshArcGIS string
 	Root               string
 	Route              string
-	SamplePoolCSV      string
 	Sidebar            contentURLSidebar
 	Tegola             string
-	UploadCSVPool      string
+	Upload             contentURLUpload
 }
 
 func newContentURL() contentURL {
@@ -21,10 +20,9 @@ func newContentURL() contentURL {
 		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
 		Root:               config.MakeURLNidus("/"),
 		Route:              config.MakeURLNidus("/route"),
-		SamplePoolCSV:      config.MakeURLNidus("/static/file/sample-pool.csv"),
 		Sidebar:            newContentURLSidebar(),
 		Tegola:             config.MakeURLTegola("/"),
-		UploadCSVPool:      config.MakeURLNidus("/configuration/upload/pool"),
+		Upload:             newContentURLUpload(),
 	}
 }
 
@@ -73,5 +71,21 @@ func newContentURLSidebar() contentURLSidebar {
 		Operations:    config.MakeURLNidus("/operations"),
 		Planning:      config.MakeURLNidus("/planning"),
 		Review:        config.MakeURLNidus("/review"),
+	}
+}
+
+type contentURLUpload struct {
+	Pool          string
+	PoolBob       string
+	PoolCustom    string
+	SamplePoolCSV string
+}
+
+func newContentURLUpload() contentURLUpload {
+	return contentURLUpload{
+		Pool:          config.MakeURLNidus("/configuration/upload/pool"),
+		PoolBob:       config.MakeURLNidus("/configuration/upload/pool/bob"),
+		PoolCustom:    config.MakeURLNidus("/configuration/upload/pool/custom"),
+		SamplePoolCSV: config.MakeURLNidus("/static/file/sample-pool.csv"),
 	}
 }

@@ -45,11 +45,25 @@ type contentUploadDetail struct {
 type contentUploadPoolList struct {
 	Uploads []platform.PoolUpload
 }
-type contentUploadPoolCreate struct{}
+type contentUploadPool struct{}
 
-func getUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPoolCreate], *errorWithStatus) {
-	data := contentUploadPoolCreate{}
+func getUploadPool(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPool], *errorWithStatus) {
+	data := contentUploadPool{}
 	return newResponse("sync/upload-csv-pool.html", data), nil
+}
+
+type contentUploadPoolBobCreate struct{}
+
+func getUploadPoolBobCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPoolBobCreate], *errorWithStatus) {
+	data := contentUploadPoolBobCreate{}
+	return newResponse("sync/upload-csv-pool-bob.html", data), nil
+}
+
+type contentUploadPoolCustomCreate struct{}
+
+func getUploadPoolCustomCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadPoolCustomCreate], *errorWithStatus) {
+	data := contentUploadPoolCustomCreate{}
+	return newResponse("sync/upload-csv-pool-custom.html", data), nil
 }
 func getUploadByID(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentUploadDetail], *errorWithStatus) {
 	file_id_str := chi.URLParam(r, "id")
@@ -88,7 +102,10 @@ func postUploadDiscard(ctx context.Context, r *http.Request, org *models.Organiz
 
 type FormUploadPool struct{}
 
-func postUploadPoolCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f FormUploadPool) (string, *errorWithStatus) {
+func postUploadPoolBobCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f FormUploadPool) (string, *errorWithStatus) {
+	return "", nil
+}
+func postUploadPoolCustomCreate(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f FormUploadPool) (string, *errorWithStatus) {
 	uploads, err := userfile.SaveFileUpload(r, "csvfile", userfile.CollectionCSV)
 	if err != nil {
 		return "", newError("Failed to extract image uploads: %s", err)
