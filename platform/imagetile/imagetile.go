@@ -10,7 +10,7 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-func ImageAtPoint(ctx context.Context, org *models.Organization, level uint, x, y float64) ([]byte, error) {
+func ImageAtPoint(ctx context.Context, org *models.Organization, level uint, lat, lng float64) ([]byte, error) {
 	oauth, err := background.GetOAuthForOrg(ctx, org)
 	if err != nil {
 		return []byte{}, fmt.Errorf("get oauth for org: %w", err)
@@ -19,11 +19,14 @@ func ImageAtPoint(ctx context.Context, org *models.Organization, level uint, x, 
 		ctx,
 		oauth,
 	)
+	if err != nil {
+		return []byte{}, fmt.Errorf("create fssync: %w", err)
+	}
 	map_service, err := aerialImageService(ctx, fssync.Arcgis)
 	if err != nil {
 		return []byte{}, fmt.Errorf("no map service: %w", err)
 	}
-	return map_service.TileGPS(ctx, fssync.Arcgis, level, x, y)
+	return map_service.TileGPS(ctx, level, lat, lng)
 }
 
 func aerialImageService(ctx context.Context, gis *arcgis.ArcGIS) (*arcgis.MapService, error) {

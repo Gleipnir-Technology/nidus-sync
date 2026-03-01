@@ -44,20 +44,26 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "parcel env", http.StatusInternalServerError)
 		return
 	}
-	log.Info().Int("len", len(*envelope)).Msg("got envelope")
 	ring := (*envelope)[0]
-	log.Info().Int("len", len(ring)).Msg("got ring")
 	p := ring[0]
-	log.Info().Int("len", len(p)).Msg("got point")
-	writeImage(ctx, w, org, 14, p[0], p[1])
+	err = writeImage(ctx, w, org, 22, p[1], p[0])
+	if err != nil {
+		log.Error().Err(err).Msg("write image")
+		http.Error(w, "failed to write image", http.StatusInternalServerError)
+		return
+	}
 }
-func writeImage(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, x, y float64) {
-	img, err := imagetile.ImageAtPoint(ctx, org, level, x, y)
+func writeImage(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
+	img, err := imagetile.ImageAtPoint(ctx, org, level, lat, lng)
+	if err != nil {
+		return fmt.Errorf("image at point: %w", err)
+	}
+	log.Info().Int("size", len(img)).Msg("image")
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img)))
 	_, err = io.Copy(w, bytes.NewBuffer(img))
 	if err != nil {
-		http.Error(w, "failed copy", http.StatusInternalServerError)
-		return
+		return fmt.Errorf("copy bytes: %w", err)
 	}
+	return nil
 }

@@ -324,6 +324,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
 	}
+	txn.Commit(ctx)
 	// At this point we have the arcgis ID. If the ID matches an existing ID, join it with the users organization
 	orgs, err := models.Organizations.Query(
 		sm.Where(
@@ -357,6 +358,13 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		return
 	}
 
+	txn, err = db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Create transaction")
+		return
+	}
+	defer txn.Rollback(ctx)
+
 	fssync, err := fieldseeker.NewFieldSeekerFromAG(ctx, *client)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create fieldseeker")
@@ -365,11 +373,13 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 	log.Info().Str("url", fssync.ServiceFeature.URL.String()).Msg("Found Fieldseeker")
 
 	// Ensure the fieldseeker service is saved on the account
+	// Why yes, we do get 'ArcGIS' and 'arcgis' from the API, why do you ask?
+	url_corrected := strings.Replace(fssync.ServiceFeature.URL.String(), "/arcgis/", "/ArcGIS/", 1)
 	service_account, err := models.ArcgisServiceFeatures.Query(
-		models.SelectWhere.ArcgisServiceFeatures.URL.EQ(fssync.ServiceFeature.URL.String()),
+		models.SelectWhere.ArcgisServiceFeatures.URL.EQ(url_corrected),
 	).One(ctx, txn)
 	if err != nil {
-		log.Error().Err(err).Msg("no fieldseeker service")
+		log.Error().Err(err).Str("url", fssync.ServiceFeature.URL.String()).Str("url_corrected", url_corrected).Msg("no fieldseeker service to link, it should have been created before")
 		return
 	}
 	setter := models.OrganizationSetter{
@@ -380,7 +390,6 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		log.Error().Err(err).Msg("Failed to create new organization")
 		return
 	}
-	txn.Commit(ctx)
 	maybeCreateWebhook(ctx, fssync)
 	downloadFieldseekerSchema(ctx, fssync, account.ID)
 	notification.ClearOauth(ctx, user)
@@ -390,7 +399,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 func NewFieldSeeker(ctx context.Context, oauth *models.ArcgisOauthToken) (*fieldseeker.FieldSeeker, error) {
 	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get org ID: %w", err)
+		return nil, fmt.Errorf("Failed to get org ID from oauth %d: %w", oauth.ID, err)
 	}
 	// The URL for fieldseeker should be something like
 	// https://foo.arcgis.com/123abc/arcgis/rest/services/FieldSeekerGIS/FeatureServer
@@ -494,16 +503,23 @@ func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, u
 	}
 	for _, sm := range service_maps {
 		log.Info().Str("account-id", account.ID).Str("arcgis-id", sm.ID).Str("name", sm.Name).Str("title", sm.Title).Str("url", sm.URL.String()).Msg("inserting map service")
-		setter := models.ArcgisServiceMapSetter{
-			AccountID: omit.From(account.ID),
-			ArcgisID:  omit.From(sm.ID),
-			Name:      omit.From(sm.Name),
-			Title:     omit.From(sm.Title),
-			URL:       omit.From(sm.URL.String()),
-		}
-		_, err := models.ArcgisServiceMaps.Insert(&setter).One(ctx, txn)
+		_, err := models.FindArcgisServiceMap(ctx, txn, sm.ID)
 		if err != nil {
-			return fmt.Errorf("save map service: %w", err)
+			if err.Error() == "sql: no rows in result set" {
+				setter := models.ArcgisServiceMapSetter{
+					AccountID: omit.From(account.ID),
+					ArcgisID:  omit.From(sm.ID),
+					Name:      omit.From(sm.Name),
+					Title:     omit.From(sm.Title),
+					URL:       omit.From(sm.URL.String()),
+				}
+				_, err := models.ArcgisServiceMaps.Insert(&setter).One(ctx, txn)
+				if err != nil {
+					return fmt.Errorf("save map service: %w", err)
+				}
+			} else {
+				return err
+			}
 		}
 		/*
 
