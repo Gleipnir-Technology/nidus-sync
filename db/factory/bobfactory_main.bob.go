@@ -72,6 +72,7 @@ type Factory struct {
 	baseFileuploadErrorCSVMods                FileuploadErrorCSVModSlice
 	baseFileuploadErrorFileMods               FileuploadErrorFileModSlice
 	baseFileuploadFileMods                    FileuploadFileModSlice
+	baseFileuploadFlyoverAerialServiceMods    FileuploadFlyoverAerialServiceModSlice
 	baseFileuploadPoolMods                    FileuploadPoolModSlice
 	baseGeographyColumnMods                   GeographyColumnModSlice
 	baseGeometryColumnMods                    GeometryColumnModSlice
@@ -2706,6 +2707,9 @@ func (f *Factory) FromExistingFileuploadCSV(m *models.FileuploadCSV) *Fileupload
 	if len(m.R.CSVFileErrorCSVS) > 0 {
 		FileuploadCSVMods.AddExistingCSVFileErrorCSVS(m.R.CSVFileErrorCSVS...).Apply(ctx, o)
 	}
+	if len(m.R.CSVFileFlyoverAerialServices) > 0 {
+		FileuploadCSVMods.AddExistingCSVFileFlyoverAerialServices(m.R.CSVFileFlyoverAerialServices...).Apply(ctx, o)
+	}
 	if len(m.R.CSVFilePools) > 0 {
 		FileuploadCSVMods.AddExistingCSVFilePools(m.R.CSVFilePools...).Apply(ctx, o)
 	}
@@ -2822,6 +2826,50 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	}
 	if len(m.R.Sites) > 0 {
 		FileuploadFileMods.AddExistingSites(m.R.Sites...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewFileuploadFlyoverAerialService(mods ...FileuploadFlyoverAerialServiceMod) *FileuploadFlyoverAerialServiceTemplate {
+	return f.NewFileuploadFlyoverAerialServiceWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewFileuploadFlyoverAerialServiceWithContext(ctx context.Context, mods ...FileuploadFlyoverAerialServiceMod) *FileuploadFlyoverAerialServiceTemplate {
+	o := &FileuploadFlyoverAerialServiceTemplate{f: f}
+
+	if f != nil {
+		f.baseFileuploadFlyoverAerialServiceMods.Apply(ctx, o)
+	}
+
+	FileuploadFlyoverAerialServiceModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingFileuploadFlyoverAerialService(m *models.FileuploadFlyoverAerialService) *FileuploadFlyoverAerialServiceTemplate {
+	o := &FileuploadFlyoverAerialServiceTemplate{f: f, alreadyPersisted: true}
+
+	o.Committed = func() bool { return m.Committed }
+	o.Condition = func() enums.FileuploadPoolconditiontype { return m.Condition }
+	o.Created = func() time.Time { return m.Created }
+	o.CreatorID = func() int32 { return m.CreatorID }
+	o.CSVFile = func() int32 { return m.CSVFile }
+	o.Deleted = func() null.Val[time.Time] { return m.Deleted }
+	o.Geom = func() null.Val[string] { return m.Geom }
+	o.H3cell = func() null.Val[string] { return m.H3cell }
+	o.ID = func() int32 { return m.ID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+
+	ctx := context.Background()
+	if m.R.CreatorUser != nil {
+		FileuploadFlyoverAerialServiceMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.CSVFileCSV != nil {
+		FileuploadFlyoverAerialServiceMods.WithExistingCSVFileCSV(m.R.CSVFileCSV).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		FileuploadFlyoverAerialServiceMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
 
 	return o
@@ -3429,6 +3477,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.Files) > 0 {
 		OrganizationMods.AddExistingFiles(m.R.Files...).Apply(ctx, o)
+	}
+	if len(m.R.FlyoverAerialServices) > 0 {
+		OrganizationMods.AddExistingFlyoverAerialServices(m.R.FlyoverAerialServices...).Apply(ctx, o)
 	}
 	if len(m.R.Pools) > 0 {
 		OrganizationMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
@@ -4404,6 +4455,9 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.CreatorFiles) > 0 {
 		UserMods.AddExistingCreatorFiles(m.R.CreatorFiles...).Apply(ctx, o)
 	}
+	if len(m.R.CreatorFlyoverAerialServices) > 0 {
+		UserMods.AddExistingCreatorFlyoverAerialServices(m.R.CreatorFlyoverAerialServices...).Apply(ctx, o)
+	}
 	if len(m.R.FileuploadPool) > 0 {
 		UserMods.AddExistingFileuploadPool(m.R.FileuploadPool...).Apply(ctx, o)
 	}
@@ -4860,6 +4914,14 @@ func (f *Factory) ClearBaseFileuploadFileMods() {
 
 func (f *Factory) AddBaseFileuploadFileMod(mods ...FileuploadFileMod) {
 	f.baseFileuploadFileMods = append(f.baseFileuploadFileMods, mods...)
+}
+
+func (f *Factory) ClearBaseFileuploadFlyoverAerialServiceMods() {
+	f.baseFileuploadFlyoverAerialServiceMods = nil
+}
+
+func (f *Factory) AddBaseFileuploadFlyoverAerialServiceMod(mods ...FileuploadFlyoverAerialServiceMod) {
+	f.baseFileuploadFlyoverAerialServiceMods = append(f.baseFileuploadFlyoverAerialServiceMods, mods...)
 }
 
 func (f *Factory) ClearBaseFileuploadPoolMods() {

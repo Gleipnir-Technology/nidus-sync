@@ -58,20 +58,21 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	UserOauthTokens                 ArcgisOauthTokenSlice        // arcgis.oauth_token.oauth_token_user_id_fkey
-	PublicUserUser                  ArcgisUserSlice              // arcgis.user_.user__public_user_id_fkey
-	CreatorComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
-	CreatorFiles                    FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
-	FileuploadPool                  FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
-	CreatorNoteAudios               NoteAudioSlice               // note_audio.note_audio_creator_id_fkey
-	DeletorNoteAudios               NoteAudioSlice               // note_audio.note_audio_deletor_id_fkey
-	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
-	DeletorNoteImages               NoteImageSlice               // note_image.note_image_deletor_id_fkey
-	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
-	CreatorPools                    PoolSlice                    // pool.pool_creator_id_fkey
-	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
-	CreatorSites                    SiteSlice                    // site.site_creator_id_fkey
-	Organization                    *Organization                // user_.user__organization_id_fkey
+	UserOauthTokens                 ArcgisOauthTokenSlice               // arcgis.oauth_token.oauth_token_user_id_fkey
+	PublicUserUser                  ArcgisUserSlice                     // arcgis.user_.user__public_user_id_fkey
+	CreatorComplianceReportRequests ComplianceReportRequestSlice        // compliance_report_request.compliance_report_request_creator_fkey
+	CreatorFiles                    FileuploadFileSlice                 // fileupload.file.file_creator_id_fkey
+	CreatorFlyoverAerialServices    FileuploadFlyoverAerialServiceSlice // fileupload.flyover_aerial_service.flyover_aerial_service_creator_id_fkey
+	FileuploadPool                  FileuploadPoolSlice                 // fileupload.pool.pool_creator_id_fkey
+	CreatorNoteAudios               NoteAudioSlice                      // note_audio.note_audio_creator_id_fkey
+	DeletorNoteAudios               NoteAudioSlice                      // note_audio.note_audio_deletor_id_fkey
+	CreatorNoteImages               NoteImageSlice                      // note_image.note_image_creator_id_fkey
+	DeletorNoteImages               NoteImageSlice                      // note_image.note_image_deletor_id_fkey
+	UserNotifications               NotificationSlice                   // notification.notification_user_id_fkey
+	CreatorPools                    PoolSlice                           // pool.pool_creator_id_fkey
+	CreatorResidents                ResidentSlice                       // resident.resident_creator_fkey
+	CreatorSites                    SiteSlice                           // site.site_creator_id_fkey
+	Organization                    *Organization                       // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -736,6 +737,30 @@ func (os UserSlice) CreatorFiles(mods ...bob.Mod[*dialect.SelectQuery]) Fileuplo
 	)...)
 }
 
+// CreatorFlyoverAerialServices starts a query for related objects on fileupload.flyover_aerial_service
+func (o *User) CreatorFlyoverAerialServices(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFlyoverAerialServicesQuery {
+	return FileuploadFlyoverAerialServices.Query(append(mods,
+		sm.Where(FileuploadFlyoverAerialServices.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorFlyoverAerialServices(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFlyoverAerialServicesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return FileuploadFlyoverAerialServices.Query(append(mods,
+		sm.Where(psql.Group(FileuploadFlyoverAerialServices.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // FileuploadPool starts a query for related objects on fileupload.pool
 func (o *User) FileuploadPool(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadPoolsQuery {
 	return FileuploadPools.Query(append(mods,
@@ -1240,6 +1265,74 @@ func (user0 *User) AttachCreatorFiles(ctx context.Context, exec bob.Executor, re
 	}
 
 	user0.R.CreatorFiles = append(user0.R.CreatorFiles, fileuploadFiles1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorFlyoverAerialServices0(ctx context.Context, exec bob.Executor, fileuploadFlyoverAerialServices1 []*FileuploadFlyoverAerialServiceSetter, user0 *User) (FileuploadFlyoverAerialServiceSlice, error) {
+	for i := range fileuploadFlyoverAerialServices1 {
+		fileuploadFlyoverAerialServices1[i].CreatorID = omit.From(user0.ID)
+	}
+
+	ret, err := FileuploadFlyoverAerialServices.Insert(bob.ToMods(fileuploadFlyoverAerialServices1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorFlyoverAerialServices0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorFlyoverAerialServices0(ctx context.Context, exec bob.Executor, count int, fileuploadFlyoverAerialServices1 FileuploadFlyoverAerialServiceSlice, user0 *User) (FileuploadFlyoverAerialServiceSlice, error) {
+	setter := &FileuploadFlyoverAerialServiceSetter{
+		CreatorID: omit.From(user0.ID),
+	}
+
+	err := fileuploadFlyoverAerialServices1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorFlyoverAerialServices0: %w", err)
+	}
+
+	return fileuploadFlyoverAerialServices1, nil
+}
+
+func (user0 *User) InsertCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, related ...*FileuploadFlyoverAerialServiceSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	fileuploadFlyoverAerialServices1, err := insertUserCreatorFlyoverAerialServices0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFlyoverAerialServices = append(user0.R.CreatorFlyoverAerialServices, fileuploadFlyoverAerialServices1...)
+
+	for _, rel := range fileuploadFlyoverAerialServices1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, related ...*FileuploadFlyoverAerialService) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	fileuploadFlyoverAerialServices1 := FileuploadFlyoverAerialServiceSlice(related)
+
+	_, err = attachUserCreatorFlyoverAerialServices0(ctx, exec, len(related), fileuploadFlyoverAerialServices1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFlyoverAerialServices = append(user0.R.CreatorFlyoverAerialServices, fileuploadFlyoverAerialServices1...)
 
 	for _, rel := range related {
 		rel.R.CreatorUser = user0
@@ -2008,6 +2101,20 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "CreatorFlyoverAerialServices":
+		rels, ok := retrieved.(FileuploadFlyoverAerialServiceSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorFlyoverAerialServices = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "FileuploadPool":
 		rels, ok := retrieved.(FileuploadPoolSlice)
 		if !ok {
@@ -2178,6 +2285,7 @@ type userThenLoader[Q orm.Loadable] struct {
 	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFlyoverAerialServices    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -2202,6 +2310,9 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type CreatorFilesLoadInterface interface {
 		LoadCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorFlyoverAerialServicesLoadInterface interface {
+		LoadCreatorFlyoverAerialServices(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type FileuploadPoolLoadInterface interface {
 		LoadFileuploadPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2257,6 +2368,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"CreatorFiles",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorFilesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorFiles(ctx, exec, mods...)
+			},
+		),
+		CreatorFlyoverAerialServices: thenLoadBuilder[Q](
+			"CreatorFlyoverAerialServices",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorFlyoverAerialServicesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorFlyoverAerialServices(ctx, exec, mods...)
 			},
 		),
 		FileuploadPool: thenLoadBuilder[Q](
@@ -2560,6 +2677,67 @@ func (os UserSlice) LoadCreatorFiles(ctx context.Context, exec bob.Executor, mod
 			rel.R.CreatorUser = o
 
 			o.R.CreatorFiles = append(o.R.CreatorFiles, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorFlyoverAerialServices loads the user's CreatorFlyoverAerialServices into the .R struct
+func (o *User) LoadCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorFlyoverAerialServices = nil
+
+	related, err := o.CreatorFlyoverAerialServices(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorFlyoverAerialServices = related
+	return nil
+}
+
+// LoadCreatorFlyoverAerialServices loads the user's CreatorFlyoverAerialServices into the .R struct
+func (os UserSlice) LoadCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	fileuploadFlyoverAerialServices, err := os.CreatorFlyoverAerialServices(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorFlyoverAerialServices = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range fileuploadFlyoverAerialServices {
+
+			if !(o.ID == rel.CreatorID) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorFlyoverAerialServices = append(o.R.CreatorFlyoverAerialServices, rel)
 		}
 	}
 
@@ -3179,6 +3357,7 @@ type userC struct {
 	PublicUserUser                  *int64
 	CreatorComplianceReportRequests *int64
 	CreatorFiles                    *int64
+	CreatorFlyoverAerialServices    *int64
 	FileuploadPool                  *int64
 	CreatorNoteAudios               *int64
 	DeletorNoteAudios               *int64
@@ -3205,6 +3384,8 @@ func (o *User) PreloadCount(name string, count int64) error {
 		o.C.CreatorComplianceReportRequests = &count
 	case "CreatorFiles":
 		o.C.CreatorFiles = &count
+	case "CreatorFlyoverAerialServices":
+		o.C.CreatorFlyoverAerialServices = &count
 	case "FileuploadPool":
 		o.C.FileuploadPool = &count
 	case "CreatorNoteAudios":
@@ -3232,6 +3413,7 @@ type userCountPreloader struct {
 	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorFlyoverAerialServices    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -3308,6 +3490,23 @@ func buildUserCountPreloader() userCountPreloader {
 
 					sm.From(FileuploadFiles.Name()),
 					sm.Where(psql.Quote(FileuploadFiles.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		CreatorFlyoverAerialServices: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorFlyoverAerialServices", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(FileuploadFlyoverAerialServices.Name()),
+					sm.Where(psql.Quote(FileuploadFlyoverAerialServices.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -3474,6 +3673,7 @@ type userCountThenLoader[Q orm.Loadable] struct {
 	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFlyoverAerialServices    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -3497,6 +3697,9 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 	}
 	type CreatorFilesCountInterface interface {
 		LoadCountCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorFlyoverAerialServicesCountInterface interface {
+		LoadCountCreatorFlyoverAerialServices(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type FileuploadPoolCountInterface interface {
 		LoadCountFileuploadPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3549,6 +3752,12 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 			"CreatorFiles",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountCreatorFiles(ctx, exec, mods...)
+			},
+		),
+		CreatorFlyoverAerialServices: countThenLoadBuilder[Q](
+			"CreatorFlyoverAerialServices",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorFlyoverAerialServicesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorFlyoverAerialServices(ctx, exec, mods...)
 			},
 		),
 		FileuploadPool: countThenLoadBuilder[Q](
@@ -3721,6 +3930,36 @@ func (os UserSlice) LoadCountCreatorFiles(ctx context.Context, exec bob.Executor
 
 	for _, o := range os {
 		if err := o.LoadCountCreatorFiles(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountCreatorFlyoverAerialServices loads the count of CreatorFlyoverAerialServices into the C struct
+func (o *User) LoadCountCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorFlyoverAerialServices(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorFlyoverAerialServices = &count
+	return nil
+}
+
+// LoadCountCreatorFlyoverAerialServices loads the count of CreatorFlyoverAerialServices for a slice
+func (os UserSlice) LoadCountCreatorFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorFlyoverAerialServices(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -4004,6 +4243,7 @@ type userJoins[Q dialect.Joinable] struct {
 	PublicUserUser                  modAs[Q, arcgisuserColumns]
 	CreatorComplianceReportRequests modAs[Q, complianceReportRequestColumns]
 	CreatorFiles                    modAs[Q, fileuploadFileColumns]
+	CreatorFlyoverAerialServices    modAs[Q, fileuploadFlyoverAerialServiceColumns]
 	FileuploadPool                  modAs[Q, fileuploadPoolColumns]
 	CreatorNoteAudios               modAs[Q, noteAudioColumns]
 	DeletorNoteAudios               modAs[Q, noteAudioColumns]
@@ -4072,6 +4312,20 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
+						to.CreatorID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorFlyoverAerialServices: modAs[Q, fileuploadFlyoverAerialServiceColumns]{
+			c: FileuploadFlyoverAerialServices.Columns,
+			f: func(to fileuploadFlyoverAerialServiceColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, FileuploadFlyoverAerialServices.Name().As(to.Alias())).On(
 						to.CreatorID.EQ(cols.ID),
 					))
 				}

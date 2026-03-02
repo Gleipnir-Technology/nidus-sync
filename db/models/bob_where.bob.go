@@ -70,6 +70,7 @@ func Where[Q psql.Filterable]() struct {
 	FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
 	FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 	FileuploadFiles                    fileuploadFileWhere[Q]
+	FileuploadFlyoverAerialServices    fileuploadFlyoverAerialServiceWhere[Q]
 	FileuploadPools                    fileuploadPoolWhere[Q]
 	GeographyColumns                   geographyColumnWhere[Q]
 	GeometryColumns                    geometryColumnWhere[Q]
@@ -162,6 +163,7 @@ func Where[Q psql.Filterable]() struct {
 		FileuploadErrorCSVS                fileuploadErrorCSVWhere[Q]
 		FileuploadErrorFiles               fileuploadErrorFileWhere[Q]
 		FileuploadFiles                    fileuploadFileWhere[Q]
+		FileuploadFlyoverAerialServices    fileuploadFlyoverAerialServiceWhere[Q]
 		FileuploadPools                    fileuploadPoolWhere[Q]
 		GeographyColumns                   geographyColumnWhere[Q]
 		GeometryColumns                    geometryColumnWhere[Q]
@@ -253,6 +255,7 @@ func Where[Q psql.Filterable]() struct {
 		FileuploadErrorCSVS:                buildFileuploadErrorCSVWhere[Q](FileuploadErrorCSVS.Columns),
 		FileuploadErrorFiles:               buildFileuploadErrorFileWhere[Q](FileuploadErrorFiles.Columns),
 		FileuploadFiles:                    buildFileuploadFileWhere[Q](FileuploadFiles.Columns),
+		FileuploadFlyoverAerialServices:    buildFileuploadFlyoverAerialServiceWhere[Q](FileuploadFlyoverAerialServices.Columns),
 		FileuploadPools:                    buildFileuploadPoolWhere[Q](FileuploadPools.Columns),
 		GeographyColumns:                   buildGeographyColumnWhere[Q](GeographyColumns.Columns),
 		GeometryColumns:                    buildGeometryColumnWhere[Q](GeometryColumns.Columns),

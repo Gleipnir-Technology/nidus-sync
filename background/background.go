@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	commsemail "github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
 var waitGroup sync.WaitGroup
@@ -20,10 +23,10 @@ var waitGroup sync.WaitGroup
 func Start(ctx context.Context) {
 	newOAuthTokenChannel = make(chan struct{}, 10)
 
-	channelJobAudio = make(chan jobAudio, 100)                 // Buffered channel to prevent blocking
-	channelJobImportCSVPool = make(chan jobImportCSVPool, 100) // Buffered channel to prevent blocking
-	channelJobEmail = make(chan email.Job, 100)                // Buffered channel to prevent blocking
-	channelJobText = make(chan text.Job, 100)                  // Buffered channel to prevent blocking
+	channelJobAudio = make(chan jobAudio, 100)         // Buffered channel to prevent blocking
+	channelJobImportCSV = make(chan jobImportCSV, 100) // Buffered channel to prevent blocking
+	channelJobEmail = make(chan email.Job, 100)        // Buffered channel to prevent blocking
+	channelJobText = make(chan text.Job, 100)          // Buffered channel to prevent blocking
 
 	waitGroup.Add(1)
 	go func() {
@@ -46,7 +49,7 @@ func Start(ctx context.Context) {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		startWorkerCSV(ctx, channelJobImportCSVPool)
+		startWorkerCSV(ctx, channelJobImportCSV)
 	}()
 
 	waitGroup.Add(1)
@@ -73,21 +76,33 @@ func WaitForExit() {
 }
 
 func addWaitingJobs(ctx context.Context) error {
-	rows, err := models.FileuploadFiles.Query(
-		models.SelectWhere.FileuploadFiles.Status.EQ(
-			enums.FileuploadFilestatustypeUploaded,
+	type Row_ struct {
+		ID   int32                   `db:"id"`
+		Type enums.FileuploadCsvtype `db:"type"`
+	}
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"file.id AS id",
+			"csv.type_ AS type",
 		),
-	).All(ctx, db.PGInstance.BobDB)
+		sm.From("fileupload.file").As("file"),
+		sm.InnerJoin("fileupload.csv").As("csv").OnEQ(psql.Raw("file.id"), psql.Raw("csv.file_id")),
+		sm.Where(
+			psql.Raw("file.status").EQ(psql.Arg(enums.FileuploadFilestatustypeUploaded)),
+		),
+	), scan.StructMapper[Row_]())
+
 	if err != nil {
 		return fmt.Errorf("Failed to query file uploads: %w", err)
 	}
 	for _, row := range rows {
 		report_id := row.ID
-		job := jobImportCSVPool{
+		job := jobImportCSV{
 			fileID: report_id,
+			type_:  row.Type,
 		}
 		select {
-		case channelJobImportCSVPool <- job:
+		case channelJobImportCSV <- job:
 			log.Info().Int32("report_id", report_id).Msg("CSV upload job queued")
 		default:
 			log.Warn().Int32("report_id", report_id).Msg("CSV upload job failed to queue, channel full")

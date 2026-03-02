@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -65,47 +64,6 @@ func (e headerPoolEnum) String() string {
 	default:
 		return "bad programmer"
 	}
-}
-func ProcessJob(ctx context.Context, file_id int32) error {
-	file, err := models.FindFileuploadFile(ctx, db.PGInstance.BobDB, file_id)
-	if err != nil {
-		return fmt.Errorf("Failed to get file %d from DB: %w", file_id, err)
-	}
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to start transaction: %w", err)
-	}
-	defer txn.Rollback(ctx)
-	c, err := models.FindFileuploadCSV(ctx, txn, file.ID)
-	if err != nil {
-		return fmt.Errorf("Failed to get csv file %d from DB: %w", file.ID, err)
-	}
-	pools, err := parseFile(ctx, txn, file, c)
-	if err != nil {
-		return fmt.Errorf("parse file: %w", err)
-	}
-	_, err = psql.Update(
-		um.Table("fileupload.csv"),
-		um.SetCol("rowcount").ToArg(len(pools)),
-		um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
-	).Exec(ctx, txn)
-	if err != nil {
-		return fmt.Errorf("update csv row: %w", err)
-	}
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, file.OrganizationID)
-	if err != nil {
-		return fmt.Errorf("get org: %w", err)
-	}
-	err = bulkGeocode(ctx, txn, file, c, pools, org)
-	if err != nil {
-		log.Error().Err(err).Msg("Failure during geocoding")
-	}
-	file.Update(ctx, txn, &models.FileuploadFileSetter{
-		Status: omit.From(enums.FileuploadFilestatustypeParsed),
-	})
-	log.Info().Int32("file.ID", file.ID).Msg("Set file to parsed")
-	txn.Commit(ctx)
-	return nil
 }
 func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, pools []*models.FileuploadPool, org *models.Organization) error {
 	if len(pools) == 0 {
@@ -215,7 +173,7 @@ func geocode(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jo
 	}
 	return nil
 }
-func parseFile(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV) ([]*models.FileuploadPool, error) {
+func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV) ([]*models.FileuploadPool, error) {
 	pools := make([]*models.FileuploadPool, 0)
 	r, err := userfile.NewFileReader(userfile.CollectionCSV, file.FileUUID)
 	if err != nil {
@@ -339,45 +297,18 @@ func parseFile(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *
 		line_number = line_number + 1
 	}
 }
-func addError(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, row_number int32, column_number int32, msg string) error {
-	r, err := models.FileuploadErrorCSVS.Insert(&models.FileuploadErrorCSVSetter{
-		Col:       omit.From(column_number),
-		CSVFileID: omit.From(c.FileID),
-		// ID
-		Line:    omit.From(row_number),
-		Message: omit.From(msg),
-	}).One(ctx, txn)
+func processCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, parsed []*models.FileuploadPool) error {
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, file.OrganizationID)
 	if err != nil {
-		return fmt.Errorf("Failed to add error: %w", err)
+		return fmt.Errorf("get org: %w", err)
 	}
-	log.Info().Int32("id", r.ID).Int32("file_id", c.FileID).Str("msg", msg).Int32("row", row_number).Int32("col", column_number).Msg("Created CSV file error")
+	err = bulkGeocode(ctx, txn, file, c, parsed, org)
+	if err != nil {
+		log.Error().Err(err).Msg("Failure during geocoding")
+	}
 	return nil
 }
-func addImportError(file *models.FileuploadFile, err error) {
-	log.Debug().Err(err).Int32("file_id", file.ID).Msg("Fake add import error")
-}
-func parseBool(s string) (bool, error) {
-	sl := strings.ToLower(s)
-	boolValue, err := strconv.ParseBool(sl)
-	if err != nil {
-		// Handle some of the stuff that strconv doesn't handle
-		switch sl {
-		case "yes":
-			return true, nil
-		case "no":
-			return false, nil
-		default:
-			return false, fmt.Errorf("unrecognized '%s'", sl)
-		}
 
-	}
-	return boolValue, err
-}
-
-func errorMissingHeader(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, h headerPoolEnum) error {
-	msg := fmt.Sprintf("The file is missing the '%s' header", h.String())
-	return addError(ctx, txn, c, 0, 0, msg)
-}
 func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
 	/*
 		if org.ServiceAreaXmax.IsNull() ||

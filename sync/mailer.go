@@ -1,14 +1,16 @@
 package sync
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
-	//"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	//"github.com/google/uuid"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -22,8 +24,26 @@ type contentMailer struct {
 	ReportURL    string
 }
 
-// func getMailer(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentMailer], *errorWithStatus) {
 func getMailer(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	if code == "" {
+		http.Error(w, "empty code", http.StatusBadRequest)
+		return
+	}
+
+	content, err := pdf.GeneratePDF(r.Context(), code)
+	if err != nil {
+		respondError(w, "generate pdf failure", err, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/pdf")
+	disposition := fmt.Sprintf("attachment; filename=\"compliance-mailer-%s.pdf\"", code)
+	w.Header().Set("Content-Disposition", disposition)
+	_, err = io.Copy(w, bytes.NewReader(content))
+	if err != nil {
+		respondError(w, "copy error", err, http.StatusInternalServerError)
+		return
+	}
 }
 func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")

@@ -986,11 +986,13 @@ func (e *Countrytype) Scan(value any) error {
 // Enum values for FileuploadCsvtype
 const (
 	FileuploadCsvtypePoollist FileuploadCsvtype = "PoolList"
+	FileuploadCsvtypeFlyover  FileuploadCsvtype = "Flyover"
 )
 
 func AllFileuploadCsvtype() []FileuploadCsvtype {
 	return []FileuploadCsvtype{
 		FileuploadCsvtypePoollist,
+		FileuploadCsvtypeFlyover,
 	}
 }
 
@@ -1002,7 +1004,8 @@ func (e FileuploadCsvtype) String() string {
 
 func (e FileuploadCsvtype) Valid() bool {
 	switch e {
-	case FileuploadCsvtypePoollist:
+	case FileuploadCsvtypePoollist,
+		FileuploadCsvtypeFlyover:
 		return true
 	default:
 		return false

@@ -79,6 +79,8 @@ func displayUploadType(s string) string {
 	switch s {
 	case "PoolList":
 		return "Green Pool List"
+	case "Flyover":
+		return "Flyover"
 	default:
 		return "Unknown upload type"
 	}

@@ -44,16 +44,16 @@ type UploadPoolRow struct {
 	Street     string
 	Tags       map[string]string
 }
-type PoolUpload struct {
+type Upload struct {
 	Created time.Time `db:"created"`
 	ID      int32     `db:"id"`
 	Status  string    `db:"status"`
 }
 
-func NewPoolUpload(ctx context.Context, u *models.User, upload userfile.FileUpload) (PoolUpload, error) {
+func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, t enums.FileuploadCsvtype) (Upload, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
-		return PoolUpload{}, fmt.Errorf("Failed to begin transaction: %w", err)
+		return Upload{}, fmt.Errorf("Failed to begin transaction: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
@@ -69,21 +69,21 @@ func NewPoolUpload(ctx context.Context, u *models.User, upload userfile.FileUplo
 		FileUUID:       omit.From(upload.UUID),
 	}).One(ctx, txn)
 	if err != nil {
-		return PoolUpload{}, fmt.Errorf("Failed to create file upload: %w", err)
+		return Upload{}, fmt.Errorf("Failed to create file upload: %w", err)
 	}
 	_, err = models.FileuploadCSVS.Insert(&models.FileuploadCSVSetter{
 		Committed: omitnull.FromPtr[time.Time](nil),
 		FileID:    omit.From(file.ID),
 		Rowcount:  omit.From(int32(0)),
-		Type:      omit.From(enums.FileuploadCsvtypePoollist),
+		Type:      omit.From(t),
 	}).One(ctx, txn)
 	if err != nil {
-		return PoolUpload{}, fmt.Errorf("Failed to create csv: %w", err)
+		return Upload{}, fmt.Errorf("Failed to create csv: %w", err)
 	}
 	log.Info().Int32("id", file.ID).Msg("Created new pool CSV upload")
 	txn.Commit(ctx)
-	background.ProcessUpload(file.ID)
-	return PoolUpload{
+	background.ProcessUpload(file.ID, t)
+	return Upload{
 		ID: file.ID,
 	}, nil
 }
@@ -115,7 +115,7 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		if row.Line == 0 {
 			file_errors = append(file_errors, e)
 		} else {
-			log.Info().Int32("line", row.Line).Msg("Found error")
+			//log.Info().Int32("line", row.Line).Msg("Found error")
 			by_line, ok := errors_by_line[row.Line]
 			if !ok {
 				errors_by_line[row.Line] = []UploadPoolError{e}
@@ -175,8 +175,8 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 		Status:        file.Status.String(),
 	}, nil
 }
-func PoolUploadList(ctx context.Context, organization_id int32) ([]PoolUpload, error) {
-	results := make([]PoolUpload, 0)
+func PoolUploadList(ctx context.Context, organization_id int32) ([]Upload, error) {
+	results := make([]Upload, 0)
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			// fileupload.csv columns
@@ -200,7 +200,7 @@ func PoolUploadList(ctx context.Context, organization_id int32) ([]PoolUpload, e
 		sm.From("fileupload.csv").As("csv"),
 		sm.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
 		sm.Where(psql.Raw("file.organization_id").EQ(psql.Arg(organization_id))),
-	), scan.StructMapper[PoolUpload]())
+	), scan.StructMapper[Upload]())
 	if err != nil {
 		return results, fmt.Errorf("Failed to query pool upload rows: %w", err)
 	}

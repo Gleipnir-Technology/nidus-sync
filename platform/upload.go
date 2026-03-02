@@ -35,6 +35,9 @@ type UploadSummary struct {
 	Type        string    `db:"type"`
 }
 
+func UploadCommit(ctx context.Context, org *models.Organization, file_id int32) error {
+	return nil
+}
 func UploadDiscard(ctx context.Context, org *models.Organization, file_id int32) error {
 	_, err := psql.Update(
 		um.Table(models.FileuploadFiles.Alias()),

@@ -1,6 +1,8 @@
 package sync
 
 import (
+	"strconv"
+
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 )
 
@@ -74,17 +76,29 @@ func newContentURLSidebar() contentURLSidebar {
 	}
 }
 
+type urlForID = func(int) string
+
+func makeURLForID(pattern string) urlForID {
+	return func(id int) string {
+		return config.MakeURLNidus(pattern, strconv.Itoa(id))
+	}
+}
+
 type contentURLUpload struct {
+	Commit        urlForID
+	Discard       urlForID
 	Pool          string
-	PoolBob       string
 	PoolCustom    string
+	PoolFlyover   string
 	SamplePoolCSV string
 }
 
 func newContentURLUpload() contentURLUpload {
 	return contentURLUpload{
+		Commit:        makeURLForID("/configuration/upload/%s/commit"),
+		Discard:       makeURLForID("/configuration/upload/%s/discard"),
 		Pool:          config.MakeURLNidus("/configuration/upload/pool"),
-		PoolBob:       config.MakeURLNidus("/configuration/upload/pool/bob"),
+		PoolFlyover:   config.MakeURLNidus("/configuration/upload/pool/flyover"),
 		PoolCustom:    config.MakeURLNidus("/configuration/upload/pool/custom"),
 		SamplePoolCSV: config.MakeURLNidus("/static/file/sample-pool.csv"),
 	}

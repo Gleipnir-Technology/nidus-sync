@@ -84,6 +84,7 @@ type joins[Q dialect.Joinable] struct {
 	FileuploadErrorCSVS                joinSet[fileuploadErrorCSVJoins[Q]]
 	FileuploadErrorFiles               joinSet[fileuploadErrorFileJoins[Q]]
 	FileuploadFiles                    joinSet[fileuploadFileJoins[Q]]
+	FileuploadFlyoverAerialServices    joinSet[fileuploadFlyoverAerialServiceJoins[Q]]
 	FileuploadPools                    joinSet[fileuploadPoolJoins[Q]]
 	H3Aggregations                     joinSet[h3AggregationJoins[Q]]
 	NoteAudios                         joinSet[noteAudioJoins[Q]]
@@ -177,6 +178,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FileuploadErrorCSVS:                buildJoinSet[fileuploadErrorCSVJoins[Q]](FileuploadErrorCSVS.Columns, buildFileuploadErrorCSVJoins),
 		FileuploadErrorFiles:               buildJoinSet[fileuploadErrorFileJoins[Q]](FileuploadErrorFiles.Columns, buildFileuploadErrorFileJoins),
 		FileuploadFiles:                    buildJoinSet[fileuploadFileJoins[Q]](FileuploadFiles.Columns, buildFileuploadFileJoins),
+		FileuploadFlyoverAerialServices:    buildJoinSet[fileuploadFlyoverAerialServiceJoins[Q]](FileuploadFlyoverAerialServices.Columns, buildFileuploadFlyoverAerialServiceJoins),
 		FileuploadPools:                    buildJoinSet[fileuploadPoolJoins[Q]](FileuploadPools.Columns, buildFileuploadPoolJoins),
 		H3Aggregations:                     buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
 		NoteAudios:                         buildJoinSet[noteAudioJoins[Q]](NoteAudios.Columns, buildNoteAudioJoins),
