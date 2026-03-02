@@ -10,6 +10,7 @@ type contextKey string
 var (
 	// Relationship Contexts for address
 	addressWithParentsCascadingCtx = newContextual[bool]("addressWithParentsCascading")
+	addressRelMailersCtx           = newContextual[bool]("address.comms.mailer.comms.mailer.mailer_address_id_fkey")
 	addressRelResidentsCtx         = newContextual[bool]("address.resident.resident.resident_address_id_fkey")
 	addressRelSiteCtx              = newContextual[bool]("address.site.site.site_address_id_fkey")
 
@@ -84,7 +85,9 @@ var (
 	commsEmailTemplateRelTemplateEmailLogsCtx = newContextual[bool]("comms.email_log.comms.email_template.comms.email_log.email_log_template_id_fkey")
 
 	// Relationship Contexts for comms.mailer
-	commsMailerWithParentsCascadingCtx = newContextual[bool]("commsMailerWithParentsCascading")
+	commsMailerWithParentsCascadingCtx        = newContextual[bool]("commsMailerWithParentsCascading")
+	commsMailerRelAddressCtx                  = newContextual[bool]("address.comms.mailer.comms.mailer.mailer_address_id_fkey")
+	commsMailerRelComplianceReportRequestsCtx = newContextual[bool]("comms.mailer.compliance_report_request.compliance_report_request_mailer.compliance_report_request_mai_compliance_report_request_id_fkeycompliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey")
 
 	// Relationship Contexts for comms.phone
 	commsPhoneWithParentsCascadingCtx             = newContextual[bool]("commsPhoneWithParentsCascading")
@@ -112,6 +115,12 @@ var (
 	complianceReportRequestWithParentsCascadingCtx = newContextual[bool]("complianceReportRequestWithParentsCascading")
 	complianceReportRequestRelCreatorUserCtx       = newContextual[bool]("compliance_report_request.user_.compliance_report_request.compliance_report_request_creator_fkey")
 	complianceReportRequestRelSiteCtx              = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
+	complianceReportRequestRelMailersCtx           = newContextual[bool]("comms.mailer.compliance_report_request.compliance_report_request_mailer.compliance_report_request_mai_compliance_report_request_id_fkeycompliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey")
+
+	// Relationship Contexts for compliance_report_request_mailer
+	complianceReportRequestMailerWithParentsCascadingCtx       = newContextual[bool]("complianceReportRequestMailerWithParentsCascading")
+	complianceReportRequestMailerRelComplianceReportRequestCtx = newContextual[bool]("compliance_report_request.compliance_report_request_mailer.compliance_report_request_mailer.compliance_report_request_mai_compliance_report_request_id_fkey")
+	complianceReportRequestMailerRelMailerCtx                  = newContextual[bool]("comms.mailer.compliance_report_request_mailer.compliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey")
 
 	// Relationship Contexts for district_subscription_email
 	districtSubscriptionEmailWithParentsCascadingCtx               = newContextual[bool]("districtSubscriptionEmailWithParentsCascading")

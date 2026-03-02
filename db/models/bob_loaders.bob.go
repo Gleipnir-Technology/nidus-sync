@@ -31,10 +31,12 @@ type preloaders struct {
 	CommsEmailContact                 commsEmailContactPreloader
 	CommsEmailLog                     commsEmailLogPreloader
 	CommsEmailTemplate                commsEmailTemplatePreloader
+	CommsMailer                       commsMailerPreloader
 	CommsPhone                        commsPhonePreloader
 	CommsTextJob                      commsTextJobPreloader
 	CommsTextLog                      commsTextLogPreloader
 	ComplianceReportRequest           complianceReportRequestPreloader
+	ComplianceReportRequestMailer     complianceReportRequestMailerPreloader
 	DistrictSubscriptionEmail         districtSubscriptionEmailPreloader
 	DistrictSubscriptionPhone         districtSubscriptionPhonePreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
@@ -117,10 +119,12 @@ func getPreloaders() preloaders {
 		CommsEmailContact:                 buildCommsEmailContactPreloader(),
 		CommsEmailLog:                     buildCommsEmailLogPreloader(),
 		CommsEmailTemplate:                buildCommsEmailTemplatePreloader(),
+		CommsMailer:                       buildCommsMailerPreloader(),
 		CommsPhone:                        buildCommsPhonePreloader(),
 		CommsTextJob:                      buildCommsTextJobPreloader(),
 		CommsTextLog:                      buildCommsTextLogPreloader(),
 		ComplianceReportRequest:           buildComplianceReportRequestPreloader(),
+		ComplianceReportRequestMailer:     buildComplianceReportRequestMailerPreloader(),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailPreloader(),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhonePreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
@@ -209,10 +213,12 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsEmailContact                 commsEmailContactThenLoader[Q]
 	CommsEmailLog                     commsEmailLogThenLoader[Q]
 	CommsEmailTemplate                commsEmailTemplateThenLoader[Q]
+	CommsMailer                       commsMailerThenLoader[Q]
 	CommsPhone                        commsPhoneThenLoader[Q]
 	CommsTextJob                      commsTextJobThenLoader[Q]
 	CommsTextLog                      commsTextLogThenLoader[Q]
 	ComplianceReportRequest           complianceReportRequestThenLoader[Q]
+	ComplianceReportRequestMailer     complianceReportRequestMailerThenLoader[Q]
 	DistrictSubscriptionEmail         districtSubscriptionEmailThenLoader[Q]
 	DistrictSubscriptionPhone         districtSubscriptionPhoneThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
@@ -295,10 +301,12 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsEmailContact:                 buildCommsEmailContactThenLoader[Q](),
 		CommsEmailLog:                     buildCommsEmailLogThenLoader[Q](),
 		CommsEmailTemplate:                buildCommsEmailTemplateThenLoader[Q](),
+		CommsMailer:                       buildCommsMailerThenLoader[Q](),
 		CommsPhone:                        buildCommsPhoneThenLoader[Q](),
 		CommsTextJob:                      buildCommsTextJobThenLoader[Q](),
 		CommsTextLog:                      buildCommsTextLogThenLoader[Q](),
 		ComplianceReportRequest:           buildComplianceReportRequestThenLoader[Q](),
+		ComplianceReportRequestMailer:     buildComplianceReportRequestMailerThenLoader[Q](),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailThenLoader[Q](),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhoneThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),

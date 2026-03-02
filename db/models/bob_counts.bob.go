@@ -21,102 +21,110 @@ var (
 )
 
 type preloadCounts struct {
-	Address              addressCountPreloader
-	ArcgisAccount        arcgisAccountCountPreloader
-	ArcgisLayer          arcgisLayerCountPreloader
-	ArcgisLayerField     arcgisLayerFieldCountPreloader
-	ArcgisServiceFeature arcgisServiceFeatureCountPreloader
-	ArcgisUser           arcgisuserCountPreloader
-	CommsEmailContact    commsEmailContactCountPreloader
-	CommsEmailTemplate   commsEmailTemplateCountPreloader
-	CommsPhone           commsPhoneCountPreloader
-	FileuploadCSV        fileuploadCSVCountPreloader
-	FileuploadFile       fileuploadFileCountPreloader
-	NoteAudio            noteAudioCountPreloader
-	NoteImage            noteImageCountPreloader
-	Organization         organizationCountPreloader
-	Parcel               parcelCountPreloader
-	PublicreportImage    publicreportImageCountPreloader
-	PublicreportNuisance publicreportNuisanceCountPreloader
-	PublicreportPool     publicreportPoolCountPreloader
-	PublicreportQuick    publicreportQuickCountPreloader
-	Site                 siteCountPreloader
-	User                 userCountPreloader
+	Address                 addressCountPreloader
+	ArcgisAccount           arcgisAccountCountPreloader
+	ArcgisLayer             arcgisLayerCountPreloader
+	ArcgisLayerField        arcgisLayerFieldCountPreloader
+	ArcgisServiceFeature    arcgisServiceFeatureCountPreloader
+	ArcgisUser              arcgisuserCountPreloader
+	CommsEmailContact       commsEmailContactCountPreloader
+	CommsEmailTemplate      commsEmailTemplateCountPreloader
+	CommsMailer             commsMailerCountPreloader
+	CommsPhone              commsPhoneCountPreloader
+	ComplianceReportRequest complianceReportRequestCountPreloader
+	FileuploadCSV           fileuploadCSVCountPreloader
+	FileuploadFile          fileuploadFileCountPreloader
+	NoteAudio               noteAudioCountPreloader
+	NoteImage               noteImageCountPreloader
+	Organization            organizationCountPreloader
+	Parcel                  parcelCountPreloader
+	PublicreportImage       publicreportImageCountPreloader
+	PublicreportNuisance    publicreportNuisanceCountPreloader
+	PublicreportPool        publicreportPoolCountPreloader
+	PublicreportQuick       publicreportQuickCountPreloader
+	Site                    siteCountPreloader
+	User                    userCountPreloader
 }
 
 func getPreloadCount() preloadCounts {
 	return preloadCounts{
-		Address:              buildAddressCountPreloader(),
-		ArcgisAccount:        buildArcgisAccountCountPreloader(),
-		ArcgisLayer:          buildArcgisLayerCountPreloader(),
-		ArcgisLayerField:     buildArcgisLayerFieldCountPreloader(),
-		ArcgisServiceFeature: buildArcgisServiceFeatureCountPreloader(),
-		ArcgisUser:           buildArcgisUserCountPreloader(),
-		CommsEmailContact:    buildCommsEmailContactCountPreloader(),
-		CommsEmailTemplate:   buildCommsEmailTemplateCountPreloader(),
-		CommsPhone:           buildCommsPhoneCountPreloader(),
-		FileuploadCSV:        buildFileuploadCSVCountPreloader(),
-		FileuploadFile:       buildFileuploadFileCountPreloader(),
-		NoteAudio:            buildNoteAudioCountPreloader(),
-		NoteImage:            buildNoteImageCountPreloader(),
-		Organization:         buildOrganizationCountPreloader(),
-		Parcel:               buildParcelCountPreloader(),
-		PublicreportImage:    buildPublicreportImageCountPreloader(),
-		PublicreportNuisance: buildPublicreportNuisanceCountPreloader(),
-		PublicreportPool:     buildPublicreportPoolCountPreloader(),
-		PublicreportQuick:    buildPublicreportQuickCountPreloader(),
-		Site:                 buildSiteCountPreloader(),
-		User:                 buildUserCountPreloader(),
+		Address:                 buildAddressCountPreloader(),
+		ArcgisAccount:           buildArcgisAccountCountPreloader(),
+		ArcgisLayer:             buildArcgisLayerCountPreloader(),
+		ArcgisLayerField:        buildArcgisLayerFieldCountPreloader(),
+		ArcgisServiceFeature:    buildArcgisServiceFeatureCountPreloader(),
+		ArcgisUser:              buildArcgisUserCountPreloader(),
+		CommsEmailContact:       buildCommsEmailContactCountPreloader(),
+		CommsEmailTemplate:      buildCommsEmailTemplateCountPreloader(),
+		CommsMailer:             buildCommsMailerCountPreloader(),
+		CommsPhone:              buildCommsPhoneCountPreloader(),
+		ComplianceReportRequest: buildComplianceReportRequestCountPreloader(),
+		FileuploadCSV:           buildFileuploadCSVCountPreloader(),
+		FileuploadFile:          buildFileuploadFileCountPreloader(),
+		NoteAudio:               buildNoteAudioCountPreloader(),
+		NoteImage:               buildNoteImageCountPreloader(),
+		Organization:            buildOrganizationCountPreloader(),
+		Parcel:                  buildParcelCountPreloader(),
+		PublicreportImage:       buildPublicreportImageCountPreloader(),
+		PublicreportNuisance:    buildPublicreportNuisanceCountPreloader(),
+		PublicreportPool:        buildPublicreportPoolCountPreloader(),
+		PublicreportQuick:       buildPublicreportQuickCountPreloader(),
+		Site:                    buildSiteCountPreloader(),
+		User:                    buildUserCountPreloader(),
 	}
 }
 
 type thenLoadCounts[Q orm.Loadable] struct {
-	Address              addressCountThenLoader[Q]
-	ArcgisAccount        arcgisAccountCountThenLoader[Q]
-	ArcgisLayer          arcgisLayerCountThenLoader[Q]
-	ArcgisLayerField     arcgisLayerFieldCountThenLoader[Q]
-	ArcgisServiceFeature arcgisServiceFeatureCountThenLoader[Q]
-	ArcgisUser           arcgisuserCountThenLoader[Q]
-	CommsEmailContact    commsEmailContactCountThenLoader[Q]
-	CommsEmailTemplate   commsEmailTemplateCountThenLoader[Q]
-	CommsPhone           commsPhoneCountThenLoader[Q]
-	FileuploadCSV        fileuploadCSVCountThenLoader[Q]
-	FileuploadFile       fileuploadFileCountThenLoader[Q]
-	NoteAudio            noteAudioCountThenLoader[Q]
-	NoteImage            noteImageCountThenLoader[Q]
-	Organization         organizationCountThenLoader[Q]
-	Parcel               parcelCountThenLoader[Q]
-	PublicreportImage    publicreportImageCountThenLoader[Q]
-	PublicreportNuisance publicreportNuisanceCountThenLoader[Q]
-	PublicreportPool     publicreportPoolCountThenLoader[Q]
-	PublicreportQuick    publicreportQuickCountThenLoader[Q]
-	Site                 siteCountThenLoader[Q]
-	User                 userCountThenLoader[Q]
+	Address                 addressCountThenLoader[Q]
+	ArcgisAccount           arcgisAccountCountThenLoader[Q]
+	ArcgisLayer             arcgisLayerCountThenLoader[Q]
+	ArcgisLayerField        arcgisLayerFieldCountThenLoader[Q]
+	ArcgisServiceFeature    arcgisServiceFeatureCountThenLoader[Q]
+	ArcgisUser              arcgisuserCountThenLoader[Q]
+	CommsEmailContact       commsEmailContactCountThenLoader[Q]
+	CommsEmailTemplate      commsEmailTemplateCountThenLoader[Q]
+	CommsMailer             commsMailerCountThenLoader[Q]
+	CommsPhone              commsPhoneCountThenLoader[Q]
+	ComplianceReportRequest complianceReportRequestCountThenLoader[Q]
+	FileuploadCSV           fileuploadCSVCountThenLoader[Q]
+	FileuploadFile          fileuploadFileCountThenLoader[Q]
+	NoteAudio               noteAudioCountThenLoader[Q]
+	NoteImage               noteImageCountThenLoader[Q]
+	Organization            organizationCountThenLoader[Q]
+	Parcel                  parcelCountThenLoader[Q]
+	PublicreportImage       publicreportImageCountThenLoader[Q]
+	PublicreportNuisance    publicreportNuisanceCountThenLoader[Q]
+	PublicreportPool        publicreportPoolCountThenLoader[Q]
+	PublicreportQuick       publicreportQuickCountThenLoader[Q]
+	Site                    siteCountThenLoader[Q]
+	User                    userCountThenLoader[Q]
 }
 
 func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 	return thenLoadCounts[Q]{
-		Address:              buildAddressCountThenLoader[Q](),
-		ArcgisAccount:        buildArcgisAccountCountThenLoader[Q](),
-		ArcgisLayer:          buildArcgisLayerCountThenLoader[Q](),
-		ArcgisLayerField:     buildArcgisLayerFieldCountThenLoader[Q](),
-		ArcgisServiceFeature: buildArcgisServiceFeatureCountThenLoader[Q](),
-		ArcgisUser:           buildArcgisUserCountThenLoader[Q](),
-		CommsEmailContact:    buildCommsEmailContactCountThenLoader[Q](),
-		CommsEmailTemplate:   buildCommsEmailTemplateCountThenLoader[Q](),
-		CommsPhone:           buildCommsPhoneCountThenLoader[Q](),
-		FileuploadCSV:        buildFileuploadCSVCountThenLoader[Q](),
-		FileuploadFile:       buildFileuploadFileCountThenLoader[Q](),
-		NoteAudio:            buildNoteAudioCountThenLoader[Q](),
-		NoteImage:            buildNoteImageCountThenLoader[Q](),
-		Organization:         buildOrganizationCountThenLoader[Q](),
-		Parcel:               buildParcelCountThenLoader[Q](),
-		PublicreportImage:    buildPublicreportImageCountThenLoader[Q](),
-		PublicreportNuisance: buildPublicreportNuisanceCountThenLoader[Q](),
-		PublicreportPool:     buildPublicreportPoolCountThenLoader[Q](),
-		PublicreportQuick:    buildPublicreportQuickCountThenLoader[Q](),
-		Site:                 buildSiteCountThenLoader[Q](),
-		User:                 buildUserCountThenLoader[Q](),
+		Address:                 buildAddressCountThenLoader[Q](),
+		ArcgisAccount:           buildArcgisAccountCountThenLoader[Q](),
+		ArcgisLayer:             buildArcgisLayerCountThenLoader[Q](),
+		ArcgisLayerField:        buildArcgisLayerFieldCountThenLoader[Q](),
+		ArcgisServiceFeature:    buildArcgisServiceFeatureCountThenLoader[Q](),
+		ArcgisUser:              buildArcgisUserCountThenLoader[Q](),
+		CommsEmailContact:       buildCommsEmailContactCountThenLoader[Q](),
+		CommsEmailTemplate:      buildCommsEmailTemplateCountThenLoader[Q](),
+		CommsMailer:             buildCommsMailerCountThenLoader[Q](),
+		CommsPhone:              buildCommsPhoneCountThenLoader[Q](),
+		ComplianceReportRequest: buildComplianceReportRequestCountThenLoader[Q](),
+		FileuploadCSV:           buildFileuploadCSVCountThenLoader[Q](),
+		FileuploadFile:          buildFileuploadFileCountThenLoader[Q](),
+		NoteAudio:               buildNoteAudioCountThenLoader[Q](),
+		NoteImage:               buildNoteImageCountThenLoader[Q](),
+		Organization:            buildOrganizationCountThenLoader[Q](),
+		Parcel:                  buildParcelCountThenLoader[Q](),
+		PublicreportImage:       buildPublicreportImageCountThenLoader[Q](),
+		PublicreportNuisance:    buildPublicreportNuisanceCountThenLoader[Q](),
+		PublicreportPool:        buildPublicreportPoolCountThenLoader[Q](),
+		PublicreportQuick:       buildPublicreportQuickCountThenLoader[Q](),
+		Site:                    buildSiteCountThenLoader[Q](),
+		User:                    buildUserCountThenLoader[Q](),
 	}
 }
 

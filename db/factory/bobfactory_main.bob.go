@@ -38,6 +38,7 @@ type Factory struct {
 	baseCommsTextJobMods                      CommsTextJobModSlice
 	baseCommsTextLogMods                      CommsTextLogModSlice
 	baseComplianceReportRequestMods           ComplianceReportRequestModSlice
+	baseComplianceReportRequestMailerMods     ComplianceReportRequestMailerModSlice
 	baseDistrictSubscriptionEmailMods         DistrictSubscriptionEmailModSlice
 	baseDistrictSubscriptionPhoneMods         DistrictSubscriptionPhoneModSlice
 	baseFieldseekerContainerrelateMods        FieldseekerContainerrelateModSlice
@@ -147,6 +148,9 @@ func (f *Factory) FromExistingAddress(m *models.Address) *AddressTemplate {
 	o.Unit = func() string { return m.Unit }
 
 	ctx := context.Background()
+	if len(m.R.Mailers) > 0 {
+		AddressMods.AddExistingMailers(m.R.Mailers...).Apply(ctx, o)
+	}
 	if len(m.R.Residents) > 0 {
 		AddressMods.AddExistingResidents(m.R.Residents...).Apply(ctx, o)
 	}
@@ -680,9 +684,19 @@ func (f *Factory) NewCommsMailerWithContext(ctx context.Context, mods ...CommsMa
 func (f *Factory) FromExistingCommsMailer(m *models.CommsMailer) *CommsMailerTemplate {
 	o := &CommsMailerTemplate{f: f, alreadyPersisted: true}
 
+	o.AddressID = func() int32 { return m.AddressID }
 	o.Created = func() time.Time { return m.Created }
 	o.ID = func() int32 { return m.ID }
-	o.Type = func() enums.CommsMailertype { return m.Type }
+	o.Recipient = func() string { return m.Recipient }
+	o.UUID = func() uuid.UUID { return m.UUID }
+
+	ctx := context.Background()
+	if m.R.Address != nil {
+		CommsMailerMods.WithExistingAddress(m.R.Address).Apply(ctx, o)
+	}
+	if len(m.R.ComplianceReportRequests) > 0 {
+		CommsMailerMods.AddExistingComplianceReportRequests(m.R.ComplianceReportRequests...).Apply(ctx, o)
+	}
 
 	return o
 }
@@ -853,6 +867,42 @@ func (f *Factory) FromExistingComplianceReportRequest(m *models.ComplianceReport
 	}
 	if m.R.Site != nil {
 		ComplianceReportRequestMods.WithExistingSite(m.R.Site).Apply(ctx, o)
+	}
+	if len(m.R.Mailers) > 0 {
+		ComplianceReportRequestMods.AddExistingMailers(m.R.Mailers...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewComplianceReportRequestMailer(mods ...ComplianceReportRequestMailerMod) *ComplianceReportRequestMailerTemplate {
+	return f.NewComplianceReportRequestMailerWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewComplianceReportRequestMailerWithContext(ctx context.Context, mods ...ComplianceReportRequestMailerMod) *ComplianceReportRequestMailerTemplate {
+	o := &ComplianceReportRequestMailerTemplate{f: f}
+
+	if f != nil {
+		f.baseComplianceReportRequestMailerMods.Apply(ctx, o)
+	}
+
+	ComplianceReportRequestMailerModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingComplianceReportRequestMailer(m *models.ComplianceReportRequestMailer) *ComplianceReportRequestMailerTemplate {
+	o := &ComplianceReportRequestMailerTemplate{f: f, alreadyPersisted: true}
+
+	o.ComplianceReportRequestID = func() int32 { return m.ComplianceReportRequestID }
+	o.MailerID = func() int32 { return m.MailerID }
+
+	ctx := context.Background()
+	if m.R.ComplianceReportRequest != nil {
+		ComplianceReportRequestMailerMods.WithExistingComplianceReportRequest(m.R.ComplianceReportRequest).Apply(ctx, o)
+	}
+	if m.R.Mailer != nil {
+		ComplianceReportRequestMailerMods.WithExistingMailer(m.R.Mailer).Apply(ctx, o)
 	}
 
 	return o
@@ -4642,6 +4692,14 @@ func (f *Factory) ClearBaseComplianceReportRequestMods() {
 
 func (f *Factory) AddBaseComplianceReportRequestMod(mods ...ComplianceReportRequestMod) {
 	f.baseComplianceReportRequestMods = append(f.baseComplianceReportRequestMods, mods...)
+}
+
+func (f *Factory) ClearBaseComplianceReportRequestMailerMods() {
+	f.baseComplianceReportRequestMailerMods = nil
+}
+
+func (f *Factory) AddBaseComplianceReportRequestMailerMod(mods ...ComplianceReportRequestMailerMod) {
+	f.baseComplianceReportRequestMailerMods = append(f.baseComplianceReportRequestMailerMods, mods...)
 }
 
 func (f *Factory) ClearBaseDistrictSubscriptionEmailMods() {

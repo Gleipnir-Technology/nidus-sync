@@ -46,10 +46,12 @@ type joins[Q dialect.Joinable] struct {
 	CommsEmailContacts                 joinSet[commsEmailContactJoins[Q]]
 	CommsEmailLogs                     joinSet[commsEmailLogJoins[Q]]
 	CommsEmailTemplates                joinSet[commsEmailTemplateJoins[Q]]
+	CommsMailers                       joinSet[commsMailerJoins[Q]]
 	CommsPhones                        joinSet[commsPhoneJoins[Q]]
 	CommsTextJobs                      joinSet[commsTextJobJoins[Q]]
 	CommsTextLogs                      joinSet[commsTextLogJoins[Q]]
 	ComplianceReportRequests           joinSet[complianceReportRequestJoins[Q]]
+	ComplianceReportRequestMailers     joinSet[complianceReportRequestMailerJoins[Q]]
 	DistrictSubscriptionEmails         joinSet[districtSubscriptionEmailJoins[Q]]
 	DistrictSubscriptionPhones         joinSet[districtSubscriptionPhoneJoins[Q]]
 	FieldseekerContainerrelates        joinSet[fieldseekerContainerrelateJoins[Q]]
@@ -140,10 +142,12 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		CommsEmailContacts:                 buildJoinSet[commsEmailContactJoins[Q]](CommsEmailContacts.Columns, buildCommsEmailContactJoins),
 		CommsEmailLogs:                     buildJoinSet[commsEmailLogJoins[Q]](CommsEmailLogs.Columns, buildCommsEmailLogJoins),
 		CommsEmailTemplates:                buildJoinSet[commsEmailTemplateJoins[Q]](CommsEmailTemplates.Columns, buildCommsEmailTemplateJoins),
+		CommsMailers:                       buildJoinSet[commsMailerJoins[Q]](CommsMailers.Columns, buildCommsMailerJoins),
 		CommsPhones:                        buildJoinSet[commsPhoneJoins[Q]](CommsPhones.Columns, buildCommsPhoneJoins),
 		CommsTextJobs:                      buildJoinSet[commsTextJobJoins[Q]](CommsTextJobs.Columns, buildCommsTextJobJoins),
 		CommsTextLogs:                      buildJoinSet[commsTextLogJoins[Q]](CommsTextLogs.Columns, buildCommsTextLogJoins),
 		ComplianceReportRequests:           buildJoinSet[complianceReportRequestJoins[Q]](ComplianceReportRequests.Columns, buildComplianceReportRequestJoins),
+		ComplianceReportRequestMailers:     buildJoinSet[complianceReportRequestMailerJoins[Q]](ComplianceReportRequestMailers.Columns, buildComplianceReportRequestMailerJoins),
 		DistrictSubscriptionEmails:         buildJoinSet[districtSubscriptionEmailJoins[Q]](DistrictSubscriptionEmails.Columns, buildDistrictSubscriptionEmailJoins),
 		DistrictSubscriptionPhones:         buildJoinSet[districtSubscriptionPhoneJoins[Q]](DistrictSubscriptionPhones.Columns, buildDistrictSubscriptionPhoneJoins),
 		FieldseekerContainerrelates:        buildJoinSet[fieldseekerContainerrelateJoins[Q]](FieldseekerContainerrelates.Columns, buildFieldseekerContainerrelateJoins),

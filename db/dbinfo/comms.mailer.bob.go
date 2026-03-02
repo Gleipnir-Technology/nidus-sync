@@ -15,6 +15,15 @@ var CommsMailers = Table[
 	Schema: "comms",
 	Name:   "mailer",
 	Columns: commsMailerColumns{
+		AddressID: column{
+			Name:      "address_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -33,9 +42,18 @@ var CommsMailers = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Type: column{
-			Name:      "type_",
-			DBType:    "comms.mailertype",
+		Recipient: column{
+			Name:      "recipient",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		UUID: column{
+			Name:      "uuid",
+			DBType:    "uuid",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -67,19 +85,32 @@ var CommsMailers = Table[
 		Columns: []string{"id"},
 		Comment: "",
 	},
+	ForeignKeys: commsMailerForeignKeys{
+		CommsMailerMailerAddressIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "comms.mailer.mailer_address_id_fkey",
+				Columns: []string{"address_id"},
+				Comment: "",
+			},
+			ForeignTable:   "address",
+			ForeignColumns: []string{"id"},
+		},
+	},
 
 	Comment: "",
 }
 
 type commsMailerColumns struct {
-	Created column
-	ID      column
-	Type    column
+	AddressID column
+	Created   column
+	ID        column
+	Recipient column
+	UUID      column
 }
 
 func (c commsMailerColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.ID, c.Type,
+		c.AddressID, c.Created, c.ID, c.Recipient, c.UUID,
 	}
 }
 
@@ -93,10 +124,14 @@ func (i commsMailerIndexes) AsSlice() []index {
 	}
 }
 
-type commsMailerForeignKeys struct{}
+type commsMailerForeignKeys struct {
+	CommsMailerMailerAddressIDFkey foreignKey
+}
 
 func (f commsMailerForeignKeys) AsSlice() []foreignKey {
-	return []foreignKey{}
+	return []foreignKey{
+		f.CommsMailerMailerAddressIDFkey,
+	}
 }
 
 type commsMailerUniques struct{}

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
-	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/aarondl/opt/omit"
+	"github.com/google/uuid"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -36,13 +36,29 @@ func (mods CommsMailerModSlice) Apply(ctx context.Context, n *CommsMailerTemplat
 // CommsMailerTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type CommsMailerTemplate struct {
-	Created func() time.Time
-	ID      func() int32
-	Type    func() enums.CommsMailertype
+	AddressID func() int32
+	Created   func() time.Time
+	ID        func() int32
+	Recipient func() string
+	UUID      func() uuid.UUID
 
+	r commsMailerR
 	f *Factory
 
 	alreadyPersisted bool
+}
+
+type commsMailerR struct {
+	Address                  *commsMailerRAddressR
+	ComplianceReportRequests []*commsMailerRComplianceReportRequestsR
+}
+
+type commsMailerRAddressR struct {
+	o *AddressTemplate
+}
+type commsMailerRComplianceReportRequestsR struct {
+	number int
+	o      *ComplianceReportRequestTemplate
 }
 
 // Apply mods to the CommsMailerTemplate
@@ -54,13 +70,36 @@ func (o *CommsMailerTemplate) Apply(ctx context.Context, mods ...CommsMailerMod)
 
 // setModelRels creates and sets the relationships on *models.CommsMailer
 // according to the relationships in the template. Nothing is inserted into the db
-func (t CommsMailerTemplate) setModelRels(o *models.CommsMailer) {}
+func (t CommsMailerTemplate) setModelRels(o *models.CommsMailer) {
+	if t.r.Address != nil {
+		rel := t.r.Address.o.Build()
+		rel.R.Mailers = append(rel.R.Mailers, o)
+		o.AddressID = rel.ID // h2
+		o.R.Address = rel
+	}
+
+	if t.r.ComplianceReportRequests != nil {
+		rel := models.ComplianceReportRequestSlice{}
+		for _, r := range t.r.ComplianceReportRequests {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.Mailers = append(rel.R.Mailers, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.ComplianceReportRequests = rel
+	}
+}
 
 // BuildSetter returns an *models.CommsMailerSetter
 // this does nothing with the relationship templates
 func (o CommsMailerTemplate) BuildSetter() *models.CommsMailerSetter {
 	m := &models.CommsMailerSetter{}
 
+	if o.AddressID != nil {
+		val := o.AddressID()
+		m.AddressID = omit.From(val)
+	}
 	if o.Created != nil {
 		val := o.Created()
 		m.Created = omit.From(val)
@@ -69,9 +108,13 @@ func (o CommsMailerTemplate) BuildSetter() *models.CommsMailerSetter {
 		val := o.ID()
 		m.ID = omit.From(val)
 	}
-	if o.Type != nil {
-		val := o.Type()
-		m.Type = omit.From(val)
+	if o.Recipient != nil {
+		val := o.Recipient()
+		m.Recipient = omit.From(val)
+	}
+	if o.UUID != nil {
+		val := o.UUID()
+		m.UUID = omit.From(val)
 	}
 
 	return m
@@ -95,14 +138,20 @@ func (o CommsMailerTemplate) BuildManySetter(number int) []*models.CommsMailerSe
 func (o CommsMailerTemplate) Build() *models.CommsMailer {
 	m := &models.CommsMailer{}
 
+	if o.AddressID != nil {
+		m.AddressID = o.AddressID()
+	}
 	if o.Created != nil {
 		m.Created = o.Created()
 	}
 	if o.ID != nil {
 		m.ID = o.ID()
 	}
-	if o.Type != nil {
-		m.Type = o.Type()
+	if o.Recipient != nil {
+		m.Recipient = o.Recipient()
+	}
+	if o.UUID != nil {
+		m.UUID = o.UUID()
 	}
 
 	o.setModelRels(m)
@@ -124,13 +173,21 @@ func (o CommsMailerTemplate) BuildMany(number int) models.CommsMailerSlice {
 }
 
 func ensureCreatableCommsMailer(m *models.CommsMailerSetter) {
+	if !(m.AddressID.IsValue()) {
+		val := random_int32(nil)
+		m.AddressID = omit.From(val)
+	}
 	if !(m.Created.IsValue()) {
 		val := random_time_Time(nil)
 		m.Created = omit.From(val)
 	}
-	if !(m.Type.IsValue()) {
-		val := random_enums_CommsMailertype(nil)
-		m.Type = omit.From(val)
+	if !(m.Recipient.IsValue()) {
+		val := random_string(nil)
+		m.Recipient = omit.From(val)
+	}
+	if !(m.UUID.IsValue()) {
+		val := random_uuid_UUID(nil)
+		m.UUID = omit.From(val)
 	}
 }
 
@@ -150,10 +207,29 @@ func (o *CommsMailerTemplate) Create(ctx context.Context, exec bob.Executor) (*m
 	opt := o.BuildSetter()
 	ensureCreatableCommsMailer(opt)
 
+	if o.r.Address == nil {
+		CommsMailerMods.WithNewAddress().Apply(ctx, o)
+	}
+
+	var rel0 *models.Address
+
+	if o.r.Address.o.alreadyPersisted {
+		rel0 = o.r.Address.o.Build()
+	} else {
+		rel0, err = o.r.Address.o.Create(ctx, exec)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opt.AddressID = omit.From(rel0.ID)
+
 	m, err := models.CommsMailers.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
+
+	m.R.Address = rel0
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -232,10 +308,43 @@ type commsMailerMods struct{}
 
 func (m commsMailerMods) RandomizeAllColumns(f *faker.Faker) CommsMailerMod {
 	return CommsMailerModSlice{
+		CommsMailerMods.RandomAddressID(f),
 		CommsMailerMods.RandomCreated(f),
 		CommsMailerMods.RandomID(f),
-		CommsMailerMods.RandomType(f),
+		CommsMailerMods.RandomRecipient(f),
+		CommsMailerMods.RandomUUID(f),
 	}
+}
+
+// Set the model columns to this value
+func (m commsMailerMods) AddressID(val int32) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.AddressID = func() int32 { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsMailerMods) AddressIDFunc(f func() int32) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.AddressID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsMailerMods) UnsetAddressID() CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.AddressID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsMailerMods) RandomAddressID(f *faker.Faker) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.AddressID = func() int32 {
+			return random_int32(f)
+		}
+	})
 }
 
 // Set the model columns to this value
@@ -301,32 +410,63 @@ func (m commsMailerMods) RandomID(f *faker.Faker) CommsMailerMod {
 }
 
 // Set the model columns to this value
-func (m commsMailerMods) Type(val enums.CommsMailertype) CommsMailerMod {
+func (m commsMailerMods) Recipient(val string) CommsMailerMod {
 	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
-		o.Type = func() enums.CommsMailertype { return val }
+		o.Recipient = func() string { return val }
 	})
 }
 
 // Set the Column from the function
-func (m commsMailerMods) TypeFunc(f func() enums.CommsMailertype) CommsMailerMod {
+func (m commsMailerMods) RecipientFunc(f func() string) CommsMailerMod {
 	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
-		o.Type = f
+		o.Recipient = f
 	})
 }
 
 // Clear any values for the column
-func (m commsMailerMods) UnsetType() CommsMailerMod {
+func (m commsMailerMods) UnsetRecipient() CommsMailerMod {
 	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
-		o.Type = nil
+		o.Recipient = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m commsMailerMods) RandomType(f *faker.Faker) CommsMailerMod {
+func (m commsMailerMods) RandomRecipient(f *faker.Faker) CommsMailerMod {
 	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
-		o.Type = func() enums.CommsMailertype {
-			return random_enums_CommsMailertype(f)
+		o.Recipient = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m commsMailerMods) UUID(val uuid.UUID) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.UUID = func() uuid.UUID { return val }
+	})
+}
+
+// Set the Column from the function
+func (m commsMailerMods) UUIDFunc(f func() uuid.UUID) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.UUID = f
+	})
+}
+
+// Clear any values for the column
+func (m commsMailerMods) UnsetUUID() CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.UUID = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m commsMailerMods) RandomUUID(f *faker.Faker) CommsMailerMod {
+	return CommsMailerModFunc(func(_ context.Context, o *CommsMailerTemplate) {
+		o.UUID = func() uuid.UUID {
+			return random_uuid_UUID(f)
 		}
 	})
 }
@@ -337,5 +477,88 @@ func (m commsMailerMods) WithParentsCascading() CommsMailerMod {
 			return
 		}
 		ctx = commsMailerWithParentsCascadingCtx.WithValue(ctx, true)
+		{
+
+			related := o.f.NewAddressWithContext(ctx, AddressMods.WithParentsCascading())
+			m.WithAddress(related).Apply(ctx, o)
+		}
+	})
+}
+
+func (m commsMailerMods) WithAddress(rel *AddressTemplate) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.Address = &commsMailerRAddressR{
+			o: rel,
+		}
+	})
+}
+
+func (m commsMailerMods) WithNewAddress(mods ...AddressMod) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		related := o.f.NewAddressWithContext(ctx, mods...)
+
+		m.WithAddress(related).Apply(ctx, o)
+	})
+}
+
+func (m commsMailerMods) WithExistingAddress(em *models.Address) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.Address = &commsMailerRAddressR{
+			o: o.f.FromExistingAddress(em),
+		}
+	})
+}
+
+func (m commsMailerMods) WithoutAddress() CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.Address = nil
+	})
+}
+
+func (m commsMailerMods) WithComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.ComplianceReportRequests = []*commsMailerRComplianceReportRequestsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m commsMailerMods) WithNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.WithComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsMailerMods) AddComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &commsMailerRComplianceReportRequestsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m commsMailerMods) AddNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
+		m.AddComplianceReportRequests(number, related).Apply(ctx, o)
+	})
+}
+
+func (m commsMailerMods) AddExistingComplianceReportRequests(existingModels ...*models.ComplianceReportRequest) CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		for _, em := range existingModels {
+			o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &commsMailerRComplianceReportRequestsR{
+				o: o.f.FromExistingComplianceReportRequest(em),
+			})
+		}
+	})
+}
+
+func (m commsMailerMods) WithoutComplianceReportRequests() CommsMailerMod {
+	return CommsMailerModFunc(func(ctx context.Context, o *CommsMailerTemplate) {
+		o.r.ComplianceReportRequests = nil
 	})
 }

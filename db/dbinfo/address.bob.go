@@ -161,6 +161,23 @@ var Addresses = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		IdxAddressGeom: index{
+			Type: "gist",
+			Name: "idx_address_geom",
+			Columns: []indexColumn{
+				{
+					Name:         "geom",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        false,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "address_pkey",
@@ -201,11 +218,12 @@ func (c addressColumns) AsSlice() []column {
 type addressIndexes struct {
 	AddressPkey                               index
 	AddressCountryLocalityUnitNumberStreetKey index
+	IdxAddressGeom                            index
 }
 
 func (i addressIndexes) AsSlice() []index {
 	return []index{
-		i.AddressPkey, i.AddressCountryLocalityUnitNumberStreetKey,
+		i.AddressPkey, i.AddressCountryLocalityUnitNumberStreetKey, i.IdxAddressGeom,
 	}
 }
 

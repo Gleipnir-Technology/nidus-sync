@@ -70,6 +70,23 @@ var Parcels = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		IdxParcelGeometry: index{
+			Type: "gist",
+			Name: "idx_parcel_geometry",
+			Columns: []indexColumn{
+				{
+					Name:         "geometry",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        false,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "parcel_pkey",
@@ -94,12 +111,13 @@ func (c parcelColumns) AsSlice() []column {
 }
 
 type parcelIndexes struct {
-	ParcelPkey index
+	ParcelPkey        index
+	IdxParcelGeometry index
 }
 
 func (i parcelIndexes) AsSlice() []index {
 	return []index{
-		i.ParcelPkey,
+		i.ParcelPkey, i.IdxParcelGeometry,
 	}
 }
 

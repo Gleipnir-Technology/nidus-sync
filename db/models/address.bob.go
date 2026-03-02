@@ -53,8 +53,9 @@ type AddressesQuery = *psql.ViewQuery[*Address, AddressSlice]
 
 // addressR is where relationships are stored.
 type addressR struct {
-	Residents ResidentSlice // resident.resident_address_id_fkey
-	Site      *Site         // site.site_address_id_fkey
+	Mailers   CommsMailerSlice // comms.mailer.mailer_address_id_fkey
+	Residents ResidentSlice    // resident.resident_address_id_fkey
+	Site      *Site            // site.site_address_id_fkey
 }
 
 func buildAddressColumns(alias string) addressColumns {
@@ -557,6 +558,30 @@ func (o AddressSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// Mailers starts a query for related objects on comms.mailer
+func (o *Address) Mailers(mods ...bob.Mod[*dialect.SelectQuery]) CommsMailersQuery {
+	return CommsMailers.Query(append(mods,
+		sm.Where(CommsMailers.Columns.AddressID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os AddressSlice) Mailers(mods ...bob.Mod[*dialect.SelectQuery]) CommsMailersQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return CommsMailers.Query(append(mods,
+		sm.Where(psql.Group(CommsMailers.Columns.AddressID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Residents starts a query for related objects on resident
 func (o *Address) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
 	return Residents.Query(append(mods,
@@ -603,6 +628,74 @@ func (os AddressSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
 		sm.Where(psql.Group(Sites.Columns.AddressID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertAddressMailers0(ctx context.Context, exec bob.Executor, commsMailers1 []*CommsMailerSetter, address0 *Address) (CommsMailerSlice, error) {
+	for i := range commsMailers1 {
+		commsMailers1[i].AddressID = omit.From(address0.ID)
+	}
+
+	ret, err := CommsMailers.Insert(bob.ToMods(commsMailers1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertAddressMailers0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachAddressMailers0(ctx context.Context, exec bob.Executor, count int, commsMailers1 CommsMailerSlice, address0 *Address) (CommsMailerSlice, error) {
+	setter := &CommsMailerSetter{
+		AddressID: omit.From(address0.ID),
+	}
+
+	err := commsMailers1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachAddressMailers0: %w", err)
+	}
+
+	return commsMailers1, nil
+}
+
+func (address0 *Address) InsertMailers(ctx context.Context, exec bob.Executor, related ...*CommsMailerSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	commsMailers1, err := insertAddressMailers0(ctx, exec, related, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Mailers = append(address0.R.Mailers, commsMailers1...)
+
+	for _, rel := range commsMailers1 {
+		rel.R.Address = address0
+	}
+	return nil
+}
+
+func (address0 *Address) AttachMailers(ctx context.Context, exec bob.Executor, related ...*CommsMailer) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	commsMailers1 := CommsMailerSlice(related)
+
+	_, err = attachAddressMailers0(ctx, exec, len(related), commsMailers1, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Mailers = append(address0.R.Mailers, commsMailers1...)
+
+	for _, rel := range related {
+		rel.R.Address = address0
+	}
+
+	return nil
 }
 
 func insertAddressResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, address0 *Address) (ResidentSlice, error) {
@@ -765,6 +858,20 @@ func (o *Address) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Mailers":
+		rels, ok := retrieved.(CommsMailerSlice)
+		if !ok {
+			return fmt.Errorf("address cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Mailers = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Address = o
+			}
+		}
+		return nil
 	case "Residents":
 		rels, ok := retrieved.(ResidentSlice)
 		if !ok {
@@ -819,11 +926,15 @@ func buildAddressPreloader() addressPreloader {
 }
 
 type addressThenLoader[Q orm.Loadable] struct {
+	Mailers   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Site      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
+	type MailersLoadInterface interface {
+		LoadMailers(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ResidentsLoadInterface interface {
 		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -832,6 +943,12 @@ func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 	}
 
 	return addressThenLoader[Q]{
+		Mailers: thenLoadBuilder[Q](
+			"Mailers",
+			func(ctx context.Context, exec bob.Executor, retrieved MailersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadMailers(ctx, exec, mods...)
+			},
+		),
 		Residents: thenLoadBuilder[Q](
 			"Residents",
 			func(ctx context.Context, exec bob.Executor, retrieved ResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -845,6 +962,67 @@ func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadMailers loads the address's Mailers into the .R struct
+func (o *Address) LoadMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Mailers = nil
+
+	related, err := o.Mailers(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Address = o
+	}
+
+	o.R.Mailers = related
+	return nil
+}
+
+// LoadMailers loads the address's Mailers into the .R struct
+func (os AddressSlice) LoadMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	commsMailers, err := os.Mailers(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Mailers = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range commsMailers {
+
+			if !(o.ID == rel.AddressID) {
+				continue
+			}
+
+			rel.R.Address = o
+
+			o.R.Mailers = append(o.R.Mailers, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadResidents loads the address's Residents into the .R struct
@@ -962,6 +1140,7 @@ func (os AddressSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...
 
 // addressC is where relationship counts are stored.
 type addressC struct {
+	Mailers   *int64
 	Residents *int64
 }
 
@@ -972,6 +1151,8 @@ func (o *Address) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
+	case "Mailers":
+		o.C.Mailers = &count
 	case "Residents":
 		o.C.Residents = &count
 	}
@@ -979,11 +1160,29 @@ func (o *Address) PreloadCount(name string, count int64) error {
 }
 
 type addressCountPreloader struct {
+	Mailers   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Residents func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildAddressCountPreloader() addressCountPreloader {
 	return addressCountPreloader{
+		Mailers: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Address]("Mailers", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Addresses.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(CommsMailers.Name()),
+					sm.Where(psql.Quote(CommsMailers.Alias(), "address_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		Residents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Address]("Residents", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -1005,15 +1204,25 @@ func buildAddressCountPreloader() addressCountPreloader {
 }
 
 type addressCountThenLoader[Q orm.Loadable] struct {
+	Mailers   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildAddressCountThenLoader[Q orm.Loadable]() addressCountThenLoader[Q] {
+	type MailersCountInterface interface {
+		LoadCountMailers(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ResidentsCountInterface interface {
 		LoadCountResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return addressCountThenLoader[Q]{
+		Mailers: countThenLoadBuilder[Q](
+			"Mailers",
+			func(ctx context.Context, exec bob.Executor, retrieved MailersCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountMailers(ctx, exec, mods...)
+			},
+		),
 		Residents: countThenLoadBuilder[Q](
 			"Residents",
 			func(ctx context.Context, exec bob.Executor, retrieved ResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1021,6 +1230,36 @@ func buildAddressCountThenLoader[Q orm.Loadable]() addressCountThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadCountMailers loads the count of Mailers into the C struct
+func (o *Address) LoadCountMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Mailers(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Mailers = &count
+	return nil
+}
+
+// LoadCountMailers loads the count of Mailers for a slice
+func (os AddressSlice) LoadCountMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountMailers(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // LoadCountResidents loads the count of Residents into the C struct
@@ -1055,6 +1294,7 @@ func (os AddressSlice) LoadCountResidents(ctx context.Context, exec bob.Executor
 
 type addressJoins[Q dialect.Joinable] struct {
 	typ       string
+	Mailers   modAs[Q, commsMailerColumns]
 	Residents modAs[Q, residentColumns]
 	Site      modAs[Q, siteColumns]
 }
@@ -1066,6 +1306,20 @@ func (j addressJoins[Q]) aliasedAs(alias string) addressJoins[Q] {
 func buildAddressJoins[Q dialect.Joinable](cols addressColumns, typ string) addressJoins[Q] {
 	return addressJoins[Q]{
 		typ: typ,
+		Mailers: modAs[Q, commsMailerColumns]{
+			c: CommsMailers.Columns,
+			f: func(to commsMailerColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, CommsMailers.Name().As(to.Alias())).On(
+						to.AddressID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
 		Residents: modAs[Q, residentColumns]{
 			c: Residents.Columns,
 			f: func(to residentColumns) bob.Mod[Q] {

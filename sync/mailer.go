@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type contentMailer struct {
@@ -68,9 +69,10 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no comp", http.StatusInternalServerError)
 		return
 	}
+	doc_id := uuid.New()
 	html.RenderOrError(w, "sync/mailer.html", contentMailer{
 		Config:       newContentConfig(),
-		DocumentID:   "00000000-0000-0000-0000-000000000000",
+		DocumentID:   doc_id.String(),
 		LogoURL:      config.MakeURLNidus("/api/district/%s/logo", org.Slug.GetOr("unset")),
 		Organization: org,
 		PoolImageURL: config.MakeURLNidus("/api/compliance-request/image/pool/%s", code),

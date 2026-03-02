@@ -54,10 +54,15 @@ type AddressTemplate struct {
 }
 
 type addressR struct {
+	Mailers   []*addressRMailersR
 	Residents []*addressRResidentsR
 	Site      *addressRSiteR
 }
 
+type addressRMailersR struct {
+	number int
+	o      *CommsMailerTemplate
+}
 type addressRResidentsR struct {
 	number int
 	o      *ResidentTemplate
@@ -76,6 +81,19 @@ func (o *AddressTemplate) Apply(ctx context.Context, mods ...AddressMod) {
 // setModelRels creates and sets the relationships on *models.Address
 // according to the relationships in the template. Nothing is inserted into the db
 func (t AddressTemplate) setModelRels(o *models.Address) {
+	if t.r.Mailers != nil {
+		rel := models.CommsMailerSlice{}
+		for _, r := range t.r.Mailers {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.AddressID = o.ID // h2
+				rel.R.Address = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Mailers = rel
+	}
+
 	if t.r.Residents != nil {
 		rel := models.ResidentSlice{}
 		for _, r := range t.r.Residents {
@@ -258,6 +276,26 @@ func ensureCreatableAddress(m *models.AddressSetter) {
 func (o *AddressTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Address) error {
 	var err error
 
+	isMailersDone, _ := addressRelMailersCtx.Value(ctx)
+	if !isMailersDone && o.r.Mailers != nil {
+		ctx = addressRelMailersCtx.WithValue(ctx, true)
+		for _, r := range o.r.Mailers {
+			if r.o.alreadyPersisted {
+				m.R.Mailers = append(m.R.Mailers, r.o.Build())
+			} else {
+				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachMailers(ctx, exec, rel0...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isResidentsDone, _ := addressRelResidentsCtx.Value(ctx)
 	if !isResidentsDone && o.r.Residents != nil {
 		ctx = addressRelResidentsCtx.WithValue(ctx, true)
@@ -265,12 +303,12 @@ func (o *AddressTemplate) insertOptRels(ctx context.Context, exec bob.Executor, 
 			if r.o.alreadyPersisted {
 				m.R.Residents = append(m.R.Residents, r.o.Build())
 			} else {
-				rel0, err := r.o.CreateMany(ctx, exec, r.number)
+				rel1, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachResidents(ctx, exec, rel0...)
+				err = m.AttachResidents(ctx, exec, rel1...)
 				if err != nil {
 					return err
 				}
@@ -284,12 +322,12 @@ func (o *AddressTemplate) insertOptRels(ctx context.Context, exec bob.Executor, 
 		if o.r.Site.o.alreadyPersisted {
 			m.R.Site = o.r.Site.o.Build()
 		} else {
-			var rel1 *models.Site
-			rel1, err = o.r.Site.o.Create(ctx, exec)
+			var rel2 *models.Site
+			rel2, err = o.r.Site.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachSite(ctx, exec, rel1)
+			err = m.AttachSite(ctx, exec, rel2)
 			if err != nil {
 				return err
 			}
@@ -753,6 +791,54 @@ func (m addressMods) WithExistingSite(em *models.Site) AddressMod {
 func (m addressMods) WithoutSite() AddressMod {
 	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
 		o.r.Site = nil
+	})
+}
+
+func (m addressMods) WithMailers(number int, related *CommsMailerTemplate) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Mailers = []*addressRMailersR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m addressMods) WithNewMailers(number int, mods ...CommsMailerMod) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		related := o.f.NewCommsMailerWithContext(ctx, mods...)
+		m.WithMailers(number, related).Apply(ctx, o)
+	})
+}
+
+func (m addressMods) AddMailers(number int, related *CommsMailerTemplate) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Mailers = append(o.r.Mailers, &addressRMailersR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m addressMods) AddNewMailers(number int, mods ...CommsMailerMod) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		related := o.f.NewCommsMailerWithContext(ctx, mods...)
+		m.AddMailers(number, related).Apply(ctx, o)
+	})
+}
+
+func (m addressMods) AddExistingMailers(existingModels ...*models.CommsMailer) AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		for _, em := range existingModels {
+			o.r.Mailers = append(o.r.Mailers, &addressRMailersR{
+				o: o.f.FromExistingCommsMailer(em),
+			})
+		}
+	})
+}
+
+func (m addressMods) WithoutMailers() AddressMod {
+	return AddressModFunc(func(ctx context.Context, o *AddressTemplate) {
+		o.r.Mailers = nil
 	})
 }
 

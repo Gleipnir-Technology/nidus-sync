@@ -51,6 +51,7 @@ type ComplianceReportRequestTemplate struct {
 type complianceReportRequestR struct {
 	CreatorUser *complianceReportRequestRCreatorUserR
 	Site        *complianceReportRequestRSiteR
+	Mailers     []*complianceReportRequestRMailersR
 }
 
 type complianceReportRequestRCreatorUserR struct {
@@ -58,6 +59,10 @@ type complianceReportRequestRCreatorUserR struct {
 }
 type complianceReportRequestRSiteR struct {
 	o *SiteTemplate
+}
+type complianceReportRequestRMailersR struct {
+	number int
+	o      *CommsMailerTemplate
 }
 
 // Apply mods to the ComplianceReportRequestTemplate
@@ -83,6 +88,18 @@ func (t ComplianceReportRequestTemplate) setModelRels(o *models.ComplianceReport
 		o.SiteID = rel.ID           // h2
 		o.SiteVersion = rel.Version // h2
 		o.R.Site = rel
+	}
+
+	if t.r.Mailers != nil {
+		rel := models.CommsMailerSlice{}
+		for _, r := range t.r.Mailers {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.R.ComplianceReportRequests = append(rel.R.ComplianceReportRequests, o)
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Mailers = rel
 	}
 }
 
@@ -604,5 +621,53 @@ func (m complianceReportRequestMods) WithExistingSite(em *models.Site) Complianc
 func (m complianceReportRequestMods) WithoutSite() ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
 		o.r.Site = nil
+	})
+}
+
+func (m complianceReportRequestMods) WithMailers(number int, related *CommsMailerTemplate) ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		o.r.Mailers = []*complianceReportRequestRMailersR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m complianceReportRequestMods) WithNewMailers(number int, mods ...CommsMailerMod) ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		related := o.f.NewCommsMailerWithContext(ctx, mods...)
+		m.WithMailers(number, related).Apply(ctx, o)
+	})
+}
+
+func (m complianceReportRequestMods) AddMailers(number int, related *CommsMailerTemplate) ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		o.r.Mailers = append(o.r.Mailers, &complianceReportRequestRMailersR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m complianceReportRequestMods) AddNewMailers(number int, mods ...CommsMailerMod) ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		related := o.f.NewCommsMailerWithContext(ctx, mods...)
+		m.AddMailers(number, related).Apply(ctx, o)
+	})
+}
+
+func (m complianceReportRequestMods) AddExistingMailers(existingModels ...*models.CommsMailer) ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		for _, em := range existingModels {
+			o.r.Mailers = append(o.r.Mailers, &complianceReportRequestRMailersR{
+				o: o.f.FromExistingCommsMailer(em),
+			})
+		}
+	})
+}
+
+func (m complianceReportRequestMods) WithoutMailers() ComplianceReportRequestMod {
+	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
+		o.r.Mailers = nil
 	})
 }
