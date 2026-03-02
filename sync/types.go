@@ -42,10 +42,6 @@ type ContentMockURLs struct {
 	SettingUser         string
 	SettingUserAdd      string
 }
-type ContentMock struct {
-	DistrictName string
-	URLs         ContentMockURLs
-}
 type ContentReportDetail struct {
 	NextURL   string
 	UpdateURL string
