@@ -16,7 +16,10 @@
 			padding: 0;
 			background: #fff;
 		}
-
+		a {
+			display: block;
+			margin: 15px 0;
+		}
 		.page {
 			width: 8.5in;
 			height: 11in;
@@ -126,7 +129,6 @@
 		.lp-body {
 			font-size: 11pt;
 			line-height: 1.38;
-			margin: 0;
 		}
 		.lp-action {
 			margin: 0.18in 0 0.16in 0;
@@ -259,13 +261,16 @@
 				conditions for mosquito production. If treatment is needed, we can
 				coordinate access while longer-term maintenance or repairs are
 				addressed.
-				<br /><br />
+			</p>
+			<p class="lp-body">
 				Our objective is to prevent mosquito production and protect your
 				neighborhood. A quick photo response through the QR code is the fastest
 				way to resolve this.
-				<br /><br />
-				If you are unable to use the QR code, please visit {{ .ReportURL }} or
-				contact our office for assistance.
+			</p>
+			<p class="lp-body">
+				If you are unable to use the QR code, please visit
+				<a href="{{ .ReportURL }}">{{ .ReportURL }}</a> or contact our office
+				for assistance.
 			</p>
 			<div class="lp-signoff">
 				Sincerely,<br />
@@ -353,7 +358,8 @@
 				vecindario. Una respuesta rápida con una foto a través del código QR es
 				la manera más rápida de resolver esto.
 				<br /><br />
-				Si no puede usar el código QR, visite {{ .ReportURL }} o comuníquese con
+				Si no puede usar el código QR, visite
+				<a href="{{ .ReportURL }}">{{ .ReportURL }}</a> o comuníquese con
 				nuestra oficina para recibir ayuda.
 			</p>
 			<div class="lp-signoff">
