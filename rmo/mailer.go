@@ -7,25 +7,29 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 )
 
 type address struct {
-	Country    string `db:"country"`
-	Locality   string `db:"locality"`
-	Number     int32  `db:"number_"`
-	PostalCode string `db:"postal_code"`
-	Street     string `db:"street"`
-	Region     string `db:"postal_code"`
+	Country          string `db:"country"`
+	Locality         string `db:"locality"`
+	Number           int32  `db:"number_"`
+	OrganizationSlug string `db:"slug"`
+	PostalCode       string `db:"postal_code"`
+	Region           string `db:"region"`
+	Street           string `db:"street"`
 }
 type contentMailer struct {
 	Address  address
 	PublicID string
+	URLLogo  string
 }
 
 func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
@@ -52,19 +56,23 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 			"address.region",
 			"address.postal_code",
 			"address.country",
+			"organization.slug",
 		),
 		sm.From("compliance_report_request").As("crr"),
 		sm.InnerJoin("site").OnEQ(psql.Raw("crr.site_id"), psql.Raw("site.id")),
+		sm.InnerJoin("organization").OnEQ(psql.Raw("site.organization_id"), psql.Raw("organization.id")),
 		sm.InnerJoin("address").OnEQ(psql.Raw("site.address_id"), psql.Raw("address.id")),
 		sm.Where(psql.Raw("crr.public_id").EQ(psql.Arg(public_id))),
 	), scan.StructMapper[address]())
 	if err != nil {
+		log.Warn().Err(err).Msg("failed to get compliance report")
 		return nil, nhttp.NewErrorStatus(http.StatusNotFound, "No compliance report with that public ID")
 	}
 	return html.NewResponse(
 		"rmo/mailer/root.html", contentMailer{
 			Address:  report,
 			PublicID: public_id,
+			URLLogo:  config.MakeURLNidus("/api/district/%s/logo", report.OrganizationSlug),
 		},
 	), nil
 
