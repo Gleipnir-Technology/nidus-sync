@@ -46,6 +46,7 @@ type AddressTemplate struct {
 	PostalCode func() string
 	Street     func() string
 	Unit       func() string
+	Region     func() string
 
 	r addressR
 	f *Factory
@@ -160,6 +161,10 @@ func (o AddressTemplate) BuildSetter() *models.AddressSetter {
 		val := o.Unit()
 		m.Unit = omit.From(val)
 	}
+	if o.Region != nil {
+		val := o.Region()
+		m.Region = omit.From(val)
+	}
 
 	return m
 }
@@ -211,6 +216,9 @@ func (o AddressTemplate) Build() *models.Address {
 	}
 	if o.Unit != nil {
 		m.Unit = o.Unit()
+	}
+	if o.Region != nil {
+		m.Region = o.Region()
 	}
 
 	o.setModelRels(m)
@@ -267,6 +275,10 @@ func ensureCreatableAddress(m *models.AddressSetter) {
 	if !(m.Unit.IsValue()) {
 		val := random_string(nil)
 		m.Unit = omit.From(val)
+	}
+	if !(m.Region.IsValue()) {
+		val := random_string(nil)
+		m.Region = omit.From(val)
 	}
 }
 
@@ -437,6 +449,7 @@ func (m addressMods) RandomizeAllColumns(f *faker.Faker) AddressMod {
 		AddressMods.RandomPostalCode(f),
 		AddressMods.RandomStreet(f),
 		AddressMods.RandomUnit(f),
+		AddressMods.RandomRegion(f),
 	}
 }
 
@@ -745,6 +758,37 @@ func (m addressMods) UnsetUnit() AddressMod {
 func (m addressMods) RandomUnit(f *faker.Faker) AddressMod {
 	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
 		o.Unit = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m addressMods) Region(val string) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Region = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m addressMods) RegionFunc(f func() string) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Region = f
+	})
+}
+
+// Clear any values for the column
+func (m addressMods) UnsetRegion() AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Region = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m addressMods) RandomRegion(f *faker.Faker) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Region = func() string {
 			return random_string(f)
 		}
 	})

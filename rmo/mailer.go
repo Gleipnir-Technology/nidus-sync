@@ -16,11 +16,12 @@ import (
 )
 
 type address struct {
-	Number     int32  `db:"number_"`
-	Street     string `db:"street"`
-	Locality   string `db:"locality"`
-	PostalCode string `db:"postal_code"`
 	Country    string `db:"country"`
+	Locality   string `db:"locality"`
+	Number     int32  `db:"number_"`
+	PostalCode string `db:"postal_code"`
+	Street     string `db:"street"`
+	Region     string `db:"postal_code"`
 }
 type contentMailer struct {
 	Address  address
@@ -48,6 +49,7 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 			"address.number_",
 			"address.street",
 			"address.locality",
+			"address.region",
 			"address.postal_code",
 			"address.country",
 		),

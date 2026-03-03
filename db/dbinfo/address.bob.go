@@ -105,6 +105,15 @@ var Addresses = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Region: column{
+			Name:      "region",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: addressIndexes{
 		AddressPkey: index{
@@ -207,11 +216,12 @@ type addressColumns struct {
 	PostalCode column
 	Street     column
 	Unit       column
+	Region     column
 }
 
 func (c addressColumns) AsSlice() []column {
 	return []column{
-		c.Country, c.Created, c.Geom, c.H3cell, c.ID, c.Locality, c.Number, c.PostalCode, c.Street, c.Unit,
+		c.Country, c.Created, c.Geom, c.H3cell, c.ID, c.Locality, c.Number, c.PostalCode, c.Street, c.Unit, c.Region,
 	}
 }
 
