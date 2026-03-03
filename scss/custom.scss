@@ -47,6 +47,7 @@ $theme-colors: map-merge(
 
 @import "./sidebar.scss";
 @import "./table.scss";
+@import "./rmo/mailer.scss";
 @import "./rmo/nuisance.scss";
 @import "./rmo/root.scss";
 @import "./rmo/status.scss";
