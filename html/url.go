@@ -9,6 +9,7 @@ import (
 type ContentURL struct {
 	Configuration      contentURLConfiguration
 	OAuthRefreshArcGIS string
+	RMO                contentURLRMO
 	Root               string
 	Route              string
 	Sidebar            contentURLSidebar
@@ -56,6 +57,18 @@ func newContentURLConfiguration() contentURLConfiguration {
 	}
 }
 
+type contentURLRMO struct {
+	Evidence       urlWithParams
+	UpdateLocation urlWithParams
+}
+
+func newContentURLRMO() contentURLRMO {
+	return contentURLRMO{
+		Evidence:       makeURLWithParams(config.MakeURLReport, "/mailer/%s/evidence"),
+		UpdateLocation: makeURLWithParams(config.MakeURLReport, "/mailer/%s/update"),
+	}
+}
+
 type contentURLSidebar struct {
 	Communication string
 	Configuration string
@@ -77,10 +90,21 @@ func newContentURLSidebar() contentURLSidebar {
 }
 
 type urlForID = func(int) string
+type urlWithParams = func(...string) string
 
-func makeURLForID(pattern string) urlForID {
+type urlMaker func(path string, args ...string) string
+
+func makeURLForID(maker urlMaker, pattern string) urlForID {
 	return func(id int) string {
-		return config.MakeURLNidus(pattern, strconv.Itoa(id))
+		params := []string{
+			strconv.Itoa(id),
+		}
+		return maker(pattern, params...)
+	}
+}
+func makeURLWithParams(maker urlMaker, pattern string, args ...string) urlWithParams {
+	return func(args ...string) string {
+		return maker(pattern, args...)
 	}
 }
 
@@ -95,8 +119,8 @@ type contentURLUpload struct {
 
 func newContentURLUpload() contentURLUpload {
 	return contentURLUpload{
-		Commit:        makeURLForID("/configuration/upload/%s/commit"),
-		Discard:       makeURLForID("/configuration/upload/%s/discard"),
+		Commit:        makeURLForID(config.MakeURLNidus, "/configuration/upload/%s/commit"),
+		Discard:       makeURLForID(config.MakeURLNidus, "/configuration/upload/%s/discard"),
 		Pool:          config.MakeURLNidus("/configuration/upload/pool"),
 		PoolFlyover:   config.MakeURLNidus("/configuration/upload/pool/flyover"),
 		PoolCustom:    config.MakeURLNidus("/configuration/upload/pool/custom"),
