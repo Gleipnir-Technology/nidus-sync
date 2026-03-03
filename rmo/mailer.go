@@ -23,7 +23,8 @@ type address struct {
 	Country    string `db:"country"`
 }
 type contentMailer struct {
-	Address address
+	Address  address
+	PublicID string
 }
 
 func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
@@ -60,7 +61,8 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 	}
 	return html.NewResponse(
 		"rmo/mailer.html", contentMailer{
-			Address: report,
+			Address:  report,
+			PublicID: public_id,
 		},
 	), nil
 

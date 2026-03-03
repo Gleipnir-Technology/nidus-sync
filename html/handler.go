@@ -20,7 +20,8 @@ func MakeGet[T any](f handlerFunctionGet[T]) http.HandlerFunc {
 			return
 		}
 		RenderOrError(w, resp.Template, Content[T]{
-			C: resp.Content,
+			C:   resp.Content,
+			URL: NewContentURL(),
 		})
 	}
 }

@@ -21,6 +21,7 @@ func NewContentURL() ContentURL {
 	return ContentURL{
 		Configuration:      newContentURLConfiguration(),
 		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
+		RMO:                newContentURLRMO(),
 		Root:               config.MakeURLNidus("/"),
 		Route:              config.MakeURLNidus("/route"),
 		Sidebar:            newContentURLSidebar(),
