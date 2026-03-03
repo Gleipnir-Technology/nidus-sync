@@ -40,24 +40,9 @@
 			position: relative;
 			overflow: hidden;
 		}
-		.map-placeholder {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			background-image: url("https://placehold.co/600x300/e9ecef/adb5bd?text=Map+View");
-			background-size: cover;
-			background-position: center;
-		}
-		.map-pin {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -100%);
-			color: #dc3545;
-			font-size: 30px;
+		#map {
+			width: 510px;
+			height: 300px;
 		}
 		.address-container {
 			background-color: #f8f9fa;
@@ -82,11 +67,7 @@
 	<div class="page-container">
 		<!-- Logo -->
 		<div class="logo-area">
-			<img
-				src="https://placehold.co/200x50/e9ecef/adb5bd?text=County+Vector+Control"
-				alt="County Vector Control"
-				class="logo-placeholder"
-			/>
+			<img src="{{ .C.URLLogo }}" alt="Vector Control District Logo" />
 		</div>
 
 		<!-- Progress Bar -->
@@ -113,10 +94,7 @@
 
 			<!-- Map View -->
 			<div class="map-container">
-				<div class="map-placeholder"></div>
-				<div class="map-pin">
-					<i class="bi bi-geo-alt-fill"></i>
-				</div>
+				<map-locator id="map"></map-locator>
 			</div>
 
 			<!-- Address Information -->
@@ -124,7 +102,8 @@
 				<div class="mb-2"><strong>Detected Address:</strong></div>
 				<h5>
 					{{ .C.Address.Number }} {{ .C.Address.Street }},
-					{{ .C.Address.Locality }}, {{ .C.Address.Region }}
+					{{ .C.Address.Locality }},
+					{{ .C.Address.Region }}
 					{{ .C.Address.PostalCode }}
 				</h5>
 			</div>

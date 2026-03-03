@@ -94,20 +94,9 @@ class MapLocator extends HTMLElement {
 		this.shadowRoot.innerHTML = `
 			<style>
 				@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
-				.map-container {
-					background-color: #e9ecef;
-					border-radius: 10px;
-					box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-					height: 500px;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					margin-top: 20px;
-				}
 				#map {
-					height: 500px;
+					height: 100%;
 					width:100%;
-					margin-bottom: 10px;
 				}
 				#map img {
 					max-width: none;
@@ -116,9 +105,7 @@ class MapLocator extends HTMLElement {
 				}
 			</style>
 			
-			<div id="map-container" class="map-container">
-				<div id="map"></div>
-			</div>
+			<div id="map"></div>
 		`;
 	}
 
