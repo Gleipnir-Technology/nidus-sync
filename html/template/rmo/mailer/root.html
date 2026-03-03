@@ -2,6 +2,11 @@
 
 {{ define "title" }}Report Standing Water{{ end }}
 {{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
+	<script src="/static/js/map-locator.js"></script>
 	<style>
 		body {
 			background-color: #f8f9fa;
@@ -117,7 +122,11 @@
 			<!-- Address Information -->
 			<div class="address-container">
 				<div class="mb-2"><strong>Detected Address:</strong></div>
-				<h5>123 Maple Street, Riverside, CA 92501</h5>
+				<h5>
+					{{ .C.Address.Number }} {{ .C.Address.Street }},
+					{{ .C.Address.Locality }}, {{ .C.Address.Region }}
+					{{ .C.Address.PostalCode }}
+				</h5>
 			</div>
 
 			<div class="mb-4">

@@ -1,4 +1,3 @@
-var map = null;
 // A map for showing a single h3 cell
 class MapCell extends HTMLElement {
 	constructor() {
