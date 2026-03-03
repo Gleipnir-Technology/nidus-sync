@@ -5,26 +5,17 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	//"github.com/rs/zerolog/log"
 )
 
-type contentConfig struct {
-	IsProductionEnvironment bool
-}
-
-func newContentConfig() contentConfig {
-	return contentConfig{
-		IsProductionEnvironment: config.IsProductionEnvironment(),
-	}
-}
-
 type contentConfigurationRoot struct{}
 
-func getConfigurationRoot(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentConfigurationRoot], *errorWithStatus) {
-	return newResponse("sync/configuration/root.html", contentConfigurationRoot{}), nil
+func getConfigurationRoot(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentConfigurationRoot], *nhttp.ErrorWithStatus) {
+	return html.NewResponse("sync/configuration/root.html", contentConfigurationRoot{}), nil
 }
 
 type contentSettingOrganization struct {
@@ -35,10 +26,10 @@ type contentSettingIntegration struct {
 	ArcGISOAuth *models.ArcgisOauthToken
 }
 
-func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingOrganization], *errorWithStatus) {
+func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
 	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return nil, newError("get organization: %w", err)
+		return nil, nhttp.NewError("get organization: %w", err)
 	}
 	/*
 		var district contentDistrict
@@ -74,44 +65,44 @@ func getConfigurationOrganization(ctx context.Context, r *http.Request, org *mod
 	data := contentSettingOrganization{
 		Organization: org,
 	}
-	return newResponse("sync/configuration/organization.html", data), nil
+	return html.NewResponse("sync/configuration/organization.html", data), nil
 }
-func getConfigurationIntegration(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingIntegration], *errorWithStatus) {
+func getConfigurationIntegration(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
 	oauth, err := arcgis.GetOAuthForUser(ctx, u)
 	if err != nil {
-		return nil, newError("Failed to get oauth: %w", err)
+		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
 	data := contentSettingIntegration{
 		ArcGISOAuth: oauth,
 	}
-	return newResponse("sync/configuration/integration.html", data), nil
+	return html.NewResponse("sync/configuration/integration.html", data), nil
 }
-func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentSettingIntegration], *errorWithStatus) {
+func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
 	oauth, err := arcgis.GetOAuthForUser(ctx, u)
 	if err != nil {
-		return nil, newError("Failed to get oauth: %w", err)
+		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
 	data := contentSettingIntegration{
 		ArcGISOAuth: oauth,
 	}
-	return newResponse("sync/configuration/integration-arcgis.html", data), nil
+	return html.NewResponse("sync/configuration/integration-arcgis.html", data), nil
 }
 
 type contentSettingPlaceholder struct{}
 
-func getConfigurationPesticide(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
+func getConfigurationPesticide(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return newResponse("sync/configuration/pesticide.html", content), nil
+	return html.NewResponse("sync/configuration/pesticide.html", content), nil
 }
-func getConfigurationPesticideAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
+func getConfigurationPesticideAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return newResponse("sync/configuration/pesticide-add.html", content), nil
+	return html.NewResponse("sync/configuration/pesticide-add.html", content), nil
 }
-func getConfigurationUserAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
+func getConfigurationUserAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return newResponse("sync/configuration/user-add.html", content), nil
+	return html.NewResponse("sync/configuration/user-add.html", content), nil
 }
-func getConfigurationUserList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSettingPlaceholder], *errorWithStatus) {
+func getConfigurationUserList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
-	return newResponse("sync/configuration/user-list.html", content), nil
+	return html.NewResponse("sync/configuration/user-list.html", content), nil
 }

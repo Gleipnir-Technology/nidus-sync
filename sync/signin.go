@@ -98,8 +98,8 @@ func postSignup(w http.ResponseWriter, r *http.Request) {
 
 type contentUnauthenticated[T any] struct {
 	C      T
-	Config contentConfig
-	URL    contentURL
+	Config html.ContentConfig
+	URL    html.ContentURL
 }
 
 func signin(w http.ResponseWriter, errorCode string, next string) {
@@ -111,8 +111,8 @@ func signin(w http.ResponseWriter, errorCode string, next string) {
 			InvalidCredentials: errorCode == "invalid-credentials",
 			Next:               next,
 		},
-		Config: newContentConfig(),
-		URL:    newContentURL(),
+		Config: html.NewContentConfig(),
+		URL:    html.NewContentURL(),
 	}
 	html.RenderOrError(w, "sync/signin.html", data)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -61,8 +62,8 @@ func getDistrict(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/district.html", &context)
 }
 
-func getLayoutTest(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentLayoutTest], *errorWithStatus) {
-	return newResponse("sync/layout-test.html", contentLayoutTest{}), nil
+func getLayoutTest(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentLayoutTest], *nhttp.ErrorWithStatus) {
+	return html.NewResponse("sync/layout-test.html", contentLayoutTest{}), nil
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -93,40 +94,40 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSource(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSource], *errorWithStatus) {
+func getSource(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSource], *nhttp.ErrorWithStatus) {
 	globalid_s := chi.URLParam(r, "globalid")
 	if globalid_s == "" {
-		return nil, newError("No globalid provided: %w", nil)
+		return nil, nhttp.NewError("No globalid provided: %w", nil)
 	}
 	globalid, err := uuid.Parse(globalid_s)
 	if err != nil {
-		return nil, newError("globalid is not a UUID: %w", nil)
+		return nil, nhttp.NewError("globalid is not a UUID: %w", nil)
 	}
 	userContent, err := contentForUser(r.Context(), user)
 	if err != nil {
-		return nil, newError("Failed to get user content: %w", err)
+		return nil, nhttp.NewError("Failed to get user content: %w", err)
 	}
 	s, err := sourceByGlobalId(r.Context(), org, globalid)
 	if err != nil {
-		return nil, newError("Failed to get source: %w", err)
+		return nil, nhttp.NewError("Failed to get source: %w", err)
 	}
 	inspections, err := inspectionsBySource(r.Context(), org, globalid)
 	if err != nil {
-		return nil, newError("Failed to get inspections: %w", err)
+		return nil, nhttp.NewError("Failed to get inspections: %w", err)
 	}
 	traps, err := trapsBySource(r.Context(), org, globalid)
 	if err != nil {
-		return nil, newError("Failed to get traps: %w", err)
+		return nil, nhttp.NewError("Failed to get traps: %w", err)
 	}
 
 	treatments, err := treatmentsBySource(r.Context(), org, globalid)
 	if err != nil {
-		return nil, newError("Failed to get treatments: %w", err)
+		return nil, nhttp.NewError("Failed to get treatments: %w", err)
 	}
 	treatment_models := modelTreatment(treatments)
 	latlng, err := s.H3Cell.LatLng()
 	if err != nil {
-		return nil, newError("Failed to get latlng: %w", err)
+		return nil, nhttp.NewError("Failed to get latlng: %w", err)
 	}
 	data := contentSource{
 		Inspections: inspections,
@@ -148,40 +149,40 @@ func getSource(ctx context.Context, r *http.Request, org *models.Organization, u
 		User:            userContent,
 	}
 
-	return newResponse("sync/source.html", data), nil
+	return html.NewResponse("sync/source.html", data), nil
 }
 
-func getStadia(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentDashboard], *errorWithStatus) {
+func getStadia(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentDashboard], *nhttp.ErrorWithStatus) {
 	data := contentDashboard{
 		MapData: ComponentMap{
 			MapboxToken: config.MapboxToken,
 		},
 	}
-	return newResponse("sync/stadia.html", data), nil
+	return html.NewResponse("sync/stadia.html", data), nil
 }
 func getTemplateTest(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/template-test.html", nil)
 }
-func getTrap(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentTrap], *errorWithStatus) {
+func getTrap(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentTrap], *nhttp.ErrorWithStatus) {
 	globalid_s := chi.URLParam(r, "globalid")
 	if globalid_s == "" {
-		return nil, newError("No globalid provided: %w", nil)
+		return nil, nhttp.NewError("No globalid provided: %w", nil)
 	}
 	globalid, err := uuid.Parse(globalid_s)
 	if err != nil {
-		return nil, newError("globalid is not a UUID: %w", nil)
+		return nil, nhttp.NewError("globalid is not a UUID: %w", nil)
 	}
 	userContent, err := contentForUser(r.Context(), user)
 	if err != nil {
-		return nil, newError("Failed to get user content: %w", err)
+		return nil, nhttp.NewError("Failed to get user content: %w", err)
 	}
 	t, err := trapByGlobalId(r.Context(), org, globalid)
 	if err != nil {
-		return nil, newError("Failed to get trap: %w", err)
+		return nil, nhttp.NewError("Failed to get trap: %w", err)
 	}
 	latlng, err := t.H3Cell.LatLng()
 	if err != nil {
-		return nil, newError("Failed to get latlng: %w", err)
+		return nil, nhttp.NewError("Failed to get latlng: %w", err)
 	}
 	data := contentTrap{
 		MapData: ComponentMap{
@@ -198,7 +199,7 @@ func getTrap(ctx context.Context, r *http.Request, org *models.Organization, use
 		Trap: t,
 		User: userContent,
 	}
-	return newResponse("sync/trap.html", data), nil
+	return html.NewResponse("sync/trap.html", data), nil
 }
 
 func dashboard(ctx context.Context, w http.ResponseWriter, org *models.Organization, user *models.User) {
@@ -260,7 +261,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, org *models.Organizat
 	}
 	html.RenderOrError(w, "sync/dashboard.html", contentAuthenticated[contentDashboard]{
 		C:    content,
-		URL:  newContentURL(),
+		URL:  html.NewContentURL(),
 		User: userContent,
 	})
 }

@@ -54,7 +54,7 @@ func addMock(r chi.Router, path string, template string) {
 }
 
 type contentMock struct {
-	Config       contentConfig
+	Config       html.ContentConfig
 	DistrictName string
 	URLs         ContentMockURLs
 }
@@ -66,7 +66,7 @@ func renderMock(template_name string) http.HandlerFunc {
 			code = "abc-123"
 		}
 		data := contentMock{
-			Config:       newContentConfig(),
+			Config:       html.NewContentConfig(),
 			DistrictName: "Delta MVCD",
 			URLs: ContentMockURLs{
 				Dispatch:            "/mock/dispatch",
@@ -91,13 +91,13 @@ func renderMock(template_name string) http.HandlerFunc {
 }
 
 type contentMockList struct {
-	Config contentConfig
+	Config html.ContentConfig
 	Mocks  []mock
 }
 
 func renderMockList(w http.ResponseWriter, r *http.Request) {
 	data := contentMockList{
-		Config: newContentConfig(),
+		Config: html.NewContentConfig(),
 		Mocks:  mocks,
 	}
 	html.RenderOrError(w, "sync/mock/root.html", data)

@@ -32,7 +32,7 @@ func Router() chi.Router {
 	r.Get("/email/unsubscribe", getEmailUnsubscribe)
 	r.Get("/email/unsubscribe/report/{report_id}", getEmailReportUnsubscribe)
 	r.Get("/image/{uuid}", getImageByUUID)
-	r.Get("/mailer/{public_id}", getMailer)
+	r.Get("/mailer/{public_id}", html.MakeGet(getMailer))
 	r.Route("/mock", addMockRoutes)
 	r.Post("/register-notifications", postRegisterNotifications)
 	r.Get("/register-notifications-complete", getRegisterNotificationsComplete)

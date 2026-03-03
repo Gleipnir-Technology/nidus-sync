@@ -8,6 +8,8 @@ import (
 	//"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	//"github.com/Gleipnir-Technology/bob"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -22,12 +24,12 @@ type contentNotificationList struct {
 	Notifications []notification.Notification
 }
 
-func getNotificationList(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*response[contentNotificationList], *errorWithStatus) {
+func getNotificationList(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentNotificationList], *nhttp.ErrorWithStatus) {
 	notifications, err := notification.ForUser(ctx, u)
 	if err != nil {
-		return nil, newError("Failed to get notifications: %w", err)
+		return nil, nhttp.NewError("Failed to get notifications: %w", err)
 	}
-	return newResponse("sync/notification-list.html", contentNotificationList{
+	return html.NewResponse("sync/notification-list.html", contentNotificationList{
 		Notifications: notifications,
 	}), nil
 }

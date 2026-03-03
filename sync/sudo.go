@@ -10,6 +10,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
@@ -19,9 +21,9 @@ type contentSudo struct {
 	ForwardEmailNidusAddress string
 }
 
-func getSudo(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentSudo], *errorWithStatus) {
+func getSudo(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSudo], *nhttp.ErrorWithStatus) {
 	if user.Role != enums.UserroleRoot {
-		return nil, &errorWithStatus{
+		return nil, &nhttp.ErrorWithStatus{
 			Message: "You have to be a root user to access this",
 			Status:  http.StatusForbidden,
 		}
@@ -30,7 +32,7 @@ func getSudo(ctx context.Context, r *http.Request, org *models.Organization, use
 		ForwardEmailRMOAddress:   config.ForwardEmailRMOAddress,
 		ForwardEmailNidusAddress: config.ForwardEmailNidusAddress,
 	}
-	return newResponse("sync/sudo.html", content), nil
+	return html.NewResponse("sync/sudo.html", content), nil
 }
 
 var decoder = schema.NewDecoder()
@@ -42,9 +44,9 @@ type FormEmail struct {
 	To      string `schema:"emailTo"`
 }
 
-func postSudoEmail(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, e FormEmail) (string, *errorWithStatus) {
+func postSudoEmail(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, e FormEmail) (string, *nhttp.ErrorWithStatus) {
 	if u.Role != enums.UserroleRoot {
-		return "", &errorWithStatus{
+		return "", &nhttp.ErrorWithStatus{
 			Message: "You must have sudo powers to do this",
 			Status:  http.StatusForbidden,
 		}
@@ -71,9 +73,9 @@ type FormSMS struct {
 	Phone   string `schema:"smsPhone"`
 }
 
-func postSudoSMS(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, sms FormSMS) (string, *errorWithStatus) {
+func postSudoSMS(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, sms FormSMS) (string, *nhttp.ErrorWithStatus) {
 	if u.Role != enums.UserroleRoot {
-		return "", &errorWithStatus{
+		return "", &nhttp.ErrorWithStatus{
 			Message: "You must have sudo powers to do this",
 			Status:  http.StatusForbidden,
 		}

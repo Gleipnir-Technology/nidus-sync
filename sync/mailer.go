@@ -16,7 +16,7 @@ import (
 )
 
 type contentMailer struct {
-	Config       contentConfig
+	Config       html.ContentConfig
 	DocumentID   string
 	LogoURL      string
 	Organization *models.Organization
@@ -71,7 +71,7 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 	}
 	doc_id := uuid.New()
 	html.RenderOrError(w, "sync/mailer.html", contentMailer{
-		Config:       newContentConfig(),
+		Config:       html.NewContentConfig(),
 		DocumentID:   doc_id.String(),
 		LogoURL:      config.MakeURLNidus("/api/district/%s/logo", org.Slug.GetOr("unset")),
 		Organization: org,

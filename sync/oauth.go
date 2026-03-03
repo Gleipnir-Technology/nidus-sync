@@ -10,6 +10,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,7 +67,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.MakeURLNidus("/"), http.StatusFound)
 }
 
-func getOAuthRefresh(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*response[contentOauthPrompt], *errorWithStatus) {
+func getOAuthRefresh(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentOauthPrompt], *nhttp.ErrorWithStatus) {
 	data := contentOauthPrompt{}
-	return newResponse("sync/oauth-prompt.html", data), nil
+	return html.NewResponse("sync/oauth-prompt.html", data), nil
 }

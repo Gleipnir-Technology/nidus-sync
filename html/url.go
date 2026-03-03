@@ -1,4 +1,4 @@
-package sync
+package html
 
 import (
 	"strconv"
@@ -6,7 +6,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 )
 
-type contentURL struct {
+type ContentURL struct {
 	Configuration      contentURLConfiguration
 	OAuthRefreshArcGIS string
 	Root               string
@@ -16,8 +16,8 @@ type contentURL struct {
 	Upload             contentURLUpload
 }
 
-func newContentURL() contentURL {
-	return contentURL{
+func NewContentURL() ContentURL {
+	return ContentURL{
 		Configuration:      newContentURLConfiguration(),
 		OAuthRefreshArcGIS: config.MakeURLNidus("/arcgis/oauth/begin"),
 		Root:               config.MakeURLNidus("/"),
