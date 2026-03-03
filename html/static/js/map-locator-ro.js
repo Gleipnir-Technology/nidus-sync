@@ -35,7 +35,8 @@ class MapLocatorReadOnly extends HTMLElement {
 		this._map = new maplibregl.Map({
 			container: mapElement,
 			center: marker.coordinates,
-			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
+			//style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
+			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 16,
 		});
 		this._map.on("load", () => {
