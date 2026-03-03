@@ -20,6 +20,7 @@ import (
 type address struct {
 	Country          string `db:"country"`
 	Locality         string `db:"locality"`
+	LocationGeoJSON  string `db:"location_geo_json"`
 	Number           int32  `db:"number_"`
 	OrganizationSlug string `db:"slug"`
 	PostalCode       string `db:"postal_code"`
@@ -53,6 +54,7 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 			"address.number_",
 			"address.street",
 			"address.locality",
+			"ST_AsGeoJSON(address.geom) AS location_geo_json",
 			"address.region",
 			"address.postal_code",
 			"address.country",

@@ -6,7 +6,7 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-locator.js"></script>
+	<script src="/static/js/map-locator-ro.js"></script>
 	<style>
 		body {
 			background-color: #f8f9fa;
@@ -94,7 +94,10 @@
 
 			<!-- Map View -->
 			<div class="map-container">
-				<map-locator id="map"></map-locator>
+				<map-locator-ro
+					marker="{{ .C.Address.LocationGeoJSON|json }}"
+					id="map"
+				></map-locator-ro>
 			</div>
 
 			<!-- Address Information -->
