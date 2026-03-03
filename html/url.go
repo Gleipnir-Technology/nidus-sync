@@ -59,14 +59,32 @@ func newContentURLConfiguration() contentURLConfiguration {
 }
 
 type contentURLRMO struct {
-	Evidence       urlWithParams
-	UpdateLocation urlWithParams
+	Mailer contentURLRMOMailer
 }
 
 func newContentURLRMO() contentURLRMO {
 	return contentURLRMO{
-		Evidence:       makeURLWithParams(config.MakeURLReport, "/mailer/%s/evidence"),
-		UpdateLocation: makeURLWithParams(config.MakeURLReport, "/mailer/%s/update"),
+		Mailer: newContentURLRMOMailer(),
+	}
+}
+
+type contentURLRMOMailer struct {
+	Confirm    urlWithParams
+	Contribute urlWithParams
+	Evidence   urlWithParams
+	Root       urlWithParams
+	Schedule   urlWithParams
+	Update     urlWithParams
+}
+
+func newContentURLRMOMailer() contentURLRMOMailer {
+	return contentURLRMOMailer{
+		Confirm:    makeURLWithParams(config.MakeURLReport, "/mailer/%s/confirm"),
+		Contribute: makeURLWithParams(config.MakeURLReport, "/mailer/%s/contribute"),
+		Evidence:   makeURLWithParams(config.MakeURLReport, "/mailer/%s/evidence"),
+		Root:       makeURLWithParams(config.MakeURLReport, "/mailer/%s"),
+		Schedule:   makeURLWithParams(config.MakeURLReport, "/mailer/%s/schedule"),
+		Update:     makeURLWithParams(config.MakeURLReport, "/mailer/%s/update"),
 	}
 }
 

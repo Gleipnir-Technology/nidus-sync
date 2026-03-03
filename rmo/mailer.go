@@ -60,10 +60,65 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 		return nil, nhttp.NewErrorStatus(http.StatusNotFound, "No compliance report with that public ID")
 	}
 	return html.NewResponse(
-		"rmo/mailer.html", contentMailer{
+		"rmo/mailer/root.html", contentMailer{
 			Address:  report,
 			PublicID: public_id,
 		},
 	), nil
 
+}
+func getMailerConfirm(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return html.NewResponse(
+		"rmo/mailer/confirm.html", contentMailer{
+			PublicID: public_id,
+		},
+	), nil
+}
+func getMailerContribute(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return html.NewResponse(
+		"rmo/mailer/contribute.html", contentMailer{
+			PublicID: public_id,
+		},
+	), nil
+}
+func getMailerEvidence(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return html.NewResponse(
+		"rmo/mailer/evidence.html", contentMailer{
+			PublicID: public_id,
+		},
+	), nil
+}
+func getMailerSchedule(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return html.NewResponse(
+		"rmo/mailer/schedule.html", contentMailer{
+			PublicID: public_id,
+		},
+	), nil
+}
+func getMailerUpdate(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return html.NewResponse(
+		"rmo/mailer/update.html", contentMailer{
+			PublicID: public_id,
+		},
+	), nil
 }
