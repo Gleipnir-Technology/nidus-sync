@@ -11,11 +11,15 @@
                 flake-utils.lib.eachDefaultSystem (system:
                         let
                                 pkgs = nixpkgs.legacyPackages.${system};
+				projPkg = proj.packages.${system}.default;
+
                                 # Override pkgs.proj with your custom proj
                                 customPkgs = pkgs // {
                                         proj = proj.packages.${system}.default;
                                 };
-                                package = import ./default.nix { pkgs = customPkgs; };
+                                package = pkgs.callPackage ./default.nix {
+					proj = projPkg;
+				};
                         in
                         {
                                 packages.default = package;

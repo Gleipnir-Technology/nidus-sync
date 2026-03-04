@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ pkgs ? import <nixpkgs> { }, proj ? pkgs.proj }:
 pkgs.buildGoModule rec {
         meta = {
                 description = "Nidus Sync";
@@ -11,7 +11,8 @@ pkgs.buildGoModule rec {
         # Needs to be updated after every modification of go.mod/go.sum
         vendorHash = "sha256-FX9ZmllLpjsk5vN+dzHTjHaZSfDntJkKkAh5cXCfX5U=";
 
-	nativeBuildInputs = [ pkgs.dart-sass pkgs.pkg-config ];
+	buildInputs = [ pkgs.proj ];
+	nativeBuildInputs = [ pkgs.pkg-config pkgs.dart-sass ];
 
 	preBuild = ''
 
