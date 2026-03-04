@@ -52,6 +52,7 @@ type PoolTemplate struct {
 type poolR struct {
 	CreatorUser *poolRCreatorUserR
 	Site        *poolRSiteR
+	SignalPools []*poolRSignalPoolsR
 }
 
 type poolRCreatorUserR struct {
@@ -59,6 +60,10 @@ type poolRCreatorUserR struct {
 }
 type poolRSiteR struct {
 	o *SiteTemplate
+}
+type poolRSignalPoolsR struct {
+	number int
+	o      *SignalPoolTemplate
 }
 
 // Apply mods to the PoolTemplate
@@ -84,6 +89,19 @@ func (t PoolTemplate) setModelRels(o *models.Pool) {
 		o.SiteID = rel.ID           // h2
 		o.SiteVersion = rel.Version // h2
 		o.R.Site = rel
+	}
+
+	if t.r.SignalPools != nil {
+		rel := models.SignalPoolSlice{}
+		for _, r := range t.r.SignalPools {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.PoolID = o.ID // h2
+				rel.R.Pool = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.SignalPools = rel
 	}
 }
 
@@ -605,5 +623,53 @@ func (m poolMods) WithExistingSite(em *models.Site) PoolMod {
 func (m poolMods) WithoutSite() PoolMod {
 	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
 		o.r.Site = nil
+	})
+}
+
+func (m poolMods) WithSignalPools(number int, related *SignalPoolTemplate) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.SignalPools = []*poolRSignalPoolsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m poolMods) WithNewSignalPools(number int, mods ...SignalPoolMod) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		related := o.f.NewSignalPoolWithContext(ctx, mods...)
+		m.WithSignalPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m poolMods) AddSignalPools(number int, related *SignalPoolTemplate) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.SignalPools = append(o.r.SignalPools, &poolRSignalPoolsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m poolMods) AddNewSignalPools(number int, mods ...SignalPoolMod) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		related := o.f.NewSignalPoolWithContext(ctx, mods...)
+		m.AddSignalPools(number, related).Apply(ctx, o)
+	})
+}
+
+func (m poolMods) AddExistingSignalPools(existingModels ...*models.SignalPool) PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		for _, em := range existingModels {
+			o.r.SignalPools = append(o.r.SignalPools, &poolRSignalPoolsR{
+				o: o.f.FromExistingSignalPool(em),
+			})
+		}
+	})
+}
+
+func (m poolMods) WithoutSignalPools() PoolMod {
+	return PoolModFunc(func(ctx context.Context, o *PoolTemplate) {
+		o.r.SignalPools = nil
 	})
 }

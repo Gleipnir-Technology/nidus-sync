@@ -122,6 +122,7 @@ type organizationR struct {
 	Nuisances                                   PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool                            PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
 	Quicks                                      PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
+	Signals                                     SignalSlice                            // signal.signal_organization_id_fkey
 	User                                        UserSlice                              // user_.user__organization_id_fkey
 }
 
@@ -1948,6 +1949,30 @@ func (os OrganizationSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) Public
 
 	return PublicreportQuicks.Query(append(mods,
 		sm.Where(psql.Group(PublicreportQuicks.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Signals starts a query for related objects on signal
+func (o *Organization) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -4853,6 +4878,74 @@ func (organization0 *Organization) AttachQuicks(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+func insertOrganizationSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, organization0 *Organization) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, organization0 *Organization) (SignalSlice, error) {
+	setter := &SignalSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (organization0 *Organization) InsertSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertOrganizationSignals0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Signals = append(organization0.R.Signals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachOrganizationSignals0(ctx, exec, len(related), signals1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Signals = append(organization0.R.Signals, signals1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationUser0(ctx context.Context, exec bob.Executor, users1 []*UserSetter, organization0 *Organization) (UserSlice, error) {
 	for i := range users1 {
 		users1[i].OrganizationID = omit.From(organization0.ID)
@@ -5601,6 +5694,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Signals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Signals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "User":
 		rels, ok := retrieved.(UserSlice)
 		if !ok {
@@ -5700,6 +5807,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	Nuisances                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -5832,6 +5940,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type QuicksLoadInterface interface {
 		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SignalsLoadInterface interface {
+		LoadSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserLoadInterface interface {
 		LoadUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6094,6 +6205,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"Quicks",
 			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadQuicks(ctx, exec, mods...)
+			},
+		),
+		Signals: thenLoadBuilder[Q](
+			"Signals",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSignals(ctx, exec, mods...)
 			},
 		),
 		User: thenLoadBuilder[Q](
@@ -8765,6 +8882,67 @@ func (os OrganizationSlice) LoadQuicks(ctx context.Context, exec bob.Executor, m
 	return nil
 }
 
+// LoadSignals loads the organization's Signals into the .R struct
+func (o *Organization) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Signals = nil
+
+	related, err := o.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Signals = related
+	return nil
+}
+
+// LoadSignals loads the organization's Signals into the .R struct
+func (os OrganizationSlice) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Signals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Signals = append(o.R.Signals, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadUser loads the organization's User into the .R struct
 func (o *Organization) LoadUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -8869,6 +9047,7 @@ type organizationC struct {
 	Nuisances               *int64
 	PublicreportPool        *int64
 	Quicks                  *int64
+	Signals                 *int64
 	User                    *int64
 }
 
@@ -8961,6 +9140,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.PublicreportPool = &count
 	case "Quicks":
 		o.C.Quicks = &count
+	case "Signals":
+		o.C.Signals = &count
 	case "User":
 		o.C.User = &count
 	}
@@ -9009,6 +9190,7 @@ type organizationCountPreloader struct {
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Signals                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	User                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
@@ -9717,6 +9899,23 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Signals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Signals", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Signals.Name()),
+					sm.Where(psql.Quote(Signals.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		User: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("User", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -9779,6 +9978,7 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -9905,6 +10105,9 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type QuicksCountInterface interface {
 		LoadCountQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SignalsCountInterface interface {
+		LoadCountSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type UserCountInterface interface {
 		LoadCountUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -10155,6 +10358,12 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"Quicks",
 			func(ctx context.Context, exec bob.Executor, retrieved QuicksCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountQuicks(ctx, exec, mods...)
+			},
+		),
+		Signals: countThenLoadBuilder[Q](
+			"Signals",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountSignals(ctx, exec, mods...)
 			},
 		),
 		User: countThenLoadBuilder[Q](
@@ -11396,6 +11605,36 @@ func (os OrganizationSlice) LoadCountQuicks(ctx context.Context, exec bob.Execut
 	return nil
 }
 
+// LoadCountSignals loads the count of Signals into the C struct
+func (o *Organization) LoadCountSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Signals(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Signals = &count
+	return nil
+}
+
+// LoadCountSignals loads the count of Signals for a slice
+func (os OrganizationSlice) LoadCountSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountSignals(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountUser loads the count of User into the C struct
 func (o *Organization) LoadCountUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -11471,6 +11710,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	Nuisances                                   modAs[Q, publicreportNuisanceColumns]
 	PublicreportPool                            modAs[Q, publicreportPoolColumns]
 	Quicks                                      modAs[Q, publicreportQuickColumns]
+	Signals                                     modAs[Q, signalColumns]
 	User                                        modAs[Q, userColumns]
 }
 
@@ -12092,6 +12332,20 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, PublicreportQuicks.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Signals: modAs[Q, signalColumns]{
+			c: Signals.Columns,
+			f: func(to signalColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
 					))
 				}

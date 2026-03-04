@@ -107,6 +107,8 @@ type Factory struct {
 	baseRasterOverviewMods                    RasterOverviewModSlice
 	baseResidentMods                          ResidentModSlice
 	baseSessionMods                           SessionModSlice
+	baseSignalMods                            SignalModSlice
+	baseSignalPoolMods                        SignalPoolModSlice
 	baseSiteMods                              SiteModSlice
 	baseSpatialRefSyMods                      SpatialRefSyModSlice
 	baseUserMods                              UserModSlice
@@ -3510,6 +3512,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	if len(m.R.Quicks) > 0 {
 		OrganizationMods.AddExistingQuicks(m.R.Quicks...).Apply(ctx, o)
 	}
+	if len(m.R.Signals) > 0 {
+		OrganizationMods.AddExistingSignals(m.R.Signals...).Apply(ctx, o)
+	}
 	if len(m.R.User) > 0 {
 		OrganizationMods.AddExistingUser(m.R.User...).Apply(ctx, o)
 	}
@@ -3581,6 +3586,9 @@ func (f *Factory) FromExistingPool(m *models.Pool) *PoolTemplate {
 	}
 	if m.R.Site != nil {
 		PoolMods.WithExistingSite(m.R.Site).Apply(ctx, o)
+	}
+	if len(m.R.SignalPools) > 0 {
+		PoolMods.AddExistingSignalPools(m.R.SignalPools...).Apply(ctx, o)
 	}
 
 	return o
@@ -4324,6 +4332,85 @@ func (f *Factory) FromExistingSession(m *models.Session) *SessionTemplate {
 	return o
 }
 
+func (f *Factory) NewSignal(mods ...SignalMod) *SignalTemplate {
+	return f.NewSignalWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewSignalWithContext(ctx context.Context, mods ...SignalMod) *SignalTemplate {
+	o := &SignalTemplate{f: f}
+
+	if f != nil {
+		f.baseSignalMods.Apply(ctx, o)
+	}
+
+	SignalModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingSignal(m *models.Signal) *SignalTemplate {
+	o := &SignalTemplate{f: f, alreadyPersisted: true}
+
+	o.Addressed = func() null.Val[time.Time] { return m.Addressed }
+	o.Addressor = func() null.Val[int32] { return m.Addressor }
+	o.Created = func() time.Time { return m.Created }
+	o.Creator = func() int32 { return m.Creator }
+	o.ID = func() int32 { return m.ID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.Species = func() null.Val[enums.Mosquitospecies] { return m.Species }
+	o.Title = func() string { return m.Title }
+	o.Type = func() enums.Signaltype { return m.Type }
+
+	ctx := context.Background()
+	if m.R.AddressorUser != nil {
+		SignalMods.WithExistingAddressorUser(m.R.AddressorUser).Apply(ctx, o)
+	}
+	if m.R.CreatorUser != nil {
+		SignalMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		SignalMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+	if len(m.R.SignalPools) > 0 {
+		SignalMods.AddExistingSignalPools(m.R.SignalPools...).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewSignalPool(mods ...SignalPoolMod) *SignalPoolTemplate {
+	return f.NewSignalPoolWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewSignalPoolWithContext(ctx context.Context, mods ...SignalPoolMod) *SignalPoolTemplate {
+	o := &SignalPoolTemplate{f: f}
+
+	if f != nil {
+		f.baseSignalPoolMods.Apply(ctx, o)
+	}
+
+	SignalPoolModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingSignalPool(m *models.SignalPool) *SignalPoolTemplate {
+	o := &SignalPoolTemplate{f: f, alreadyPersisted: true}
+
+	o.PoolID = func() int32 { return m.PoolID }
+	o.SignalID = func() int32 { return m.SignalID }
+
+	ctx := context.Background()
+	if m.R.Pool != nil {
+		SignalPoolMods.WithExistingPool(m.R.Pool).Apply(ctx, o)
+	}
+	if m.R.Signal != nil {
+		SignalPoolMods.WithExistingSignal(m.R.Signal).Apply(ctx, o)
+	}
+
+	return o
+}
+
 func (f *Factory) NewSite(mods ...SiteMod) *SiteTemplate {
 	return f.NewSiteWithContext(context.Background(), mods...)
 }
@@ -4480,6 +4567,12 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	}
 	if len(m.R.CreatorResidents) > 0 {
 		UserMods.AddExistingCreatorResidents(m.R.CreatorResidents...).Apply(ctx, o)
+	}
+	if len(m.R.AddressorSignals) > 0 {
+		UserMods.AddExistingAddressorSignals(m.R.AddressorSignals...).Apply(ctx, o)
+	}
+	if len(m.R.CreatorSignals) > 0 {
+		UserMods.AddExistingCreatorSignals(m.R.CreatorSignals...).Apply(ctx, o)
 	}
 	if len(m.R.CreatorSites) > 0 {
 		UserMods.AddExistingCreatorSites(m.R.CreatorSites...).Apply(ctx, o)
@@ -5193,6 +5286,22 @@ func (f *Factory) ClearBaseSessionMods() {
 
 func (f *Factory) AddBaseSessionMod(mods ...SessionMod) {
 	f.baseSessionMods = append(f.baseSessionMods, mods...)
+}
+
+func (f *Factory) ClearBaseSignalMods() {
+	f.baseSignalMods = nil
+}
+
+func (f *Factory) AddBaseSignalMod(mods ...SignalMod) {
+	f.baseSignalMods = append(f.baseSignalMods, mods...)
+}
+
+func (f *Factory) ClearBaseSignalPoolMods() {
+	f.baseSignalPoolMods = nil
+}
+
+func (f *Factory) AddBaseSignalPoolMod(mods ...SignalPoolMod) {
+	f.baseSignalPoolMods = append(f.baseSignalPoolMods, mods...)
 }
 
 func (f *Factory) ClearBaseSiteMods() {

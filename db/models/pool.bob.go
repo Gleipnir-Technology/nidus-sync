@@ -33,6 +33,8 @@ type Pool struct {
 	SiteVersion int32                   `db:"site_version" `
 
 	R poolR `db:"-" `
+
+	C poolC `db:"-" `
 }
 
 // PoolSlice is an alias for a slice of pointers to Pool.
@@ -47,8 +49,9 @@ type PoolsQuery = *psql.ViewQuery[*Pool, PoolSlice]
 
 // poolR is where relationships are stored.
 type poolR struct {
-	CreatorUser *User // pool.pool_creator_id_fkey
-	Site        *Site // pool.pool_site_id_site_version_fkey
+	CreatorUser *User           // pool.pool_creator_id_fkey
+	Site        *Site           // pool.pool_site_id_site_version_fkey
+	SignalPools SignalPoolSlice // signal_pool.signal_pool_pool_id_fkey
 }
 
 func buildPoolColumns(alias string) poolColumns {
@@ -515,6 +518,30 @@ func (os PoolSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	)...)
 }
 
+// SignalPools starts a query for related objects on signal_pool
+func (o *Pool) SignalPools(mods ...bob.Mod[*dialect.SelectQuery]) SignalPoolsQuery {
+	return SignalPools.Query(append(mods,
+		sm.Where(SignalPools.Columns.PoolID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PoolSlice) SignalPools(mods ...bob.Mod[*dialect.SelectQuery]) SignalPoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return SignalPools.Query(append(mods,
+		sm.Where(psql.Group(SignalPools.Columns.PoolID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachPoolCreatorUser0(ctx context.Context, exec bob.Executor, count int, pool0 *Pool, user1 *User) (*Pool, error) {
 	setter := &PoolSetter{
 		CreatorID: omit.From(user1.ID),
@@ -666,6 +693,20 @@ func (o *Pool) Preload(name string, retrieved any) error {
 			rel.R.Pools = PoolSlice{o}
 		}
 		return nil
+	case "SignalPools":
+		rels, ok := retrieved.(SignalPoolSlice)
+		if !ok {
+			return fmt.Errorf("pool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SignalPools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Pool = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("pool has no relationship %q", name)
 	}
@@ -710,6 +751,7 @@ func buildPoolPreloader() poolPreloader {
 type poolThenLoader[Q orm.Loadable] struct {
 	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Site        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SignalPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPoolThenLoader[Q orm.Loadable]() poolThenLoader[Q] {
@@ -718,6 +760,9 @@ func buildPoolThenLoader[Q orm.Loadable]() poolThenLoader[Q] {
 	}
 	type SiteLoadInterface interface {
 		LoadSite(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SignalPoolsLoadInterface interface {
+		LoadSignalPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return poolThenLoader[Q]{
@@ -731,6 +776,12 @@ func buildPoolThenLoader[Q orm.Loadable]() poolThenLoader[Q] {
 			"Site",
 			func(ctx context.Context, exec bob.Executor, retrieved SiteLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadSite(ctx, exec, mods...)
+			},
+		),
+		SignalPools: thenLoadBuilder[Q](
+			"SignalPools",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSignalPools(ctx, exec, mods...)
 			},
 		),
 	}
@@ -844,10 +895,165 @@ func (os PoolSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob
 	return nil
 }
 
+// LoadSignalPools loads the pool's SignalPools into the .R struct
+func (o *Pool) LoadSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SignalPools = nil
+
+	related, err := o.SignalPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Pool = o
+	}
+
+	o.R.SignalPools = related
+	return nil
+}
+
+// LoadSignalPools loads the pool's SignalPools into the .R struct
+func (os PoolSlice) LoadSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signalPools, err := os.SignalPools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.SignalPools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signalPools {
+
+			if !(o.ID == rel.PoolID) {
+				continue
+			}
+
+			rel.R.Pool = o
+
+			o.R.SignalPools = append(o.R.SignalPools, rel)
+		}
+	}
+
+	return nil
+}
+
+// poolC is where relationship counts are stored.
+type poolC struct {
+	SignalPools *int64
+}
+
+// PreloadCount sets a count in the C struct by name
+func (o *Pool) PreloadCount(name string, count int64) error {
+	if o == nil {
+		return nil
+	}
+
+	switch name {
+	case "SignalPools":
+		o.C.SignalPools = &count
+	}
+	return nil
+}
+
+type poolCountPreloader struct {
+	SignalPools func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+}
+
+func buildPoolCountPreloader() poolCountPreloader {
+	return poolCountPreloader{
+		SignalPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Pool]("SignalPools", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Pools.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(SignalPools.Name()),
+					sm.Where(psql.Quote(SignalPools.Alias(), "pool_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+	}
+}
+
+type poolCountThenLoader[Q orm.Loadable] struct {
+	SignalPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+}
+
+func buildPoolCountThenLoader[Q orm.Loadable]() poolCountThenLoader[Q] {
+	type SignalPoolsCountInterface interface {
+		LoadCountSignalPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+
+	return poolCountThenLoader[Q]{
+		SignalPools: countThenLoadBuilder[Q](
+			"SignalPools",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountSignalPools(ctx, exec, mods...)
+			},
+		),
+	}
+}
+
+// LoadCountSignalPools loads the count of SignalPools into the C struct
+func (o *Pool) LoadCountSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.SignalPools(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.SignalPools = &count
+	return nil
+}
+
+// LoadCountSignalPools loads the count of SignalPools for a slice
+func (os PoolSlice) LoadCountSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountSignalPools(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type poolJoins[Q dialect.Joinable] struct {
 	typ         string
 	CreatorUser modAs[Q, userColumns]
 	Site        modAs[Q, siteColumns]
+	SignalPools modAs[Q, signalPoolColumns]
 }
 
 func (j poolJoins[Q]) aliasedAs(alias string) poolJoins[Q] {
@@ -879,6 +1085,20 @@ func buildPoolJoins[Q dialect.Joinable](cols poolColumns, typ string) poolJoins[
 				{
 					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
 						to.ID.EQ(cols.SiteID), to.Version.EQ(cols.SiteVersion),
+					))
+				}
+
+				return mods
+			},
+		},
+		SignalPools: modAs[Q, signalPoolColumns]{
+			c: SignalPools.Columns,
+			f: func(to signalPoolColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, SignalPools.Name().As(to.Alias())).On(
+						to.PoolID.EQ(cols.ID),
 					))
 				}
 

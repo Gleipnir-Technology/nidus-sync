@@ -368,6 +368,7 @@ var (
 	organizationRelNuisancesCtx                                   = newContextual[bool]("organization.publicreport.nuisance.publicreport.nuisance.nuisance_organization_id_fkey")
 	organizationRelPublicreportPoolCtx                            = newContextual[bool]("organization.publicreport.pool.publicreport.pool.pool_organization_id_fkey")
 	organizationRelQuicksCtx                                      = newContextual[bool]("organization.publicreport.quick.publicreport.quick.quick_organization_id_fkey")
+	organizationRelSignalsCtx                                     = newContextual[bool]("organization.signal.signal.signal_organization_id_fkey")
 	organizationRelUserCtx                                        = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 
 	// Relationship Contexts for parcel
@@ -378,6 +379,7 @@ var (
 	poolWithParentsCascadingCtx = newContextual[bool]("poolWithParentsCascading")
 	poolRelCreatorUserCtx       = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
 	poolRelSiteCtx              = newContextual[bool]("pool.site.pool.pool_site_id_site_version_fkey")
+	poolRelSignalPoolsCtx       = newContextual[bool]("pool.signal_pool.signal_pool.signal_pool_pool_id_fkey")
 
 	// Relationship Contexts for publicreport.image
 	publicreportImageWithParentsCascadingCtx = newContextual[bool]("publicreportImageWithParentsCascading")
@@ -471,6 +473,18 @@ var (
 	// Relationship Contexts for sessions
 	sessionWithParentsCascadingCtx = newContextual[bool]("sessionWithParentsCascading")
 
+	// Relationship Contexts for signal
+	signalWithParentsCascadingCtx = newContextual[bool]("signalWithParentsCascading")
+	signalRelAddressorUserCtx     = newContextual[bool]("signal.user_.signal.signal_addressor_fkey")
+	signalRelCreatorUserCtx       = newContextual[bool]("signal.user_.signal.signal_creator_fkey")
+	signalRelOrganizationCtx      = newContextual[bool]("organization.signal.signal.signal_organization_id_fkey")
+	signalRelSignalPoolsCtx       = newContextual[bool]("signal.signal_pool.signal_pool.signal_pool_signal_id_fkey")
+
+	// Relationship Contexts for signal_pool
+	signalPoolWithParentsCascadingCtx = newContextual[bool]("signalPoolWithParentsCascading")
+	signalPoolRelPoolCtx              = newContextual[bool]("pool.signal_pool.signal_pool.signal_pool_pool_id_fkey")
+	signalPoolRelSignalCtx            = newContextual[bool]("signal.signal_pool.signal_pool.signal_pool_signal_id_fkey")
+
 	// Relationship Contexts for site
 	siteWithParentsCascadingCtx        = newContextual[bool]("siteWithParentsCascading")
 	siteRelComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
@@ -498,6 +512,8 @@ var (
 	userRelUserNotificationsCtx               = newContextual[bool]("notification.user_.notification.notification_user_id_fkey")
 	userRelCreatorPoolsCtx                    = newContextual[bool]("pool.user_.pool.pool_creator_id_fkey")
 	userRelCreatorResidentsCtx                = newContextual[bool]("resident.user_.resident.resident_creator_fkey")
+	userRelAddressorSignalsCtx                = newContextual[bool]("signal.user_.signal.signal_addressor_fkey")
+	userRelCreatorSignalsCtx                  = newContextual[bool]("signal.user_.signal.signal_creator_fkey")
 	userRelCreatorSitesCtx                    = newContextual[bool]("site.user_.site.site_creator_id_fkey")
 	userRelOrganizationCtx                    = newContextual[bool]("organization.user_.user_.user__organization_id_fkey")
 )

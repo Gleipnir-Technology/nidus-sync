@@ -1371,6 +1371,85 @@ func (e *Imagedatatype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Mosquitospecies
+const (
+	MosquitospeciesAedesAegypti    Mosquitospecies = "aedes aegypti"
+	MosquitospeciesAedesAlbopictus Mosquitospecies = "aedes albopictus"
+	MosquitospeciesCulexPipiens    Mosquitospecies = "culex pipiens"
+	MosquitospeciesCulexTarsalis   Mosquitospecies = "culex tarsalis"
+)
+
+func AllMosquitospecies() []Mosquitospecies {
+	return []Mosquitospecies{
+		MosquitospeciesAedesAegypti,
+		MosquitospeciesAedesAlbopictus,
+		MosquitospeciesCulexPipiens,
+		MosquitospeciesCulexTarsalis,
+	}
+}
+
+type Mosquitospecies string
+
+func (e Mosquitospecies) String() string {
+	return string(e)
+}
+
+func (e Mosquitospecies) Valid() bool {
+	switch e {
+	case MosquitospeciesAedesAegypti,
+		MosquitospeciesAedesAlbopictus,
+		MosquitospeciesCulexPipiens,
+		MosquitospeciesCulexTarsalis:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Mosquitospecies) All() []Mosquitospecies {
+	return AllMosquitospecies()
+}
+
+func (e Mosquitospecies) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Mosquitospecies) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Mosquitospecies) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Mosquitospecies) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Mosquitospecies) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Mosquitospecies) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Mosquitospecies(x)
+	case []byte:
+		*e = Mosquitospecies(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Mosquitospecies")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Mosquitospecies value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Notificationtype
 const (
 	NotificationtypeOauthTokenInvalidated Notificationtype = "oauth_token_invalidated"
@@ -1861,6 +1940,94 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 
 	if !e.Valid() {
 		return fmt.Errorf("invalid PublicreportReportstatustype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for Signaltype
+const (
+	SignaltypeFlyoverU2epool             Signaltype = "flyover.pool"
+	SignaltypePlanU2efollowup            Signaltype = "plan.followup"
+	SignaltypePublicreportU2ewater       Signaltype = "publicreport.water"
+	SignaltypePublicreportU2enuisance    Signaltype = "publicreport.nuisance"
+	SignaltypeResidualU2eexiring         Signaltype = "residual.exiring"
+	SignaltypeSurveillanceU2eobservation Signaltype = "surveillance.observation"
+	SignaltypeTrapU2espike               Signaltype = "trap.spike"
+)
+
+func AllSignaltype() []Signaltype {
+	return []Signaltype{
+		SignaltypeFlyoverU2epool,
+		SignaltypePlanU2efollowup,
+		SignaltypePublicreportU2ewater,
+		SignaltypePublicreportU2enuisance,
+		SignaltypeResidualU2eexiring,
+		SignaltypeSurveillanceU2eobservation,
+		SignaltypeTrapU2espike,
+	}
+}
+
+type Signaltype string
+
+func (e Signaltype) String() string {
+	return string(e)
+}
+
+func (e Signaltype) Valid() bool {
+	switch e {
+	case SignaltypeFlyoverU2epool,
+		SignaltypePlanU2efollowup,
+		SignaltypePublicreportU2ewater,
+		SignaltypePublicreportU2enuisance,
+		SignaltypeResidualU2eexiring,
+		SignaltypeSurveillanceU2eobservation,
+		SignaltypeTrapU2espike:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Signaltype) All() []Signaltype {
+	return AllSignaltype()
+}
+
+func (e Signaltype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Signaltype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Signaltype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Signaltype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Signaltype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Signaltype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Signaltype(x)
+	case []byte:
+		*e = Signaltype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Signaltype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Signaltype value: %s", *e)
 	}
 
 	return nil

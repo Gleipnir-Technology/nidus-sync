@@ -121,6 +121,7 @@ type organizationR struct {
 	Nuisances                                   []*organizationRNuisancesR
 	PublicreportPool                            []*organizationRPublicreportPoolR
 	Quicks                                      []*organizationRQuicksR
+	Signals                                     []*organizationRSignalsR
 	User                                        []*organizationRUserR
 }
 
@@ -293,6 +294,10 @@ type organizationRPublicreportPoolR struct {
 type organizationRQuicksR struct {
 	number int
 	o      *PublicreportQuickTemplate
+}
+type organizationRSignalsR struct {
+	number int
+	o      *SignalTemplate
 }
 type organizationRUserR struct {
 	number int
@@ -852,6 +857,19 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			rel = append(rel, related...)
 		}
 		o.R.Quicks = rel
+	}
+
+	if t.r.Signals != nil {
+		rel := models.SignalSlice{}
+		for _, r := range t.r.Signals {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Signals = rel
 	}
 
 	if t.r.User != nil {
@@ -1969,6 +1987,26 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isSignalsDone, _ := organizationRelSignalsCtx.Value(ctx)
+	if !isSignalsDone && o.r.Signals != nil {
+		ctx = organizationRelSignalsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Signals {
+			if r.o.alreadyPersisted {
+				m.R.Signals = append(m.R.Signals, r.o.Build())
+			} else {
+				rel43, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachSignals(ctx, exec, rel43...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isUserDone, _ := organizationRelUserCtx.Value(ctx)
 	if !isUserDone && o.r.User != nil {
 		ctx = organizationRelUserCtx.WithValue(ctx, true)
@@ -1976,12 +2014,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel43, err := r.o.CreateMany(ctx, exec, r.number)
+				rel44, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel43...)
+				err = m.AttachUser(ctx, exec, rel44...)
 				if err != nil {
 					return err
 				}
@@ -5812,6 +5850,54 @@ func (m organizationMods) AddExistingQuicks(existingModels ...*models.Publicrepo
 func (m organizationMods) WithoutQuicks() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.Quicks = nil
+	})
+}
+
+func (m organizationMods) WithSignals(number int, related *SignalTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Signals = []*organizationRSignalsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewSignals(number int, mods ...SignalMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.WithSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddSignals(number int, related *SignalTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Signals = append(o.r.Signals, &organizationRSignalsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewSignals(number int, mods ...SignalMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.AddSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingSignals(existingModels ...*models.Signal) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Signals = append(o.r.Signals, &organizationRSignalsR{
+				o: o.f.FromExistingSignal(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutSignals() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Signals = nil
 	})
 }
 

@@ -98,6 +98,8 @@ type preloaders struct {
 	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
 	Resident                          residentPreloader
+	Signal                            signalPreloader
+	SignalPool                        signalPoolPreloader
 	Site                              sitePreloader
 	User                              userPreloader
 }
@@ -185,6 +187,8 @@ func getPreloaders() preloaders {
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
 		Resident:                          buildResidentPreloader(),
+		Signal:                            buildSignalPreloader(),
+		SignalPool:                        buildSignalPoolPreloader(),
 		Site:                              buildSitePreloader(),
 		User:                              buildUserPreloader(),
 	}
@@ -278,6 +282,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
 	Resident                          residentThenLoader[Q]
+	Signal                            signalThenLoader[Q]
+	SignalPool                        signalPoolThenLoader[Q]
 	Site                              siteThenLoader[Q]
 	User                              userThenLoader[Q]
 }
@@ -365,6 +371,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
 		Resident:                          buildResidentThenLoader[Q](),
+		Signal:                            buildSignalThenLoader[Q](),
+		SignalPool:                        buildSignalPoolThenLoader[Q](),
 		Site:                              buildSiteThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}

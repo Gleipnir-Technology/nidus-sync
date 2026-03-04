@@ -71,6 +71,8 @@ type userR struct {
 	UserNotifications               []*userRUserNotificationsR
 	CreatorPools                    []*userRCreatorPoolsR
 	CreatorResidents                []*userRCreatorResidentsR
+	AddressorSignals                []*userRAddressorSignalsR
+	CreatorSignals                  []*userRCreatorSignalsR
 	CreatorSites                    []*userRCreatorSitesR
 	Organization                    *userROrganizationR
 }
@@ -122,6 +124,14 @@ type userRCreatorPoolsR struct {
 type userRCreatorResidentsR struct {
 	number int
 	o      *ResidentTemplate
+}
+type userRAddressorSignalsR struct {
+	number int
+	o      *SignalTemplate
+}
+type userRCreatorSignalsR struct {
+	number int
+	o      *SignalTemplate
 }
 type userRCreatorSitesR struct {
 	number int
@@ -295,6 +305,32 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.CreatorResidents = rel
+	}
+
+	if t.r.AddressorSignals != nil {
+		rel := models.SignalSlice{}
+		for _, r := range t.r.AddressorSignals {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.Addressor = null.From(o.ID) // h2
+				rel.R.AddressorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.AddressorSignals = rel
+	}
+
+	if t.r.CreatorSignals != nil {
+		rel := models.SignalSlice{}
+		for _, r := range t.r.CreatorSignals {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.Creator = o.ID // h2
+				rel.R.CreatorUser = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.CreatorSignals = rel
 	}
 
 	if t.r.CreatorSites != nil {
@@ -728,6 +764,46 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
+	isAddressorSignalsDone, _ := userRelAddressorSignalsCtx.Value(ctx)
+	if !isAddressorSignalsDone && o.r.AddressorSignals != nil {
+		ctx = userRelAddressorSignalsCtx.WithValue(ctx, true)
+		for _, r := range o.r.AddressorSignals {
+			if r.o.alreadyPersisted {
+				m.R.AddressorSignals = append(m.R.AddressorSignals, r.o.Build())
+			} else {
+				rel12, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachAddressorSignals(ctx, exec, rel12...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	isCreatorSignalsDone, _ := userRelCreatorSignalsCtx.Value(ctx)
+	if !isCreatorSignalsDone && o.r.CreatorSignals != nil {
+		ctx = userRelCreatorSignalsCtx.WithValue(ctx, true)
+		for _, r := range o.r.CreatorSignals {
+			if r.o.alreadyPersisted {
+				m.R.CreatorSignals = append(m.R.CreatorSignals, r.o.Build())
+			} else {
+				rel13, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachCreatorSignals(ctx, exec, rel13...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isCreatorSitesDone, _ := userRelCreatorSitesCtx.Value(ctx)
 	if !isCreatorSitesDone && o.r.CreatorSites != nil {
 		ctx = userRelCreatorSitesCtx.WithValue(ctx, true)
@@ -735,12 +811,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorSites = append(m.R.CreatorSites, r.o.Build())
 			} else {
-				rel12, err := r.o.CreateMany(ctx, exec, r.number)
+				rel14, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorSites(ctx, exec, rel12...)
+				err = m.AttachCreatorSites(ctx, exec, rel14...)
 				if err != nil {
 					return err
 				}
@@ -762,25 +838,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel13 *models.Organization
+	var rel15 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel13 = o.r.Organization.o.Build()
+		rel15 = o.r.Organization.o.Build()
 	} else {
-		rel13, err = o.r.Organization.o.Create(ctx, exec)
+		rel15, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel13.ID)
+	opt.OrganizationID = omit.From(rel15.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel13
+	m.R.Organization = rel15
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -2027,6 +2103,102 @@ func (m userMods) AddExistingCreatorResidents(existingModels ...*models.Resident
 func (m userMods) WithoutCreatorResidents() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.CreatorResidents = nil
+	})
+}
+
+func (m userMods) WithAddressorSignals(number int, related *SignalTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.AddressorSignals = []*userRAddressorSignalsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewAddressorSignals(number int, mods ...SignalMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.WithAddressorSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddAddressorSignals(number int, related *SignalTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.AddressorSignals = append(o.r.AddressorSignals, &userRAddressorSignalsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewAddressorSignals(number int, mods ...SignalMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.AddAddressorSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingAddressorSignals(existingModels ...*models.Signal) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.AddressorSignals = append(o.r.AddressorSignals, &userRAddressorSignalsR{
+				o: o.f.FromExistingSignal(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutAddressorSignals() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.AddressorSignals = nil
+	})
+}
+
+func (m userMods) WithCreatorSignals(number int, related *SignalTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSignals = []*userRCreatorSignalsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m userMods) WithNewCreatorSignals(number int, mods ...SignalMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.WithCreatorSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddCreatorSignals(number int, related *SignalTemplate) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSignals = append(o.r.CreatorSignals, &userRCreatorSignalsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m userMods) AddNewCreatorSignals(number int, mods ...SignalMod) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		related := o.f.NewSignalWithContext(ctx, mods...)
+		m.AddCreatorSignals(number, related).Apply(ctx, o)
+	})
+}
+
+func (m userMods) AddExistingCreatorSignals(existingModels ...*models.Signal) UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		for _, em := range existingModels {
+			o.r.CreatorSignals = append(o.r.CreatorSignals, &userRCreatorSignalsR{
+				o: o.f.FromExistingSignal(em),
+			})
+		}
+	})
+}
+
+func (m userMods) WithoutCreatorSignals() UserMod {
+	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
+		o.r.CreatorSignals = nil
 	})
 }
 

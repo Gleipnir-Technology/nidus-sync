@@ -70,6 +70,8 @@ type userR struct {
 	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
 	CreatorPools                    PoolSlice                    // pool.pool_creator_id_fkey
 	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
+	AddressorSignals                SignalSlice                  // signal.signal_addressor_fkey
+	CreatorSignals                  SignalSlice                  // signal.signal_creator_fkey
 	CreatorSites                    SiteSlice                    // site.site_creator_id_fkey
 	Organization                    *Organization                // user_.user__organization_id_fkey
 }
@@ -925,6 +927,54 @@ func (os UserSlice) CreatorResidents(mods ...bob.Mod[*dialect.SelectQuery]) Resi
 
 	return Residents.Query(append(mods,
 		sm.Where(psql.Group(Residents.Columns.Creator).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// AddressorSignals starts a query for related objects on signal
+func (o *User) AddressorSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.Addressor.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) AddressorSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.Addressor).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// CreatorSignals starts a query for related objects on signal
+func (o *User) CreatorSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.Creator.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.Creator).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1792,6 +1842,142 @@ func (user0 *User) AttachCreatorResidents(ctx context.Context, exec bob.Executor
 	return nil
 }
 
+func insertUserAddressorSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, user0 *User) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].Addressor = omitnull.From(user0.ID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserAddressorSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserAddressorSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, user0 *User) (SignalSlice, error) {
+	setter := &SignalSetter{
+		Addressor: omitnull.From(user0.ID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserAddressorSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (user0 *User) InsertAddressorSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertUserAddressorSignals0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.AddressorSignals = append(user0.R.AddressorSignals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.AddressorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachAddressorSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachUserAddressorSignals0(ctx, exec, len(related), signals1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.AddressorSignals = append(user0.R.AddressorSignals, signals1...)
+
+	for _, rel := range related {
+		rel.R.AddressorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, user0 *User) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].Creator = omit.From(user0.ID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, user0 *User) (SignalSlice, error) {
+	setter := &SignalSetter{
+		Creator: omit.From(user0.ID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (user0 *User) InsertCreatorSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertUserCreatorSignals0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorSignals = append(user0.R.CreatorSignals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachUserCreatorSignals0(ctx, exec, len(related), signals1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorSignals = append(user0.R.CreatorSignals, signals1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
 func insertUserCreatorSites0(ctx context.Context, exec bob.Executor, sites1 []*SiteSetter, user0 *User) (SiteSlice, error) {
 	for i := range sites1 {
 		sites1[i].CreatorID = omit.From(user0.ID)
@@ -2120,6 +2306,34 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "AddressorSignals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.AddressorSignals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.AddressorUser = o
+			}
+		}
+		return nil
+	case "CreatorSignals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorSignals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "CreatorSites":
 		rels, ok := retrieved.(SiteSlice)
 		if !ok {
@@ -2186,6 +2400,8 @@ type userThenLoader[Q orm.Loadable] struct {
 	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -2226,6 +2442,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type CreatorResidentsLoadInterface interface {
 		LoadCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type AddressorSignalsLoadInterface interface {
+		LoadAddressorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorSignalsLoadInterface interface {
+		LoadCreatorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorSitesLoadInterface interface {
 		LoadCreatorSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2305,6 +2527,18 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"CreatorResidents",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorResidents(ctx, exec, mods...)
+			},
+		),
+		AddressorSignals: thenLoadBuilder[Q](
+			"AddressorSignals",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressorSignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadAddressorSignals(ctx, exec, mods...)
+			},
+		),
+		CreatorSignals: thenLoadBuilder[Q](
+			"CreatorSignals",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorSignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorSignals(ctx, exec, mods...)
 			},
 		),
 		CreatorSites: thenLoadBuilder[Q](
@@ -3060,6 +3294,131 @@ func (os UserSlice) LoadCreatorResidents(ctx context.Context, exec bob.Executor,
 	return nil
 }
 
+// LoadAddressorSignals loads the user's AddressorSignals into the .R struct
+func (o *User) LoadAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.AddressorSignals = nil
+
+	related, err := o.AddressorSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.AddressorUser = o
+	}
+
+	o.R.AddressorSignals = related
+	return nil
+}
+
+// LoadAddressorSignals loads the user's AddressorSignals into the .R struct
+func (os UserSlice) LoadAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.AddressorSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.AddressorSignals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !rel.Addressor.IsValue() {
+				continue
+			}
+			if !(rel.Addressor.IsValue() && o.ID == rel.Addressor.MustGet()) {
+				continue
+			}
+
+			rel.R.AddressorUser = o
+
+			o.R.AddressorSignals = append(o.R.AddressorSignals, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorSignals loads the user's CreatorSignals into the .R struct
+func (o *User) LoadCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorSignals = nil
+
+	related, err := o.CreatorSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorSignals = related
+	return nil
+}
+
+// LoadCreatorSignals loads the user's CreatorSignals into the .R struct
+func (os UserSlice) LoadCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.CreatorSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorSignals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !(o.ID == rel.Creator) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorSignals = append(o.R.CreatorSignals, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadCreatorSites loads the user's CreatorSites into the .R struct
 func (o *User) LoadCreatorSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -3187,6 +3546,8 @@ type userC struct {
 	UserNotifications               *int64
 	CreatorPools                    *int64
 	CreatorResidents                *int64
+	AddressorSignals                *int64
+	CreatorSignals                  *int64
 	CreatorSites                    *int64
 }
 
@@ -3221,6 +3582,10 @@ func (o *User) PreloadCount(name string, count int64) error {
 		o.C.CreatorPools = &count
 	case "CreatorResidents":
 		o.C.CreatorResidents = &count
+	case "AddressorSignals":
+		o.C.AddressorSignals = &count
+	case "CreatorSignals":
+		o.C.CreatorSignals = &count
 	case "CreatorSites":
 		o.C.CreatorSites = &count
 	}
@@ -3240,6 +3605,8 @@ type userCountPreloader struct {
 	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
@@ -3449,6 +3816,40 @@ func buildUserCountPreloader() userCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		AddressorSignals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("AddressorSignals", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Signals.Name()),
+					sm.Where(psql.Quote(Signals.Alias(), "addressor").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
+		CreatorSignals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*User]("CreatorSignals", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Users.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Signals.Name()),
+					sm.Where(psql.Quote(Signals.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		CreatorSites: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*User]("CreatorSites", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -3482,6 +3883,8 @@ type userCountThenLoader[Q orm.Loadable] struct {
 	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -3521,6 +3924,12 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 	}
 	type CreatorResidentsCountInterface interface {
 		LoadCountCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type AddressorSignalsCountInterface interface {
+		LoadCountAddressorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorSignalsCountInterface interface {
+		LoadCountCreatorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorSitesCountInterface interface {
 		LoadCountCreatorSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3597,6 +4006,18 @@ func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
 			"CreatorResidents",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountCreatorResidents(ctx, exec, mods...)
+			},
+		),
+		AddressorSignals: countThenLoadBuilder[Q](
+			"AddressorSignals",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressorSignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountAddressorSignals(ctx, exec, mods...)
+			},
+		),
+		CreatorSignals: countThenLoadBuilder[Q](
+			"CreatorSignals",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorSignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountCreatorSignals(ctx, exec, mods...)
 			},
 		),
 		CreatorSites: countThenLoadBuilder[Q](
@@ -3968,6 +4389,66 @@ func (os UserSlice) LoadCountCreatorResidents(ctx context.Context, exec bob.Exec
 	return nil
 }
 
+// LoadCountAddressorSignals loads the count of AddressorSignals into the C struct
+func (o *User) LoadCountAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.AddressorSignals(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.AddressorSignals = &count
+	return nil
+}
+
+// LoadCountAddressorSignals loads the count of AddressorSignals for a slice
+func (os UserSlice) LoadCountAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountAddressorSignals(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadCountCreatorSignals loads the count of CreatorSignals into the C struct
+func (o *User) LoadCountCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.CreatorSignals(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.CreatorSignals = &count
+	return nil
+}
+
+// LoadCountCreatorSignals loads the count of CreatorSignals for a slice
+func (os UserSlice) LoadCountCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountCreatorSignals(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountCreatorSites loads the count of CreatorSites into the C struct
 func (o *User) LoadCountCreatorSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -4012,6 +4493,8 @@ type userJoins[Q dialect.Joinable] struct {
 	UserNotifications               modAs[Q, notificationColumns]
 	CreatorPools                    modAs[Q, poolColumns]
 	CreatorResidents                modAs[Q, residentColumns]
+	AddressorSignals                modAs[Q, signalColumns]
+	CreatorSignals                  modAs[Q, signalColumns]
 	CreatorSites                    modAs[Q, siteColumns]
 	Organization                    modAs[Q, organizationColumns]
 }
@@ -4184,6 +4667,34 @@ func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
+						to.Creator.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		AddressorSignals: modAs[Q, signalColumns]{
+			c: Signals.Columns,
+			f: func(to signalColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
+						to.Addressor.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		CreatorSignals: modAs[Q, signalColumns]{
+			c: Signals.Columns,
+			f: func(to signalColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
 						to.Creator.EQ(cols.ID),
 					))
 				}

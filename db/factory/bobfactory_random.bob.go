@@ -231,6 +231,16 @@ func random_enums_Hashtype(f *faker.Faker, limits ...string) enums.Hashtype {
 	return all[f.IntBetween(0, len(all)-1)]
 }
 
+func random_enums_Mosquitospecies(f *faker.Faker, limits ...string) enums.Mosquitospecies {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Mosquitospecies
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
 func random_enums_Notificationtype(f *faker.Faker, limits ...string) enums.Notificationtype {
 	if f == nil {
 		f = &defaultFaker
@@ -277,6 +287,16 @@ func random_enums_PublicreportReportstatustype(f *faker.Faker, limits ...string)
 	}
 
 	var e enums.PublicreportReportstatustype
+	all := e.All()
+	return all[f.IntBetween(0, len(all)-1)]
+}
+
+func random_enums_Signaltype(f *faker.Faker, limits ...string) enums.Signaltype {
+	if f == nil {
+		f = &defaultFaker
+	}
+
+	var e enums.Signaltype
 	all := e.All()
 	return all[f.IntBetween(0, len(all)-1)]
 }

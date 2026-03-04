@@ -38,10 +38,12 @@ type preloadCounts struct {
 	NoteImage               noteImageCountPreloader
 	Organization            organizationCountPreloader
 	Parcel                  parcelCountPreloader
+	Pool                    poolCountPreloader
 	PublicreportImage       publicreportImageCountPreloader
 	PublicreportNuisance    publicreportNuisanceCountPreloader
 	PublicreportPool        publicreportPoolCountPreloader
 	PublicreportQuick       publicreportQuickCountPreloader
+	Signal                  signalCountPreloader
 	Site                    siteCountPreloader
 	User                    userCountPreloader
 }
@@ -65,10 +67,12 @@ func getPreloadCount() preloadCounts {
 		NoteImage:               buildNoteImageCountPreloader(),
 		Organization:            buildOrganizationCountPreloader(),
 		Parcel:                  buildParcelCountPreloader(),
+		Pool:                    buildPoolCountPreloader(),
 		PublicreportImage:       buildPublicreportImageCountPreloader(),
 		PublicreportNuisance:    buildPublicreportNuisanceCountPreloader(),
 		PublicreportPool:        buildPublicreportPoolCountPreloader(),
 		PublicreportQuick:       buildPublicreportQuickCountPreloader(),
+		Signal:                  buildSignalCountPreloader(),
 		Site:                    buildSiteCountPreloader(),
 		User:                    buildUserCountPreloader(),
 	}
@@ -92,10 +96,12 @@ type thenLoadCounts[Q orm.Loadable] struct {
 	NoteImage               noteImageCountThenLoader[Q]
 	Organization            organizationCountThenLoader[Q]
 	Parcel                  parcelCountThenLoader[Q]
+	Pool                    poolCountThenLoader[Q]
 	PublicreportImage       publicreportImageCountThenLoader[Q]
 	PublicreportNuisance    publicreportNuisanceCountThenLoader[Q]
 	PublicreportPool        publicreportPoolCountThenLoader[Q]
 	PublicreportQuick       publicreportQuickCountThenLoader[Q]
+	Signal                  signalCountThenLoader[Q]
 	Site                    siteCountThenLoader[Q]
 	User                    userCountThenLoader[Q]
 }
@@ -119,10 +125,12 @@ func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 		NoteImage:               buildNoteImageCountThenLoader[Q](),
 		Organization:            buildOrganizationCountThenLoader[Q](),
 		Parcel:                  buildParcelCountThenLoader[Q](),
+		Pool:                    buildPoolCountThenLoader[Q](),
 		PublicreportImage:       buildPublicreportImageCountThenLoader[Q](),
 		PublicreportNuisance:    buildPublicreportNuisanceCountThenLoader[Q](),
 		PublicreportPool:        buildPublicreportPoolCountThenLoader[Q](),
 		PublicreportQuick:       buildPublicreportQuickCountThenLoader[Q](),
+		Signal:                  buildSignalCountThenLoader[Q](),
 		Site:                    buildSiteCountThenLoader[Q](),
 		User:                    buildUserCountThenLoader[Q](),
 	}

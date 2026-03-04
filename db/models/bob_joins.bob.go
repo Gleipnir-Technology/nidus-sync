@@ -113,6 +113,8 @@ type joins[Q dialect.Joinable] struct {
 	PublicreportSubscribeEmails        joinSet[publicreportSubscribeEmailJoins[Q]]
 	PublicreportSubscribePhones        joinSet[publicreportSubscribePhoneJoins[Q]]
 	Residents                          joinSet[residentJoins[Q]]
+	Signals                            joinSet[signalJoins[Q]]
+	SignalPools                        joinSet[signalPoolJoins[Q]]
 	Sites                              joinSet[siteJoins[Q]]
 	Users                              joinSet[userJoins[Q]]
 }
@@ -208,6 +210,8 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		PublicreportSubscribeEmails:        buildJoinSet[publicreportSubscribeEmailJoins[Q]](PublicreportSubscribeEmails.Columns, buildPublicreportSubscribeEmailJoins),
 		PublicreportSubscribePhones:        buildJoinSet[publicreportSubscribePhoneJoins[Q]](PublicreportSubscribePhones.Columns, buildPublicreportSubscribePhoneJoins),
 		Residents:                          buildJoinSet[residentJoins[Q]](Residents.Columns, buildResidentJoins),
+		Signals:                            buildJoinSet[signalJoins[Q]](Signals.Columns, buildSignalJoins),
+		SignalPools:                        buildJoinSet[signalPoolJoins[Q]](SignalPools.Columns, buildSignalPoolJoins),
 		Sites:                              buildJoinSet[siteJoins[Q]](Sites.Columns, buildSiteJoins),
 		Users:                              buildJoinSet[userJoins[Q]](Users.Columns, buildUserJoins),
 	}

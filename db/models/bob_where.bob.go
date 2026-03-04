@@ -105,6 +105,8 @@ func Where[Q psql.Filterable]() struct {
 	RasterOverviews                    rasterOverviewWhere[Q]
 	Residents                          residentWhere[Q]
 	Sessions                           sessionWhere[Q]
+	Signals                            signalWhere[Q]
+	SignalPools                        signalPoolWhere[Q]
 	Sites                              siteWhere[Q]
 	SpatialRefSys                      spatialRefSyWhere[Q]
 	Users                              userWhere[Q]
@@ -198,6 +200,8 @@ func Where[Q psql.Filterable]() struct {
 		RasterOverviews                    rasterOverviewWhere[Q]
 		Residents                          residentWhere[Q]
 		Sessions                           sessionWhere[Q]
+		Signals                            signalWhere[Q]
+		SignalPools                        signalPoolWhere[Q]
 		Sites                              siteWhere[Q]
 		SpatialRefSys                      spatialRefSyWhere[Q]
 		Users                              userWhere[Q]
@@ -290,6 +294,8 @@ func Where[Q psql.Filterable]() struct {
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Residents:                          buildResidentWhere[Q](Residents.Columns),
 		Sessions:                           buildSessionWhere[Q](Sessions.Columns),
+		Signals:                            buildSignalWhere[Q](Signals.Columns),
+		SignalPools:                        buildSignalPoolWhere[Q](SignalPools.Columns),
 		Sites:                              buildSiteWhere[Q](Sites.Columns),
 		SpatialRefSys:                      buildSpatialRefSyWhere[Q](SpatialRefSys.Columns),
 		Users:                              buildUserWhere[Q](Users.Columns),
