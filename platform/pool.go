@@ -86,12 +86,13 @@ func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (
 		if r.IsNew {
 			count_new = count_new + 1
 			status = "new"
-		} else if !r.IsInDistrict {
-			count_outside = count_outside + 1
-			status = "outside"
 		} else {
 			count_existing = count_existing + 1
 			status = "existing"
+		}
+		if !r.IsInDistrict {
+			count_outside++
+			status = "outside"
 		}
 		tags := db.ConvertFromPGData(r.Tags)
 		// add 2 here because our file lines are 1-indexed and we skip the header line, but we are ranging 0-indexed
