@@ -858,8 +858,6 @@ func doTokenRequest(ctx context.Context, form url.Values) (*OAuthTokenResponse, 
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	log.Info().Int("status", resp.StatusCode).Msg("Token request")
-	filename := newTimestampedFilename("token", ".json")
-	saveResponse(bodyBytes, filename)
 	if resp.StatusCode >= http.StatusBadRequest {
 		if err != nil {
 			return nil, fmt.Errorf("Got status code %d and failed to read response body: %w", resp.StatusCode, err)
