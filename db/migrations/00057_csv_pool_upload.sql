@@ -46,6 +46,7 @@ CREATE TYPE fileupload.PoolConditionType AS ENUM (
 	'green',
 	'murky',
 	'blue',
+	'empty',
 	'unknown'
 );
 CREATE TABLE fileupload.pool (
