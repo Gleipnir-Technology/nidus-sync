@@ -3,7 +3,7 @@ module github.com/Gleipnir-Technology/nidus-sync
 go 1.24.9
 
 require (
-	github.com/Gleipnir-Technology/arcgis-go v0.0.9
+	github.com/Gleipnir-Technology/arcgis-go v0.0.10
 	github.com/Gleipnir-Technology/bob v0.42.5
 	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
@@ -84,6 +84,7 @@ require (
 	github.com/tidwall/rtree v1.3.1 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
+	github.com/twpayne/go-proj/v11 v11.0.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	go.mongodb.org/mongo-driver v1.11.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -96,4 +97,4 @@ require (
 )
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
-// replace github.com/Gleipnir-Technology/arcgis-go v0.0.9 => ./arcgis-go
+// replace github.com/Gleipnir-Technology/arcgis-go v0.0.10 => ./arcgis-go
