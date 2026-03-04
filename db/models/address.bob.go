@@ -31,11 +31,11 @@ type Address struct {
 	H3cell     string            `db:"h3cell" `
 	ID         int32             `db:"id,pk" `
 	Locality   string            `db:"locality" `
-	Number     int32             `db:"number_" `
 	PostalCode string            `db:"postal_code" `
 	Street     string            `db:"street" `
 	Unit       string            `db:"unit" `
 	Region     string            `db:"region" `
+	Number     string            `db:"number_" `
 
 	R addressR `db:"-" `
 
@@ -62,7 +62,7 @@ type addressR struct {
 func buildAddressColumns(alias string) addressColumns {
 	return addressColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"country", "created", "geom", "h3cell", "id", "locality", "number_", "postal_code", "street", "unit", "region",
+			"country", "created", "geom", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_",
 		).WithParent("address"),
 		tableAlias: alias,
 		Country:    psql.Quote(alias, "country"),
@@ -71,11 +71,11 @@ func buildAddressColumns(alias string) addressColumns {
 		H3cell:     psql.Quote(alias, "h3cell"),
 		ID:         psql.Quote(alias, "id"),
 		Locality:   psql.Quote(alias, "locality"),
-		Number:     psql.Quote(alias, "number_"),
 		PostalCode: psql.Quote(alias, "postal_code"),
 		Street:     psql.Quote(alias, "street"),
 		Unit:       psql.Quote(alias, "unit"),
 		Region:     psql.Quote(alias, "region"),
+		Number:     psql.Quote(alias, "number_"),
 	}
 }
 
@@ -88,11 +88,11 @@ type addressColumns struct {
 	H3cell     psql.Expression
 	ID         psql.Expression
 	Locality   psql.Expression
-	Number     psql.Expression
 	PostalCode psql.Expression
 	Street     psql.Expression
 	Unit       psql.Expression
 	Region     psql.Expression
+	Number     psql.Expression
 }
 
 func (c addressColumns) Alias() string {
@@ -113,11 +113,11 @@ type AddressSetter struct {
 	H3cell     omit.Val[string]            `db:"h3cell" `
 	ID         omit.Val[int32]             `db:"id,pk" `
 	Locality   omit.Val[string]            `db:"locality" `
-	Number     omit.Val[int32]             `db:"number_" `
 	PostalCode omit.Val[string]            `db:"postal_code" `
 	Street     omit.Val[string]            `db:"street" `
 	Unit       omit.Val[string]            `db:"unit" `
 	Region     omit.Val[string]            `db:"region" `
+	Number     omit.Val[string]            `db:"number_" `
 }
 
 func (s AddressSetter) SetColumns() []string {
@@ -140,9 +140,6 @@ func (s AddressSetter) SetColumns() []string {
 	if s.Locality.IsValue() {
 		vals = append(vals, "locality")
 	}
-	if s.Number.IsValue() {
-		vals = append(vals, "number_")
-	}
 	if s.PostalCode.IsValue() {
 		vals = append(vals, "postal_code")
 	}
@@ -154,6 +151,9 @@ func (s AddressSetter) SetColumns() []string {
 	}
 	if s.Region.IsValue() {
 		vals = append(vals, "region")
+	}
+	if s.Number.IsValue() {
+		vals = append(vals, "number_")
 	}
 	return vals
 }
@@ -177,9 +177,6 @@ func (s AddressSetter) Overwrite(t *Address) {
 	if s.Locality.IsValue() {
 		t.Locality = s.Locality.MustGet()
 	}
-	if s.Number.IsValue() {
-		t.Number = s.Number.MustGet()
-	}
 	if s.PostalCode.IsValue() {
 		t.PostalCode = s.PostalCode.MustGet()
 	}
@@ -191,6 +188,9 @@ func (s AddressSetter) Overwrite(t *Address) {
 	}
 	if s.Region.IsValue() {
 		t.Region = s.Region.MustGet()
+	}
+	if s.Number.IsValue() {
+		t.Number = s.Number.MustGet()
 	}
 }
 
@@ -237,32 +237,32 @@ func (s *AddressSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.Number.IsValue() {
-			vals[6] = psql.Arg(s.Number.MustGet())
+		if s.PostalCode.IsValue() {
+			vals[6] = psql.Arg(s.PostalCode.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.PostalCode.IsValue() {
-			vals[7] = psql.Arg(s.PostalCode.MustGet())
+		if s.Street.IsValue() {
+			vals[7] = psql.Arg(s.Street.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.Street.IsValue() {
-			vals[8] = psql.Arg(s.Street.MustGet())
+		if s.Unit.IsValue() {
+			vals[8] = psql.Arg(s.Unit.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.Unit.IsValue() {
-			vals[9] = psql.Arg(s.Unit.MustGet())
+		if s.Region.IsValue() {
+			vals[9] = psql.Arg(s.Region.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.Region.IsValue() {
-			vals[10] = psql.Arg(s.Region.MustGet())
+		if s.Number.IsValue() {
+			vals[10] = psql.Arg(s.Number.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
@@ -320,13 +320,6 @@ func (s AddressSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Number.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "number_")...),
-			psql.Arg(s.Number),
-		}})
-	}
-
 	if s.PostalCode.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "postal_code")...),
@@ -352,6 +345,13 @@ func (s AddressSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "region")...),
 			psql.Arg(s.Region),
+		}})
+	}
+
+	if s.Number.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "number_")...),
+			psql.Arg(s.Number),
 		}})
 	}
 
@@ -850,11 +850,11 @@ type addressWhere[Q psql.Filterable] struct {
 	H3cell     psql.WhereMod[Q, string]
 	ID         psql.WhereMod[Q, int32]
 	Locality   psql.WhereMod[Q, string]
-	Number     psql.WhereMod[Q, int32]
 	PostalCode psql.WhereMod[Q, string]
 	Street     psql.WhereMod[Q, string]
 	Unit       psql.WhereMod[Q, string]
 	Region     psql.WhereMod[Q, string]
+	Number     psql.WhereMod[Q, string]
 }
 
 func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
@@ -869,11 +869,11 @@ func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 		H3cell:     psql.Where[Q, string](cols.H3cell),
 		ID:         psql.Where[Q, int32](cols.ID),
 		Locality:   psql.Where[Q, string](cols.Locality),
-		Number:     psql.Where[Q, int32](cols.Number),
 		PostalCode: psql.Where[Q, string](cols.PostalCode),
 		Street:     psql.Where[Q, string](cols.Street),
 		Unit:       psql.Where[Q, string](cols.Unit),
 		Region:     psql.Where[Q, string](cols.Region),
+		Number:     psql.Where[Q, string](cols.Number),
 	}
 }
 

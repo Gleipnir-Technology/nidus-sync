@@ -988,11 +988,13 @@ func (e *FileuploadCsvtype) Scan(value any) error {
 
 // Enum values for FileuploadFilestatustype
 const (
-	FileuploadFilestatustypeError     FileuploadFilestatustype = "error"
-	FileuploadFilestatustypeParsed    FileuploadFilestatustype = "parsed"
-	FileuploadFilestatustypeUploaded  FileuploadFilestatustype = "uploaded"
-	FileuploadFilestatustypeCommitted FileuploadFilestatustype = "committed"
-	FileuploadFilestatustypeDiscarded FileuploadFilestatustype = "discarded"
+	FileuploadFilestatustypeError      FileuploadFilestatustype = "error"
+	FileuploadFilestatustypeParsed     FileuploadFilestatustype = "parsed"
+	FileuploadFilestatustypeUploaded   FileuploadFilestatustype = "uploaded"
+	FileuploadFilestatustypeParsing    FileuploadFilestatustype = "parsing"
+	FileuploadFilestatustypeCommitting FileuploadFilestatustype = "committing"
+	FileuploadFilestatustypeCommitted  FileuploadFilestatustype = "committed"
+	FileuploadFilestatustypeDiscarded  FileuploadFilestatustype = "discarded"
 )
 
 func AllFileuploadFilestatustype() []FileuploadFilestatustype {
@@ -1000,6 +1002,8 @@ func AllFileuploadFilestatustype() []FileuploadFilestatustype {
 		FileuploadFilestatustypeError,
 		FileuploadFilestatustypeParsed,
 		FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeParsing,
+		FileuploadFilestatustypeCommitting,
 		FileuploadFilestatustypeCommitted,
 		FileuploadFilestatustypeDiscarded,
 	}
@@ -1016,6 +1020,8 @@ func (e FileuploadFilestatustype) Valid() bool {
 	case FileuploadFilestatustypeError,
 		FileuploadFilestatustypeParsed,
 		FileuploadFilestatustypeUploaded,
+		FileuploadFilestatustypeParsing,
+		FileuploadFilestatustypeCommitting,
 		FileuploadFilestatustypeCommitted,
 		FileuploadFilestatustypeDiscarded:
 		return true

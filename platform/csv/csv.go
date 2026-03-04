@@ -17,6 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	//"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/text"
@@ -30,18 +31,71 @@ import (
 type csvParserFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV) ([]T, error)
 type csvProcessorFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV, []T) error
 
-func ProcessJob(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype) error {
+func JobCommit(ctx context.Context, file_id int32) error {
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to start transaction: %w", err)
+	}
+
+	f, err := models.FindFileuploadFile(ctx, txn, file_id)
+	if err != nil {
+		return fmt.Errorf("Failed to get csv file %d from DB: %w", file_id, err)
+	}
+	org, err := models.FindOrganization(ctx, txn, f.OrganizationID)
+	if err != nil {
+		return fmt.Errorf("Failed to get org %d from DB: %w", f.OrganizationID, err)
+	}
+
+	rows, err := models.FileuploadPools.Query(
+		models.SelectWhere.FileuploadPools.CSVFile.EQ(file_id),
+	).All(ctx, txn)
+	if err != nil {
+		return fmt.Errorf("Failed to get all rows of file %d: %w", file_id, err)
+	}
+	for _, row := range rows {
+		a := geocode.Address{
+			Country:    enums.CountrytypeUsa,
+			Locality:   row.AddressLocality,
+			Number:     row.AddressNumber,
+			PostalCode: row.AddressPostalCode,
+			Region:     row.AddressRegion,
+			Street:     row.AddressStreet,
+			Unit:       "",
+		}
+		address, err := geocode.EnsureAddress(ctx, txn, org, a)
+		if err != nil {
+			return fmt.Errorf("ensure address: %w", err)
+		}
+		log.Info().Int32("id", address.ID).Msg("made address")
+	}
+	return nil
+}
+func JobImport(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype) error {
 	var err error
 	switch type_ {
 	case enums.FileuploadCsvtypePoollist:
-		err = processCSV(ctx, file_id, parseCSVPoollist, processCSVPoollist)
+		err = importCSV(ctx, file_id, parseCSVPoollist, processCSVPoollist)
 	case enums.FileuploadCsvtypeFlyover:
-		err = processCSV(ctx, file_id, parseCSVFlyover, processCSVFlyover)
+		err = importCSV(ctx, file_id, parseCSVFlyover, processCSVFlyover)
+	}
+	if err != nil {
+		psql.Update(
+			um.Table("fileupload.csv"),
+			um.SetCol("status").ToArg("error"),
+			um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
+		).Exec(ctx, db.PGInstance.BobDB)
 	}
 	return err
 }
 
-func processCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T], processor csvProcessorFunc[T]) error {
+func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T], processor csvProcessorFunc[T]) error {
+	// Not done in the transaction so the state shows up immediately
+	_, err := psql.Update(
+		um.Table("fileupload.csv"),
+		um.SetCol("status").ToArg("processing"),
+		um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
+	).Exec(ctx, db.PGInstance.BobDB)
+
 	file, c, err := loadFileAndCSV(ctx, file_id)
 	if err != nil {
 		return fmt.Errorf("load file and csv: %w", err)

@@ -12,7 +12,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	"github.com/google/uuid"
 	"github.com/uber/h3-go/v4"
 )
@@ -75,41 +74,6 @@ func sourceByGlobalId(ctx context.Context, org *models.Organization, id uuid.UUI
 		return nil, fmt.Errorf("Failed to get point location: %w", err)
 	}
 	return toTemplateBreedingSource(row), nil
-}
-
-func extractInitials(name string) string {
-	parts := strings.Fields(name)
-	var initials strings.Builder
-
-	for _, part := range parts {
-		if len(part) > 0 {
-			initials.WriteString(strings.ToUpper(string(part[0])))
-		}
-	}
-
-	return initials.String()
-}
-
-func contentForUser(ctx context.Context, user *models.User) (User, error) {
-	notifications, err := notification.ForUser(ctx, user)
-	if err != nil {
-		return User{}, err
-	}
-	org := user.R.Organization
-	var organization Organization
-	if org != nil {
-		organization.ID = int(org.ID)
-		organization.Name = org.Name
-	}
-	return User{
-		DisplayName:   user.DisplayName,
-		Initials:      extractInitials(user.DisplayName),
-		Notifications: notifications,
-		Organization:  organization,
-		Role:          user.Role.String(),
-		Username:      user.Username,
-	}, nil
-
 }
 
 func trapsBySource(ctx context.Context, org *models.Organization, sourceID uuid.UUID) ([]TrapNearby, error) {

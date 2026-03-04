@@ -23,10 +23,10 @@ var waitGroup sync.WaitGroup
 func Start(ctx context.Context) {
 	newOAuthTokenChannel = make(chan struct{}, 10)
 
-	channelJobAudio = make(chan jobAudio, 100)         // Buffered channel to prevent blocking
-	channelJobImportCSV = make(chan jobImportCSV, 100) // Buffered channel to prevent blocking
-	channelJobEmail = make(chan email.Job, 100)        // Buffered channel to prevent blocking
-	channelJobText = make(chan text.Job, 100)          // Buffered channel to prevent blocking
+	channelJobAudio = make(chan jobAudio, 100)  // Buffered channel to prevent blocking
+	channelJobCSV = make(chan jobCSV, 100)      // Buffered channel to prevent blocking
+	channelJobEmail = make(chan email.Job, 100) // Buffered channel to prevent blocking
+	channelJobText = make(chan text.Job, 100)   // Buffered channel to prevent blocking
 
 	waitGroup.Add(1)
 	go func() {
@@ -49,7 +49,7 @@ func Start(ctx context.Context) {
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
-		startWorkerCSV(ctx, channelJobImportCSV)
+		startWorkerCSV(ctx, channelJobCSV)
 	}()
 
 	waitGroup.Add(1)
@@ -97,16 +97,10 @@ func addWaitingJobs(ctx context.Context) error {
 	}
 	for _, row := range rows {
 		report_id := row.ID
-		job := jobImportCSV{
-			fileID: report_id,
-			type_:  row.Type,
-		}
-		select {
-		case channelJobImportCSV <- job:
-			log.Info().Int32("report_id", report_id).Msg("CSV upload job queued")
-		default:
-			log.Warn().Int32("report_id", report_id).Msg("CSV upload job failed to queue, channel full")
-		}
+		enqueueJobCSV(jobCSV{
+			fileID:  report_id,
+			csvType: row.Type,
+		})
 	}
 	return nil
 }

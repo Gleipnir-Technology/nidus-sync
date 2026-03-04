@@ -33,54 +33,36 @@ type GeocodeGeometry struct {
 
 // GeocodeProperties contains the properties of a geocoding result
 type GeocodeProperties struct {
-	GID                   string                 `json:"gid"`
-	Layer                 string                 `json:"layer"`
-	Sources               []GeocodeSource        `json:"sources"`
-	Precision             string                 `json:"precision"`
-	Name                  string                 `json:"name"`
-	FormattedAddressLines []string               `json:"formatted_address_lines"`
-	FormattedAddressLine  string                 `json:"formatted_address_line"`
-	CoarseLocation        string                 `json:"coarse_location"`
-	AddressComponents     AddressComponents      `json:"address_components,omitempty"`
-	Context               GeocodeContext         `json:"context,omitempty"`
-	Confidence            float64                `json:"confidence,omitempty"`
-	Distance              float64                `json:"distance,omitempty"`
-	Addendum              map[string]interface{} `json:"addendum,omitempty"`
+	Addendum    map[string]interface{} `json:"addendum,omitempty"`
+	Accuracy    string                 `json:"accuracy"`     // 'point'
+	Confidence  float64                `json:"confidence"`   // 1
+	Country     string                 `json:"country"`      // 'United States'
+	CountryA    string                 `json:"country_a"`    // 'USA'
+	CountryCode string                 `json:"country_code"` // 'US'
+	CountryGID  string                 `json:"country_gid"`  // 'whosonfirst:country:85633793'
+	County      string                 `json:"county"`       // "Tulare County"
+	CountyA     string                 `json:"county_a"`     // 'TL'
+	CountyGID   string                 `json:"county_gid"`   // 'whosonfirst:county:102082895'
+	GID         string                 `json:"gid"`          // 'openaddresses:address:us/ca/tulare-addresses-county:fe9dfab3d45c4550'
+	HouseNumber string                 `json:"housenumber"`  // '1234'
+	ID          string                 `json:"id"`           // us/ca/tulare-addresses-county:fe9dfab3d45c4550
+	Label       string                 `json:"label"`        // 1234 Main St, Dinuba, CA, USA
+	Layer       string                 `json:"layer"`        // 'address'
+	Locality    string                 `json:"locality"`     // 'Dinuba'
+	LocalityGID string                 `json:"locality_gid"` // 'whosonfirst:locality:85922491'
+	MatchType   string                 `json:"match_type"`   // 'exact'
+	Name        string                 `json:"name"`         // '1234 Main St'
+	PostalCode  string                 `json:"postalcode"`   // '93618'
+	Region      string                 `json:"region"`       // 'California'
+	RegionA     string                 `json:"region_a"`     // 'CA'
+	RegionGID   string                 `json:"region_gid"`   // 'whosonfirst:region:85688637'
+	Source      string                 `json:"source"`       // 'openaddresses'
+	SourceID    string                 `json:"source"`       // 'us/ca/tulare-addresses-county:fe9dfab3d45c4550'
+	Street      string                 `json:"street"`       // 'Main Street'
 }
 
 // GeocodeSource represents a source of geocoding data
 type GeocodeSource struct {
 	Source   string `json:"source"`
 	SourceID string `json:"source_id"`
-}
-
-// AddressComponents represents the structured components of an address
-type AddressComponents struct {
-	Number     string `json:"number,omitempty"`
-	Street     string `json:"street,omitempty"`
-	Unit       string `json:"unit,omitempty"`
-	PostalCode string `json:"postal_code,omitempty"`
-}
-
-// GeocodeContext represents the geographic context of a result
-type GeocodeContext struct {
-	WhosOnFirst WhosOnFirstContext `json:"whosonfirst,omitempty"`
-	ISO3166A2   string             `json:"iso_3166_a2,omitempty"`
-	ISO3166A3   string             `json:"iso_3166_a3,omitempty"`
-}
-
-// WhosOnFirstContext contains geographic hierarchy information
-type WhosOnFirstContext struct {
-	Country       *ContextPlace `json:"country,omitempty"`
-	Region        *ContextPlace `json:"region,omitempty"`
-	County        *ContextPlace `json:"county,omitempty"`
-	Locality      *ContextPlace `json:"locality,omitempty"`
-	Neighbourhood *ContextPlace `json:"neighbourhood,omitempty"`
-	Borough       *ContextPlace `json:"borough,omitempty"`
-}
-
-// ContextPlace represents a place in the geographic hierarchy
-type ContextPlace struct {
-	GID  string `json:"gid"`
-	Name string `json:"name"`
 }

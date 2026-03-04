@@ -2,9 +2,9 @@ package stadia
 
 import (
 	"crypto/tls"
+	"github.com/rs/zerolog/log"
 	"os"
 	"resty.dev/v3"
-	//"github.com/rs/zerolog/log"
 )
 
 type StadiaMaps struct {
@@ -20,6 +20,7 @@ func NewStadiaMaps(api_key string) *StadiaMaps {
 	//r := resty.New().SetDebug(true)
 	r := resty.New()
 	if os.Getenv("STADIA_INSECURE_SKIP_VERIFY") != "" {
+		log.Warn().Msg("Using insecure TLS verification settings")
 		r.SetTLSClientConfig(&tls.Config{
 			InsecureSkipVerify: true,
 		})

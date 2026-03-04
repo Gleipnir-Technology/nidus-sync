@@ -3,7 +3,6 @@ package sync
 import (
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/notification"
 	"github.com/google/uuid"
 	"github.com/uber/h3-go/v4"
 )
@@ -48,9 +47,6 @@ type ContentReportDetail struct {
 }
 type ContentReportDiagnostic struct {
 }
-type ContentDashboardLoading struct {
-	User User
-}
 
 type Inspection struct {
 	Action     string
@@ -63,20 +59,8 @@ type Link struct {
 	Href  string
 	Title string
 }
-type Organization struct {
-	ID   int
-	Name string
-}
 type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string
 	Status   string
-}
-type User struct {
-	DisplayName   string
-	Initials      string
-	Notifications []notification.Notification
-	Organization  Organization
-	Role          string
-	Username      string
 }

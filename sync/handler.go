@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,14 +20,14 @@ type contentAuthenticated[T any] struct {
 	Config       html.ContentConfig
 	Organization *models.Organization
 	URL          html.ContentURL
-	User         User
+	User         platform.User
 }
 
 // w http.ResponseWriter, r *http.Request, u *models.User) {
 func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
 		ctx := r.Context()
-		userContent, err := contentForUser(ctx, u)
+		userContent, err := auth.ContentForUser(ctx, u)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

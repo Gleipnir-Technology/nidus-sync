@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -30,12 +31,12 @@ type contentSource struct {
 	Treatments  []Treatment
 	//TreatmentCadence TreatmentCadence
 	TreatmentModels []TreatmentModel
-	User            User
+	User            platform.User
 }
 type contentTrap struct {
 	MapData ComponentMap
 	Trap    Trap
-	User    User
+	User    platform.User
 }
 type contentDashboard struct {
 	CountTraps           int
@@ -49,7 +50,7 @@ type contentDashboard struct {
 }
 
 type contentLayoutTest struct {
-	User User
+	User platform.User
 }
 type ContentDistrict struct {
 	MapboxToken string
@@ -103,7 +104,7 @@ func getSource(ctx context.Context, r *http.Request, org *models.Organization, u
 	if err != nil {
 		return nil, nhttp.NewError("globalid is not a UUID: %w", nil)
 	}
-	userContent, err := contentForUser(r.Context(), user)
+	userContent, err := auth.ContentForUser(r.Context(), user)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get user content: %w", err)
 	}
@@ -172,7 +173,7 @@ func getTrap(ctx context.Context, r *http.Request, org *models.Organization, use
 	if err != nil {
 		return nil, nhttp.NewError("globalid is not a UUID: %w", nil)
 	}
-	userContent, err := contentForUser(r.Context(), user)
+	userContent, err := auth.ContentForUser(r.Context(), user)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get user content: %w", err)
 	}
@@ -254,7 +255,7 @@ func dashboard(ctx context.Context, w http.ResponseWriter, org *models.Organizat
 		},
 		RecentRequests: requests,
 	}
-	userContent, err := contentForUser(ctx, user)
+	userContent, err := auth.ContentForUser(ctx, user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

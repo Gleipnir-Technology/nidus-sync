@@ -69,15 +69,6 @@ var Addresses = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Number: column{
-			Name:      "number_",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		PostalCode: column{
 			Name:      "postal_code",
 			DBType:    "text",
@@ -114,6 +105,15 @@ var Addresses = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Number: column{
+			Name:      "number_",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: addressIndexes{
 		AddressPkey: index{
@@ -129,43 +129,6 @@ var Addresses = Table[
 			Unique:        true,
 			Comment:       "",
 			NullsFirst:    []bool{false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
-		AddressCountryLocalityUnitNumberStreetKey: index{
-			Type: "btree",
-			Name: "address_country_locality_unit_number__street_key",
-			Columns: []indexColumn{
-				{
-					Name:         "country",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "locality",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "unit",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "number_",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-				{
-					Name:         "street",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        true,
-			Comment:       "",
-			NullsFirst:    []bool{false, false, false, false, false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -194,14 +157,6 @@ var Addresses = Table[
 		Comment: "",
 	},
 
-	Uniques: addressUniques{
-		AddressCountryLocalityUnitNumberStreetKey: constraint{
-			Name:    "address_country_locality_unit_number__street_key",
-			Columns: []string{"country", "locality", "unit", "number_", "street"},
-			Comment: "",
-		},
-	},
-
 	Comment: "",
 }
 
@@ -212,28 +167,27 @@ type addressColumns struct {
 	H3cell     column
 	ID         column
 	Locality   column
-	Number     column
 	PostalCode column
 	Street     column
 	Unit       column
 	Region     column
+	Number     column
 }
 
 func (c addressColumns) AsSlice() []column {
 	return []column{
-		c.Country, c.Created, c.Geom, c.H3cell, c.ID, c.Locality, c.Number, c.PostalCode, c.Street, c.Unit, c.Region,
+		c.Country, c.Created, c.Geom, c.H3cell, c.ID, c.Locality, c.PostalCode, c.Street, c.Unit, c.Region, c.Number,
 	}
 }
 
 type addressIndexes struct {
-	AddressPkey                               index
-	AddressCountryLocalityUnitNumberStreetKey index
-	IdxAddressGeom                            index
+	AddressPkey    index
+	IdxAddressGeom index
 }
 
 func (i addressIndexes) AsSlice() []index {
 	return []index{
-		i.AddressPkey, i.AddressCountryLocalityUnitNumberStreetKey, i.IdxAddressGeom,
+		i.AddressPkey, i.IdxAddressGeom,
 	}
 }
 
@@ -243,14 +197,10 @@ func (f addressForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type addressUniques struct {
-	AddressCountryLocalityUnitNumberStreetKey constraint
-}
+type addressUniques struct{}
 
 func (u addressUniques) AsSlice() []constraint {
-	return []constraint{
-		u.AddressCountryLocalityUnitNumberStreetKey,
-	}
+	return []constraint{}
 }
 
 type addressChecks struct{}

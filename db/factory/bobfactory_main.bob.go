@@ -143,11 +143,11 @@ func (f *Factory) FromExistingAddress(m *models.Address) *AddressTemplate {
 	o.H3cell = func() string { return m.H3cell }
 	o.ID = func() int32 { return m.ID }
 	o.Locality = func() string { return m.Locality }
-	o.Number = func() int32 { return m.Number }
 	o.PostalCode = func() string { return m.PostalCode }
 	o.Street = func() string { return m.Street }
 	o.Unit = func() string { return m.Unit }
 	o.Region = func() string { return m.Region }
+	o.Number = func() string { return m.Number }
 
 	ctx := context.Background()
 	if len(m.R.Mailers) > 0 {

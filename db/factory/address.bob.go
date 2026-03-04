@@ -42,11 +42,11 @@ type AddressTemplate struct {
 	H3cell     func() string
 	ID         func() int32
 	Locality   func() string
-	Number     func() int32
 	PostalCode func() string
 	Street     func() string
 	Unit       func() string
 	Region     func() string
+	Number     func() string
 
 	r addressR
 	f *Factory
@@ -145,10 +145,6 @@ func (o AddressTemplate) BuildSetter() *models.AddressSetter {
 		val := o.Locality()
 		m.Locality = omit.From(val)
 	}
-	if o.Number != nil {
-		val := o.Number()
-		m.Number = omit.From(val)
-	}
 	if o.PostalCode != nil {
 		val := o.PostalCode()
 		m.PostalCode = omit.From(val)
@@ -164,6 +160,10 @@ func (o AddressTemplate) BuildSetter() *models.AddressSetter {
 	if o.Region != nil {
 		val := o.Region()
 		m.Region = omit.From(val)
+	}
+	if o.Number != nil {
+		val := o.Number()
+		m.Number = omit.From(val)
 	}
 
 	return m
@@ -205,9 +205,6 @@ func (o AddressTemplate) Build() *models.Address {
 	if o.Locality != nil {
 		m.Locality = o.Locality()
 	}
-	if o.Number != nil {
-		m.Number = o.Number()
-	}
 	if o.PostalCode != nil {
 		m.PostalCode = o.PostalCode()
 	}
@@ -219,6 +216,9 @@ func (o AddressTemplate) Build() *models.Address {
 	}
 	if o.Region != nil {
 		m.Region = o.Region()
+	}
+	if o.Number != nil {
+		m.Number = o.Number()
 	}
 
 	o.setModelRels(m)
@@ -260,10 +260,6 @@ func ensureCreatableAddress(m *models.AddressSetter) {
 		val := random_string(nil)
 		m.Locality = omit.From(val)
 	}
-	if !(m.Number.IsValue()) {
-		val := random_int32(nil)
-		m.Number = omit.From(val)
-	}
 	if !(m.PostalCode.IsValue()) {
 		val := random_string(nil)
 		m.PostalCode = omit.From(val)
@@ -279,6 +275,10 @@ func ensureCreatableAddress(m *models.AddressSetter) {
 	if !(m.Region.IsValue()) {
 		val := random_string(nil)
 		m.Region = omit.From(val)
+	}
+	if !(m.Number.IsValue()) {
+		val := random_string(nil)
+		m.Number = omit.From(val)
 	}
 }
 
@@ -445,11 +445,11 @@ func (m addressMods) RandomizeAllColumns(f *faker.Faker) AddressMod {
 		AddressMods.RandomH3cell(f),
 		AddressMods.RandomID(f),
 		AddressMods.RandomLocality(f),
-		AddressMods.RandomNumber(f),
 		AddressMods.RandomPostalCode(f),
 		AddressMods.RandomStreet(f),
 		AddressMods.RandomUnit(f),
 		AddressMods.RandomRegion(f),
+		AddressMods.RandomNumber(f),
 	}
 }
 
@@ -640,37 +640,6 @@ func (m addressMods) RandomLocality(f *faker.Faker) AddressMod {
 }
 
 // Set the model columns to this value
-func (m addressMods) Number(val int32) AddressMod {
-	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
-		o.Number = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m addressMods) NumberFunc(f func() int32) AddressMod {
-	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
-		o.Number = f
-	})
-}
-
-// Clear any values for the column
-func (m addressMods) UnsetNumber() AddressMod {
-	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
-		o.Number = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m addressMods) RandomNumber(f *faker.Faker) AddressMod {
-	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
-		o.Number = func() int32 {
-			return random_int32(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m addressMods) PostalCode(val string) AddressMod {
 	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
 		o.PostalCode = func() string { return val }
@@ -789,6 +758,37 @@ func (m addressMods) UnsetRegion() AddressMod {
 func (m addressMods) RandomRegion(f *faker.Faker) AddressMod {
 	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
 		o.Region = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m addressMods) Number(val string) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Number = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m addressMods) NumberFunc(f func() string) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Number = f
+	})
+}
+
+// Clear any values for the column
+func (m addressMods) UnsetNumber() AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Number = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m addressMods) RandomNumber(f *faker.Faker) AddressMod {
+	return AddressModFunc(func(_ context.Context, o *AddressTemplate) {
+		o.Number = func() string {
 			return random_string(f)
 		}
 	})

@@ -85,7 +85,7 @@ func postUploadCommit(ctx context.Context, r *http.Request, org *models.Organiza
 	}
 	err = platform.UploadCommit(ctx, org, int32(file_id_))
 	if err != nil {
-		return "", nhttp.NewError("Failed to mark discarded: %w", err)
+		return "", nhttp.NewError("Failed to mark committed: %w", err)
 	}
 	return "/configuration/upload", nil
 }

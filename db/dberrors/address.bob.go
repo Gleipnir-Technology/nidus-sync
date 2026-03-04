@@ -10,17 +10,8 @@ var AddressErrors = &addressErrors{
 		columns: []string{"id"},
 		s:       "address_pkey",
 	},
-
-	ErrUniqueAddressCountryLocalityUnitNumber_StreetKey: &UniqueConstraintError{
-		schema:  "",
-		table:   "address",
-		columns: []string{"country", "locality", "unit", "number_", "street"},
-		s:       "address_country_locality_unit_number__street_key",
-	},
 }
 
 type addressErrors struct {
 	ErrUniqueAddressPkey *UniqueConstraintError
-
-	ErrUniqueAddressCountryLocalityUnitNumber_StreetKey *UniqueConstraintError
 }

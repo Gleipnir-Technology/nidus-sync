@@ -16,7 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
@@ -130,41 +130,22 @@ type jobGeocode struct {
 	pool      *models.FileuploadPool
 }
 
-func geocode(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jobGeocode) error {
+func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jobGeocode) error {
 	pool := job.pool
-	sublog := log.With().
-		Str("pool.address_postal", pool.AddressPostalCode).
-		Str("pool.address_street", pool.AddressStreet).
-		Str("pool.postal", pool.AddressPostalCode).
-		Logger()
-	req := stadia.StructuredGeocodeRequest{
-		Address:    &pool.AddressStreet,
-		Locality:   &pool.AddressLocality,
-		PostalCode: &pool.AddressPostalCode,
+	a := geocode.Address{
+		Number:     pool.AddressNumber,
+		Locality:   pool.AddressLocality,
+		PostalCode: pool.AddressPostalCode,
+		Street:     pool.AddressStreet,
 	}
-	maybeAddServiceArea(&req, job.org)
-	resp, err := client.StructuredGeocode(ctx, req)
+	address, err := geocode.Geocode(ctx, job.org, a)
 	if err != nil {
-		return fmt.Errorf("client structured geocode failure on %s, %s, %s: %w", pool.AddressStreet, pool.AddressLocality, pool.AddressPostalCode, err)
+		addError(ctx, txn, job.csv, job.rownumber, 0, err.Error())
 	}
-	if len(resp.Features) > 1 {
-		sublog.Warn().Int("len", len(resp.Features)).Msg("More than one feature")
-		addError(ctx, txn, job.csv, job.rownumber, 0, "The address provided matched more than one location")
-	}
-	feature := resp.Features[0]
-	if feature.Geometry.Type != "Point" {
-		return fmt.Errorf("wrong type %s from %s %s", feature.Geometry.Type, pool.AddressStreet, pool.AddressPostalCode)
-	}
-	longitude := feature.Geometry.Coordinates[0]
-	latitude := feature.Geometry.Coordinates[1]
-	cell, err := h3utils.GetCell(longitude, latitude, 15)
-	if err != nil {
-		return fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
-	}
-	geom_query := geom.PostgisPointQuery(longitude, latitude)
+	geom_query := geom.PostgisPointQuery(address.Longitude, address.Latitude)
 	_, err = psql.Update(
 		um.Table("fileupload.pool"),
-		um.SetCol("h3cell").ToArg(cell),
+		um.SetCol("h3cell").ToArg(address.Cell),
 		um.SetCol("geom").To(geom_query),
 		um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
 	).Exec(ctx, txn)
@@ -318,31 +299,6 @@ func processCSVPoollist(ctx context.Context, txn bob.Tx, file *models.Fileupload
 	return nil
 }
 
-func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
-	/*
-		if org.ServiceAreaXmax.IsNull() ||
-			org.ServiceAreaYmax.IsNull() ||
-			org.ServiceAreaXmin.IsNull() ||
-			org.ServiceAreaYmin.IsNull() {
-			return
-		}
-		xmax := org.ServiceAreaXmax.MustGet()
-		ymax := org.ServiceAreaYmax.MustGet()
-		xmin := org.ServiceAreaXmin.MustGet()
-		ymin := org.ServiceAreaYmin.MustGet()
-		req.BoundaryRectMaxLon = &xmax
-		req.BoundaryRectMaxLat = &ymax
-		req.BoundaryRectMinLon = &xmin
-		req.BoundaryRectMinLat = &ymin
-	*/
-	if org.ServiceAreaCentroidX.IsNull() || org.ServiceAreaCentroidY.IsNull() {
-		return
-	}
-	centroid_x := org.ServiceAreaCentroidX.MustGet()
-	centroid_y := org.ServiceAreaCentroidY.MustGet()
-	req.FocusPointLat = &centroid_y
-	req.FocusPointLng = &centroid_x
-}
 func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 	result_enums := make([]headerPoolEnum, 0)
 	result_names := make([]string, 0)
@@ -414,7 +370,7 @@ func worker(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, jobs <-c
 	defer wg.Done()
 
 	for job := range jobs {
-		err := geocode(ctx, txn, client, job)
+		err := geocodePool(ctx, txn, client, job)
 
 		if err != nil {
 			errors <- err
