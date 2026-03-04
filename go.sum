@@ -306,8 +306,6 @@ github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+F
 github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=
 github.com/twilio/twilio-go v1.29.1 h1:4dx1d9EhRUhL5ubzYrDROERAiw55s7mBE6/w3q2epVg=
 github.com/twilio/twilio-go v1.29.1/go.mod h1:FpgNWMoD8CFnmukpKq9RNpUSGXC0BwnbeKZj2YHlIkw=
-github.com/twpayne/go-proj/v11 v11.0.0 h1:jkGRE2DOwxhbn2hPnps1wNepdCgA8JB/K8rJosVR2jM=
-github.com/twpayne/go-proj/v11 v11.0.0/go.mod h1:2qEvCqcSQqaKRxHc8K6F5THAzS/SVknfWVPnTHFqE3M=
 github.com/uber/h3-go/v4 v4.4.0 h1:sCHcZHvIKEbdt4rY5ZVs2HDNlCy2wXeJ98vAbz+iLok=
 github.com/uber/h3-go/v4 v4.4.0/go.mod h1:c94kwXZNHVWkZGIN+y9dV81YVEttypqJpOjsmXGr68Y=
 github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07 h1:mJdDDPblDfPe7z7go8Dvv1AJQDI3eQ/5xith3q2mFlo=

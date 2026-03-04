@@ -84,7 +84,6 @@ require (
 	github.com/tidwall/rtree v1.3.1 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
-	github.com/twpayne/go-proj/v11 v11.0.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	go.mongodb.org/mongo-driver v1.11.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

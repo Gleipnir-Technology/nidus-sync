@@ -10,7 +10,9 @@
                 flake-utils.lib.eachDefaultSystem (system:
                         let
                                 pkgs = nixpkgs.legacyPackages.${system};
-                                package = import ./default.nix { inherit pkgs; };
+                                package = import ./default.nix {
+					inherit pkgs;
+				};
                         in
                         {
                                 packages.default = package;
@@ -29,7 +31,6 @@
 						pkgs.pkg-config
 						pkgs.prettier
 						pkgs.prettier-plugin-go-template
-						pkgs.proj
 						pkgs.watchexec
                                         ];
                                 };
