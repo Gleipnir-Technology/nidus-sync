@@ -11,40 +11,6 @@
 		function onLoad() {}
 		window.addEventListener("load", onLoad);
 	</script>
-	<style>
-		.pane-header {
-			font-weight: 600;
-		}
-		.workbench-map {
-			height: 320px;
-			background-color: #e9ecef;
-			border: 1px dashed #adb5bd;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			text-align: center;
-			font-weight: 500;
-			color: #6c757d;
-		}
-		.scroll-pane {
-			max-height: 75vh;
-			overflow-y: auto;
-		}
-		.signal-item:hover {
-			background-color: #f1f3f5;
-			cursor: pointer;
-		}
-		.tool-button {
-			width: 100%;
-			margin-bottom: 0.5rem;
-		}
-		.filter-label {
-			font-size: 0.75rem;
-			text-transform: uppercase;
-			color: #6c757d;
-			font-weight: 600;
-		}
-	</style>
 {{ end }}
 {{ define "content" }}
 
@@ -71,7 +37,7 @@
 					<!-- FILTERS -->
 					<div class="mb-3">
 						<div class="filter-label mb-1">Species</div>
-						<select class="form-select form-select-sm mb-2">
+						<select class="form-select form-select-sm mb-2 disabled" disabled>
 							<option>All Species</option>
 							<option>Aedes aegypti</option>
 							<option>Aedes albopictus</option>
@@ -80,17 +46,18 @@
 						</select>
 
 						<div class="filter-label mb-1">Signal Type</div>
-						<select class="form-select form-select-sm mb-2">
+						<select class="form-select form-select-sm mb-2 disabled" disabled>
 							<option>All Types</option>
 							<option>Public Report</option>
 							<option>Trap Spike</option>
 							<option>Surveillance Observation</option>
 							<option>Residual Expiring</option>
 							<option>Plan Follow-Up</option>
+							<option>Green Pool Import</option>
 						</select>
 
 						<div class="filter-label mb-1">Sort By</div>
-						<select class="form-select form-select-sm">
+						<select class="form-select form-select-sm disabled" disabled>
 							<option>Newest First</option>
 							<option>Highest Priority</option>
 							<option>Most Signals Linked</option>

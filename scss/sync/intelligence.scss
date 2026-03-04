@@ -1,0 +1,32 @@
+.pane-header {
+	font-weight: 600;
+}
+.workbench-map {
+	height: 320px;
+	background-color: #e9ecef;
+	border: 1px dashed #adb5bd;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-weight: 500;
+	color: #6c757d;
+}
+.scroll-pane {
+	max-height: 75vh;
+	overflow-y: auto;
+}
+.signal-item:hover {
+	background-color: #f1f3f5;
+	cursor: pointer;
+}
+.tool-button {
+	width: 100%;
+	margin-bottom: 0.5rem;
+}
+.filter-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	color: #6c757d;
+	font-weight: 600;
+}
