@@ -141,15 +141,6 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		OrganizationID: column{
-			Name:      "organization_id",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		PropertyOwnerName: column{
 			Name:      "property_owner_name",
 			DBType:    "text",
@@ -275,15 +266,6 @@ var FileuploadPools = Table[
 			ForeignTable:   "fileupload.csv",
 			ForeignColumns: []string{"file_id"},
 		},
-		FileuploadPoolPoolOrganizationIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "fileupload.pool.pool_organization_id_fkey",
-				Columns: []string{"organization_id"},
-				Comment: "",
-			},
-			ForeignTable:   "organization",
-			ForeignColumns: []string{"id"},
-		},
 		FileuploadPoolPoolPropertyOwnerPhoneE164Fkey: foreignKey{
 			constraint: constraint{
 				Name:    "fileupload.pool.pool_property_owner_phone_e164_fkey",
@@ -322,7 +304,6 @@ type fileuploadPoolColumns struct {
 	IsInDistrict           column
 	IsNew                  column
 	Notes                  column
-	OrganizationID         column
 	PropertyOwnerName      column
 	PropertyOwnerPhoneE164 column
 	ResidentOwned          column
@@ -336,7 +317,7 @@ type fileuploadPoolColumns struct {
 
 func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags, c.AddressNumber, c.AddressLocality, c.AddressRegion,
+		c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags, c.AddressNumber, c.AddressLocality, c.AddressRegion,
 	}
 }
 
@@ -353,14 +334,13 @@ func (i fileuploadPoolIndexes) AsSlice() []index {
 type fileuploadPoolForeignKeys struct {
 	FileuploadPoolPoolCreatorIDFkey              foreignKey
 	FileuploadPoolPoolCSVFileFkey                foreignKey
-	FileuploadPoolPoolOrganizationIDFkey         foreignKey
 	FileuploadPoolPoolPropertyOwnerPhoneE164Fkey foreignKey
 	FileuploadPoolPoolResidentPhoneE164Fkey      foreignKey
 }
 
 func (f fileuploadPoolForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.FileuploadPoolPoolCreatorIDFkey, f.FileuploadPoolPoolCSVFileFkey, f.FileuploadPoolPoolOrganizationIDFkey, f.FileuploadPoolPoolPropertyOwnerPhoneE164Fkey, f.FileuploadPoolPoolResidentPhoneE164Fkey,
+		f.FileuploadPoolPoolCreatorIDFkey, f.FileuploadPoolPoolCSVFileFkey, f.FileuploadPoolPoolPropertyOwnerPhoneE164Fkey, f.FileuploadPoolPoolResidentPhoneE164Fkey,
 	}
 }
 

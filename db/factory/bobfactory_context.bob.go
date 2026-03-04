@@ -270,7 +270,6 @@ var (
 	fileuploadPoolWithParentsCascadingCtx           = newContextual[bool]("fileuploadPoolWithParentsCascading")
 	fileuploadPoolRelCreatorUserCtx                 = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
 	fileuploadPoolRelCSVFileCSVCtx                  = newContextual[bool]("fileupload.csv.fileupload.pool.fileupload.pool.pool_csv_file_fkey")
-	fileuploadPoolRelOrganizationCtx                = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
 	fileuploadPoolRelPropertyOwnerPhoneE164PhoneCtx = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_property_owner_phone_e164_fkey")
 	fileuploadPoolRelResidentPhoneE164PhoneCtx      = newContextual[bool]("comms.phone.fileupload.pool.fileupload.pool.pool_resident_phone_e164_fkey")
 
@@ -359,7 +358,6 @@ var (
 	organizationRelZones2sCtx                                     = newContextual[bool]("fieldseeker.zones2.organization.fieldseeker.zones2.zones2_organization_id_fkey")
 	organizationRelFieldseekerSyncsCtx                            = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
 	organizationRelFilesCtx                                       = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
-	organizationRelPoolsCtx                                       = newContextual[bool]("fileupload.pool.organization.fileupload.pool.pool_organization_id_fkey")
 	organizationRelH3AggregationsCtx                              = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
 	organizationRelNoteAudiosCtx                                  = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
 	organizationRelNoteImagesCtx                                  = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")

@@ -53,7 +53,6 @@ type FileuploadPoolTemplate struct {
 	IsInDistrict           func() bool
 	IsNew                  func() bool
 	Notes                  func() string
-	OrganizationID         func() int32
 	PropertyOwnerName      func() string
 	PropertyOwnerPhoneE164 func() null.Val[string]
 	ResidentOwned          func() null.Val[bool]
@@ -73,7 +72,6 @@ type FileuploadPoolTemplate struct {
 type fileuploadPoolR struct {
 	CreatorUser                 *fileuploadPoolRCreatorUserR
 	CSVFileCSV                  *fileuploadPoolRCSVFileCSVR
-	Organization                *fileuploadPoolROrganizationR
 	PropertyOwnerPhoneE164Phone *fileuploadPoolRPropertyOwnerPhoneE164PhoneR
 	ResidentPhoneE164Phone      *fileuploadPoolRResidentPhoneE164PhoneR
 }
@@ -83,9 +81,6 @@ type fileuploadPoolRCreatorUserR struct {
 }
 type fileuploadPoolRCSVFileCSVR struct {
 	o *FileuploadCSVTemplate
-}
-type fileuploadPoolROrganizationR struct {
-	o *OrganizationTemplate
 }
 type fileuploadPoolRPropertyOwnerPhoneE164PhoneR struct {
 	o *CommsPhoneTemplate
@@ -116,13 +111,6 @@ func (t FileuploadPoolTemplate) setModelRels(o *models.FileuploadPool) {
 		rel.R.CSVFilePools = append(rel.R.CSVFilePools, o)
 		o.CSVFile = rel.FileID // h2
 		o.R.CSVFileCSV = rel
-	}
-
-	if t.r.Organization != nil {
-		rel := t.r.Organization.o.Build()
-		rel.R.Pools = append(rel.R.Pools, o)
-		o.OrganizationID = rel.ID // h2
-		o.R.Organization = rel
 	}
 
 	if t.r.PropertyOwnerPhoneE164Phone != nil {
@@ -200,10 +188,6 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 	if o.Notes != nil {
 		val := o.Notes()
 		m.Notes = omit.From(val)
-	}
-	if o.OrganizationID != nil {
-		val := o.OrganizationID()
-		m.OrganizationID = omit.From(val)
 	}
 	if o.PropertyOwnerName != nil {
 		val := o.PropertyOwnerName()
@@ -305,9 +289,6 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.Notes != nil {
 		m.Notes = o.Notes()
 	}
-	if o.OrganizationID != nil {
-		m.OrganizationID = o.OrganizationID()
-	}
 	if o.PropertyOwnerName != nil {
 		m.PropertyOwnerName = o.PropertyOwnerName()
 	}
@@ -395,10 +376,6 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 		val := random_string(nil)
 		m.Notes = omit.From(val)
 	}
-	if !(m.OrganizationID.IsValue()) {
-		val := random_int32(nil)
-		m.OrganizationID = omit.From(val)
-	}
 	if !(m.PropertyOwnerName.IsValue()) {
 		val := random_string(nil)
 		m.PropertyOwnerName = omit.From(val)
@@ -437,12 +414,12 @@ func (o *FileuploadPoolTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 		if o.r.PropertyOwnerPhoneE164Phone.o.alreadyPersisted {
 			m.R.PropertyOwnerPhoneE164Phone = o.r.PropertyOwnerPhoneE164Phone.o.Build()
 		} else {
-			var rel3 *models.CommsPhone
-			rel3, err = o.r.PropertyOwnerPhoneE164Phone.o.Create(ctx, exec)
+			var rel2 *models.CommsPhone
+			rel2, err = o.r.PropertyOwnerPhoneE164Phone.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachPropertyOwnerPhoneE164Phone(ctx, exec, rel3)
+			err = m.AttachPropertyOwnerPhoneE164Phone(ctx, exec, rel2)
 			if err != nil {
 				return err
 			}
@@ -456,12 +433,12 @@ func (o *FileuploadPoolTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 		if o.r.ResidentPhoneE164Phone.o.alreadyPersisted {
 			m.R.ResidentPhoneE164Phone = o.r.ResidentPhoneE164Phone.o.Build()
 		} else {
-			var rel4 *models.CommsPhone
-			rel4, err = o.r.ResidentPhoneE164Phone.o.Create(ctx, exec)
+			var rel3 *models.CommsPhone
+			rel3, err = o.r.ResidentPhoneE164Phone.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachResidentPhoneE164Phone(ctx, exec, rel4)
+			err = m.AttachResidentPhoneE164Phone(ctx, exec, rel3)
 			if err != nil {
 				return err
 			}
@@ -513,23 +490,6 @@ func (o *FileuploadPoolTemplate) Create(ctx context.Context, exec bob.Executor) 
 
 	opt.CSVFile = omit.From(rel1.FileID)
 
-	if o.r.Organization == nil {
-		FileuploadPoolMods.WithNewOrganization().Apply(ctx, o)
-	}
-
-	var rel2 *models.Organization
-
-	if o.r.Organization.o.alreadyPersisted {
-		rel2 = o.r.Organization.o.Build()
-	} else {
-		rel2, err = o.r.Organization.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.OrganizationID = omit.From(rel2.ID)
-
 	m, err := models.FileuploadPools.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
@@ -537,7 +497,6 @@ func (o *FileuploadPoolTemplate) Create(ctx context.Context, exec bob.Executor) 
 
 	m.R.CreatorUser = rel0
 	m.R.CSVFileCSV = rel1
-	m.R.Organization = rel2
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -630,7 +589,6 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomIsInDistrict(f),
 		FileuploadPoolMods.RandomIsNew(f),
 		FileuploadPoolMods.RandomNotes(f),
-		FileuploadPoolMods.RandomOrganizationID(f),
 		FileuploadPoolMods.RandomPropertyOwnerName(f),
 		FileuploadPoolMods.RandomPropertyOwnerPhoneE164(f),
 		FileuploadPoolMods.RandomResidentOwned(f),
@@ -1144,37 +1102,6 @@ func (m fileuploadPoolMods) RandomNotes(f *faker.Faker) FileuploadPoolMod {
 }
 
 // Set the model columns to this value
-func (m fileuploadPoolMods) OrganizationID(val int32) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.OrganizationID = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) OrganizationIDFunc(f func() int32) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.OrganizationID = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetOrganizationID() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.OrganizationID = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m fileuploadPoolMods) RandomOrganizationID(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.OrganizationID = func() int32 {
-			return random_int32(f)
-		}
-	})
-}
-
-// Set the model columns to this value
 func (m fileuploadPoolMods) PropertyOwnerName(val string) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.PropertyOwnerName = func() string { return val }
@@ -1537,11 +1464,6 @@ func (m fileuploadPoolMods) WithParentsCascading() FileuploadPoolMod {
 		}
 		{
 
-			related := o.f.NewOrganizationWithContext(ctx, OrganizationMods.WithParentsCascading())
-			m.WithOrganization(related).Apply(ctx, o)
-		}
-		{
-
 			related := o.f.NewCommsPhoneWithContext(ctx, CommsPhoneMods.WithParentsCascading())
 			m.WithPropertyOwnerPhoneE164Phone(related).Apply(ctx, o)
 		}
@@ -1610,36 +1532,6 @@ func (m fileuploadPoolMods) WithExistingCSVFileCSV(em *models.FileuploadCSV) Fil
 func (m fileuploadPoolMods) WithoutCSVFileCSV() FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
 		o.r.CSVFileCSV = nil
-	})
-}
-
-func (m fileuploadPoolMods) WithOrganization(rel *OrganizationTemplate) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
-		o.r.Organization = &fileuploadPoolROrganizationR{
-			o: rel,
-		}
-	})
-}
-
-func (m fileuploadPoolMods) WithNewOrganization(mods ...OrganizationMod) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
-		related := o.f.NewOrganizationWithContext(ctx, mods...)
-
-		m.WithOrganization(related).Apply(ctx, o)
-	})
-}
-
-func (m fileuploadPoolMods) WithExistingOrganization(em *models.Organization) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
-		o.r.Organization = &fileuploadPoolROrganizationR{
-			o: o.f.FromExistingOrganization(em),
-		}
-	})
-}
-
-func (m fileuploadPoolMods) WithoutOrganization() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(ctx context.Context, o *FileuploadPoolTemplate) {
-		o.r.Organization = nil
 	})
 }
 

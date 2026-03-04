@@ -205,7 +205,6 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 			IsNew:                  omit.From(true),
 			LineNumber:             omit.From(line_number),
 			Notes:                  omit.From(""),
-			OrganizationID:         omit.From(file.OrganizationID),
 			PropertyOwnerName:      omit.From(""),
 			PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
 			ResidentOwned:          omitnull.FromPtr[bool](nil),

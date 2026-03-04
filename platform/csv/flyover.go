@@ -159,7 +159,6 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		IsNew:                  omit.From(true),
 		LineNumber:             omit.From(line_number),
 		Notes:                  omit.From(""),
-		OrganizationID:         omit.From(file.OrganizationID),
 		PropertyOwnerName:      omit.From(""),
 		PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
 		ResidentOwned:          omitnull.FromPtr[bool](nil),
@@ -217,10 +216,14 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 	}
 	geom_query := geom.PostgisPointQuery(lng, lat)
 	_, err = psql.Update(
-		um.Table("fileupload.pool"),
+		um.TableAs("fileupload.pool", "pool"),
 		um.SetCol("h3cell").ToArg(cell),
 		um.SetCol("geom").To(geom_query),
-		um.Where(psql.Quote("id").EQ(psql.Arg(flyover.ID))),
+		um.SetCol("is_in_district").To(psql.F("ST_Contains", "org.service_area_geometry", geom_query)),
+		um.From("fileupload.csv").As("csv"),
+		um.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
+		um.InnerJoin("organization").As("org").OnEQ(psql.Raw("file.organization_id"), psql.Raw("org.id")),
+		um.Where(psql.Raw("pool.id").EQ(psql.Arg(flyover.ID))),
 	).Exec(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update flyover geometry: %w", err)
@@ -247,7 +250,6 @@ func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadF
 		IsNew:                  omit.From(true),
 		LineNumber:             omit.From(line_number),
 		Notes:                  omit.From(""),
-		OrganizationID:         omit.From(file.OrganizationID),
 		PropertyOwnerName:      omit.From(""),
 		PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
 		ResidentOwned:          omitnull.FromPtr[bool](nil),

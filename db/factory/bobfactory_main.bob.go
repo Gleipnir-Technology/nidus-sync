@@ -2913,7 +2913,6 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.IsInDistrict = func() bool { return m.IsInDistrict }
 	o.IsNew = func() bool { return m.IsNew }
 	o.Notes = func() string { return m.Notes }
-	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.PropertyOwnerName = func() string { return m.PropertyOwnerName }
 	o.PropertyOwnerPhoneE164 = func() null.Val[string] { return m.PropertyOwnerPhoneE164 }
 	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
@@ -2930,9 +2929,6 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	}
 	if m.R.CSVFileCSV != nil {
 		FileuploadPoolMods.WithExistingCSVFileCSV(m.R.CSVFileCSV).Apply(ctx, o)
-	}
-	if m.R.Organization != nil {
-		FileuploadPoolMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
 	}
 	if m.R.PropertyOwnerPhoneE164Phone != nil {
 		FileuploadPoolMods.WithExistingPropertyOwnerPhoneE164Phone(m.R.PropertyOwnerPhoneE164Phone).Apply(ctx, o)
@@ -3484,9 +3480,6 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.Files) > 0 {
 		OrganizationMods.AddExistingFiles(m.R.Files...).Apply(ctx, o)
-	}
-	if len(m.R.Pools) > 0 {
-		OrganizationMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
 	}
 	if len(m.R.H3Aggregations) > 0 {
 		OrganizationMods.AddExistingH3Aggregations(m.R.H3Aggregations...).Apply(ctx, o)

@@ -41,7 +41,6 @@ type FileuploadPool struct {
 	IsInDistrict           bool                              `db:"is_in_district" `
 	IsNew                  bool                              `db:"is_new" `
 	Notes                  string                            `db:"notes" `
-	OrganizationID         int32                             `db:"organization_id" `
 	PropertyOwnerName      string                            `db:"property_owner_name" `
 	PropertyOwnerPhoneE164 null.Val[string]                  `db:"property_owner_phone_e164" `
 	ResidentOwned          null.Val[bool]                    `db:"resident_owned" `
@@ -69,7 +68,6 @@ type FileuploadPoolsQuery = *psql.ViewQuery[*FileuploadPool, FileuploadPoolSlice
 type fileuploadPoolR struct {
 	CreatorUser                 *User          // fileupload.pool.pool_creator_id_fkey
 	CSVFileCSV                  *FileuploadCSV // fileupload.pool.pool_csv_file_fkey
-	Organization                *Organization  // fileupload.pool.pool_organization_id_fkey
 	PropertyOwnerPhoneE164Phone *CommsPhone    // fileupload.pool.pool_property_owner_phone_e164_fkey
 	ResidentPhoneE164Phone      *CommsPhone    // fileupload.pool.pool_resident_phone_e164_fkey
 }
@@ -77,7 +75,7 @@ type fileuploadPoolR struct {
 func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 	return fileuploadPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_postal_code", "address_street", "committed", "condition", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "organization_id", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region",
+			"address_postal_code", "address_street", "committed", "condition", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region",
 		).WithParent("fileupload.pool"),
 		tableAlias:             alias,
 		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
@@ -94,7 +92,6 @@ func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 		IsInDistrict:           psql.Quote(alias, "is_in_district"),
 		IsNew:                  psql.Quote(alias, "is_new"),
 		Notes:                  psql.Quote(alias, "notes"),
-		OrganizationID:         psql.Quote(alias, "organization_id"),
 		PropertyOwnerName:      psql.Quote(alias, "property_owner_name"),
 		PropertyOwnerPhoneE164: psql.Quote(alias, "property_owner_phone_e164"),
 		ResidentOwned:          psql.Quote(alias, "resident_owned"),
@@ -124,7 +121,6 @@ type fileuploadPoolColumns struct {
 	IsInDistrict           psql.Expression
 	IsNew                  psql.Expression
 	Notes                  psql.Expression
-	OrganizationID         psql.Expression
 	PropertyOwnerName      psql.Expression
 	PropertyOwnerPhoneE164 psql.Expression
 	ResidentOwned          psql.Expression
@@ -162,7 +158,6 @@ type FileuploadPoolSetter struct {
 	IsInDistrict           omit.Val[bool]                              `db:"is_in_district" `
 	IsNew                  omit.Val[bool]                              `db:"is_new" `
 	Notes                  omit.Val[string]                            `db:"notes" `
-	OrganizationID         omit.Val[int32]                             `db:"organization_id" `
 	PropertyOwnerName      omit.Val[string]                            `db:"property_owner_name" `
 	PropertyOwnerPhoneE164 omitnull.Val[string]                        `db:"property_owner_phone_e164" `
 	ResidentOwned          omitnull.Val[bool]                          `db:"resident_owned" `
@@ -175,7 +170,7 @@ type FileuploadPoolSetter struct {
 }
 
 func (s FileuploadPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 24)
+	vals := make([]string, 0, 23)
 	if s.AddressPostalCode.IsValue() {
 		vals = append(vals, "address_postal_code")
 	}
@@ -217,9 +212,6 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	}
 	if s.Notes.IsValue() {
 		vals = append(vals, "notes")
-	}
-	if s.OrganizationID.IsValue() {
-		vals = append(vals, "organization_id")
 	}
 	if s.PropertyOwnerName.IsValue() {
 		vals = append(vals, "property_owner_name")
@@ -294,9 +286,6 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	if s.Notes.IsValue() {
 		t.Notes = s.Notes.MustGet()
 	}
-	if s.OrganizationID.IsValue() {
-		t.OrganizationID = s.OrganizationID.MustGet()
-	}
 	if s.PropertyOwnerName.IsValue() {
 		t.PropertyOwnerName = s.PropertyOwnerName.MustGet()
 	}
@@ -332,7 +321,7 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 24)
+		vals := make([]bob.Expression, 23)
 		if s.AddressPostalCode.IsValue() {
 			vals[0] = psql.Arg(s.AddressPostalCode.MustGet())
 		} else {
@@ -417,64 +406,58 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.OrganizationID.IsValue() {
-			vals[14] = psql.Arg(s.OrganizationID.MustGet())
+		if s.PropertyOwnerName.IsValue() {
+			vals[14] = psql.Arg(s.PropertyOwnerName.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.PropertyOwnerName.IsValue() {
-			vals[15] = psql.Arg(s.PropertyOwnerName.MustGet())
+		if !s.PropertyOwnerPhoneE164.IsUnset() {
+			vals[15] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.PropertyOwnerPhoneE164.IsUnset() {
-			vals[16] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
+		if !s.ResidentOwned.IsUnset() {
+			vals[16] = psql.Arg(s.ResidentOwned.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentOwned.IsUnset() {
-			vals[17] = psql.Arg(s.ResidentOwned.MustGetNull())
+		if !s.ResidentPhoneE164.IsUnset() {
+			vals[17] = psql.Arg(s.ResidentPhoneE164.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentPhoneE164.IsUnset() {
-			vals[18] = psql.Arg(s.ResidentPhoneE164.MustGetNull())
+		if s.LineNumber.IsValue() {
+			vals[18] = psql.Arg(s.LineNumber.MustGet())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if s.LineNumber.IsValue() {
-			vals[19] = psql.Arg(s.LineNumber.MustGet())
+		if s.Tags.IsValue() {
+			vals[19] = psql.Arg(s.Tags.MustGet())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if s.Tags.IsValue() {
-			vals[20] = psql.Arg(s.Tags.MustGet())
+		if s.AddressNumber.IsValue() {
+			vals[20] = psql.Arg(s.AddressNumber.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressNumber.IsValue() {
-			vals[21] = psql.Arg(s.AddressNumber.MustGet())
+		if s.AddressLocality.IsValue() {
+			vals[21] = psql.Arg(s.AddressLocality.MustGet())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressLocality.IsValue() {
-			vals[22] = psql.Arg(s.AddressLocality.MustGet())
+		if s.AddressRegion.IsValue() {
+			vals[22] = psql.Arg(s.AddressRegion.MustGet())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressRegion.IsValue() {
-			vals[23] = psql.Arg(s.AddressRegion.MustGet())
-		} else {
-			vals[23] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -486,7 +469,7 @@ func (s FileuploadPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 24)
+	exprs := make([]bob.Expression, 0, 23)
 
 	if s.AddressPostalCode.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -583,13 +566,6 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "notes")...),
 			psql.Arg(s.Notes),
-		}})
-	}
-
-	if s.OrganizationID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "organization_id")...),
-			psql.Arg(s.OrganizationID),
 		}})
 	}
 
@@ -930,30 +906,6 @@ func (os FileuploadPoolSlice) CSVFileCSV(mods ...bob.Mod[*dialect.SelectQuery]) 
 	)...)
 }
 
-// Organization starts a query for related objects on organization
-func (o *FileuploadPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	return Organizations.Query(append(mods,
-		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
-	)...)
-}
-
-func (os FileuploadPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
-	))
-
-	return Organizations.Query(append(mods,
-		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 // PropertyOwnerPhoneE164Phone starts a query for related objects on comms.phone
 func (o *FileuploadPool) PropertyOwnerPhoneE164Phone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	return CommsPhones.Query(append(mods,
@@ -1098,54 +1050,6 @@ func (fileuploadPool0 *FileuploadPool) AttachCSVFileCSV(ctx context.Context, exe
 	return nil
 }
 
-func attachFileuploadPoolOrganization0(ctx context.Context, exec bob.Executor, count int, fileuploadPool0 *FileuploadPool, organization1 *Organization) (*FileuploadPool, error) {
-	setter := &FileuploadPoolSetter{
-		OrganizationID: omit.From(organization1.ID),
-	}
-
-	err := fileuploadPool0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachFileuploadPoolOrganization0: %w", err)
-	}
-
-	return fileuploadPool0, nil
-}
-
-func (fileuploadPool0 *FileuploadPool) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
-	var err error
-
-	organization1, err := Organizations.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachFileuploadPoolOrganization0(ctx, exec, 1, fileuploadPool0, organization1)
-	if err != nil {
-		return err
-	}
-
-	fileuploadPool0.R.Organization = organization1
-
-	organization1.R.Pools = append(organization1.R.Pools, fileuploadPool0)
-
-	return nil
-}
-
-func (fileuploadPool0 *FileuploadPool) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
-	var err error
-
-	_, err = attachFileuploadPoolOrganization0(ctx, exec, 1, fileuploadPool0, organization1)
-	if err != nil {
-		return err
-	}
-
-	fileuploadPool0.R.Organization = organization1
-
-	organization1.R.Pools = append(organization1.R.Pools, fileuploadPool0)
-
-	return nil
-}
-
 func attachFileuploadPoolPropertyOwnerPhoneE164Phone0(ctx context.Context, exec bob.Executor, count int, fileuploadPool0 *FileuploadPool, commsPhone1 *CommsPhone) (*FileuploadPool, error) {
 	setter := &FileuploadPoolSetter{
 		PropertyOwnerPhoneE164: omitnull.From(commsPhone1.E164),
@@ -1257,7 +1161,6 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	IsInDistrict           psql.WhereMod[Q, bool]
 	IsNew                  psql.WhereMod[Q, bool]
 	Notes                  psql.WhereMod[Q, string]
-	OrganizationID         psql.WhereMod[Q, int32]
 	PropertyOwnerName      psql.WhereMod[Q, string]
 	PropertyOwnerPhoneE164 psql.WhereNullMod[Q, string]
 	ResidentOwned          psql.WhereNullMod[Q, bool]
@@ -1289,7 +1192,6 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		IsInDistrict:           psql.Where[Q, bool](cols.IsInDistrict),
 		IsNew:                  psql.Where[Q, bool](cols.IsNew),
 		Notes:                  psql.Where[Q, string](cols.Notes),
-		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		PropertyOwnerName:      psql.Where[Q, string](cols.PropertyOwnerName),
 		PropertyOwnerPhoneE164: psql.WhereNull[Q, string](cols.PropertyOwnerPhoneE164),
 		ResidentOwned:          psql.WhereNull[Q, bool](cols.ResidentOwned),
@@ -1332,18 +1234,6 @@ func (o *FileuploadPool) Preload(name string, retrieved any) error {
 			rel.R.CSVFilePools = FileuploadPoolSlice{o}
 		}
 		return nil
-	case "Organization":
-		rel, ok := retrieved.(*Organization)
-		if !ok {
-			return fmt.Errorf("fileuploadPool cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Organization = rel
-
-		if rel != nil {
-			rel.R.Pools = FileuploadPoolSlice{o}
-		}
-		return nil
 	case "PropertyOwnerPhoneE164Phone":
 		rel, ok := retrieved.(*CommsPhone)
 		if !ok {
@@ -1376,7 +1266,6 @@ func (o *FileuploadPool) Preload(name string, retrieved any) error {
 type fileuploadPoolPreloader struct {
 	CreatorUser                 func(...psql.PreloadOption) psql.Preloader
 	CSVFileCSV                  func(...psql.PreloadOption) psql.Preloader
-	Organization                func(...psql.PreloadOption) psql.Preloader
 	PropertyOwnerPhoneE164Phone func(...psql.PreloadOption) psql.Preloader
 	ResidentPhoneE164Phone      func(...psql.PreloadOption) psql.Preloader
 }
@@ -1408,19 +1297,6 @@ func buildFileuploadPoolPreloader() fileuploadPoolPreloader {
 					},
 				},
 			}, FileuploadCSVS.Columns.Names(), opts...)
-		},
-		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
-				Name: "Organization",
-				Sides: []psql.PreloadSide{
-					{
-						From:        FileuploadPools,
-						To:          Organizations,
-						FromColumns: []string{"organization_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Organizations.Columns.Names(), opts...)
 		},
 		PropertyOwnerPhoneE164Phone: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*CommsPhone, CommsPhoneSlice](psql.PreloadRel{
@@ -1454,7 +1330,6 @@ func buildFileuploadPoolPreloader() fileuploadPoolPreloader {
 type fileuploadPoolThenLoader[Q orm.Loadable] struct {
 	CreatorUser                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CSVFileCSV                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PropertyOwnerPhoneE164Phone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ResidentPhoneE164Phone      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -1465,9 +1340,6 @@ func buildFileuploadPoolThenLoader[Q orm.Loadable]() fileuploadPoolThenLoader[Q]
 	}
 	type CSVFileCSVLoadInterface interface {
 		LoadCSVFileCSV(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type OrganizationLoadInterface interface {
-		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PropertyOwnerPhoneE164PhoneLoadInterface interface {
 		LoadPropertyOwnerPhoneE164Phone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1487,12 +1359,6 @@ func buildFileuploadPoolThenLoader[Q orm.Loadable]() fileuploadPoolThenLoader[Q]
 			"CSVFileCSV",
 			func(ctx context.Context, exec bob.Executor, retrieved CSVFileCSVLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCSVFileCSV(ctx, exec, mods...)
-			},
-		),
-		Organization: thenLoadBuilder[Q](
-			"Organization",
-			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadOrganization(ctx, exec, mods...)
 			},
 		),
 		PropertyOwnerPhoneE164Phone: thenLoadBuilder[Q](
@@ -1614,58 +1480,6 @@ func (os FileuploadPoolSlice) LoadCSVFileCSV(ctx context.Context, exec bob.Execu
 	return nil
 }
 
-// LoadOrganization loads the fileuploadPool's Organization into the .R struct
-func (o *FileuploadPool) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Organization = nil
-
-	related, err := o.Organization(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.Pools = FileuploadPoolSlice{o}
-
-	o.R.Organization = related
-	return nil
-}
-
-// LoadOrganization loads the fileuploadPool's Organization into the .R struct
-func (os FileuploadPoolSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	organizations, err := os.Organization(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range organizations {
-
-			if !(o.OrganizationID == rel.ID) {
-				continue
-			}
-
-			rel.R.Pools = append(rel.R.Pools, o)
-
-			o.R.Organization = rel
-			break
-		}
-	}
-
-	return nil
-}
-
 // LoadPropertyOwnerPhoneE164Phone loads the fileuploadPool's PropertyOwnerPhoneE164Phone into the .R struct
 func (o *FileuploadPool) LoadPropertyOwnerPhoneE164Phone(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -1780,7 +1594,6 @@ type fileuploadPoolJoins[Q dialect.Joinable] struct {
 	typ                         string
 	CreatorUser                 modAs[Q, userColumns]
 	CSVFileCSV                  modAs[Q, fileuploadCSVColumns]
-	Organization                modAs[Q, organizationColumns]
 	PropertyOwnerPhoneE164Phone modAs[Q, commsPhoneColumns]
 	ResidentPhoneE164Phone      modAs[Q, commsPhoneColumns]
 }
@@ -1814,20 +1627,6 @@ func buildFileuploadPoolJoins[Q dialect.Joinable](cols fileuploadPoolColumns, ty
 				{
 					mods = append(mods, dialect.Join[Q](typ, FileuploadCSVS.Name().As(to.Alias())).On(
 						to.FileID.EQ(cols.CSVFile),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
 					))
 				}
 

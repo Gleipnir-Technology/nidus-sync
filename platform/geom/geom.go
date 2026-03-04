@@ -5,5 +5,5 @@ import (
 )
 
 func PostgisPointQuery(longitude, latitude float64) string {
-	return fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", longitude, latitude)
+	return fmt.Sprintf("ST_SetSRID(ST_MakePoint(%f, %f), 4326)", longitude, latitude)
 }

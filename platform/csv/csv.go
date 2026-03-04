@@ -79,11 +79,14 @@ func JobImport(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype
 		err = importCSV(ctx, file_id, parseCSVFlyover, processCSVFlyover)
 	}
 	if err != nil {
-		psql.Update(
-			um.Table("fileupload.csv"),
+		_, err := psql.Update(
+			um.Table("fileupload.file"),
 			um.SetCol("status").ToArg("error"),
-			um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
+			um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 		).Exec(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to set upload to error status")
+		}
 	}
 	return err
 }
