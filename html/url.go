@@ -69,22 +69,24 @@ func newContentURLRMO() contentURLRMO {
 }
 
 type contentURLRMOMailer struct {
-	Confirm    urlWithParams
-	Contribute urlWithParams
-	Evidence   urlWithParams
-	Root       urlWithParams
-	Schedule   urlWithParams
-	Update     urlWithParams
+	AppointmentConfirmed urlWithParams
+	Confirm              urlWithParams
+	Contribute           urlWithParams
+	Evidence             urlWithParams
+	Root                 urlWithParams
+	Schedule             urlWithParams
+	Update               urlWithParams
 }
 
 func newContentURLRMOMailer() contentURLRMOMailer {
 	return contentURLRMOMailer{
-		Confirm:    makeURLWithParams(config.MakeURLReport, "/mailer/%s/confirm"),
-		Contribute: makeURLWithParams(config.MakeURLReport, "/mailer/%s/contribute"),
-		Evidence:   makeURLWithParams(config.MakeURLReport, "/mailer/%s/evidence"),
-		Root:       makeURLWithParams(config.MakeURLReport, "/mailer/%s"),
-		Schedule:   makeURLWithParams(config.MakeURLReport, "/mailer/%s/schedule"),
-		Update:     makeURLWithParams(config.MakeURLReport, "/mailer/%s/update"),
+		AppointmentConfirmed: makeURLWithParams(config.MakeURLReport, "/mailer/%s/appointment-confirmed"),
+		Confirm:              makeURLWithParams(config.MakeURLReport, "/mailer/%s/confirm"),
+		Contribute:           makeURLWithParams(config.MakeURLReport, "/mailer/%s/contribute"),
+		Evidence:             makeURLWithParams(config.MakeURLReport, "/mailer/%s/evidence"),
+		Root:                 makeURLWithParams(config.MakeURLReport, "/mailer/%s"),
+		Schedule:             makeURLWithParams(config.MakeURLReport, "/mailer/%s/schedule"),
+		Update:               makeURLWithParams(config.MakeURLReport, "/mailer/%s/update"),
 	}
 }
 

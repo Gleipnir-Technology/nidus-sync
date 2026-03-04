@@ -33,7 +33,7 @@ func Router() chi.Router {
 	r.Get("/email/unsubscribe/report/{report_id}", getEmailReportUnsubscribe)
 	r.Get("/image/{uuid}", getImageByUUID)
 	r.Get("/mailer/{public_id}", html.MakeGet(getMailer))
-	r.Get("/mailer/{public_id}/confirm", html.MakeGet(getMailerConfirm))
+	r.Post("/mailer/{public_id}/confirm", html.MakePost(postMailerConfirm))
 	r.Get("/mailer/{public_id}/contribute", html.MakeGet(getMailerContribute))
 	r.Get("/mailer/{public_id}/evidence", html.MakeGet(getMailerEvidence))
 	r.Get("/mailer/{public_id}/schedule", html.MakeGet(getMailerSchedule))

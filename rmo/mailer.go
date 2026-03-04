@@ -134,3 +134,14 @@ func getMailerUpdate(ctx context.Context, r *http.Request) (*html.Response[conte
 		},
 	), nil
 }
+
+type formMailerConfirm struct{}
+
+func postMailerConfirm(ctx context.Context, r *http.Request, form formMailerConfirm) (string, *nhttp.ErrorWithStatus) {
+	log.Info().Msg("Fake confirm location")
+	public_id := chi.URLParam(r, "public_id")
+	if public_id == "" {
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
+	}
+	return config.MakeURLReport("/mailer/%s/evidence", public_id), nil
+}
