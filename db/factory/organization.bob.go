@@ -112,7 +112,6 @@ type organizationR struct {
 	Zones2s                                     []*organizationRZones2sR
 	FieldseekerSyncs                            []*organizationRFieldseekerSyncsR
 	Files                                       []*organizationRFilesR
-	FlyoverAerialServices                       []*organizationRFlyoverAerialServicesR
 	Pools                                       []*organizationRPoolsR
 	H3Aggregations                              []*organizationRH3AggregationsR
 	NoteAudios                                  []*organizationRNoteAudiosR
@@ -260,10 +259,6 @@ type organizationRFieldseekerSyncsR struct {
 type organizationRFilesR struct {
 	number int
 	o      *FileuploadFileTemplate
-}
-type organizationRFlyoverAerialServicesR struct {
-	number int
-	o      *FileuploadFlyoverAerialServiceTemplate
 }
 type organizationRPoolsR struct {
 	number int
@@ -752,19 +747,6 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			rel = append(rel, related...)
 		}
 		o.R.Files = rel
-	}
-
-	if t.r.FlyoverAerialServices != nil {
-		rel := models.FileuploadFlyoverAerialServiceSlice{}
-		for _, r := range t.r.FlyoverAerialServices {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.OrganizationID = o.ID // h2
-				rel.R.Organization = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.FlyoverAerialServices = rel
 	}
 
 	if t.r.Pools != nil {
@@ -1809,26 +1791,6 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
-	isFlyoverAerialServicesDone, _ := organizationRelFlyoverAerialServicesCtx.Value(ctx)
-	if !isFlyoverAerialServicesDone && o.r.FlyoverAerialServices != nil {
-		ctx = organizationRelFlyoverAerialServicesCtx.WithValue(ctx, true)
-		for _, r := range o.r.FlyoverAerialServices {
-			if r.o.alreadyPersisted {
-				m.R.FlyoverAerialServices = append(m.R.FlyoverAerialServices, r.o.Build())
-			} else {
-				rel34, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachFlyoverAerialServices(ctx, exec, rel34...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
 	isPoolsDone, _ := organizationRelPoolsCtx.Value(ctx)
 	if !isPoolsDone && o.r.Pools != nil {
 		ctx = organizationRelPoolsCtx.WithValue(ctx, true)
@@ -1836,12 +1798,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Pools = append(m.R.Pools, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel34, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPools(ctx, exec, rel35...)
+				err = m.AttachPools(ctx, exec, rel34...)
 				if err != nil {
 					return err
 				}
@@ -1856,12 +1818,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.H3Aggregations = append(m.R.H3Aggregations, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachH3Aggregations(ctx, exec, rel36...)
+				err = m.AttachH3Aggregations(ctx, exec, rel35...)
 				if err != nil {
 					return err
 				}
@@ -1876,12 +1838,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel37, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel37...)
+				err = m.AttachNoteAudios(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1896,12 +1858,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel38, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel38...)
+				err = m.AttachNoteImages(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1915,12 +1877,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.ArcgisAccountAccount.o.alreadyPersisted {
 			m.R.ArcgisAccountAccount = o.r.ArcgisAccountAccount.o.Build()
 		} else {
-			var rel39 *models.ArcgisAccount
-			rel39, err = o.r.ArcgisAccountAccount.o.Create(ctx, exec)
+			var rel38 *models.ArcgisAccount
+			rel38, err = o.r.ArcgisAccountAccount.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachArcgisAccountAccount(ctx, exec, rel39)
+			err = m.AttachArcgisAccountAccount(ctx, exec, rel38)
 			if err != nil {
 				return err
 			}
@@ -1934,12 +1896,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.FieldseekerServiceFeatureItemServiceFeature.o.alreadyPersisted {
 			m.R.FieldseekerServiceFeatureItemServiceFeature = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Build()
 		} else {
-			var rel40 *models.ArcgisServiceFeature
-			rel40, err = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Create(ctx, exec)
+			var rel39 *models.ArcgisServiceFeature
+			rel39, err = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachFieldseekerServiceFeatureItemServiceFeature(ctx, exec, rel40)
+			err = m.AttachFieldseekerServiceFeatureItemServiceFeature(ctx, exec, rel39)
 			if err != nil {
 				return err
 			}
@@ -1954,12 +1916,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel41, err := r.o.CreateMany(ctx, exec, r.number)
+				rel40, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel41...)
+				err = m.AttachNuisances(ctx, exec, rel40...)
 				if err != nil {
 					return err
 				}
@@ -1974,12 +1936,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel42, err := r.o.CreateMany(ctx, exec, r.number)
+				rel41, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel42...)
+				err = m.AttachPublicreportPool(ctx, exec, rel41...)
 				if err != nil {
 					return err
 				}
@@ -1994,12 +1956,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel43, err := r.o.CreateMany(ctx, exec, r.number)
+				rel42, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel43...)
+				err = m.AttachQuicks(ctx, exec, rel42...)
 				if err != nil {
 					return err
 				}
@@ -2014,12 +1976,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel44, err := r.o.CreateMany(ctx, exec, r.number)
+				rel43, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel44...)
+				err = m.AttachUser(ctx, exec, rel43...)
 				if err != nil {
 					return err
 				}
@@ -5514,54 +5476,6 @@ func (m organizationMods) AddExistingFiles(existingModels ...*models.FileuploadF
 func (m organizationMods) WithoutFiles() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.Files = nil
-	})
-}
-
-func (m organizationMods) WithFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.FlyoverAerialServices = []*organizationRFlyoverAerialServicesR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m organizationMods) WithNewFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.WithFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m organizationMods) AddFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.FlyoverAerialServices = append(o.r.FlyoverAerialServices, &organizationRFlyoverAerialServicesR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m organizationMods) AddNewFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.AddFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m organizationMods) AddExistingFlyoverAerialServices(existingModels ...*models.FileuploadFlyoverAerialService) OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		for _, em := range existingModels {
-			o.r.FlyoverAerialServices = append(o.r.FlyoverAerialServices, &organizationRFlyoverAerialServicesR{
-				o: o.f.FromExistingFileuploadFlyoverAerialService(em),
-			})
-		}
-	})
-}
-
-func (m organizationMods) WithoutFlyoverAerialServices() OrganizationMod {
-	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
-		o.r.FlyoverAerialServices = nil
 	})
 }
 

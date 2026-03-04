@@ -49,10 +49,9 @@ type FileuploadCSVSQuery = *psql.ViewQuery[*FileuploadCSV, FileuploadCSVSlice]
 
 // fileuploadCSVR is where relationships are stored.
 type fileuploadCSVR struct {
-	File                         *FileuploadFile                     // fileupload.csv.csv_file_id_fkey
-	CSVFileErrorCSVS             FileuploadErrorCSVSlice             // fileupload.error_csv.error_csv_csv_file_id_fkey
-	CSVFileFlyoverAerialServices FileuploadFlyoverAerialServiceSlice // fileupload.flyover_aerial_service.flyover_aerial_service_csv_file_fkey
-	CSVFilePools                 FileuploadPoolSlice                 // fileupload.pool.pool_csv_file_fkey
+	File             *FileuploadFile         // fileupload.csv.csv_file_id_fkey
+	CSVFileErrorCSVS FileuploadErrorCSVSlice // fileupload.error_csv.error_csv_csv_file_id_fkey
+	CSVFilePools     FileuploadPoolSlice     // fileupload.pool.pool_csv_file_fkey
 }
 
 func buildFileuploadCSVColumns(alias string) fileuploadCSVColumns {
@@ -471,30 +470,6 @@ func (os FileuploadCSVSlice) CSVFileErrorCSVS(mods ...bob.Mod[*dialect.SelectQue
 	)...)
 }
 
-// CSVFileFlyoverAerialServices starts a query for related objects on fileupload.flyover_aerial_service
-func (o *FileuploadCSV) CSVFileFlyoverAerialServices(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFlyoverAerialServicesQuery {
-	return FileuploadFlyoverAerialServices.Query(append(mods,
-		sm.Where(FileuploadFlyoverAerialServices.Columns.CSVFile.EQ(psql.Arg(o.FileID))),
-	)...)
-}
-
-func (os FileuploadCSVSlice) CSVFileFlyoverAerialServices(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFlyoverAerialServicesQuery {
-	pkFileID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkFileID = append(pkFileID, o.FileID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkFileID), "integer[]")),
-	))
-
-	return FileuploadFlyoverAerialServices.Query(append(mods,
-		sm.Where(psql.Group(FileuploadFlyoverAerialServices.Columns.CSVFile).OP("IN", PKArgExpr)),
-	)...)
-}
-
 // CSVFilePools starts a query for related objects on fileupload.pool
 func (o *FileuploadCSV) CSVFilePools(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadPoolsQuery {
 	return FileuploadPools.Query(append(mods,
@@ -635,74 +610,6 @@ func (fileuploadCSV0 *FileuploadCSV) AttachCSVFileErrorCSVS(ctx context.Context,
 	return nil
 }
 
-func insertFileuploadCSVCSVFileFlyoverAerialServices0(ctx context.Context, exec bob.Executor, fileuploadFlyoverAerialServices1 []*FileuploadFlyoverAerialServiceSetter, fileuploadCSV0 *FileuploadCSV) (FileuploadFlyoverAerialServiceSlice, error) {
-	for i := range fileuploadFlyoverAerialServices1 {
-		fileuploadFlyoverAerialServices1[i].CSVFile = omit.From(fileuploadCSV0.FileID)
-	}
-
-	ret, err := FileuploadFlyoverAerialServices.Insert(bob.ToMods(fileuploadFlyoverAerialServices1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertFileuploadCSVCSVFileFlyoverAerialServices0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachFileuploadCSVCSVFileFlyoverAerialServices0(ctx context.Context, exec bob.Executor, count int, fileuploadFlyoverAerialServices1 FileuploadFlyoverAerialServiceSlice, fileuploadCSV0 *FileuploadCSV) (FileuploadFlyoverAerialServiceSlice, error) {
-	setter := &FileuploadFlyoverAerialServiceSetter{
-		CSVFile: omit.From(fileuploadCSV0.FileID),
-	}
-
-	err := fileuploadFlyoverAerialServices1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachFileuploadCSVCSVFileFlyoverAerialServices0: %w", err)
-	}
-
-	return fileuploadFlyoverAerialServices1, nil
-}
-
-func (fileuploadCSV0 *FileuploadCSV) InsertCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, related ...*FileuploadFlyoverAerialServiceSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	fileuploadFlyoverAerialServices1, err := insertFileuploadCSVCSVFileFlyoverAerialServices0(ctx, exec, related, fileuploadCSV0)
-	if err != nil {
-		return err
-	}
-
-	fileuploadCSV0.R.CSVFileFlyoverAerialServices = append(fileuploadCSV0.R.CSVFileFlyoverAerialServices, fileuploadFlyoverAerialServices1...)
-
-	for _, rel := range fileuploadFlyoverAerialServices1 {
-		rel.R.CSVFileCSV = fileuploadCSV0
-	}
-	return nil
-}
-
-func (fileuploadCSV0 *FileuploadCSV) AttachCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, related ...*FileuploadFlyoverAerialService) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	fileuploadFlyoverAerialServices1 := FileuploadFlyoverAerialServiceSlice(related)
-
-	_, err = attachFileuploadCSVCSVFileFlyoverAerialServices0(ctx, exec, len(related), fileuploadFlyoverAerialServices1, fileuploadCSV0)
-	if err != nil {
-		return err
-	}
-
-	fileuploadCSV0.R.CSVFileFlyoverAerialServices = append(fileuploadCSV0.R.CSVFileFlyoverAerialServices, fileuploadFlyoverAerialServices1...)
-
-	for _, rel := range related {
-		rel.R.CSVFileCSV = fileuploadCSV0
-	}
-
-	return nil
-}
-
 func insertFileuploadCSVCSVFilePools0(ctx context.Context, exec bob.Executor, fileuploadPools1 []*FileuploadPoolSetter, fileuploadCSV0 *FileuploadCSV) (FileuploadPoolSlice, error) {
 	for i := range fileuploadPools1 {
 		fileuploadPools1[i].CSVFile = omit.From(fileuploadCSV0.FileID)
@@ -823,20 +730,6 @@ func (o *FileuploadCSV) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "CSVFileFlyoverAerialServices":
-		rels, ok := retrieved.(FileuploadFlyoverAerialServiceSlice)
-		if !ok {
-			return fmt.Errorf("fileuploadCSV cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.CSVFileFlyoverAerialServices = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.CSVFileCSV = o
-			}
-		}
-		return nil
 	case "CSVFilePools":
 		rels, ok := retrieved.(FileuploadPoolSlice)
 		if !ok {
@@ -879,10 +772,9 @@ func buildFileuploadCSVPreloader() fileuploadCSVPreloader {
 }
 
 type fileuploadCSVThenLoader[Q orm.Loadable] struct {
-	File                         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CSVFileErrorCSVS             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CSVFileFlyoverAerialServices func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CSVFilePools                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	File             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSVFilePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadCSVThenLoader[Q orm.Loadable]() fileuploadCSVThenLoader[Q] {
@@ -891,9 +783,6 @@ func buildFileuploadCSVThenLoader[Q orm.Loadable]() fileuploadCSVThenLoader[Q] {
 	}
 	type CSVFileErrorCSVSLoadInterface interface {
 		LoadCSVFileErrorCSVS(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CSVFileFlyoverAerialServicesLoadInterface interface {
-		LoadCSVFileFlyoverAerialServices(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CSVFilePoolsLoadInterface interface {
 		LoadCSVFilePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -910,12 +799,6 @@ func buildFileuploadCSVThenLoader[Q orm.Loadable]() fileuploadCSVThenLoader[Q] {
 			"CSVFileErrorCSVS",
 			func(ctx context.Context, exec bob.Executor, retrieved CSVFileErrorCSVSLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCSVFileErrorCSVS(ctx, exec, mods...)
-			},
-		),
-		CSVFileFlyoverAerialServices: thenLoadBuilder[Q](
-			"CSVFileFlyoverAerialServices",
-			func(ctx context.Context, exec bob.Executor, retrieved CSVFileFlyoverAerialServicesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCSVFileFlyoverAerialServices(ctx, exec, mods...)
 			},
 		),
 		CSVFilePools: thenLoadBuilder[Q](
@@ -1040,67 +923,6 @@ func (os FileuploadCSVSlice) LoadCSVFileErrorCSVS(ctx context.Context, exec bob.
 	return nil
 }
 
-// LoadCSVFileFlyoverAerialServices loads the fileuploadCSV's CSVFileFlyoverAerialServices into the .R struct
-func (o *FileuploadCSV) LoadCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.CSVFileFlyoverAerialServices = nil
-
-	related, err := o.CSVFileFlyoverAerialServices(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.CSVFileCSV = o
-	}
-
-	o.R.CSVFileFlyoverAerialServices = related
-	return nil
-}
-
-// LoadCSVFileFlyoverAerialServices loads the fileuploadCSV's CSVFileFlyoverAerialServices into the .R struct
-func (os FileuploadCSVSlice) LoadCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	fileuploadFlyoverAerialServices, err := os.CSVFileFlyoverAerialServices(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.CSVFileFlyoverAerialServices = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range fileuploadFlyoverAerialServices {
-
-			if !(o.FileID == rel.CSVFile) {
-				continue
-			}
-
-			rel.R.CSVFileCSV = o
-
-			o.R.CSVFileFlyoverAerialServices = append(o.R.CSVFileFlyoverAerialServices, rel)
-		}
-	}
-
-	return nil
-}
-
 // LoadCSVFilePools loads the fileuploadCSV's CSVFilePools into the .R struct
 func (o *FileuploadCSV) LoadCSVFilePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -1164,9 +986,8 @@ func (os FileuploadCSVSlice) LoadCSVFilePools(ctx context.Context, exec bob.Exec
 
 // fileuploadCSVC is where relationship counts are stored.
 type fileuploadCSVC struct {
-	CSVFileErrorCSVS             *int64
-	CSVFileFlyoverAerialServices *int64
-	CSVFilePools                 *int64
+	CSVFileErrorCSVS *int64
+	CSVFilePools     *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1178,8 +999,6 @@ func (o *FileuploadCSV) PreloadCount(name string, count int64) error {
 	switch name {
 	case "CSVFileErrorCSVS":
 		o.C.CSVFileErrorCSVS = &count
-	case "CSVFileFlyoverAerialServices":
-		o.C.CSVFileFlyoverAerialServices = &count
 	case "CSVFilePools":
 		o.C.CSVFilePools = &count
 	}
@@ -1187,9 +1006,8 @@ func (o *FileuploadCSV) PreloadCount(name string, count int64) error {
 }
 
 type fileuploadCSVCountPreloader struct {
-	CSVFileErrorCSVS             func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CSVFileFlyoverAerialServices func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CSVFilePools                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	CSVFilePools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildFileuploadCSVCountPreloader() fileuploadCSVCountPreloader {
@@ -1206,23 +1024,6 @@ func buildFileuploadCSVCountPreloader() fileuploadCSVCountPreloader {
 
 					sm.From(FileuploadErrorCSVS.Name()),
 					sm.Where(psql.Quote(FileuploadErrorCSVS.Alias(), "csv_file_id").EQ(psql.Quote(parent, "file_id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CSVFileFlyoverAerialServices: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*FileuploadCSV]("CSVFileFlyoverAerialServices", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = FileuploadCSVS.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FileuploadFlyoverAerialServices.Name()),
-					sm.Where(psql.Quote(FileuploadFlyoverAerialServices.Alias(), "csv_file").EQ(psql.Quote(parent, "file_id"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -1249,17 +1050,13 @@ func buildFileuploadCSVCountPreloader() fileuploadCSVCountPreloader {
 }
 
 type fileuploadCSVCountThenLoader[Q orm.Loadable] struct {
-	CSVFileErrorCSVS             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CSVFileFlyoverAerialServices func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CSVFilePools                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSVFileErrorCSVS func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CSVFilePools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFileuploadCSVCountThenLoader[Q orm.Loadable]() fileuploadCSVCountThenLoader[Q] {
 	type CSVFileErrorCSVSCountInterface interface {
 		LoadCountCSVFileErrorCSVS(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CSVFileFlyoverAerialServicesCountInterface interface {
-		LoadCountCSVFileFlyoverAerialServices(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CSVFilePoolsCountInterface interface {
 		LoadCountCSVFilePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1270,12 +1067,6 @@ func buildFileuploadCSVCountThenLoader[Q orm.Loadable]() fileuploadCSVCountThenL
 			"CSVFileErrorCSVS",
 			func(ctx context.Context, exec bob.Executor, retrieved CSVFileErrorCSVSCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountCSVFileErrorCSVS(ctx, exec, mods...)
-			},
-		),
-		CSVFileFlyoverAerialServices: countThenLoadBuilder[Q](
-			"CSVFileFlyoverAerialServices",
-			func(ctx context.Context, exec bob.Executor, retrieved CSVFileFlyoverAerialServicesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCSVFileFlyoverAerialServices(ctx, exec, mods...)
 			},
 		),
 		CSVFilePools: countThenLoadBuilder[Q](
@@ -1317,36 +1108,6 @@ func (os FileuploadCSVSlice) LoadCountCSVFileErrorCSVS(ctx context.Context, exec
 	return nil
 }
 
-// LoadCountCSVFileFlyoverAerialServices loads the count of CSVFileFlyoverAerialServices into the C struct
-func (o *FileuploadCSV) LoadCountCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CSVFileFlyoverAerialServices(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CSVFileFlyoverAerialServices = &count
-	return nil
-}
-
-// LoadCountCSVFileFlyoverAerialServices loads the count of CSVFileFlyoverAerialServices for a slice
-func (os FileuploadCSVSlice) LoadCountCSVFileFlyoverAerialServices(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCSVFileFlyoverAerialServices(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // LoadCountCSVFilePools loads the count of CSVFilePools into the C struct
 func (o *FileuploadCSV) LoadCountCSVFilePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -1378,11 +1139,10 @@ func (os FileuploadCSVSlice) LoadCountCSVFilePools(ctx context.Context, exec bob
 }
 
 type fileuploadCSVJoins[Q dialect.Joinable] struct {
-	typ                          string
-	File                         modAs[Q, fileuploadFileColumns]
-	CSVFileErrorCSVS             modAs[Q, fileuploadErrorCSVColumns]
-	CSVFileFlyoverAerialServices modAs[Q, fileuploadFlyoverAerialServiceColumns]
-	CSVFilePools                 modAs[Q, fileuploadPoolColumns]
+	typ              string
+	File             modAs[Q, fileuploadFileColumns]
+	CSVFileErrorCSVS modAs[Q, fileuploadErrorCSVColumns]
+	CSVFilePools     modAs[Q, fileuploadPoolColumns]
 }
 
 func (j fileuploadCSVJoins[Q]) aliasedAs(alias string) fileuploadCSVJoins[Q] {
@@ -1414,20 +1174,6 @@ func buildFileuploadCSVJoins[Q dialect.Joinable](cols fileuploadCSVColumns, typ 
 				{
 					mods = append(mods, dialect.Join[Q](typ, FileuploadErrorCSVS.Name().As(to.Alias())).On(
 						to.CSVFileID.EQ(cols.FileID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CSVFileFlyoverAerialServices: modAs[Q, fileuploadFlyoverAerialServiceColumns]{
-			c: FileuploadFlyoverAerialServices.Columns,
-			f: func(to fileuploadFlyoverAerialServiceColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFlyoverAerialServices.Name().As(to.Alias())).On(
-						to.CSVFile.EQ(cols.FileID),
 					))
 				}
 

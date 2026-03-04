@@ -29,37 +29,37 @@ import (
 type headerPoolEnum int
 
 const (
-	headerAddressCity = iota
-	headerAddressPostalCode
-	headerAddressStreet
-	headerCondition
-	headerNotes
-	headerPropertyOwnerName
-	headerPropertyOwnerPhone
-	headerResidentOwned
-	headerResidentPhone
-	headerTag
+	headerPoolAddressPostalCode headerPoolEnum = iota
+	headerPoolAddressRegion
+	headerPoolAddressStreet
+	headerPoolCondition
+	headerPoolNotes
+	headerPoolPropertyOwnerName
+	headerPoolPropertyOwnerPhone
+	headerPoolResidentOwned
+	headerPoolResidentPhone
+	headerPoolTag
 )
 
 func (e headerPoolEnum) String() string {
 	switch e {
-	case headerAddressCity:
-		return "City"
-	case headerAddressPostalCode:
+	case headerPoolAddressPostalCode:
 		return "Postal Code"
-	case headerAddressStreet:
+	case headerPoolAddressRegion:
+		return "City"
+	case headerPoolAddressStreet:
 		return "Street Address"
-	case headerCondition:
+	case headerPoolCondition:
 		return "Condition"
-	case headerNotes:
+	case headerPoolNotes:
 		return "Notes"
-	case headerPropertyOwnerName:
+	case headerPoolPropertyOwnerName:
 		return "Property Owner Name"
-	case headerPropertyOwnerPhone:
+	case headerPoolPropertyOwnerPhone:
 		return "Property Owner Phone"
-	case headerResidentOwned:
+	case headerPoolResidentOwned:
 		return "Resident Owned"
-	case headerResidentPhone:
+	case headerPoolResidentPhone:
 		return "Resident Phone"
 	default:
 		return "bad programmer"
@@ -139,13 +139,13 @@ func geocode(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jo
 		Logger()
 	req := stadia.StructuredGeocodeRequest{
 		Address:    &pool.AddressStreet,
-		Locality:   &pool.AddressCity,
+		Locality:   &pool.AddressLocality,
 		PostalCode: &pool.AddressPostalCode,
 	}
 	maybeAddServiceArea(&req, job.org)
 	resp, err := client.StructuredGeocode(ctx, req)
 	if err != nil {
-		return fmt.Errorf("client structured geocode failure on %s, %s, %s: %w", pool.AddressStreet, pool.AddressCity, pool.AddressPostalCode, err)
+		return fmt.Errorf("client structured geocode failure on %s, %s, %s: %w", pool.AddressStreet, pool.AddressLocality, pool.AddressPostalCode, err)
 	}
 	if len(resp.Features) > 1 {
 		sublog.Warn().Int("len", len(resp.Features)).Msg("More than one feature")
@@ -206,8 +206,10 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 		tags := make(map[string]string, 0)
 		setter := models.FileuploadPoolSetter{
 			// required fields
-			//AddressCity: omit.From(),
+			//AddressNumber: omit.From(),
+			//AddressLocality: omit.From(),
 			//AddressPostalCode: omit.From(),
+			//AddressRegion: omit.From(),
 			//AddressStreet: omit.From(),
 			Committed: omit.From(false),
 			Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
@@ -235,13 +237,20 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 				continue
 			}
 			switch hdr_t {
-			case headerAddressCity:
-				setter.AddressCity = omit.From(col)
-			case headerAddressPostalCode:
+			case headerPoolAddressRegion:
+				setter.AddressRegion = omit.From(col)
+			case headerPoolAddressPostalCode:
 				setter.AddressPostalCode = omit.From(col)
-			case headerAddressStreet:
-				setter.AddressStreet = omit.From(col)
-			case headerCondition:
+			case headerPoolAddressStreet:
+				// This type of spreadsheet normally has '123 Main Str'
+				parts := strings.SplitN(col, " ", 2)
+				if len(parts) != 2 {
+					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a house number and street. It needs to be in the form '123 main'", col))
+					continue
+				}
+				setter.AddressNumber = omit.From(parts[0])
+				setter.AddressStreet = omit.From(parts[1])
+			case headerPoolCondition:
 				var condition enums.FileuploadPoolconditiontype
 				col_l := strings.ToLower(col)
 				col_translated := col_l
@@ -256,11 +265,11 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 					continue
 				}
 				setter.Condition = omit.From(condition)
-			case headerNotes:
+			case headerPoolNotes:
 				setter.Notes = omit.From(col)
-			case headerPropertyOwnerName:
+			case headerPoolPropertyOwnerName:
 				setter.PropertyOwnerName = omit.From(col)
-			case headerPropertyOwnerPhone:
+			case headerPoolPropertyOwnerPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
@@ -268,14 +277,14 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 				}
 				text.EnsureInDB(ctx, txn, *phone)
 				setter.PropertyOwnerPhoneE164 = omitnull.From(text.PhoneString(*phone))
-			case headerResidentOwned:
+			case headerPoolResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", col))
 					continue
 				}
 				setter.ResidentOwned = omitnull.From(boolValue)
-			case headerResidentPhone:
+			case headerPoolResidentPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
@@ -283,7 +292,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 				}
 				text.EnsureInDB(ctx, txn, *phone)
 				setter.ResidentPhoneE164 = omitnull.From(text.PhoneString(*phone))
-			case headerTag:
+			case headerPoolTag:
 				tags[header_names[i]] = col
 			}
 
@@ -344,29 +353,29 @@ func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 		var type_ headerPoolEnum
 		switch hl {
 		case "city":
-			type_ = headerAddressCity
+			type_ = headerPoolAddressRegion
 		case "zip":
 		case "postal code":
-			type_ = headerAddressPostalCode
+			type_ = headerPoolAddressPostalCode
 		case "street address":
-			type_ = headerAddressStreet
+			type_ = headerPoolAddressStreet
 		case "condition":
 		case "pool condition":
-			type_ = headerCondition
+			type_ = headerPoolCondition
 		case "notes":
-			type_ = headerNotes
+			type_ = headerPoolNotes
 		case "property owner":
 		case "property owner name":
-			type_ = headerPropertyOwnerName
+			type_ = headerPoolPropertyOwnerName
 		case "property owner phone":
-			type_ = headerPropertyOwnerPhone
+			type_ = headerPoolPropertyOwnerPhone
 		case "resident owned":
-			type_ = headerResidentOwned
+			type_ = headerPoolResidentOwned
 		case "resident phone":
 		case "resident phone number":
-			type_ = headerResidentPhone
+			type_ = headerPoolResidentPhone
 		default:
-			type_ = headerTag
+			type_ = headerPoolTag
 		}
 		result_enums = append(result_enums, type_)
 		result_names = append(result_names, hl)
@@ -376,7 +385,7 @@ func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 }
 func missingRequiredHeaders(headers []headerPoolEnum) []headerPoolEnum {
 	results := make([]headerPoolEnum, 0)
-	for _, rh := range []headerPoolEnum{headerAddressCity, headerAddressPostalCode, headerAddressStreet} {
+	for _, rh := range []headerPoolEnum{headerPoolAddressRegion, headerPoolAddressPostalCode, headerPoolAddressStreet} {
 		present := false
 		for _, h := range headers {
 			if h == rh {

@@ -63,7 +63,6 @@ type userR struct {
 	PublicUserUser                  []*userRPublicUserUserR
 	CreatorComplianceReportRequests []*userRCreatorComplianceReportRequestsR
 	CreatorFiles                    []*userRCreatorFilesR
-	CreatorFlyoverAerialServices    []*userRCreatorFlyoverAerialServicesR
 	FileuploadPool                  []*userRFileuploadPoolR
 	CreatorNoteAudios               []*userRCreatorNoteAudiosR
 	DeletorNoteAudios               []*userRDeletorNoteAudiosR
@@ -91,10 +90,6 @@ type userRCreatorComplianceReportRequestsR struct {
 type userRCreatorFilesR struct {
 	number int
 	o      *FileuploadFileTemplate
-}
-type userRCreatorFlyoverAerialServicesR struct {
-	number int
-	o      *FileuploadFlyoverAerialServiceTemplate
 }
 type userRFileuploadPoolR struct {
 	number int
@@ -196,19 +191,6 @@ func (t UserTemplate) setModelRels(o *models.User) {
 			rel = append(rel, related...)
 		}
 		o.R.CreatorFiles = rel
-	}
-
-	if t.r.CreatorFlyoverAerialServices != nil {
-		rel := models.FileuploadFlyoverAerialServiceSlice{}
-		for _, r := range t.r.CreatorFlyoverAerialServices {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.CreatorID = o.ID // h2
-				rel.R.CreatorUser = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.CreatorFlyoverAerialServices = rel
 	}
 
 	if t.r.FileuploadPool != nil {
@@ -586,26 +568,6 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 		}
 	}
 
-	isCreatorFlyoverAerialServicesDone, _ := userRelCreatorFlyoverAerialServicesCtx.Value(ctx)
-	if !isCreatorFlyoverAerialServicesDone && o.r.CreatorFlyoverAerialServices != nil {
-		ctx = userRelCreatorFlyoverAerialServicesCtx.WithValue(ctx, true)
-		for _, r := range o.r.CreatorFlyoverAerialServices {
-			if r.o.alreadyPersisted {
-				m.R.CreatorFlyoverAerialServices = append(m.R.CreatorFlyoverAerialServices, r.o.Build())
-			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachCreatorFlyoverAerialServices(ctx, exec, rel4...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
 	isFileuploadPoolDone, _ := userRelFileuploadPoolCtx.Value(ctx)
 	if !isFileuploadPoolDone && o.r.FileuploadPool != nil {
 		ctx = userRelFileuploadPoolCtx.WithValue(ctx, true)
@@ -613,12 +575,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.FileuploadPool = append(m.R.FileuploadPool, r.o.Build())
 			} else {
-				rel5, err := r.o.CreateMany(ctx, exec, r.number)
+				rel4, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachFileuploadPool(ctx, exec, rel5...)
+				err = m.AttachFileuploadPool(ctx, exec, rel4...)
 				if err != nil {
 					return err
 				}
@@ -633,12 +595,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteAudios = append(m.R.CreatorNoteAudios, r.o.Build())
 			} else {
-				rel6, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteAudios(ctx, exec, rel6...)
+				err = m.AttachCreatorNoteAudios(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -653,12 +615,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteAudios = append(m.R.DeletorNoteAudios, r.o.Build())
 			} else {
-				rel7, err := r.o.CreateMany(ctx, exec, r.number)
+				rel6, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteAudios(ctx, exec, rel7...)
+				err = m.AttachDeletorNoteAudios(ctx, exec, rel6...)
 				if err != nil {
 					return err
 				}
@@ -673,12 +635,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorNoteImages = append(m.R.CreatorNoteImages, r.o.Build())
 			} else {
-				rel8, err := r.o.CreateMany(ctx, exec, r.number)
+				rel7, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorNoteImages(ctx, exec, rel8...)
+				err = m.AttachCreatorNoteImages(ctx, exec, rel7...)
 				if err != nil {
 					return err
 				}
@@ -693,12 +655,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.DeletorNoteImages = append(m.R.DeletorNoteImages, r.o.Build())
 			} else {
-				rel9, err := r.o.CreateMany(ctx, exec, r.number)
+				rel8, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachDeletorNoteImages(ctx, exec, rel9...)
+				err = m.AttachDeletorNoteImages(ctx, exec, rel8...)
 				if err != nil {
 					return err
 				}
@@ -713,12 +675,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.UserNotifications = append(m.R.UserNotifications, r.o.Build())
 			} else {
-				rel10, err := r.o.CreateMany(ctx, exec, r.number)
+				rel9, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUserNotifications(ctx, exec, rel10...)
+				err = m.AttachUserNotifications(ctx, exec, rel9...)
 				if err != nil {
 					return err
 				}
@@ -733,12 +695,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorPools = append(m.R.CreatorPools, r.o.Build())
 			} else {
-				rel11, err := r.o.CreateMany(ctx, exec, r.number)
+				rel10, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorPools(ctx, exec, rel11...)
+				err = m.AttachCreatorPools(ctx, exec, rel10...)
 				if err != nil {
 					return err
 				}
@@ -753,12 +715,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorResidents = append(m.R.CreatorResidents, r.o.Build())
 			} else {
-				rel12, err := r.o.CreateMany(ctx, exec, r.number)
+				rel11, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorResidents(ctx, exec, rel12...)
+				err = m.AttachCreatorResidents(ctx, exec, rel11...)
 				if err != nil {
 					return err
 				}
@@ -773,12 +735,12 @@ func (o *UserTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 			if r.o.alreadyPersisted {
 				m.R.CreatorSites = append(m.R.CreatorSites, r.o.Build())
 			} else {
-				rel13, err := r.o.CreateMany(ctx, exec, r.number)
+				rel12, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCreatorSites(ctx, exec, rel13...)
+				err = m.AttachCreatorSites(ctx, exec, rel12...)
 				if err != nil {
 					return err
 				}
@@ -800,25 +762,25 @@ func (o *UserTemplate) Create(ctx context.Context, exec bob.Executor) (*models.U
 		UserMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel14 *models.Organization
+	var rel13 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel14 = o.r.Organization.o.Build()
+		rel13 = o.r.Organization.o.Build()
 	} else {
-		rel14, err = o.r.Organization.o.Create(ctx, exec)
+		rel13, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel14.ID)
+	opt.OrganizationID = omit.From(rel13.ID)
 
 	m, err := models.Users.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.Organization = rel14
+	m.R.Organization = rel13
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -1681,54 +1643,6 @@ func (m userMods) AddExistingCreatorFiles(existingModels ...*models.FileuploadFi
 func (m userMods) WithoutCreatorFiles() UserMod {
 	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
 		o.r.CreatorFiles = nil
-	})
-}
-
-func (m userMods) WithCreatorFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorFlyoverAerialServices = []*userRCreatorFlyoverAerialServicesR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m userMods) WithNewCreatorFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.WithCreatorFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddCreatorFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorFlyoverAerialServices = append(o.r.CreatorFlyoverAerialServices, &userRCreatorFlyoverAerialServicesR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m userMods) AddNewCreatorFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.AddCreatorFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m userMods) AddExistingCreatorFlyoverAerialServices(existingModels ...*models.FileuploadFlyoverAerialService) UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		for _, em := range existingModels {
-			o.r.CreatorFlyoverAerialServices = append(o.r.CreatorFlyoverAerialServices, &userRCreatorFlyoverAerialServicesR{
-				o: o.f.FromExistingFileuploadFlyoverAerialService(em),
-			})
-		}
-	})
-}
-
-func (m userMods) WithoutCreatorFlyoverAerialServices() UserMod {
-	return UserModFunc(func(ctx context.Context, o *UserTemplate) {
-		o.r.CreatorFlyoverAerialServices = nil
 	})
 }
 

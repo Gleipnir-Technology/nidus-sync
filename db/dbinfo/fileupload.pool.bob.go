@@ -15,15 +15,6 @@ var FileuploadPools = Table[
 	Schema: "fileupload",
 	Name:   "pool",
 	Columns: fileuploadPoolColumns{
-		AddressCity: column{
-			Name:      "address_city",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		AddressPostalCode: column{
 			Name:      "address_postal_code",
 			DBType:    "text",
@@ -213,6 +204,33 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressNumber: column{
+			Name:      "address_number",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressLocality: column{
+			Name:      "address_locality",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		AddressRegion: column{
+			Name:      "address_region",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fileuploadPoolIndexes{
 		PoolPkey: index{
@@ -290,7 +308,6 @@ var FileuploadPools = Table[
 }
 
 type fileuploadPoolColumns struct {
-	AddressCity            column
 	AddressPostalCode      column
 	AddressStreet          column
 	Committed              column
@@ -312,11 +329,14 @@ type fileuploadPoolColumns struct {
 	ResidentPhoneE164      column
 	LineNumber             column
 	Tags                   column
+	AddressNumber          column
+	AddressLocality        column
+	AddressRegion          column
 }
 
 func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressCity, c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags,
+		c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.OrganizationID, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags, c.AddressNumber, c.AddressLocality, c.AddressRegion,
 	}
 }
 

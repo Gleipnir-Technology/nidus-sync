@@ -50,10 +50,9 @@ type FileuploadCSVTemplate struct {
 }
 
 type fileuploadCSVR struct {
-	File                         *fileuploadCSVRFileR
-	CSVFileErrorCSVS             []*fileuploadCSVRCSVFileErrorCSVSR
-	CSVFileFlyoverAerialServices []*fileuploadCSVRCSVFileFlyoverAerialServicesR
-	CSVFilePools                 []*fileuploadCSVRCSVFilePoolsR
+	File             *fileuploadCSVRFileR
+	CSVFileErrorCSVS []*fileuploadCSVRCSVFileErrorCSVSR
+	CSVFilePools     []*fileuploadCSVRCSVFilePoolsR
 }
 
 type fileuploadCSVRFileR struct {
@@ -62,10 +61,6 @@ type fileuploadCSVRFileR struct {
 type fileuploadCSVRCSVFileErrorCSVSR struct {
 	number int
 	o      *FileuploadErrorCSVTemplate
-}
-type fileuploadCSVRCSVFileFlyoverAerialServicesR struct {
-	number int
-	o      *FileuploadFlyoverAerialServiceTemplate
 }
 type fileuploadCSVRCSVFilePoolsR struct {
 	number int
@@ -100,19 +95,6 @@ func (t FileuploadCSVTemplate) setModelRels(o *models.FileuploadCSV) {
 			rel = append(rel, related...)
 		}
 		o.R.CSVFileErrorCSVS = rel
-	}
-
-	if t.r.CSVFileFlyoverAerialServices != nil {
-		rel := models.FileuploadFlyoverAerialServiceSlice{}
-		for _, r := range t.r.CSVFileFlyoverAerialServices {
-			related := r.o.BuildMany(r.number)
-			for _, rel := range related {
-				rel.CSVFile = o.FileID // h2
-				rel.R.CSVFileCSV = o
-			}
-			rel = append(rel, related...)
-		}
-		o.R.CSVFileFlyoverAerialServices = rel
 	}
 
 	if t.r.CSVFilePools != nil {
@@ -244,26 +226,6 @@ func (o *FileuploadCSVTemplate) insertOptRels(ctx context.Context, exec bob.Exec
 		}
 	}
 
-	isCSVFileFlyoverAerialServicesDone, _ := fileuploadCSVRelCSVFileFlyoverAerialServicesCtx.Value(ctx)
-	if !isCSVFileFlyoverAerialServicesDone && o.r.CSVFileFlyoverAerialServices != nil {
-		ctx = fileuploadCSVRelCSVFileFlyoverAerialServicesCtx.WithValue(ctx, true)
-		for _, r := range o.r.CSVFileFlyoverAerialServices {
-			if r.o.alreadyPersisted {
-				m.R.CSVFileFlyoverAerialServices = append(m.R.CSVFileFlyoverAerialServices, r.o.Build())
-			} else {
-				rel2, err := r.o.CreateMany(ctx, exec, r.number)
-				if err != nil {
-					return err
-				}
-
-				err = m.AttachCSVFileFlyoverAerialServices(ctx, exec, rel2...)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
 	isCSVFilePoolsDone, _ := fileuploadCSVRelCSVFilePoolsCtx.Value(ctx)
 	if !isCSVFilePoolsDone && o.r.CSVFilePools != nil {
 		ctx = fileuploadCSVRelCSVFilePoolsCtx.WithValue(ctx, true)
@@ -271,12 +233,12 @@ func (o *FileuploadCSVTemplate) insertOptRels(ctx context.Context, exec bob.Exec
 			if r.o.alreadyPersisted {
 				m.R.CSVFilePools = append(m.R.CSVFilePools, r.o.Build())
 			} else {
-				rel3, err := r.o.CreateMany(ctx, exec, r.number)
+				rel2, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachCSVFilePools(ctx, exec, rel3...)
+				err = m.AttachCSVFilePools(ctx, exec, rel2...)
 				if err != nil {
 					return err
 				}
@@ -637,54 +599,6 @@ func (m fileuploadCSVMods) AddExistingCSVFileErrorCSVS(existingModels ...*models
 func (m fileuploadCSVMods) WithoutCSVFileErrorCSVS() FileuploadCSVMod {
 	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
 		o.r.CSVFileErrorCSVS = nil
-	})
-}
-
-func (m fileuploadCSVMods) WithCSVFileFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		o.r.CSVFileFlyoverAerialServices = []*fileuploadCSVRCSVFileFlyoverAerialServicesR{{
-			number: number,
-			o:      related,
-		}}
-	})
-}
-
-func (m fileuploadCSVMods) WithNewCSVFileFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.WithCSVFileFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m fileuploadCSVMods) AddCSVFileFlyoverAerialServices(number int, related *FileuploadFlyoverAerialServiceTemplate) FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		o.r.CSVFileFlyoverAerialServices = append(o.r.CSVFileFlyoverAerialServices, &fileuploadCSVRCSVFileFlyoverAerialServicesR{
-			number: number,
-			o:      related,
-		})
-	})
-}
-
-func (m fileuploadCSVMods) AddNewCSVFileFlyoverAerialServices(number int, mods ...FileuploadFlyoverAerialServiceMod) FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		related := o.f.NewFileuploadFlyoverAerialServiceWithContext(ctx, mods...)
-		m.AddCSVFileFlyoverAerialServices(number, related).Apply(ctx, o)
-	})
-}
-
-func (m fileuploadCSVMods) AddExistingCSVFileFlyoverAerialServices(existingModels ...*models.FileuploadFlyoverAerialService) FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		for _, em := range existingModels {
-			o.r.CSVFileFlyoverAerialServices = append(o.r.CSVFileFlyoverAerialServices, &fileuploadCSVRCSVFileFlyoverAerialServicesR{
-				o: o.f.FromExistingFileuploadFlyoverAerialService(em),
-			})
-		}
-	})
-}
-
-func (m fileuploadCSVMods) WithoutCSVFileFlyoverAerialServices() FileuploadCSVMod {
-	return FileuploadCSVModFunc(func(ctx context.Context, o *FileuploadCSVTemplate) {
-		o.r.CSVFileFlyoverAerialServices = nil
 	})
 }
 

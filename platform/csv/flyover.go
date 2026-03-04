@@ -17,7 +17,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -31,7 +30,12 @@ type Enum interface {
 type headerFlyoverEnum int
 
 const (
-	headerFlyoverComment headerFlyoverEnum = iota
+	headerFlyoverAddressLocality headerFlyoverEnum = iota
+	headerFlyoverAddressNumber
+	headerFlyoverAddressPostalCode
+	headerFlyoverAddressRegion
+	headerFlyoverAddressStreet
+	headerFlyoverComment
 	headerFlyoverLatitude
 	headerFlyoverLongitude
 	headerFlyoverNone
@@ -39,6 +43,16 @@ const (
 
 func (e headerFlyoverEnum) String() string {
 	switch e {
+	case headerFlyoverAddressLocality:
+		return "City"
+	case headerFlyoverAddressNumber:
+		return "HouseNo"
+	case headerFlyoverAddressPostalCode:
+		return "ZIP"
+	case headerFlyoverAddressRegion:
+		return "State"
+	case headerFlyoverAddressStreet:
+		return "Street"
 	case headerFlyoverComment:
 		return "Comment"
 	case headerFlyoverLatitude:
@@ -53,8 +67,13 @@ func (e headerFlyoverEnum) String() string {
 var parseCSVFlyover = makeParseCSV(
 	makeParseHeaders(map[string]headerFlyoverEnum{
 		"comment":   headerFlyoverComment,
+		"houseno":   headerFlyoverAddressNumber,
+		"state":     headerFlyoverAddressRegion,
+		"street":    headerFlyoverAddressStreet,
+		"city":      headerFlyoverAddressLocality,
 		"targetlat": headerFlyoverLatitude,
 		"targetlon": headerFlyoverLongitude,
+		"zip":       headerFlyoverAddressPostalCode,
 		"*":         headerFlyoverNone,
 	}),
 	insertFlyover,
@@ -98,13 +117,35 @@ func makeParseCSV[ModelType any, HeaderType Enum](parseHeader parseHeaderFunc[He
 				return rows, fmt.Errorf("Failed to read all CSV records for file %d: %w", file.ID, err)
 			}
 			m, err := insertModel(ctx, txn, file, c, line_number, header_types, header_names, row)
+			if err != nil {
+				return rows, fmt.Errorf("insert models: %w", err)
+			}
 			rows = append(rows, m)
 			line_number = line_number + 1
 		}
 	}
 }
-func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerFlyoverEnum, header_names []string, row []string) (*models.FileuploadFlyoverAerialService, error) {
-	setter := models.FileuploadFlyoverAerialServiceSetter{
+func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerFlyoverEnum, header_names []string, row []string) (*models.FileuploadPool, error) {
+	/*
+		setter := models.FileuploadFlyoverAerialServiceSetter{
+			Committed: omit.From(false),
+			Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
+			Created:   omit.From(time.Now()),
+			CreatorID: omit.From(file.CreatorID),
+			CSVFile:   omit.From(file.ID),
+			Deleted:   omitnull.FromPtr[time.Time](nil),
+			Geom:      omitnull.FromPtr[string](nil),
+			H3cell:    omitnull.FromPtr[string](nil),
+			// ID - generated
+			OrganizationID: omit.From(file.OrganizationID),
+		}
+	*/
+	setter := models.FileuploadPoolSetter{
+		// required fields
+		//AddressLocality: omit.From(),
+		//AddressPostalCode: omit.From(),
+		//AddressRegion: omit.From(),
+		//AddressStreet: omit.From(),
 		Committed: omit.From(false),
 		Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
 		Created:   omit.From(time.Now()),
@@ -114,7 +155,16 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		Geom:      omitnull.FromPtr[string](nil),
 		H3cell:    omitnull.FromPtr[string](nil),
 		// ID - generated
-		OrganizationID: omit.From(file.OrganizationID),
+		IsInDistrict:           omit.From(false),
+		IsNew:                  omit.From(true),
+		LineNumber:             omit.From(line_number),
+		Notes:                  omit.From(""),
+		OrganizationID:         omit.From(file.OrganizationID),
+		PropertyOwnerName:      omit.From(""),
+		PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
+		ResidentOwned:          omitnull.FromPtr[bool](nil),
+		ResidentPhoneE164:      omitnull.FromPtr[string](nil),
+		//Tags:       		convertToPGData(tags),
 	}
 	var lat, lng float64
 	var err error
@@ -124,6 +174,16 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		}
 		header_type := header_types[i]
 		switch header_type {
+		case headerFlyoverAddressLocality:
+			setter.AddressLocality = omit.From(value)
+		case headerFlyoverAddressNumber:
+			setter.AddressNumber = omit.From(value)
+		case headerFlyoverAddressPostalCode:
+			setter.AddressPostalCode = omit.From(value)
+		case headerFlyoverAddressRegion:
+			setter.AddressRegion = omit.From(value)
+		case headerFlyoverAddressStreet:
+			setter.AddressStreet = omit.From(value)
 		case headerFlyoverComment:
 			condition, err := parsePoolCondition(value)
 			if err == nil {
@@ -146,7 +206,8 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 			}
 		}
 	}
-	flyover, err := models.FileuploadFlyoverAerialServices.Insert(&setter).One(ctx, txn)
+	setter.Tags = omit.From(db.ConvertToPGData(map[string]string{}))
+	flyover, err := models.FileuploadPools.Insert(&setter).One(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create flyover: %w", err)
 	}
@@ -156,7 +217,7 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 	}
 	geom_query := geom.PostgisPointQuery(lng, lat)
 	_, err = psql.Update(
-		um.Table("fileupload.flyover_aerial_service"),
+		um.Table("fileupload.pool"),
 		um.SetCol("h3cell").ToArg(cell),
 		um.SetCol("geom").To(geom_query),
 		um.Where(psql.Quote("id").EQ(psql.Arg(flyover.ID))),
@@ -166,7 +227,7 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 	}
 	return flyover, nil
 }
-func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerPoolEnum, header_names []string, row []string) (*models.FileuploadPool, error) {
+func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerFlyoverEnum, header_names []string, row []string) (*models.FileuploadPool, error) {
 	tags := make(map[string]string, 0)
 	// Start with a setter with default values, comment out the required fields to ensure they're set
 	setter := models.FileuploadPoolSetter{
@@ -200,13 +261,13 @@ func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadF
 		}
 		header_type := header_types[i]
 		switch header_type {
-		case headerAddressCity:
-			setter.AddressCity = omit.From(value)
-		case headerAddressPostalCode:
+		case headerFlyoverAddressLocality:
+			setter.AddressLocality = omit.From(value)
+		case headerFlyoverAddressPostalCode:
 			setter.AddressPostalCode = omit.From(value)
-		case headerAddressStreet:
+		case headerFlyoverAddressStreet:
 			setter.AddressStreet = omit.From(value)
-		case headerCondition:
+		case headerFlyoverComment:
 			condition, err := parsePoolCondition(value)
 			if err == nil {
 				setter.Condition = omit.From(condition)
@@ -214,35 +275,6 @@ func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadF
 				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
 				continue
 			}
-		case headerNotes:
-			setter.Notes = omit.From(value)
-		case headerPropertyOwnerName:
-			setter.PropertyOwnerName = omit.From(value)
-		case headerPropertyOwnerPhone:
-			phone, err := text.ParsePhoneNumber(value)
-			if err != nil {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", value))
-				continue
-			}
-			text.EnsureInDB(ctx, txn, *phone)
-			setter.PropertyOwnerPhoneE164 = omitnull.From(text.PhoneString(*phone))
-		case headerResidentOwned:
-			boolValue, err := parseBool(value)
-			if err != nil {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", value))
-				continue
-			}
-			setter.ResidentOwned = omitnull.From(boolValue)
-		case headerResidentPhone:
-			phone, err := text.ParsePhoneNumber(value)
-			if err != nil {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", value))
-				continue
-			}
-			text.EnsureInDB(ctx, txn, *phone)
-			setter.ResidentPhoneE164 = omitnull.From(text.PhoneString(*phone))
-		case headerTag:
-			tags[header_names[i]] = value
 		}
 
 	}
@@ -280,7 +312,7 @@ func makeParseHeaders[EnumType any](headerToType map[string]EnumType) parseHeade
 	}
 }
 
-func processCSVFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, rows []*models.FileuploadFlyoverAerialService) error {
+func processCSVFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, rows []*models.FileuploadPool) error {
 	return nil
 }
 

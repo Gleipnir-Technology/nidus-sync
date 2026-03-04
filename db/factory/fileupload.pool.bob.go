@@ -39,7 +39,6 @@ func (mods FileuploadPoolModSlice) Apply(ctx context.Context, n *FileuploadPoolT
 // FileuploadPoolTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type FileuploadPoolTemplate struct {
-	AddressCity            func() string
 	AddressPostalCode      func() string
 	AddressStreet          func() string
 	Committed              func() bool
@@ -61,6 +60,9 @@ type FileuploadPoolTemplate struct {
 	ResidentPhoneE164      func() null.Val[string]
 	LineNumber             func() int32
 	Tags                   func() pgtypes.HStore
+	AddressNumber          func() string
+	AddressLocality        func() string
+	AddressRegion          func() string
 
 	r fileuploadPoolR
 	f *Factory
@@ -143,10 +145,6 @@ func (t FileuploadPoolTemplate) setModelRels(o *models.FileuploadPool) {
 func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 	m := &models.FileuploadPoolSetter{}
 
-	if o.AddressCity != nil {
-		val := o.AddressCity()
-		m.AddressCity = omit.From(val)
-	}
 	if o.AddressPostalCode != nil {
 		val := o.AddressPostalCode()
 		m.AddressPostalCode = omit.From(val)
@@ -231,6 +229,18 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.Tags()
 		m.Tags = omit.From(val)
 	}
+	if o.AddressNumber != nil {
+		val := o.AddressNumber()
+		m.AddressNumber = omit.From(val)
+	}
+	if o.AddressLocality != nil {
+		val := o.AddressLocality()
+		m.AddressLocality = omit.From(val)
+	}
+	if o.AddressRegion != nil {
+		val := o.AddressRegion()
+		m.AddressRegion = omit.From(val)
+	}
 
 	return m
 }
@@ -253,9 +263,6 @@ func (o FileuploadPoolTemplate) BuildManySetter(number int) []*models.Fileupload
 func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	m := &models.FileuploadPool{}
 
-	if o.AddressCity != nil {
-		m.AddressCity = o.AddressCity()
-	}
 	if o.AddressPostalCode != nil {
 		m.AddressPostalCode = o.AddressPostalCode()
 	}
@@ -319,6 +326,15 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.Tags != nil {
 		m.Tags = o.Tags()
 	}
+	if o.AddressNumber != nil {
+		m.AddressNumber = o.AddressNumber()
+	}
+	if o.AddressLocality != nil {
+		m.AddressLocality = o.AddressLocality()
+	}
+	if o.AddressRegion != nil {
+		m.AddressRegion = o.AddressRegion()
+	}
 
 	o.setModelRels(m)
 
@@ -339,10 +355,6 @@ func (o FileuploadPoolTemplate) BuildMany(number int) models.FileuploadPoolSlice
 }
 
 func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
-	if !(m.AddressCity.IsValue()) {
-		val := random_string(nil)
-		m.AddressCity = omit.From(val)
-	}
 	if !(m.AddressPostalCode.IsValue()) {
 		val := random_string(nil)
 		m.AddressPostalCode = omit.From(val)
@@ -398,6 +410,18 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 	if !(m.Tags.IsValue()) {
 		val := random_pgtypes_HStore(nil)
 		m.Tags = omit.From(val)
+	}
+	if !(m.AddressNumber.IsValue()) {
+		val := random_string(nil)
+		m.AddressNumber = omit.From(val)
+	}
+	if !(m.AddressLocality.IsValue()) {
+		val := random_string(nil)
+		m.AddressLocality = omit.From(val)
+	}
+	if !(m.AddressRegion.IsValue()) {
+		val := random_string(nil)
+		m.AddressRegion = omit.From(val)
 	}
 }
 
@@ -592,7 +616,6 @@ type fileuploadPoolMods struct{}
 
 func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMod {
 	return FileuploadPoolModSlice{
-		FileuploadPoolMods.RandomAddressCity(f),
 		FileuploadPoolMods.RandomAddressPostalCode(f),
 		FileuploadPoolMods.RandomAddressStreet(f),
 		FileuploadPoolMods.RandomCommitted(f),
@@ -614,38 +637,10 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomResidentPhoneE164(f),
 		FileuploadPoolMods.RandomLineNumber(f),
 		FileuploadPoolMods.RandomTags(f),
+		FileuploadPoolMods.RandomAddressNumber(f),
+		FileuploadPoolMods.RandomAddressLocality(f),
+		FileuploadPoolMods.RandomAddressRegion(f),
 	}
-}
-
-// Set the model columns to this value
-func (m fileuploadPoolMods) AddressCity(val string) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.AddressCity = func() string { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) AddressCityFunc(f func() string) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.AddressCity = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetAddressCity() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.AddressCity = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m fileuploadPoolMods) RandomAddressCity(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.AddressCity = func() string {
-			return random_string(f)
-		}
-	})
 }
 
 // Set the model columns to this value
@@ -1427,6 +1422,99 @@ func (m fileuploadPoolMods) RandomTags(f *faker.Faker) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.Tags = func() pgtypes.HStore {
 			return random_pgtypes_HStore(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) AddressNumber(val string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressNumber = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) AddressNumberFunc(f func() string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressNumber = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetAddressNumber() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressNumber = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadPoolMods) RandomAddressNumber(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressNumber = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) AddressLocality(val string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressLocality = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) AddressLocalityFunc(f func() string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressLocality = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetAddressLocality() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressLocality = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadPoolMods) RandomAddressLocality(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressLocality = func() string {
+			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) AddressRegion(val string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressRegion = func() string { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) AddressRegionFunc(f func() string) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressRegion = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetAddressRegion() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressRegion = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadPoolMods) RandomAddressRegion(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.AddressRegion = func() string {
+			return random_string(f)
 		}
 	})
 }

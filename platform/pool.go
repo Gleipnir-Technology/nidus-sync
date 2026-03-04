@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,10 +37,11 @@ type UploadPoolError struct {
 	Message string
 }
 type UploadPoolRow struct {
-	City       string
 	Condition  string
 	Errors     []UploadPoolError
+	Locality   string
 	PostalCode string
+	Region     string
 	Status     string
 	Street     string
 	Tags       map[string]string
@@ -87,50 +89,34 @@ func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, 
 		ID: file.ID,
 	}, nil
 }
-func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int32) (UploadPoolDetail, error) {
+func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) (UploadPoolDetail, error) {
 	file, err := models.FindFileuploadFile(ctx, db.PGInstance.BobDB, file_id)
 	if err != nil {
 		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup file %d: %w", file_id, err)
 	}
-	/*
-		csv, err := models.FindFileuploadCSV(ctx, db.PGInstance.BobDB, file_id)
-		if err != nil {
-			return UploadPoolDetail{}, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
-		}
-	*/
-	error_rows, err := models.FileuploadErrorCSVS.Query(
-		models.SelectWhere.FileuploadErrorCSVS.CSVFileID.EQ(file_id),
-	).All(ctx, db.PGInstance.BobDB)
+	csv, err := models.FindFileuploadCSV(ctx, db.PGInstance.BobDB, file_id)
 	if err != nil {
-		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup errors in csv %d: %w", file_id, err)
+		return UploadPoolDetail{}, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
 	}
-	file_errors := make([]UploadPoolError, 0)
-	errors_by_line := make(map[int32][]UploadPoolError, 0)
-	for _, row := range error_rows {
-		e := UploadPoolError{
-			Column:  uint(row.Col),
-			Line:    uint(row.Line),
-			Message: row.Message,
-		}
-		if row.Line == 0 {
-			file_errors = append(file_errors, e)
-		} else {
-			//log.Info().Int32("line", row.Line).Msg("Found error")
-			by_line, ok := errors_by_line[row.Line]
-			if !ok {
-				errors_by_line[row.Line] = []UploadPoolError{e}
-				continue
-			}
-			by_line = append(by_line, e)
-			errors_by_line[row.Line] = by_line
-		}
+	switch csv.Type {
+	case enums.FileuploadCsvtypeFlyover:
+		return getUploadPoollistDetail(ctx, file)
+	case enums.FileuploadCsvtypePoollist:
+		return getUploadPoollistDetail(ctx, file)
 	}
+	return UploadPoolDetail{}, errors.New("No idea what to do with upload type")
+}
 
+func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (UploadPoolDetail, error) {
+	file_errors, errors_by_line, err := errorsByLine(ctx, file)
+	if err != nil {
+		return UploadPoolDetail{}, fmt.Errorf("get errors by line: %w", err)
+	}
 	pool_rows, err := models.FileuploadPools.Query(
-		models.SelectWhere.FileuploadPools.CSVFile.EQ(file_id),
+		models.SelectWhere.FileuploadPools.CSVFile.EQ(file.ID),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return UploadPoolDetail{}, fmt.Errorf("Failed to query pools for %d: %w", file_id, err)
+		return UploadPoolDetail{}, fmt.Errorf("Failed to query pools for %d: %w", file.ID, err)
 	}
 
 	pools := make([]UploadPoolRow, 0)
@@ -156,10 +142,11 @@ func GetUploadPoolDetail(ctx context.Context, organization_id int32, file_id int
 			errors = []UploadPoolError{}
 		}
 		pools = append(pools, UploadPoolRow{
-			City:       r.AddressCity,
 			Condition:  r.Condition.String(),
 			Errors:     errors,
+			Locality:   r.AddressLocality,
 			PostalCode: r.AddressPostalCode,
+			Region:     r.AddressRegion,
 			Status:     status,
 			Street:     r.AddressStreet,
 			Tags:       tags,
@@ -205,4 +192,34 @@ func PoolUploadList(ctx context.Context, organization_id int32) ([]Upload, error
 		return results, fmt.Errorf("Failed to query pool upload rows: %w", err)
 	}
 	return rows, nil
+}
+func errorsByLine(ctx context.Context, file *models.FileuploadFile) ([]UploadPoolError, map[int32][]UploadPoolError, error) {
+	file_errors := make([]UploadPoolError, 0)
+	errors_by_line := make(map[int32][]UploadPoolError, 0)
+	error_rows, err := models.FileuploadErrorCSVS.Query(
+		models.SelectWhere.FileuploadErrorCSVS.CSVFileID.EQ(file.ID),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return file_errors, errors_by_line, fmt.Errorf("Failed to lookup errors in csv %d: %w", file.ID, err)
+	}
+	for _, row := range error_rows {
+		e := UploadPoolError{
+			Column:  uint(row.Col),
+			Line:    uint(row.Line),
+			Message: row.Message,
+		}
+		if row.Line == 0 {
+			file_errors = append(file_errors, e)
+		} else {
+			//log.Info().Int32("line", row.Line).Msg("Found error")
+			by_line, ok := errors_by_line[row.Line]
+			if !ok {
+				errors_by_line[row.Line] = []UploadPoolError{e}
+				continue
+			}
+			by_line = append(by_line, e)
+			errors_by_line[row.Line] = by_line
+		}
+	}
+	return file_errors, errors_by_line, nil
 }

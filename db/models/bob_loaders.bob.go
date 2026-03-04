@@ -71,7 +71,6 @@ type preloaders struct {
 	FileuploadErrorCSV                fileuploadErrorCSVPreloader
 	FileuploadErrorFile               fileuploadErrorFilePreloader
 	FileuploadFile                    fileuploadFilePreloader
-	FileuploadFlyoverAerialService    fileuploadFlyoverAerialServicePreloader
 	FileuploadPool                    fileuploadPoolPreloader
 	H3Aggregation                     h3AggregationPreloader
 	NoteAudio                         noteAudioPreloader
@@ -159,7 +158,6 @@ func getPreloaders() preloaders {
 		FileuploadErrorCSV:                buildFileuploadErrorCSVPreloader(),
 		FileuploadErrorFile:               buildFileuploadErrorFilePreloader(),
 		FileuploadFile:                    buildFileuploadFilePreloader(),
-		FileuploadFlyoverAerialService:    buildFileuploadFlyoverAerialServicePreloader(),
 		FileuploadPool:                    buildFileuploadPoolPreloader(),
 		H3Aggregation:                     buildH3AggregationPreloader(),
 		NoteAudio:                         buildNoteAudioPreloader(),
@@ -253,7 +251,6 @@ type thenLoaders[Q orm.Loadable] struct {
 	FileuploadErrorCSV                fileuploadErrorCSVThenLoader[Q]
 	FileuploadErrorFile               fileuploadErrorFileThenLoader[Q]
 	FileuploadFile                    fileuploadFileThenLoader[Q]
-	FileuploadFlyoverAerialService    fileuploadFlyoverAerialServiceThenLoader[Q]
 	FileuploadPool                    fileuploadPoolThenLoader[Q]
 	H3Aggregation                     h3AggregationThenLoader[Q]
 	NoteAudio                         noteAudioThenLoader[Q]
@@ -341,7 +338,6 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FileuploadErrorCSV:                buildFileuploadErrorCSVThenLoader[Q](),
 		FileuploadErrorFile:               buildFileuploadErrorFileThenLoader[Q](),
 		FileuploadFile:                    buildFileuploadFileThenLoader[Q](),
-		FileuploadFlyoverAerialService:    buildFileuploadFlyoverAerialServiceThenLoader[Q](),
 		FileuploadPool:                    buildFileuploadPoolThenLoader[Q](),
 		H3Aggregation:                     buildH3AggregationThenLoader[Q](),
 		NoteAudio:                         buildNoteAudioThenLoader[Q](),
