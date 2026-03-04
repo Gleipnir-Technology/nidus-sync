@@ -96,15 +96,16 @@ func startWorkerCSV(ctx context.Context, channelJobImport chan jobCSV) {
 				log.Info().Msg("CSV worker shutting down.")
 				return
 			case job := <-channelJobImport:
-				log.Info().Int32("id", job.fileID).Msg("Processing CSV job")
 				switch job.action {
 				case jobCSVActionCommit:
+					log.Info().Int32("id", job.fileID).Msg("Processing CSV commit job")
 					err := csv.JobCommit(ctx, job.fileID)
 					if err != nil {
 						log.Error().Err(err).Int32("id", job.fileID).Msg("Error processing CSV file")
 						continue
 					}
 				case jobCSVActionImport:
+					log.Info().Int32("id", job.fileID).Msg("Processing CSV import job")
 					err := csv.JobImport(ctx, job.fileID, job.csvType)
 					if err != nil {
 						log.Error().Err(err).Int32("id", job.fileID).Msg("Error processing CSV file")

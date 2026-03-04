@@ -91,10 +91,13 @@ func JobImport(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype
 func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T], processor csvProcessorFunc[T]) error {
 	// Not done in the transaction so the state shows up immediately
 	_, err := psql.Update(
-		um.Table("fileupload.csv"),
-		um.SetCol("status").ToArg("processing"),
-		um.Where(psql.Quote("file_id").EQ(psql.Arg(file_id))),
+		um.Table("fileupload.file"),
+		um.SetCol("status").ToArg("parsing"),
+		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 	).Exec(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("Failed to set file %d to processing: %w", file_id, err)
+	}
 
 	file, c, err := loadFileAndCSV(ctx, file_id)
 	if err != nil {
