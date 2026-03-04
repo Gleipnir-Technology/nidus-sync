@@ -3,7 +3,7 @@ module github.com/Gleipnir-Technology/nidus-sync
 go 1.24.9
 
 require (
-	github.com/Gleipnir-Technology/arcgis-go v0.0.8
+	github.com/Gleipnir-Technology/arcgis-go v0.0.9
 	github.com/Gleipnir-Technology/bob v0.42.5
 	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
@@ -98,4 +98,4 @@ require (
 )
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
-replace github.com/Gleipnir-Technology/arcgis-go v0.0.8 => ./arcgis-go
+// replace github.com/Gleipnir-Technology/arcgis-go v0.0.9 => ./arcgis-go
