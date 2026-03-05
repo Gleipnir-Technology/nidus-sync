@@ -17,7 +17,7 @@
 	overflow-y: auto;
 }
 .signal-item:hover {
-	background-color: #f1f3f5;
+	background-color: $primary-light-4;
 	cursor: pointer;
 }
 .tool-button {
@@ -29,4 +29,7 @@
 	text-transform: uppercase;
 	color: #6c757d;
 	font-weight: 600;
+}
+.selected {
+	background-color: $info;
 }
