@@ -16,6 +16,11 @@
 		function shortAddress(a) {
 			return a.number + " " + a.street + ", " + a.locality + ", " + a.region;
 		}
+		function updateMap(signals) {
+			const map = document.querySelector("map-multipoint");
+			const markers = signals.map((s) => s.location);
+			map.SetMarkers(markers);
+		}
 		function workbench() {
 			return {
 				// API Configuration
@@ -123,18 +128,6 @@
 					return this.selectedSignals.some((s) => s.id === id);
 				},
 
-				toggleSignal(signal) {
-					const index = this.selectedSignals.findIndex(
-						(s) => s.id === signal.id,
-					);
-
-					if (index > -1) {
-						this.selectedSignals.splice(index, 1);
-					} else {
-						this.selectedSignals.push(signal);
-					}
-				},
-
 				clearSelection() {
 					this.selectedSignals = [];
 				},
@@ -219,6 +212,18 @@
 						console.error("Error marking signals as addressed:", err);
 						alert(`Failed to mark signals: ${err.message}`);
 					}
+				},
+				toggleSignal(signal) {
+					const index = this.selectedSignals.findIndex(
+						(s) => s.id === signal.id,
+					);
+
+					if (index > -1) {
+						this.selectedSignals.splice(index, 1);
+					} else {
+						this.selectedSignals.push(signal);
+					}
+					updateMap(this.selectedSignals);
 				},
 			};
 		}

@@ -12,7 +12,7 @@ class MapMultipoint extends HTMLElement {
 		this.render();
 
 		this._map = null;
-		this._markers = null;
+		this._markers = [];
 	}
 
 	// Lifecycle: when element is added to the DOM
@@ -80,9 +80,10 @@ class MapMultipoint extends HTMLElement {
 	render() {
 		this.shadowRoot.innerHTML = `
 			<style>
+				@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
 				#map {
 					height: 100%;
-					width:100%;
+					width: 100%;
 				}
 			</style>
 			
@@ -111,6 +112,18 @@ class MapMultipoint extends HTMLElement {
 
 	SetLayoutProperty(layout, property, value) {
 		return this._map.setLayoutProperty(layout, property, value);
+	}
+	SetMarkers(markers) {
+		console.log("Setting map markers", markers);
+		this._markers.forEach((marker) => marker.remove());
+		this._markers = markers.map((m) => {
+			return new maplibregl.Marker({
+				color: "#FF0000",
+				draggable: false,
+			})
+				.setLngLat([m.longitude, m.latitude])
+				.addTo(this._map);
+		});
 	}
 }
 
