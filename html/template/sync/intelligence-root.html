@@ -152,9 +152,6 @@
 							},
 							body: JSON.stringify({
 								signal_ids: this.selectedSignals.map((s) => s.id),
-								// Add any other required fields
-								created_by: "current_user", // Replace with actual user
-								timestamp: new Date().toISOString(),
 							}),
 						});
 

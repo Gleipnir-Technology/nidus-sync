@@ -261,9 +261,10 @@ func dashboard(ctx context.Context, w http.ResponseWriter, org *models.Organizat
 		return
 	}
 	html.RenderOrError(w, "sync/dashboard.html", contentAuthenticated[contentDashboard]{
-		C:    content,
-		URL:  html.NewContentURL(),
-		User: userContent,
+		C:            content,
+		Organization: org,
+		URL:          html.NewContentURL(),
+		User:         userContent,
 	})
 }
 

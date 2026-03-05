@@ -12,7 +12,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
-	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,8 +33,6 @@ func getSudo(ctx context.Context, r *http.Request, org *models.Organization, use
 	}
 	return html.NewResponse("sync/sudo.html", content), nil
 }
-
-var decoder = schema.NewDecoder()
 
 type FormEmail struct {
 	Body    string `schema:"emailBody"`

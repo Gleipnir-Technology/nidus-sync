@@ -10,8 +10,11 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
+
+var decoder = schema.NewDecoder()
 
 type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User) (*html.Response[T], *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
