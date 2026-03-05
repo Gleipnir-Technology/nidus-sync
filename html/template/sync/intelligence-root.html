@@ -6,11 +6,13 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
+	<script src="/static/js/map-arcgis-tile.js"></script>
 	<script src="/static/js/map-multipoint.js"></script>
 	<script
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
+	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
 
 	<script>
 		// Return two points defining a bounding box for the given points
@@ -508,6 +510,26 @@
 										>
 											Clear Selection
 										</button>
+									</div>
+								</div>
+								<div class="card border">
+									<div class="card-body">
+										<template
+											x-for="signal in selectedSignals"
+											:key="signal.id"
+										>
+											<div class="map-container">
+												<map-arcgis-tile
+													class="map"
+													arcgis-access-token="{{ .C.ArcgisAccessToken }}"
+													organization-id="{{ .Organization.ID }}"
+													tegola="{{ .URL.Tegola }}"
+													:latitude="signal.location.latitude"
+													:longitude="signal.location.longitude"
+												>
+												</map-arcgis-tile>
+											</div>
+										</template>
 									</div>
 								</div>
 							</div>
