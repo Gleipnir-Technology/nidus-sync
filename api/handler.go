@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
@@ -66,21 +67,20 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 	})
 }
 
-type handlerFunctionPost[FormType any, ResponseType any] func(context.Context, *http.Request, *models.Organization, *models.User, FormType) (ResponseType, *nhttp.ErrorWithStatus)
+type handlerFunctionPost[ReqType any, ResponseType any] func(context.Context, *http.Request, *models.Organization, *models.User, ReqType) (ResponseType, *nhttp.ErrorWithStatus)
 
-func authenticatedHandlerJSONPost[FormType any, ResponseType any](f handlerFunctionPost[FormType, ResponseType]) http.Handler {
+func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFunctionPost[ReqType, ResponseType]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
 		w.Header().Set("Content-Type", "application/json")
-		err := r.ParseForm()
+		var req ReqType
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			respondError(w, http.StatusBadRequest, "failed to parse form: %w", err)
+			respondError(w, http.StatusInternalServerError, "Failed to read body: %w", err)
 			return
 		}
-
-		var form FormType
-		err = decoder.Decode(&form, r.PostForm)
+		err = json.Unmarshal(body, &req)
 		if err != nil {
-			respondError(w, http.StatusBadRequest, "Failed to decode form: %w", err)
+			respondError(w, http.StatusBadRequest, "Failed to decode request: %w", err)
 			return
 		}
 		ctx := r.Context()
@@ -89,7 +89,7 @@ func authenticatedHandlerJSONPost[FormType any, ResponseType any](f handlerFunct
 			respondError(w, http.StatusInternalServerError, "Failed to get org: %w", err)
 			return
 		}
-		response, e := f(ctx, r, org, u, form)
+		response, e := f(ctx, r, org, u, req)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return

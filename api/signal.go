@@ -96,6 +96,7 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 			psql.Quote("address", "id"),
 		),
 		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("signal", "addressed").IsNull()),
 	), scan.StructMapper[_Row]())
 
 	/*
