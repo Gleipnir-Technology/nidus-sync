@@ -71,7 +71,7 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a 
 	}
 	created := time.Now()
 	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "geom", "h3cell", "id", "locality", "number", "postal_code", "region", "street", "unit"),
+		im.Into("address", "country", "created", "geom", "h3cell", "id", "locality", "number_", "postal_code", "region", "street", "unit"),
 		im.Values(
 			psql.Arg(geo.Address.Country),
 			psql.Arg(created),
