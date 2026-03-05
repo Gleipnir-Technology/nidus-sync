@@ -15,16 +15,6 @@
 	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
 
 	<script>
-		function updateSignalLocation(event, signal_id) {
-			console.log("map click", signal_id, event.detail);
-			const map = event.detail.map;
-			const loc = {
-				latitude: event.detail.lat,
-				longitude: event.detail.lng,
-			};
-			map.SetMarkers([loc]);
-			this.poolLocations[signal_id] = loc;
-		}
 		// Return two points defining a bounding box for the given points
 		function getBoundingBox(points) {
 			// Handle empty or invalid input
@@ -269,6 +259,16 @@
 						this.selectedSignals.push(signal);
 					}
 					updateMap(this.selectedSignals);
+				},
+				updateSignalLocation(event, signal_id) {
+					console.log("map click", signal_id, event.detail);
+					const map = event.detail.map;
+					const loc = {
+						latitude: event.detail.lat,
+						longitude: event.detail.lng,
+					};
+					map.SetMarkers([loc]);
+					this.poolLocations[signal_id] = loc;
 				},
 			};
 		}

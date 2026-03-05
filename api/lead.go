@@ -13,14 +13,16 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
-	//"github.com/rs/zerolog/log"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
 
 type createLead struct {
-	SignalIDs []int `json:"signal_ids"`
+	PoolLocations map[int]Location `json:"pool_locations"`
+	SignalIDs     []int            `json:"signal_ids"`
 }
 type createdLead struct {
 	ID int32 `json:"id"`
@@ -102,7 +104,21 @@ func postLeads(ctx context.Context, r *http.Request, org *models.Organization, u
 	if err != nil {
 		return nil, nhttp.NewError("failed to update signal %d: %w", signal_id, err)
 	}
-
+	pool_location, ok := req.PoolLocations[signal_id]
+	if ok {
+		log.Info().Float64("lat", pool_location.Latitude).Float64("lng", pool_location.Longitude).Msg("got pool location")
+		geom_query := geom.PostgisPointQuery(pool_location.Longitude, pool_location.Latitude)
+		_, err = psql.Update(
+			um.Table("pool"),
+			um.SetCol("geometry").To(geom_query),
+			um.From("signal_pool"),
+			um.Where(psql.Quote("signal_pool", "pool_id").EQ(psql.Quote("pool", "id"))),
+			um.Where(psql.Quote("signal_pool", "signal_id").EQ(psql.Arg(signal_id))),
+		).Exec(ctx, txn)
+		if err != nil {
+			return nil, nhttp.NewError("failed to update pool through signal %d: %w", signal_id, err)
+		}
+	}
 	txn.Commit(ctx)
 
 	return &createdLead{
