@@ -4483,7 +4483,7 @@ func (f *Factory) FromExistingSite(m *models.Site) *SiteTemplate {
 	o.OrganizationID = func() int32 { return m.OrganizationID }
 	o.OwnerName = func() string { return m.OwnerName }
 	o.OwnerPhoneE164 = func() null.Val[string] { return m.OwnerPhoneE164 }
-	o.ParcelID = func() int32 { return m.ParcelID }
+	o.ParcelID = func() null.Val[int32] { return m.ParcelID }
 	o.ResidentOwned = func() null.Val[bool] { return m.ResidentOwned }
 	o.Tags = func() pgtypes.HStore { return m.Tags }
 	o.Version = func() int32 { return m.Version }

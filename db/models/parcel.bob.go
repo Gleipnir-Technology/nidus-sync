@@ -444,7 +444,7 @@ func (os ParcelSlice) Sites(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 
 func insertParcelSites0(ctx context.Context, exec bob.Executor, sites1 []*SiteSetter, parcel0 *Parcel) (SiteSlice, error) {
 	for i := range sites1 {
-		sites1[i].ParcelID = omit.From(parcel0.ID)
+		sites1[i].ParcelID = omitnull.From(parcel0.ID)
 	}
 
 	ret, err := Sites.Insert(bob.ToMods(sites1...)).All(ctx, exec)
@@ -457,7 +457,7 @@ func insertParcelSites0(ctx context.Context, exec bob.Executor, sites1 []*SiteSe
 
 func attachParcelSites0(ctx context.Context, exec bob.Executor, count int, sites1 SiteSlice, parcel0 *Parcel) (SiteSlice, error) {
 	setter := &SiteSetter{
-		ParcelID: omit.From(parcel0.ID),
+		ParcelID: omitnull.From(parcel0.ID),
 	}
 
 	err := sites1.UpdateAll(ctx, exec, *setter)
@@ -628,7 +628,10 @@ func (os ParcelSlice) LoadSites(ctx context.Context, exec bob.Executor, mods ...
 
 		for _, rel := range sites {
 
-			if !(o.ID == rel.ParcelID) {
+			if !rel.ParcelID.IsValue() {
+				continue
+			}
+			if !(rel.ParcelID.IsValue() && o.ID == rel.ParcelID.MustGet()) {
 				continue
 			}
 

@@ -35,7 +35,7 @@ type Site struct {
 	OrganizationID int32            `db:"organization_id" `
 	OwnerName      string           `db:"owner_name" `
 	OwnerPhoneE164 null.Val[string] `db:"owner_phone_e164" `
-	ParcelID       int32            `db:"parcel_id" `
+	ParcelID       null.Val[int32]  `db:"parcel_id" `
 	ResidentOwned  null.Val[bool]   `db:"resident_owned" `
 	Tags           pgtypes.HStore   `db:"tags" `
 	Version        int32            `db:"version,pk" `
@@ -127,7 +127,7 @@ type SiteSetter struct {
 	OrganizationID omit.Val[int32]          `db:"organization_id" `
 	OwnerName      omit.Val[string]         `db:"owner_name" `
 	OwnerPhoneE164 omitnull.Val[string]     `db:"owner_phone_e164" `
-	ParcelID       omit.Val[int32]          `db:"parcel_id" `
+	ParcelID       omitnull.Val[int32]      `db:"parcel_id" `
 	ResidentOwned  omitnull.Val[bool]       `db:"resident_owned" `
 	Tags           omit.Val[pgtypes.HStore] `db:"tags" `
 	Version        omit.Val[int32]          `db:"version,pk" `
@@ -162,7 +162,7 @@ func (s SiteSetter) SetColumns() []string {
 	if !s.OwnerPhoneE164.IsUnset() {
 		vals = append(vals, "owner_phone_e164")
 	}
-	if s.ParcelID.IsValue() {
+	if !s.ParcelID.IsUnset() {
 		vals = append(vals, "parcel_id")
 	}
 	if !s.ResidentOwned.IsUnset() {
@@ -205,8 +205,8 @@ func (s SiteSetter) Overwrite(t *Site) {
 	if !s.OwnerPhoneE164.IsUnset() {
 		t.OwnerPhoneE164 = s.OwnerPhoneE164.MustGetNull()
 	}
-	if s.ParcelID.IsValue() {
-		t.ParcelID = s.ParcelID.MustGet()
+	if !s.ParcelID.IsUnset() {
+		t.ParcelID = s.ParcelID.MustGetNull()
 	}
 	if !s.ResidentOwned.IsUnset() {
 		t.ResidentOwned = s.ResidentOwned.MustGetNull()
@@ -280,8 +280,8 @@ func (s *SiteSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.ParcelID.IsValue() {
-			vals[9] = psql.Arg(s.ParcelID.MustGet())
+		if !s.ParcelID.IsUnset() {
+			vals[9] = psql.Arg(s.ParcelID.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
@@ -378,7 +378,7 @@ func (s SiteSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.ParcelID.IsValue() {
+	if !s.ParcelID.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "parcel_id")...),
 			psql.Arg(s.ParcelID),
@@ -806,7 +806,7 @@ func (o *Site) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
 }
 
 func (os SiteSlice) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
-	pkParcelID := make(pgtypes.Array[int32], 0, len(os))
+	pkParcelID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1178,7 +1178,7 @@ func (site0 *Site) AttachFile(ctx context.Context, exec bob.Executor, fileupload
 
 func attachSiteParcel0(ctx context.Context, exec bob.Executor, count int, site0 *Site, parcel1 *Parcel) (*Site, error) {
 	setter := &SiteSetter{
-		ParcelID: omit.From(parcel1.ID),
+		ParcelID: omitnull.From(parcel1.ID),
 	}
 
 	err := site0.Update(ctx, exec, setter)
@@ -1234,7 +1234,7 @@ type siteWhere[Q psql.Filterable] struct {
 	OrganizationID psql.WhereMod[Q, int32]
 	OwnerName      psql.WhereMod[Q, string]
 	OwnerPhoneE164 psql.WhereNullMod[Q, string]
-	ParcelID       psql.WhereMod[Q, int32]
+	ParcelID       psql.WhereNullMod[Q, int32]
 	ResidentOwned  psql.WhereNullMod[Q, bool]
 	Tags           psql.WhereMod[Q, pgtypes.HStore]
 	Version        psql.WhereMod[Q, int32]
@@ -1255,7 +1255,7 @@ func buildSiteWhere[Q psql.Filterable](cols siteColumns) siteWhere[Q] {
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		OwnerName:      psql.Where[Q, string](cols.OwnerName),
 		OwnerPhoneE164: psql.WhereNull[Q, string](cols.OwnerPhoneE164),
-		ParcelID:       psql.Where[Q, int32](cols.ParcelID),
+		ParcelID:       psql.WhereNull[Q, int32](cols.ParcelID),
 		ResidentOwned:  psql.WhereNull[Q, bool](cols.ResidentOwned),
 		Tags:           psql.Where[Q, pgtypes.HStore](cols.Tags),
 		Version:        psql.Where[Q, int32](cols.Version),
@@ -1903,8 +1903,11 @@ func (os SiteSlice) LoadParcel(ctx context.Context, exec bob.Executor, mods ...b
 		}
 
 		for _, rel := range parcels {
+			if !o.ParcelID.IsValue() {
+				continue
+			}
 
-			if !(o.ParcelID == rel.ID) {
+			if !(o.ParcelID.IsValue() && o.ParcelID.MustGet() == rel.ID) {
 				continue
 			}
 

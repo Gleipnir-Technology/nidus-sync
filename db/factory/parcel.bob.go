@@ -71,7 +71,7 @@ func (t ParcelTemplate) setModelRels(o *models.Parcel) {
 		for _, r := range t.r.Sites {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.ParcelID = o.ID // h2
+				rel.ParcelID = null.From(o.ID) // h2
 				rel.R.Parcel = o
 			}
 			rel = append(rel, related...)

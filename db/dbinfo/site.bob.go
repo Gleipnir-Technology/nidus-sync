@@ -99,9 +99,9 @@ var Sites = Table[
 		ParcelID: column{
 			Name:      "parcel_id",
 			DBType:    "integer",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},

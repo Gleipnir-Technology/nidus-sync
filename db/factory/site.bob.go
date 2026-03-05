@@ -47,7 +47,7 @@ type SiteTemplate struct {
 	OrganizationID func() int32
 	OwnerName      func() string
 	OwnerPhoneE164 func() null.Val[string]
-	ParcelID       func() int32
+	ParcelID       func() null.Val[int32]
 	ResidentOwned  func() null.Val[bool]
 	Tags           func() pgtypes.HStore
 	Version        func() int32
@@ -169,7 +169,7 @@ func (t SiteTemplate) setModelRels(o *models.Site) {
 	if t.r.Parcel != nil {
 		rel := t.r.Parcel.o.Build()
 		rel.R.Sites = append(rel.R.Sites, o)
-		o.ParcelID = rel.ID // h2
+		o.ParcelID = null.From(rel.ID) // h2
 		o.R.Parcel = rel
 	}
 }
@@ -217,7 +217,7 @@ func (o SiteTemplate) BuildSetter() *models.SiteSetter {
 	}
 	if o.ParcelID != nil {
 		val := o.ParcelID()
-		m.ParcelID = omit.From(val)
+		m.ParcelID = omitnull.FromNull(val)
 	}
 	if o.ResidentOwned != nil {
 		val := o.ResidentOwned()
@@ -336,10 +336,6 @@ func ensureCreatableSite(m *models.SiteSetter) {
 		val := random_string(nil)
 		m.OwnerName = omit.From(val)
 	}
-	if !(m.ParcelID.IsValue()) {
-		val := random_int32(nil)
-		m.ParcelID = omit.From(val)
-	}
 	if !(m.Tags.IsValue()) {
 		val := random_pgtypes_HStore(nil)
 		m.Tags = omit.From(val)
@@ -435,6 +431,25 @@ func (o *SiteTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *
 
 	}
 
+	isParcelDone, _ := siteRelParcelCtx.Value(ctx)
+	if !isParcelDone && o.r.Parcel != nil {
+		ctx = siteRelParcelCtx.WithValue(ctx, true)
+		if o.r.Parcel.o.alreadyPersisted {
+			m.R.Parcel = o.r.Parcel.o.Build()
+		} else {
+			var rel6 *models.Parcel
+			rel6, err = o.r.Parcel.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachParcel(ctx, exec, rel6)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return err
 }
 
@@ -479,23 +494,6 @@ func (o *SiteTemplate) Create(ctx context.Context, exec bob.Executor) (*models.S
 
 	opt.CreatorID = omit.From(rel4.ID)
 
-	if o.r.Parcel == nil {
-		SiteMods.WithNewParcel().Apply(ctx, o)
-	}
-
-	var rel6 *models.Parcel
-
-	if o.r.Parcel.o.alreadyPersisted {
-		rel6 = o.r.Parcel.o.Build()
-	} else {
-		rel6, err = o.r.Parcel.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.ParcelID = omit.From(rel6.ID)
-
 	m, err := models.Sites.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
@@ -503,7 +501,6 @@ func (o *SiteTemplate) Create(ctx context.Context, exec bob.Executor) (*models.S
 
 	m.R.Address = rel3
 	m.R.CreatorUser = rel4
-	m.R.Parcel = rel6
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -922,14 +919,14 @@ func (m siteMods) RandomOwnerPhoneE164NotNull(f *faker.Faker) SiteMod {
 }
 
 // Set the model columns to this value
-func (m siteMods) ParcelID(val int32) SiteMod {
+func (m siteMods) ParcelID(val null.Val[int32]) SiteMod {
 	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ParcelID = func() int32 { return val }
+		o.ParcelID = func() null.Val[int32] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m siteMods) ParcelIDFunc(f func() int32) SiteMod {
+func (m siteMods) ParcelIDFunc(f func() null.Val[int32]) SiteMod {
 	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
 		o.ParcelID = f
 	})
@@ -944,10 +941,32 @@ func (m siteMods) UnsetParcelID() SiteMod {
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
+// The generated value is sometimes null
 func (m siteMods) RandomParcelID(f *faker.Faker) SiteMod {
 	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
-		o.ParcelID = func() int32 {
-			return random_int32(f)
+		o.ParcelID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m siteMods) RandomParcelIDNotNull(f *faker.Faker) SiteMod {
+	return SiteModFunc(func(_ context.Context, o *SiteTemplate) {
+		o.ParcelID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
 		}
 	})
 }

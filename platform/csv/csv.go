@@ -79,6 +79,10 @@ func JobCommit(ctx context.Context, file_id int32) error {
 			if err.Error() != "sql: no rows in result set" {
 				return fmt.Errorf("query site: %w", err)
 			}
+			var parcel_id *int32
+			if parcel != nil {
+				parcel_id = &(*parcel).ID
+			}
 			setter := models.SiteSetter{
 				AddressID: omit.From(address.ID),
 				Created:   omit.From(time.Now()),
@@ -89,7 +93,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 				OrganizationID: omit.From(org.ID),
 				OwnerName:      omit.From(row.PropertyOwnerName),
 				OwnerPhoneE164: omitnull.FromPtr(row.PropertyOwnerPhoneE164.Ptr()),
-				ParcelID:       omit.From(parcel.ID),
+				ParcelID:       omitnull.FromPtr(parcel_id),
 				ResidentOwned:  omitnull.FromPtr(row.ResidentOwned.Ptr()),
 				Tags:           omit.From(row.Tags),
 				Version:        omit.From(int32(1)),
