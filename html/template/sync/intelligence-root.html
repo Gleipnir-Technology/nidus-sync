@@ -468,7 +468,7 @@
 						</div>
 
 						<div class="row g-3">
-							<div class="col-md-6">
+							<div class="col-md-12">
 								<div class="card border">
 									<div class="card-body">
 										<div class="fw-semibold">Selected Signals</div>
@@ -508,67 +508,6 @@
 										>
 											Clear Selection
 										</button>
-									</div>
-								</div>
-							</div>
-
-							<div class="col-md-6">
-								<div class="card border">
-									<div class="card-body">
-										<div class="fw-semibold">Derived Lead Strength</div>
-										<div class="text-muted small">Signal Convergence Score</div>
-										<div class="mt-2">
-											<template x-if="selectedSignals.length === 0">
-												<span class="badge bg-secondary">No Selection</span>
-											</template>
-											<template x-if="selectedSignals.length === 1">
-												<span class="badge bg-info">Single Signal</span>
-											</template>
-											<template x-if="selectedSignals.length === 2">
-												<span class="badge bg-warning text-dark"
-													>Moderate Confidence</span
-												>
-											</template>
-											<template x-if="selectedSignals.length >= 3">
-												<span class="badge bg-danger">High Confidence</span>
-											</template>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="col-md-6">
-								<div class="card border">
-									<div class="card-body">
-										<div class="fw-semibold">Related Communications</div>
-										<div class="text-muted small">
-											Inbound & outbound contact
-										</div>
-										<ul class="small mt-2">
-											<li>Resident follow-up requested</li>
-											<li>HOA notification sent</li>
-										</ul>
-									</div>
-								</div>
-							</div>
-
-							<div class="col-md-6">
-								<div class="card border">
-									<div class="card-body">
-										<div class="fw-semibold">Priority Context</div>
-										<div class="text-muted small">Risk synthesis</div>
-										<template
-											x-if="selectedSignals.some(s => s.species === 'aedes_aegypti')"
-										>
-											<span class="badge bg-warning text-dark"
-												>Elevated Aedes Risk</span
-											>
-										</template>
-										<template
-											x-if="!selectedSignals.some(s => s.species === 'aedes_aegypti')"
-										>
-											<span class="badge bg-secondary">Standard Priority</span>
-										</template>
 									</div>
 								</div>
 							</div>
