@@ -34,12 +34,10 @@ func NewBounds() Bounds {
 	}
 }
 
-/* not sure if used
 type Location struct {
 	Latitude  float64
 	Longitude float64
 }
-*/
 
 type NoteImagePayload struct {
 	UUID      string     `json:"uuid"`

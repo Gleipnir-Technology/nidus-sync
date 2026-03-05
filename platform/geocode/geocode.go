@@ -130,10 +130,15 @@ func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeR
 	if err != nil {
 		return GeocodeResult{}, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
 	}
-	if len(resp.Features) > 1 {
-		return GeocodeResult{}, fmt.Errorf("%s matched more than one location", a.String())
+	if len(resp.Features) < 1 {
+		return GeocodeResult{}, fmt.Errorf("%s matched no locations", a.String())
 	}
 	feature := resp.Features[0]
+	if len(resp.Features) > 1 {
+		if !allFeaturesIdenticalEnough(resp.Features) {
+			return GeocodeResult{}, fmt.Errorf("%s matched more than one location, and they differ a lot", a.String())
+		}
+	}
 	if feature.Geometry.Type != "Point" {
 		return GeocodeResult{}, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, a.String())
 	}
@@ -178,6 +183,22 @@ func GetParcel(ctx context.Context, txn bob.Tx, a *models.Address) (*models.Parc
 		return nil, fmt.Errorf("Get parcel from address %d: %w", a.ID, err)
 	}
 	return result, nil
+}
+func allFeaturesIdenticalEnough(features []stadia.GeocodeFeature) bool {
+	if len(features) < 2 {
+		return true
+	}
+	f := features[0].Properties
+	for _, feature := range features {
+		if feature.Properties.CountryCode != f.CountryCode ||
+			feature.Properties.County != f.County ||
+			feature.Properties.HouseNumber != f.HouseNumber ||
+			feature.Properties.Locality != f.Locality ||
+			feature.Properties.RegionA != f.RegionA {
+			return false
+		}
+	}
+	return true
 }
 func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
 	if org.ServiceAreaXmax.IsNull() ||

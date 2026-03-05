@@ -5,21 +5,36 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/aarondl/opt/null"
+	//"github.com/aarondl/opt/null"
+	"github.com/stephenafamo/scan"
 )
 
+type Address struct {
+	Country    string `db:"country"`
+	Locality   string `db:"locality"`
+	Number     string `db:"number"`
+	PostalCode string `db:"postal_code"`
+	Region     string `db:"region"`
+	Street     string `db:"street"`
+	Unit       string `db:"unit"`
+}
 type signal struct {
+	Address   Address
 	Addressed *time.Time     `json:"addressed"`
 	Addressor *platform.User `json:"addressed"`
 	Created   time.Time      `json:"created"`
 	Creator   platform.User  `json:"creator"`
 	ID        int32          `json:"id"`
+	Location  Location       `json:"location"`
 	Species   string         `json:"species"`
+	Title     string         `json:"title"`
 	Type      string         `json:"type"`
 }
 type contentListSignal struct {
@@ -27,10 +42,68 @@ type contentListSignal struct {
 }
 
 func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*contentListSignal, *nhttp.ErrorWithStatus) {
-	rows, err := models.Signals.Query(
-		models.SelectWhere.Signals.OrganizationID.EQ(org.ID),
-		sm.OrderBy("created").Desc(),
-	).All(ctx, db.PGInstance.BobDB)
+	type _Row struct {
+		Address   Address
+		Addressed *time.Time `db:"addressed"`
+		Addressor *int32     `db:"addressor"`
+		Created   time.Time  `db:"created"`
+		Creator   int32      `db:"creator"`
+		ID        int32      `db:"id"`
+		Latitude  float64    `db:"latitude"`
+		Longitude float64    `db:"longitude"`
+		Location  Location   `db:"location"`
+		Species   *string    `db:"species"`
+		Title     string     `db:"title"`
+		Type      string     `db:"type"`
+	}
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"signal.addressed AS addressed",
+			"signal.addressor AS addressor",
+			"signal.created AS created",
+			"signal.creator_id AS creator_id",
+			"signal.id AS id",
+			"signal.species AS species",
+			"signal.title AS title",
+			"signal.type_ AS type",
+			"address.country",
+			"address.locality",
+			"address.number_",
+			"address.postal_code",
+			"address.region",
+			"address.street",
+			"address.unit",
+			"ST_Y(address.geom) AS latitude",
+			"ST_X(address.geom) AS longitude",
+		),
+		sm.From("signal"),
+		sm.InnerJoin("signal_pool").OnEQ(
+			psql.Quote("signal", "id"),
+			psql.Quote("signal_pool", "signal_id"),
+		),
+		sm.InnerJoin("pool").OnEQ(
+			psql.Quote("signal_pool", "pool_id"),
+			psql.Quote("pool", "id"),
+		),
+		sm.InnerJoin("site").On(
+			psql.And(
+				psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
+				psql.Quote("pool", "site_version").EQ(psql.Quote("site", "version")),
+			),
+		),
+		sm.InnerJoin("address").OnEQ(
+			psql.Quote("site", "address_id"),
+			psql.Quote("address", "id"),
+		),
+		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(org.ID))),
+	), scan.StructMapper[_Row]())
+
+	/*
+		rows, err := models.Signals.Query(
+			models.SelectWhere.Signals.OrganizationID.EQ(org.ID),
+			sm.OrderBy("created").Desc(),
+		).All(ctx, db.PGInstance.BobDB)
+	*/
 	if err != nil {
 		return nil, nhttp.NewError("failed to get signals: %w", err)
 	}
@@ -41,17 +114,22 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 	signals := make([]signal, len(rows))
 	for i, row := range rows {
 		var species string = ""
-		if row.Species.IsValue() {
-			species = row.Species.MustGet().String()
+		if row.Species != nil {
+			species = *row.Species
 		}
 		signals[i] = signal{
-			Addressed: row.Addressed.Ptr(),
+			Addressed: row.Addressed,
 			Addressor: userOrNil(users_by_id, row.Addressor),
 			Created:   row.Created,
 			Creator:   *users_by_id[row.Creator],
 			ID:        row.ID,
-			Species:   species,
-			Type:      row.Type.String(),
+			Location: Location{
+				Latitude:  row.Latitude,
+				Longitude: row.Longitude,
+			},
+			Species: species,
+			Title:   row.Title,
+			Type:    row.Type,
 		}
 	}
 	return &contentListSignal{
@@ -59,11 +137,11 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 	}, nil
 }
 
-func userOrNil(usersByID map[int32]*platform.User, id null.Val[int32]) *platform.User {
-	if id.IsNull() {
+func userOrNil(usersByID map[int32]*platform.User, id *int32) *platform.User {
+	if id == nil {
 		return nil
 	}
-	u, ok := usersByID[id.MustGet()]
+	u, ok := usersByID[*id]
 	if !ok {
 		return nil
 	}

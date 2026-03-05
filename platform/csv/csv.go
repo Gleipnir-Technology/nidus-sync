@@ -65,7 +65,13 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		}
 		address, err := geocode.EnsureAddress(ctx, txn, org, a)
 		if err != nil {
-			return fmt.Errorf("ensure address: %w", err)
+			//return fmt.Errorf("ensure address: %w", err)
+			if address == nil {
+				log.Warn().Err(err).Msg("ensure address failure")
+			} else {
+				log.Warn().Err(err).Int32("address.id", address.ID).Msg("ensure address failure")
+			}
+			continue
 		}
 		parcel, err := geocode.GetParcel(ctx, txn, address)
 		if err != nil {
@@ -135,13 +141,16 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		if err != nil {
 			return fmt.Errorf("insert signal: %w", err)
 		}
-		_, err = bob.Exec(ctx, db.PGInstance.BobDB, psql.Insert(
-			im.Into("signa_pool", "pool_id", "signal_id"),
+		_, err = bob.Exec(ctx, txn, psql.Insert(
+			im.Into("signal_pool", "pool_id", "signal_id"),
 			im.Values(
 				psql.Arg(pool.ID),
 				psql.Arg(signal.ID),
 			),
 		))
+		if err != nil {
+			return fmt.Errorf("insert signal pool: %w", err)
+		}
 		/*
 			Not sure why SignalPools doesn't have an Insert method
 			_, err = models.SignalPools.Insert(&models.SignalPoolSetter{
