@@ -13,6 +13,33 @@
 	></script>
 
 	<script>
+		// Return two points defining a bounding box for the given points
+		function getBoundingBox(points) {
+			// Handle empty or invalid input
+			if (!points || points.length === 0) {
+				return null;
+			}
+
+			// Initialize with the first point's coordinates
+			let minLat = points[0].latitude;
+			let maxLat = points[0].latitude;
+			let minLng = points[0].longitude;
+			let maxLng = points[0].longitude;
+
+			// Find the min and max for latitude and longitude
+			for (const point of points) {
+				if (point.latitude < minLat) minLat = point.latitude;
+				if (point.latitude > maxLat) maxLat = point.latitude;
+				if (point.longitude < minLng) minLng = point.longitude;
+				if (point.longitude > maxLng) maxLng = point.longitude;
+			}
+
+			// Return southwest and northeast corners
+			return new maplibregl.LngLatBounds(
+				new maplibregl.LngLat(minLng, minLat),
+				new maplibregl.LngLat(maxLng, maxLat),
+			);
+		}
 		function shortAddress(a) {
 			return a.number + " " + a.street + ", " + a.locality + ", " + a.region;
 		}
@@ -20,6 +47,10 @@
 			const map = document.querySelector("map-multipoint");
 			const markers = signals.map((s) => s.location);
 			map.SetMarkers(markers);
+			bounds = getBoundingBox(markers);
+			map.FitBounds(bounds, {
+				padding: 50,
+			});
 		}
 		function workbench() {
 			return {

@@ -45,9 +45,11 @@ class MapMultipoint extends HTMLElement {
 			center: centroid.coordinates,
 			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
-		}).fitBounds(bounds, {
-			padding: { top: 10, bottom: 10, left: 10, right: 10 },
 		});
+		let camera_transform = this._map.cameraForBounds(bounds, {
+			padding: 10,
+		});
+		this._map.setZoom(camera_transform.zoom);
 		this._map.on("load", () => {
 			if (organization_id != 0) {
 				this._map.addSource("tegola", {
@@ -110,6 +112,9 @@ class MapMultipoint extends HTMLElement {
 		return this._map.queryRenderedFeatures(a);
 	}
 
+	FitBounds(bounds, options) {
+		return this._map.fitBounds(bounds, options);
+	}
 	SetLayoutProperty(layout, property, value) {
 		return this._map.setLayoutProperty(layout, property, value);
 	}
