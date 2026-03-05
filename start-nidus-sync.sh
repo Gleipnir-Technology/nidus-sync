@@ -1,2 +1,7 @@
 #!/run/current-system/sw/bin/bash
-export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && MITM_PROXY=http://127.0.0.1:8080 ./nidus-sync 2>&1 | tee nidus-sync.log
+# with MITM
+# export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && MITM_PROXY=http://127.0.0.1:8080 ./nidus-sync 2>&1 | tee nidus-sync.log
+# original recipe
+#export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && ./nidus-sync 2>&1 | tee nidus-sync.log
+# force production environment
+export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && ./nidus-sync -prod 2>&1 | tee nidus-sync.log

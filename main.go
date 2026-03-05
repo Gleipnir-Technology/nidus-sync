@@ -46,8 +46,9 @@ func main() {
 		log.Warn().Msg("Forcing production mode for testing templates")
 		config.Environment = "PRODUCTION"
 	}
+	log.Info().Str("environment", config.Environment).Bool("is-prod", config.IsProductionEnvironment()).Msg("Starting")
 	err = sentry.Init(sentry.ClientOptions{
-		Debug:            false, //!config.IsProductionEnvironment(),
+		Debug:            !config.IsProductionEnvironment(),
 		Dsn:              config.SentryDSN,
 		EnableTracing:    true,
 		SendDefaultPII:   true,
