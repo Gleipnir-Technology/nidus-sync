@@ -331,7 +331,8 @@
 						<div class="mb-3">
 							<div class="filter-label mb-1">Species</div>
 							<select
-								class="form-select form-select-sm mb-2"
+								class="form-select form-select-sm mb-2 disabled"
+								disabled
 								x-model="filters.species"
 								@change="loadSignals()"
 							>
@@ -344,7 +345,8 @@
 
 							<div class="filter-label mb-1">Signal Type</div>
 							<select
-								class="form-select form-select-sm mb-2"
+								class="form-select form-select-sm mb-2 disabled"
+								disabled
 								x-model="filters.type"
 								@change="loadSignals()"
 							>
@@ -358,7 +360,8 @@
 
 							<div class="filter-label mb-1">Sort By</div>
 							<select
-								class="form-select form-select-sm"
+								class="form-select form-select-sm disabled"
+								disabled
 								x-model="filters.sort"
 								@change="loadSignals()"
 							>
