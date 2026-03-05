@@ -2,618 +2,169 @@
 
 {{ define "title" }}Planning{{ end }}
 {{ define "extraheader" }}
-	<script
-		type="text/javascript"
-		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
-	></script>
-	<script src="/static/js/map-arcgis-tile.js"></script>
-	<script src="/static/js/map-multipoint.js"></script>
-	<script
-		defer
-		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-	></script>
-	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
-
-	<script>
-		// Return two points defining a bounding box for the given points
-		function getBoundingBox(points) {
-			// Handle empty or invalid input
-			if (!points || points.length === 0) {
-				return null;
-			}
-
-			// Initialize with the first point's coordinates
-			let minLat = points[0].latitude;
-			let maxLat = points[0].latitude;
-			let minLng = points[0].longitude;
-			let maxLng = points[0].longitude;
-
-			// Find the min and max for latitude and longitude
-			for (const point of points) {
-				if (point.latitude < minLat) minLat = point.latitude;
-				if (point.latitude > maxLat) maxLat = point.latitude;
-				if (point.longitude < minLng) minLng = point.longitude;
-				if (point.longitude > maxLng) maxLng = point.longitude;
-			}
-
-			// Return southwest and northeast corners
-			return new maplibregl.LngLatBounds(
-				new maplibregl.LngLat(minLng, minLat),
-				new maplibregl.LngLat(maxLng, maxLat),
-			);
+	<style>
+		.report-card {
+			transition: all 0.3s;
+			border-radius: 10px;
 		}
-		function shortAddress(a) {
-			return a.number + " " + a.street + ", " + a.locality + ", " + a.region;
+		.report-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 		}
-		function updateMap(signals) {
-			const map = document.querySelector("map-multipoint");
-			const markers = signals.map((s) => s.location);
-			map.SetMarkers(markers);
-			bounds = getBoundingBox(markers);
-			map.FitBounds(bounds, {
-				padding: 50,
-			});
+		.card-header {
+			border-radius: 10px 10px 0 0 !important;
 		}
-		function workbench() {
-			return {
-				// API Configuration
-				apiBase: "/api", // Change this to your API base URL
-
-				// State
-				creating: false,
-				error: null,
-				planFollowups: [],
-				leads: [],
-				loading: false,
-				poolLocations: {}, // A mapping of signal IDs to the pool values
-				selectedSignals: [],
-				signals: [],
-
-				filters: {
-					species: "",
-					type: "",
-					sort: "newest",
-				},
-
-				// Initialize - runs when component loads
-				init() {
-					this.loadData();
-				},
-
-				// Load all data
-				async loadData() {
-					this.loading = true;
-					this.error = null;
-
-					try {
-						await Promise.all([
-							this.loadSignals(),
-							//this.loadPlanFollowups(),
-							this.loadLeads(),
-						]);
-					} catch (err) {
-						this.error = err.message;
-						console.error("Error loading data:", err);
-					} finally {
-						this.loading = false;
-					}
-				},
-
-				// Load signals from API
-				async loadSignals() {
-					try {
-						// Build query parameters from filters
-						const params = new URLSearchParams();
-						if (this.filters.species)
-							params.append("species", this.filters.species);
-						if (this.filters.type) params.append("type", this.filters.type);
-						if (this.filters.sort) params.append("sort", this.filters.sort);
-
-						const response = await fetch(`${this.apiBase}/signal?${params}`);
-
-						if (!response.ok) {
-							throw new Error(`HTTP error! status: ${response.status}`);
-						}
-
-						const data = await response.json();
-						this.signals = data.signals || data; // Handle different response formats
-					} catch (err) {
-						console.error("Error loading signals:", err);
-						throw err;
-					}
-				},
-
-				// Load plan followups from API
-				async loadPlanFollowups() {
-					try {
-						const response = await fetch(`${this.apiBase}/plan-followups`);
-
-						if (!response.ok) {
-							throw new Error(`HTTP error! status: ${response.status}`);
-						}
-
-						const data = await response.json();
-						this.planFollowups = data.followups || data;
-					} catch (err) {
-						console.error("Error loading plan followups:", err);
-						throw err;
-					}
-				},
-
-				// Load leads from API
-				async loadLeads() {
-					try {
-						const response = await fetch(`${this.apiBase}/leads`);
-
-						if (!response.ok) {
-							throw new Error(`HTTP error! status: ${response.status}`);
-						}
-
-						const data = await response.json();
-						this.leads = data.leads || data;
-					} catch (err) {
-						console.error("Error loading leads:", err);
-						throw err;
-					}
-				},
-
-				// Selection methods
-				isSelected(id) {
-					return this.selectedSignals.some((s) => s.id === id);
-				},
-
-				clearSelection() {
-					this.selectedSignals = [];
-				},
-
-				// Create a new lead from selected signals
-				async createLead() {
-					if (this.selectedSignals.length === 0) return;
-
-					this.creating = true;
-
-					try {
-						const response = await fetch(`${this.apiBase}/leads`, {
-							method: "POST",
-							headers: {
-								"Content-Type": "application/json",
-								// Add authentication headers if needed
-								// 'Authorization': `Bearer ${your_token}`
-							},
-							body: JSON.stringify({
-								pool_locations: this.poolLocations,
-								signal_ids: this.selectedSignals.map((s) => s.id),
-							}),
-						});
-
-						if (!response.ok) {
-							const errorData = await response.json();
-							throw new Error(
-								errorData.message || `HTTP error! status: ${response.status}`,
-							);
-						}
-
-						const newLead = await response.json();
-
-						// Add the new lead to the leads list
-						this.leads.unshift(newLead);
-
-						// Clear selection
-						this.clearSelection();
-
-						// Refresh signals to update their status
-						await this.loadSignals();
-
-						// Show success message
-						alert(`Lead created successfully! ID: ${newLead.id}`);
-					} catch (err) {
-						console.error("Error creating lead:", err);
-						alert(`Failed to create lead: ${err.message}`);
-					} finally {
-						this.creating = false;
-					}
-				},
-
-				// Mark signals as addressed
-				async markAsAddressed() {
-					if (this.selectedSignals.length === 0) return;
-
-					try {
-						const response = await fetch(
-							`${this.apiBase}/signal/mark-addressed`,
-							{
-								method: "POST",
-								headers: {
-									"Content-Type": "application/json",
-								},
-								body: JSON.stringify({
-									signal_ids: this.selectedSignals.map((s) => s.id),
-								}),
-							},
-						);
-
-						if (!response.ok) {
-							throw new Error(`HTTP error! status: ${response.status}`);
-						}
-
-						// Remove addressed signals from the list
-						this.signals = this.signals.filter(
-							(signal) => !this.selectedSignals.some((s) => s.id === signal.id),
-						);
-
-						this.clearSelection();
-						alert("Signals marked as addressed");
-					} catch (err) {
-						console.error("Error marking signals as addressed:", err);
-						alert(`Failed to mark signals: ${err.message}`);
-					}
-				},
-				toggleSignal(signal) {
-					const index = this.selectedSignals.findIndex(
-						(s) => s.id === signal.id,
-					);
-
-					if (index > -1) {
-						this.selectedSignals.splice(index, 1);
-					} else {
-						this.selectedSignals.push(signal);
-					}
-					updateMap(this.selectedSignals);
-				},
-				updateSignalLocation(event, signal_id) {
-					console.log("map click", signal_id, event.detail);
-					const map = event.detail.map;
-					const loc = {
-						latitude: event.detail.lat,
-						longitude: event.detail.lng,
-					};
-					map.SetMarkers([loc]);
-					this.poolLocations[signal_id] = loc;
-				},
-			};
+		.report-item {
+			padding: 12px;
+			border-left: 4px solid transparent;
+			transition: all 0.2s;
 		}
-	</script>
+		.report-item:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+			border-left: 4px solid #0d6efd;
+		}
+		body {
+			background-color: #f8f9fa;
+		}
+	</style>
 {{ end }}
 {{ define "content" }}
-
-	<div class="container-fluid py-3" x-data="workbench()">
-		<!-- Header -->
-		<div class="row mb-3">
-			<div class="col">
-				<h3 class="mb-1">Daily Planning Workbench</h3>
-				<div class="text-muted small">
-					Signals and leads enter from the left, are investigated in the center,
-					and transformed into structured field assignments using tools on the
-					right.
-				</div>
-			</div>
-		</div>
-
-		<div class="row g-3">
-			<!-- LEFT: Incoming Signals & Leads -->
-			<div class="col-xl-3">
-				<div class="card shadow-sm h-100">
-					<div class="card-header bg-white pane-header">
-						Incoming Signals & Leads
-						<span
-							x-show="loading"
-							class="spinner-border spinner-border-sm ms-2"
-							role="status"
-						></span>
-					</div>
-					<div class="card-body scroll-pane">
-						<!-- Error Display -->
-						<template x-if="error">
-							<div class="error-message">
-								<strong>Error:</strong> <span x-text="error"></span>
-								<button
-									@click="loadData()"
-									class="btn btn-sm btn-outline-danger mt-2 w-100"
-								>
-									Retry
-								</button>
-							</div>
-						</template>
-
-						<!-- FILTERS -->
-						<div class="mb-3">
-							<div class="filter-label mb-1">Species</div>
-							<select
-								class="form-select form-select-sm mb-2"
-								x-model="filters.species"
-								@change="loadSignals()"
-							>
-								<option value="">All Species</option>
-								<option value="aedes_aegypti">Aedes aegypti</option>
-								<option value="aedes_albopictus">Aedes albopictus</option>
-								<option value="culex_pipiens">Culex pipiens</option>
-								<option value="culex_tarsalis">Culex tarsalis</option>
-							</select>
-
-							<div class="filter-label mb-1">Signal Type</div>
-							<select
-								class="form-select form-select-sm mb-2"
-								x-model="filters.type"
-								@change="loadSignals()"
-							>
-								<option value="">All Types</option>
-								<option value="public_report">Public Report</option>
-								<option value="trap_spike">Trap Spike</option>
-								<option value="surveillance">Surveillance Observation</option>
-								<option value="residual_expiring">Residual Expiring</option>
-								<option value="plan_followup">Plan Follow-Up</option>
-							</select>
-
-							<div class="filter-label mb-1">Sort By</div>
-							<select
-								class="form-select form-select-sm"
-								x-model="filters.sort"
-								@change="loadSignals()"
-							>
-								<option value="newest">Newest First</option>
-								<option value="priority">Highest Priority</option>
-								<option value="linked">Most Signals Linked</option>
-								<option value="species_signal">Strongest Species Signal</option>
-							</select>
-						</div>
-
-						<hr />
-
-						<!-- Loading State -->
-						<template x-if="loading && signals.length === 0">
-							<div class="loading-spinner">
-								<div class="spinner-border text-primary" role="status">
-									<span class="visually-hidden">Loading...</span>
-								</div>
-							</div>
-						</template>
-
-						<!-- Signals -->
-						<div class="mb-3" x-show="!loading || signals.length > 0">
-							<div class="fw-semibold mb-2">
-								Signals
-								<span
-									class="badge bg-primary"
-									x-show="selectedSignals.length > 0"
-									x-text="selectedSignals.length"
-								></span>
-							</div>
-
-							<template x-if="signals.length === 0 && !loading">
-								<div class="text-muted small fst-italic">No signals found</div>
-							</template>
-
-							<template x-for="signal in signals" :key="signal.id">
-								<div
-									class="border rounded p-2 mb-2 signal-item"
-									:class="{ 'selected': isSelected(signal.id) }"
-									@click="toggleSignal(signal)"
-								>
-									<div class="small fw-semibold" x-text="signal.title"></div>
-									<div
-										class="signal-address"
-										x-text="shortAddress(signal.address)"
-									></div>
-									<div
-										class="text-muted small"
-										x-text="signal.description"
-									></div>
-									<template x-if="signal.badge">
-										<span
-											class="badge bg-secondary mt-1"
-											x-text="signal.badge"
-										></span>
-									</template>
-								</div>
-							</template>
-						</div>
-
-						<hr />
-
-						<!-- Mosquito Control Plan Followups -->
-						<div class="mb-3" x-show="!loading || planFollowups.length > 0">
-							<div class="fw-semibold mb-2">
-								Mosquito Control Plan Follow-Ups
-							</div>
-
-							<template x-if="planFollowups.length === 0 && !loading">
-								<div class="text-muted small fst-italic">
-									No plan follow-ups
-								</div>
-							</template>
-
-							<template x-for="followup in planFollowups" :key="followup.id">
-								<div
-									class="border rounded p-2 mb-2 signal-item"
-									:class="{ 'selected': isSelected(followup.id) }"
-									@click="toggleSignal(followup)"
-								>
-									<div class="small fw-semibold" x-text="followup.title"></div>
-									<div
-										class="text-muted small"
-										x-text="followup.description"
-									></div>
-									<span class="badge bg-secondary">Plan</span>
-								</div>
-							</template>
-						</div>
-
-						<hr />
-
-						<!-- Leads -->
-						<div x-show="!loading || leads.length > 0">
-							<div class="fw-semibold mb-2">Existing Leads</div>
-
-							<template x-if="leads.length === 0 && !loading">
-								<div class="text-muted small fst-italic">No existing leads</div>
-							</template>
-
-							<template x-for="lead in leads" :key="lead.id">
-								<div class="border rounded p-2 mb-2 signal-item">
-									<div class="small fw-semibold" x-text="lead.title"></div>
-									<div class="text-muted small" x-text="lead.description"></div>
-								</div>
-							</template>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- CENTER: Active Workbench -->
-			<div class="col-xl-6">
-				<div class="card shadow-sm mb-3">
-					<div class="card-header bg-white pane-header">
-						Active Investigation Workbench
+	<div class="container py-5">
+		<div class="row g-4">
+			<!-- Technician Supervision -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-primary text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-person-workspace me-2"></i>Technician Supervision
+						</h3>
 					</div>
 					<div class="card-body">
-						<div class="map-container">
-							<map-multipoint
-								id="map"
-								centroid="{{ if .Organization.ServiceAreaCentroidGeojson.IsValue }}
-									{{ .Organization.ServiceAreaCentroidGeojson.MustGet|json }}
-								{{ end }}"
-								organization-id="{{ .Organization.ID }}"
-								tegola="{{ .URL.Tegola }}"
-								xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
-								ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
-								xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
-								ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
-							></map-multipoint>
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-activity fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Recent Activity</h5>
+								<p class="text-muted small mb-0">Activity logs by technician</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
 						</div>
 
-						<div class="row g-3">
-							<div class="col-md-12">
-								<div class="card border">
-									<div class="card-body">
-										<div class="fw-semibold">Selected Signals</div>
-										<div
-											class="text-muted small"
-											x-text="`${selectedSignals.length} Signal${selectedSignals.length !== 1 ? 's' : ''} Selected`"
-										></div>
-
-										<template x-if="selectedSignals.length === 0">
-											<div class="text-muted small mt-2 fst-italic">
-												Click signals from the left panel to select them
-											</div>
-										</template>
-
-										<ul class="small mt-2" x-show="selectedSignals.length > 0">
-											<template
-												x-for="signal in selectedSignals"
-												:key="signal.id"
-											>
-												<li>
-													<span x-text="signal.title"></span>
-													<button
-														@click="toggleSignal(signal)"
-														class="btn btn-sm btn-link text-danger p-0 ms-1"
-														style="font-size: 0.7rem;"
-													>
-														✕
-													</button>
-												</li>
-											</template>
-										</ul>
-
-										<button
-											x-show="selectedSignals.length > 0"
-											@click="clearSelection()"
-											class="btn btn-sm btn-outline-secondary mt-2 w-100"
-										>
-											Clear Selection
-										</button>
-									</div>
-								</div>
-								<div class="card border">
-									<div class="card-body">
-										<template
-											x-for="signal in selectedSignals"
-											:key="signal.id"
-										>
-											<div class="map-container">
-												<map-arcgis-tile
-													class="map"
-													arcgis-access-token="{{ .C.ArcgisAccessToken }}"
-													organization-id="{{ .Organization.ID }}"
-													tegola="{{ .URL.Tegola }}"
-													@map-click="updateSignalLocation($event, signal.id)"
-													:latitude="signal.location.latitude"
-													:longitude="signal.location.longitude"
-												>
-												</map-arcgis-tile>
-											</div>
-										</template>
-									</div>
-								</div>
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-map fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Coverage Maps</h5>
+								<p class="text-muted small mb-0">Area coverage by region</p>
 							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-graph-up fs-4 me-3 text-primary"></i>
+							<div>
+								<h5 class="mb-0">Performance</h5>
+								<p class="text-muted small mb-0">
+									Staff evaluations and metrics
+								</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-primary ms-auto"
+								><i class="bi bi-download"></i
+							></a>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- RIGHT: Transformation Tools -->
-			<div class="col-xl-3">
-				<div class="card shadow-sm h-100">
-					<div class="card-header bg-white pane-header">
-						Transformation Tools
+			<!-- Inventory Management -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-success text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-boxes me-2"></i>Inventory Management
+						</h3>
 					</div>
-					<div class="card-body scroll-pane">
-						<div class="mb-3">
-							<div class="text-muted small mb-2">Signal → Lead</div>
-							<button
-								class="btn btn-outline-primary tool-button"
-								:disabled="selectedSignals.length === 0 || creating"
-								@click="createLead()"
-							>
-								<span x-show="!creating">Create New Lead from Selection</span>
-								<span x-show="creating">
-									<span class="spinner-border spinner-border-sm me-1"></span>
-									Creating...
-								</span>
-							</button>
-							<button
-								class="btn btn-outline-secondary tool-button"
-								:disabled="selectedSignals.length === 0"
-							>
-								Add Signals to Existing Lead
-							</button>
-							<button
-								class="btn btn-outline-secondary tool-button"
-								:disabled="selectedSignals.length === 0"
-								@click="markAsAddressed()"
-							>
-								Mark Signal as Addressed
-							</button>
+					<div class="card-body">
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-cart-check fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Recent Orders</h5>
+								<p class="text-muted small mb-0">
+									Purchase orders and deliveries
+								</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
 						</div>
 
-						<hr />
-
-						<div class="mb-3">
-							<div class="text-muted small mb-2">Lead → Field Assignment</div>
-							<button class="btn btn-outline-success tool-button">
-								Create Proposed Assignment
-							</button>
-							<button class="btn btn-outline-secondary tool-button">
-								Add Leads to Existing Assignment
-							</button>
-							<button class="btn btn-outline-secondary tool-button">
-								Split Lead
-							</button>
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-box-seam fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Current Stock</h5>
+								<p class="text-muted small mb-0">Inventory levels and status</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
 						</div>
 
-						<hr />
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-bar-chart-line fs-4 me-3 text-success"></i>
+							<div>
+								<h5 class="mb-0">Usage Rates</h5>
+								<p class="text-muted small mb-0">Consumption analytics</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-success ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+					</div>
+				</div>
+			</div>
 
-						<div class="mb-3">
-							<div class="text-muted small mb-2">Assignment Controls</div>
-							<button class="btn btn-outline-dark tool-button">
-								Set Priority
-							</button>
-							<button class="btn btn-outline-dark tool-button">
-								Estimate Effort
-							</button>
-							<button class="btn btn-outline-dark tool-button">
-								Send to Operations
-							</button>
+			<!-- Lab Reports -->
+			<div class="col-lg-4">
+				<div class="card h-100 border-0 shadow-sm report-card">
+					<div class="card-header bg-info text-white py-3">
+						<h3 class="mb-0">
+							<i class="bi bi-clipboard-data me-2"></i>Lab Reports
+						</h3>
+					</div>
+					<div class="card-body">
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-bug fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Trap Counts</h5>
+								<p class="text-muted small mb-0">Regional trap data analysis</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-arrow-up-right fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Rate Changes</h5>
+								<p class="text-muted small mb-0">Population fluctuation data</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
+						</div>
+
+						<div class="report-item d-flex align-items-center">
+							<i class="bi bi-virus fs-4 me-3 text-info"></i>
+							<div>
+								<h5 class="mb-0">Disease Propagation</h5>
+								<p class="text-muted small mb-0">Health risk assessment data</p>
+							</div>
+							<a href="#" class="btn btn-sm btn-outline-info ms-auto"
+								><i class="bi bi-download"></i
+							></a>
 						</div>
 					</div>
 				</div>
