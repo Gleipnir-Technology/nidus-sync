@@ -118,6 +118,7 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 			species = *row.Species
 		}
 		signals[i] = signal{
+			Address:   row.Address,
 			Addressed: row.Addressed,
 			Addressor: userOrNil(users_by_id, row.Addressor),
 			Created:   row.Created,
