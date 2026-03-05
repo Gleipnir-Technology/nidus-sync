@@ -13,6 +13,9 @@
 	></script>
 
 	<script>
+		function shortAddress(a) {
+			return a.number + " " + a.street + ", " + a.locality + ", " + a.region;
+		}
 		function workbench() {
 			return {
 				// API Configuration
@@ -337,6 +340,10 @@
 									@click="toggleSignal(signal)"
 								>
 									<div class="small fw-semibold" x-text="signal.title"></div>
+									<div
+										class="signal-address"
+										x-text="shortAddress(signal.address)"
+									></div>
 									<div
 										class="text-muted small"
 										x-text="signal.description"

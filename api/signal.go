@@ -17,18 +17,18 @@ import (
 )
 
 type Address struct {
-	Country    string `db:"country"`
-	Locality   string `db:"locality"`
-	Number     string `db:"number"`
-	PostalCode string `db:"postal_code"`
-	Region     string `db:"region"`
-	Street     string `db:"street"`
-	Unit       string `db:"unit"`
+	Country    string `db:"country" json:"country"`
+	Locality   string `db:"locality" json:"locality"`
+	Number     string `db:"number" json:"number"`
+	PostalCode string `db:"postal_code" json:"postal_code"`
+	Region     string `db:"region" json:"region"`
+	Street     string `db:"street" json:"street"`
+	Unit       string `db:"unit" json:"unit"`
 }
 type signal struct {
-	Address   Address
+	Address   Address        `json:"address"`
 	Addressed *time.Time     `json:"addressed"`
-	Addressor *platform.User `json:"addressed"`
+	Addressor *platform.User `json:"addressor"`
 	Created   time.Time      `json:"created"`
 	Creator   platform.User  `json:"creator"`
 	ID        int32          `json:"id"`
