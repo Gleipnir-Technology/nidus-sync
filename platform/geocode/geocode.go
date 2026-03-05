@@ -165,13 +165,17 @@ func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeR
 	}, nil
 }
 
+// Get the parcel for a given address, if one can be found
 func GetParcel(ctx context.Context, txn bob.Tx, a *models.Address) (*models.Parcel, error) {
 	result, err := models.Parcels.Query(
 		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.geom"))),
 		models.SelectWhere.Addresses.ID.EQ(a.ID),
 	).One(ctx, txn)
 	if err != nil {
-		return nil, fmt.Errorf("Get parcel from address %d: %w", a.ID)
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Get parcel from address %d: %w", a.ID, err)
 	}
 	return result, nil
 }
