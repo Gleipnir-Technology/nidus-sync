@@ -39,12 +39,11 @@ class MapArcgisTile extends HTMLElement {
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 22,
 		});
-		/*
+		console.log("ArcGIS token", arcgis_access_token);
 		const basemap_style = maplibreArcGIS.BasemapStyle.applyStyle(this._map, {
 			style: "arcgis/light-gray",
 			token: arcgis_access_token,
 		});
-		*/
 		this._map.on("load", () => {
 			console.log("map-arcgis-tile loaded");
 			if (organization_id != 0) {
@@ -64,12 +63,12 @@ class MapArcgisTile extends HTMLElement {
 					},
 				});
 			}
-			/*
 			if (arcgis_access_token != "") {
 				this._map.addSource("flyover", {
 					type: "raster",
 					tiles: [
-						"https://tiles.arcgis.com/tiles/pV7SH1EgRc6tpxlJ/arcgis/rest/services/TrimmedFlyover2025/MapServer/tile/{z}/{y}/{x}?token=" + arcgis_access_token,
+						"https://tiles.arcgis.com/tiles/pV7SH1EgRc6tpxlJ/arcgis/rest/services/TrimmedFlyover2025/MapServer/tile/{z}/{y}/{x}?token=" +
+							arcgis_access_token,
 					],
 				});
 				console.log("added arcgis tile source");
@@ -80,7 +79,6 @@ class MapArcgisTile extends HTMLElement {
 				});
 				console.log("added arcgis tile layer");
 			}
-			*/
 			this.dispatchEvent(new CustomEvent("load"), {
 				bubbles: true,
 				composed: true, // Allows event to cross shadow DOM boundary
