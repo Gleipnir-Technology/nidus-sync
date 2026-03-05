@@ -97,7 +97,7 @@ class MapArcgisTile extends HTMLElement {
 					detail: {
 						lng: e.lngLat.lng,
 						lat: e.lngLat.lat,
-						map: this._map,
+						map: this,
 						point: e.point,
 					},
 				}),

@@ -15,8 +15,15 @@
 	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
 
 	<script>
-		function updateSignalLocation(event) {
-			console.log("map click", event.detail);
+		function updateSignalLocation(event, signal_id) {
+			console.log("map click", signal_id, event.detail);
+			const map = event.detail.map;
+			const loc = {
+				latitude: event.detail.lat,
+				longitude: event.detail.lng,
+			};
+			map.SetMarkers([loc]);
+			this.poolLocations[signal_id] = loc;
 		}
 		// Return two points defining a bounding box for the given points
 		function getBoundingBox(points) {
@@ -63,13 +70,14 @@
 				apiBase: "/api", // Change this to your API base URL
 
 				// State
-				signals: [],
-				planFollowups: [],
-				leads: [],
-				selectedSignals: [],
-				loading: false,
 				creating: false,
 				error: null,
+				planFollowups: [],
+				leads: [],
+				loading: false,
+				poolLocations: {}, // A mapping of signal IDs to the pool values
+				selectedSignals: [],
+				signals: [],
 
 				filters: {
 					species: "",
@@ -183,6 +191,7 @@
 								// 'Authorization': `Bearer ${your_token}`
 							},
 							body: JSON.stringify({
+								pool_locations: this.poolLocations,
 								signal_ids: this.selectedSignals.map((s) => s.id),
 							}),
 						});
@@ -527,7 +536,7 @@
 													arcgis-access-token="{{ .C.ArcgisAccessToken }}"
 													organization-id="{{ .Organization.ID }}"
 													tegola="{{ .URL.Tegola }}"
-													@map-click="updateSignalLocation($event)"
+													@map-click="updateSignalLocation($event, signal.id)"
 													:latitude="signal.location.latitude"
 													:longitude="signal.location.longitude"
 												>
