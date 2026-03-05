@@ -12,6 +12,17 @@
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
 		<script>
+			function restoreLocalStorage() {
+				const expanded = localStorage.getItem("sidebar.expanded");
+				if (expanded == "false") {
+					document.getElementById("sidebar").classList.add("collapsed");
+					document.getElementById("content").classList.add("expanded");
+				} else {
+					document.getElementById("sidebar").classList.remove("collapsed");
+					document.getElementById("content").classList.remove("expanded");
+					localStorage.setItem("sidebar.expanded", "true");
+				}
+			}
 			function setTooltipsForSidebar() {
 				const sidebarTooltips = document.querySelectorAll(
 					'#sidebar [data-bs-toggle="tooltip"]',
@@ -45,6 +56,7 @@
 					return t;
 				});
 				console.log("Initialized ", tooltipTriggerList.length, " tooltips");
+				restoreLocalStorage();
 				setTooltipsForSidebar();
 			});
 		</script>
@@ -67,9 +79,14 @@
 		<script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
 		<script>
 			document.getElementById("sidebarToggle").addEventListener("click", () => {
-				document.getElementById("sidebar").classList.toggle("collapsed");
+				const sidebar = document.getElementById("sidebar");
+				sidebar.classList.toggle("collapsed");
 				document.getElementById("content").classList.toggle("expanded");
 				setTooltipsForSidebar();
+				localStorage.setItem(
+					"sidebar.expanded",
+					(!sidebar.classList.contains("collapsed")).toString(),
+				);
 			});
 		</script>
 	</body>
