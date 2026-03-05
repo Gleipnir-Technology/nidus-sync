@@ -7,253 +7,499 @@
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
 	<script src="/static/js/map-aggregate.js"></script>
+	<script
+		defer
+		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+	></script>
+
 	<script>
-		function onLoad() {}
-		window.addEventListener("load", onLoad);
+		function workbench() {
+			return {
+				// Fake database - JSON data
+				signals: [
+					{
+						id: "sig-1",
+						type: "public_report",
+						title: "Public Report – Service Request #1024",
+						description: "Aedes aegypti • Standing Water Complaint",
+						species: "aedes_aegypti",
+						priority: 8,
+						created_at: "2024-01-15T10:30:00Z",
+					},
+					{
+						id: "sig-2",
+						type: "trap_spike",
+						title: "Trap Spike – H3 8828308281fffff",
+						description: "Culex pipiens • Adult Surge",
+						species: "culex_pipiens",
+						priority: 6,
+						created_at: "2024-01-15T09:15:00Z",
+					},
+					{
+						id: "sig-3",
+						type: "residual_expiring",
+						title: "Residual Expiring – Parcel 45-233-01",
+						description: "Reinspection Due",
+						species: null,
+						priority: 4,
+						created_at: "2024-01-14T14:20:00Z",
+					},
+				],
+
+				planFollowups: [
+					{
+						id: "plan-1",
+						type: "plan_followup",
+						title: "Plan Follow-Up – Greenway HOA Basin",
+						description: "Residential Section • Verification Required",
+						species: "aedes_aegypti",
+						badge: "Plan",
+						priority: 7,
+						created_at: "2024-01-14T08:00:00Z",
+					},
+					{
+						id: "plan-2",
+						type: "plan_followup",
+						title: "Plan Follow-Up – Ag Irrigation Canal 7B",
+						description: "Ag Section • Monitoring Window",
+						species: "culex_tarsalis",
+						badge: "Plan",
+						priority: 5,
+						created_at: "2024-01-13T16:45:00Z",
+					},
+				],
+
+				leads: [
+					{
+						id: "lead-1",
+						title: "Lead #L-204",
+						description: "3 Signals • Aedes aegypti",
+					},
+					{
+						id: "lead-2",
+						title: "Lead #L-198",
+						description: "2 Signals • Culex pipiens",
+					},
+				],
+
+				// State
+				selectedSignals: [],
+
+				filters: {
+					species: "",
+					type: "",
+					sort: "newest",
+				},
+
+				// Computed: Filtered signals
+				get filteredSignals() {
+					let filtered = [...this.signals];
+
+					// Apply species filter
+					if (this.filters.species) {
+						filtered = filtered.filter(
+							(s) => s.species === this.filters.species,
+						);
+					}
+
+					// Apply type filter
+					if (this.filters.type) {
+						filtered = filtered.filter((s) => s.type === this.filters.type);
+					}
+
+					// Apply sorting
+					if (this.filters.sort === "priority") {
+						filtered.sort((a, b) => b.priority - a.priority);
+					} else if (this.filters.sort === "newest") {
+						filtered.sort(
+							(a, b) => new Date(b.created_at) - new Date(a.created_at),
+						);
+					}
+
+					return filtered;
+				},
+
+				// Methods
+				isSelected(id) {
+					return this.selectedSignals.some((s) => s.id === id);
+				},
+
+				toggleSignal(signal) {
+					const index = this.selectedSignals.findIndex(
+						(s) => s.id === signal.id,
+					);
+
+					if (index > -1) {
+						// Deselect
+						this.selectedSignals.splice(index, 1);
+					} else {
+						// Select
+						this.selectedSignals.push(signal);
+					}
+				},
+
+				clearSelection() {
+					this.selectedSignals = [];
+				},
+
+				createLead() {
+					if (this.selectedSignals.length === 0) return;
+
+					alert(
+						`Creating new lead from ${this.selectedSignals.length} signal(s):\n` +
+							this.selectedSignals.map((s) => `- ${s.title}`).join("\n"),
+					);
+
+					// In a real app, you would make an API call here
+					// fetch('/api/leads', {
+					//	 method: 'POST',
+					//	 body: JSON.stringify({ signals: this.selectedSignals.map(s => s.id) })
+					// })
+
+					this.clearSelection();
+				},
+			};
+		}
 	</script>
 {{ end }}
 {{ define "content" }}
-
-	<!-- Header -->
-	<div class="row mb-3">
-		<div class="col">
-			<h3 class="mb-1">Daily Planning Workbench</h3>
-			<div class="text-muted small">
-				Signals and leads enter from the left, are investigated in the center,
-				and transformed into structured field assignments using tools on the
-				right.
-			</div>
-		</div>
-	</div>
-
-	<div class="row g-3">
-		<!-- LEFT: Incoming Signals & Leads -->
-		<div class="col-xl-3">
-			<div class="card shadow-sm h-100">
-				<div class="card-header bg-white pane-header">
-					Incoming Signals & Leads
-				</div>
-				<div class="card-body scroll-pane">
-					<!-- FILTERS -->
-					<div class="mb-3">
-						<div class="filter-label mb-1">Species</div>
-						<select class="form-select form-select-sm mb-2 disabled" disabled>
-							<option>All Species</option>
-							<option>Aedes aegypti</option>
-							<option>Aedes albopictus</option>
-							<option>Culex pipiens</option>
-							<option>Culex tarsalis</option>
-						</select>
-
-						<div class="filter-label mb-1">Signal Type</div>
-						<select class="form-select form-select-sm mb-2 disabled" disabled>
-							<option>All Types</option>
-							<option>Public Report</option>
-							<option>Trap Spike</option>
-							<option>Surveillance Observation</option>
-							<option>Residual Expiring</option>
-							<option>Plan Follow-Up</option>
-							<option>Green Pool Import</option>
-						</select>
-
-						<div class="filter-label mb-1">Sort By</div>
-						<select class="form-select form-select-sm disabled" disabled>
-							<option>Newest First</option>
-							<option>Highest Priority</option>
-							<option>Most Signals Linked</option>
-							<option>Strongest Species Signal</option>
-						</select>
-					</div>
-
-					<hr />
-
-					<!-- Signals -->
-					<div class="mb-3">
-						<div class="fw-semibold mb-2">Signals</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">
-								Public Report – Service Request #1024
-							</div>
-							<div class="text-muted small">
-								Aedes aegypti • Standing Water Complaint
-							</div>
-						</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">
-								Trap Spike – H3 8828308281fffff
-							</div>
-							<div class="text-muted small">Culex pipiens • Adult Surge</div>
-						</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">
-								Residual Expiring – Parcel 45-233-01
-							</div>
-							<div class="text-muted small">Reinspection Due</div>
-						</div>
-					</div>
-
-					<hr />
-
-					<!-- Mosquito Control Plan Followups -->
-					<div class="mb-3">
-						<div class="fw-semibold mb-2">Mosquito Control Plan Follow-Ups</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">
-								Plan Follow-Up – Greenway HOA Basin
-							</div>
-							<div class="text-muted small">
-								Residential Section • Verification Required
-							</div>
-							<span class="badge bg-secondary">Plan</span>
-						</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">
-								Plan Follow-Up – Ag Irrigation Canal 7B
-							</div>
-							<div class="text-muted small">Ag Section • Monitoring Window</div>
-							<span class="badge bg-secondary">Plan</span>
-						</div>
-					</div>
-
-					<hr />
-
-					<!-- Leads -->
-					<div>
-						<div class="fw-semibold mb-2">Existing Leads</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">Lead #L-204</div>
-							<div class="text-muted small">3 Signals • Aedes aegypti</div>
-						</div>
-
-						<div class="border rounded p-2 mb-2 signal-item">
-							<div class="small fw-semibold">Lead #L-198</div>
-							<div class="text-muted small">2 Signals • Culex pipiens</div>
-						</div>
-					</div>
+	<div class="container-fluid py-3" x-data="workbench()">
+		<!-- Header -->
+		<div class="row mb-3">
+			<div class="col">
+				<h3 class="mb-1">Daily Planning Workbench</h3>
+				<div class="text-muted small">
+					Signals and leads enter from the left, are investigated in the center,
+					and transformed into structured field assignments using tools on the
+					right.
 				</div>
 			</div>
 		</div>
 
-		<!-- CENTER: Active Workbench -->
-		<div class="col-xl-6">
-			<div class="card shadow-sm mb-3">
-				<div class="card-header bg-white pane-header">
-					Active Investigation Workbench
-				</div>
-				<div class="card-body">
-					<div class="workbench-map mb-3">
-						Map Placeholder<br />
-						H3 Cells • Parcels • Signal Density • Lead Clusters
+		<div class="row g-3">
+			<!-- LEFT: Incoming Signals & Leads -->
+			<div class="col-xl-3">
+				<div class="card shadow-sm h-100">
+					<div class="card-header bg-white pane-header">
+						Incoming Signals & Leads
 					</div>
+					<div class="card-body scroll-pane">
+						<!-- FILTERS -->
+						<div class="mb-3">
+							<div class="filter-label mb-1">Species</div>
+							<select
+								class="form-select form-select-sm mb-2 disabled"
+								x-model="filters.species"
+								disabled
+							>
+								<option value="">All Species</option>
+								<option value="aedes_aegypti">Aedes aegypti</option>
+								<option value="aedes_albopictus">Aedes albopictus</option>
+								<option value="culex_pipiens">Culex pipiens</option>
+								<option value="culex_tarsalis">Culex tarsalis</option>
+							</select>
 
-					<div class="row g-3">
-						<div class="col-md-6">
-							<div class="card border">
-								<div class="card-body">
-									<div class="fw-semibold">Selected Signals</div>
-									<div class="text-muted small">3 Signals Selected</div>
-									<ul class="small mt-2">
-										<li>Public Report – Aedes aegypti</li>
-										<li>Trap Spike – Culex pipiens</li>
-										<li>Plan Follow-Up – HOA Basin</li>
-									</ul>
+							<div class="filter-label mb-1">Signal Type</div>
+							<select
+								class="form-select form-select-sm mb-2 disabled"
+								x-model="filters.type"
+								disabled
+							>
+								<option value="">All Types</option>
+								<option value="public_report">Public Report</option>
+								<option value="trap_spike">Trap Spike</option>
+								<option value="surveillance">Surveillance Observation</option>
+								<option value="residual_expiring">Residual Expiring</option>
+								<option value="plan_followup">Plan Follow-Up</option>
+							</select>
+
+							<div class="filter-label mb-1">Sort By</div>
+							<select
+								class="form-select form-select-sm disabled"
+								x-model="filters.sort"
+								disabled
+							>
+								<option value="newest">Newest First</option>
+								<option value="priority">Highest Priority</option>
+								<option value="linked">Most Signals Linked</option>
+								<option value="species_signal">Strongest Species Signal</option>
+							</select>
+						</div>
+
+						<hr />
+
+						<!-- Signals -->
+						<div class="mb-3">
+							<div class="fw-semibold mb-2">
+								Signals
+								<span
+									class="badge bg-primary"
+									x-show="selectedSignals.length > 0"
+									x-text="selectedSignals.length"
+								></span>
+							</div>
+
+							<template x-for="signal in filteredSignals" :key="signal.id">
+								<div
+									class="border rounded p-2 mb-2 signal-item"
+									:class="{ 'selected': isSelected(signal.id) }"
+									@click="toggleSignal(signal)"
+								>
+									<div class="small fw-semibold" x-text="signal.title"></div>
+									<div
+										class="text-muted small"
+										x-text="signal.description"
+									></div>
+									<template x-if="signal.badge">
+										<span
+											class="badge bg-secondary mt-1"
+											x-text="signal.badge"
+										></span>
+									</template>
+								</div>
+							</template>
+						</div>
+
+						<hr />
+
+						<!-- Mosquito Control Plan Followups -->
+						<div class="mb-3">
+							<div class="fw-semibold mb-2">
+								Mosquito Control Plan Follow-Ups
+							</div>
+
+							<template x-for="followup in planFollowups" :key="followup.id">
+								<div
+									class="border rounded p-2 mb-2 signal-item"
+									:class="{ 'selected': isSelected(followup.id) }"
+									@click="toggleSignal(followup)"
+								>
+									<div class="small fw-semibold" x-text="followup.title"></div>
+									<div
+										class="text-muted small"
+										x-text="followup.description"
+									></div>
+									<span class="badge bg-secondary">Plan</span>
+								</div>
+							</template>
+						</div>
+
+						<hr />
+
+						<!-- Leads -->
+						<div>
+							<div class="fw-semibold mb-2">Existing Leads</div>
+
+							<template x-for="lead in leads" :key="lead.id">
+								<div class="border rounded p-2 mb-2 signal-item">
+									<div class="small fw-semibold" x-text="lead.title"></div>
+									<div class="text-muted small" x-text="lead.description"></div>
+								</div>
+							</template>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- CENTER: Active Workbench -->
+			<div class="col-xl-6">
+				<div class="card shadow-sm mb-3">
+					<div class="card-header bg-white pane-header">
+						Active Investigation Workbench
+					</div>
+					<div class="card-body">
+						<div class="workbench-map mb-3">
+							Map Placeholder<br />
+							H3 Cells • Parcels • Signal Density • Lead Clusters
+						</div>
+
+						<div class="row g-3">
+							<div class="col-md-6">
+								<div class="card border">
+									<div class="card-body">
+										<div class="fw-semibold">Selected Signals</div>
+										<div
+											class="text-muted small"
+											x-text="`${selectedSignals.length} Signal${selectedSignals.length !== 1 ? 's' : ''} Selected`"
+										></div>
+
+										<template x-if="selectedSignals.length === 0">
+											<div class="text-muted small mt-2 fst-italic">
+												Click signals from the left panel to select them
+											</div>
+										</template>
+
+										<ul class="small mt-2" x-show="selectedSignals.length > 0">
+											<template
+												x-for="signal in selectedSignals"
+												:key="signal.id"
+											>
+												<li>
+													<span x-text="signal.title"></span>
+													<button
+														@click="toggleSignal(signal)"
+														class="btn btn-sm btn-link text-danger p-0 ms-1"
+														style="font-size: 0.7rem;"
+													>
+														✕
+													</button>
+												</li>
+											</template>
+										</ul>
+
+										<button
+											x-show="selectedSignals.length > 0"
+											@click="clearSelection()"
+											class="btn btn-sm btn-outline-secondary mt-2 w-100"
+										>
+											Clear Selection
+										</button>
+									</div>
 								</div>
 							</div>
-						</div>
 
-						<div class="col-md-6">
-							<div class="card border">
-								<div class="card-body">
-									<div class="fw-semibold">Derived Lead Strength</div>
-									<div class="text-muted small">Signal Convergence Score</div>
-									<div class="mt-2">
-										<span class="badge bg-danger">High Confidence</span>
+							<div class="col-md-6">
+								<div class="card border">
+									<div class="card-body">
+										<div class="fw-semibold">Derived Lead Strength</div>
+										<div class="text-muted small">Signal Convergence Score</div>
+										<div class="mt-2">
+											<template x-if="selectedSignals.length === 0">
+												<span class="badge bg-secondary">No Selection</span>
+											</template>
+											<template x-if="selectedSignals.length === 1">
+												<span class="badge bg-info">Single Signal</span>
+											</template>
+											<template x-if="selectedSignals.length === 2">
+												<span class="badge bg-warning text-dark"
+													>Moderate Confidence</span
+												>
+											</template>
+											<template x-if="selectedSignals.length >= 3">
+												<span class="badge bg-danger">High Confidence</span>
+											</template>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card border">
+									<div class="card-body">
+										<div class="fw-semibold">Related Communications</div>
+										<div class="text-muted small">
+											Inbound & outbound contact
+										</div>
+										<ul class="small mt-2">
+											<li>Resident follow-up requested</li>
+											<li>HOA notification sent</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card border">
+									<div class="card-body">
+										<div class="fw-semibold">Priority Context</div>
+										<div class="text-muted small">Risk synthesis</div>
+										<template
+											x-if="selectedSignals.some(s => s.species === 'aedes_aegypti')"
+										>
+											<span class="badge bg-warning text-dark"
+												>Elevated Aedes Risk</span
+											>
+										</template>
+										<template
+											x-if="!selectedSignals.some(s => s.species === 'aedes_aegypti')"
+										>
+											<span class="badge bg-secondary">Standard Priority</span>
+										</template>
 									</div>
 								</div>
 							</div>
 						</div>
-
-						<div class="col-md-6">
-							<div class="card border">
-								<div class="card-body">
-									<div class="fw-semibold">Related Communications</div>
-									<div class="text-muted small">Inbound & outbound contact</div>
-									<ul class="small mt-2">
-										<li>Resident follow-up requested</li>
-										<li>HOA notification sent</li>
-									</ul>
-								</div>
-							</div>
-						</div>
-
-						<div class="col-md-6">
-							<div class="card border">
-								<div class="card-body">
-									<div class="fw-semibold">Priority Context</div>
-									<div class="text-muted small">Risk synthesis</div>
-									<span class="badge bg-warning text-dark"
-										>Elevated Aedes Risk</span
-									>
-								</div>
-							</div>
-						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- RIGHT: Transformation Tools -->
-		<div class="col-xl-3">
-			<div class="card shadow-sm h-100">
-				<div class="card-header bg-white pane-header">Transformation Tools</div>
-				<div class="card-body scroll-pane">
-					<div class="mb-3">
-						<div class="text-muted small mb-2">Signal → Lead</div>
-						<button class="btn btn-outline-primary tool-button">
-							Create New Lead from Selection
-						</button>
-						<button class="btn btn-outline-secondary tool-button">
-							Add Signals to Existing Lead
-						</button>
-						<button class="btn btn-outline-secondary tool-button">
-							Mark Signal as Addressed
-						</button>
+			<!-- RIGHT: Transformation Tools -->
+			<div class="col-xl-3">
+				<div class="card shadow-sm h-100">
+					<div class="card-header bg-white pane-header">
+						Transformation Tools
 					</div>
+					<div class="card-body scroll-pane">
+						<div class="mb-3">
+							<div class="text-muted small mb-2">Signal → Lead</div>
+							<button
+								class="btn btn-outline-primary tool-button"
+								:disabled="selectedSignals.length === 0"
+								@click="createLead()"
+							>
+								Create New Lead from Selection
+							</button>
+							<button
+								class="btn btn-outline-secondary tool-button disabled"
+								disabled
+							>
+								Add Signals to Existing Lead
+							</button>
+							<button
+								class="btn btn-outline-secondary tool-button"
+								:disabled="selectedSignals.length === 0"
+							>
+								Mark Signal as Addressed
+							</button>
+						</div>
 
-					<hr />
+						<hr />
 
-					<div class="mb-3">
-						<div class="text-muted small mb-2">Lead → Field Assignment</div>
-						<button class="btn btn-outline-success tool-button">
-							Create Proposed Assignment
-						</button>
-						<button class="btn btn-outline-secondary tool-button">
-							Add Leads to Existing Assignment
-						</button>
-						<button class="btn btn-outline-secondary tool-button">
-							Split Lead
-						</button>
-					</div>
+						<div class="mb-3">
+							<div class="text-muted small mb-2">Lead → Field Assignment</div>
+							<button
+								class="btn btn-outline-success tool-button disabled"
+								disabled
+							>
+								Create Proposed Assignment
+							</button>
+							<button
+								class="btn btn-outline-secondary tool-button disabled"
+								disabled
+							>
+								Add Leads to Existing Assignment
+							</button>
+							<button
+								class="btn btn-outline-secondary tool-button disabled"
+								disabled
+							>
+								Split Lead
+							</button>
+						</div>
 
-					<hr />
+						<hr />
 
-					<div class="mb-3">
-						<div class="text-muted small mb-2">Assignment Controls</div>
-						<button class="btn btn-outline-dark tool-button">
-							Set Priority
-						</button>
-						<button class="btn btn-outline-dark tool-button">
-							Estimate Effort
-						</button>
-						<button class="btn btn-outline-dark tool-button">
-							Send to Operations
-						</button>
+						<div class="mb-3">
+							<div class="text-muted small mb-2">Assignment Controls</div>
+							<button
+								class="btn btn-outline-dark tool-button disabled"
+								disabled
+							>
+								Set Priority
+							</button>
+							<button
+								class="btn btn-outline-dark tool-button disabled"
+								disabled
+							>
+								Estimate Effort
+							</button>
+							<button
+								class="btn btn-outline-dark tool-button disabled"
+								disabled
+							>
+								Send to Operations
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
