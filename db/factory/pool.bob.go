@@ -11,7 +11,9 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -42,6 +44,7 @@ type PoolTemplate struct {
 	ID          func() int32
 	SiteID      func() int32
 	SiteVersion func() int32
+	Geometry    func() null.Val[string]
 
 	r poolR
 	f *Factory
@@ -134,6 +137,10 @@ func (o PoolTemplate) BuildSetter() *models.PoolSetter {
 		val := o.SiteVersion()
 		m.SiteVersion = omit.From(val)
 	}
+	if o.Geometry != nil {
+		val := o.Geometry()
+		m.Geometry = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -173,6 +180,9 @@ func (o PoolTemplate) Build() *models.Pool {
 	}
 	if o.SiteVersion != nil {
 		m.SiteVersion = o.SiteVersion()
+	}
+	if o.Geometry != nil {
+		m.Geometry = o.Geometry()
 	}
 
 	o.setModelRels(m)
@@ -358,6 +368,7 @@ func (m poolMods) RandomizeAllColumns(f *faker.Faker) PoolMod {
 		PoolMods.RandomID(f),
 		PoolMods.RandomSiteID(f),
 		PoolMods.RandomSiteVersion(f),
+		PoolMods.RandomGeometry(f),
 	}
 }
 
@@ -543,6 +554,59 @@ func (m poolMods) RandomSiteVersion(f *faker.Faker) PoolMod {
 	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
 		o.SiteVersion = func() int32 {
 			return random_int32(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m poolMods) Geometry(val null.Val[string]) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.Geometry = func() null.Val[string] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m poolMods) GeometryFunc(f func() null.Val[string]) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.Geometry = f
+	})
+}
+
+// Clear any values for the column
+func (m poolMods) UnsetGeometry() PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.Geometry = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m poolMods) RandomGeometry(f *faker.Faker) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.Geometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m poolMods) RandomGeometryNotNull(f *faker.Faker) PoolMod {
+	return PoolModFunc(func(_ context.Context, o *PoolTemplate) {
+		o.Geometry = func() null.Val[string] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_string(f)
+			return null.From(val)
 		}
 	})
 }

@@ -3623,6 +3623,7 @@ func (f *Factory) FromExistingPool(m *models.Pool) *PoolTemplate {
 	o.ID = func() int32 { return m.ID }
 	o.SiteID = func() int32 { return m.SiteID }
 	o.SiteVersion = func() int32 { return m.SiteVersion }
+	o.Geometry = func() null.Val[string] { return m.Geometry }
 
 	ctx := context.Background()
 	if m.R.CreatorUser != nil {

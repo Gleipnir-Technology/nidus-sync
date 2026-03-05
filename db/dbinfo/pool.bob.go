@@ -69,6 +69,15 @@ var Pools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Geometry: column{
+			Name:      "geometry",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: poolIndexes{
 		PoolPkey: index{
@@ -125,11 +134,12 @@ type poolColumns struct {
 	ID          column
 	SiteID      column
 	SiteVersion column
+	Geometry    column
 }
 
 func (c poolColumns) AsSlice() []column {
 	return []column{
-		c.Condition, c.Created, c.CreatorID, c.ID, c.SiteID, c.SiteVersion,
+		c.Condition, c.Created, c.CreatorID, c.ID, c.SiteID, c.SiteVersion, c.Geometry,
 	}
 }
 

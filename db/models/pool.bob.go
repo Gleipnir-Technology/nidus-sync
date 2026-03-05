@@ -20,7 +20,9 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // Pool is an object representing the database table.
@@ -31,6 +33,7 @@ type Pool struct {
 	ID          int32                   `db:"id,pk" `
 	SiteID      int32                   `db:"site_id" `
 	SiteVersion int32                   `db:"site_version" `
+	Geometry    null.Val[string]        `db:"geometry" `
 
 	R poolR `db:"-" `
 
@@ -57,7 +60,7 @@ type poolR struct {
 func buildPoolColumns(alias string) poolColumns {
 	return poolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"condition", "created", "creator_id", "id", "site_id", "site_version",
+			"condition", "created", "creator_id", "id", "site_id", "site_version", "geometry",
 		).WithParent("pool"),
 		tableAlias:  alias,
 		Condition:   psql.Quote(alias, "condition"),
@@ -66,6 +69,7 @@ func buildPoolColumns(alias string) poolColumns {
 		ID:          psql.Quote(alias, "id"),
 		SiteID:      psql.Quote(alias, "site_id"),
 		SiteVersion: psql.Quote(alias, "site_version"),
+		Geometry:    psql.Quote(alias, "geometry"),
 	}
 }
 
@@ -78,6 +82,7 @@ type poolColumns struct {
 	ID          psql.Expression
 	SiteID      psql.Expression
 	SiteVersion psql.Expression
+	Geometry    psql.Expression
 }
 
 func (c poolColumns) Alias() string {
@@ -98,10 +103,11 @@ type PoolSetter struct {
 	ID          omit.Val[int32]                   `db:"id,pk" `
 	SiteID      omit.Val[int32]                   `db:"site_id" `
 	SiteVersion omit.Val[int32]                   `db:"site_version" `
+	Geometry    omitnull.Val[string]              `db:"geometry" `
 }
 
 func (s PoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 7)
 	if s.Condition.IsValue() {
 		vals = append(vals, "condition")
 	}
@@ -119,6 +125,9 @@ func (s PoolSetter) SetColumns() []string {
 	}
 	if s.SiteVersion.IsValue() {
 		vals = append(vals, "site_version")
+	}
+	if !s.Geometry.IsUnset() {
+		vals = append(vals, "geometry")
 	}
 	return vals
 }
@@ -142,6 +151,9 @@ func (s PoolSetter) Overwrite(t *Pool) {
 	if s.SiteVersion.IsValue() {
 		t.SiteVersion = s.SiteVersion.MustGet()
 	}
+	if !s.Geometry.IsUnset() {
+		t.Geometry = s.Geometry.MustGetNull()
+	}
 }
 
 func (s *PoolSetter) Apply(q *dialect.InsertQuery) {
@@ -150,7 +162,7 @@ func (s *PoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 7)
 		if s.Condition.IsValue() {
 			vals[0] = psql.Arg(s.Condition.MustGet())
 		} else {
@@ -187,6 +199,12 @@ func (s *PoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Geometry.IsUnset() {
+			vals[6] = psql.Arg(s.Geometry.MustGetNull())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -196,7 +214,7 @@ func (s PoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.Condition.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -237,6 +255,13 @@ func (s PoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_version")...),
 			psql.Arg(s.SiteVersion),
+		}})
+	}
+
+	if !s.Geometry.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "geometry")...),
+			psql.Arg(s.Geometry),
 		}})
 	}
 
@@ -646,6 +671,7 @@ type poolWhere[Q psql.Filterable] struct {
 	ID          psql.WhereMod[Q, int32]
 	SiteID      psql.WhereMod[Q, int32]
 	SiteVersion psql.WhereMod[Q, int32]
+	Geometry    psql.WhereNullMod[Q, string]
 }
 
 func (poolWhere[Q]) AliasedAs(alias string) poolWhere[Q] {
@@ -660,6 +686,7 @@ func buildPoolWhere[Q psql.Filterable](cols poolColumns) poolWhere[Q] {
 		ID:          psql.Where[Q, int32](cols.ID),
 		SiteID:      psql.Where[Q, int32](cols.SiteID),
 		SiteVersion: psql.Where[Q, int32](cols.SiteVersion),
+		Geometry:    psql.WhereNull[Q, string](cols.Geometry),
 	}
 }
 
