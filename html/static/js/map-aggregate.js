@@ -1,4 +1,3 @@
-var map = null;
 // A map that can be used to locate a single point by setting its location explicitly
 // or by allowing the user to move a marker.
 class MapAggregate extends HTMLElement {
@@ -42,9 +41,11 @@ class MapAggregate extends HTMLElement {
 			center: centroid.coordinates,
 			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
-		}).fitBounds(bounds, {
-			padding: { top: 10, bottom: 10, left: 10, right: 10 },
 		});
+		let camera_transform = this._map.cameraForBounds(bounds, {
+			padding: 10,
+		});
+		this._map.setZoom(camera_transform.zoom);
 		this._map.on("load", () => {
 			this._map.addSource("tegola", {
 				type: "vector",
