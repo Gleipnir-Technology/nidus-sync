@@ -146,6 +146,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 			}).One(ctx, txn)
 		*/
 	}
+	txn.Commit(ctx)
 	return nil
 }
 func JobImport(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype) error {
