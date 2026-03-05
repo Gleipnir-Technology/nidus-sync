@@ -42,14 +42,10 @@ class MapMultipoint extends HTMLElement {
 
 		const mapElement = this.shadowRoot.querySelector("#map");
 		this._map = new maplibregl.Map({
-			center: centroid.coordinates,
+			bounds: bounds,
 			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 		});
-		let camera_transform = this._map.cameraForBounds(bounds, {
-			padding: 10,
-		});
-		this._map.setZoom(camera_transform.zoom);
 		this._map.on("load", () => {
 			if (organization_id != 0) {
 				this._map.addSource("tegola", {
