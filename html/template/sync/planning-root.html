@@ -218,9 +218,6 @@
 
 						// Refresh signals to update their status
 						await this.loadSignals();
-
-						// Show success message
-						alert(`Lead created successfully! ID: ${newLead.id}`);
 					} catch (err) {
 						console.error("Error creating lead:", err);
 						alert(`Failed to create lead: ${err.message}`);
