@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
@@ -111,6 +112,7 @@ func main() {
 		os.Exit(7)
 	}
 
+	geocode.InitializeStadia(config.StadiaMapsAPIKey)
 	router_logger := log.With().Logger()
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,

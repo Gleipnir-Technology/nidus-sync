@@ -41,6 +41,10 @@ func (a Address) String() string {
 
 var client *stadia.StadiaMaps
 
+func InitializeStadia(key string) {
+	client = stadia.NewStadiaMaps(key)
+}
+
 // Either get an address that matches, or create a new address. Either way, return an address
 // This will make a call to a structured geocode service, so it's slow.
 func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a Address) (*models.Address, error) {
