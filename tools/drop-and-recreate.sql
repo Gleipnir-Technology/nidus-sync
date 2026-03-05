@@ -11,6 +11,7 @@ ALTER SCHEMA import OWNER TO $1;
 GRANT USAGE ON SCHEMA fileupload TO "tegola";
 GRANT USAGE ON SCHEMA import TO "tegola";
 GRANT USAGE ON SCHEMA publicreport TO "tegola";
+GRANT SELECT ON address TO "tegola";
 GRANT SELECT ON fileupload.pool TO "tegola";
 GRANT SELECT ON h3_aggregation to "tegola";
 GRANT SELECT ON organization TO "tegola";
@@ -38,3 +39,6 @@ SET
     service_area_geometry = dist.geom_4326
 FROM import.district AS dist
 WHERE org.import_district_gid = dist.gid;
+
+-- do import of parcel data
+GRANT SELECT ON parcel TO "tegola";
