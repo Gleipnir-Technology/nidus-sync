@@ -83,12 +83,13 @@
 						map.on("load", () => {
 							map.addLayer({
 								id: "parcel",
-								source: "tegola",
-								"source-layer": "parcel",
-								type: "line",
+								minzoom: 14,
 								paint: {
 									"line-color": "#0f0",
 								},
+								source: "tegola",
+								"source-layer": "parcel",
+								type: "line",
 							});
 						});
 					});
