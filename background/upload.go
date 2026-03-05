@@ -39,6 +39,7 @@ func CommitUpload(file_id int32) {
 }
 func ProcessUpload(file_id int32, t enums.FileuploadCsvtype) {
 	enqueueJobCSV(jobCSV{
+		action:  jobCSVActionImport,
 		csvType: t,
 		fileID:  file_id,
 	})
