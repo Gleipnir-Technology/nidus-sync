@@ -78,6 +78,20 @@
 				// Initialize - runs when component loads
 				init() {
 					this.loadData();
+					const map = document.querySelector("map-multipoint");
+					window.addEventListener("load", () => {
+						map.on("load", () => {
+							map.addLayer({
+								id: "parcel",
+								source: "tegola",
+								"source-layer": "parcel",
+								type: "line",
+								paint: {
+									"line-color": "#0f0",
+								},
+							});
+						});
+					});
 				},
 
 				// Load all data
