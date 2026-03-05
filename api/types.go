@@ -35,8 +35,8 @@ func NewBounds() Bounds {
 }
 
 type Location struct {
-	Latitude  float64
-	Longitude float64
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 type NoteImagePayload struct {
