@@ -113,6 +113,7 @@ type organizationR struct {
 	FieldseekerSyncs                            []*organizationRFieldseekerSyncsR
 	Files                                       []*organizationRFilesR
 	H3Aggregations                              []*organizationRH3AggregationsR
+	Leads                                       []*organizationRLeadsR
 	NoteAudios                                  []*organizationRNoteAudiosR
 	NoteImages                                  []*organizationRNoteImagesR
 	ArcgisAccountAccount                        *organizationRArcgisAccountAccountR
@@ -263,6 +264,10 @@ type organizationRFilesR struct {
 type organizationRH3AggregationsR struct {
 	number int
 	o      *H3AggregationTemplate
+}
+type organizationRLeadsR struct {
+	number int
+	o      *LeadTemplate
 }
 type organizationRNoteAudiosR struct {
 	number int
@@ -760,6 +765,19 @@ func (t OrganizationTemplate) setModelRels(o *models.Organization) {
 			rel = append(rel, related...)
 		}
 		o.R.H3Aggregations = rel
+	}
+
+	if t.r.Leads != nil {
+		rel := models.LeadSlice{}
+		for _, r := range t.r.Leads {
+			related := r.o.BuildMany(r.number)
+			for _, rel := range related {
+				rel.OrganizationID = o.ID // h2
+				rel.R.Organization = o
+			}
+			rel = append(rel, related...)
+		}
+		o.R.Leads = rel
 	}
 
 	if t.r.NoteAudios != nil {
@@ -1811,6 +1829,26 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		}
 	}
 
+	isLeadsDone, _ := organizationRelLeadsCtx.Value(ctx)
+	if !isLeadsDone && o.r.Leads != nil {
+		ctx = organizationRelLeadsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Leads {
+			if r.o.alreadyPersisted {
+				m.R.Leads = append(m.R.Leads, r.o.Build())
+			} else {
+				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				if err != nil {
+					return err
+				}
+
+				err = m.AttachLeads(ctx, exec, rel35...)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	isNoteAudiosDone, _ := organizationRelNoteAudiosCtx.Value(ctx)
 	if !isNoteAudiosDone && o.r.NoteAudios != nil {
 		ctx = organizationRelNoteAudiosCtx.WithValue(ctx, true)
@@ -1818,12 +1856,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteAudios = append(m.R.NoteAudios, r.o.Build())
 			} else {
-				rel35, err := r.o.CreateMany(ctx, exec, r.number)
+				rel36, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteAudios(ctx, exec, rel35...)
+				err = m.AttachNoteAudios(ctx, exec, rel36...)
 				if err != nil {
 					return err
 				}
@@ -1838,12 +1876,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.NoteImages = append(m.R.NoteImages, r.o.Build())
 			} else {
-				rel36, err := r.o.CreateMany(ctx, exec, r.number)
+				rel37, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNoteImages(ctx, exec, rel36...)
+				err = m.AttachNoteImages(ctx, exec, rel37...)
 				if err != nil {
 					return err
 				}
@@ -1857,12 +1895,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.ArcgisAccountAccount.o.alreadyPersisted {
 			m.R.ArcgisAccountAccount = o.r.ArcgisAccountAccount.o.Build()
 		} else {
-			var rel37 *models.ArcgisAccount
-			rel37, err = o.r.ArcgisAccountAccount.o.Create(ctx, exec)
+			var rel38 *models.ArcgisAccount
+			rel38, err = o.r.ArcgisAccountAccount.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachArcgisAccountAccount(ctx, exec, rel37)
+			err = m.AttachArcgisAccountAccount(ctx, exec, rel38)
 			if err != nil {
 				return err
 			}
@@ -1876,12 +1914,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 		if o.r.FieldseekerServiceFeatureItemServiceFeature.o.alreadyPersisted {
 			m.R.FieldseekerServiceFeatureItemServiceFeature = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Build()
 		} else {
-			var rel38 *models.ArcgisServiceFeature
-			rel38, err = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Create(ctx, exec)
+			var rel39 *models.ArcgisServiceFeature
+			rel39, err = o.r.FieldseekerServiceFeatureItemServiceFeature.o.Create(ctx, exec)
 			if err != nil {
 				return err
 			}
-			err = m.AttachFieldseekerServiceFeatureItemServiceFeature(ctx, exec, rel38)
+			err = m.AttachFieldseekerServiceFeatureItemServiceFeature(ctx, exec, rel39)
 			if err != nil {
 				return err
 			}
@@ -1896,12 +1934,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Nuisances = append(m.R.Nuisances, r.o.Build())
 			} else {
-				rel39, err := r.o.CreateMany(ctx, exec, r.number)
+				rel40, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachNuisances(ctx, exec, rel39...)
+				err = m.AttachNuisances(ctx, exec, rel40...)
 				if err != nil {
 					return err
 				}
@@ -1916,12 +1954,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.PublicreportPool = append(m.R.PublicreportPool, r.o.Build())
 			} else {
-				rel40, err := r.o.CreateMany(ctx, exec, r.number)
+				rel41, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachPublicreportPool(ctx, exec, rel40...)
+				err = m.AttachPublicreportPool(ctx, exec, rel41...)
 				if err != nil {
 					return err
 				}
@@ -1936,12 +1974,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Quicks = append(m.R.Quicks, r.o.Build())
 			} else {
-				rel41, err := r.o.CreateMany(ctx, exec, r.number)
+				rel42, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachQuicks(ctx, exec, rel41...)
+				err = m.AttachQuicks(ctx, exec, rel42...)
 				if err != nil {
 					return err
 				}
@@ -1956,12 +1994,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.Signals = append(m.R.Signals, r.o.Build())
 			} else {
-				rel42, err := r.o.CreateMany(ctx, exec, r.number)
+				rel43, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSignals(ctx, exec, rel42...)
+				err = m.AttachSignals(ctx, exec, rel43...)
 				if err != nil {
 					return err
 				}
@@ -1976,12 +2014,12 @@ func (o *OrganizationTemplate) insertOptRels(ctx context.Context, exec bob.Execu
 			if r.o.alreadyPersisted {
 				m.R.User = append(m.R.User, r.o.Build())
 			} else {
-				rel43, err := r.o.CreateMany(ctx, exec, r.number)
+				rel44, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachUser(ctx, exec, rel43...)
+				err = m.AttachUser(ctx, exec, rel44...)
 				if err != nil {
 					return err
 				}
@@ -5524,6 +5562,54 @@ func (m organizationMods) AddExistingH3Aggregations(existingModels ...*models.H3
 func (m organizationMods) WithoutH3Aggregations() OrganizationMod {
 	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
 		o.r.H3Aggregations = nil
+	})
+}
+
+func (m organizationMods) WithLeads(number int, related *LeadTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Leads = []*organizationRLeadsR{{
+			number: number,
+			o:      related,
+		}}
+	})
+}
+
+func (m organizationMods) WithNewLeads(number int, mods ...LeadMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewLeadWithContext(ctx, mods...)
+		m.WithLeads(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddLeads(number int, related *LeadTemplate) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Leads = append(o.r.Leads, &organizationRLeadsR{
+			number: number,
+			o:      related,
+		})
+	})
+}
+
+func (m organizationMods) AddNewLeads(number int, mods ...LeadMod) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		related := o.f.NewLeadWithContext(ctx, mods...)
+		m.AddLeads(number, related).Apply(ctx, o)
+	})
+}
+
+func (m organizationMods) AddExistingLeads(existingModels ...*models.Lead) OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		for _, em := range existingModels {
+			o.r.Leads = append(o.r.Leads, &organizationRLeadsR{
+				o: o.f.FromExistingLead(em),
+			})
+		}
+	})
+}
+
+func (m organizationMods) WithoutLeads() OrganizationMod {
+	return OrganizationModFunc(func(ctx context.Context, o *OrganizationTemplate) {
+		o.r.Leads = nil
 	})
 }
 

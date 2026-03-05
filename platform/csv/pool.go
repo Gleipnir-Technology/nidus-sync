@@ -193,7 +193,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 			//AddressRegion: omit.From(),
 			//AddressStreet: omit.From(),
 			Committed: omit.From(false),
-			Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
+			Condition: omit.From(enums.PoolconditiontypeUnknown),
 			Created:   omit.From(time.Now()),
 			CreatorID: omit.From(file.CreatorID),
 			CSVFile:   omit.From(file.ID),
@@ -231,7 +231,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 				setter.AddressNumber = omit.From(parts[0])
 				setter.AddressStreet = omit.From(parts[1])
 			case headerPoolCondition:
-				var condition enums.FileuploadPoolconditiontype
+				var condition enums.Poolconditiontype
 				col_l := strings.ToLower(col)
 				col_translated := col_l
 				switch col_l {
@@ -241,7 +241,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 				err := condition.Scan(col_translated)
 				if err != nil {
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
-					setter.Condition = omit.From(enums.FileuploadPoolconditiontypeUnknown)
+					setter.Condition = omit.From(enums.PoolconditiontypeUnknown)
 					continue
 				}
 				setter.Condition = omit.From(condition)
@@ -356,7 +356,7 @@ func missingRequiredHeaders(headers []headerPoolEnum) []headerPoolEnum {
 }
 func poolConditionValidValues() string {
 	var b strings.Builder
-	for i, cond := range enums.AllFileuploadPoolconditiontype() {
+	for i, cond := range enums.AllPoolconditiontype() {
 		if i == 0 {
 			fmt.Fprintf(&b, "'%s'", cond)
 		} else {

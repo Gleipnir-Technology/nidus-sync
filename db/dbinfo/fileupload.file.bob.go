@@ -105,6 +105,15 @@ var FileuploadFiles = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Committer: column{
+			Name:      "committer",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fileuploadFileIndexes{
 		FilePkey: index{
@@ -131,6 +140,15 @@ var FileuploadFiles = Table[
 		Comment: "",
 	},
 	ForeignKeys: fileuploadFileForeignKeys{
+		FileuploadFileFileCommitterFkey: foreignKey{
+			constraint: constraint{
+				Name:    "fileupload.file.file_committer_fkey",
+				Columns: []string{"committer"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
 		FileuploadFileFileCreatorIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "fileupload.file.file_creator_id_fkey",
@@ -165,11 +183,12 @@ type fileuploadFileColumns struct {
 	Status         column
 	SizeBytes      column
 	FileUUID       column
+	Committer      column
 }
 
 func (c fileuploadFileColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.OrganizationID, c.Status, c.SizeBytes, c.FileUUID,
+		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.OrganizationID, c.Status, c.SizeBytes, c.FileUUID, c.Committer,
 	}
 }
 
@@ -184,13 +203,14 @@ func (i fileuploadFileIndexes) AsSlice() []index {
 }
 
 type fileuploadFileForeignKeys struct {
+	FileuploadFileFileCommitterFkey      foreignKey
 	FileuploadFileFileCreatorIDFkey      foreignKey
 	FileuploadFileFileOrganizationIDFkey foreignKey
 }
 
 func (f fileuploadFileForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.FileuploadFileFileCreatorIDFkey, f.FileuploadFileFileOrganizationIDFkey,
+		f.FileuploadFileFileCommitterFkey, f.FileuploadFileFileCreatorIDFkey, f.FileuploadFileFileOrganizationIDFkey,
 	}
 }
 

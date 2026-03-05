@@ -88,6 +88,7 @@ type joins[Q dialect.Joinable] struct {
 	FileuploadFiles                    joinSet[fileuploadFileJoins[Q]]
 	FileuploadPools                    joinSet[fileuploadPoolJoins[Q]]
 	H3Aggregations                     joinSet[h3AggregationJoins[Q]]
+	Leads                              joinSet[leadJoins[Q]]
 	NoteAudios                         joinSet[noteAudioJoins[Q]]
 	NoteAudioBreadcrumbs               joinSet[noteAudioBreadcrumbJoins[Q]]
 	NoteAudioData                      joinSet[noteAudioDatumJoins[Q]]
@@ -185,6 +186,7 @@ func getJoins[Q dialect.Joinable]() joins[Q] {
 		FileuploadFiles:                    buildJoinSet[fileuploadFileJoins[Q]](FileuploadFiles.Columns, buildFileuploadFileJoins),
 		FileuploadPools:                    buildJoinSet[fileuploadPoolJoins[Q]](FileuploadPools.Columns, buildFileuploadPoolJoins),
 		H3Aggregations:                     buildJoinSet[h3AggregationJoins[Q]](H3Aggregations.Columns, buildH3AggregationJoins),
+		Leads:                              buildJoinSet[leadJoins[Q]](Leads.Columns, buildLeadJoins),
 		NoteAudios:                         buildJoinSet[noteAudioJoins[Q]](NoteAudios.Columns, buildNoteAudioJoins),
 		NoteAudioBreadcrumbs:               buildJoinSet[noteAudioBreadcrumbJoins[Q]](NoteAudioBreadcrumbs.Columns, buildNoteAudioBreadcrumbJoins),
 		NoteAudioData:                      buildJoinSet[noteAudioDatumJoins[Q]](NoteAudioData.Columns, buildNoteAudioDatumJoins),

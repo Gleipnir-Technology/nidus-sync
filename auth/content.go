@@ -17,7 +17,7 @@ func ContentForUser(ctx context.Context, user *models.User) (platform.User, erro
 	org := user.R.Organization
 	var organization platform.Organization
 	if org != nil {
-		organization.ID = int(org.ID)
+		organization.ID = int32(org.ID)
 		organization.Name = org.Name
 	}
 	return platform.User{

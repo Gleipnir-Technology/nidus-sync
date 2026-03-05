@@ -1074,91 +1074,6 @@ func (e *FileuploadFilestatustype) Scan(value any) error {
 	return nil
 }
 
-// Enum values for FileuploadPoolconditiontype
-const (
-	FileuploadPoolconditiontypeGreen     FileuploadPoolconditiontype = "green"
-	FileuploadPoolconditiontypeMurky     FileuploadPoolconditiontype = "murky"
-	FileuploadPoolconditiontypeBlue      FileuploadPoolconditiontype = "blue"
-	FileuploadPoolconditiontypeDry       FileuploadPoolconditiontype = "dry"
-	FileuploadPoolconditiontypeFalsePool FileuploadPoolconditiontype = "false pool"
-	FileuploadPoolconditiontypeUnknown   FileuploadPoolconditiontype = "unknown"
-)
-
-func AllFileuploadPoolconditiontype() []FileuploadPoolconditiontype {
-	return []FileuploadPoolconditiontype{
-		FileuploadPoolconditiontypeGreen,
-		FileuploadPoolconditiontypeMurky,
-		FileuploadPoolconditiontypeBlue,
-		FileuploadPoolconditiontypeDry,
-		FileuploadPoolconditiontypeFalsePool,
-		FileuploadPoolconditiontypeUnknown,
-	}
-}
-
-type FileuploadPoolconditiontype string
-
-func (e FileuploadPoolconditiontype) String() string {
-	return string(e)
-}
-
-func (e FileuploadPoolconditiontype) Valid() bool {
-	switch e {
-	case FileuploadPoolconditiontypeGreen,
-		FileuploadPoolconditiontypeMurky,
-		FileuploadPoolconditiontypeBlue,
-		FileuploadPoolconditiontypeDry,
-		FileuploadPoolconditiontypeFalsePool,
-		FileuploadPoolconditiontypeUnknown:
-		return true
-	default:
-		return false
-	}
-}
-
-// useful when testing in other packages
-func (e FileuploadPoolconditiontype) All() []FileuploadPoolconditiontype {
-	return AllFileuploadPoolconditiontype()
-}
-
-func (e FileuploadPoolconditiontype) MarshalText() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *FileuploadPoolconditiontype) UnmarshalText(text []byte) error {
-	return e.Scan(text)
-}
-
-func (e FileuploadPoolconditiontype) MarshalBinary() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *FileuploadPoolconditiontype) UnmarshalBinary(data []byte) error {
-	return e.Scan(data)
-}
-
-func (e FileuploadPoolconditiontype) Value() (driver.Value, error) {
-	return string(e), nil
-}
-
-func (e *FileuploadPoolconditiontype) Scan(value any) error {
-	switch x := value.(type) {
-	case string:
-		*e = FileuploadPoolconditiontype(x)
-	case []byte:
-		*e = FileuploadPoolconditiontype(x)
-	case nil:
-		return fmt.Errorf("cannot nil into FileuploadPoolconditiontype")
-	default:
-		return fmt.Errorf("cannot scan type %T: %v", value, value)
-	}
-
-	if !e.Valid() {
-		return fmt.Errorf("invalid FileuploadPoolconditiontype value: %s", *e)
-	}
-
-	return nil
-}
-
 // Enum values for H3aggregationtype
 const (
 	H3aggregationtypeMosquitosource H3aggregationtype = "MosquitoSource"
@@ -1377,8 +1292,79 @@ func (e *Imagedatatype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Leadtype
+const (
+	LeadtypeGreenPool Leadtype = "green-pool"
+)
+
+func AllLeadtype() []Leadtype {
+	return []Leadtype{
+		LeadtypeGreenPool,
+	}
+}
+
+type Leadtype string
+
+func (e Leadtype) String() string {
+	return string(e)
+}
+
+func (e Leadtype) Valid() bool {
+	switch e {
+	case LeadtypeGreenPool:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Leadtype) All() []Leadtype {
+	return AllLeadtype()
+}
+
+func (e Leadtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Leadtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Leadtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Leadtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Leadtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Leadtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Leadtype(x)
+	case []byte:
+		*e = Leadtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Leadtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Leadtype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Mosquitospecies
 const (
+	MosquitospeciesNone            Mosquitospecies = "none"
 	MosquitospeciesAedesAegypti    Mosquitospecies = "aedes aegypti"
 	MosquitospeciesAedesAlbopictus Mosquitospecies = "aedes albopictus"
 	MosquitospeciesCulexPipiens    Mosquitospecies = "culex pipiens"
@@ -1387,6 +1373,7 @@ const (
 
 func AllMosquitospecies() []Mosquitospecies {
 	return []Mosquitospecies{
+		MosquitospeciesNone,
 		MosquitospeciesAedesAegypti,
 		MosquitospeciesAedesAlbopictus,
 		MosquitospeciesCulexPipiens,
@@ -1402,7 +1389,8 @@ func (e Mosquitospecies) String() string {
 
 func (e Mosquitospecies) Valid() bool {
 	switch e {
-	case MosquitospeciesAedesAegypti,
+	case MosquitospeciesNone,
+		MosquitospeciesAedesAegypti,
 		MosquitospeciesAedesAlbopictus,
 		MosquitospeciesCulexPipiens,
 		MosquitospeciesCulexTarsalis:
@@ -1531,6 +1519,7 @@ const (
 	PoolconditiontypeBlue      Poolconditiontype = "blue"
 	PoolconditiontypeDry       Poolconditiontype = "dry"
 	PoolconditiontypeFalsePool Poolconditiontype = "false pool"
+	PoolconditiontypeUnknown   Poolconditiontype = "unknown"
 	PoolconditiontypeGreen     Poolconditiontype = "green"
 	PoolconditiontypeMurky     Poolconditiontype = "murky"
 )
@@ -1540,6 +1529,7 @@ func AllPoolconditiontype() []Poolconditiontype {
 		PoolconditiontypeBlue,
 		PoolconditiontypeDry,
 		PoolconditiontypeFalsePool,
+		PoolconditiontypeUnknown,
 		PoolconditiontypeGreen,
 		PoolconditiontypeMurky,
 	}
@@ -1556,6 +1546,7 @@ func (e Poolconditiontype) Valid() bool {
 	case PoolconditiontypeBlue,
 		PoolconditiontypeDry,
 		PoolconditiontypeFalsePool,
+		PoolconditiontypeUnknown,
 		PoolconditiontypeGreen,
 		PoolconditiontypeMurky:
 		return true
@@ -1953,24 +1944,24 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 
 // Enum values for Signaltype
 const (
-	SignaltypeFlyoverU2epool             Signaltype = "flyover.pool"
-	SignaltypePlanU2efollowup            Signaltype = "plan.followup"
-	SignaltypePublicreportU2ewater       Signaltype = "publicreport.water"
-	SignaltypePublicreportU2enuisance    Signaltype = "publicreport.nuisance"
-	SignaltypeResidualU2eexiring         Signaltype = "residual.exiring"
-	SignaltypeSurveillanceU2eobservation Signaltype = "surveillance.observation"
-	SignaltypeTrapU2espike               Signaltype = "trap.spike"
+	SignaltypeFlyoverPool             Signaltype = "flyover pool"
+	SignaltypePlanFollowup            Signaltype = "plan followup"
+	SignaltypePublicreportWater       Signaltype = "publicreport water"
+	SignaltypePublicreportNuisance    Signaltype = "publicreport nuisance"
+	SignaltypeResidualExiring         Signaltype = "residual exiring"
+	SignaltypeSurveillanceObservation Signaltype = "surveillance observation"
+	SignaltypeTrapSpike               Signaltype = "trap spike"
 )
 
 func AllSignaltype() []Signaltype {
 	return []Signaltype{
-		SignaltypeFlyoverU2epool,
-		SignaltypePlanU2efollowup,
-		SignaltypePublicreportU2ewater,
-		SignaltypePublicreportU2enuisance,
-		SignaltypeResidualU2eexiring,
-		SignaltypeSurveillanceU2eobservation,
-		SignaltypeTrapU2espike,
+		SignaltypeFlyoverPool,
+		SignaltypePlanFollowup,
+		SignaltypePublicreportWater,
+		SignaltypePublicreportNuisance,
+		SignaltypeResidualExiring,
+		SignaltypeSurveillanceObservation,
+		SignaltypeTrapSpike,
 	}
 }
 
@@ -1982,13 +1973,13 @@ func (e Signaltype) String() string {
 
 func (e Signaltype) Valid() bool {
 	switch e {
-	case SignaltypeFlyoverU2epool,
-		SignaltypePlanU2efollowup,
-		SignaltypePublicreportU2ewater,
-		SignaltypePublicreportU2enuisance,
-		SignaltypeResidualU2eexiring,
-		SignaltypeSurveillanceU2eobservation,
-		SignaltypeTrapU2espike:
+	case SignaltypeFlyoverPool,
+		SignaltypePlanFollowup,
+		SignaltypePublicreportWater,
+		SignaltypePublicreportNuisance,
+		SignaltypeResidualExiring,
+		SignaltypeSurveillanceObservation,
+		SignaltypeTrapSpike:
 		return true
 	default:
 		return false

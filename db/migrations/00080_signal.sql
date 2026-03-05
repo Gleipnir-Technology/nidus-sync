@@ -1,14 +1,15 @@
 -- +goose Up
 CREATE TYPE SignalType AS ENUM (
-	'flyover.pool',
-	'plan.followup',
-	'publicreport.water',
-	'publicreport.nuisance',
-	'residual.exiring',
-	'surveillance.observation',
-	'trap.spike'
+	'flyover pool',
+	'plan followup',
+	'publicreport water',
+	'publicreport nuisance',
+	'residual exiring',
+	'surveillance observation',
+	'trap spike'
 );
 CREATE TYPE MosquitoSpecies AS ENUM (
+	'none',
 	'aedes aegypti',
 	'aedes albopictus',
 	'culex pipiens',

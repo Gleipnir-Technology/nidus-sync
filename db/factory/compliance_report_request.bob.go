@@ -10,7 +10,9 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	models "github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/jaswdr/faker/v2"
 )
 
@@ -35,12 +37,11 @@ func (mods ComplianceReportRequestModSlice) Apply(ctx context.Context, n *Compli
 // ComplianceReportRequestTemplate is an object representing the database table.
 // all columns are optional and should be set by mods
 type ComplianceReportRequestTemplate struct {
-	Created     func() time.Time
-	Creator     func() int32
-	ID          func() int32
-	PublicID    func() string
-	SiteID      func() int32
-	SiteVersion func() int32
+	Created  func() time.Time
+	Creator  func() int32
+	ID       func() int32
+	PublicID func() string
+	LeadID   func() null.Val[int32]
 
 	r complianceReportRequestR
 	f *Factory
@@ -50,15 +51,15 @@ type ComplianceReportRequestTemplate struct {
 
 type complianceReportRequestR struct {
 	CreatorUser *complianceReportRequestRCreatorUserR
-	Site        *complianceReportRequestRSiteR
+	Lead        *complianceReportRequestRLeadR
 	Mailers     []*complianceReportRequestRMailersR
 }
 
 type complianceReportRequestRCreatorUserR struct {
 	o *UserTemplate
 }
-type complianceReportRequestRSiteR struct {
-	o *SiteTemplate
+type complianceReportRequestRLeadR struct {
+	o *LeadTemplate
 }
 type complianceReportRequestRMailersR struct {
 	number int
@@ -82,12 +83,11 @@ func (t ComplianceReportRequestTemplate) setModelRels(o *models.ComplianceReport
 		o.R.CreatorUser = rel
 	}
 
-	if t.r.Site != nil {
-		rel := t.r.Site.o.Build()
+	if t.r.Lead != nil {
+		rel := t.r.Lead.o.Build()
 		rel.R.ComplianceReportRequests = append(rel.R.ComplianceReportRequests, o)
-		o.SiteID = rel.ID           // h2
-		o.SiteVersion = rel.Version // h2
-		o.R.Site = rel
+		o.LeadID = null.From(rel.ID) // h2
+		o.R.Lead = rel
 	}
 
 	if t.r.Mailers != nil {
@@ -124,13 +124,9 @@ func (o ComplianceReportRequestTemplate) BuildSetter() *models.ComplianceReportR
 		val := o.PublicID()
 		m.PublicID = omit.From(val)
 	}
-	if o.SiteID != nil {
-		val := o.SiteID()
-		m.SiteID = omit.From(val)
-	}
-	if o.SiteVersion != nil {
-		val := o.SiteVersion()
-		m.SiteVersion = omit.From(val)
+	if o.LeadID != nil {
+		val := o.LeadID()
+		m.LeadID = omitnull.FromNull(val)
 	}
 
 	return m
@@ -166,11 +162,8 @@ func (o ComplianceReportRequestTemplate) Build() *models.ComplianceReportRequest
 	if o.PublicID != nil {
 		m.PublicID = o.PublicID()
 	}
-	if o.SiteID != nil {
-		m.SiteID = o.SiteID()
-	}
-	if o.SiteVersion != nil {
-		m.SiteVersion = o.SiteVersion()
+	if o.LeadID != nil {
+		m.LeadID = o.LeadID()
 	}
 
 	o.setModelRels(m)
@@ -204,14 +197,6 @@ func ensureCreatableComplianceReportRequest(m *models.ComplianceReportRequestSet
 		val := random_string(nil)
 		m.PublicID = omit.From(val)
 	}
-	if !(m.SiteID.IsValue()) {
-		val := random_int32(nil)
-		m.SiteID = omit.From(val)
-	}
-	if !(m.SiteVersion.IsValue()) {
-		val := random_int32(nil)
-		m.SiteVersion = omit.From(val)
-	}
 }
 
 // insertOptRels creates and inserts any optional the relationships on *models.ComplianceReportRequest
@@ -219,6 +204,25 @@ func ensureCreatableComplianceReportRequest(m *models.ComplianceReportRequestSet
 // any required relationship should have already exist on the model
 func (o *ComplianceReportRequestTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.ComplianceReportRequest) error {
 	var err error
+
+	isLeadDone, _ := complianceReportRequestRelLeadCtx.Value(ctx)
+	if !isLeadDone && o.r.Lead != nil {
+		ctx = complianceReportRequestRelLeadCtx.WithValue(ctx, true)
+		if o.r.Lead.o.alreadyPersisted {
+			m.R.Lead = o.r.Lead.o.Build()
+		} else {
+			var rel1 *models.Lead
+			rel1, err = o.r.Lead.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachLead(ctx, exec, rel1)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 
 	return err
 }
@@ -247,31 +251,12 @@ func (o *ComplianceReportRequestTemplate) Create(ctx context.Context, exec bob.E
 
 	opt.Creator = omit.From(rel0.ID)
 
-	if o.r.Site == nil {
-		ComplianceReportRequestMods.WithNewSite().Apply(ctx, o)
-	}
-
-	var rel1 *models.Site
-
-	if o.r.Site.o.alreadyPersisted {
-		rel1 = o.r.Site.o.Build()
-	} else {
-		rel1, err = o.r.Site.o.Create(ctx, exec)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	opt.SiteID = omit.From(rel1.ID)
-	opt.SiteVersion = omit.From(rel1.Version)
-
 	m, err := models.ComplianceReportRequests.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
 	m.R.CreatorUser = rel0
-	m.R.Site = rel1
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -354,8 +339,7 @@ func (m complianceReportRequestMods) RandomizeAllColumns(f *faker.Faker) Complia
 		ComplianceReportRequestMods.RandomCreator(f),
 		ComplianceReportRequestMods.RandomID(f),
 		ComplianceReportRequestMods.RandomPublicID(f),
-		ComplianceReportRequestMods.RandomSiteID(f),
-		ComplianceReportRequestMods.RandomSiteVersion(f),
+		ComplianceReportRequestMods.RandomLeadID(f),
 	}
 }
 
@@ -484,63 +468,54 @@ func (m complianceReportRequestMods) RandomPublicID(f *faker.Faker) ComplianceRe
 }
 
 // Set the model columns to this value
-func (m complianceReportRequestMods) SiteID(val int32) ComplianceReportRequestMod {
+func (m complianceReportRequestMods) LeadID(val null.Val[int32]) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteID = func() int32 { return val }
+		o.LeadID = func() null.Val[int32] { return val }
 	})
 }
 
 // Set the Column from the function
-func (m complianceReportRequestMods) SiteIDFunc(f func() int32) ComplianceReportRequestMod {
+func (m complianceReportRequestMods) LeadIDFunc(f func() null.Val[int32]) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteID = f
+		o.LeadID = f
 	})
 }
 
 // Clear any values for the column
-func (m complianceReportRequestMods) UnsetSiteID() ComplianceReportRequestMod {
+func (m complianceReportRequestMods) UnsetLeadID() ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteID = nil
+		o.LeadID = nil
 	})
 }
 
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m complianceReportRequestMods) RandomSiteID(f *faker.Faker) ComplianceReportRequestMod {
+// The generated value is sometimes null
+func (m complianceReportRequestMods) RandomLeadID(f *faker.Faker) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteID = func() int32 {
-			return random_int32(f)
+		o.LeadID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
 		}
 	})
 }
 
-// Set the model columns to this value
-func (m complianceReportRequestMods) SiteVersion(val int32) ComplianceReportRequestMod {
-	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteVersion = func() int32 { return val }
-	})
-}
-
-// Set the Column from the function
-func (m complianceReportRequestMods) SiteVersionFunc(f func() int32) ComplianceReportRequestMod {
-	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteVersion = f
-	})
-}
-
-// Clear any values for the column
-func (m complianceReportRequestMods) UnsetSiteVersion() ComplianceReportRequestMod {
-	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteVersion = nil
-	})
-}
-
 // Generates a random value for the column using the given faker
 // if faker is nil, a default faker is used
-func (m complianceReportRequestMods) RandomSiteVersion(f *faker.Faker) ComplianceReportRequestMod {
+// The generated value is never null
+func (m complianceReportRequestMods) RandomLeadIDNotNull(f *faker.Faker) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(_ context.Context, o *ComplianceReportRequestTemplate) {
-		o.SiteVersion = func() int32 {
-			return random_int32(f)
+		o.LeadID = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
 		}
 	})
 }
@@ -558,8 +533,8 @@ func (m complianceReportRequestMods) WithParentsCascading() ComplianceReportRequ
 		}
 		{
 
-			related := o.f.NewSiteWithContext(ctx, SiteMods.WithParentsCascading())
-			m.WithSite(related).Apply(ctx, o)
+			related := o.f.NewLeadWithContext(ctx, LeadMods.WithParentsCascading())
+			m.WithLead(related).Apply(ctx, o)
 		}
 	})
 }
@@ -594,33 +569,33 @@ func (m complianceReportRequestMods) WithoutCreatorUser() ComplianceReportReques
 	})
 }
 
-func (m complianceReportRequestMods) WithSite(rel *SiteTemplate) ComplianceReportRequestMod {
+func (m complianceReportRequestMods) WithLead(rel *LeadTemplate) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
-		o.r.Site = &complianceReportRequestRSiteR{
+		o.r.Lead = &complianceReportRequestRLeadR{
 			o: rel,
 		}
 	})
 }
 
-func (m complianceReportRequestMods) WithNewSite(mods ...SiteMod) ComplianceReportRequestMod {
+func (m complianceReportRequestMods) WithNewLead(mods ...LeadMod) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
-		related := o.f.NewSiteWithContext(ctx, mods...)
+		related := o.f.NewLeadWithContext(ctx, mods...)
 
-		m.WithSite(related).Apply(ctx, o)
+		m.WithLead(related).Apply(ctx, o)
 	})
 }
 
-func (m complianceReportRequestMods) WithExistingSite(em *models.Site) ComplianceReportRequestMod {
+func (m complianceReportRequestMods) WithExistingLead(em *models.Lead) ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
-		o.r.Site = &complianceReportRequestRSiteR{
-			o: o.f.FromExistingSite(em),
+		o.r.Lead = &complianceReportRequestRLeadR{
+			o: o.f.FromExistingLead(em),
 		}
 	})
 }
 
-func (m complianceReportRequestMods) WithoutSite() ComplianceReportRequestMod {
+func (m complianceReportRequestMods) WithoutLead() ComplianceReportRequestMod {
 	return ComplianceReportRequestModFunc(func(ctx context.Context, o *ComplianceReportRequestTemplate) {
-		o.r.Site = nil
+		o.r.Lead = nil
 	})
 }
 

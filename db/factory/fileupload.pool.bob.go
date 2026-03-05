@@ -42,7 +42,6 @@ type FileuploadPoolTemplate struct {
 	AddressPostalCode      func() string
 	AddressStreet          func() string
 	Committed              func() bool
-	Condition              func() enums.FileuploadPoolconditiontype
 	Created                func() time.Time
 	CreatorID              func() int32
 	CSVFile                func() int32
@@ -62,6 +61,7 @@ type FileuploadPoolTemplate struct {
 	AddressNumber          func() string
 	AddressLocality        func() string
 	AddressRegion          func() string
+	Condition              func() enums.Poolconditiontype
 
 	r fileuploadPoolR
 	f *Factory
@@ -145,10 +145,6 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.Committed()
 		m.Committed = omit.From(val)
 	}
-	if o.Condition != nil {
-		val := o.Condition()
-		m.Condition = omit.From(val)
-	}
 	if o.Created != nil {
 		val := o.Created()
 		m.Created = omit.From(val)
@@ -225,6 +221,10 @@ func (o FileuploadPoolTemplate) BuildSetter() *models.FileuploadPoolSetter {
 		val := o.AddressRegion()
 		m.AddressRegion = omit.From(val)
 	}
+	if o.Condition != nil {
+		val := o.Condition()
+		m.Condition = omit.From(val)
+	}
 
 	return m
 }
@@ -255,9 +255,6 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	}
 	if o.Committed != nil {
 		m.Committed = o.Committed()
-	}
-	if o.Condition != nil {
-		m.Condition = o.Condition()
 	}
 	if o.Created != nil {
 		m.Created = o.Created()
@@ -316,6 +313,9 @@ func (o FileuploadPoolTemplate) Build() *models.FileuploadPool {
 	if o.AddressRegion != nil {
 		m.AddressRegion = o.AddressRegion()
 	}
+	if o.Condition != nil {
+		m.Condition = o.Condition()
+	}
 
 	o.setModelRels(m)
 
@@ -347,10 +347,6 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 	if !(m.Committed.IsValue()) {
 		val := random_bool(nil)
 		m.Committed = omit.From(val)
-	}
-	if !(m.Condition.IsValue()) {
-		val := random_enums_FileuploadPoolconditiontype(nil)
-		m.Condition = omit.From(val)
 	}
 	if !(m.Created.IsValue()) {
 		val := random_time_Time(nil)
@@ -399,6 +395,10 @@ func ensureCreatableFileuploadPool(m *models.FileuploadPoolSetter) {
 	if !(m.AddressRegion.IsValue()) {
 		val := random_string(nil)
 		m.AddressRegion = omit.From(val)
+	}
+	if !(m.Condition.IsValue()) {
+		val := random_enums_Poolconditiontype(nil)
+		m.Condition = omit.From(val)
 	}
 }
 
@@ -578,7 +578,6 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomAddressPostalCode(f),
 		FileuploadPoolMods.RandomAddressStreet(f),
 		FileuploadPoolMods.RandomCommitted(f),
-		FileuploadPoolMods.RandomCondition(f),
 		FileuploadPoolMods.RandomCreated(f),
 		FileuploadPoolMods.RandomCreatorID(f),
 		FileuploadPoolMods.RandomCSVFile(f),
@@ -598,6 +597,7 @@ func (m fileuploadPoolMods) RandomizeAllColumns(f *faker.Faker) FileuploadPoolMo
 		FileuploadPoolMods.RandomAddressNumber(f),
 		FileuploadPoolMods.RandomAddressLocality(f),
 		FileuploadPoolMods.RandomAddressRegion(f),
+		FileuploadPoolMods.RandomCondition(f),
 	}
 }
 
@@ -690,37 +690,6 @@ func (m fileuploadPoolMods) RandomCommitted(f *faker.Faker) FileuploadPoolMod {
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.Committed = func() bool {
 			return random_bool(f)
-		}
-	})
-}
-
-// Set the model columns to this value
-func (m fileuploadPoolMods) Condition(val enums.FileuploadPoolconditiontype) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Condition = func() enums.FileuploadPoolconditiontype { return val }
-	})
-}
-
-// Set the Column from the function
-func (m fileuploadPoolMods) ConditionFunc(f func() enums.FileuploadPoolconditiontype) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Condition = f
-	})
-}
-
-// Clear any values for the column
-func (m fileuploadPoolMods) UnsetCondition() FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Condition = nil
-	})
-}
-
-// Generates a random value for the column using the given faker
-// if faker is nil, a default faker is used
-func (m fileuploadPoolMods) RandomCondition(f *faker.Faker) FileuploadPoolMod {
-	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
-		o.Condition = func() enums.FileuploadPoolconditiontype {
-			return random_enums_FileuploadPoolconditiontype(f)
 		}
 	})
 }
@@ -1442,6 +1411,37 @@ func (m fileuploadPoolMods) RandomAddressRegion(f *faker.Faker) FileuploadPoolMo
 	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
 		o.AddressRegion = func() string {
 			return random_string(f)
+		}
+	})
+}
+
+// Set the model columns to this value
+func (m fileuploadPoolMods) Condition(val enums.Poolconditiontype) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Condition = func() enums.Poolconditiontype { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadPoolMods) ConditionFunc(f func() enums.Poolconditiontype) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Condition = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadPoolMods) UnsetCondition() FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Condition = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+func (m fileuploadPoolMods) RandomCondition(f *faker.Faker) FileuploadPoolMod {
+	return FileuploadPoolModFunc(func(_ context.Context, o *FileuploadPoolTemplate) {
+		o.Condition = func() enums.Poolconditiontype {
+			return random_enums_Poolconditiontype(f)
 		}
 	})
 }

@@ -57,13 +57,13 @@ type SitesQuery = *psql.ViewQuery[*Site, SiteSlice]
 
 // siteR is where relationships are stored.
 type siteR struct {
-	ComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_site_id_site_version_fkey
-	Pools                    PoolSlice                    // pool.pool_site_id_site_version_fkey
-	Residents                ResidentSlice                // resident.resident_site_id_site_version_fkey
-	Address                  *Address                     // site.site_address_id_fkey
-	CreatorUser              *User                        // site.site_creator_id_fkey
-	File                     *FileuploadFile              // site.site_file_id_fkey
-	Parcel                   *Parcel                      // site.site_parcel_id_fkey
+	Leads       LeadSlice       // lead.lead_site_id_site_version_fkey
+	Pools       PoolSlice       // pool.pool_site_id_site_version_fkey
+	Residents   ResidentSlice   // resident.resident_site_id_site_version_fkey
+	Address     *Address        // site.site_address_id_fkey
+	CreatorUser *User           // site.site_creator_id_fkey
+	File        *FileuploadFile // site.site_file_id_fkey
+	Parcel      *Parcel         // site.site_parcel_id_fkey
 }
 
 func buildSiteColumns(alias string) siteColumns {
@@ -642,14 +642,14 @@ func (o SiteSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
-// ComplianceReportRequests starts a query for related objects on compliance_report_request
-func (o *Site) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
-	return ComplianceReportRequests.Query(append(mods,
-		sm.Where(ComplianceReportRequests.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(ComplianceReportRequests.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+// Leads starts a query for related objects on lead
+func (o *Site) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
+	return Leads.Query(append(mods,
+		sm.Where(Leads.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Leads.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
 	)...)
 }
 
-func (os SiteSlice) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+func (os SiteSlice) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 
 	pkVersion := make(pgtypes.Array[int32], 0, len(os))
@@ -665,8 +665,8 @@ func (os SiteSlice) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuer
 		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
 	))
 
-	return ComplianceReportRequests.Query(append(mods,
-		sm.Where(psql.Group(ComplianceReportRequests.Columns.SiteID, ComplianceReportRequests.Columns.SiteVersion).OP("IN", PKArgExpr)),
+	return Leads.Query(append(mods,
+		sm.Where(psql.Group(Leads.Columns.SiteID, Leads.Columns.SiteVersion).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -822,68 +822,68 @@ func (os SiteSlice) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
 	)...)
 }
 
-func insertSiteComplianceReportRequests0(ctx context.Context, exec bob.Executor, complianceReportRequests1 []*ComplianceReportRequestSetter, site0 *Site) (ComplianceReportRequestSlice, error) {
-	for i := range complianceReportRequests1 {
-		complianceReportRequests1[i].SiteID = omit.From(site0.ID)
-		complianceReportRequests1[i].SiteVersion = omit.From(site0.Version)
+func insertSiteLeads0(ctx context.Context, exec bob.Executor, leads1 []*LeadSetter, site0 *Site) (LeadSlice, error) {
+	for i := range leads1 {
+		leads1[i].SiteID = omitnull.From(site0.ID)
+		leads1[i].SiteVersion = omitnull.From(site0.Version)
 	}
 
-	ret, err := ComplianceReportRequests.Insert(bob.ToMods(complianceReportRequests1...)).All(ctx, exec)
+	ret, err := Leads.Insert(bob.ToMods(leads1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertSiteComplianceReportRequests0: %w", err)
+		return ret, fmt.Errorf("insertSiteLeads0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachSiteComplianceReportRequests0(ctx context.Context, exec bob.Executor, count int, complianceReportRequests1 ComplianceReportRequestSlice, site0 *Site) (ComplianceReportRequestSlice, error) {
-	setter := &ComplianceReportRequestSetter{
-		SiteID:      omit.From(site0.ID),
-		SiteVersion: omit.From(site0.Version),
+func attachSiteLeads0(ctx context.Context, exec bob.Executor, count int, leads1 LeadSlice, site0 *Site) (LeadSlice, error) {
+	setter := &LeadSetter{
+		SiteID:      omitnull.From(site0.ID),
+		SiteVersion: omitnull.From(site0.Version),
 	}
 
-	err := complianceReportRequests1.UpdateAll(ctx, exec, *setter)
+	err := leads1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachSiteComplianceReportRequests0: %w", err)
+		return nil, fmt.Errorf("attachSiteLeads0: %w", err)
 	}
 
-	return complianceReportRequests1, nil
+	return leads1, nil
 }
 
-func (site0 *Site) InsertComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequestSetter) error {
+func (site0 *Site) InsertLeads(ctx context.Context, exec bob.Executor, related ...*LeadSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	complianceReportRequests1, err := insertSiteComplianceReportRequests0(ctx, exec, related, site0)
+	leads1, err := insertSiteLeads0(ctx, exec, related, site0)
 	if err != nil {
 		return err
 	}
 
-	site0.R.ComplianceReportRequests = append(site0.R.ComplianceReportRequests, complianceReportRequests1...)
+	site0.R.Leads = append(site0.R.Leads, leads1...)
 
-	for _, rel := range complianceReportRequests1 {
+	for _, rel := range leads1 {
 		rel.R.Site = site0
 	}
 	return nil
 }
 
-func (site0 *Site) AttachComplianceReportRequests(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequest) error {
+func (site0 *Site) AttachLeads(ctx context.Context, exec bob.Executor, related ...*Lead) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	complianceReportRequests1 := ComplianceReportRequestSlice(related)
+	leads1 := LeadSlice(related)
 
-	_, err = attachSiteComplianceReportRequests0(ctx, exec, len(related), complianceReportRequests1, site0)
+	_, err = attachSiteLeads0(ctx, exec, len(related), leads1, site0)
 	if err != nil {
 		return err
 	}
 
-	site0.R.ComplianceReportRequests = append(site0.R.ComplianceReportRequests, complianceReportRequests1...)
+	site0.R.Leads = append(site0.R.Leads, leads1...)
 
 	for _, rel := range related {
 		rel.R.Site = site0
@@ -1268,13 +1268,13 @@ func (o *Site) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "ComplianceReportRequests":
-		rels, ok := retrieved.(ComplianceReportRequestSlice)
+	case "Leads":
+		rels, ok := retrieved.(LeadSlice)
 		if !ok {
 			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.ComplianceReportRequests = rels
+		o.R.Leads = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1428,18 +1428,18 @@ func buildSitePreloader() sitePreloader {
 }
 
 type siteThenLoader[Q orm.Loadable] struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Residents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Address                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorUser              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	File                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Parcel                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Leads       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Residents   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	File        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Parcel      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
-	type ComplianceReportRequestsLoadInterface interface {
-		LoadComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type LeadsLoadInterface interface {
+		LoadLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PoolsLoadInterface interface {
 		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1461,10 +1461,10 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 	}
 
 	return siteThenLoader[Q]{
-		ComplianceReportRequests: thenLoadBuilder[Q](
-			"ComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadComplianceReportRequests(ctx, exec, mods...)
+		Leads: thenLoadBuilder[Q](
+			"Leads",
+			func(ctx context.Context, exec bob.Executor, retrieved LeadsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadLeads(ctx, exec, mods...)
 			},
 		),
 		Pools: thenLoadBuilder[Q](
@@ -1506,16 +1506,16 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 	}
 }
 
-// LoadComplianceReportRequests loads the site's ComplianceReportRequests into the .R struct
-func (o *Site) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadLeads loads the site's Leads into the .R struct
+func (o *Site) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.ComplianceReportRequests = nil
+	o.R.Leads = nil
 
-	related, err := o.ComplianceReportRequests(mods...).All(ctx, exec)
+	related, err := o.Leads(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1524,17 +1524,17 @@ func (o *Site) LoadComplianceReportRequests(ctx context.Context, exec bob.Execut
 		rel.R.Site = o
 	}
 
-	o.R.ComplianceReportRequests = related
+	o.R.Leads = related
 	return nil
 }
 
-// LoadComplianceReportRequests loads the site's ComplianceReportRequests into the .R struct
-func (os SiteSlice) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadLeads loads the site's Leads into the .R struct
+func (os SiteSlice) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	complianceReportRequests, err := os.ComplianceReportRequests(mods...).All(ctx, exec)
+	leads, err := os.Leads(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1544,7 +1544,7 @@ func (os SiteSlice) LoadComplianceReportRequests(ctx context.Context, exec bob.E
 			continue
 		}
 
-		o.R.ComplianceReportRequests = nil
+		o.R.Leads = nil
 	}
 
 	for _, o := range os {
@@ -1552,19 +1552,25 @@ func (os SiteSlice) LoadComplianceReportRequests(ctx context.Context, exec bob.E
 			continue
 		}
 
-		for _, rel := range complianceReportRequests {
+		for _, rel := range leads {
 
-			if !(o.ID == rel.SiteID) {
+			if !rel.SiteID.IsValue() {
+				continue
+			}
+			if !(rel.SiteID.IsValue() && o.ID == rel.SiteID.MustGet()) {
 				continue
 			}
 
-			if !(o.Version == rel.SiteVersion) {
+			if !rel.SiteVersion.IsValue() {
+				continue
+			}
+			if !(rel.SiteVersion.IsValue() && o.Version == rel.SiteVersion.MustGet()) {
 				continue
 			}
 
 			rel.R.Site = o
 
-			o.R.ComplianceReportRequests = append(o.R.ComplianceReportRequests, rel)
+			o.R.Leads = append(o.R.Leads, rel)
 		}
 	}
 
@@ -1914,9 +1920,9 @@ func (os SiteSlice) LoadParcel(ctx context.Context, exec bob.Executor, mods ...b
 
 // siteC is where relationship counts are stored.
 type siteC struct {
-	ComplianceReportRequests *int64
-	Pools                    *int64
-	Residents                *int64
+	Leads     *int64
+	Pools     *int64
+	Residents *int64
 }
 
 // PreloadCount sets a count in the C struct by name
@@ -1926,8 +1932,8 @@ func (o *Site) PreloadCount(name string, count int64) error {
 	}
 
 	switch name {
-	case "ComplianceReportRequests":
-		o.C.ComplianceReportRequests = &count
+	case "Leads":
+		o.C.Leads = &count
 	case "Pools":
 		o.C.Pools = &count
 	case "Residents":
@@ -1937,15 +1943,15 @@ func (o *Site) PreloadCount(name string, count int64) error {
 }
 
 type siteCountPreloader struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Pools                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Residents                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Leads     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Pools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Residents func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 }
 
 func buildSiteCountPreloader() siteCountPreloader {
 	return siteCountPreloader{
-		ComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Site]("ComplianceReportRequests", func(parent string) bob.Expression {
+		Leads: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Site]("Leads", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
 				if parent == "" {
 					parent = Sites.Alias()
@@ -1954,9 +1960,9 @@ func buildSiteCountPreloader() siteCountPreloader {
 				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
 					sm.Columns(psql.Raw("count(*)")),
 
-					sm.From(ComplianceReportRequests.Name()),
-					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
-					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
+					sm.From(Leads.Name()),
+					sm.Where(psql.Quote(Leads.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
+					sm.Where(psql.Quote(Leads.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
 				}
 				subqueryMods = append(subqueryMods, mods...)
 				return psql.Group(psql.Select(subqueryMods...).Expression)
@@ -2002,14 +2008,14 @@ func buildSiteCountPreloader() siteCountPreloader {
 }
 
 type siteCountThenLoader[Q orm.Loadable] struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Residents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Leads     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSiteCountThenLoader[Q orm.Loadable]() siteCountThenLoader[Q] {
-	type ComplianceReportRequestsCountInterface interface {
-		LoadCountComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type LeadsCountInterface interface {
+		LoadCountLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PoolsCountInterface interface {
 		LoadCountPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2019,10 +2025,10 @@ func buildSiteCountThenLoader[Q orm.Loadable]() siteCountThenLoader[Q] {
 	}
 
 	return siteCountThenLoader[Q]{
-		ComplianceReportRequests: countThenLoadBuilder[Q](
-			"ComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountComplianceReportRequests(ctx, exec, mods...)
+		Leads: countThenLoadBuilder[Q](
+			"Leads",
+			func(ctx context.Context, exec bob.Executor, retrieved LeadsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountLeads(ctx, exec, mods...)
 			},
 		),
 		Pools: countThenLoadBuilder[Q](
@@ -2040,29 +2046,29 @@ func buildSiteCountThenLoader[Q orm.Loadable]() siteCountThenLoader[Q] {
 	}
 }
 
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests into the C struct
-func (o *Site) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountLeads loads the count of Leads into the C struct
+func (o *Site) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
-	count, err := o.ComplianceReportRequests(mods...).Count(ctx, exec)
+	count, err := o.Leads(mods...).Count(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	o.C.ComplianceReportRequests = &count
+	o.C.Leads = &count
 	return nil
 }
 
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests for a slice
-func (os SiteSlice) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadCountLeads loads the count of Leads for a slice
+func (os SiteSlice) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
 	for _, o := range os {
-		if err := o.LoadCountComplianceReportRequests(ctx, exec, mods...); err != nil {
+		if err := o.LoadCountLeads(ctx, exec, mods...); err != nil {
 			return err
 		}
 	}
@@ -2131,14 +2137,14 @@ func (os SiteSlice) LoadCountResidents(ctx context.Context, exec bob.Executor, m
 }
 
 type siteJoins[Q dialect.Joinable] struct {
-	typ                      string
-	ComplianceReportRequests modAs[Q, complianceReportRequestColumns]
-	Pools                    modAs[Q, poolColumns]
-	Residents                modAs[Q, residentColumns]
-	Address                  modAs[Q, addressColumns]
-	CreatorUser              modAs[Q, userColumns]
-	File                     modAs[Q, fileuploadFileColumns]
-	Parcel                   modAs[Q, parcelColumns]
+	typ         string
+	Leads       modAs[Q, leadColumns]
+	Pools       modAs[Q, poolColumns]
+	Residents   modAs[Q, residentColumns]
+	Address     modAs[Q, addressColumns]
+	CreatorUser modAs[Q, userColumns]
+	File        modAs[Q, fileuploadFileColumns]
+	Parcel      modAs[Q, parcelColumns]
 }
 
 func (j siteJoins[Q]) aliasedAs(alias string) siteJoins[Q] {
@@ -2148,13 +2154,13 @@ func (j siteJoins[Q]) aliasedAs(alias string) siteJoins[Q] {
 func buildSiteJoins[Q dialect.Joinable](cols siteColumns, typ string) siteJoins[Q] {
 	return siteJoins[Q]{
 		typ: typ,
-		ComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
-			c: ComplianceReportRequests.Columns,
-			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
+		Leads: modAs[Q, leadColumns]{
+			c: Leads.Columns,
+			f: func(to leadColumns) bob.Mod[Q] {
 				mods := make(mods.QueryMods[Q], 0, 1)
 
 				{
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
+					mods = append(mods, dialect.Join[Q](typ, Leads.Name().As(to.Alias())).On(
 						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
 					))
 				}

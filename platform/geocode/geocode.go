@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
@@ -160,6 +161,16 @@ func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeR
 	}, nil
 }
 
+func GetParcel(ctx context.Context, txn bob.Tx, a *models.Address) (*models.Parcel, error) {
+	result, err := models.Parcels.Query(
+		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.geom"))),
+		models.SelectWhere.Addresses.ID.EQ(a.ID),
+	).One(ctx, txn)
+	if err != nil {
+		return nil, fmt.Errorf("Get parcel from address %d: %w", a.ID)
+	}
+	return result, nil
+}
 func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
 	if org.ServiceAreaXmax.IsNull() ||
 		org.ServiceAreaYmax.IsNull() ||

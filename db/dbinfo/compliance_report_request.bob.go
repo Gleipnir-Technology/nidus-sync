@@ -51,21 +51,12 @@ var ComplianceReportRequests = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SiteID: column{
-			Name:      "site_id",
+		LeadID: column{
+			Name:      "lead_id",
 			DBType:    "integer",
-			Default:   "",
+			Default:   "NULL",
 			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SiteVersion: column{
-			Name:      "site_version",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
+			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -121,14 +112,14 @@ var ComplianceReportRequests = Table[
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
-		ComplianceReportRequestComplianceReportRequestSiteIDSiteVersionFkey: foreignKey{
+		ComplianceReportRequestComplianceReportRequestLeadIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "compliance_report_request.compliance_report_request_site_id_site_version_fkey",
-				Columns: []string{"site_id", "site_version"},
+				Name:    "compliance_report_request.compliance_report_request_lead_id_fkey",
+				Columns: []string{"lead_id"},
 				Comment: "",
 			},
-			ForeignTable:   "site",
-			ForeignColumns: []string{"id", "version"},
+			ForeignTable:   "lead",
+			ForeignColumns: []string{"id"},
 		},
 	},
 	Uniques: complianceReportRequestUniques{
@@ -143,17 +134,16 @@ var ComplianceReportRequests = Table[
 }
 
 type complianceReportRequestColumns struct {
-	Created     column
-	Creator     column
-	ID          column
-	PublicID    column
-	SiteID      column
-	SiteVersion column
+	Created  column
+	Creator  column
+	ID       column
+	PublicID column
+	LeadID   column
 }
 
 func (c complianceReportRequestColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Creator, c.ID, c.PublicID, c.SiteID, c.SiteVersion,
+		c.Created, c.Creator, c.ID, c.PublicID, c.LeadID,
 	}
 }
 
@@ -169,13 +159,13 @@ func (i complianceReportRequestIndexes) AsSlice() []index {
 }
 
 type complianceReportRequestForeignKeys struct {
-	ComplianceReportRequestComplianceReportRequestCreatorFkey           foreignKey
-	ComplianceReportRequestComplianceReportRequestSiteIDSiteVersionFkey foreignKey
+	ComplianceReportRequestComplianceReportRequestCreatorFkey foreignKey
+	ComplianceReportRequestComplianceReportRequestLeadIDFkey  foreignKey
 }
 
 func (f complianceReportRequestForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.ComplianceReportRequestComplianceReportRequestCreatorFkey, f.ComplianceReportRequestComplianceReportRequestSiteIDSiteVersionFkey,
+		f.ComplianceReportRequestComplianceReportRequestCreatorFkey, f.ComplianceReportRequestComplianceReportRequestLeadIDFkey,
 	}
 }
 

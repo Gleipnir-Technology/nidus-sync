@@ -8,10 +8,11 @@ import (
 	"strconv"
 	"strings"
 	//"sync"
-	//"time"
+	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -24,7 +25,7 @@ import (
 	//"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	//"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
-	//"github.com/aarondl/opt/omitnull"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,13 +38,13 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		return fmt.Errorf("Failed to start transaction: %w", err)
 	}
 
-	f, err := models.FindFileuploadFile(ctx, txn, file_id)
+	file, err := models.FindFileuploadFile(ctx, txn, file_id)
 	if err != nil {
 		return fmt.Errorf("Failed to get csv file %d from DB: %w", file_id, err)
 	}
-	org, err := models.FindOrganization(ctx, txn, f.OrganizationID)
+	org, err := models.FindOrganization(ctx, txn, file.OrganizationID)
 	if err != nil {
-		return fmt.Errorf("Failed to get org %d from DB: %w", f.OrganizationID, err)
+		return fmt.Errorf("Failed to get org %d from DB: %w", file.OrganizationID, err)
 	}
 
 	rows, err := models.FileuploadPools.Query(
@@ -66,7 +67,84 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		if err != nil {
 			return fmt.Errorf("ensure address: %w", err)
 		}
-		log.Info().Int32("id", address.ID).Msg("made address")
+		parcel, err := geocode.GetParcel(ctx, txn, address)
+		if err != nil {
+			return fmt.Errorf("get parcel: %w", err)
+		}
+		var site *models.Site
+		site, err = models.Sites.Query(
+			models.SelectWhere.Sites.AddressID.EQ(address.ID),
+		).One(ctx, txn)
+		if err != nil {
+			if err.Error() != "sql: no rows in result set" {
+				return fmt.Errorf("query site: %w", err)
+			}
+			setter := models.SiteSetter{
+				AddressID: omit.From(address.ID),
+				Created:   omit.From(time.Now()),
+				CreatorID: omit.FromPtr(file.Committer.Ptr()),
+				FileID:    omitnull.From(file_id),
+				//ID             omit.Val[int32]          `db:"id,pk" `
+				Notes:          omit.From(row.Notes),
+				OrganizationID: omit.From(org.ID),
+				OwnerName:      omit.From(row.PropertyOwnerName),
+				OwnerPhoneE164: omitnull.FromPtr(row.PropertyOwnerPhoneE164.Ptr()),
+				ParcelID:       omit.From(parcel.ID),
+				ResidentOwned:  omitnull.FromPtr(row.ResidentOwned.Ptr()),
+				Tags:           omit.From(row.Tags),
+				Version:        omit.From(int32(1)),
+			}
+			site, err = models.Sites.Insert(&setter).One(ctx, txn)
+			if err != nil {
+				return fmt.Errorf("insert site: %w", err)
+			}
+		}
+		var pool *models.Pool
+		pool, err = models.Pools.Query(
+			models.SelectWhere.Pools.SiteID.EQ(site.ID),
+			models.SelectWhere.Pools.SiteVersion.EQ(site.Version),
+		).One(ctx, txn)
+		if err != nil {
+			if err.Error() != "sql: no rows in result set" {
+				return fmt.Errorf("query site: %w", err)
+			}
+			pool, err = models.Pools.Insert(&models.PoolSetter{
+				Condition: omit.From(row.Condition),
+				Created:   omit.From(time.Now()),
+				CreatorID: omit.From(file.Committer.MustGet()),
+				//ID: row.Address,
+				SiteID:      omit.From(site.ID),
+				SiteVersion: omit.From(site.Version),
+			}).One(ctx, txn)
+		}
+		signal, err := models.Signals.Insert(&models.SignalSetter{
+			Addressed: omitnull.FromPtr[time.Time](nil),
+			Addressor: omitnull.FromPtr[int32](nil),
+			Created:   omit.From(time.Now()),
+			Creator:   omit.From(file.Committer.MustGet()),
+			//ID: row.Address,
+			OrganizationID: omit.From(org.ID),
+			Species:        omitnull.From(enums.MosquitospeciesNone),
+			Title:          omit.From("Green pool import"),
+			Type:           omit.From(enums.SignaltypeFlyoverPool),
+		}).One(ctx, txn)
+		if err != nil {
+			return fmt.Errorf("insert signal: %w", err)
+		}
+		_, err = bob.Exec(ctx, db.PGInstance.BobDB, psql.Insert(
+			im.Into("signa_pool", "pool_id", "signal_id"),
+			im.Values(
+				psql.Arg(pool.ID),
+				psql.Arg(signal.ID),
+			),
+		))
+		/*
+			Not sure why SignalPools doesn't have an Insert method
+			_, err = models.SignalPools.Insert(&models.SignalPoolSetter{
+				PoolID: omit.From(pool.ID),
+				SignalID: omit.From(signal.ID),
+			}).One(ctx, txn)
+		*/
 	}
 	return nil
 }

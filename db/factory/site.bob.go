@@ -59,18 +59,18 @@ type SiteTemplate struct {
 }
 
 type siteR struct {
-	ComplianceReportRequests []*siteRComplianceReportRequestsR
-	Pools                    []*siteRPoolsR
-	Residents                []*siteRResidentsR
-	Address                  *siteRAddressR
-	CreatorUser              *siteRCreatorUserR
-	File                     *siteRFileR
-	Parcel                   *siteRParcelR
+	Leads       []*siteRLeadsR
+	Pools       []*siteRPoolsR
+	Residents   []*siteRResidentsR
+	Address     *siteRAddressR
+	CreatorUser *siteRCreatorUserR
+	File        *siteRFileR
+	Parcel      *siteRParcelR
 }
 
-type siteRComplianceReportRequestsR struct {
+type siteRLeadsR struct {
 	number int
-	o      *ComplianceReportRequestTemplate
+	o      *LeadTemplate
 }
 type siteRPoolsR struct {
 	number int
@@ -103,18 +103,18 @@ func (o *SiteTemplate) Apply(ctx context.Context, mods ...SiteMod) {
 // setModelRels creates and sets the relationships on *models.Site
 // according to the relationships in the template. Nothing is inserted into the db
 func (t SiteTemplate) setModelRels(o *models.Site) {
-	if t.r.ComplianceReportRequests != nil {
-		rel := models.ComplianceReportRequestSlice{}
-		for _, r := range t.r.ComplianceReportRequests {
+	if t.r.Leads != nil {
+		rel := models.LeadSlice{}
+		for _, r := range t.r.Leads {
 			related := r.o.BuildMany(r.number)
 			for _, rel := range related {
-				rel.SiteID = o.ID           // h2
-				rel.SiteVersion = o.Version // h2
+				rel.SiteID = null.From(o.ID)           // h2
+				rel.SiteVersion = null.From(o.Version) // h2
 				rel.R.Site = o
 			}
 			rel = append(rel, related...)
 		}
-		o.R.ComplianceReportRequests = rel
+		o.R.Leads = rel
 	}
 
 	if t.r.Pools != nil {
@@ -356,19 +356,19 @@ func ensureCreatableSite(m *models.SiteSetter) {
 func (o *SiteTemplate) insertOptRels(ctx context.Context, exec bob.Executor, m *models.Site) error {
 	var err error
 
-	isComplianceReportRequestsDone, _ := siteRelComplianceReportRequestsCtx.Value(ctx)
-	if !isComplianceReportRequestsDone && o.r.ComplianceReportRequests != nil {
-		ctx = siteRelComplianceReportRequestsCtx.WithValue(ctx, true)
-		for _, r := range o.r.ComplianceReportRequests {
+	isLeadsDone, _ := siteRelLeadsCtx.Value(ctx)
+	if !isLeadsDone && o.r.Leads != nil {
+		ctx = siteRelLeadsCtx.WithValue(ctx, true)
+		for _, r := range o.r.Leads {
 			if r.o.alreadyPersisted {
-				m.R.ComplianceReportRequests = append(m.R.ComplianceReportRequests, r.o.Build())
+				m.R.Leads = append(m.R.Leads, r.o.Build())
 			} else {
 				rel0, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachComplianceReportRequests(ctx, exec, rel0...)
+				err = m.AttachLeads(ctx, exec, rel0...)
 				if err != nil {
 					return err
 				}
@@ -1216,51 +1216,51 @@ func (m siteMods) WithoutParcel() SiteMod {
 	})
 }
 
-func (m siteMods) WithComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) SiteMod {
+func (m siteMods) WithLeads(number int, related *LeadTemplate) SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
-		o.r.ComplianceReportRequests = []*siteRComplianceReportRequestsR{{
+		o.r.Leads = []*siteRLeadsR{{
 			number: number,
 			o:      related,
 		}}
 	})
 }
 
-func (m siteMods) WithNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) SiteMod {
+func (m siteMods) WithNewLeads(number int, mods ...LeadMod) SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
-		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
-		m.WithComplianceReportRequests(number, related).Apply(ctx, o)
+		related := o.f.NewLeadWithContext(ctx, mods...)
+		m.WithLeads(number, related).Apply(ctx, o)
 	})
 }
 
-func (m siteMods) AddComplianceReportRequests(number int, related *ComplianceReportRequestTemplate) SiteMod {
+func (m siteMods) AddLeads(number int, related *LeadTemplate) SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
-		o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &siteRComplianceReportRequestsR{
+		o.r.Leads = append(o.r.Leads, &siteRLeadsR{
 			number: number,
 			o:      related,
 		})
 	})
 }
 
-func (m siteMods) AddNewComplianceReportRequests(number int, mods ...ComplianceReportRequestMod) SiteMod {
+func (m siteMods) AddNewLeads(number int, mods ...LeadMod) SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
-		related := o.f.NewComplianceReportRequestWithContext(ctx, mods...)
-		m.AddComplianceReportRequests(number, related).Apply(ctx, o)
+		related := o.f.NewLeadWithContext(ctx, mods...)
+		m.AddLeads(number, related).Apply(ctx, o)
 	})
 }
 
-func (m siteMods) AddExistingComplianceReportRequests(existingModels ...*models.ComplianceReportRequest) SiteMod {
+func (m siteMods) AddExistingLeads(existingModels ...*models.Lead) SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
 		for _, em := range existingModels {
-			o.r.ComplianceReportRequests = append(o.r.ComplianceReportRequests, &siteRComplianceReportRequestsR{
-				o: o.f.FromExistingComplianceReportRequest(em),
+			o.r.Leads = append(o.r.Leads, &siteRLeadsR{
+				o: o.f.FromExistingLead(em),
 			})
 		}
 	})
 }
 
-func (m siteMods) WithoutComplianceReportRequests() SiteMod {
+func (m siteMods) WithoutLeads() SiteMod {
 	return SiteModFunc(func(ctx context.Context, o *SiteTemplate) {
-		o.r.ComplianceReportRequests = nil
+		o.r.Leads = nil
 	})
 }
 

@@ -55,7 +55,7 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	comp, err := models.ComplianceReportRequests.Query(
-		models.Preload.ComplianceReportRequest.Site(),
+		models.Preload.ComplianceReportRequest.Lead(),
 		models.SelectWhere.ComplianceReportRequests.PublicID.EQ(code),
 	).One(ctx, db.PGInstance.BobDB)
 
@@ -63,8 +63,8 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no comp", http.StatusInternalServerError)
 		return
 	}
-	site := comp.R.Site
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, site.OrganizationID)
+	lead := comp.R.Lead
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, lead.OrganizationID)
 	if err != nil {
 		http.Error(w, "no comp", http.StatusInternalServerError)
 		return

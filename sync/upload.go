@@ -83,7 +83,7 @@ func postUploadCommit(ctx context.Context, r *http.Request, org *models.Organiza
 	if err != nil {
 		return "", nhttp.NewError("Failed to parse file_id: %w", err)
 	}
-	err = platform.UploadCommit(ctx, org, int32(file_id_))
+	err = platform.UploadCommit(ctx, org, int32(file_id_), u)
 	if err != nil {
 		return "", nhttp.NewError("Failed to mark committed: %w", err)
 	}

@@ -147,7 +147,7 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		//AddressRegion: omit.From(),
 		//AddressStreet: omit.From(),
 		Committed: omit.From(false),
-		Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
+		Condition: omit.From(enums.PoolconditiontypeUnknown),
 		Created:   omit.From(time.Now()),
 		CreatorID: omit.From(file.CreatorID),
 		CSVFile:   omit.From(file.ID),
@@ -238,7 +238,7 @@ func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadF
 		// AddressPostalCode: omit.From(),
 		// AddressStreet: omit.From(),
 		Committed: omit.From(false),
-		Condition: omit.From(enums.FileuploadPoolconditiontypeUnknown),
+		Condition: omit.From(enums.PoolconditiontypeUnknown),
 		Created:   omit.From(time.Now()),
 		CreatorID: omit.From(file.CreatorID),
 		CSVFile:   omit.From(file.ID),
@@ -329,8 +329,8 @@ var poolConditionAliases = map[string]string{
 	"questionable":  "unknown",
 }
 
-func parsePoolCondition(c string) (enums.FileuploadPoolconditiontype, error) {
-	var condition enums.FileuploadPoolconditiontype
+func parsePoolCondition(c string) (enums.Poolconditiontype, error) {
+	var condition enums.Poolconditiontype
 	col_l := strings.ToLower(c)
 	col_translated, ok := poolConditionAliases[col_l]
 	if ok {

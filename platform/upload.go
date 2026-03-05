@@ -78,13 +78,14 @@ func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, 
 		ID: file.ID,
 	}, nil
 }
-func UploadCommit(ctx context.Context, org *models.Organization, file_id int32) error {
+func UploadCommit(ctx context.Context, org *models.Organization, file_id int32, committer *models.User) error {
 	// Create addresses for each row
 	// Create sites for each row
 	// Create pools for each row
 	_, err := psql.Update(
 		um.Table(models.FileuploadFiles.Alias()),
 		um.SetCol("status").ToArg("committed"),
+		um.SetCol("committer").ToArg(committer.ID),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
 	).Exec(ctx, db.PGInstance.BobDB)

@@ -42,15 +42,6 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Condition: column{
-			Name:      "condition",
-			DBType:    "fileupload.poolconditiontype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -222,6 +213,15 @@ var FileuploadPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Condition: column{
+			Name:      "condition",
+			DBType:    "public.poolconditiontype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fileuploadPoolIndexes{
 		PoolPkey: index{
@@ -293,7 +293,6 @@ type fileuploadPoolColumns struct {
 	AddressPostalCode      column
 	AddressStreet          column
 	Committed              column
-	Condition              column
 	Created                column
 	CreatorID              column
 	CSVFile                column
@@ -313,11 +312,12 @@ type fileuploadPoolColumns struct {
 	AddressNumber          column
 	AddressLocality        column
 	AddressRegion          column
+	Condition              column
 }
 
 func (c fileuploadPoolColumns) AsSlice() []column {
 	return []column{
-		c.AddressPostalCode, c.AddressStreet, c.Committed, c.Condition, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags, c.AddressNumber, c.AddressLocality, c.AddressRegion,
+		c.AddressPostalCode, c.AddressStreet, c.Committed, c.Created, c.CreatorID, c.CSVFile, c.Deleted, c.Geom, c.H3cell, c.ID, c.IsInDistrict, c.IsNew, c.Notes, c.PropertyOwnerName, c.PropertyOwnerPhoneE164, c.ResidentOwned, c.ResidentPhoneE164, c.LineNumber, c.Tags, c.AddressNumber, c.AddressLocality, c.AddressRegion, c.Condition,
 	}
 }
 

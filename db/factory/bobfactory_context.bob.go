@@ -114,7 +114,7 @@ var (
 	// Relationship Contexts for compliance_report_request
 	complianceReportRequestWithParentsCascadingCtx = newContextual[bool]("complianceReportRequestWithParentsCascading")
 	complianceReportRequestRelCreatorUserCtx       = newContextual[bool]("compliance_report_request.user_.compliance_report_request.compliance_report_request_creator_fkey")
-	complianceReportRequestRelSiteCtx              = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
+	complianceReportRequestRelLeadCtx              = newContextual[bool]("compliance_report_request.lead.compliance_report_request.compliance_report_request_lead_id_fkey")
 	complianceReportRequestRelMailersCtx           = newContextual[bool]("comms.mailer.compliance_report_request.compliance_report_request_mailer.compliance_report_request_mai_compliance_report_request_id_fkeycompliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey")
 
 	// Relationship Contexts for compliance_report_request_mailer
@@ -262,6 +262,7 @@ var (
 	fileuploadFileWithParentsCascadingCtx = newContextual[bool]("fileuploadFileWithParentsCascading")
 	fileuploadFileRelCSVCtx               = newContextual[bool]("fileupload.csv.fileupload.file.fileupload.csv.csv_file_id_fkey")
 	fileuploadFileRelErrorFilesCtx        = newContextual[bool]("fileupload.error_file.fileupload.file.fileupload.error_file.error_file_file_id_fkey")
+	fileuploadFileRelCommitterUserCtx     = newContextual[bool]("fileupload.file.user_.fileupload.file.file_committer_fkey")
 	fileuploadFileRelCreatorUserCtx       = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
 	fileuploadFileRelOrganizationCtx      = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 	fileuploadFileRelSitesCtx             = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
@@ -285,6 +286,13 @@ var (
 	// Relationship Contexts for h3_aggregation
 	h3AggregationWithParentsCascadingCtx = newContextual[bool]("h3AggregationWithParentsCascading")
 	h3AggregationRelOrganizationCtx      = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
+
+	// Relationship Contexts for lead
+	leadWithParentsCascadingCtx        = newContextual[bool]("leadWithParentsCascading")
+	leadRelComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.lead.compliance_report_request.compliance_report_request_lead_id_fkey")
+	leadRelCreatorUserCtx              = newContextual[bool]("lead.user_.lead.lead_creator_fkey")
+	leadRelOrganizationCtx             = newContextual[bool]("lead.organization.lead.lead_organization_id_fkey")
+	leadRelSiteCtx                     = newContextual[bool]("lead.site.lead.lead_site_id_site_version_fkey")
 
 	// Relationship Contexts for note_audio
 	noteAudioWithParentsCascadingCtx    = newContextual[bool]("noteAudioWithParentsCascading")
@@ -359,6 +367,7 @@ var (
 	organizationRelFieldseekerSyncsCtx                            = newContextual[bool]("fieldseeker_sync.organization.fieldseeker_sync.fieldseeker_sync_organization_id_fkey")
 	organizationRelFilesCtx                                       = newContextual[bool]("fileupload.file.organization.fileupload.file.file_organization_id_fkey")
 	organizationRelH3AggregationsCtx                              = newContextual[bool]("h3_aggregation.organization.h3_aggregation.h3_aggregation_organization_id_fkey")
+	organizationRelLeadsCtx                                       = newContextual[bool]("lead.organization.lead.lead_organization_id_fkey")
 	organizationRelNoteAudiosCtx                                  = newContextual[bool]("note_audio.organization.note_audio.note_audio_organization_id_fkey")
 	organizationRelNoteImagesCtx                                  = newContextual[bool]("note_image.organization.note_image.note_image_organization_id_fkey")
 	organizationRelArcgisAccountAccountCtx                        = newContextual[bool]("arcgis.account.organization.organization.organization_arcgis_account_id_fkey")
@@ -484,14 +493,14 @@ var (
 	signalPoolRelSignalCtx            = newContextual[bool]("signal.signal_pool.signal_pool.signal_pool_signal_id_fkey")
 
 	// Relationship Contexts for site
-	siteWithParentsCascadingCtx        = newContextual[bool]("siteWithParentsCascading")
-	siteRelComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.site.compliance_report_request.compliance_report_request_site_id_site_version_fkey")
-	siteRelPoolsCtx                    = newContextual[bool]("pool.site.pool.pool_site_id_site_version_fkey")
-	siteRelResidentsCtx                = newContextual[bool]("resident.site.resident.resident_site_id_site_version_fkey")
-	siteRelAddressCtx                  = newContextual[bool]("address.site.site.site_address_id_fkey")
-	siteRelCreatorUserCtx              = newContextual[bool]("site.user_.site.site_creator_id_fkey")
-	siteRelFileCtx                     = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
-	siteRelParcelCtx                   = newContextual[bool]("parcel.site.site.site_parcel_id_fkey")
+	siteWithParentsCascadingCtx = newContextual[bool]("siteWithParentsCascading")
+	siteRelLeadsCtx             = newContextual[bool]("lead.site.lead.lead_site_id_site_version_fkey")
+	siteRelPoolsCtx             = newContextual[bool]("pool.site.pool.pool_site_id_site_version_fkey")
+	siteRelResidentsCtx         = newContextual[bool]("resident.site.resident.resident_site_id_site_version_fkey")
+	siteRelAddressCtx           = newContextual[bool]("address.site.site.site_address_id_fkey")
+	siteRelCreatorUserCtx       = newContextual[bool]("site.user_.site.site_creator_id_fkey")
+	siteRelFileCtx              = newContextual[bool]("fileupload.file.site.site.site_file_id_fkey")
+	siteRelParcelCtx            = newContextual[bool]("parcel.site.site.site_parcel_id_fkey")
 
 	// Relationship Contexts for spatial_ref_sys
 	spatialRefSyWithParentsCascadingCtx = newContextual[bool]("spatialRefSyWithParentsCascading")
@@ -501,8 +510,10 @@ var (
 	userRelUserOauthTokensCtx                 = newContextual[bool]("arcgis.oauth_token.user_.arcgis.oauth_token.oauth_token_user_id_fkey")
 	userRelPublicUserUserCtx                  = newContextual[bool]("arcgis.user_.user_.arcgis.user_.user__public_user_id_fkey")
 	userRelCreatorComplianceReportRequestsCtx = newContextual[bool]("compliance_report_request.user_.compliance_report_request.compliance_report_request_creator_fkey")
+	userRelCommitterFilesCtx                  = newContextual[bool]("fileupload.file.user_.fileupload.file.file_committer_fkey")
 	userRelCreatorFilesCtx                    = newContextual[bool]("fileupload.file.user_.fileupload.file.file_creator_id_fkey")
 	userRelFileuploadPoolCtx                  = newContextual[bool]("fileupload.pool.user_.fileupload.pool.pool_creator_id_fkey")
+	userRelCreatorLeadsCtx                    = newContextual[bool]("lead.user_.lead.lead_creator_fkey")
 	userRelCreatorNoteAudiosCtx               = newContextual[bool]("note_audio.user_.note_audio.note_audio_creator_id_fkey")
 	userRelDeletorNoteAudiosCtx               = newContextual[bool]("note_audio.user_.note_audio.note_audio_deletor_id_fkey")
 	userRelCreatorNoteImagesCtx               = newContextual[bool]("note_image.user_.note_image.note_image_creator_id_fkey")

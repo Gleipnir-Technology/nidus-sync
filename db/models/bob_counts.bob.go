@@ -34,6 +34,7 @@ type preloadCounts struct {
 	ComplianceReportRequest complianceReportRequestCountPreloader
 	FileuploadCSV           fileuploadCSVCountPreloader
 	FileuploadFile          fileuploadFileCountPreloader
+	Lead                    leadCountPreloader
 	NoteAudio               noteAudioCountPreloader
 	NoteImage               noteImageCountPreloader
 	Organization            organizationCountPreloader
@@ -63,6 +64,7 @@ func getPreloadCount() preloadCounts {
 		ComplianceReportRequest: buildComplianceReportRequestCountPreloader(),
 		FileuploadCSV:           buildFileuploadCSVCountPreloader(),
 		FileuploadFile:          buildFileuploadFileCountPreloader(),
+		Lead:                    buildLeadCountPreloader(),
 		NoteAudio:               buildNoteAudioCountPreloader(),
 		NoteImage:               buildNoteImageCountPreloader(),
 		Organization:            buildOrganizationCountPreloader(),
@@ -92,6 +94,7 @@ type thenLoadCounts[Q orm.Loadable] struct {
 	ComplianceReportRequest complianceReportRequestCountThenLoader[Q]
 	FileuploadCSV           fileuploadCSVCountThenLoader[Q]
 	FileuploadFile          fileuploadFileCountThenLoader[Q]
+	Lead                    leadCountThenLoader[Q]
 	NoteAudio               noteAudioCountThenLoader[Q]
 	NoteImage               noteImageCountThenLoader[Q]
 	Organization            organizationCountThenLoader[Q]
@@ -121,6 +124,7 @@ func getThenLoadCount[Q orm.Loadable]() thenLoadCounts[Q] {
 		ComplianceReportRequest: buildComplianceReportRequestCountThenLoader[Q](),
 		FileuploadCSV:           buildFileuploadCSVCountThenLoader[Q](),
 		FileuploadFile:          buildFileuploadFileCountThenLoader[Q](),
+		Lead:                    buildLeadCountThenLoader[Q](),
 		NoteAudio:               buildNoteAudioCountThenLoader[Q](),
 		NoteImage:               buildNoteImageCountThenLoader[Q](),
 		Organization:            buildOrganizationCountThenLoader[Q](),

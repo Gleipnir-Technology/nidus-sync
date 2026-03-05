@@ -27,29 +27,29 @@ import (
 
 // FileuploadPool is an object representing the database table.
 type FileuploadPool struct {
-	AddressPostalCode      string                            `db:"address_postal_code" `
-	AddressStreet          string                            `db:"address_street" `
-	Committed              bool                              `db:"committed" `
-	Condition              enums.FileuploadPoolconditiontype `db:"condition" `
-	Created                time.Time                         `db:"created" `
-	CreatorID              int32                             `db:"creator_id" `
-	CSVFile                int32                             `db:"csv_file" `
-	Deleted                null.Val[time.Time]               `db:"deleted" `
-	Geom                   null.Val[string]                  `db:"geom" `
-	H3cell                 null.Val[string]                  `db:"h3cell" `
-	ID                     int32                             `db:"id,pk" `
-	IsInDistrict           bool                              `db:"is_in_district" `
-	IsNew                  bool                              `db:"is_new" `
-	Notes                  string                            `db:"notes" `
-	PropertyOwnerName      string                            `db:"property_owner_name" `
-	PropertyOwnerPhoneE164 null.Val[string]                  `db:"property_owner_phone_e164" `
-	ResidentOwned          null.Val[bool]                    `db:"resident_owned" `
-	ResidentPhoneE164      null.Val[string]                  `db:"resident_phone_e164" `
-	LineNumber             int32                             `db:"line_number" `
-	Tags                   pgtypes.HStore                    `db:"tags" `
-	AddressNumber          string                            `db:"address_number" `
-	AddressLocality        string                            `db:"address_locality" `
-	AddressRegion          string                            `db:"address_region" `
+	AddressPostalCode      string                  `db:"address_postal_code" `
+	AddressStreet          string                  `db:"address_street" `
+	Committed              bool                    `db:"committed" `
+	Created                time.Time               `db:"created" `
+	CreatorID              int32                   `db:"creator_id" `
+	CSVFile                int32                   `db:"csv_file" `
+	Deleted                null.Val[time.Time]     `db:"deleted" `
+	Geom                   null.Val[string]        `db:"geom" `
+	H3cell                 null.Val[string]        `db:"h3cell" `
+	ID                     int32                   `db:"id,pk" `
+	IsInDistrict           bool                    `db:"is_in_district" `
+	IsNew                  bool                    `db:"is_new" `
+	Notes                  string                  `db:"notes" `
+	PropertyOwnerName      string                  `db:"property_owner_name" `
+	PropertyOwnerPhoneE164 null.Val[string]        `db:"property_owner_phone_e164" `
+	ResidentOwned          null.Val[bool]          `db:"resident_owned" `
+	ResidentPhoneE164      null.Val[string]        `db:"resident_phone_e164" `
+	LineNumber             int32                   `db:"line_number" `
+	Tags                   pgtypes.HStore          `db:"tags" `
+	AddressNumber          string                  `db:"address_number" `
+	AddressLocality        string                  `db:"address_locality" `
+	AddressRegion          string                  `db:"address_region" `
+	Condition              enums.Poolconditiontype `db:"condition" `
 
 	R fileuploadPoolR `db:"-" `
 }
@@ -75,13 +75,12 @@ type fileuploadPoolR struct {
 func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 	return fileuploadPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_postal_code", "address_street", "committed", "condition", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region",
+			"address_postal_code", "address_street", "committed", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region", "condition",
 		).WithParent("fileupload.pool"),
 		tableAlias:             alias,
 		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
 		AddressStreet:          psql.Quote(alias, "address_street"),
 		Committed:              psql.Quote(alias, "committed"),
-		Condition:              psql.Quote(alias, "condition"),
 		Created:                psql.Quote(alias, "created"),
 		CreatorID:              psql.Quote(alias, "creator_id"),
 		CSVFile:                psql.Quote(alias, "csv_file"),
@@ -101,6 +100,7 @@ func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 		AddressNumber:          psql.Quote(alias, "address_number"),
 		AddressLocality:        psql.Quote(alias, "address_locality"),
 		AddressRegion:          psql.Quote(alias, "address_region"),
+		Condition:              psql.Quote(alias, "condition"),
 	}
 }
 
@@ -110,7 +110,6 @@ type fileuploadPoolColumns struct {
 	AddressPostalCode      psql.Expression
 	AddressStreet          psql.Expression
 	Committed              psql.Expression
-	Condition              psql.Expression
 	Created                psql.Expression
 	CreatorID              psql.Expression
 	CSVFile                psql.Expression
@@ -130,6 +129,7 @@ type fileuploadPoolColumns struct {
 	AddressNumber          psql.Expression
 	AddressLocality        psql.Expression
 	AddressRegion          psql.Expression
+	Condition              psql.Expression
 }
 
 func (c fileuploadPoolColumns) Alias() string {
@@ -144,29 +144,29 @@ func (fileuploadPoolColumns) AliasedAs(alias string) fileuploadPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type FileuploadPoolSetter struct {
-	AddressPostalCode      omit.Val[string]                            `db:"address_postal_code" `
-	AddressStreet          omit.Val[string]                            `db:"address_street" `
-	Committed              omit.Val[bool]                              `db:"committed" `
-	Condition              omit.Val[enums.FileuploadPoolconditiontype] `db:"condition" `
-	Created                omit.Val[time.Time]                         `db:"created" `
-	CreatorID              omit.Val[int32]                             `db:"creator_id" `
-	CSVFile                omit.Val[int32]                             `db:"csv_file" `
-	Deleted                omitnull.Val[time.Time]                     `db:"deleted" `
-	Geom                   omitnull.Val[string]                        `db:"geom" `
-	H3cell                 omitnull.Val[string]                        `db:"h3cell" `
-	ID                     omit.Val[int32]                             `db:"id,pk" `
-	IsInDistrict           omit.Val[bool]                              `db:"is_in_district" `
-	IsNew                  omit.Val[bool]                              `db:"is_new" `
-	Notes                  omit.Val[string]                            `db:"notes" `
-	PropertyOwnerName      omit.Val[string]                            `db:"property_owner_name" `
-	PropertyOwnerPhoneE164 omitnull.Val[string]                        `db:"property_owner_phone_e164" `
-	ResidentOwned          omitnull.Val[bool]                          `db:"resident_owned" `
-	ResidentPhoneE164      omitnull.Val[string]                        `db:"resident_phone_e164" `
-	LineNumber             omit.Val[int32]                             `db:"line_number" `
-	Tags                   omit.Val[pgtypes.HStore]                    `db:"tags" `
-	AddressNumber          omit.Val[string]                            `db:"address_number" `
-	AddressLocality        omit.Val[string]                            `db:"address_locality" `
-	AddressRegion          omit.Val[string]                            `db:"address_region" `
+	AddressPostalCode      omit.Val[string]                  `db:"address_postal_code" `
+	AddressStreet          omit.Val[string]                  `db:"address_street" `
+	Committed              omit.Val[bool]                    `db:"committed" `
+	Created                omit.Val[time.Time]               `db:"created" `
+	CreatorID              omit.Val[int32]                   `db:"creator_id" `
+	CSVFile                omit.Val[int32]                   `db:"csv_file" `
+	Deleted                omitnull.Val[time.Time]           `db:"deleted" `
+	Geom                   omitnull.Val[string]              `db:"geom" `
+	H3cell                 omitnull.Val[string]              `db:"h3cell" `
+	ID                     omit.Val[int32]                   `db:"id,pk" `
+	IsInDistrict           omit.Val[bool]                    `db:"is_in_district" `
+	IsNew                  omit.Val[bool]                    `db:"is_new" `
+	Notes                  omit.Val[string]                  `db:"notes" `
+	PropertyOwnerName      omit.Val[string]                  `db:"property_owner_name" `
+	PropertyOwnerPhoneE164 omitnull.Val[string]              `db:"property_owner_phone_e164" `
+	ResidentOwned          omitnull.Val[bool]                `db:"resident_owned" `
+	ResidentPhoneE164      omitnull.Val[string]              `db:"resident_phone_e164" `
+	LineNumber             omit.Val[int32]                   `db:"line_number" `
+	Tags                   omit.Val[pgtypes.HStore]          `db:"tags" `
+	AddressNumber          omit.Val[string]                  `db:"address_number" `
+	AddressLocality        omit.Val[string]                  `db:"address_locality" `
+	AddressRegion          omit.Val[string]                  `db:"address_region" `
+	Condition              omit.Val[enums.Poolconditiontype] `db:"condition" `
 }
 
 func (s FileuploadPoolSetter) SetColumns() []string {
@@ -179,9 +179,6 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	}
 	if s.Committed.IsValue() {
 		vals = append(vals, "committed")
-	}
-	if s.Condition.IsValue() {
-		vals = append(vals, "condition")
 	}
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
@@ -240,6 +237,9 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	if s.AddressRegion.IsValue() {
 		vals = append(vals, "address_region")
 	}
+	if s.Condition.IsValue() {
+		vals = append(vals, "condition")
+	}
 	return vals
 }
 
@@ -252,9 +252,6 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	}
 	if s.Committed.IsValue() {
 		t.Committed = s.Committed.MustGet()
-	}
-	if s.Condition.IsValue() {
-		t.Condition = s.Condition.MustGet()
 	}
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
@@ -313,6 +310,9 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	if s.AddressRegion.IsValue() {
 		t.AddressRegion = s.AddressRegion.MustGet()
 	}
+	if s.Condition.IsValue() {
+		t.Condition = s.Condition.MustGet()
+	}
 }
 
 func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -340,122 +340,122 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Condition.IsValue() {
-			vals[3] = psql.Arg(s.Condition.MustGet())
+		if s.Created.IsValue() {
+			vals[3] = psql.Arg(s.Created.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.Created.IsValue() {
-			vals[4] = psql.Arg(s.Created.MustGet())
+		if s.CreatorID.IsValue() {
+			vals[4] = psql.Arg(s.CreatorID.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.CreatorID.IsValue() {
-			vals[5] = psql.Arg(s.CreatorID.MustGet())
+		if s.CSVFile.IsValue() {
+			vals[5] = psql.Arg(s.CSVFile.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.CSVFile.IsValue() {
-			vals[6] = psql.Arg(s.CSVFile.MustGet())
+		if !s.Deleted.IsUnset() {
+			vals[6] = psql.Arg(s.Deleted.MustGetNull())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Deleted.IsUnset() {
-			vals[7] = psql.Arg(s.Deleted.MustGetNull())
+		if !s.Geom.IsUnset() {
+			vals[7] = psql.Arg(s.Geom.MustGetNull())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Geom.IsUnset() {
-			vals[8] = psql.Arg(s.Geom.MustGetNull())
+		if !s.H3cell.IsUnset() {
+			vals[8] = psql.Arg(s.H3cell.MustGetNull())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[9] = psql.Arg(s.H3cell.MustGetNull())
+		if s.ID.IsValue() {
+			vals[9] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.ID.IsValue() {
-			vals[10] = psql.Arg(s.ID.MustGet())
+		if s.IsInDistrict.IsValue() {
+			vals[10] = psql.Arg(s.IsInDistrict.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsInDistrict.IsValue() {
-			vals[11] = psql.Arg(s.IsInDistrict.MustGet())
+		if s.IsNew.IsValue() {
+			vals[11] = psql.Arg(s.IsNew.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsNew.IsValue() {
-			vals[12] = psql.Arg(s.IsNew.MustGet())
+		if s.Notes.IsValue() {
+			vals[12] = psql.Arg(s.Notes.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.Notes.IsValue() {
-			vals[13] = psql.Arg(s.Notes.MustGet())
+		if s.PropertyOwnerName.IsValue() {
+			vals[13] = psql.Arg(s.PropertyOwnerName.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.PropertyOwnerName.IsValue() {
-			vals[14] = psql.Arg(s.PropertyOwnerName.MustGet())
+		if !s.PropertyOwnerPhoneE164.IsUnset() {
+			vals[14] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.PropertyOwnerPhoneE164.IsUnset() {
-			vals[15] = psql.Arg(s.PropertyOwnerPhoneE164.MustGetNull())
+		if !s.ResidentOwned.IsUnset() {
+			vals[15] = psql.Arg(s.ResidentOwned.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentOwned.IsUnset() {
-			vals[16] = psql.Arg(s.ResidentOwned.MustGetNull())
+		if !s.ResidentPhoneE164.IsUnset() {
+			vals[16] = psql.Arg(s.ResidentPhoneE164.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResidentPhoneE164.IsUnset() {
-			vals[17] = psql.Arg(s.ResidentPhoneE164.MustGetNull())
+		if s.LineNumber.IsValue() {
+			vals[17] = psql.Arg(s.LineNumber.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if s.LineNumber.IsValue() {
-			vals[18] = psql.Arg(s.LineNumber.MustGet())
+		if s.Tags.IsValue() {
+			vals[18] = psql.Arg(s.Tags.MustGet())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if s.Tags.IsValue() {
-			vals[19] = psql.Arg(s.Tags.MustGet())
+		if s.AddressNumber.IsValue() {
+			vals[19] = psql.Arg(s.AddressNumber.MustGet())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressNumber.IsValue() {
-			vals[20] = psql.Arg(s.AddressNumber.MustGet())
+		if s.AddressLocality.IsValue() {
+			vals[20] = psql.Arg(s.AddressLocality.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressLocality.IsValue() {
-			vals[21] = psql.Arg(s.AddressLocality.MustGet())
+		if s.AddressRegion.IsValue() {
+			vals[21] = psql.Arg(s.AddressRegion.MustGet())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRegion.IsValue() {
-			vals[22] = psql.Arg(s.AddressRegion.MustGet())
+		if s.Condition.IsValue() {
+			vals[22] = psql.Arg(s.Condition.MustGet())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
@@ -489,13 +489,6 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "committed")...),
 			psql.Arg(s.Committed),
-		}})
-	}
-
-	if s.Condition.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "condition")...),
-			psql.Arg(s.Condition),
 		}})
 	}
 
@@ -629,6 +622,13 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address_region")...),
 			psql.Arg(s.AddressRegion),
+		}})
+	}
+
+	if s.Condition.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "condition")...),
+			psql.Arg(s.Condition),
 		}})
 	}
 
@@ -1150,7 +1150,6 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	AddressPostalCode      psql.WhereMod[Q, string]
 	AddressStreet          psql.WhereMod[Q, string]
 	Committed              psql.WhereMod[Q, bool]
-	Condition              psql.WhereMod[Q, enums.FileuploadPoolconditiontype]
 	Created                psql.WhereMod[Q, time.Time]
 	CreatorID              psql.WhereMod[Q, int32]
 	CSVFile                psql.WhereMod[Q, int32]
@@ -1170,6 +1169,7 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	AddressNumber          psql.WhereMod[Q, string]
 	AddressLocality        psql.WhereMod[Q, string]
 	AddressRegion          psql.WhereMod[Q, string]
+	Condition              psql.WhereMod[Q, enums.Poolconditiontype]
 }
 
 func (fileuploadPoolWhere[Q]) AliasedAs(alias string) fileuploadPoolWhere[Q] {
@@ -1181,7 +1181,6 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
 		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
 		Committed:              psql.Where[Q, bool](cols.Committed),
-		Condition:              psql.Where[Q, enums.FileuploadPoolconditiontype](cols.Condition),
 		Created:                psql.Where[Q, time.Time](cols.Created),
 		CreatorID:              psql.Where[Q, int32](cols.CreatorID),
 		CSVFile:                psql.Where[Q, int32](cols.CSVFile),
@@ -1201,6 +1200,7 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
 		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
 		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
+		Condition:              psql.Where[Q, enums.Poolconditiontype](cols.Condition),
 	}
 }
 

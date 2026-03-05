@@ -49,6 +49,7 @@ type FileuploadFileTemplate struct {
 	Status         func() enums.FileuploadFilestatustype
 	SizeBytes      func() int32
 	FileUUID       func() uuid.UUID
+	Committer      func() null.Val[int32]
 
 	r fileuploadFileR
 	f *Factory
@@ -57,11 +58,12 @@ type FileuploadFileTemplate struct {
 }
 
 type fileuploadFileR struct {
-	CSV          *fileuploadFileRCSVR
-	ErrorFiles   []*fileuploadFileRErrorFilesR
-	CreatorUser  *fileuploadFileRCreatorUserR
-	Organization *fileuploadFileROrganizationR
-	Sites        []*fileuploadFileRSitesR
+	CSV           *fileuploadFileRCSVR
+	ErrorFiles    []*fileuploadFileRErrorFilesR
+	CommitterUser *fileuploadFileRCommitterUserR
+	CreatorUser   *fileuploadFileRCreatorUserR
+	Organization  *fileuploadFileROrganizationR
+	Sites         []*fileuploadFileRSitesR
 }
 
 type fileuploadFileRCSVR struct {
@@ -70,6 +72,9 @@ type fileuploadFileRCSVR struct {
 type fileuploadFileRErrorFilesR struct {
 	number int
 	o      *FileuploadErrorFileTemplate
+}
+type fileuploadFileRCommitterUserR struct {
+	o *UserTemplate
 }
 type fileuploadFileRCreatorUserR struct {
 	o *UserTemplate
@@ -110,6 +115,13 @@ func (t FileuploadFileTemplate) setModelRels(o *models.FileuploadFile) {
 			rel = append(rel, related...)
 		}
 		o.R.ErrorFiles = rel
+	}
+
+	if t.r.CommitterUser != nil {
+		rel := t.r.CommitterUser.o.Build()
+		rel.R.CommitterFiles = append(rel.R.CommitterFiles, o)
+		o.Committer = null.From(rel.ID) // h2
+		o.R.CommitterUser = rel
 	}
 
 	if t.r.CreatorUser != nil {
@@ -185,6 +197,10 @@ func (o FileuploadFileTemplate) BuildSetter() *models.FileuploadFileSetter {
 		val := o.FileUUID()
 		m.FileUUID = omit.From(val)
 	}
+	if o.Committer != nil {
+		val := o.Committer()
+		m.Committer = omitnull.FromNull(val)
+	}
 
 	return m
 }
@@ -236,6 +252,9 @@ func (o FileuploadFileTemplate) Build() *models.FileuploadFile {
 	}
 	if o.FileUUID != nil {
 		m.FileUUID = o.FileUUID()
+	}
+	if o.Committer != nil {
+		m.Committer = o.Committer()
 	}
 
 	o.setModelRels(m)
@@ -336,6 +355,25 @@ func (o *FileuploadFileTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 		}
 	}
 
+	isCommitterUserDone, _ := fileuploadFileRelCommitterUserCtx.Value(ctx)
+	if !isCommitterUserDone && o.r.CommitterUser != nil {
+		ctx = fileuploadFileRelCommitterUserCtx.WithValue(ctx, true)
+		if o.r.CommitterUser.o.alreadyPersisted {
+			m.R.CommitterUser = o.r.CommitterUser.o.Build()
+		} else {
+			var rel2 *models.User
+			rel2, err = o.r.CommitterUser.o.Create(ctx, exec)
+			if err != nil {
+				return err
+			}
+			err = m.AttachCommitterUser(ctx, exec, rel2)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	isSitesDone, _ := fileuploadFileRelSitesCtx.Value(ctx)
 	if !isSitesDone && o.r.Sites != nil {
 		ctx = fileuploadFileRelSitesCtx.WithValue(ctx, true)
@@ -343,12 +381,12 @@ func (o *FileuploadFileTemplate) insertOptRels(ctx context.Context, exec bob.Exe
 			if r.o.alreadyPersisted {
 				m.R.Sites = append(m.R.Sites, r.o.Build())
 			} else {
-				rel4, err := r.o.CreateMany(ctx, exec, r.number)
+				rel5, err := r.o.CreateMany(ctx, exec, r.number)
 				if err != nil {
 					return err
 				}
 
-				err = m.AttachSites(ctx, exec, rel4...)
+				err = m.AttachSites(ctx, exec, rel5...)
 				if err != nil {
 					return err
 				}
@@ -370,43 +408,43 @@ func (o *FileuploadFileTemplate) Create(ctx context.Context, exec bob.Executor) 
 		FileuploadFileMods.WithNewCreatorUser().Apply(ctx, o)
 	}
 
-	var rel2 *models.User
+	var rel3 *models.User
 
 	if o.r.CreatorUser.o.alreadyPersisted {
-		rel2 = o.r.CreatorUser.o.Build()
+		rel3 = o.r.CreatorUser.o.Build()
 	} else {
-		rel2, err = o.r.CreatorUser.o.Create(ctx, exec)
+		rel3, err = o.r.CreatorUser.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.CreatorID = omit.From(rel2.ID)
+	opt.CreatorID = omit.From(rel3.ID)
 
 	if o.r.Organization == nil {
 		FileuploadFileMods.WithNewOrganization().Apply(ctx, o)
 	}
 
-	var rel3 *models.Organization
+	var rel4 *models.Organization
 
 	if o.r.Organization.o.alreadyPersisted {
-		rel3 = o.r.Organization.o.Build()
+		rel4 = o.r.Organization.o.Build()
 	} else {
-		rel3, err = o.r.Organization.o.Create(ctx, exec)
+		rel4, err = o.r.Organization.o.Create(ctx, exec)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	opt.OrganizationID = omit.From(rel3.ID)
+	opt.OrganizationID = omit.From(rel4.ID)
 
 	m, err := models.FileuploadFiles.Insert(opt).One(ctx, exec)
 	if err != nil {
 		return nil, err
 	}
 
-	m.R.CreatorUser = rel2
-	m.R.Organization = rel3
+	m.R.CreatorUser = rel3
+	m.R.Organization = rel4
 
 	if err := o.insertOptRels(ctx, exec, m); err != nil {
 		return nil, err
@@ -495,6 +533,7 @@ func (m fileuploadFileMods) RandomizeAllColumns(f *faker.Faker) FileuploadFileMo
 		FileuploadFileMods.RandomStatus(f),
 		FileuploadFileMods.RandomSizeBytes(f),
 		FileuploadFileMods.RandomFileUUID(f),
+		FileuploadFileMods.RandomCommitter(f),
 	}
 }
 
@@ -830,6 +869,59 @@ func (m fileuploadFileMods) RandomFileUUID(f *faker.Faker) FileuploadFileMod {
 	})
 }
 
+// Set the model columns to this value
+func (m fileuploadFileMods) Committer(val null.Val[int32]) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.Committer = func() null.Val[int32] { return val }
+	})
+}
+
+// Set the Column from the function
+func (m fileuploadFileMods) CommitterFunc(f func() null.Val[int32]) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.Committer = f
+	})
+}
+
+// Clear any values for the column
+func (m fileuploadFileMods) UnsetCommitter() FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.Committer = nil
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is sometimes null
+func (m fileuploadFileMods) RandomCommitter(f *faker.Faker) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.Committer = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
+// Generates a random value for the column using the given faker
+// if faker is nil, a default faker is used
+// The generated value is never null
+func (m fileuploadFileMods) RandomCommitterNotNull(f *faker.Faker) FileuploadFileMod {
+	return FileuploadFileModFunc(func(_ context.Context, o *FileuploadFileTemplate) {
+		o.Committer = func() null.Val[int32] {
+			if f == nil {
+				f = &defaultFaker
+			}
+
+			val := random_int32(f)
+			return null.From(val)
+		}
+	})
+}
+
 func (m fileuploadFileMods) WithParentsCascading() FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
 		if isDone, _ := fileuploadFileWithParentsCascadingCtx.Value(ctx); isDone {
@@ -840,6 +932,11 @@ func (m fileuploadFileMods) WithParentsCascading() FileuploadFileMod {
 
 			related := o.f.NewFileuploadCSVWithContext(ctx, FileuploadCSVMods.WithParentsCascading())
 			m.WithCSV(related).Apply(ctx, o)
+		}
+		{
+
+			related := o.f.NewUserWithContext(ctx, UserMods.WithParentsCascading())
+			m.WithCommitterUser(related).Apply(ctx, o)
 		}
 		{
 
@@ -881,6 +978,36 @@ func (m fileuploadFileMods) WithExistingCSV(em *models.FileuploadCSV) Fileupload
 func (m fileuploadFileMods) WithoutCSV() FileuploadFileMod {
 	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
 		o.r.CSV = nil
+	})
+}
+
+func (m fileuploadFileMods) WithCommitterUser(rel *UserTemplate) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.CommitterUser = &fileuploadFileRCommitterUserR{
+			o: rel,
+		}
+	})
+}
+
+func (m fileuploadFileMods) WithNewCommitterUser(mods ...UserMod) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		related := o.f.NewUserWithContext(ctx, mods...)
+
+		m.WithCommitterUser(related).Apply(ctx, o)
+	})
+}
+
+func (m fileuploadFileMods) WithExistingCommitterUser(em *models.User) FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.CommitterUser = &fileuploadFileRCommitterUserR{
+			o: o.f.FromExistingUser(em),
+		}
+	})
+}
+
+func (m fileuploadFileMods) WithoutCommitterUser() FileuploadFileMod {
+	return FileuploadFileModFunc(func(ctx context.Context, o *FileuploadFileTemplate) {
+		o.r.CommitterUser = nil
 	})
 }
 

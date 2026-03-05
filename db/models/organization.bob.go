@@ -114,6 +114,7 @@ type organizationR struct {
 	FieldseekerSyncs                            FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
 	Files                                       FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
 	H3Aggregations                              H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
+	Leads                                       LeadSlice                              // lead.lead_organization_id_fkey
 	NoteAudios                                  NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
 	NoteImages                                  NoteImageSlice                         // note_image.note_image_organization_id_fkey
 	ArcgisAccountAccount                        *ArcgisAccount                         // organization.organization_arcgis_account_id_fkey
@@ -1756,6 +1757,30 @@ func (os OrganizationSlice) H3Aggregations(mods ...bob.Mod[*dialect.SelectQuery]
 
 	return H3Aggregations.Query(append(mods,
 		sm.Where(psql.Group(H3Aggregations.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Leads starts a query for related objects on lead
+func (o *Organization) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
+	return Leads.Query(append(mods,
+		sm.Where(Leads.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Leads.Query(append(mods,
+		sm.Where(psql.Group(Leads.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -4349,6 +4374,74 @@ func (organization0 *Organization) AttachH3Aggregations(ctx context.Context, exe
 	return nil
 }
 
+func insertOrganizationLeads0(ctx context.Context, exec bob.Executor, leads1 []*LeadSetter, organization0 *Organization) (LeadSlice, error) {
+	for i := range leads1 {
+		leads1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := Leads.Insert(bob.ToMods(leads1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationLeads0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationLeads0(ctx context.Context, exec bob.Executor, count int, leads1 LeadSlice, organization0 *Organization) (LeadSlice, error) {
+	setter := &LeadSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := leads1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationLeads0: %w", err)
+	}
+
+	return leads1, nil
+}
+
+func (organization0 *Organization) InsertLeads(ctx context.Context, exec bob.Executor, related ...*LeadSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	leads1, err := insertOrganizationLeads0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Leads = append(organization0.R.Leads, leads1...)
+
+	for _, rel := range leads1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachLeads(ctx context.Context, exec bob.Executor, related ...*Lead) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	leads1 := LeadSlice(related)
+
+	_, err = attachOrganizationLeads0(ctx, exec, len(related), leads1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Leads = append(organization0.R.Leads, leads1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationNoteAudios0(ctx context.Context, exec bob.Executor, noteAudios1 []*NoteAudioSetter, organization0 *Organization) (NoteAudioSlice, error) {
 	for i := range noteAudios1 {
 		noteAudios1[i].OrganizationID = omit.From(organization0.ID)
@@ -5493,6 +5586,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Leads":
+		rels, ok := retrieved.(LeadSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Leads = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "NoteAudios":
 		rels, ok := retrieved.(NoteAudioSlice)
 		if !ok {
@@ -5692,6 +5799,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	FieldseekerSyncs                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Files                                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	H3Aggregations                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Leads                                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ArcgisAccountAccount                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -5808,6 +5916,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type H3AggregationsLoadInterface interface {
 		LoadH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type LeadsLoadInterface interface {
+		LoadLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NoteAudiosLoadInterface interface {
 		LoadNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6046,6 +6157,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"H3Aggregations",
 			func(ctx context.Context, exec bob.Executor, retrieved H3AggregationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadH3Aggregations(ctx, exec, mods...)
+			},
+		),
+		Leads: thenLoadBuilder[Q](
+			"Leads",
+			func(ctx context.Context, exec bob.Executor, retrieved LeadsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadLeads(ctx, exec, mods...)
 			},
 		),
 		NoteAudios: thenLoadBuilder[Q](
@@ -8280,6 +8397,67 @@ func (os OrganizationSlice) LoadH3Aggregations(ctx context.Context, exec bob.Exe
 	return nil
 }
 
+// LoadLeads loads the organization's Leads into the .R struct
+func (o *Organization) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Leads = nil
+
+	related, err := o.Leads(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Leads = related
+	return nil
+}
+
+// LoadLeads loads the organization's Leads into the .R struct
+func (os OrganizationSlice) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	leads, err := os.Leads(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Leads = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range leads {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Leads = append(o.R.Leads, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadNoteAudios loads the organization's NoteAudios into the .R struct
 func (o *Organization) LoadNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -8863,6 +9041,7 @@ type organizationC struct {
 	FieldseekerSyncs        *int64
 	Files                   *int64
 	H3Aggregations          *int64
+	Leads                   *int64
 	NoteAudios              *int64
 	NoteImages              *int64
 	Nuisances               *int64
@@ -8949,6 +9128,8 @@ func (o *Organization) PreloadCount(name string, count int64) error {
 		o.C.Files = &count
 	case "H3Aggregations":
 		o.C.H3Aggregations = &count
+	case "Leads":
+		o.C.Leads = &count
 	case "NoteAudios":
 		o.C.NoteAudios = &count
 	case "NoteImages":
@@ -9003,6 +9184,7 @@ type organizationCountPreloader struct {
 	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Files                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
+	Leads                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
@@ -9615,6 +9797,23 @@ func buildOrganizationCountPreloader() organizationCountPreloader {
 				return psql.Group(psql.Select(subqueryMods...).Expression)
 			})
 		},
+		Leads: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
+			return countPreloader[*Organization]("Leads", func(parent string) bob.Expression {
+				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
+				if parent == "" {
+					parent = Organizations.Alias()
+				}
+
+				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
+					sm.Columns(psql.Raw("count(*)")),
+
+					sm.From(Leads.Name()),
+					sm.Where(psql.Quote(Leads.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
+				}
+				subqueryMods = append(subqueryMods, mods...)
+				return psql.Group(psql.Select(subqueryMods...).Expression)
+			})
+		},
 		NoteAudios: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
 			return countPreloader[*Organization]("NoteAudios", func(parent string) bob.Expression {
 				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
@@ -9773,6 +9972,7 @@ type organizationCountThenLoader[Q orm.Loadable] struct {
 	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Files                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Leads                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -9887,6 +10087,9 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 	}
 	type H3AggregationsCountInterface interface {
 		LoadCountH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type LeadsCountInterface interface {
+		LoadCountLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NoteAudiosCountInterface interface {
 		LoadCountNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -10119,6 +10322,12 @@ func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoa
 			"H3Aggregations",
 			func(ctx context.Context, exec bob.Executor, retrieved H3AggregationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCountH3Aggregations(ctx, exec, mods...)
+			},
+		),
+		Leads: countThenLoadBuilder[Q](
+			"Leads",
+			func(ctx context.Context, exec bob.Executor, retrieved LeadsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCountLeads(ctx, exec, mods...)
 			},
 		),
 		NoteAudios: countThenLoadBuilder[Q](
@@ -11216,6 +11425,36 @@ func (os OrganizationSlice) LoadCountH3Aggregations(ctx context.Context, exec bo
 	return nil
 }
 
+// LoadCountLeads loads the count of Leads into the C struct
+func (o *Organization) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	count, err := o.Leads(mods...).Count(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.C.Leads = &count
+	return nil
+}
+
+// LoadCountLeads loads the count of Leads for a slice
+func (os OrganizationSlice) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	for _, o := range os {
+		if err := o.LoadCountLeads(ctx, exec, mods...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LoadCountNoteAudios loads the count of NoteAudios into the C struct
 func (o *Organization) LoadCountNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -11463,6 +11702,7 @@ type organizationJoins[Q dialect.Joinable] struct {
 	FieldseekerSyncs                            modAs[Q, fieldseekerSyncColumns]
 	Files                                       modAs[Q, fileuploadFileColumns]
 	H3Aggregations                              modAs[Q, h3AggregationColumns]
+	Leads                                       modAs[Q, leadColumns]
 	NoteAudios                                  modAs[Q, noteAudioColumns]
 	NoteImages                                  modAs[Q, noteImageColumns]
 	ArcgisAccountAccount                        modAs[Q, arcgisAccountColumns]
@@ -11980,6 +12220,20 @@ func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ st
 
 				{
 					mods = append(mods, dialect.Join[Q](typ, H3Aggregations.Name().As(to.Alias())).On(
+						to.OrganizationID.EQ(cols.ID),
+					))
+				}
+
+				return mods
+			},
+		},
+		Leads: modAs[Q, leadColumns]{
+			c: Leads.Columns,
+			f: func(to leadColumns) bob.Mod[Q] {
+				mods := make(mods.QueryMods[Q], 0, 1)
+
+				{
+					mods = append(mods, dialect.Join[Q](typ, Leads.Name().As(to.Alias())).On(
 						to.OrganizationID.EQ(cols.ID),
 					))
 				}

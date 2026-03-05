@@ -78,6 +78,7 @@ type Factory struct {
 	baseGeometryColumnMods                    GeometryColumnModSlice
 	baseGooseDBVersionMods                    GooseDBVersionModSlice
 	baseH3AggregationMods                     H3AggregationModSlice
+	baseLeadMods                              LeadModSlice
 	baseNoteAudioMods                         NoteAudioModSlice
 	baseNoteAudioBreadcrumbMods               NoteAudioBreadcrumbModSlice
 	baseNoteAudioDatumMods                    NoteAudioDatumModSlice
@@ -860,15 +861,14 @@ func (f *Factory) FromExistingComplianceReportRequest(m *models.ComplianceReport
 	o.Creator = func() int32 { return m.Creator }
 	o.ID = func() int32 { return m.ID }
 	o.PublicID = func() string { return m.PublicID }
-	o.SiteID = func() int32 { return m.SiteID }
-	o.SiteVersion = func() int32 { return m.SiteVersion }
+	o.LeadID = func() null.Val[int32] { return m.LeadID }
 
 	ctx := context.Background()
 	if m.R.CreatorUser != nil {
 		ComplianceReportRequestMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
 	}
-	if m.R.Site != nil {
-		ComplianceReportRequestMods.WithExistingSite(m.R.Site).Apply(ctx, o)
+	if m.R.Lead != nil {
+		ComplianceReportRequestMods.WithExistingLead(m.R.Lead).Apply(ctx, o)
 	}
 	if len(m.R.Mailers) > 0 {
 		ComplianceReportRequestMods.AddExistingMailers(m.R.Mailers...).Apply(ctx, o)
@@ -2859,6 +2859,7 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	o.Status = func() enums.FileuploadFilestatustype { return m.Status }
 	o.SizeBytes = func() int32 { return m.SizeBytes }
 	o.FileUUID = func() uuid.UUID { return m.FileUUID }
+	o.Committer = func() null.Val[int32] { return m.Committer }
 
 	ctx := context.Background()
 	if m.R.CSV != nil {
@@ -2866,6 +2867,9 @@ func (f *Factory) FromExistingFileuploadFile(m *models.FileuploadFile) *Fileuplo
 	}
 	if len(m.R.ErrorFiles) > 0 {
 		FileuploadFileMods.AddExistingErrorFiles(m.R.ErrorFiles...).Apply(ctx, o)
+	}
+	if m.R.CommitterUser != nil {
+		FileuploadFileMods.WithExistingCommitterUser(m.R.CommitterUser).Apply(ctx, o)
 	}
 	if m.R.CreatorUser != nil {
 		FileuploadFileMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
@@ -2902,7 +2906,6 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.AddressPostalCode = func() string { return m.AddressPostalCode }
 	o.AddressStreet = func() string { return m.AddressStreet }
 	o.Committed = func() bool { return m.Committed }
-	o.Condition = func() enums.FileuploadPoolconditiontype { return m.Condition }
 	o.Created = func() time.Time { return m.Created }
 	o.CreatorID = func() int32 { return m.CreatorID }
 	o.CSVFile = func() int32 { return m.CSVFile }
@@ -2922,6 +2925,7 @@ func (f *Factory) FromExistingFileuploadPool(m *models.FileuploadPool) *Fileuplo
 	o.AddressNumber = func() string { return m.AddressNumber }
 	o.AddressLocality = func() string { return m.AddressLocality }
 	o.AddressRegion = func() string { return m.AddressRegion }
+	o.Condition = func() enums.Poolconditiontype { return m.Condition }
 
 	ctx := context.Background()
 	if m.R.CreatorUser != nil {
@@ -3057,6 +3061,50 @@ func (f *Factory) FromExistingH3Aggregation(m *models.H3Aggregation) *H3Aggregat
 	ctx := context.Background()
 	if m.R.Organization != nil {
 		H3AggregationMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+
+	return o
+}
+
+func (f *Factory) NewLead(mods ...LeadMod) *LeadTemplate {
+	return f.NewLeadWithContext(context.Background(), mods...)
+}
+
+func (f *Factory) NewLeadWithContext(ctx context.Context, mods ...LeadMod) *LeadTemplate {
+	o := &LeadTemplate{f: f}
+
+	if f != nil {
+		f.baseLeadMods.Apply(ctx, o)
+	}
+
+	LeadModSlice(mods).Apply(ctx, o)
+
+	return o
+}
+
+func (f *Factory) FromExistingLead(m *models.Lead) *LeadTemplate {
+	o := &LeadTemplate{f: f, alreadyPersisted: true}
+
+	o.Created = func() time.Time { return m.Created }
+	o.Creator = func() int32 { return m.Creator }
+	o.ID = func() int32 { return m.ID }
+	o.OrganizationID = func() int32 { return m.OrganizationID }
+	o.SiteID = func() null.Val[int32] { return m.SiteID }
+	o.SiteVersion = func() null.Val[int32] { return m.SiteVersion }
+	o.Type = func() enums.Leadtype { return m.Type }
+
+	ctx := context.Background()
+	if len(m.R.ComplianceReportRequests) > 0 {
+		LeadMods.AddExistingComplianceReportRequests(m.R.ComplianceReportRequests...).Apply(ctx, o)
+	}
+	if m.R.CreatorUser != nil {
+		LeadMods.WithExistingCreatorUser(m.R.CreatorUser).Apply(ctx, o)
+	}
+	if m.R.Organization != nil {
+		LeadMods.WithExistingOrganization(m.R.Organization).Apply(ctx, o)
+	}
+	if m.R.Site != nil {
+		LeadMods.WithExistingSite(m.R.Site).Apply(ctx, o)
 	}
 
 	return o
@@ -3483,6 +3531,9 @@ func (f *Factory) FromExistingOrganization(m *models.Organization) *Organization
 	}
 	if len(m.R.H3Aggregations) > 0 {
 		OrganizationMods.AddExistingH3Aggregations(m.R.H3Aggregations...).Apply(ctx, o)
+	}
+	if len(m.R.Leads) > 0 {
+		OrganizationMods.AddExistingLeads(m.R.Leads...).Apply(ctx, o)
 	}
 	if len(m.R.NoteAudios) > 0 {
 		OrganizationMods.AddExistingNoteAudios(m.R.NoteAudios...).Apply(ctx, o)
@@ -4438,8 +4489,8 @@ func (f *Factory) FromExistingSite(m *models.Site) *SiteTemplate {
 	o.Version = func() int32 { return m.Version }
 
 	ctx := context.Background()
-	if len(m.R.ComplianceReportRequests) > 0 {
-		SiteMods.AddExistingComplianceReportRequests(m.R.ComplianceReportRequests...).Apply(ctx, o)
+	if len(m.R.Leads) > 0 {
+		SiteMods.AddExistingLeads(m.R.Leads...).Apply(ctx, o)
 	}
 	if len(m.R.Pools) > 0 {
 		SiteMods.AddExistingPools(m.R.Pools...).Apply(ctx, o)
@@ -4534,11 +4585,17 @@ func (f *Factory) FromExistingUser(m *models.User) *UserTemplate {
 	if len(m.R.CreatorComplianceReportRequests) > 0 {
 		UserMods.AddExistingCreatorComplianceReportRequests(m.R.CreatorComplianceReportRequests...).Apply(ctx, o)
 	}
+	if len(m.R.CommitterFiles) > 0 {
+		UserMods.AddExistingCommitterFiles(m.R.CommitterFiles...).Apply(ctx, o)
+	}
 	if len(m.R.CreatorFiles) > 0 {
 		UserMods.AddExistingCreatorFiles(m.R.CreatorFiles...).Apply(ctx, o)
 	}
 	if len(m.R.FileuploadPool) > 0 {
 		UserMods.AddExistingFileuploadPool(m.R.FileuploadPool...).Apply(ctx, o)
+	}
+	if len(m.R.CreatorLeads) > 0 {
+		UserMods.AddExistingCreatorLeads(m.R.CreatorLeads...).Apply(ctx, o)
 	}
 	if len(m.R.CreatorNoteAudios) > 0 {
 		UserMods.AddExistingCreatorNoteAudios(m.R.CreatorNoteAudios...).Apply(ctx, o)
@@ -5047,6 +5104,14 @@ func (f *Factory) ClearBaseH3AggregationMods() {
 
 func (f *Factory) AddBaseH3AggregationMod(mods ...H3AggregationMod) {
 	f.baseH3AggregationMods = append(f.baseH3AggregationMods, mods...)
+}
+
+func (f *Factory) ClearBaseLeadMods() {
+	f.baseLeadMods = nil
+}
+
+func (f *Factory) AddBaseLeadMod(mods ...LeadMod) {
+	f.baseLeadMods = append(f.baseLeadMods, mods...)
 }
 
 func (f *Factory) ClearBaseNoteAudioMods() {
