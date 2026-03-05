@@ -15,6 +15,9 @@
 	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
 
 	<script>
+		function updateSignalLocation(event) {
+			console.log("map click", event.detail);
+		}
 		// Return two points defining a bounding box for the given points
 		function getBoundingBox(points) {
 			// Handle empty or invalid input
@@ -524,6 +527,7 @@
 													arcgis-access-token="{{ .C.ArcgisAccessToken }}"
 													organization-id="{{ .Organization.ID }}"
 													tegola="{{ .URL.Tegola }}"
+													@map-click="updateSignalLocation($event)"
 													:latitude="signal.location.latitude"
 													:longitude="signal.location.longitude"
 												>

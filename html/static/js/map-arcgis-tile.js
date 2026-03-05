@@ -37,7 +37,7 @@ class MapArcgisTile extends HTMLElement {
 			center: [longitude, latitude],
 			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
-			zoom: 22,
+			zoom: 20,
 		});
 		console.log("ArcGIS token", arcgis_access_token);
 		const basemap_style = maplibreArcGIS.BasemapStyle.applyStyle(this._map, {
@@ -79,13 +79,29 @@ class MapArcgisTile extends HTMLElement {
 				});
 				console.log("added arcgis tile layer");
 			}
-			this.dispatchEvent(new CustomEvent("load"), {
-				bubbles: true,
-				composed: true, // Allows event to cross shadow DOM boundary
-				detail: {
-					map: this,
-				},
-			});
+			this.dispatchEvent(
+				new CustomEvent("load", {
+					bubbles: true,
+					composed: true, // Allows event to cross shadow DOM boundary
+					detail: {
+						map: this,
+					},
+				}),
+			);
+		});
+		this._map.on("click", (e) => {
+			this.dispatchEvent(
+				new CustomEvent("map-click", {
+					bubbles: true,
+					composed: true,
+					detail: {
+						lng: e.lngLat.lng,
+						lat: e.lngLat.lat,
+						map: this._map,
+						point: e.point,
+					},
+				}),
+			);
 		});
 	}
 
