@@ -38,14 +38,11 @@ class MapAggregate extends HTMLElement {
 
 		const mapElement = this.shadowRoot.querySelector("#map");
 		this._map = new maplibregl.Map({
-			center: centroid.coordinates,
+			bounds: bounds,
 			container: mapElement,
 			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 		});
-		let camera_transform = this._map.cameraForBounds(bounds, {
-			padding: 10,
-		});
-		this._map.setZoom(camera_transform.zoom);
+		console.log("Initializing map to bounds", bounds);
 		this._map.on("load", () => {
 			this._map.addSource("tegola", {
 				type: "vector",
