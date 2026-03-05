@@ -15,75 +15,17 @@
 	<script>
 		function workbench() {
 			return {
-				// Fake database - JSON data
-				signals: [
-					{
-						id: "sig-1",
-						type: "public_report",
-						title: "Public Report – Service Request #1024",
-						description: "Aedes aegypti • Standing Water Complaint",
-						species: "aedes_aegypti",
-						priority: 8,
-						created_at: "2024-01-15T10:30:00Z",
-					},
-					{
-						id: "sig-2",
-						type: "trap_spike",
-						title: "Trap Spike – H3 8828308281fffff",
-						description: "Culex pipiens • Adult Surge",
-						species: "culex_pipiens",
-						priority: 6,
-						created_at: "2024-01-15T09:15:00Z",
-					},
-					{
-						id: "sig-3",
-						type: "residual_expiring",
-						title: "Residual Expiring – Parcel 45-233-01",
-						description: "Reinspection Due",
-						species: null,
-						priority: 4,
-						created_at: "2024-01-14T14:20:00Z",
-					},
-				],
-
-				planFollowups: [
-					{
-						id: "plan-1",
-						type: "plan_followup",
-						title: "Plan Follow-Up – Greenway HOA Basin",
-						description: "Residential Section • Verification Required",
-						species: "aedes_aegypti",
-						badge: "Plan",
-						priority: 7,
-						created_at: "2024-01-14T08:00:00Z",
-					},
-					{
-						id: "plan-2",
-						type: "plan_followup",
-						title: "Plan Follow-Up – Ag Irrigation Canal 7B",
-						description: "Ag Section • Monitoring Window",
-						species: "culex_tarsalis",
-						badge: "Plan",
-						priority: 5,
-						created_at: "2024-01-13T16:45:00Z",
-					},
-				],
-
-				leads: [
-					{
-						id: "lead-1",
-						title: "Lead #L-204",
-						description: "3 Signals • Aedes aegypti",
-					},
-					{
-						id: "lead-2",
-						title: "Lead #L-198",
-						description: "2 Signals • Culex pipiens",
-					},
-				],
+				// API Configuration
+				apiBase: "/api", // Change this to your API base URL
 
 				// State
+				signals: [],
+				planFollowups: [],
+				leads: [],
 				selectedSignals: [],
+				loading: false,
+				creating: false,
+				error: null,
 
 				filters: {
 					species: "",
@@ -91,35 +33,89 @@
 					sort: "newest",
 				},
 
-				// Computed: Filtered signals
-				get filteredSignals() {
-					let filtered = [...this.signals];
-
-					// Apply species filter
-					if (this.filters.species) {
-						filtered = filtered.filter(
-							(s) => s.species === this.filters.species,
-						);
-					}
-
-					// Apply type filter
-					if (this.filters.type) {
-						filtered = filtered.filter((s) => s.type === this.filters.type);
-					}
-
-					// Apply sorting
-					if (this.filters.sort === "priority") {
-						filtered.sort((a, b) => b.priority - a.priority);
-					} else if (this.filters.sort === "newest") {
-						filtered.sort(
-							(a, b) => new Date(b.created_at) - new Date(a.created_at),
-						);
-					}
-
-					return filtered;
+				// Initialize - runs when component loads
+				init() {
+					this.loadData();
 				},
 
-				// Methods
+				// Load all data
+				async loadData() {
+					this.loading = true;
+					this.error = null;
+
+					try {
+						await Promise.all([
+							this.loadSignals(),
+							this.loadPlanFollowups(),
+							this.loadLeads(),
+						]);
+					} catch (err) {
+						this.error = err.message;
+						console.error("Error loading data:", err);
+					} finally {
+						this.loading = false;
+					}
+				},
+
+				// Load signals from API
+				async loadSignals() {
+					try {
+						// Build query parameters from filters
+						const params = new URLSearchParams();
+						if (this.filters.species)
+							params.append("species", this.filters.species);
+						if (this.filters.type) params.append("type", this.filters.type);
+						if (this.filters.sort) params.append("sort", this.filters.sort);
+
+						const response = await fetch(`${this.apiBase}/signal?${params}`);
+
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+
+						const data = await response.json();
+						this.signals = data.signals || data; // Handle different response formats
+					} catch (err) {
+						console.error("Error loading signals:", err);
+						throw err;
+					}
+				},
+
+				// Load plan followups from API
+				async loadPlanFollowups() {
+					try {
+						const response = await fetch(`${this.apiBase}/plan-followups`);
+
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+
+						const data = await response.json();
+						this.planFollowups = data.followups || data;
+					} catch (err) {
+						console.error("Error loading plan followups:", err);
+						throw err;
+					}
+				},
+
+				// Load leads from API
+				async loadLeads() {
+					try {
+						const response = await fetch(`${this.apiBase}/leads`);
+
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+
+						const data = await response.json();
+						this.leads = data.leads || data;
+					} catch (err) {
+						console.error("Error loading leads:", err);
+						throw err;
+					}
+				},
+
+				// Selection methods
 				isSelected(id) {
 					return this.selectedSignals.some((s) => s.id === id);
 				},
@@ -130,10 +126,8 @@
 					);
 
 					if (index > -1) {
-						// Deselect
 						this.selectedSignals.splice(index, 1);
 					} else {
-						// Select
 						this.selectedSignals.push(signal);
 					}
 				},
@@ -142,27 +136,96 @@
 					this.selectedSignals = [];
 				},
 
-				createLead() {
+				// Create a new lead from selected signals
+				async createLead() {
 					if (this.selectedSignals.length === 0) return;
 
-					alert(
-						`Creating new lead from ${this.selectedSignals.length} signal(s):\n` +
-							this.selectedSignals.map((s) => `- ${s.title}`).join("\n"),
-					);
+					this.creating = true;
 
-					// In a real app, you would make an API call here
-					// fetch('/api/leads', {
-					//	 method: 'POST',
-					//	 body: JSON.stringify({ signals: this.selectedSignals.map(s => s.id) })
-					// })
+					try {
+						const response = await fetch(`${this.apiBase}/leads`, {
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+								// Add authentication headers if needed
+								// 'Authorization': `Bearer ${your_token}`
+							},
+							body: JSON.stringify({
+								signal_ids: this.selectedSignals.map((s) => s.id),
+								// Add any other required fields
+								created_by: "current_user", // Replace with actual user
+								timestamp: new Date().toISOString(),
+							}),
+						});
 
-					this.clearSelection();
+						if (!response.ok) {
+							const errorData = await response.json();
+							throw new Error(
+								errorData.message || `HTTP error! status: ${response.status}`,
+							);
+						}
+
+						const newLead = await response.json();
+
+						// Add the new lead to the leads list
+						this.leads.unshift(newLead);
+
+						// Clear selection
+						this.clearSelection();
+
+						// Refresh signals to update their status
+						await this.loadSignals();
+
+						// Show success message
+						alert(`Lead created successfully! ID: ${newLead.id}`);
+					} catch (err) {
+						console.error("Error creating lead:", err);
+						alert(`Failed to create lead: ${err.message}`);
+					} finally {
+						this.creating = false;
+					}
+				},
+
+				// Mark signals as addressed
+				async markAsAddressed() {
+					if (this.selectedSignals.length === 0) return;
+
+					try {
+						const response = await fetch(
+							`${this.apiBase}/signal/mark-addressed`,
+							{
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({
+									signal_ids: this.selectedSignals.map((s) => s.id),
+								}),
+							},
+						);
+
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+
+						// Remove addressed signals from the list
+						this.signals = this.signals.filter(
+							(signal) => !this.selectedSignals.some((s) => s.id === signal.id),
+						);
+
+						this.clearSelection();
+						alert("Signals marked as addressed");
+					} catch (err) {
+						console.error("Error marking signals as addressed:", err);
+						alert(`Failed to mark signals: ${err.message}`);
+					}
 				},
 			};
 		}
 	</script>
 {{ end }}
 {{ define "content" }}
+
 	<div class="container-fluid py-3" x-data="workbench()">
 		<!-- Header -->
 		<div class="row mb-3">
@@ -182,15 +245,33 @@
 				<div class="card shadow-sm h-100">
 					<div class="card-header bg-white pane-header">
 						Incoming Signals & Leads
+						<span
+							x-show="loading"
+							class="spinner-border spinner-border-sm ms-2"
+							role="status"
+						></span>
 					</div>
 					<div class="card-body scroll-pane">
+						<!-- Error Display -->
+						<template x-if="error">
+							<div class="error-message">
+								<strong>Error:</strong> <span x-text="error"></span>
+								<button
+									@click="loadData()"
+									class="btn btn-sm btn-outline-danger mt-2 w-100"
+								>
+									Retry
+								</button>
+							</div>
+						</template>
+
 						<!-- FILTERS -->
 						<div class="mb-3">
 							<div class="filter-label mb-1">Species</div>
 							<select
-								class="form-select form-select-sm mb-2 disabled"
+								class="form-select form-select-sm mb-2"
 								x-model="filters.species"
-								disabled
+								@change="loadSignals()"
 							>
 								<option value="">All Species</option>
 								<option value="aedes_aegypti">Aedes aegypti</option>
@@ -201,9 +282,9 @@
 
 							<div class="filter-label mb-1">Signal Type</div>
 							<select
-								class="form-select form-select-sm mb-2 disabled"
+								class="form-select form-select-sm mb-2"
 								x-model="filters.type"
-								disabled
+								@change="loadSignals()"
 							>
 								<option value="">All Types</option>
 								<option value="public_report">Public Report</option>
@@ -215,9 +296,9 @@
 
 							<div class="filter-label mb-1">Sort By</div>
 							<select
-								class="form-select form-select-sm disabled"
+								class="form-select form-select-sm"
 								x-model="filters.sort"
-								disabled
+								@change="loadSignals()"
 							>
 								<option value="newest">Newest First</option>
 								<option value="priority">Highest Priority</option>
@@ -228,8 +309,17 @@
 
 						<hr />
 
+						<!-- Loading State -->
+						<template x-if="loading && signals.length === 0">
+							<div class="loading-spinner">
+								<div class="spinner-border text-primary" role="status">
+									<span class="visually-hidden">Loading...</span>
+								</div>
+							</div>
+						</template>
+
 						<!-- Signals -->
-						<div class="mb-3">
+						<div class="mb-3" x-show="!loading || signals.length > 0">
 							<div class="fw-semibold mb-2">
 								Signals
 								<span
@@ -239,7 +329,11 @@
 								></span>
 							</div>
 
-							<template x-for="signal in filteredSignals" :key="signal.id">
+							<template x-if="signals.length === 0 && !loading">
+								<div class="text-muted small fst-italic">No signals found</div>
+							</template>
+
+							<template x-for="signal in signals" :key="signal.id">
 								<div
 									class="border rounded p-2 mb-2 signal-item"
 									:class="{ 'selected': isSelected(signal.id) }"
@@ -263,10 +357,16 @@
 						<hr />
 
 						<!-- Mosquito Control Plan Followups -->
-						<div class="mb-3">
+						<div class="mb-3" x-show="!loading || planFollowups.length > 0">
 							<div class="fw-semibold mb-2">
 								Mosquito Control Plan Follow-Ups
 							</div>
+
+							<template x-if="planFollowups.length === 0 && !loading">
+								<div class="text-muted small fst-italic">
+									No plan follow-ups
+								</div>
+							</template>
 
 							<template x-for="followup in planFollowups" :key="followup.id">
 								<div
@@ -287,8 +387,12 @@
 						<hr />
 
 						<!-- Leads -->
-						<div>
+						<div x-show="!loading || leads.length > 0">
 							<div class="fw-semibold mb-2">Existing Leads</div>
+
+							<template x-if="leads.length === 0 && !loading">
+								<div class="text-muted small fst-italic">No existing leads</div>
+							</template>
 
 							<template x-for="lead in leads" :key="lead.id">
 								<div class="border rounded p-2 mb-2 signal-item">
@@ -308,7 +412,7 @@
 						Active Investigation Workbench
 					</div>
 					<div class="card-body">
-						<div class="workbench-map mb-3">
+						<div class="map-container">
 							<map-multipoint id="map"></map-multipoint>
 						</div>
 
@@ -433,20 +537,25 @@
 							<div class="text-muted small mb-2">Signal → Lead</div>
 							<button
 								class="btn btn-outline-primary tool-button"
-								:disabled="selectedSignals.length === 0"
+								:disabled="selectedSignals.length === 0 || creating"
 								@click="createLead()"
 							>
-								Create New Lead from Selection
+								<span x-show="!creating">Create New Lead from Selection</span>
+								<span x-show="creating">
+									<span class="spinner-border spinner-border-sm me-1"></span>
+									Creating...
+								</span>
 							</button>
 							<button
-								class="btn btn-outline-secondary tool-button disabled"
-								disabled
+								class="btn btn-outline-secondary tool-button"
+								:disabled="selectedSignals.length === 0"
 							>
 								Add Signals to Existing Lead
 							</button>
 							<button
 								class="btn btn-outline-secondary tool-button"
 								:disabled="selectedSignals.length === 0"
+								@click="markAsAddressed()"
 							>
 								Mark Signal as Addressed
 							</button>
@@ -456,22 +565,13 @@
 
 						<div class="mb-3">
 							<div class="text-muted small mb-2">Lead → Field Assignment</div>
-							<button
-								class="btn btn-outline-success tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-success tool-button">
 								Create Proposed Assignment
 							</button>
-							<button
-								class="btn btn-outline-secondary tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-secondary tool-button">
 								Add Leads to Existing Assignment
 							</button>
-							<button
-								class="btn btn-outline-secondary tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-secondary tool-button">
 								Split Lead
 							</button>
 						</div>
@@ -480,22 +580,13 @@
 
 						<div class="mb-3">
 							<div class="text-muted small mb-2">Assignment Controls</div>
-							<button
-								class="btn btn-outline-dark tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-dark tool-button">
 								Set Priority
 							</button>
-							<button
-								class="btn btn-outline-dark tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-dark tool-button">
 								Estimate Effort
 							</button>
-							<button
-								class="btn btn-outline-dark tool-button disabled"
-								disabled
-							>
+							<button class="btn btn-outline-dark tool-button">
 								Send to Operations
 							</button>
 						</div>

@@ -43,11 +43,11 @@ type contentListSignal struct {
 
 func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*contentListSignal, *nhttp.ErrorWithStatus) {
 	type _Row struct {
-		Address   Address
+		Address   Address    `db:"address"`
 		Addressed *time.Time `db:"addressed"`
 		Addressor *int32     `db:"addressor"`
 		Created   time.Time  `db:"created"`
-		Creator   int32      `db:"creator"`
+		Creator   int32      `db:"creator_id"`
 		ID        int32      `db:"id"`
 		Latitude  float64    `db:"latitude"`
 		Longitude float64    `db:"longitude"`
@@ -61,18 +61,18 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 			"signal.addressed AS addressed",
 			"signal.addressor AS addressor",
 			"signal.created AS created",
-			"signal.creator_id AS creator_id",
+			"signal.creator AS creator_id",
 			"signal.id AS id",
 			"signal.species AS species",
 			"signal.title AS title",
 			"signal.type_ AS type",
-			"address.country",
-			"address.locality",
-			"address.number_",
-			"address.postal_code",
-			"address.region",
-			"address.street",
-			"address.unit",
+			"address.country AS \"address.country\"",
+			"address.locality AS \"address.locality\"",
+			"address.number_ AS \"address.number\"",
+			"address.postal_code AS \"address.postal_code\"",
+			"address.region AS \"address.region\"",
+			"address.street AS \"address.street\"",
+			"address.unit AS \"address.unit\"",
 			"ST_Y(address.geom) AS latitude",
 			"ST_X(address.geom) AS longitude",
 		),

@@ -99,9 +99,7 @@ class MapMultipoint extends HTMLElement {
 				}
 			</style>
 			
-			<div id="map-container" class="map-container">
-				<div id="map"></div>
-			</div>
+			<div id="map"></div>
 		`;
 	}
 
