@@ -6,7 +6,7 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-aggregate.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
 	<script
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
@@ -309,8 +309,7 @@
 					</div>
 					<div class="card-body">
 						<div class="workbench-map mb-3">
-							Map Placeholder<br />
-							H3 Cells • Parcels • Signal Density • Lead Clusters
+							<map-multipoint id="map"></map-multipoint>
 						</div>
 
 						<div class="row g-3">

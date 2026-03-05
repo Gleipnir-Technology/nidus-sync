@@ -2,7 +2,10 @@
 
 {{ define "title" }}Status{{ end }}
 {{ define "extraheader" }}
-	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
 	<script src="/static/js/address-or-report-suggestion.js"></script>
 	<script src="/static/js/geocode.js"></script>
 	<script src="/static/js/location.js"></script>
@@ -237,13 +240,16 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				<h5 class="mb-0"><i class="bi bi-pin-map-fill me-2"></i>Reports Map</h5>
 			</div>
 			<div class="card-body p-0">
-				<map-multipoint
-					api-key="{{ .MapboxToken }}"
-					latitude="36.3"
-					longitude="-119.2"
-					tegola="{{ .URL.Tegola }}"
-					zoom="9"
-				></map-multipoint>
+				<div class="map-container">
+					<map-multipoint
+						api-key="{{ .MapboxToken }}"
+						id="map"
+						latitude="36.3"
+						longitude="-119.2"
+						tegola="{{ .URL.Tegola }}"
+						zoom="9"
+					></map-multipoint>
+				</div>
 			</div>
 		</div>
 
