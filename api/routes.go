@@ -19,6 +19,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost))
 	r.Method("POST", "/image/{uuid}", auth.NewEnsureAuth(apiImagePost))
 	r.Method("POST", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentPost))
+	r.Method("GET", "/leads", authenticatedHandlerJSON(listLead))
 	r.Method("POST", "/leads", authenticatedHandlerJSONPost(postLeads))
 
 	// Unauthenticated endpoints
