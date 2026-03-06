@@ -6,297 +6,1066 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
+	<script
+		defer
+		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+	></script>
 	<script>
 		function onLoad() {}
 		window.addEventListener("load", onLoad);
 	</script>
-	<script>
-		const DATA = [
-			{
-				id: "PR-1",
-				type: "Adult",
-				unread: true,
-				narrative: "Large number of mosquitoes in backyard.",
-				messages: [
-					{ dir: "inbound", author: "Public", text: "Mosquitoes everywhere." },
-					{
-						dir: "outbound",
-						author: "Admin",
-						text: "We are reviewing your report.",
-					},
-				],
-			},
-			{
-				id: "PR-2",
-				type: "Standing Water",
-				unread: false,
-				narrative: "Green pool visible.",
-				messages: [
-					{
-						dir: "inbound",
-						author: "Public",
-						text: "Pool has been untreated.",
-					},
-				],
-			},
-		];
-
-		function renderInbox() {
-			const list = document.getElementById("inboxList");
-			list.innerHTML = "";
-			DATA.forEach((r) => {
-				const item = document.createElement("div");
-				item.className = "list-group-item";
-				if (r.unread) item.classList.add("unread");
-				item.innerHTML = `${r.unread ? '<span class="badge-dot"></span>' : ""}${r.id} <div class="small-muted">${r.type}</div>`;
-				item.onclick = () => selectThread(r.id);
-				list.appendChild(item);
-			});
-		}
-
-		function selectThread(id) {
-			const r = DATA.find((x) => x.id === id);
-			if (!r) return;
-			r.unread = false;
-			document.getElementById("threadTitle").textContent =
-				`${r.id} (${r.type})`;
-			document.getElementById("reportNarrative").textContent = r.narrative;
-
-			const thread = document.getElementById("threadMessages");
-			thread.innerHTML = "";
-
-			r.messages.forEach((m) => {
-				const div = document.createElement("div");
-				div.className = "timeline-msg " + (m.dir || "internal");
-				div.innerHTML = `<strong>${m.author}</strong>: ${m.text}`;
-				thread.appendChild(div);
-			});
-
-			renderInbox();
-		}
-
-		renderInbox();
-	</script>
-
 	<style>
-		.app {
-			height: 100vh;
-			display: grid;
-			grid-template-columns: 360px 1fr 420px;
-			gap: 12px;
-			padding: 12px;
+		html,
+		body {
+			height: 100%;
 		}
-		.panel {
-			background: #fff;
-			border: 1px solid rgba(0, 0, 0, 0.08);
-			border-radius: 12px;
-			display: flex;
-			flex-direction: column;
-			overflow: hidden;
+		.reports-list {
+			height: calc(100vh - 56px);
+			overflow-y: auto;
 		}
-		.header {
-			padding: 12px 14px;
-			border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-			font-weight: 600;
+		.report-card {
+			cursor: pointer;
+			transition: all 0.2s ease;
 		}
-		.body {
-			padding: 14px;
-			overflow: auto;
+		.report-card:hover {
+			background-color: #f8f9fa;
 		}
-		.section-title {
-			font-size: 13px;
-			font-weight: 600;
-			margin-bottom: 6px;
-			text-transform: uppercase;
-			color: rgba(0, 0, 0, 0.6);
+		.report-card.active {
+			border-left: 4px solid #0d6efd;
+			background-color: #e7f1ff;
 		}
-		.card-lite {
-			border: 1px solid rgba(0, 0, 0, 0.08);
-			border-radius: 10px;
-			padding: 10px;
-			margin-bottom: 10px;
-			background: #fff;
-		}
-		.unread {
-			font-weight: 600;
-		}
-		.badge-dot {
-			width: 8px;
-			height: 8px;
-			border-radius: 50%;
-			background: #0d6efd;
-			display: inline-block;
-			margin-right: 6px;
-		}
-		.small-muted {
-			font-size: 12px;
-			color: rgba(0, 0, 0, 0.55);
-		}
-		.timeline-msg {
-			padding: 8px;
-			border-radius: 8px;
-			margin-bottom: 6px;
-			font-size: 14px;
-		}
-		.inbound {
-			background: #eef5ff;
-		}
-		.outbound {
-			background: #e9fbe9;
-		}
-		.internal {
-			background: #f3f3f3;
-		}
-		.map-preview {
-			height: 200px;
-			border-radius: 10px;
-			border: 1px dashed rgba(0, 0, 0, 0.25);
+		.map-placeholder {
+			height: 300px;
+			background: linear-gradient(135deg, #e0e7ee 0%, #c9d6e3 100%);
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			margin-bottom: 16px;
-			background: linear-gradient(
-				180deg,
-				rgba(13, 110, 253, 0.06),
-				rgba(13, 110, 253, 0.01)
-			);
+			border-radius: 8px;
+		}
+		.details-section {
+			height: calc(100vh - 56px - 300px - 2rem);
+			overflow-y: auto;
+		}
+		.actions-panel {
+			height: calc(100vh - 56px);
+		}
+		.icon-nuisance {
+			color: #dc3545;
+		}
+		.icon-standing-water {
+			color: #0dcaf0;
+		}
+		.photo-thumbnail {
+			width: 80px;
+			height: 80px;
+			object-fit: cover;
+			cursor: pointer;
+			border-radius: 4px;
+		}
+		.badge-larvae {
+			background-color: #ffc107;
+			color: #000;
+		}
+		.badge-pupae {
+			background-color: #fd7e14;
+			color: #fff;
+		}
+		.badge-adult {
+			background-color: #dc3545;
+			color: #fff;
 		}
 	</style>
+	<script>
+		function communicationsApp() {
+			return {
+				// State
+				selectedReport: null,
+				searchFilter: "",
+				typeFilter: "all",
+				messageText: "",
+				showPhotoModal: false,
+				showInvalidModal: false,
+				currentPhotoIndex: 0,
+				invalidReason: "",
+				invalidNotes: "",
+				showToast: false,
+				toastTitle: "",
+				toastMessage: "",
+
+				// Sample data - replace with API call
+				reports: [
+					{
+						id: 1001,
+						type: "nuisance",
+						createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+						address: "123 Oak Street, Springfield, FL 32801",
+						zipCode: "32801",
+						latitude: 28.5383,
+						longitude: -81.3792,
+						reporterName: "John Smith",
+						reporterEmail: "john.smith@email.com",
+						timeOfDay: "Evening (6pm - 9pm)",
+						propertyAreas: ["Backyard", "Pool Area"],
+						notes:
+							"Mosquitoes have been extremely bad for the past week. Cannot enjoy outdoor activities anymore. They seem to be coming from the drainage ditch behind our property.",
+						photos: [
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+1",
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+2",
+						],
+						activityLog: [
+							{
+								action: "Report created",
+								timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+							},
+						],
+					},
+					{
+						id: 1002,
+						type: "standing_water",
+						createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+						address: "456 Pine Avenue, Springfield, FL 32803",
+						zipCode: "32803",
+						latitude: 28.54,
+						longitude: -81.375,
+						reporterName: "Sarah Johnson",
+						reporterEmail: "sarah.j@email.com",
+						observedLarvae: true,
+						observedPupae: false,
+						observedAdult: true,
+						waterSourceType: "Abandoned pool",
+						photos: [
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+1",
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+2",
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+3",
+						],
+						activityLog: [
+							{
+								action: "Report created",
+								timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+							},
+						],
+					},
+					{
+						id: 1003,
+						type: "nuisance",
+						createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+						address: "789 Maple Drive, Springfield, FL 32801",
+						zipCode: "32801",
+						latitude: 28.542,
+						longitude: -81.38,
+						reporterName: "Mike Williams",
+						reporterEmail: "mike.w@email.com",
+						timeOfDay: "Morning (6am - 9am)",
+						propertyAreas: ["Front Yard"],
+						notes: "Getting bitten every morning when leaving for work.",
+						photos: [],
+						activityLog: [
+							{
+								action: "Report created",
+								timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+							},
+						],
+					},
+					{
+						id: 1004,
+						type: "standing_water",
+						createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+						address: "321 Elm Court, Springfield, FL 32805",
+						zipCode: "32805",
+						latitude: 28.535,
+						longitude: -81.385,
+						reporterName: "Emily Davis",
+						reporterEmail: "emily.d@email.com",
+						observedLarvae: true,
+						observedPupae: true,
+						observedAdult: false,
+						waterSourceType: "Clogged storm drain",
+						photos: [
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Drain+Photo",
+						],
+						activityLog: [
+							{
+								action: "Report created",
+								timestamp: new Date(Date.now() - 30 * 60 * 1000),
+							},
+						],
+					},
+					{
+						id: 1005,
+						type: "nuisance",
+						createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+						address: "555 Birch Lane, Springfield, FL 32803",
+						zipCode: "32803",
+						latitude: 28.545,
+						longitude: -81.37,
+						reporterName: "Robert Chen",
+						reporterEmail: "r.chen@email.com",
+						timeOfDay: "All Day",
+						propertyAreas: ["Backyard", "Front Yard", "Pool Area"],
+						notes:
+							"We have a serious mosquito problem throughout our entire property. Multiple family members have been bitten. We suspect there may be standing water in the vacant lot next door.",
+						photos: [
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Backyard+1",
+							"https://via.placeholder.com/400x300/cccccc/666666?text=Backyard+2",
+						],
+						activityLog: [
+							{
+								action: "Report created",
+								timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+							},
+							{
+								action: "Viewed by supervisor",
+								timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+							},
+						],
+					},
+				],
+
+				// Computed property for filtered reports
+				get filteredReports() {
+					return this.reports.filter((report) => {
+						const matchesType =
+							this.typeFilter === "all" || report.type === this.typeFilter;
+						const matchesSearch =
+							this.searchFilter === "" ||
+							report.address
+								.toLowerCase()
+								.includes(this.searchFilter.toLowerCase()) ||
+							report.zipCode.includes(this.searchFilter) ||
+							report.reporterName
+								.toLowerCase()
+								.includes(this.searchFilter.toLowerCase());
+						return matchesType && matchesSearch;
+					});
+				},
+
+				// Methods
+				selectReport(report) {
+					this.selectedReport = report;
+					this.messageText = "";
+					this.moveMapToLocation(report.latitude, report.longitude);
+				},
+
+				/**
+				 * Stub function to move map to a specific location
+				 * Replace this with actual map implementation (e.g., Leaflet, Google Maps, Mapbox)
+				 * @param {number} lat - Latitude
+				 * @param {number} lng - Longitude
+				 */
+				moveMapToLocation(lat, lng) {
+					console.log(`Moving map to location: ${lat}, ${lng}`);
+
+					// TODO: Implement actual map functionality
+					// Example with Leaflet:
+					// if (this.map) {
+					//     this.map.setView([lat, lng], 15);
+					//     if (this.marker) {
+					//         this.marker.setLatLng([lat, lng]);
+					//     } else {
+					//         this.marker = L.marker([lat, lng]).addTo(this.map);
+					//     }
+					// }
+
+					// Example with Google Maps:
+					// if (this.map) {
+					//     const position = { lat: lat, lng: lng };
+					//     this.map.setCenter(position);
+					//     this.map.setZoom(15);
+					//     if (this.marker) {
+					//         this.marker.setPosition(position);
+					//     } else {
+					//         this.marker = new google.maps.Marker({
+					//             position: position,
+					//             map: this.map
+					//         });
+					//     }
+					// }
+				},
+
+				getRelativeTime(date) {
+					const now = new Date();
+					const diffMs = now - new Date(date);
+					const diffMins = Math.floor(diffMs / 60000);
+					const diffHours = Math.floor(diffMs / 3600000);
+					const diffDays = Math.floor(diffMs / 86400000);
+
+					if (diffMins < 1) return "Just now";
+					if (diffMins < 60) return `${diffMins}m ago`;
+					if (diffHours < 24) return `${diffHours}h ago`;
+					if (diffDays < 7) return `${diffDays}d ago`;
+					return new Date(date).toLocaleDateString();
+				},
+
+				formatDate(date) {
+					return new Date(date).toLocaleString();
+				},
+
+				openPhotoViewer(index) {
+					this.currentPhotoIndex = index;
+					this.showPhotoModal = true;
+				},
+
+				applyMessageTemplate(template) {
+					const templates = {
+						received: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
+						scheduled: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
+						completed: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
+						need_info: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
+					};
+
+					if (templates[template]) {
+						this.messageText = templates[template];
+					}
+				},
+
+				createLead() {
+					// TODO: Implement API call to create lead
+					console.log("Creating lead for report:", this.selectedReport.id);
+
+					// Add to activity log
+					if (!this.selectedReport.activityLog) {
+						this.selectedReport.activityLog = [];
+					}
+					this.selectedReport.activityLog.push({
+						action: "Lead created",
+						timestamp: new Date(),
+					});
+
+					this.showNotification(
+						"Lead Created",
+						`Lead successfully created for report #${this.selectedReport.id}`,
+					);
+
+					// Remove from list after creating lead
+					// this.reports = this.reports.filter(r => r.id !== this.selectedReport.id);
+					// this.selectedReport = null;
+				},
+
+				markInvalid() {
+					// TODO: Implement API call to mark as invalid
+					console.log(
+						"Marking report as invalid:",
+						this.selectedReport.id,
+						this.invalidReason,
+						this.invalidNotes,
+					);
+
+					this.showNotification(
+						"Report Marked Invalid",
+						`Report #${this.selectedReport.id} has been marked as ${this.invalidReason}`,
+					);
+
+					// Remove from list
+					this.reports = this.reports.filter(
+						(r) => r.id !== this.selectedReport.id,
+					);
+					this.selectedReport = null;
+					this.showInvalidModal = false;
+					this.invalidReason = "";
+					this.invalidNotes = "";
+				},
+
+				sendMessage() {
+					if (!this.messageText.trim()) return;
+
+					// TODO: Implement API call to send message
+					console.log("Sending message to:", this.selectedReport.reporterEmail);
+					console.log("Message:", this.messageText);
+
+					// Add to activity log
+					if (!this.selectedReport.activityLog) {
+						this.selectedReport.activityLog = [];
+					}
+					this.selectedReport.activityLog.push({
+						action: "Message sent to reporter",
+						timestamp: new Date(),
+					});
+
+					this.showNotification(
+						"Message Sent",
+						`Message successfully sent to ${this.selectedReport.reporterName}`,
+					);
+					this.messageText = "";
+				},
+
+				showNotification(title, message) {
+					this.toastTitle = title;
+					this.toastMessage = message;
+					this.showToast = true;
+
+					setTimeout(() => {
+						this.showToast = false;
+					}, 3000);
+				},
+
+				// Initialize map (call this on page load if using a map library)
+				initMap() {
+					// TODO: Initialize your map library here
+					// Example with Leaflet:
+					// this.map = L.map('map-container').setView([28.5383, -81.3792], 12);
+					// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+
+					console.log(
+						"Map initialization placeholder - implement with your preferred map library",
+					);
+				},
+			};
+		}
+	</script>
 {{ end }}
 {{ define "content" }}
-	<div class="app">
-		<!-- LEFT: INBOX / SIGNAL FEED -->
-		<section class="panel">
-			<div class="header">Signal Feed</div>
-			<div class="body">
-				<div class="btn-group btn-group-sm w-100 mb-2">
-					<button class="btn btn-outline-secondary active">All Coms</button>
-					<button class="btn btn-outline-secondary">Reports</button>
-					<button class="btn btn-outline-secondary">Internal</button>
-					<button class="btn btn-outline-secondary">System</button>
+	<div x-data="communicationsApp()" class="h-100">
+		<div class="container-fluid h-100">
+			<div class="row h-100">
+				<!-- Left Column - Reports List -->
+				<div class="col-md-3 border-end p-0 reports-list">
+					<div class="p-3 bg-light border-bottom">
+						<div class="input-group input-group-sm">
+							<span class="input-group-text"><i class="bi bi-search"></i></span>
+							<input
+								type="text"
+								class="form-control"
+								placeholder="Filter reports..."
+								x-model="searchFilter"
+							/>
+						</div>
+						<div class="mt-2 d-flex gap-2">
+							<button
+								class="btn btn-sm"
+								:class="typeFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'"
+								@click="typeFilter = 'all'"
+							>
+								All
+							</button>
+							<button
+								class="btn btn-sm"
+								:class="typeFilter === 'nuisance' ? 'btn-danger' : 'btn-outline-secondary'"
+								@click="typeFilter = 'nuisance'"
+							>
+								<i class="bi bi-exclamation-triangle"></i> Nuisance
+							</button>
+							<button
+								class="btn btn-sm"
+								:class="typeFilter === 'standing_water' ? 'btn-info' : 'btn-outline-secondary'"
+								@click="typeFilter = 'standing_water'"
+							>
+								<i class="bi bi-droplet"></i> Water
+							</button>
+						</div>
+					</div>
+
+					<div class="list-group list-group-flush">
+						<template x-for="report in filteredReports" :key="report.id">
+							<div
+								class="list-group-item report-card p-3"
+								:class="{ 'active': selectedReport && selectedReport.id === report.id }"
+								@click="selectReport(report)"
+							>
+								<div class="d-flex align-items-start">
+									<div class="me-3">
+										<template x-if="report.type === 'nuisance'">
+											<i
+												class="bi bi-exclamation-triangle-fill icon-nuisance fs-4"
+											></i>
+										</template>
+										<template x-if="report.type === 'standing_water'">
+											<i
+												class="bi bi-droplet-fill icon-standing-water fs-4"
+											></i>
+										</template>
+									</div>
+									<div class="flex-grow-1">
+										<div
+											class="d-flex justify-content-between align-items-center"
+										>
+											<span
+												class="badge"
+												:class="report.type === 'nuisance' ? 'bg-danger' : 'bg-info'"
+												x-text="report.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
+											>
+											</span>
+											<small
+												class="text-muted"
+												x-text="getRelativeTime(report.createdAt)"
+											></small>
+										</div>
+										<div class="mt-1">
+											<i class="bi bi-geo-alt text-muted"></i>
+											<span x-text="report.zipCode" class="fw-medium"></span>
+										</div>
+										<small
+											class="text-muted"
+											x-text="report.address.substring(0, 30) + '...'"
+										></small>
+										<div class="mt-1">
+											<template
+												x-if="report.photos && report.photos.length > 0"
+											>
+												<small class="text-muted">
+													<i class="bi bi-camera"></i>
+													<span x-text="report.photos.length"></span> photo(s)
+												</small>
+											</template>
+										</div>
+									</div>
+								</div>
+							</div>
+						</template>
+					</div>
+
+					<template x-if="filteredReports.length === 0">
+						<div class="text-center text-muted p-4">
+							<i class="bi bi-inbox fs-1"></i>
+							<p class="mt-2">No reports found</p>
+						</div>
+					</template>
 				</div>
 
-				<div class="form-check form-switch mb-3">
-					<input class="form-check-input" type="checkbox" />
-					<label class="form-check-label">Show archived</label>
+				<!-- Middle Column - Report Details -->
+				<div class="col-md-6 p-0">
+					<template x-if="!selectedReport">
+						<div
+							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted"
+						>
+							<i class="bi bi-hand-index fs-1"></i>
+							<p class="mt-2">Select a report to view details</p>
+						</div>
+					</template>
+
+					<template x-if="selectedReport">
+						<div class="h-100 d-flex flex-column">
+							<!-- Map Placeholder -->
+							<div class="p-3">
+								<div class="map-placeholder" id="map-container">
+									<div class="text-center text-muted">
+										<i class="bi bi-map fs-1"></i>
+										<p class="mb-0">Map View</p>
+										<small
+											x-text="selectedReport.latitude + ', ' + selectedReport.longitude"
+										></small>
+									</div>
+								</div>
+							</div>
+
+							<!-- Report Details -->
+							<div class="details-section p-3 border-top">
+								<div
+									class="d-flex justify-content-between align-items-start mb-3"
+								>
+									<div>
+										<h5 class="mb-1">
+											<template x-if="selectedReport.type === 'nuisance'">
+												<span
+													><i
+														class="bi bi-exclamation-triangle-fill icon-nuisance"
+													></i>
+													Nuisance Report</span
+												>
+											</template>
+											<template x-if="selectedReport.type === 'standing_water'">
+												<span
+													><i
+														class="bi bi-droplet-fill icon-standing-water"
+													></i>
+													Standing Water Report</span
+												>
+											</template>
+										</h5>
+										<small class="text-muted"
+											>Report ID: #<span x-text="selectedReport.id"></span
+										></small>
+									</div>
+									<span
+										class="badge bg-secondary"
+										x-text="getRelativeTime(selectedReport.createdAt)"
+									></span>
+								</div>
+
+								<!-- Common Fields -->
+								<div class="card mb-3">
+									<div class="card-body">
+										<div class="row g-3">
+											<div class="col-12">
+												<label class="form-label text-muted small mb-0">
+													<i class="bi bi-geo-alt"></i> Address
+												</label>
+												<div
+													class="fw-medium"
+													x-text="selectedReport.address"
+												></div>
+											</div>
+											<div class="col-md-6">
+												<label class="form-label text-muted small mb-0">
+													<i class="bi bi-person"></i> Reporter Name
+												</label>
+												<div
+													class="fw-medium"
+													x-text="selectedReport.reporterName"
+												></div>
+											</div>
+											<div class="col-md-6">
+												<label class="form-label text-muted small mb-0">
+													<i class="bi bi-envelope"></i> Contact
+												</label>
+												<div
+													class="fw-medium"
+													x-text="selectedReport.reporterEmail"
+												></div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Nuisance-specific Fields -->
+								<template x-if="selectedReport.type === 'nuisance'">
+									<div class="card mb-3">
+										<div class="card-header bg-danger bg-opacity-10">
+											<i class="bi bi-exclamation-triangle"></i> Nuisance
+											Details
+										</div>
+										<div class="card-body">
+											<div class="row g-3">
+												<div class="col-md-6">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-clock"></i> Time of Day Encountered
+													</label>
+													<div
+														class="fw-medium"
+														x-text="selectedReport.timeOfDay"
+													></div>
+												</div>
+												<div class="col-md-6">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-house"></i> Property Area
+													</label>
+													<div>
+														<template
+															x-for="area in selectedReport.propertyAreas"
+															:key="area"
+														>
+															<span
+																class="badge bg-secondary me-1"
+																x-text="area"
+															></span>
+														</template>
+													</div>
+												</div>
+												<div class="col-12">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-chat-text"></i> Additional Notes
+													</label>
+													<div
+														class="p-2 bg-light rounded"
+														x-text="selectedReport.notes || 'No additional notes'"
+													></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</template>
+
+								<!-- Standing Water-specific Fields -->
+								<template x-if="selectedReport.type === 'standing_water'">
+									<div class="card mb-3">
+										<div class="card-header bg-info bg-opacity-10">
+											<i class="bi bi-droplet"></i> Standing Water Details
+										</div>
+										<div class="card-body">
+											<label class="form-label text-muted small mb-0">
+												<i class="bi bi-eye"></i> Mosquito Life Stages Observed
+											</label>
+											<div class="mt-2">
+												<span
+													class="badge me-2"
+													:class="selectedReport.observedLarvae ? 'badge-larvae' : 'bg-light text-muted'"
+												>
+													<i
+														class="bi"
+														:class="selectedReport.observedLarvae ? 'bi-check-circle' : 'bi-circle'"
+													></i>
+													Larvae
+												</span>
+												<span
+													class="badge me-2"
+													:class="selectedReport.observedPupae ? 'badge-pupae' : 'bg-light text-muted'"
+												>
+													<i
+														class="bi"
+														:class="selectedReport.observedPupae ? 'bi-check-circle' : 'bi-circle'"
+													></i>
+													Pupae
+												</span>
+												<span
+													class="badge"
+													:class="selectedReport.observedAdult ? 'badge-adult' : 'bg-light text-muted'"
+												>
+													<i
+														class="bi"
+														:class="selectedReport.observedAdult ? 'bi-check-circle' : 'bi-circle'"
+													></i>
+													Adult Mosquitoes
+												</span>
+											</div>
+											<template x-if="selectedReport.waterSourceType">
+												<div class="mt-3">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-water"></i> Water Source Type
+													</label>
+													<div
+														class="fw-medium"
+														x-text="selectedReport.waterSourceType"
+													></div>
+												</div>
+											</template>
+										</div>
+									</div>
+								</template>
+
+								<!-- Photos Section -->
+								<div class="card">
+									<div
+										class="card-header d-flex justify-content-between align-items-center"
+									>
+										<span><i class="bi bi-images"></i> Attached Photos</span>
+										<span
+											class="badge bg-primary"
+											x-text="selectedReport.photos ? selectedReport.photos.length : 0"
+										></span>
+									</div>
+									<div class="card-body">
+										<template
+											x-if="selectedReport.photos && selectedReport.photos.length > 0"
+										>
+											<div class="d-flex flex-wrap gap-2">
+												<template
+													x-for="(photo, index) in selectedReport.photos"
+													:key="index"
+												>
+													<img
+														:src="photo"
+														class="photo-thumbnail"
+														@click="openPhotoViewer(index)"
+														:alt="'Photo ' + (index + 1)"
+													/>
+												</template>
+											</div>
+										</template>
+										<template
+											x-if="!selectedReport.photos || selectedReport.photos.length === 0"
+										>
+											<div class="text-muted text-center py-3">
+												<i class="bi bi-camera-slash fs-4"></i>
+												<p class="mb-0 small">No photos attached</p>
+											</div>
+										</template>
+									</div>
+								</div>
+							</div>
+						</div>
+					</template>
 				</div>
 
-				<div class="list-group" id="inboxList"></div>
+				<!-- Right Column - Actions -->
+				<div class="col-md-3 border-start p-0">
+					<template x-if="!selectedReport">
+						<div
+							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted p-3"
+						>
+							<i class="bi bi-gear fs-1"></i>
+							<p class="mt-2 text-center">
+								Actions will appear here when a report is selected
+							</p>
+						</div>
+					</template>
+
+					<template x-if="selectedReport">
+						<div class="actions-panel d-flex flex-column">
+							<div class="p-3 bg-light border-bottom">
+								<h6 class="mb-0">
+									<i class="bi bi-lightning"></i> Quick Actions
+								</h6>
+							</div>
+
+							<div class="p-3 flex-grow-1">
+								<!-- Create Lead -->
+								<div class="d-grid mb-3">
+									<button class="btn btn-success btn-lg" @click="createLead()">
+										<i class="bi bi-plus-circle me-2"></i>Create Lead
+									</button>
+									<small class="text-muted mt-1">
+										Creates a new service lead from this report
+									</small>
+								</div>
+
+								<!-- Mark Invalid -->
+								<div class="d-grid mb-3">
+									<button
+										class="btn btn-outline-danger"
+										@click="showInvalidModal = true"
+									>
+										<i class="bi bi-x-circle me-2"></i>Mark Invalid
+									</button>
+									<small class="text-muted mt-1">
+										Mark as spam, duplicate, or out of district
+									</small>
+								</div>
+
+								<hr />
+
+								<!-- Message Reporter -->
+								<div class="mb-3">
+									<h6><i class="bi bi-chat-dots"></i> Message Reporter</h6>
+									<div class="mb-2">
+										<label class="form-label small text-muted"
+											>Quick Templates</label
+										>
+										<select
+											class="form-select form-select-sm"
+											@change="applyMessageTemplate($event.target.value)"
+										>
+											<option value="">Select a template...</option>
+											<option value="received">Report Received</option>
+											<option value="scheduled">Service Scheduled</option>
+											<option value="completed">Service Completed</option>
+											<option value="need_info">Need More Information</option>
+										</select>
+									</div>
+									<textarea
+										class="form-control mb-2"
+										rows="5"
+										x-model="messageText"
+										placeholder="Type your message to the reporter..."
+									></textarea>
+									<div class="d-grid">
+										<button
+											class="btn btn-primary"
+											@click="sendMessage()"
+											:disabled="!messageText.trim()"
+										>
+											<i class="bi bi-send me-2"></i>Send Message
+										</button>
+									</div>
+								</div>
+
+								<hr />
+
+								<!-- Report History -->
+								<div>
+									<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
+									<div class="small">
+										<template
+											x-for="activity in selectedReport.activityLog || []"
+											:key="activity.timestamp"
+										>
+											<div class="border-start border-2 ps-2 mb-2">
+												<div class="text-muted" x-text="activity.action"></div>
+												<small
+													class="text-muted"
+													x-text="formatDate(activity.timestamp)"
+												></small>
+											</div>
+										</template>
+										<template
+											x-if="!selectedReport.activityLog || selectedReport.activityLog.length === 0"
+										>
+											<div class="text-muted">No activity yet</div>
+										</template>
+									</div>
+								</div>
+							</div>
+						</div>
+					</template>
+				</div>
 			</div>
-		</section>
+		</div>
 
-		<!-- CENTER: SIGNAL DETAIL -->
-		<section class="panel">
-			<div class="header" id="threadTitle">Select a signal</div>
-			<div class="body">
-				<!-- Map Preview -->
-				<div class="map-preview">Map Preview</div>
-
-				<div class="row g-3">
-					<!-- LEFT HALF: CONVERSATION + REPLY -->
-					<div class="col-md-6">
-						<div class="section-title">Report Narrative</div>
-						<div id="reportNarrative" class="mb-3"></div>
-
-						<div class="section-title">Conversation</div>
-						<div id="threadMessages" class="mb-3"></div>
-
-						<textarea
-							class="form-control"
-							rows="4"
-							placeholder="Reply to reporter..."
-						></textarea>
-						<button class="btn btn-outline-primary btn-sm mt-2 w-100">
-							Send Reply
+		<!-- Photo Viewer Modal -->
+		<div
+			class="modal fade"
+			:class="{ 'show d-block': showPhotoModal }"
+			tabindex="-1"
+			x-show="showPhotoModal"
+			@click.self="showPhotoModal = false"
+		>
+			<div class="modal-dialog modal-lg modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">
+							Photo <span x-text="currentPhotoIndex + 1"></span> of
+							<span x-text="selectedReport?.photos?.length || 0"></span>
+						</h5>
+						<button
+							type="button"
+							class="btn-close"
+							@click="showPhotoModal = false"
+						></button>
+					</div>
+					<div class="modal-body text-center">
+						<template x-if="selectedReport && selectedReport.photos">
+							<img
+								:src="selectedReport.photos[currentPhotoIndex]"
+								class="img-fluid rounded"
+								style="max-height: 60vh;"
+							/>
+						</template>
+					</div>
+					<div class="modal-footer justify-content-between">
+						<button
+							class="btn btn-outline-secondary"
+							@click="currentPhotoIndex = Math.max(0, currentPhotoIndex - 1)"
+							:disabled="currentPhotoIndex === 0"
+						>
+							<i class="bi bi-chevron-left"></i> Previous
+						</button>
+						<button
+							class="btn btn-outline-secondary"
+							@click="currentPhotoIndex = Math.min(selectedReport.photos.length - 1, currentPhotoIndex + 1)"
+							:disabled="currentPhotoIndex >= (selectedReport?.photos?.length || 1) - 1"
+						>
+							Next <i class="bi bi-chevron-right"></i>
 						</button>
 					</div>
+				</div>
+			</div>
+		</div>
+		<div
+			class="modal-backdrop fade show"
+			x-show="showPhotoModal"
+			@click="showPhotoModal = false"
+		></div>
 
-					<!-- RIGHT HALF: CONTEXT -->
-					<div class="col-md-6">
-						<div class="section-title">Context Summary</div>
-
-						<div class="card-lite">
-							<strong>Signal Type</strong>
-							<div class="small-muted">Adult / Standing Water</div>
+		<!-- Invalid Report Modal -->
+		<div
+			class="modal fade"
+			:class="{ 'show d-block': showInvalidModal }"
+			tabindex="-1"
+			x-show="showInvalidModal"
+			@click.self="showInvalidModal = false"
+		>
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">
+							<i class="bi bi-x-circle text-danger"></i> Mark as Invalid
+						</h5>
+						<button
+							type="button"
+							class="btn-close"
+							@click="showInvalidModal = false"
+						></button>
+					</div>
+					<div class="modal-body">
+						<p>Please select a reason for marking this report as invalid:</p>
+						<div class="form-check mb-2">
+							<input
+								class="form-check-input"
+								type="radio"
+								name="invalidReason"
+								id="reason1"
+								value="spam"
+								x-model="invalidReason"
+							/>
+							<label class="form-check-label" for="reason1">Spam or junk</label>
 						</div>
-
-						<div class="card-lite">
-							<strong>Site Attachment</strong>
-							<div class="small-muted">1234 Maple Ave</div>
-							<button class="btn btn-sm btn-outline-secondary mt-2">
-								Attach / Modify Site
-							</button>
+						<div class="form-check mb-2">
+							<input
+								class="form-check-input"
+								type="radio"
+								name="invalidReason"
+								id="reason2"
+								value="duplicate"
+								x-model="invalidReason"
+							/>
+							<label class="form-check-label" for="reason2"
+								>Duplicate report</label
+							>
 						</div>
-
-						<div class="card-lite">
-							<strong>Nearby Reports (7 day window)</strong>
-							<div class="small-muted">3 related adult reports</div>
-							<button class="btn btn-sm btn-outline-secondary mt-2">
-								View Related
-							</button>
+						<div class="form-check mb-2">
+							<input
+								class="form-check-input"
+								type="radio"
+								name="invalidReason"
+								id="reason3"
+								value="out_of_district"
+								x-model="invalidReason"
+							/>
+							<label class="form-check-label" for="reason3"
+								>Outside service district</label
+							>
 						</div>
-
-						<div class="card-lite">
-							<strong>Existing Lead Suggestions</strong>
-							<div class="small-muted">
-								💡 Possible matching lead in same H3
-							</div>
-							<button class="btn btn-sm btn-outline-secondary mt-2">
-								Review Leads
-							</button>
+						<div class="form-check mb-2">
+							<input
+								class="form-check-input"
+								type="radio"
+								name="invalidReason"
+								id="reason4"
+								value="insufficient"
+								x-model="invalidReason"
+							/>
+							<label class="form-check-label" for="reason4"
+								>Insufficient information</label
+							>
 						</div>
-
-						<div class="card-lite">
-							<strong>Reporter Reliability</strong>
-							<div class="small-muted">High , 12 prior reports</div>
-							<button class="btn btn-sm btn-outline-secondary mt-2">
-								View Reporter History
-							</button>
+						<div class="form-check mb-3">
+							<input
+								class="form-check-input"
+								type="radio"
+								name="invalidReason"
+								id="reason5"
+								value="other"
+								x-model="invalidReason"
+							/>
+							<label class="form-check-label" for="reason5">Other</label>
 						</div>
+						<textarea
+							class="form-control"
+							rows="2"
+							placeholder="Additional notes (optional)"
+							x-model="invalidNotes"
+						></textarea>
+					</div>
+					<div class="modal-footer">
+						<button
+							type="button"
+							class="btn btn-secondary"
+							@click="showInvalidModal = false"
+						>
+							Cancel
+						</button>
+						<button
+							type="button"
+							class="btn btn-danger"
+							@click="markInvalid()"
+							:disabled="!invalidReason"
+						>
+							Confirm Invalid
+						</button>
 					</div>
 				</div>
 			</div>
-		</section>
+		</div>
+		<div
+			class="modal-backdrop fade show"
+			x-show="showInvalidModal"
+			@click="showInvalidModal = false"
+		></div>
 
-		<!-- RIGHT: SIGNAL SHAPING TO LEAD -->
-		<section class="panel">
-			<div class="header">Signal , Lead Tools</div>
-			<div class="body">
-				<div class="section-title">Lead Formation</div>
-				<button class="btn btn-primary w-100 mb-2">Create Lead</button>
-				<button class="btn btn-outline-secondary w-100 mb-2">
-					Add to Existing Lead 💡
-				</button>
-				<button class="btn btn-outline-secondary w-100 mb-3">
-					Merge with Similar Signals
-				</button>
-
-				<div class="section-title">Communication Routing</div>
-				<button class="btn btn-outline-secondary w-100 mb-2">
-					Forward / Ping Planner
-				</button>
-				<button class="btn btn-outline-secondary w-100 mb-2">
-					Forward / Ping Technician
-				</button>
-				<button class="btn btn-outline-secondary w-100 mb-3">
-					Forward / Ping Supervisor
-				</button>
-
-				<div class="form-check form-switch mb-3">
-					<input class="form-check-input" type="checkbox" />
-					<label class="form-check-label">Requires More Information</label>
+		<!-- Toast Notifications -->
+		<div class="toast-container position-fixed bottom-0 end-0 p-3">
+			<div class="toast" :class="{ 'show': showToast }" role="alert">
+				<div class="toast-header">
+					<i class="bi bi-check-circle text-success me-2"></i>
+					<strong class="me-auto" x-text="toastTitle"></strong>
+					<button
+						type="button"
+						class="btn-close"
+						@click="showToast = false"
+					></button>
 				</div>
-
-				<hr />
-
-				<div class="section-title">Disposition</div>
-				<button class="btn btn-outline-warning btn-sm w-100 mb-2">
-					Defer (with reason)
-				</button>
-				<button class="btn btn-outline-danger btn-sm w-100">
-					Archive (when resolved)
-				</button>
+				<div class="toast-body" x-text="toastMessage"></div>
 			</div>
-		</section>
+		</div>
 	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 {{ end }}
