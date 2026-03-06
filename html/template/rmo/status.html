@@ -242,10 +242,11 @@ document.addEventListener('DOMContentLoaded', onLoad);
 			<div class="card-body p-0">
 				<div class="map-container">
 					<map-multipoint
-						api-key="{{ .MapboxToken }}"
 						id="map"
-						latitude="36.3"
-						longitude="-119.2"
+						xmax="-118.0"
+						ymax="37.0"
+						xmin="-119.0"
+						ymin="36.0"
 						tegola="{{ .URL.Tegola }}"
 						zoom="9"
 					></map-multipoint>
