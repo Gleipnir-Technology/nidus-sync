@@ -4,12 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type contentConfigurationRoot struct{}
@@ -25,6 +27,7 @@ type contentSettingOrganization struct {
 type contentSettingIntegration struct {
 	ArcGISAccount *models.ArcgisAccount
 	ArcGISOAuth   *models.ArcgisOauthToken
+	ServiceMaps   []*models.ArcgisServiceMap
 }
 
 func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
@@ -84,15 +87,23 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
 	var account *models.ArcgisAccount
+	var service_maps []*models.ArcgisServiceMap
 	if org.ArcgisAccountID.IsValue() {
 		account, err = models.FindArcgisAccount(ctx, db.PGInstance.BobDB, org.ArcgisAccountID.MustGet())
 		if err != nil {
 			return nil, nhttp.NewError("Failed to get arcgis: %w", err)
 		}
+		service_maps, err = models.ArcgisServiceMaps.Query(
+			models.SelectWhere.ArcgisServiceMaps.AccountID.EQ(account.ID),
+		).All(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			return nil, nhttp.NewError("Failed to get map services: %w", err)
+		}
 	}
 	data := contentSettingIntegration{
 		ArcGISAccount: account,
 		ArcGISOAuth:   oauth,
+		ServiceMaps:   service_maps,
 	}
 	return html.NewResponse("sync/configuration/integration-arcgis.html", data), nil
 }
@@ -114,4 +125,25 @@ func getConfigurationUserAdd(ctx context.Context, r *http.Request, org *models.O
 func getConfigurationUserList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
 	return html.NewResponse("sync/configuration/user-list.html", content), nil
+}
+
+type formArcgisConfiguration struct {
+	MapService *string `schema:"map-service"`
+}
+
+func postConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f formArcgisConfiguration) (string, *nhttp.ErrorWithStatus) {
+	if f.MapService != nil {
+		_, err := psql.Update(
+			um.Table("organization"),
+			um.SetCol("arcgis_map_service_id").ToArg(f.MapService),
+			um.Where(psql.Quote("id").EQ(psql.Arg(org.ID))),
+		).Exec(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			return "", nhttp.NewError("Failed to update map service config: %w", err)
+		}
+		log.Info().Str("map-service", *f.MapService).Int32("org-id", org.ID).Msg("changed map service")
+	} else {
+		log.Info().Msg("no map service")
+	}
+	return "/configuration/integration/arcgis", nil
 }

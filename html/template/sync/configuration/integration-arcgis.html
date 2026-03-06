@@ -19,7 +19,7 @@
 				<!-- Main Card -->
 				<div class="card shadow-sm">
 					<div class="card-body p-4">
-						<form>
+						<form action="{{ .URL.Configuration.ArcGIS }}" method="POST">
 							<!-- OAuth Authentication Section -->
 							<div class="mb-4">
 								<h5 class="card-title border-bottom pb-2 mb-3">
@@ -113,50 +113,24 @@
 
 								<div class="row g-3">
 									<div class="col-md-12">
-										<label for="satelliteLayer" class="form-label fw-semibold">
-											Satellite Imagery Layer
+										<label for="map-service" class="form-label fw-semibold">
+											Map Service (Aerial Imagery)
 											<span class="text-danger">*</span>
 										</label>
-										<select class="form-select" id="satelliteLayer" required>
-											<option value="">-- Select a feature layer --</option>
-											<option value="layer1" selected>
-												World Imagery (Clarity)
-											</option>
-											<option value="layer2">
-												Sentinel-2 Satellite Imagery
-											</option>
-											<option value="layer3">NAIP Aerial Imagery</option>
-											<option value="layer4">Landsat 8 Multispectral</option>
-											<option value="layer5">
-												High Resolution Ortho Imagery
-											</option>
+										<select
+											class="form-select"
+											id="map-service"
+											name="map-service"
+											required
+										>
+											{{ range .C.ServiceMaps }}
+												<option value="{{ .ArcgisID }}">
+													{{ .Name }}
+												</option>
+											{{ end }}
 										</select>
 										<div class="form-text">
-											Select the feature layer for satellite imagery data
-										</div>
-									</div>
-
-									<div class="col-md-12">
-										<label for="parcelLayer" class="form-label fw-semibold">
-											Parcel Data Layer
-											<span class="text-danger">*</span>
-										</label>
-										<select class="form-select" id="parcelLayer" required>
-											<option value="">-- Select a feature layer --</option>
-											<option value="parcel1" selected>
-												County Parcel Boundaries 2024
-											</option>
-											<option value="parcel2">Tax Assessor Parcels</option>
-											<option value="parcel3">
-												Property Ownership Records
-											</option>
-											<option value="parcel4">
-												Zoning and Land Use Parcels
-											</option>
-											<option value="parcel5">Cadastral Parcel Dataset</option>
-										</select>
-										<div class="form-text">
-											Select the feature layer for parcel boundary data
+											Select the feature layer for aerial imagery data
 										</div>
 									</div>
 								</div>

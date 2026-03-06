@@ -48,6 +48,7 @@ func Router() chi.Router {
 	r.Method("GET", "/configuration", authenticatedHandler(getConfigurationRoot))
 	r.Method("GET", "/configuration/integration", authenticatedHandler(getConfigurationIntegration))
 	r.Method("GET", "/configuration/integration/arcgis", authenticatedHandler(getConfigurationIntegrationArcgis))
+	r.Method("POST", "/configuration/integration/arcgis", authenticatedHandlerPost(postConfigurationIntegrationArcgis))
 	r.Method("GET", "/configuration/organization", authenticatedHandler(getConfigurationOrganization))
 	r.Method("GET", "/configuration/pesticide", authenticatedHandler(getConfigurationPesticide))
 	r.Method("GET", "/configuration/pesticide/add", authenticatedHandler(getConfigurationPesticideAdd))
