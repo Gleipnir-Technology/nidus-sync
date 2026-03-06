@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // ArcgisServiceMap is an object representing the database table.
@@ -43,7 +44,9 @@ type ArcgisServiceMapsQuery = *psql.ViewQuery[*ArcgisServiceMap, ArcgisServiceMa
 
 // arcgisServiceMapR is where relationships are stored.
 type arcgisServiceMapR struct {
-	Account *ArcgisAccount // arcgis.service_map.service_map_account_id_fkey
+	Account                       *ArcgisAccount       // arcgis.service_map.service_map_account_id_fkey
+	ArcgisMapServiceOrganizations OrganizationSlice    // organization.organization_arcgis_map_service_id_fkey
+	ArcgisCachedImages            TileCachedImageSlice // tile.cached_image.cached_image_arcgis_id_fkey
 }
 
 func buildArcgisServiceMapColumns(alias string) arcgisServiceMapColumns {
@@ -460,6 +463,54 @@ func (os ArcgisServiceMapSlice) Account(mods ...bob.Mod[*dialect.SelectQuery]) A
 	)...)
 }
 
+// ArcgisMapServiceOrganizations starts a query for related objects on organization
+func (o *ArcgisServiceMap) ArcgisMapServiceOrganizations(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ArcgisMapServiceID.EQ(psql.Arg(o.ArcgisID))),
+	)...)
+}
+
+func (os ArcgisServiceMapSlice) ArcgisMapServiceOrganizations(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkArcgisID := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkArcgisID = append(pkArcgisID, o.ArcgisID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisID), "text[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ArcgisMapServiceID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ArcgisCachedImages starts a query for related objects on tile.cached_image
+func (o *ArcgisServiceMap) ArcgisCachedImages(mods ...bob.Mod[*dialect.SelectQuery]) TileCachedImagesQuery {
+	return TileCachedImages.Query(append(mods,
+		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisID))),
+	)...)
+}
+
+func (os ArcgisServiceMapSlice) ArcgisCachedImages(mods ...bob.Mod[*dialect.SelectQuery]) TileCachedImagesQuery {
+	pkArcgisID := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkArcgisID = append(pkArcgisID, o.ArcgisID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisID), "text[]")),
+	))
+
+	return TileCachedImages.Query(append(mods,
+		sm.Where(psql.Group(TileCachedImages.Columns.ArcgisID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachArcgisServiceMapAccount0(ctx context.Context, exec bob.Executor, count int, arcgisServiceMap0 *ArcgisServiceMap, arcgisAccount1 *ArcgisAccount) (*ArcgisServiceMap, error) {
 	setter := &ArcgisServiceMapSetter{
 		AccountID: omit.From(arcgisAccount1.ID),
@@ -508,6 +559,74 @@ func (arcgisServiceMap0 *ArcgisServiceMap) AttachAccount(ctx context.Context, ex
 	return nil
 }
 
+func insertArcgisServiceMapArcgisMapServiceOrganizations0(ctx context.Context, exec bob.Executor, organizations1 []*OrganizationSetter, arcgisServiceMap0 *ArcgisServiceMap) (OrganizationSlice, error) {
+	for i := range organizations1 {
+		organizations1[i].ArcgisMapServiceID = omitnull.From(arcgisServiceMap0.ArcgisID)
+	}
+
+	ret, err := Organizations.Insert(bob.ToMods(organizations1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertArcgisServiceMapArcgisMapServiceOrganizations0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachArcgisServiceMapArcgisMapServiceOrganizations0(ctx context.Context, exec bob.Executor, count int, organizations1 OrganizationSlice, arcgisServiceMap0 *ArcgisServiceMap) (OrganizationSlice, error) {
+	setter := &OrganizationSetter{
+		ArcgisMapServiceID: omitnull.From(arcgisServiceMap0.ArcgisID),
+	}
+
+	err := organizations1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachArcgisServiceMapArcgisMapServiceOrganizations0: %w", err)
+	}
+
+	return organizations1, nil
+}
+
+func (arcgisServiceMap0 *ArcgisServiceMap) InsertArcgisMapServiceOrganizations(ctx context.Context, exec bob.Executor, related ...*OrganizationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	organizations1, err := insertArcgisServiceMapArcgisMapServiceOrganizations0(ctx, exec, related, arcgisServiceMap0)
+	if err != nil {
+		return err
+	}
+
+	arcgisServiceMap0.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap0.R.ArcgisMapServiceOrganizations, organizations1...)
+
+	for _, rel := range organizations1 {
+		rel.R.ArcgisMapServiceServiceMap = arcgisServiceMap0
+	}
+	return nil
+}
+
+func (arcgisServiceMap0 *ArcgisServiceMap) AttachArcgisMapServiceOrganizations(ctx context.Context, exec bob.Executor, related ...*Organization) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	organizations1 := OrganizationSlice(related)
+
+	_, err = attachArcgisServiceMapArcgisMapServiceOrganizations0(ctx, exec, len(related), organizations1, arcgisServiceMap0)
+	if err != nil {
+		return err
+	}
+
+	arcgisServiceMap0.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap0.R.ArcgisMapServiceOrganizations, organizations1...)
+
+	for _, rel := range related {
+		rel.R.ArcgisMapServiceServiceMap = arcgisServiceMap0
+	}
+
+	return nil
+}
+
 type arcgisServiceMapWhere[Q psql.Filterable] struct {
 	AccountID psql.WhereMod[Q, string]
 	ArcgisID  psql.WhereMod[Q, string]
@@ -548,6 +667,34 @@ func (o *ArcgisServiceMap) Preload(name string, retrieved any) error {
 			rel.R.ServiceMaps = ArcgisServiceMapSlice{o}
 		}
 		return nil
+	case "ArcgisMapServiceOrganizations":
+		rels, ok := retrieved.(OrganizationSlice)
+		if !ok {
+			return fmt.Errorf("arcgisServiceMap cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ArcgisMapServiceOrganizations = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ArcgisMapServiceServiceMap = o
+			}
+		}
+		return nil
+	case "ArcgisCachedImages":
+		rels, ok := retrieved.(TileCachedImageSlice)
+		if !ok {
+			return fmt.Errorf("arcgisServiceMap cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ArcgisCachedImages = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ArcgisServiceMap = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("arcgisServiceMap has no relationship %q", name)
 	}
@@ -576,12 +723,20 @@ func buildArcgisServiceMapPreloader() arcgisServiceMapPreloader {
 }
 
 type arcgisServiceMapThenLoader[Q orm.Loadable] struct {
-	Account func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Account                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ArcgisMapServiceOrganizations func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ArcgisCachedImages            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildArcgisServiceMapThenLoader[Q orm.Loadable]() arcgisServiceMapThenLoader[Q] {
 	type AccountLoadInterface interface {
 		LoadAccount(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ArcgisMapServiceOrganizationsLoadInterface interface {
+		LoadArcgisMapServiceOrganizations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ArcgisCachedImagesLoadInterface interface {
+		LoadArcgisCachedImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return arcgisServiceMapThenLoader[Q]{
@@ -589,6 +744,18 @@ func buildArcgisServiceMapThenLoader[Q orm.Loadable]() arcgisServiceMapThenLoade
 			"Account",
 			func(ctx context.Context, exec bob.Executor, retrieved AccountLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadAccount(ctx, exec, mods...)
+			},
+		),
+		ArcgisMapServiceOrganizations: thenLoadBuilder[Q](
+			"ArcgisMapServiceOrganizations",
+			func(ctx context.Context, exec bob.Executor, retrieved ArcgisMapServiceOrganizationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadArcgisMapServiceOrganizations(ctx, exec, mods...)
+			},
+		),
+		ArcgisCachedImages: thenLoadBuilder[Q](
+			"ArcgisCachedImages",
+			func(ctx context.Context, exec bob.Executor, retrieved ArcgisCachedImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadArcgisCachedImages(ctx, exec, mods...)
 			},
 		),
 	}
@@ -640,6 +807,131 @@ func (os ArcgisServiceMapSlice) LoadAccount(ctx context.Context, exec bob.Execut
 
 			o.R.Account = rel
 			break
+		}
+	}
+
+	return nil
+}
+
+// LoadArcgisMapServiceOrganizations loads the arcgisServiceMap's ArcgisMapServiceOrganizations into the .R struct
+func (o *ArcgisServiceMap) LoadArcgisMapServiceOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ArcgisMapServiceOrganizations = nil
+
+	related, err := o.ArcgisMapServiceOrganizations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ArcgisMapServiceServiceMap = o
+	}
+
+	o.R.ArcgisMapServiceOrganizations = related
+	return nil
+}
+
+// LoadArcgisMapServiceOrganizations loads the arcgisServiceMap's ArcgisMapServiceOrganizations into the .R struct
+func (os ArcgisServiceMapSlice) LoadArcgisMapServiceOrganizations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.ArcgisMapServiceOrganizations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ArcgisMapServiceOrganizations = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+
+			if !rel.ArcgisMapServiceID.IsValue() {
+				continue
+			}
+			if !(rel.ArcgisMapServiceID.IsValue() && o.ArcgisID == rel.ArcgisMapServiceID.MustGet()) {
+				continue
+			}
+
+			rel.R.ArcgisMapServiceServiceMap = o
+
+			o.R.ArcgisMapServiceOrganizations = append(o.R.ArcgisMapServiceOrganizations, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadArcgisCachedImages loads the arcgisServiceMap's ArcgisCachedImages into the .R struct
+func (o *ArcgisServiceMap) LoadArcgisCachedImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ArcgisCachedImages = nil
+
+	related, err := o.ArcgisCachedImages(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ArcgisServiceMap = o
+	}
+
+	o.R.ArcgisCachedImages = related
+	return nil
+}
+
+// LoadArcgisCachedImages loads the arcgisServiceMap's ArcgisCachedImages into the .R struct
+func (os ArcgisServiceMapSlice) LoadArcgisCachedImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	tileCachedImages, err := os.ArcgisCachedImages(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ArcgisCachedImages = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range tileCachedImages {
+
+			if !(o.ArcgisID == rel.ArcgisID) {
+				continue
+			}
+
+			rel.R.ArcgisServiceMap = o
+
+			o.R.ArcgisCachedImages = append(o.R.ArcgisCachedImages, rel)
 		}
 	}
 

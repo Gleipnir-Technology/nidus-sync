@@ -104,6 +104,7 @@ type preloaders struct {
 	ReviewTaskPool                    reviewTaskPoolPreloader
 	Signal                            signalPreloader
 	Site                              sitePreloader
+	TileCachedImage                   tileCachedImagePreloader
 	User                              userPreloader
 }
 
@@ -196,6 +197,7 @@ func getPreloaders() preloaders {
 		ReviewTaskPool:                    buildReviewTaskPoolPreloader(),
 		Signal:                            buildSignalPreloader(),
 		Site:                              buildSitePreloader(),
+		TileCachedImage:                   buildTileCachedImagePreloader(),
 		User:                              buildUserPreloader(),
 	}
 }
@@ -294,6 +296,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	ReviewTaskPool                    reviewTaskPoolThenLoader[Q]
 	Signal                            signalThenLoader[Q]
 	Site                              siteThenLoader[Q]
+	TileCachedImage                   tileCachedImageThenLoader[Q]
 	User                              userThenLoader[Q]
 }
 
@@ -386,6 +389,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		ReviewTaskPool:                    buildReviewTaskPoolThenLoader[Q](),
 		Signal:                            buildSignalThenLoader[Q](),
 		Site:                              buildSiteThenLoader[Q](),
+		TileCachedImage:                   buildTileCachedImageThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}
 }

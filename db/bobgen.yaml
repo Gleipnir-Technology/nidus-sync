@@ -20,10 +20,11 @@ psql:
   schemas:
     - "arcgis"
     - "comms"
+    - "fieldseeker"
     - "fileupload"
     - "public"
     - "publicreport"
-    - "fieldseeker"
+    - "tile"
   shared_schema: "public"
   queries:
     - ./sql

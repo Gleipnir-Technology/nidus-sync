@@ -303,6 +303,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ArcgisMapServiceID: column{
+			Name:      "arcgis_map_service_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -372,6 +381,15 @@ var Organizations = Table[
 			ForeignTable:   "arcgis.account",
 			ForeignColumns: []string{"id"},
 		},
+		OrganizationOrganizationArcgisMapServiceIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "organization.organization_arcgis_map_service_id_fkey",
+				Columns: []string{"arcgis_map_service_id"},
+				Comment: "",
+			},
+			ForeignTable:   "arcgis.service_map",
+			ForeignColumns: []string{"arcgis_id"},
+		},
 		OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "organization.organization_fieldseeker_service_feature_item_id_fkey",
@@ -440,11 +458,12 @@ type organizationColumns struct {
 	OfficeAddressState              column
 	ArcgisAccountID                 column
 	FieldseekerServiceFeatureItemID column
+	ArcgisMapServiceID              column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID,
+		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID, c.ArcgisMapServiceID,
 	}
 }
 
@@ -462,13 +481,14 @@ func (i organizationIndexes) AsSlice() []index {
 
 type organizationForeignKeys struct {
 	OrganizationOrganizationArcgisAccountIDFkey                 foreignKey
+	OrganizationOrganizationArcgisMapServiceIDFkey              foreignKey
 	OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey foreignKey
 	OrganizationOrganizationImportDistrictGidFkey               foreignKey
 }
 
 func (f organizationForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.OrganizationOrganizationArcgisAccountIDFkey, f.OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey, f.OrganizationOrganizationImportDistrictGidFkey,
+		f.OrganizationOrganizationArcgisAccountIDFkey, f.OrganizationOrganizationArcgisMapServiceIDFkey, f.OrganizationOrganizationFieldseekerServiceFeatureItemIDFkey, f.OrganizationOrganizationImportDistrictGidFkey,
 	}
 }
 

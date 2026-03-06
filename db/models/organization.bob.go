@@ -59,6 +59,7 @@ type Organization struct {
 	OfficeAddressState              null.Val[string]          `db:"office_address_state" `
 	ArcgisAccountID                 null.Val[string]          `db:"arcgis_account_id" `
 	FieldseekerServiceFeatureItemID null.Val[string]          `db:"fieldseeker_service_feature_item_id" `
+	ArcgisMapServiceID              null.Val[string]          `db:"arcgis_map_service_id" `
 
 	R organizationR `db:"-" `
 }
@@ -115,6 +116,7 @@ type organizationR struct {
 	NoteAudios                                  NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
 	NoteImages                                  NoteImageSlice                         // note_image.note_image_organization_id_fkey
 	ArcgisAccountAccount                        *ArcgisAccount                         // organization.organization_arcgis_account_id_fkey
+	ArcgisMapServiceServiceMap                  *ArcgisServiceMap                      // organization.organization_arcgis_map_service_id_fkey
 	FieldseekerServiceFeatureItemServiceFeature *ArcgisServiceFeature                  // organization.organization_fieldseeker_service_feature_item_id_fkey
 	Nuisances                                   PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool                            PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
@@ -127,7 +129,7 @@ type organizationR struct {
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson", "service_area_centroid_x", "service_area_centroid_y", "mailing_address_country", "mailing_address_state", "office_address_country", "office_address_state", "arcgis_account_id", "fieldseeker_service_feature_item_id",
+			"id", "name", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson", "service_area_centroid_x", "service_area_centroid_y", "mailing_address_country", "mailing_address_state", "office_address_country", "office_address_state", "arcgis_account_id", "fieldseeker_service_feature_item_id", "arcgis_map_service_id",
 		).WithParent("organization"),
 		tableAlias:                      alias,
 		ID:                              psql.Quote(alias, "id"),
@@ -162,6 +164,7 @@ func buildOrganizationColumns(alias string) organizationColumns {
 		OfficeAddressState:              psql.Quote(alias, "office_address_state"),
 		ArcgisAccountID:                 psql.Quote(alias, "arcgis_account_id"),
 		FieldseekerServiceFeatureItemID: psql.Quote(alias, "fieldseeker_service_feature_item_id"),
+		ArcgisMapServiceID:              psql.Quote(alias, "arcgis_map_service_id"),
 	}
 }
 
@@ -200,6 +203,7 @@ type organizationColumns struct {
 	OfficeAddressState              psql.Expression
 	ArcgisAccountID                 psql.Expression
 	FieldseekerServiceFeatureItemID psql.Expression
+	ArcgisMapServiceID              psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -236,10 +240,11 @@ type OrganizationSetter struct {
 	OfficeAddressState              omitnull.Val[string]    `db:"office_address_state" `
 	ArcgisAccountID                 omitnull.Val[string]    `db:"arcgis_account_id" `
 	FieldseekerServiceFeatureItemID omitnull.Val[string]    `db:"fieldseeker_service_feature_item_id" `
+	ArcgisMapServiceID              omitnull.Val[string]    `db:"arcgis_map_service_id" `
 }
 
 func (s OrganizationSetter) SetColumns() []string {
-	vals := make([]string, 0, 22)
+	vals := make([]string, 0, 23)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -305,6 +310,9 @@ func (s OrganizationSetter) SetColumns() []string {
 	}
 	if !s.FieldseekerServiceFeatureItemID.IsUnset() {
 		vals = append(vals, "fieldseeker_service_feature_item_id")
+	}
+	if !s.ArcgisMapServiceID.IsUnset() {
+		vals = append(vals, "arcgis_map_service_id")
 	}
 	return vals
 }
@@ -376,6 +384,9 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if !s.FieldseekerServiceFeatureItemID.IsUnset() {
 		t.FieldseekerServiceFeatureItemID = s.FieldseekerServiceFeatureItemID.MustGetNull()
 	}
+	if !s.ArcgisMapServiceID.IsUnset() {
+		t.ArcgisMapServiceID = s.ArcgisMapServiceID.MustGetNull()
+	}
 }
 
 func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
@@ -384,7 +395,7 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 22)
+		vals := make([]bob.Expression, 23)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -517,6 +528,12 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
+		if !s.ArcgisMapServiceID.IsUnset() {
+			vals[22] = psql.Arg(s.ArcgisMapServiceID.MustGetNull())
+		} else {
+			vals[22] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -526,7 +543,7 @@ func (s OrganizationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 22)
+	exprs := make([]bob.Expression, 0, 23)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -679,6 +696,13 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "fieldseeker_service_feature_item_id")...),
 			psql.Arg(s.FieldseekerServiceFeatureItemID),
+		}})
+	}
+
+	if !s.ArcgisMapServiceID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "arcgis_map_service_id")...),
+			psql.Arg(s.ArcgisMapServiceID),
 		}})
 	}
 
@@ -1875,6 +1899,30 @@ func (os OrganizationSlice) ArcgisAccountAccount(mods ...bob.Mod[*dialect.Select
 
 	return ArcgisAccounts.Query(append(mods,
 		sm.Where(psql.Group(ArcgisAccounts.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ArcgisMapServiceServiceMap starts a query for related objects on arcgis.service_map
+func (o *Organization) ArcgisMapServiceServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
+	return ArcgisServiceMaps.Query(append(mods,
+		sm.Where(ArcgisServiceMaps.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisMapServiceID))),
+	)...)
+}
+
+func (os OrganizationSlice) ArcgisMapServiceServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
+	pkArcgisMapServiceID := make(pgtypes.Array[null.Val[string]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkArcgisMapServiceID = append(pkArcgisMapServiceID, o.ArcgisMapServiceID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisMapServiceID), "text[]")),
+	))
+
+	return ArcgisServiceMaps.Query(append(mods,
+		sm.Where(psql.Group(ArcgisServiceMaps.Columns.ArcgisID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -4740,6 +4788,54 @@ func (organization0 *Organization) AttachArcgisAccountAccount(ctx context.Contex
 	return nil
 }
 
+func attachOrganizationArcgisMapServiceServiceMap0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, arcgisServiceMap1 *ArcgisServiceMap) (*Organization, error) {
+	setter := &OrganizationSetter{
+		ArcgisMapServiceID: omitnull.From(arcgisServiceMap1.ArcgisID),
+	}
+
+	err := organization0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationArcgisMapServiceServiceMap0: %w", err)
+	}
+
+	return organization0, nil
+}
+
+func (organization0 *Organization) InsertArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, related *ArcgisServiceMapSetter) error {
+	var err error
+
+	arcgisServiceMap1, err := ArcgisServiceMaps.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachOrganizationArcgisMapServiceServiceMap0(ctx, exec, 1, organization0, arcgisServiceMap1)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ArcgisMapServiceServiceMap = arcgisServiceMap1
+
+	arcgisServiceMap1.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap1.R.ArcgisMapServiceOrganizations, organization0)
+
+	return nil
+}
+
+func (organization0 *Organization) AttachArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, arcgisServiceMap1 *ArcgisServiceMap) error {
+	var err error
+
+	_, err = attachOrganizationArcgisMapServiceServiceMap0(ctx, exec, 1, organization0, arcgisServiceMap1)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ArcgisMapServiceServiceMap = arcgisServiceMap1
+
+	arcgisServiceMap1.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap1.R.ArcgisMapServiceOrganizations, organization0)
+
+	return nil
+}
+
 func attachOrganizationFieldseekerServiceFeatureItemServiceFeature0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, arcgisServiceFeature1 *ArcgisServiceFeature) (*Organization, error) {
 	setter := &OrganizationSetter{
 		FieldseekerServiceFeatureItemID: omitnull.From(arcgisServiceFeature1.ItemID),
@@ -5229,6 +5325,7 @@ type organizationWhere[Q psql.Filterable] struct {
 	OfficeAddressState              psql.WhereNullMod[Q, string]
 	ArcgisAccountID                 psql.WhereNullMod[Q, string]
 	FieldseekerServiceFeatureItemID psql.WhereNullMod[Q, string]
+	ArcgisMapServiceID              psql.WhereNullMod[Q, string]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -5269,6 +5366,7 @@ func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organiz
 		OfficeAddressState:              psql.WhereNull[Q, string](cols.OfficeAddressState),
 		ArcgisAccountID:                 psql.WhereNull[Q, string](cols.ArcgisAccountID),
 		FieldseekerServiceFeatureItemID: psql.WhereNull[Q, string](cols.FieldseekerServiceFeatureItemID),
+		ArcgisMapServiceID:              psql.WhereNull[Q, string](cols.ArcgisMapServiceID),
 	}
 }
 
@@ -5836,6 +5934,18 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			rel.R.ArcgisAccountOrganizations = OrganizationSlice{o}
 		}
 		return nil
+	case "ArcgisMapServiceServiceMap":
+		rel, ok := retrieved.(*ArcgisServiceMap)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ArcgisMapServiceServiceMap = rel
+
+		if rel != nil {
+			rel.R.ArcgisMapServiceOrganizations = OrganizationSlice{o}
+		}
+		return nil
 	case "FieldseekerServiceFeatureItemServiceFeature":
 		rel, ok := retrieved.(*ArcgisServiceFeature)
 		if !ok {
@@ -5939,6 +6049,7 @@ func (o *Organization) Preload(name string, retrieved any) error {
 
 type organizationPreloader struct {
 	ArcgisAccountAccount                        func(...psql.PreloadOption) psql.Preloader
+	ArcgisMapServiceServiceMap                  func(...psql.PreloadOption) psql.Preloader
 	FieldseekerServiceFeatureItemServiceFeature func(...psql.PreloadOption) psql.Preloader
 }
 
@@ -5956,6 +6067,19 @@ func buildOrganizationPreloader() organizationPreloader {
 					},
 				},
 			}, ArcgisAccounts.Columns.Names(), opts...)
+		},
+		ArcgisMapServiceServiceMap: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*ArcgisServiceMap, ArcgisServiceMapSlice](psql.PreloadRel{
+				Name: "ArcgisMapServiceServiceMap",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Organizations,
+						To:          ArcgisServiceMaps,
+						FromColumns: []string{"arcgis_map_service_id"},
+						ToColumns:   []string{"arcgis_id"},
+					},
+				},
+			}, ArcgisServiceMaps.Columns.Names(), opts...)
 		},
 		FieldseekerServiceFeatureItemServiceFeature: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*ArcgisServiceFeature, ArcgisServiceFeatureSlice](psql.PreloadRel{
@@ -6014,6 +6138,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	NoteAudios                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NoteImages                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ArcgisAccountAccount                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ArcgisMapServiceServiceMap                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FieldseekerServiceFeatureItemServiceFeature func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -6143,6 +6268,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type ArcgisAccountAccountLoadInterface interface {
 		LoadArcgisAccountAccount(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ArcgisMapServiceServiceMapLoadInterface interface {
+		LoadArcgisMapServiceServiceMap(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type FieldseekerServiceFeatureItemServiceFeatureLoadInterface interface {
 		LoadFieldseekerServiceFeatureItemServiceFeature(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6405,6 +6533,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"ArcgisAccountAccount",
 			func(ctx context.Context, exec bob.Executor, retrieved ArcgisAccountAccountLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadArcgisAccountAccount(ctx, exec, mods...)
+			},
+		),
+		ArcgisMapServiceServiceMap: thenLoadBuilder[Q](
+			"ArcgisMapServiceServiceMap",
+			func(ctx context.Context, exec bob.Executor, retrieved ArcgisMapServiceServiceMapLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadArcgisMapServiceServiceMap(ctx, exec, mods...)
 			},
 		),
 		FieldseekerServiceFeatureItemServiceFeature: thenLoadBuilder[Q](
@@ -8919,6 +9053,61 @@ func (os OrganizationSlice) LoadArcgisAccountAccount(ctx context.Context, exec b
 			rel.R.ArcgisAccountOrganizations = append(rel.R.ArcgisAccountOrganizations, o)
 
 			o.R.ArcgisAccountAccount = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadArcgisMapServiceServiceMap loads the organization's ArcgisMapServiceServiceMap into the .R struct
+func (o *Organization) LoadArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ArcgisMapServiceServiceMap = nil
+
+	related, err := o.ArcgisMapServiceServiceMap(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.ArcgisMapServiceOrganizations = OrganizationSlice{o}
+
+	o.R.ArcgisMapServiceServiceMap = related
+	return nil
+}
+
+// LoadArcgisMapServiceServiceMap loads the organization's ArcgisMapServiceServiceMap into the .R struct
+func (os OrganizationSlice) LoadArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	arcgisServiceMaps, err := os.ArcgisMapServiceServiceMap(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range arcgisServiceMaps {
+			if !o.ArcgisMapServiceID.IsValue() {
+				continue
+			}
+
+			if !(o.ArcgisMapServiceID.IsValue() && o.ArcgisMapServiceID.MustGet() == rel.ArcgisID) {
+				continue
+			}
+
+			rel.R.ArcgisMapServiceOrganizations = append(rel.R.ArcgisMapServiceOrganizations, o)
+
+			o.R.ArcgisMapServiceServiceMap = rel
 			break
 		}
 	}
