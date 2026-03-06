@@ -24,7 +24,7 @@ func getSignin(w http.ResponseWriter, r *http.Request) {
 	signin(w, errorCode, next)
 }
 
-func getSignout(w http.ResponseWriter, r *http.Request, user *models.User) {
+func getSignout(w http.ResponseWriter, r *http.Request, org *models.Organization, user *models.User) {
 	auth.SignoutUser(r, user)
 	http.Redirect(w, r, "/signin", http.StatusFound)
 }

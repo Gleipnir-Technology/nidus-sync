@@ -24,7 +24,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func apiAudioPost(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiAudioPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	id := chi.URLParam(r, "uuid")
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
@@ -61,7 +61,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u *models.User) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiAudioContentPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	u_str := chi.URLParam(r, "uuid")
 	audioUUID, err := uuid.Parse(u_str)
 	if err != nil {
@@ -78,7 +78,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
+func handleClientIos(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	var sinceStr string
 	err := r.ParseForm()
 	if err != nil {
@@ -121,7 +121,7 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 }
 
-func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiImagePost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	id := chi.URLParam(r, "uuid")
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
@@ -156,7 +156,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u *models.User) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiImageContentPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	u_str := chi.URLParam(r, "uuid")
 	imageUUID, err := uuid.Parse(u_str)
 	if err != nil {
@@ -173,7 +173,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u *models.User)
 	fmt.Fprintf(w, "PNG uploaded successfully")
 }
 
-func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiMosquitoSource(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
@@ -198,7 +198,7 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 }
 
-func apiTrapData(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiTrapData(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
@@ -223,7 +223,7 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u *models.User) {
 	}
 }
 
-func apiServiceRequest(w http.ResponseWriter, r *http.Request, u *models.User) {
+func apiServiceRequest(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))

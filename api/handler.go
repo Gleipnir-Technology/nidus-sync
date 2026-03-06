@@ -37,7 +37,7 @@ type ErrorAPI struct {
 }
 
 func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 		ctx := r.Context()
 		org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
 		if err != nil {
@@ -82,7 +82,7 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 type handlerFunctionPost[ReqType any, ResponseType any] func(context.Context, *http.Request, *models.Organization, *models.User, ReqType) (ResponseType, *nhttp.ErrorWithStatus)
 
 func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFunctionPost[ReqType, ResponseType]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 		w.Header().Set("Content-Type", "application/json")
 		var req ReqType
 		body, err := io.ReadAll(r.Body)
@@ -96,11 +96,6 @@ func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFuncti
 			return
 		}
 		ctx := r.Context()
-		org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			respondError(w, http.StatusInternalServerError, "Failed to get org: %w", err)
-			return
-		}
 		response, e := f(ctx, r, org, u, req)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)

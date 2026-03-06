@@ -36,7 +36,7 @@ type InvalidUsername struct{}
 
 func (e InvalidUsername) Error() string { return "That username doesn't exist" }
 
-type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *models.User)
+type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *models.Organization, *models.User)
 type EnsureAuth struct {
 	handler AuthenticatedHandler
 }
@@ -82,6 +82,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	accept := r.Header.Values("Accept")
 	offers := []string{"application/json", "text/html"}
 
+	ctx := r.Context()
 	content_type := NegotiateContent(accept, offers)
 	user, err := GetAuthenticatedUser(r)
 	if err != nil || user == nil {
@@ -108,8 +109,13 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(msg)
 		return
 	}
+	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	ea.handler(w, r, user)
+	ea.handler(w, r, org, user)
 }
 func SigninUser(r *http.Request, username string, password string) (*models.User, error) {
 	user, err := validateUser(r.Context(), username, password)
