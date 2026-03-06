@@ -115,8 +115,9 @@ function onLoad() {
 		function _updateReports() {
 			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
 			const pools = map.queryRenderedFeatures({target: {layerId: 'pool'}});
-
-			const uniqueFeatures = getUniqueFeatures(nuisances, pools, 'public_id');
+			const nidus_nuisances = nuisances.filter((feature) => feature.source == "tegola");
+			const nidus_pools = pools.filter((feature) => feature.source == "tegola");
+			const uniqueFeatures = getUniqueFeatures(nidus_nuisances, nidus_pools, 'public_id');
 			// Populate features for the listing overlay.
 			renderReports(uniqueFeatures);
 		}
