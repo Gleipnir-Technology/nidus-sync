@@ -19,7 +19,12 @@ import (
 
 var decoder = schema.NewDecoder()
 
-type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User) (*T, *nhttp.ErrorWithStatus)
+type queryParams struct {
+	Limit *int    `schema:"limit"`
+	Sort  *string `schema:"sort"`
+}
+
+type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User, queryParams) (*T, *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {
 	C      T
@@ -44,7 +49,14 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 			return
 		}
 		var body []byte
-		resp, e := f(ctx, r, org, u)
+		var params queryParams
+		err = decoder.Decode(&params, r.URL.Query())
+		if err != nil {
+			log.Error().Err(err).Msg("decode query failure")
+			http.Error(w, "failed to decode query", http.StatusInternalServerError)
+			return
+		}
+		resp, e := f(ctx, r, org, u, params)
 		w.Header().Set("Content-Type", "application/json")
 		//log.Info().Str("template", template).Err(e).Msg("handler done")
 		if e != nil {

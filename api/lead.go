@@ -34,7 +34,7 @@ type lead struct {
 	ID int32 `json:"id"`
 }
 
-func listLead(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*contentListLead, *nhttp.ErrorWithStatus) {
+func listLead(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListLead, *nhttp.ErrorWithStatus) {
 	return &contentListLead{
 		Leads: make([]lead, 0),
 	}, nil

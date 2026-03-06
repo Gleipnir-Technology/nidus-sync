@@ -41,7 +41,7 @@ type contentListSignal struct {
 	Signals []signal `json:"signals"`
 }
 
-func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*contentListSignal, *nhttp.ErrorWithStatus) {
+func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {
 	type _Row struct {
 		Address   Address    `db:"address"`
 		Addressed *time.Time `db:"addressed"`
@@ -55,6 +55,10 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 		Species   *string    `db:"species"`
 		Title     string     `db:"title"`
 		Type      string     `db:"type"`
+	}
+	limit := 20
+	if query.Limit != nil {
+		limit = *query.Limit
 	}
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -97,6 +101,7 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 		),
 		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(org.ID))),
 		sm.Where(psql.Quote("signal", "addressed").IsNull()),
+		sm.Limit(limit),
 	), scan.StructMapper[_Row]())
 
 	/*
