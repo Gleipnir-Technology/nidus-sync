@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -37,8 +36,6 @@ type CommsEmailTemplate struct {
 	MessageType     enums.CommsMessagetypeemail `db:"message_type" `
 
 	R commsEmailTemplateR `db:"-" `
-
-	C commsEmailTemplateC `db:"-" `
 }
 
 // CommsEmailTemplateSlice is an alias for a slice of pointers to CommsEmailTemplate.
@@ -741,126 +738,4 @@ func (os CommsEmailTemplateSlice) LoadTemplateEmailLogs(ctx context.Context, exe
 	}
 
 	return nil
-}
-
-// commsEmailTemplateC is where relationship counts are stored.
-type commsEmailTemplateC struct {
-	TemplateEmailLogs *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *CommsEmailTemplate) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "TemplateEmailLogs":
-		o.C.TemplateEmailLogs = &count
-	}
-	return nil
-}
-
-type commsEmailTemplateCountPreloader struct {
-	TemplateEmailLogs func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildCommsEmailTemplateCountPreloader() commsEmailTemplateCountPreloader {
-	return commsEmailTemplateCountPreloader{
-		TemplateEmailLogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*CommsEmailTemplate]("TemplateEmailLogs", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = CommsEmailTemplates.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(CommsEmailLogs.Name()),
-					sm.Where(psql.Quote(CommsEmailLogs.Alias(), "template_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type commsEmailTemplateCountThenLoader[Q orm.Loadable] struct {
-	TemplateEmailLogs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildCommsEmailTemplateCountThenLoader[Q orm.Loadable]() commsEmailTemplateCountThenLoader[Q] {
-	type TemplateEmailLogsCountInterface interface {
-		LoadCountTemplateEmailLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return commsEmailTemplateCountThenLoader[Q]{
-		TemplateEmailLogs: countThenLoadBuilder[Q](
-			"TemplateEmailLogs",
-			func(ctx context.Context, exec bob.Executor, retrieved TemplateEmailLogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTemplateEmailLogs(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountTemplateEmailLogs loads the count of TemplateEmailLogs into the C struct
-func (o *CommsEmailTemplate) LoadCountTemplateEmailLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.TemplateEmailLogs(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.TemplateEmailLogs = &count
-	return nil
-}
-
-// LoadCountTemplateEmailLogs loads the count of TemplateEmailLogs for a slice
-func (os CommsEmailTemplateSlice) LoadCountTemplateEmailLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTemplateEmailLogs(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type commsEmailTemplateJoins[Q dialect.Joinable] struct {
-	typ               string
-	TemplateEmailLogs modAs[Q, commsEmailLogColumns]
-}
-
-func (j commsEmailTemplateJoins[Q]) aliasedAs(alias string) commsEmailTemplateJoins[Q] {
-	return buildCommsEmailTemplateJoins[Q](buildCommsEmailTemplateColumns(alias), j.typ)
-}
-
-func buildCommsEmailTemplateJoins[Q dialect.Joinable](cols commsEmailTemplateColumns, typ string) commsEmailTemplateJoins[Q] {
-	return commsEmailTemplateJoins[Q]{
-		typ: typ,
-		TemplateEmailLogs: modAs[Q, commsEmailLogColumns]{
-			c: CommsEmailLogs.Columns,
-			f: func(to commsEmailLogColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailLogs.Name().As(to.Alias())).On(
-						to.TemplateID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

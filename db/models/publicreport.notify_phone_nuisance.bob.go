@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -794,48 +793,4 @@ func (os PublicreportNotifyPhoneNuisanceSlice) LoadPhoneE164Phone(ctx context.Co
 	}
 
 	return nil
-}
-
-type publicreportNotifyPhoneNuisanceJoins[Q dialect.Joinable] struct {
-	typ            string
-	Nuisance       modAs[Q, publicreportNuisanceColumns]
-	PhoneE164Phone modAs[Q, commsPhoneColumns]
-}
-
-func (j publicreportNotifyPhoneNuisanceJoins[Q]) aliasedAs(alias string) publicreportNotifyPhoneNuisanceJoins[Q] {
-	return buildPublicreportNotifyPhoneNuisanceJoins[Q](buildPublicreportNotifyPhoneNuisanceColumns(alias), j.typ)
-}
-
-func buildPublicreportNotifyPhoneNuisanceJoins[Q dialect.Joinable](cols publicreportNotifyPhoneNuisanceColumns, typ string) publicreportNotifyPhoneNuisanceJoins[Q] {
-	return publicreportNotifyPhoneNuisanceJoins[Q]{
-		typ: typ,
-		Nuisance: modAs[Q, publicreportNuisanceColumns]{
-			c: PublicreportNuisances.Columns,
-			f: func(to publicreportNuisanceColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportNuisances.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.NuisanceID),
-					))
-				}
-
-				return mods
-			},
-		},
-		PhoneE164Phone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

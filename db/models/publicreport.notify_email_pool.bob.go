@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -794,48 +793,4 @@ func (os PublicreportNotifyEmailPoolSlice) LoadPool(ctx context.Context, exec bo
 	}
 
 	return nil
-}
-
-type publicreportNotifyEmailPoolJoins[Q dialect.Joinable] struct {
-	typ                      string
-	EmailAddressEmailContact modAs[Q, commsEmailContactColumns]
-	Pool                     modAs[Q, publicreportPoolColumns]
-}
-
-func (j publicreportNotifyEmailPoolJoins[Q]) aliasedAs(alias string) publicreportNotifyEmailPoolJoins[Q] {
-	return buildPublicreportNotifyEmailPoolJoins[Q](buildPublicreportNotifyEmailPoolColumns(alias), j.typ)
-}
-
-func buildPublicreportNotifyEmailPoolJoins[Q dialect.Joinable](cols publicreportNotifyEmailPoolColumns, typ string) publicreportNotifyEmailPoolJoins[Q] {
-	return publicreportNotifyEmailPoolJoins[Q]{
-		typ: typ,
-		EmailAddressEmailContact: modAs[Q, commsEmailContactColumns]{
-			c: CommsEmailContacts.Columns,
-			f: func(to commsEmailContactColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
-						to.Address.EQ(cols.EmailAddress),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pool: modAs[Q, publicreportPoolColumns]{
-			c: PublicreportPools.Columns,
-			f: func(to publicreportPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportPools.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.PoolID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

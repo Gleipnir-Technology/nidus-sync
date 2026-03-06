@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -719,48 +718,4 @@ func (os DistrictSubscriptionEmailSlice) LoadOrganization(ctx context.Context, e
 	}
 
 	return nil
-}
-
-type districtSubscriptionEmailJoins[Q dialect.Joinable] struct {
-	typ                             string
-	EmailContactAddressEmailContact modAs[Q, commsEmailContactColumns]
-	Organization                    modAs[Q, organizationColumns]
-}
-
-func (j districtSubscriptionEmailJoins[Q]) aliasedAs(alias string) districtSubscriptionEmailJoins[Q] {
-	return buildDistrictSubscriptionEmailJoins[Q](buildDistrictSubscriptionEmailColumns(alias), j.typ)
-}
-
-func buildDistrictSubscriptionEmailJoins[Q dialect.Joinable](cols districtSubscriptionEmailColumns, typ string) districtSubscriptionEmailJoins[Q] {
-	return districtSubscriptionEmailJoins[Q]{
-		typ: typ,
-		EmailContactAddressEmailContact: modAs[Q, commsEmailContactColumns]{
-			c: CommsEmailContacts.Columns,
-			f: func(to commsEmailContactColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
-						to.Address.EQ(cols.EmailContactAddress),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

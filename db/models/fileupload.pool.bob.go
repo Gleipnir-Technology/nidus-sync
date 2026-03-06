@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -1588,78 +1587,4 @@ func (os FileuploadPoolSlice) LoadResidentPhoneE164Phone(ctx context.Context, ex
 	}
 
 	return nil
-}
-
-type fileuploadPoolJoins[Q dialect.Joinable] struct {
-	typ                         string
-	CreatorUser                 modAs[Q, userColumns]
-	CSVFileCSV                  modAs[Q, fileuploadCSVColumns]
-	PropertyOwnerPhoneE164Phone modAs[Q, commsPhoneColumns]
-	ResidentPhoneE164Phone      modAs[Q, commsPhoneColumns]
-}
-
-func (j fileuploadPoolJoins[Q]) aliasedAs(alias string) fileuploadPoolJoins[Q] {
-	return buildFileuploadPoolJoins[Q](buildFileuploadPoolColumns(alias), j.typ)
-}
-
-func buildFileuploadPoolJoins[Q dialect.Joinable](cols fileuploadPoolColumns, typ string) fileuploadPoolJoins[Q] {
-	return fileuploadPoolJoins[Q]{
-		typ: typ,
-		CreatorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.CreatorID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CSVFileCSV: modAs[Q, fileuploadCSVColumns]{
-			c: FileuploadCSVS.Columns,
-			f: func(to fileuploadCSVColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadCSVS.Name().As(to.Alias())).On(
-						to.FileID.EQ(cols.CSVFile),
-					))
-				}
-
-				return mods
-			},
-		},
-		PropertyOwnerPhoneE164Phone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PropertyOwnerPhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-		ResidentPhoneE164Phone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.ResidentPhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

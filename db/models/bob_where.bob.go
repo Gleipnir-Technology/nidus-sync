@@ -39,6 +39,8 @@ func Where[Q psql.Filterable]() struct {
 	ComplianceReportRequestMailers     complianceReportRequestMailerWhere[Q]
 	DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
 	DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
+	Features                           featureWhere[Q]
+	FeaturePools                       featurePoolWhere[Q]
 	FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 	FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 	FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -86,7 +88,6 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                      notificationWhere[Q]
 	Organizations                      organizationWhere[Q]
 	Parcels                            parcelWhere[Q]
-	Pools                              poolWhere[Q]
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -105,9 +106,10 @@ func Where[Q psql.Filterable]() struct {
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
 	Residents                          residentWhere[Q]
+	ReviewTasks                        reviewTaskWhere[Q]
+	ReviewTaskPools                    reviewTaskPoolWhere[Q]
 	Sessions                           sessionWhere[Q]
 	Signals                            signalWhere[Q]
-	SignalPools                        signalPoolWhere[Q]
 	Sites                              siteWhere[Q]
 	SpatialRefSys                      spatialRefSyWhere[Q]
 	Users                              userWhere[Q]
@@ -135,6 +137,8 @@ func Where[Q psql.Filterable]() struct {
 		ComplianceReportRequestMailers     complianceReportRequestMailerWhere[Q]
 		DistrictSubscriptionEmails         districtSubscriptionEmailWhere[Q]
 		DistrictSubscriptionPhones         districtSubscriptionPhoneWhere[Q]
+		Features                           featureWhere[Q]
+		FeaturePools                       featurePoolWhere[Q]
 		FieldseekerContainerrelates        fieldseekerContainerrelateWhere[Q]
 		FieldseekerFieldscoutinglogs       fieldseekerFieldscoutinglogWhere[Q]
 		FieldseekerHabitatrelates          fieldseekerHabitatrelateWhere[Q]
@@ -182,7 +186,6 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                      notificationWhere[Q]
 		Organizations                      organizationWhere[Q]
 		Parcels                            parcelWhere[Q]
-		Pools                              poolWhere[Q]
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
@@ -201,9 +204,10 @@ func Where[Q psql.Filterable]() struct {
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
 		Residents                          residentWhere[Q]
+		ReviewTasks                        reviewTaskWhere[Q]
+		ReviewTaskPools                    reviewTaskPoolWhere[Q]
 		Sessions                           sessionWhere[Q]
 		Signals                            signalWhere[Q]
-		SignalPools                        signalPoolWhere[Q]
 		Sites                              siteWhere[Q]
 		SpatialRefSys                      spatialRefSyWhere[Q]
 		Users                              userWhere[Q]
@@ -230,6 +234,8 @@ func Where[Q psql.Filterable]() struct {
 		ComplianceReportRequestMailers:     buildComplianceReportRequestMailerWhere[Q](ComplianceReportRequestMailers.Columns),
 		DistrictSubscriptionEmails:         buildDistrictSubscriptionEmailWhere[Q](DistrictSubscriptionEmails.Columns),
 		DistrictSubscriptionPhones:         buildDistrictSubscriptionPhoneWhere[Q](DistrictSubscriptionPhones.Columns),
+		Features:                           buildFeatureWhere[Q](Features.Columns),
+		FeaturePools:                       buildFeaturePoolWhere[Q](FeaturePools.Columns),
 		FieldseekerContainerrelates:        buildFieldseekerContainerrelateWhere[Q](FieldseekerContainerrelates.Columns),
 		FieldseekerFieldscoutinglogs:       buildFieldseekerFieldscoutinglogWhere[Q](FieldseekerFieldscoutinglogs.Columns),
 		FieldseekerHabitatrelates:          buildFieldseekerHabitatrelateWhere[Q](FieldseekerHabitatrelates.Columns),
@@ -277,7 +283,6 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                      buildNotificationWhere[Q](Notifications.Columns),
 		Organizations:                      buildOrganizationWhere[Q](Organizations.Columns),
 		Parcels:                            buildParcelWhere[Q](Parcels.Columns),
-		Pools:                              buildPoolWhere[Q](Pools.Columns),
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNotifyEmailNuisances:   buildPublicreportNotifyEmailNuisanceWhere[Q](PublicreportNotifyEmailNuisances.Columns),
@@ -296,9 +301,10 @@ func Where[Q psql.Filterable]() struct {
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Residents:                          buildResidentWhere[Q](Residents.Columns),
+		ReviewTasks:                        buildReviewTaskWhere[Q](ReviewTasks.Columns),
+		ReviewTaskPools:                    buildReviewTaskPoolWhere[Q](ReviewTaskPools.Columns),
 		Sessions:                           buildSessionWhere[Q](Sessions.Columns),
 		Signals:                            buildSignalWhere[Q](Signals.Columns),
-		SignalPools:                        buildSignalPoolWhere[Q](SignalPools.Columns),
 		Sites:                              buildSiteWhere[Q](Sites.Columns),
 		SpatialRefSys:                      buildSpatialRefSyWhere[Q](SpatialRefSys.Columns),
 		Users:                              buildUserWhere[Q](Users.Columns),

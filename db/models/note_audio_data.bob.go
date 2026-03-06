@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -650,33 +649,4 @@ func (os NoteAudioDatumSlice) LoadNoteAudio(ctx context.Context, exec bob.Execut
 	}
 
 	return nil
-}
-
-type noteAudioDatumJoins[Q dialect.Joinable] struct {
-	typ       string
-	NoteAudio modAs[Q, noteAudioColumns]
-}
-
-func (j noteAudioDatumJoins[Q]) aliasedAs(alias string) noteAudioDatumJoins[Q] {
-	return buildNoteAudioDatumJoins[Q](buildNoteAudioDatumColumns(alias), j.typ)
-}
-
-func buildNoteAudioDatumJoins[Q dialect.Joinable](cols noteAudioDatumColumns, typ string) noteAudioDatumJoins[Q] {
-	return noteAudioDatumJoins[Q]{
-		typ: typ,
-		NoteAudio: modAs[Q, noteAudioColumns]{
-			c: NoteAudios.Columns,
-			f: func(to noteAudioColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteAudios.Name().As(to.Alias())).On(
-						to.Version.EQ(cols.NoteAudioVersion), to.UUID.EQ(cols.NoteAudioUUID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

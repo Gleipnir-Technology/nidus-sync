@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -42,8 +41,6 @@ type User struct {
 	Role                      enums.Userrole                    `db:"role" `
 
 	R userR `db:"-" `
-
-	C userC `db:"-" `
 }
 
 // UserSlice is an alias for a slice of pointers to User.
@@ -61,6 +58,7 @@ type userR struct {
 	UserOauthTokens                 ArcgisOauthTokenSlice        // arcgis.oauth_token.oauth_token_user_id_fkey
 	PublicUserUser                  ArcgisUserSlice              // arcgis.user_.user__public_user_id_fkey
 	CreatorComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
+	CreatorFeatures                 FeatureSlice                 // feature.feature_creator_id_fkey
 	CommitterFiles                  FileuploadFileSlice          // fileupload.file.file_committer_fkey
 	CreatorFiles                    FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
 	FileuploadPool                  FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
@@ -70,8 +68,9 @@ type userR struct {
 	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
 	DeletorNoteImages               NoteImageSlice               // note_image.note_image_deletor_id_fkey
 	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
-	CreatorPools                    PoolSlice                    // pool.pool_creator_id_fkey
 	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
+	CreatorReviewTasks              ReviewTaskSlice              // review_task.review_task_creator_id_fkey
+	ReviewerReviewTasks             ReviewTaskSlice              // review_task.review_task_reviewer_id_fkey
 	AddressorSignals                SignalSlice                  // signal.signal_addressor_fkey
 	CreatorSignals                  SignalSlice                  // signal.signal_creator_fkey
 	CreatorSites                    SiteSlice                    // site.site_creator_id_fkey
@@ -716,6 +715,30 @@ func (os UserSlice) CreatorComplianceReportRequests(mods ...bob.Mod[*dialect.Sel
 	)...)
 }
 
+// CreatorFeatures starts a query for related objects on feature
+func (o *User) CreatorFeatures(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	return Features.Query(append(mods,
+		sm.Where(Features.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorFeatures(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Features.Query(append(mods,
+		sm.Where(psql.Group(Features.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // CommitterFiles starts a query for related objects on fileupload.file
 func (o *User) CommitterFiles(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadFilesQuery {
 	return FileuploadFiles.Query(append(mods,
@@ -932,30 +955,6 @@ func (os UserSlice) UserNotifications(mods ...bob.Mod[*dialect.SelectQuery]) Not
 	)...)
 }
 
-// CreatorPools starts a query for related objects on pool
-func (o *User) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
-	return Pools.Query(append(mods,
-		sm.Where(Pools.Columns.CreatorID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os UserSlice) CreatorPools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return Pools.Query(append(mods,
-		sm.Where(psql.Group(Pools.Columns.CreatorID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 // CreatorResidents starts a query for related objects on resident
 func (o *User) CreatorResidents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
 	return Residents.Query(append(mods,
@@ -977,6 +976,54 @@ func (os UserSlice) CreatorResidents(mods ...bob.Mod[*dialect.SelectQuery]) Resi
 
 	return Residents.Query(append(mods,
 		sm.Where(psql.Group(Residents.Columns.Creator).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// CreatorReviewTasks starts a query for related objects on review_task
+func (o *User) CreatorReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	return ReviewTasks.Query(append(mods,
+		sm.Where(ReviewTasks.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ReviewTasks.Query(append(mods,
+		sm.Where(psql.Group(ReviewTasks.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ReviewerReviewTasks starts a query for related objects on review_task
+func (o *User) ReviewerReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	return ReviewTasks.Query(append(mods,
+		sm.Where(ReviewTasks.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) ReviewerReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ReviewTasks.Query(append(mods,
+		sm.Where(psql.Group(ReviewTasks.Columns.ReviewerID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1272,6 +1319,74 @@ func (user0 *User) AttachCreatorComplianceReportRequests(ctx context.Context, ex
 	}
 
 	user0.R.CreatorComplianceReportRequests = append(user0.R.CreatorComplianceReportRequests, complianceReportRequests1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorFeatures0(ctx context.Context, exec bob.Executor, features1 []*FeatureSetter, user0 *User) (FeatureSlice, error) {
+	for i := range features1 {
+		features1[i].CreatorID = omit.From(user0.ID)
+	}
+
+	ret, err := Features.Insert(bob.ToMods(features1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorFeatures0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorFeatures0(ctx context.Context, exec bob.Executor, count int, features1 FeatureSlice, user0 *User) (FeatureSlice, error) {
+	setter := &FeatureSetter{
+		CreatorID: omit.From(user0.ID),
+	}
+
+	err := features1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorFeatures0: %w", err)
+	}
+
+	return features1, nil
+}
+
+func (user0 *User) InsertCreatorFeatures(ctx context.Context, exec bob.Executor, related ...*FeatureSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	features1, err := insertUserCreatorFeatures0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFeatures = append(user0.R.CreatorFeatures, features1...)
+
+	for _, rel := range features1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorFeatures(ctx context.Context, exec bob.Executor, related ...*Feature) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	features1 := FeatureSlice(related)
+
+	_, err = attachUserCreatorFeatures0(ctx, exec, len(related), features1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorFeatures = append(user0.R.CreatorFeatures, features1...)
 
 	for _, rel := range related {
 		rel.R.CreatorUser = user0
@@ -1892,74 +2007,6 @@ func (user0 *User) AttachUserNotifications(ctx context.Context, exec bob.Executo
 	return nil
 }
 
-func insertUserCreatorPools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, user0 *User) (PoolSlice, error) {
-	for i := range pools1 {
-		pools1[i].CreatorID = omit.From(user0.ID)
-	}
-
-	ret, err := Pools.Insert(bob.ToMods(pools1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertUserCreatorPools0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachUserCreatorPools0(ctx context.Context, exec bob.Executor, count int, pools1 PoolSlice, user0 *User) (PoolSlice, error) {
-	setter := &PoolSetter{
-		CreatorID: omit.From(user0.ID),
-	}
-
-	err := pools1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachUserCreatorPools0: %w", err)
-	}
-
-	return pools1, nil
-}
-
-func (user0 *User) InsertCreatorPools(ctx context.Context, exec bob.Executor, related ...*PoolSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	pools1, err := insertUserCreatorPools0(ctx, exec, related, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.CreatorPools = append(user0.R.CreatorPools, pools1...)
-
-	for _, rel := range pools1 {
-		rel.R.CreatorUser = user0
-	}
-	return nil
-}
-
-func (user0 *User) AttachCreatorPools(ctx context.Context, exec bob.Executor, related ...*Pool) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	pools1 := PoolSlice(related)
-
-	_, err = attachUserCreatorPools0(ctx, exec, len(related), pools1, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.CreatorPools = append(user0.R.CreatorPools, pools1...)
-
-	for _, rel := range related {
-		rel.R.CreatorUser = user0
-	}
-
-	return nil
-}
-
 func insertUserCreatorResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, user0 *User) (ResidentSlice, error) {
 	for i := range residents1 {
 		residents1[i].Creator = omit.From(user0.ID)
@@ -2023,6 +2070,142 @@ func (user0 *User) AttachCreatorResidents(ctx context.Context, exec bob.Executor
 
 	for _, rel := range related {
 		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorReviewTasks0(ctx context.Context, exec bob.Executor, reviewTasks1 []*ReviewTaskSetter, user0 *User) (ReviewTaskSlice, error) {
+	for i := range reviewTasks1 {
+		reviewTasks1[i].CreatorID = omitnull.From(user0.ID)
+	}
+
+	ret, err := ReviewTasks.Insert(bob.ToMods(reviewTasks1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorReviewTasks0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorReviewTasks0(ctx context.Context, exec bob.Executor, count int, reviewTasks1 ReviewTaskSlice, user0 *User) (ReviewTaskSlice, error) {
+	setter := &ReviewTaskSetter{
+		CreatorID: omitnull.From(user0.ID),
+	}
+
+	err := reviewTasks1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorReviewTasks0: %w", err)
+	}
+
+	return reviewTasks1, nil
+}
+
+func (user0 *User) InsertCreatorReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTaskSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	reviewTasks1, err := insertUserCreatorReviewTasks0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorReviewTasks = append(user0.R.CreatorReviewTasks, reviewTasks1...)
+
+	for _, rel := range reviewTasks1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTask) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	reviewTasks1 := ReviewTaskSlice(related)
+
+	_, err = attachUserCreatorReviewTasks0(ctx, exec, len(related), reviewTasks1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorReviewTasks = append(user0.R.CreatorReviewTasks, reviewTasks1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserReviewerReviewTasks0(ctx context.Context, exec bob.Executor, reviewTasks1 []*ReviewTaskSetter, user0 *User) (ReviewTaskSlice, error) {
+	for i := range reviewTasks1 {
+		reviewTasks1[i].ReviewerID = omitnull.From(user0.ID)
+	}
+
+	ret, err := ReviewTasks.Insert(bob.ToMods(reviewTasks1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserReviewerReviewTasks0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserReviewerReviewTasks0(ctx context.Context, exec bob.Executor, count int, reviewTasks1 ReviewTaskSlice, user0 *User) (ReviewTaskSlice, error) {
+	setter := &ReviewTaskSetter{
+		ReviewerID: omitnull.From(user0.ID),
+	}
+
+	err := reviewTasks1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserReviewerReviewTasks0: %w", err)
+	}
+
+	return reviewTasks1, nil
+}
+
+func (user0 *User) InsertReviewerReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTaskSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	reviewTasks1, err := insertUserReviewerReviewTasks0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ReviewerReviewTasks = append(user0.R.ReviewerReviewTasks, reviewTasks1...)
+
+	for _, rel := range reviewTasks1 {
+		rel.R.ReviewerUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachReviewerReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTask) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	reviewTasks1 := ReviewTaskSlice(related)
+
+	_, err = attachUserReviewerReviewTasks0(ctx, exec, len(related), reviewTasks1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ReviewerReviewTasks = append(user0.R.ReviewerReviewTasks, reviewTasks1...)
+
+	for _, rel := range related {
+		rel.R.ReviewerUser = user0
 	}
 
 	return nil
@@ -2366,6 +2549,20 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "CreatorFeatures":
+		rels, ok := retrieved.(FeatureSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorFeatures = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "CommitterFiles":
 		rels, ok := retrieved.(FileuploadFileSlice)
 		if !ok {
@@ -2492,20 +2689,6 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "CreatorPools":
-		rels, ok := retrieved.(PoolSlice)
-		if !ok {
-			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.CreatorPools = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.CreatorUser = o
-			}
-		}
-		return nil
 	case "CreatorResidents":
 		rels, ok := retrieved.(ResidentSlice)
 		if !ok {
@@ -2517,6 +2700,34 @@ func (o *User) Preload(name string, retrieved any) error {
 		for _, rel := range rels {
 			if rel != nil {
 				rel.R.CreatorUser = o
+			}
+		}
+		return nil
+	case "CreatorReviewTasks":
+		rels, ok := retrieved.(ReviewTaskSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorReviewTasks = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
+	case "ReviewerReviewTasks":
+		rels, ok := retrieved.(ReviewTaskSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReviewerReviewTasks = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ReviewerUser = o
 			}
 		}
 		return nil
@@ -2605,6 +2816,7 @@ type userThenLoader[Q orm.Loadable] struct {
 	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFeatures                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CommitterFiles                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -2614,8 +2826,9 @@ type userThenLoader[Q orm.Loadable] struct {
 	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorReviewTasks              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerReviewTasks             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -2631,6 +2844,9 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type CreatorComplianceReportRequestsLoadInterface interface {
 		LoadCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorFeaturesLoadInterface interface {
+		LoadCreatorFeatures(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CommitterFilesLoadInterface interface {
 		LoadCommitterFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2659,11 +2875,14 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	type UserNotificationsLoadInterface interface {
 		LoadUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type CreatorPoolsLoadInterface interface {
-		LoadCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type CreatorResidentsLoadInterface interface {
 		LoadCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorReviewTasksLoadInterface interface {
+		LoadCreatorReviewTasks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReviewerReviewTasksLoadInterface interface {
+		LoadReviewerReviewTasks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type AddressorSignalsLoadInterface interface {
 		LoadAddressorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2695,6 +2914,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"CreatorComplianceReportRequests",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorComplianceReportRequestsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorComplianceReportRequests(ctx, exec, mods...)
+			},
+		),
+		CreatorFeatures: thenLoadBuilder[Q](
+			"CreatorFeatures",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorFeaturesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorFeatures(ctx, exec, mods...)
 			},
 		),
 		CommitterFiles: thenLoadBuilder[Q](
@@ -2751,16 +2976,22 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 				return retrieved.LoadUserNotifications(ctx, exec, mods...)
 			},
 		),
-		CreatorPools: thenLoadBuilder[Q](
-			"CreatorPools",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCreatorPools(ctx, exec, mods...)
-			},
-		),
 		CreatorResidents: thenLoadBuilder[Q](
 			"CreatorResidents",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorResidents(ctx, exec, mods...)
+			},
+		),
+		CreatorReviewTasks: thenLoadBuilder[Q](
+			"CreatorReviewTasks",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorReviewTasksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorReviewTasks(ctx, exec, mods...)
+			},
+		),
+		ReviewerReviewTasks: thenLoadBuilder[Q](
+			"ReviewerReviewTasks",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewerReviewTasksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewerReviewTasks(ctx, exec, mods...)
 			},
 		),
 		AddressorSignals: thenLoadBuilder[Q](
@@ -2967,6 +3198,67 @@ func (os UserSlice) LoadCreatorComplianceReportRequests(ctx context.Context, exe
 			rel.R.CreatorUser = o
 
 			o.R.CreatorComplianceReportRequests = append(o.R.CreatorComplianceReportRequests, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorFeatures loads the user's CreatorFeatures into the .R struct
+func (o *User) LoadCreatorFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorFeatures = nil
+
+	related, err := o.CreatorFeatures(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorFeatures = related
+	return nil
+}
+
+// LoadCreatorFeatures loads the user's CreatorFeatures into the .R struct
+func (os UserSlice) LoadCreatorFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	features, err := os.CreatorFeatures(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorFeatures = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range features {
+
+			if !(o.ID == rel.CreatorID) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorFeatures = append(o.R.CreatorFeatures, rel)
 		}
 	}
 
@@ -3531,67 +3823,6 @@ func (os UserSlice) LoadUserNotifications(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// LoadCreatorPools loads the user's CreatorPools into the .R struct
-func (o *User) LoadCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.CreatorPools = nil
-
-	related, err := o.CreatorPools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.CreatorUser = o
-	}
-
-	o.R.CreatorPools = related
-	return nil
-}
-
-// LoadCreatorPools loads the user's CreatorPools into the .R struct
-func (os UserSlice) LoadCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	pools, err := os.CreatorPools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.CreatorPools = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range pools {
-
-			if !(o.ID == rel.CreatorID) {
-				continue
-			}
-
-			rel.R.CreatorUser = o
-
-			o.R.CreatorPools = append(o.R.CreatorPools, rel)
-		}
-	}
-
-	return nil
-}
-
 // LoadCreatorResidents loads the user's CreatorResidents into the .R struct
 func (o *User) LoadCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -3647,6 +3878,134 @@ func (os UserSlice) LoadCreatorResidents(ctx context.Context, exec bob.Executor,
 			rel.R.CreatorUser = o
 
 			o.R.CreatorResidents = append(o.R.CreatorResidents, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorReviewTasks loads the user's CreatorReviewTasks into the .R struct
+func (o *User) LoadCreatorReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorReviewTasks = nil
+
+	related, err := o.CreatorReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorReviewTasks = related
+	return nil
+}
+
+// LoadCreatorReviewTasks loads the user's CreatorReviewTasks into the .R struct
+func (os UserSlice) LoadCreatorReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	reviewTasks, err := os.CreatorReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorReviewTasks = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range reviewTasks {
+
+			if !rel.CreatorID.IsValue() {
+				continue
+			}
+			if !(rel.CreatorID.IsValue() && o.ID == rel.CreatorID.MustGet()) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorReviewTasks = append(o.R.CreatorReviewTasks, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadReviewerReviewTasks loads the user's ReviewerReviewTasks into the .R struct
+func (o *User) LoadReviewerReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReviewerReviewTasks = nil
+
+	related, err := o.ReviewerReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ReviewerUser = o
+	}
+
+	o.R.ReviewerReviewTasks = related
+	return nil
+}
+
+// LoadReviewerReviewTasks loads the user's ReviewerReviewTasks into the .R struct
+func (os UserSlice) LoadReviewerReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	reviewTasks, err := os.ReviewerReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ReviewerReviewTasks = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range reviewTasks {
+
+			if !rel.ReviewerID.IsValue() {
+				continue
+			}
+			if !(rel.ReviewerID.IsValue() && o.ID == rel.ReviewerID.MustGet()) {
+				continue
+			}
+
+			rel.R.ReviewerUser = o
+
+			o.R.ReviewerReviewTasks = append(o.R.ReviewerReviewTasks, rel)
 		}
 	}
 
@@ -3889,1357 +4248,4 @@ func (os UserSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mod
 	}
 
 	return nil
-}
-
-// userC is where relationship counts are stored.
-type userC struct {
-	UserOauthTokens                 *int64
-	PublicUserUser                  *int64
-	CreatorComplianceReportRequests *int64
-	CommitterFiles                  *int64
-	CreatorFiles                    *int64
-	FileuploadPool                  *int64
-	CreatorLeads                    *int64
-	CreatorNoteAudios               *int64
-	DeletorNoteAudios               *int64
-	CreatorNoteImages               *int64
-	DeletorNoteImages               *int64
-	UserNotifications               *int64
-	CreatorPools                    *int64
-	CreatorResidents                *int64
-	AddressorSignals                *int64
-	CreatorSignals                  *int64
-	CreatorSites                    *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *User) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "UserOauthTokens":
-		o.C.UserOauthTokens = &count
-	case "PublicUserUser":
-		o.C.PublicUserUser = &count
-	case "CreatorComplianceReportRequests":
-		o.C.CreatorComplianceReportRequests = &count
-	case "CommitterFiles":
-		o.C.CommitterFiles = &count
-	case "CreatorFiles":
-		o.C.CreatorFiles = &count
-	case "FileuploadPool":
-		o.C.FileuploadPool = &count
-	case "CreatorLeads":
-		o.C.CreatorLeads = &count
-	case "CreatorNoteAudios":
-		o.C.CreatorNoteAudios = &count
-	case "DeletorNoteAudios":
-		o.C.DeletorNoteAudios = &count
-	case "CreatorNoteImages":
-		o.C.CreatorNoteImages = &count
-	case "DeletorNoteImages":
-		o.C.DeletorNoteImages = &count
-	case "UserNotifications":
-		o.C.UserNotifications = &count
-	case "CreatorPools":
-		o.C.CreatorPools = &count
-	case "CreatorResidents":
-		o.C.CreatorResidents = &count
-	case "AddressorSignals":
-		o.C.AddressorSignals = &count
-	case "CreatorSignals":
-		o.C.CreatorSignals = &count
-	case "CreatorSites":
-		o.C.CreatorSites = &count
-	}
-	return nil
-}
-
-type userCountPreloader struct {
-	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CommitterFiles                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorLeads                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildUserCountPreloader() userCountPreloader {
-	return userCountPreloader{
-		UserOauthTokens: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("UserOauthTokens", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisOauthTokens.Name()),
-					sm.Where(psql.Quote(ArcgisOauthTokens.Alias(), "user_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		PublicUserUser: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("PublicUserUser", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisUsers.Name()),
-					sm.Where(psql.Quote(ArcgisUsers.Alias(), "public_user_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorComplianceReportRequests", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ComplianceReportRequests.Name()),
-					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CommitterFiles: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CommitterFiles", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FileuploadFiles.Name()),
-					sm.Where(psql.Quote(FileuploadFiles.Alias(), "committer").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorFiles: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorFiles", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FileuploadFiles.Name()),
-					sm.Where(psql.Quote(FileuploadFiles.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		FileuploadPool: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("FileuploadPool", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FileuploadPools.Name()),
-					sm.Where(psql.Quote(FileuploadPools.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorLeads: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorLeads", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Leads.Name()),
-					sm.Where(psql.Quote(Leads.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorNoteAudios: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorNoteAudios", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteAudios.Name()),
-					sm.Where(psql.Quote(NoteAudios.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		DeletorNoteAudios: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("DeletorNoteAudios", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteAudios.Name()),
-					sm.Where(psql.Quote(NoteAudios.Alias(), "deletor_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorNoteImages: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorNoteImages", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteImages.Name()),
-					sm.Where(psql.Quote(NoteImages.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		DeletorNoteImages: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("DeletorNoteImages", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteImages.Name()),
-					sm.Where(psql.Quote(NoteImages.Alias(), "deletor_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		UserNotifications: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("UserNotifications", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Notifications.Name()),
-					sm.Where(psql.Quote(Notifications.Alias(), "user_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorPools", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Pools.Name()),
-					sm.Where(psql.Quote(Pools.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorResidents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorResidents", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Residents.Name()),
-					sm.Where(psql.Quote(Residents.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		AddressorSignals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("AddressorSignals", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Signals.Name()),
-					sm.Where(psql.Quote(Signals.Alias(), "addressor").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorSignals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorSignals", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Signals.Name()),
-					sm.Where(psql.Quote(Signals.Alias(), "creator").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		CreatorSites: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*User]("CreatorSites", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Users.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Sites.Name()),
-					sm.Where(psql.Quote(Sites.Alias(), "creator_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type userCountThenLoader[Q orm.Loadable] struct {
-	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CommitterFiles                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorLeads                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorPools                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildUserCountThenLoader[Q orm.Loadable]() userCountThenLoader[Q] {
-	type UserOauthTokensCountInterface interface {
-		LoadCountUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PublicUserUserCountInterface interface {
-		LoadCountPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorComplianceReportRequestsCountInterface interface {
-		LoadCountCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CommitterFilesCountInterface interface {
-		LoadCountCommitterFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorFilesCountInterface interface {
-		LoadCountCreatorFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FileuploadPoolCountInterface interface {
-		LoadCountFileuploadPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorLeadsCountInterface interface {
-		LoadCountCreatorLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorNoteAudiosCountInterface interface {
-		LoadCountCreatorNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type DeletorNoteAudiosCountInterface interface {
-		LoadCountDeletorNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorNoteImagesCountInterface interface {
-		LoadCountCreatorNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type DeletorNoteImagesCountInterface interface {
-		LoadCountDeletorNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type UserNotificationsCountInterface interface {
-		LoadCountUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorPoolsCountInterface interface {
-		LoadCountCreatorPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorResidentsCountInterface interface {
-		LoadCountCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type AddressorSignalsCountInterface interface {
-		LoadCountAddressorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorSignalsCountInterface interface {
-		LoadCountCreatorSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type CreatorSitesCountInterface interface {
-		LoadCountCreatorSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return userCountThenLoader[Q]{
-		UserOauthTokens: countThenLoadBuilder[Q](
-			"UserOauthTokens",
-			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountUserOauthTokens(ctx, exec, mods...)
-			},
-		),
-		PublicUserUser: countThenLoadBuilder[Q](
-			"PublicUserUser",
-			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPublicUserUser(ctx, exec, mods...)
-			},
-		),
-		CreatorComplianceReportRequests: countThenLoadBuilder[Q](
-			"CreatorComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorComplianceReportRequests(ctx, exec, mods...)
-			},
-		),
-		CommitterFiles: countThenLoadBuilder[Q](
-			"CommitterFiles",
-			func(ctx context.Context, exec bob.Executor, retrieved CommitterFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCommitterFiles(ctx, exec, mods...)
-			},
-		),
-		CreatorFiles: countThenLoadBuilder[Q](
-			"CreatorFiles",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorFilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorFiles(ctx, exec, mods...)
-			},
-		),
-		FileuploadPool: countThenLoadBuilder[Q](
-			"FileuploadPool",
-			func(ctx context.Context, exec bob.Executor, retrieved FileuploadPoolCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountFileuploadPool(ctx, exec, mods...)
-			},
-		),
-		CreatorLeads: countThenLoadBuilder[Q](
-			"CreatorLeads",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorLeadsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorLeads(ctx, exec, mods...)
-			},
-		),
-		CreatorNoteAudios: countThenLoadBuilder[Q](
-			"CreatorNoteAudios",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorNoteAudiosCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorNoteAudios(ctx, exec, mods...)
-			},
-		),
-		DeletorNoteAudios: countThenLoadBuilder[Q](
-			"DeletorNoteAudios",
-			func(ctx context.Context, exec bob.Executor, retrieved DeletorNoteAudiosCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountDeletorNoteAudios(ctx, exec, mods...)
-			},
-		),
-		CreatorNoteImages: countThenLoadBuilder[Q](
-			"CreatorNoteImages",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorNoteImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorNoteImages(ctx, exec, mods...)
-			},
-		),
-		DeletorNoteImages: countThenLoadBuilder[Q](
-			"DeletorNoteImages",
-			func(ctx context.Context, exec bob.Executor, retrieved DeletorNoteImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountDeletorNoteImages(ctx, exec, mods...)
-			},
-		),
-		UserNotifications: countThenLoadBuilder[Q](
-			"UserNotifications",
-			func(ctx context.Context, exec bob.Executor, retrieved UserNotificationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountUserNotifications(ctx, exec, mods...)
-			},
-		),
-		CreatorPools: countThenLoadBuilder[Q](
-			"CreatorPools",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorPools(ctx, exec, mods...)
-			},
-		),
-		CreatorResidents: countThenLoadBuilder[Q](
-			"CreatorResidents",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorResidents(ctx, exec, mods...)
-			},
-		),
-		AddressorSignals: countThenLoadBuilder[Q](
-			"AddressorSignals",
-			func(ctx context.Context, exec bob.Executor, retrieved AddressorSignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountAddressorSignals(ctx, exec, mods...)
-			},
-		),
-		CreatorSignals: countThenLoadBuilder[Q](
-			"CreatorSignals",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorSignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorSignals(ctx, exec, mods...)
-			},
-		),
-		CreatorSites: countThenLoadBuilder[Q](
-			"CreatorSites",
-			func(ctx context.Context, exec bob.Executor, retrieved CreatorSitesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountCreatorSites(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountUserOauthTokens loads the count of UserOauthTokens into the C struct
-func (o *User) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.UserOauthTokens(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.UserOauthTokens = &count
-	return nil
-}
-
-// LoadCountUserOauthTokens loads the count of UserOauthTokens for a slice
-func (os UserSlice) LoadCountUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountUserOauthTokens(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPublicUserUser loads the count of PublicUserUser into the C struct
-func (o *User) LoadCountPublicUserUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.PublicUserUser(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.PublicUserUser = &count
-	return nil
-}
-
-// LoadCountPublicUserUser loads the count of PublicUserUser for a slice
-func (os UserSlice) LoadCountPublicUserUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPublicUserUser(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorComplianceReportRequests loads the count of CreatorComplianceReportRequests into the C struct
-func (o *User) LoadCountCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorComplianceReportRequests(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorComplianceReportRequests = &count
-	return nil
-}
-
-// LoadCountCreatorComplianceReportRequests loads the count of CreatorComplianceReportRequests for a slice
-func (os UserSlice) LoadCountCreatorComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorComplianceReportRequests(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCommitterFiles loads the count of CommitterFiles into the C struct
-func (o *User) LoadCountCommitterFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CommitterFiles(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CommitterFiles = &count
-	return nil
-}
-
-// LoadCountCommitterFiles loads the count of CommitterFiles for a slice
-func (os UserSlice) LoadCountCommitterFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCommitterFiles(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorFiles loads the count of CreatorFiles into the C struct
-func (o *User) LoadCountCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorFiles(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorFiles = &count
-	return nil
-}
-
-// LoadCountCreatorFiles loads the count of CreatorFiles for a slice
-func (os UserSlice) LoadCountCreatorFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorFiles(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountFileuploadPool loads the count of FileuploadPool into the C struct
-func (o *User) LoadCountFileuploadPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.FileuploadPool(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.FileuploadPool = &count
-	return nil
-}
-
-// LoadCountFileuploadPool loads the count of FileuploadPool for a slice
-func (os UserSlice) LoadCountFileuploadPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountFileuploadPool(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorLeads loads the count of CreatorLeads into the C struct
-func (o *User) LoadCountCreatorLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorLeads(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorLeads = &count
-	return nil
-}
-
-// LoadCountCreatorLeads loads the count of CreatorLeads for a slice
-func (os UserSlice) LoadCountCreatorLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorLeads(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorNoteAudios loads the count of CreatorNoteAudios into the C struct
-func (o *User) LoadCountCreatorNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorNoteAudios(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorNoteAudios = &count
-	return nil
-}
-
-// LoadCountCreatorNoteAudios loads the count of CreatorNoteAudios for a slice
-func (os UserSlice) LoadCountCreatorNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorNoteAudios(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountDeletorNoteAudios loads the count of DeletorNoteAudios into the C struct
-func (o *User) LoadCountDeletorNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.DeletorNoteAudios(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.DeletorNoteAudios = &count
-	return nil
-}
-
-// LoadCountDeletorNoteAudios loads the count of DeletorNoteAudios for a slice
-func (os UserSlice) LoadCountDeletorNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountDeletorNoteAudios(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorNoteImages loads the count of CreatorNoteImages into the C struct
-func (o *User) LoadCountCreatorNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorNoteImages(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorNoteImages = &count
-	return nil
-}
-
-// LoadCountCreatorNoteImages loads the count of CreatorNoteImages for a slice
-func (os UserSlice) LoadCountCreatorNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorNoteImages(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountDeletorNoteImages loads the count of DeletorNoteImages into the C struct
-func (o *User) LoadCountDeletorNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.DeletorNoteImages(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.DeletorNoteImages = &count
-	return nil
-}
-
-// LoadCountDeletorNoteImages loads the count of DeletorNoteImages for a slice
-func (os UserSlice) LoadCountDeletorNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountDeletorNoteImages(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountUserNotifications loads the count of UserNotifications into the C struct
-func (o *User) LoadCountUserNotifications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.UserNotifications(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.UserNotifications = &count
-	return nil
-}
-
-// LoadCountUserNotifications loads the count of UserNotifications for a slice
-func (os UserSlice) LoadCountUserNotifications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountUserNotifications(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorPools loads the count of CreatorPools into the C struct
-func (o *User) LoadCountCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorPools(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorPools = &count
-	return nil
-}
-
-// LoadCountCreatorPools loads the count of CreatorPools for a slice
-func (os UserSlice) LoadCountCreatorPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorPools(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorResidents loads the count of CreatorResidents into the C struct
-func (o *User) LoadCountCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorResidents(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorResidents = &count
-	return nil
-}
-
-// LoadCountCreatorResidents loads the count of CreatorResidents for a slice
-func (os UserSlice) LoadCountCreatorResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorResidents(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountAddressorSignals loads the count of AddressorSignals into the C struct
-func (o *User) LoadCountAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.AddressorSignals(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.AddressorSignals = &count
-	return nil
-}
-
-// LoadCountAddressorSignals loads the count of AddressorSignals for a slice
-func (os UserSlice) LoadCountAddressorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountAddressorSignals(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorSignals loads the count of CreatorSignals into the C struct
-func (o *User) LoadCountCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorSignals(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorSignals = &count
-	return nil
-}
-
-// LoadCountCreatorSignals loads the count of CreatorSignals for a slice
-func (os UserSlice) LoadCountCreatorSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorSignals(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountCreatorSites loads the count of CreatorSites into the C struct
-func (o *User) LoadCountCreatorSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.CreatorSites(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.CreatorSites = &count
-	return nil
-}
-
-// LoadCountCreatorSites loads the count of CreatorSites for a slice
-func (os UserSlice) LoadCountCreatorSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountCreatorSites(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type userJoins[Q dialect.Joinable] struct {
-	typ                             string
-	UserOauthTokens                 modAs[Q, arcgisOauthTokenColumns]
-	PublicUserUser                  modAs[Q, arcgisuserColumns]
-	CreatorComplianceReportRequests modAs[Q, complianceReportRequestColumns]
-	CommitterFiles                  modAs[Q, fileuploadFileColumns]
-	CreatorFiles                    modAs[Q, fileuploadFileColumns]
-	FileuploadPool                  modAs[Q, fileuploadPoolColumns]
-	CreatorLeads                    modAs[Q, leadColumns]
-	CreatorNoteAudios               modAs[Q, noteAudioColumns]
-	DeletorNoteAudios               modAs[Q, noteAudioColumns]
-	CreatorNoteImages               modAs[Q, noteImageColumns]
-	DeletorNoteImages               modAs[Q, noteImageColumns]
-	UserNotifications               modAs[Q, notificationColumns]
-	CreatorPools                    modAs[Q, poolColumns]
-	CreatorResidents                modAs[Q, residentColumns]
-	AddressorSignals                modAs[Q, signalColumns]
-	CreatorSignals                  modAs[Q, signalColumns]
-	CreatorSites                    modAs[Q, siteColumns]
-	Organization                    modAs[Q, organizationColumns]
-}
-
-func (j userJoins[Q]) aliasedAs(alias string) userJoins[Q] {
-	return buildUserJoins[Q](buildUserColumns(alias), j.typ)
-}
-
-func buildUserJoins[Q dialect.Joinable](cols userColumns, typ string) userJoins[Q] {
-	return userJoins[Q]{
-		typ: typ,
-		UserOauthTokens: modAs[Q, arcgisOauthTokenColumns]{
-			c: ArcgisOauthTokens.Columns,
-			f: func(to arcgisOauthTokenColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisOauthTokens.Name().As(to.Alias())).On(
-						to.UserID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		PublicUserUser: modAs[Q, arcgisuserColumns]{
-			c: ArcgisUsers.Columns,
-			f: func(to arcgisuserColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisUsers.Name().As(to.Alias())).On(
-						to.PublicUserID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
-			c: ComplianceReportRequests.Columns,
-			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
-						to.Creator.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CommitterFiles: modAs[Q, fileuploadFileColumns]{
-			c: FileuploadFiles.Columns,
-			f: func(to fileuploadFileColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
-						to.Committer.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorFiles: modAs[Q, fileuploadFileColumns]{
-			c: FileuploadFiles.Columns,
-			f: func(to fileuploadFileColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		FileuploadPool: modAs[Q, fileuploadPoolColumns]{
-			c: FileuploadPools.Columns,
-			f: func(to fileuploadPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadPools.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorLeads: modAs[Q, leadColumns]{
-			c: Leads.Columns,
-			f: func(to leadColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Leads.Name().As(to.Alias())).On(
-						to.Creator.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorNoteAudios: modAs[Q, noteAudioColumns]{
-			c: NoteAudios.Columns,
-			f: func(to noteAudioColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteAudios.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		DeletorNoteAudios: modAs[Q, noteAudioColumns]{
-			c: NoteAudios.Columns,
-			f: func(to noteAudioColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteAudios.Name().As(to.Alias())).On(
-						to.DeletorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorNoteImages: modAs[Q, noteImageColumns]{
-			c: NoteImages.Columns,
-			f: func(to noteImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteImages.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		DeletorNoteImages: modAs[Q, noteImageColumns]{
-			c: NoteImages.Columns,
-			f: func(to noteImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteImages.Name().As(to.Alias())).On(
-						to.DeletorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		UserNotifications: modAs[Q, notificationColumns]{
-			c: Notifications.Columns,
-			f: func(to notificationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Notifications.Name().As(to.Alias())).On(
-						to.UserID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorPools: modAs[Q, poolColumns]{
-			c: Pools.Columns,
-			f: func(to poolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorResidents: modAs[Q, residentColumns]{
-			c: Residents.Columns,
-			f: func(to residentColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
-						to.Creator.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		AddressorSignals: modAs[Q, signalColumns]{
-			c: Signals.Columns,
-			f: func(to signalColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
-						to.Addressor.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorSignals: modAs[Q, signalColumns]{
-			c: Signals.Columns,
-			f: func(to signalColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
-						to.Creator.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorSites: modAs[Q, siteColumns]{
-			c: Sites.Columns,
-			f: func(to siteColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
-						to.CreatorID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

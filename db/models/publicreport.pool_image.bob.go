@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -719,48 +718,4 @@ func (os PublicreportPoolImageSlice) LoadPool(ctx context.Context, exec bob.Exec
 	}
 
 	return nil
-}
-
-type publicreportPoolImageJoins[Q dialect.Joinable] struct {
-	typ   string
-	Image modAs[Q, publicreportImageColumns]
-	Pool  modAs[Q, publicreportPoolColumns]
-}
-
-func (j publicreportPoolImageJoins[Q]) aliasedAs(alias string) publicreportPoolImageJoins[Q] {
-	return buildPublicreportPoolImageJoins[Q](buildPublicreportPoolImageColumns(alias), j.typ)
-}
-
-func buildPublicreportPoolImageJoins[Q dialect.Joinable](cols publicreportPoolImageColumns, typ string) publicreportPoolImageJoins[Q] {
-	return publicreportPoolImageJoins[Q]{
-		typ: typ,
-		Image: modAs[Q, publicreportImageColumns]{
-			c: PublicreportImages.Columns,
-			f: func(to publicreportImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ImageID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pool: modAs[Q, publicreportPoolColumns]{
-			c: PublicreportPools.Columns,
-			f: func(to publicreportPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportPools.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.PoolID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -613,33 +612,4 @@ func (os PublicreportImageExifSlice) LoadImage(ctx context.Context, exec bob.Exe
 	}
 
 	return nil
-}
-
-type publicreportImageExifJoins[Q dialect.Joinable] struct {
-	typ   string
-	Image modAs[Q, publicreportImageColumns]
-}
-
-func (j publicreportImageExifJoins[Q]) aliasedAs(alias string) publicreportImageExifJoins[Q] {
-	return buildPublicreportImageExifJoins[Q](buildPublicreportImageExifColumns(alias), j.typ)
-}
-
-func buildPublicreportImageExifJoins[Q dialect.Joinable](cols publicreportImageExifColumns, typ string) publicreportImageExifJoins[Q] {
-	return publicreportImageExifJoins[Q]{
-		typ: typ,
-		Image: modAs[Q, publicreportImageColumns]{
-			c: PublicreportImages.Columns,
-			f: func(to publicreportImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ImageID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

@@ -14,7 +14,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -417,48 +416,4 @@ func (os ComplianceReportRequestMailerSlice) LoadMailer(ctx context.Context, exe
 	}
 
 	return nil
-}
-
-type complianceReportRequestMailerJoins[Q dialect.Joinable] struct {
-	typ                     string
-	ComplianceReportRequest modAs[Q, complianceReportRequestColumns]
-	Mailer                  modAs[Q, commsMailerColumns]
-}
-
-func (j complianceReportRequestMailerJoins[Q]) aliasedAs(alias string) complianceReportRequestMailerJoins[Q] {
-	return buildComplianceReportRequestMailerJoins[Q](buildComplianceReportRequestMailerColumns(alias), j.typ)
-}
-
-func buildComplianceReportRequestMailerJoins[Q dialect.Joinable](cols complianceReportRequestMailerColumns, typ string) complianceReportRequestMailerJoins[Q] {
-	return complianceReportRequestMailerJoins[Q]{
-		typ: typ,
-		ComplianceReportRequest: modAs[Q, complianceReportRequestColumns]{
-			c: ComplianceReportRequests.Columns,
-			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ComplianceReportRequestID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Mailer: modAs[Q, commsMailerColumns]{
-			c: CommsMailers.Columns,
-			f: func(to commsMailerColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsMailers.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.MailerID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

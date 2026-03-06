@@ -17,7 +17,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
@@ -1831,33 +1830,4 @@ func (os FieldseekerSamplecollectionSlice) LoadOrganization(ctx context.Context,
 	}
 
 	return nil
-}
-
-type fieldseekerSamplecollectionJoins[Q dialect.Joinable] struct {
-	typ          string
-	Organization modAs[Q, organizationColumns]
-}
-
-func (j fieldseekerSamplecollectionJoins[Q]) aliasedAs(alias string) fieldseekerSamplecollectionJoins[Q] {
-	return buildFieldseekerSamplecollectionJoins[Q](buildFieldseekerSamplecollectionColumns(alias), j.typ)
-}
-
-func buildFieldseekerSamplecollectionJoins[Q dialect.Joinable](cols fieldseekerSamplecollectionColumns, typ string) fieldseekerSamplecollectionJoins[Q] {
-	return fieldseekerSamplecollectionJoins[Q]{
-		typ: typ,
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

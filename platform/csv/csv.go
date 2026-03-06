@@ -12,7 +12,6 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -109,47 +108,53 @@ func JobCommit(ctx context.Context, file_id int32) error {
 				return fmt.Errorf("insert site: %w", err)
 			}
 		}
-		var pool *models.Pool
-		pool, err = models.Pools.Query(
-			models.SelectWhere.Pools.SiteID.EQ(site.ID),
-			models.SelectWhere.Pools.SiteVersion.EQ(site.Version),
+		var feature *models.Feature
+		feature, err = models.Features.Query(
+			models.SelectWhere.Features.SiteID.EQ(site.ID),
+			models.SelectWhere.Features.SiteVersion.EQ(site.Version),
 		).One(ctx, txn)
 		if err != nil {
 			if err.Error() != "sql: no rows in result set" {
 				return fmt.Errorf("query site: %w", err)
 			}
-			pool, err = models.Pools.Insert(&models.PoolSetter{
-				Condition: omit.From(row.Condition),
+			feature, err = models.Features.Insert(&models.FeatureSetter{
 				Created:   omit.From(time.Now()),
 				CreatorID: omit.From(file.Committer.MustGet()),
 				//ID: row.Address,
 				SiteID:      omit.From(site.ID),
 				SiteVersion: omit.From(site.Version),
 			}).One(ctx, txn)
+			if err != nil {
+				return fmt.Errorf("insert feature: %w", err)
+			}
+			_, err := models.FeaturePools.Insert(&models.FeaturePoolSetter{
+				Condition: omit.From(row.Condition),
+				FeatureID: omit.From(feature.ID),
+			}).One(ctx, txn)
+			if err != nil {
+				return fmt.Errorf("insert feature_pool: %w", err)
+			}
 		}
-		signal, err := models.Signals.Insert(&models.SignalSetter{
-			Addressed: omitnull.FromPtr[time.Time](nil),
-			Addressor: omitnull.FromPtr[int32](nil),
+		review_task, err := models.ReviewTasks.Insert(&models.ReviewTaskSetter{
 			Created:   omit.From(time.Now()),
-			Creator:   omit.From(file.Committer.MustGet()),
+			CreatorID: omitnull.From(file.Committer.MustGet()),
 			//ID: row.Address,
 			OrganizationID: omit.From(org.ID),
-			Species:        omitnull.From(enums.MosquitospeciesNone),
-			Title:          omit.From("Green pool import"),
-			Type:           omit.From(enums.SignaltypeFlyoverPool),
+			Reviewed:       omitnull.FromPtr[time.Time](nil),
+			ReviewerID:     omitnull.FromPtr[int32](nil),
 		}).One(ctx, txn)
 		if err != nil {
-			return fmt.Errorf("insert signal: %w", err)
+			return fmt.Errorf("insert review task: %w", err)
 		}
-		_, err = bob.Exec(ctx, txn, psql.Insert(
-			im.Into("signal_pool", "pool_id", "signal_id"),
-			im.Values(
-				psql.Arg(pool.ID),
-				psql.Arg(signal.ID),
-			),
-		))
+		_, err = models.ReviewTaskPools.Insert(&models.ReviewTaskPoolSetter{
+			FeaturePool:  omit.From(feature.ID),
+			Location:     omitnull.FromPtr[string](nil),
+			Geometry:     omitnull.FromPtr[string](nil),
+			ReviewTaskID: omit.From(review_task.ID),
+		}).One(ctx, txn)
+
 		if err != nil {
-			return fmt.Errorf("insert signal pool: %w", err)
+			return fmt.Errorf("insert review task pool: %w", err)
 		}
 		/*
 			Not sure why SignalPools doesn't have an Insert method

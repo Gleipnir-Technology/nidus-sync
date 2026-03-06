@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -699,33 +698,4 @@ func (os CommsTextJobSlice) LoadDestinationPhone(ctx context.Context, exec bob.E
 	}
 
 	return nil
-}
-
-type commsTextJobJoins[Q dialect.Joinable] struct {
-	typ              string
-	DestinationPhone modAs[Q, commsPhoneColumns]
-}
-
-func (j commsTextJobJoins[Q]) aliasedAs(alias string) commsTextJobJoins[Q] {
-	return buildCommsTextJobJoins[Q](buildCommsTextJobColumns(alias), j.typ)
-}
-
-func buildCommsTextJobJoins[Q dialect.Joinable](cols commsTextJobColumns, typ string) commsTextJobJoins[Q] {
-	return commsTextJobJoins[Q]{
-		typ: typ,
-		DestinationPhone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.Destination),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

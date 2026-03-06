@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -719,48 +718,4 @@ func (os PublicreportQuickImageSlice) LoadQuick(ctx context.Context, exec bob.Ex
 	}
 
 	return nil
-}
-
-type publicreportQuickImageJoins[Q dialect.Joinable] struct {
-	typ   string
-	Image modAs[Q, publicreportImageColumns]
-	Quick modAs[Q, publicreportQuickColumns]
-}
-
-func (j publicreportQuickImageJoins[Q]) aliasedAs(alias string) publicreportQuickImageJoins[Q] {
-	return buildPublicreportQuickImageJoins[Q](buildPublicreportQuickImageColumns(alias), j.typ)
-}
-
-func buildPublicreportQuickImageJoins[Q dialect.Joinable](cols publicreportQuickImageColumns, typ string) publicreportQuickImageJoins[Q] {
-	return publicreportQuickImageJoins[Q]{
-		typ: typ,
-		Image: modAs[Q, publicreportImageColumns]{
-			c: PublicreportImages.Columns,
-			f: func(to publicreportImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportImages.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ImageID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Quick: modAs[Q, publicreportQuickColumns]{
-			c: PublicreportQuicks.Columns,
-			f: func(to publicreportQuickColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportQuicks.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.QuickID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

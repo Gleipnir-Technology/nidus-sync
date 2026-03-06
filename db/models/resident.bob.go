@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -1218,78 +1217,4 @@ func (os ResidentSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ..
 	}
 
 	return nil
-}
-
-type residentJoins[Q dialect.Joinable] struct {
-	typ              string
-	Address          modAs[Q, addressColumns]
-	CreatorUser      modAs[Q, userColumns]
-	PhoneMobilePhone modAs[Q, commsPhoneColumns]
-	Site             modAs[Q, siteColumns]
-}
-
-func (j residentJoins[Q]) aliasedAs(alias string) residentJoins[Q] {
-	return buildResidentJoins[Q](buildResidentColumns(alias), j.typ)
-}
-
-func buildResidentJoins[Q dialect.Joinable](cols residentColumns, typ string) residentJoins[Q] {
-	return residentJoins[Q]{
-		typ: typ,
-		Address: modAs[Q, addressColumns]{
-			c: Addresses.Columns,
-			f: func(to addressColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Addresses.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.AddressID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.Creator),
-					))
-				}
-
-				return mods
-			},
-		},
-		PhoneMobilePhone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PhoneMobile),
-					))
-				}
-
-				return mods
-			},
-		},
-		Site: modAs[Q, siteColumns]{
-			c: Sites.Columns,
-			f: func(to siteColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.SiteID), to.Version.EQ(cols.SiteVersion),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

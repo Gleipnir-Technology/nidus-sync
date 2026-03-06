@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -645,33 +644,4 @@ func (os FileuploadErrorCSVSlice) LoadCSVFileCSV(ctx context.Context, exec bob.E
 	}
 
 	return nil
-}
-
-type fileuploadErrorCSVJoins[Q dialect.Joinable] struct {
-	typ        string
-	CSVFileCSV modAs[Q, fileuploadCSVColumns]
-}
-
-func (j fileuploadErrorCSVJoins[Q]) aliasedAs(alias string) fileuploadErrorCSVJoins[Q] {
-	return buildFileuploadErrorCSVJoins[Q](buildFileuploadErrorCSVColumns(alias), j.typ)
-}
-
-func buildFileuploadErrorCSVJoins[Q dialect.Joinable](cols fileuploadErrorCSVColumns, typ string) fileuploadErrorCSVJoins[Q] {
-	return fileuploadErrorCSVJoins[Q]{
-		typ: typ,
-		CSVFileCSV: modAs[Q, fileuploadCSVColumns]{
-			c: FileuploadCSVS.Columns,
-			f: func(to fileuploadCSVColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadCSVS.Name().As(to.Alias())).On(
-						to.FileID.EQ(cols.CSVFileID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

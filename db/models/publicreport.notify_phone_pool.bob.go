@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -794,48 +793,4 @@ func (os PublicreportNotifyPhonePoolSlice) LoadPool(ctx context.Context, exec bo
 	}
 
 	return nil
-}
-
-type publicreportNotifyPhonePoolJoins[Q dialect.Joinable] struct {
-	typ            string
-	PhoneE164Phone modAs[Q, commsPhoneColumns]
-	Pool           modAs[Q, publicreportPoolColumns]
-}
-
-func (j publicreportNotifyPhonePoolJoins[Q]) aliasedAs(alias string) publicreportNotifyPhonePoolJoins[Q] {
-	return buildPublicreportNotifyPhonePoolJoins[Q](buildPublicreportNotifyPhonePoolColumns(alias), j.typ)
-}
-
-func buildPublicreportNotifyPhonePoolJoins[Q dialect.Joinable](cols publicreportNotifyPhonePoolColumns, typ string) publicreportNotifyPhonePoolJoins[Q] {
-	return publicreportNotifyPhonePoolJoins[Q]{
-		typ: typ,
-		PhoneE164Phone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pool: modAs[Q, publicreportPoolColumns]{
-			c: PublicreportPools.Columns,
-			f: func(to publicreportPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportPools.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.PoolID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

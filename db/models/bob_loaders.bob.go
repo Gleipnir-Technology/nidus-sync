@@ -39,6 +39,8 @@ type preloaders struct {
 	ComplianceReportRequestMailer     complianceReportRequestMailerPreloader
 	DistrictSubscriptionEmail         districtSubscriptionEmailPreloader
 	DistrictSubscriptionPhone         districtSubscriptionPhonePreloader
+	Feature                           featurePreloader
+	FeaturePool                       featurePoolPreloader
 	FieldseekerContainerrelate        fieldseekerContainerrelatePreloader
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogPreloader
 	FieldseekerHabitatrelate          fieldseekerHabitatrelatePreloader
@@ -83,7 +85,6 @@ type preloaders struct {
 	Notification                      notificationPreloader
 	Organization                      organizationPreloader
 	Parcel                            parcelPreloader
-	Pool                              poolPreloader
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisancePreloader
@@ -99,8 +100,9 @@ type preloaders struct {
 	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
 	Resident                          residentPreloader
+	ReviewTask                        reviewTaskPreloader
+	ReviewTaskPool                    reviewTaskPoolPreloader
 	Signal                            signalPreloader
-	SignalPool                        signalPoolPreloader
 	Site                              sitePreloader
 	User                              userPreloader
 }
@@ -129,6 +131,8 @@ func getPreloaders() preloaders {
 		ComplianceReportRequestMailer:     buildComplianceReportRequestMailerPreloader(),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailPreloader(),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhonePreloader(),
+		Feature:                           buildFeaturePreloader(),
+		FeaturePool:                       buildFeaturePoolPreloader(),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelatePreloader(),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogPreloader(),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelatePreloader(),
@@ -173,7 +177,6 @@ func getPreloaders() preloaders {
 		Notification:                      buildNotificationPreloader(),
 		Organization:                      buildOrganizationPreloader(),
 		Parcel:                            buildParcelPreloader(),
-		Pool:                              buildPoolPreloader(),
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisancePreloader(),
@@ -189,8 +192,9 @@ func getPreloaders() preloaders {
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
 		Resident:                          buildResidentPreloader(),
+		ReviewTask:                        buildReviewTaskPreloader(),
+		ReviewTaskPool:                    buildReviewTaskPoolPreloader(),
 		Signal:                            buildSignalPreloader(),
-		SignalPool:                        buildSignalPoolPreloader(),
 		Site:                              buildSitePreloader(),
 		User:                              buildUserPreloader(),
 	}
@@ -225,6 +229,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	ComplianceReportRequestMailer     complianceReportRequestMailerThenLoader[Q]
 	DistrictSubscriptionEmail         districtSubscriptionEmailThenLoader[Q]
 	DistrictSubscriptionPhone         districtSubscriptionPhoneThenLoader[Q]
+	Feature                           featureThenLoader[Q]
+	FeaturePool                       featurePoolThenLoader[Q]
 	FieldseekerContainerrelate        fieldseekerContainerrelateThenLoader[Q]
 	FieldseekerFieldscoutinglog       fieldseekerFieldscoutinglogThenLoader[Q]
 	FieldseekerHabitatrelate          fieldseekerHabitatrelateThenLoader[Q]
@@ -269,7 +275,6 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                      notificationThenLoader[Q]
 	Organization                      organizationThenLoader[Q]
 	Parcel                            parcelThenLoader[Q]
-	Pool                              poolThenLoader[Q]
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisanceThenLoader[Q]
@@ -285,8 +290,9 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
 	Resident                          residentThenLoader[Q]
+	ReviewTask                        reviewTaskThenLoader[Q]
+	ReviewTaskPool                    reviewTaskPoolThenLoader[Q]
 	Signal                            signalThenLoader[Q]
-	SignalPool                        signalPoolThenLoader[Q]
 	Site                              siteThenLoader[Q]
 	User                              userThenLoader[Q]
 }
@@ -315,6 +321,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		ComplianceReportRequestMailer:     buildComplianceReportRequestMailerThenLoader[Q](),
 		DistrictSubscriptionEmail:         buildDistrictSubscriptionEmailThenLoader[Q](),
 		DistrictSubscriptionPhone:         buildDistrictSubscriptionPhoneThenLoader[Q](),
+		Feature:                           buildFeatureThenLoader[Q](),
+		FeaturePool:                       buildFeaturePoolThenLoader[Q](),
 		FieldseekerContainerrelate:        buildFieldseekerContainerrelateThenLoader[Q](),
 		FieldseekerFieldscoutinglog:       buildFieldseekerFieldscoutinglogThenLoader[Q](),
 		FieldseekerHabitatrelate:          buildFieldseekerHabitatrelateThenLoader[Q](),
@@ -359,7 +367,6 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                      buildNotificationThenLoader[Q](),
 		Organization:                      buildOrganizationThenLoader[Q](),
 		Parcel:                            buildParcelThenLoader[Q](),
-		Pool:                              buildPoolThenLoader[Q](),
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisanceThenLoader[Q](),
@@ -375,8 +382,9 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
 		Resident:                          buildResidentThenLoader[Q](),
+		ReviewTask:                        buildReviewTaskThenLoader[Q](),
+		ReviewTaskPool:                    buildReviewTaskPoolThenLoader[Q](),
 		Signal:                            buildSignalThenLoader[Q](),
-		SignalPool:                        buildSignalPoolThenLoader[Q](),
 		Site:                              buildSiteThenLoader[Q](),
 		User:                              buildUserThenLoader[Q](),
 	}

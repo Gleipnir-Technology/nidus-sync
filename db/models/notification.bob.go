@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -699,33 +698,4 @@ func (os NotificationSlice) LoadUserUser(ctx context.Context, exec bob.Executor,
 	}
 
 	return nil
-}
-
-type notificationJoins[Q dialect.Joinable] struct {
-	typ      string
-	UserUser modAs[Q, userColumns]
-}
-
-func (j notificationJoins[Q]) aliasedAs(alias string) notificationJoins[Q] {
-	return buildNotificationJoins[Q](buildNotificationColumns(alias), j.typ)
-}
-
-func buildNotificationJoins[Q dialect.Joinable](cols notificationColumns, typ string) notificationJoins[Q] {
-	return notificationJoins[Q]{
-		typ: typ,
-		UserUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.UserID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

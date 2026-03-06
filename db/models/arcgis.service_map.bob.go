@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -645,33 +644,4 @@ func (os ArcgisServiceMapSlice) LoadAccount(ctx context.Context, exec bob.Execut
 	}
 
 	return nil
-}
-
-type arcgisServiceMapJoins[Q dialect.Joinable] struct {
-	typ     string
-	Account modAs[Q, arcgisAccountColumns]
-}
-
-func (j arcgisServiceMapJoins[Q]) aliasedAs(alias string) arcgisServiceMapJoins[Q] {
-	return buildArcgisServiceMapJoins[Q](buildArcgisServiceMapColumns(alias), j.typ)
-}
-
-func buildArcgisServiceMapJoins[Q dialect.Joinable](cols arcgisServiceMapColumns, typ string) arcgisServiceMapJoins[Q] {
-	return arcgisServiceMapJoins[Q]{
-		typ: typ,
-		Account: modAs[Q, arcgisAccountColumns]{
-			c: ArcgisAccounts.Columns,
-			f: func(to arcgisAccountColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisAccounts.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.AccountID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

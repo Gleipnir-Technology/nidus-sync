@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -16,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -63,8 +61,6 @@ type Organization struct {
 	FieldseekerServiceFeatureItemID null.Val[string]          `db:"fieldseeker_service_feature_item_id" `
 
 	R organizationR `db:"-" `
-
-	C organizationC `db:"-" `
 }
 
 // OrganizationSlice is an alias for a slice of pointers to Organization.
@@ -84,6 +80,7 @@ type organizationR struct {
 	ParcelMappings                              ArcgisParcelMappingSlice               // arcgis.parcel_mapping.parcel_mapping_organization_id_fkey
 	EmailContacts                               CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
 	Phones                                      CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	Features                                    FeatureSlice                           // feature.feature_organization_id_fkey
 	Containerrelates                            FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
 	Fieldscoutinglogs                           FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
 	Habitatrelates                              FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
@@ -122,6 +119,7 @@ type organizationR struct {
 	Nuisances                                   PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool                            PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
 	Quicks                                      PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
+	ReviewTasks                                 ReviewTaskSlice                        // review_task.review_task_organization_id_fkey
 	Signals                                     SignalSlice                            // signal.signal_organization_id_fkey
 	User                                        UserSlice                              // user_.user__organization_id_fkey
 }
@@ -1040,6 +1038,30 @@ func (os OrganizationSlice) Phones(mods ...bob.Mod[*dialect.SelectQuery]) CommsP
 	)...)
 }
 
+// Features starts a query for related objects on feature
+func (o *Organization) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	return Features.Query(append(mods,
+		sm.Where(Features.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Features.Query(append(mods,
+		sm.Where(psql.Group(Features.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Containerrelates starts a query for related objects on fieldseeker.containerrelate
 func (o *Organization) Containerrelates(mods ...bob.Mod[*dialect.SelectQuery]) FieldseekerContainerrelatesQuery {
 	return FieldseekerContainerrelates.Query(append(mods,
@@ -1952,6 +1974,30 @@ func (os OrganizationSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) Public
 	)...)
 }
 
+// ReviewTasks starts a query for related objects on review_task
+func (o *Organization) ReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	return ReviewTasks.Query(append(mods,
+		sm.Where(ReviewTasks.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) ReviewTasks(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTasksQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ReviewTasks.Query(append(mods,
+		sm.Where(psql.Group(ReviewTasks.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Signals starts a query for related objects on signal
 func (o *Organization) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
 	return Signals.Query(append(mods,
@@ -2329,6 +2375,74 @@ func (organization0 *Organization) AttachPhones(ctx context.Context, exec bob.Ex
 
 	for _, rel := range related {
 		rel.R.Organizations = append(rel.R.Organizations, organization0)
+	}
+
+	return nil
+}
+
+func insertOrganizationFeatures0(ctx context.Context, exec bob.Executor, features1 []*FeatureSetter, organization0 *Organization) (FeatureSlice, error) {
+	for i := range features1 {
+		features1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := Features.Insert(bob.ToMods(features1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationFeatures0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationFeatures0(ctx context.Context, exec bob.Executor, count int, features1 FeatureSlice, organization0 *Organization) (FeatureSlice, error) {
+	setter := &FeatureSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := features1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationFeatures0: %w", err)
+	}
+
+	return features1, nil
+}
+
+func (organization0 *Organization) InsertFeatures(ctx context.Context, exec bob.Executor, related ...*FeatureSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	features1, err := insertOrganizationFeatures0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Features = append(organization0.R.Features, features1...)
+
+	for _, rel := range features1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachFeatures(ctx context.Context, exec bob.Executor, related ...*Feature) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	features1 := FeatureSlice(related)
+
+	_, err = attachOrganizationFeatures0(ctx, exec, len(related), features1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Features = append(organization0.R.Features, features1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
 	}
 
 	return nil
@@ -4878,6 +4992,74 @@ func (organization0 *Organization) AttachQuicks(ctx context.Context, exec bob.Ex
 	return nil
 }
 
+func insertOrganizationReviewTasks0(ctx context.Context, exec bob.Executor, reviewTasks1 []*ReviewTaskSetter, organization0 *Organization) (ReviewTaskSlice, error) {
+	for i := range reviewTasks1 {
+		reviewTasks1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := ReviewTasks.Insert(bob.ToMods(reviewTasks1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationReviewTasks0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationReviewTasks0(ctx context.Context, exec bob.Executor, count int, reviewTasks1 ReviewTaskSlice, organization0 *Organization) (ReviewTaskSlice, error) {
+	setter := &ReviewTaskSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := reviewTasks1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationReviewTasks0: %w", err)
+	}
+
+	return reviewTasks1, nil
+}
+
+func (organization0 *Organization) InsertReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTaskSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	reviewTasks1, err := insertOrganizationReviewTasks0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ReviewTasks = append(organization0.R.ReviewTasks, reviewTasks1...)
+
+	for _, rel := range reviewTasks1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachReviewTasks(ctx context.Context, exec bob.Executor, related ...*ReviewTask) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	reviewTasks1 := ReviewTaskSlice(related)
+
+	_, err = attachOrganizationReviewTasks0(ctx, exec, len(related), reviewTasks1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.ReviewTasks = append(organization0.R.ReviewTasks, reviewTasks1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
+}
+
 func insertOrganizationSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, organization0 *Organization) (SignalSlice, error) {
 	for i := range signals1 {
 		signals1[i].OrganizationID = omit.From(organization0.ID)
@@ -5163,6 +5345,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 		for _, rel := range rels {
 			if rel != nil {
 				rel.R.Organizations = OrganizationSlice{o}
+			}
+		}
+		return nil
+	case "Features":
+		rels, ok := retrieved.(FeatureSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Features = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
 			}
 		}
 		return nil
@@ -5694,6 +5890,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "ReviewTasks":
+		rels, ok := retrieved.(ReviewTaskSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReviewTasks = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "Signals":
 		rels, ok := retrieved.(SignalSlice)
 		if !ok {
@@ -5769,6 +5979,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	ParcelMappings                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailContacts                               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Phones                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Features                                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Containerrelates                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Fieldscoutinglogs                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Habitatrelates                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -5807,6 +6018,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	Nuisances                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Quicks                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewTasks                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Signals                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -5826,6 +6038,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type PhonesLoadInterface interface {
 		LoadPhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type FeaturesLoadInterface interface {
+		LoadFeatures(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ContainerrelatesLoadInterface interface {
 		LoadContainerrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -5941,6 +6156,9 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	type QuicksLoadInterface interface {
 		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type ReviewTasksLoadInterface interface {
+		LoadReviewTasks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type SignalsLoadInterface interface {
 		LoadSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -5977,6 +6195,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"Phones",
 			func(ctx context.Context, exec bob.Executor, retrieved PhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPhones(ctx, exec, mods...)
+			},
+		),
+		Features: thenLoadBuilder[Q](
+			"Features",
+			func(ctx context.Context, exec bob.Executor, retrieved FeaturesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFeatures(ctx, exec, mods...)
 			},
 		),
 		Containerrelates: thenLoadBuilder[Q](
@@ -6205,6 +6429,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"Quicks",
 			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadQuicks(ctx, exec, mods...)
+			},
+		),
+		ReviewTasks: thenLoadBuilder[Q](
+			"ReviewTasks",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewTasksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewTasks(ctx, exec, mods...)
 			},
 		),
 		Signals: thenLoadBuilder[Q](
@@ -6561,6 +6791,67 @@ func (os OrganizationSlice) LoadPhones(ctx context.Context, exec bob.Executor, m
 			rel.R.Organizations = append(rel.R.Organizations, o)
 
 			o.R.Phones = append(o.R.Phones, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadFeatures loads the organization's Features into the .R struct
+func (o *Organization) LoadFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Features = nil
+
+	related, err := o.Features(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Features = related
+	return nil
+}
+
+// LoadFeatures loads the organization's Features into the .R struct
+func (os OrganizationSlice) LoadFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	features, err := os.Features(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Features = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range features {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Features = append(o.R.Features, rel)
 		}
 	}
 
@@ -8882,6 +9173,67 @@ func (os OrganizationSlice) LoadQuicks(ctx context.Context, exec bob.Executor, m
 	return nil
 }
 
+// LoadReviewTasks loads the organization's ReviewTasks into the .R struct
+func (o *Organization) LoadReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReviewTasks = nil
+
+	related, err := o.ReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.ReviewTasks = related
+	return nil
+}
+
+// LoadReviewTasks loads the organization's ReviewTasks into the .R struct
+func (os OrganizationSlice) LoadReviewTasks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	reviewTasks, err := os.ReviewTasks(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ReviewTasks = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range reviewTasks {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.ReviewTasks = append(o.R.ReviewTasks, rel)
+		}
+	}
+
+	return nil
+}
+
 // LoadSignals loads the organization's Signals into the .R struct
 func (o *Organization) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -9002,3370 +9354,4 @@ func (os OrganizationSlice) LoadUser(ctx context.Context, exec bob.Executor, mod
 	}
 
 	return nil
-}
-
-// organizationC is where relationship counts are stored.
-type organizationC struct {
-	Accounts                *int64
-	AddressMappings         *int64
-	ParcelMappings          *int64
-	EmailContacts           *int64
-	Phones                  *int64
-	Containerrelates        *int64
-	Fieldscoutinglogs       *int64
-	Habitatrelates          *int64
-	Inspectionsamples       *int64
-	Inspectionsampledetails *int64
-	Linelocations           *int64
-	Locationtrackings       *int64
-	Mosquitoinspections     *int64
-	Pointlocations          *int64
-	Polygonlocations        *int64
-	FieldseekerPool         *int64
-	Pooldetails             *int64
-	Proposedtreatmentareas  *int64
-	Qamosquitoinspections   *int64
-	Rodentlocations         *int64
-	Samplecollections       *int64
-	Samplelocations         *int64
-	Servicerequests         *int64
-	Speciesabundances       *int64
-	Stormdrains             *int64
-	Timecards               *int64
-	Trapdata                *int64
-	Traplocations           *int64
-	Treatments              *int64
-	Treatmentareas          *int64
-	Zones                   *int64
-	Zones2s                 *int64
-	FieldseekerSyncs        *int64
-	Files                   *int64
-	H3Aggregations          *int64
-	Leads                   *int64
-	NoteAudios              *int64
-	NoteImages              *int64
-	Nuisances               *int64
-	PublicreportPool        *int64
-	Quicks                  *int64
-	Signals                 *int64
-	User                    *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *Organization) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "Accounts":
-		o.C.Accounts = &count
-	case "AddressMappings":
-		o.C.AddressMappings = &count
-	case "ParcelMappings":
-		o.C.ParcelMappings = &count
-	case "EmailContacts":
-		o.C.EmailContacts = &count
-	case "Phones":
-		o.C.Phones = &count
-	case "Containerrelates":
-		o.C.Containerrelates = &count
-	case "Fieldscoutinglogs":
-		o.C.Fieldscoutinglogs = &count
-	case "Habitatrelates":
-		o.C.Habitatrelates = &count
-	case "Inspectionsamples":
-		o.C.Inspectionsamples = &count
-	case "Inspectionsampledetails":
-		o.C.Inspectionsampledetails = &count
-	case "Linelocations":
-		o.C.Linelocations = &count
-	case "Locationtrackings":
-		o.C.Locationtrackings = &count
-	case "Mosquitoinspections":
-		o.C.Mosquitoinspections = &count
-	case "Pointlocations":
-		o.C.Pointlocations = &count
-	case "Polygonlocations":
-		o.C.Polygonlocations = &count
-	case "FieldseekerPool":
-		o.C.FieldseekerPool = &count
-	case "Pooldetails":
-		o.C.Pooldetails = &count
-	case "Proposedtreatmentareas":
-		o.C.Proposedtreatmentareas = &count
-	case "Qamosquitoinspections":
-		o.C.Qamosquitoinspections = &count
-	case "Rodentlocations":
-		o.C.Rodentlocations = &count
-	case "Samplecollections":
-		o.C.Samplecollections = &count
-	case "Samplelocations":
-		o.C.Samplelocations = &count
-	case "Servicerequests":
-		o.C.Servicerequests = &count
-	case "Speciesabundances":
-		o.C.Speciesabundances = &count
-	case "Stormdrains":
-		o.C.Stormdrains = &count
-	case "Timecards":
-		o.C.Timecards = &count
-	case "Trapdata":
-		o.C.Trapdata = &count
-	case "Traplocations":
-		o.C.Traplocations = &count
-	case "Treatments":
-		o.C.Treatments = &count
-	case "Treatmentareas":
-		o.C.Treatmentareas = &count
-	case "Zones":
-		o.C.Zones = &count
-	case "Zones2s":
-		o.C.Zones2s = &count
-	case "FieldseekerSyncs":
-		o.C.FieldseekerSyncs = &count
-	case "Files":
-		o.C.Files = &count
-	case "H3Aggregations":
-		o.C.H3Aggregations = &count
-	case "Leads":
-		o.C.Leads = &count
-	case "NoteAudios":
-		o.C.NoteAudios = &count
-	case "NoteImages":
-		o.C.NoteImages = &count
-	case "Nuisances":
-		o.C.Nuisances = &count
-	case "PublicreportPool":
-		o.C.PublicreportPool = &count
-	case "Quicks":
-		o.C.Quicks = &count
-	case "Signals":
-		o.C.Signals = &count
-	case "User":
-		o.C.User = &count
-	}
-	return nil
-}
-
-type organizationCountPreloader struct {
-	Accounts                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	AddressMappings         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	ParcelMappings          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Phones                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Inspectionsamples       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Inspectionsampledetails func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Linelocations           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Locationtrackings       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Rodentlocations         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Samplecollections       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Samplelocations         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Servicerequests         func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Speciesabundances       func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Stormdrains             func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Timecards               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Trapdata                func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Traplocations           func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Treatments              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Treatmentareas          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Zones                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Files                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Leads                   func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Signals                 func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	User                    func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildOrganizationCountPreloader() organizationCountPreloader {
-	return organizationCountPreloader{
-		Accounts: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Accounts", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisAccounts.Name()),
-					sm.Where(psql.Quote(ArcgisAccounts.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		AddressMappings: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("AddressMappings", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisAddressMappings.Name()),
-					sm.Where(psql.Quote(ArcgisAddressMappings.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		ParcelMappings: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("ParcelMappings", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisParcelMappings.Name()),
-					sm.Where(psql.Quote(ArcgisParcelMappings.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		EmailContacts: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("EmailContacts", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(DistrictSubscriptionEmails.Name()),
-					sm.Where(psql.Quote(DistrictSubscriptionEmails.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-					sm.InnerJoin(CommsEmailContacts.Name()).On(
-						psql.Quote(CommsEmailContacts.Alias(), "address").EQ(psql.Quote(DistrictSubscriptionEmails.Alias(), "email_contact_address")),
-					),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Phones: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Phones", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(DistrictSubscriptionPhones.Name()),
-					sm.Where(psql.Quote(DistrictSubscriptionPhones.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-					sm.InnerJoin(CommsPhones.Name()).On(
-						psql.Quote(CommsPhones.Alias(), "e164").EQ(psql.Quote(DistrictSubscriptionPhones.Alias(), "phone_e164")),
-					),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Containerrelates: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Containerrelates", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerContainerrelates.Name()),
-					sm.Where(psql.Quote(FieldseekerContainerrelates.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Fieldscoutinglogs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Fieldscoutinglogs", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerFieldscoutinglogs.Name()),
-					sm.Where(psql.Quote(FieldseekerFieldscoutinglogs.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Habitatrelates: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Habitatrelates", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerHabitatrelates.Name()),
-					sm.Where(psql.Quote(FieldseekerHabitatrelates.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Inspectionsamples: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Inspectionsamples", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerInspectionsamples.Name()),
-					sm.Where(psql.Quote(FieldseekerInspectionsamples.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Inspectionsampledetails: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Inspectionsampledetails", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerInspectionsampledetails.Name()),
-					sm.Where(psql.Quote(FieldseekerInspectionsampledetails.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Linelocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Linelocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerLinelocations.Name()),
-					sm.Where(psql.Quote(FieldseekerLinelocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Locationtrackings: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Locationtrackings", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerLocationtrackings.Name()),
-					sm.Where(psql.Quote(FieldseekerLocationtrackings.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Mosquitoinspections: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Mosquitoinspections", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerMosquitoinspections.Name()),
-					sm.Where(psql.Quote(FieldseekerMosquitoinspections.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Pointlocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Pointlocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerPointlocations.Name()),
-					sm.Where(psql.Quote(FieldseekerPointlocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Polygonlocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Polygonlocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerPolygonlocations.Name()),
-					sm.Where(psql.Quote(FieldseekerPolygonlocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		FieldseekerPool: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("FieldseekerPool", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerPools.Name()),
-					sm.Where(psql.Quote(FieldseekerPools.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Pooldetails: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Pooldetails", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerPooldetails.Name()),
-					sm.Where(psql.Quote(FieldseekerPooldetails.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Proposedtreatmentareas: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Proposedtreatmentareas", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerProposedtreatmentareas.Name()),
-					sm.Where(psql.Quote(FieldseekerProposedtreatmentareas.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Qamosquitoinspections: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Qamosquitoinspections", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerQamosquitoinspections.Name()),
-					sm.Where(psql.Quote(FieldseekerQamosquitoinspections.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Rodentlocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Rodentlocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerRodentlocations.Name()),
-					sm.Where(psql.Quote(FieldseekerRodentlocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Samplecollections: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Samplecollections", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerSamplecollections.Name()),
-					sm.Where(psql.Quote(FieldseekerSamplecollections.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Samplelocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Samplelocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerSamplelocations.Name()),
-					sm.Where(psql.Quote(FieldseekerSamplelocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Servicerequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Servicerequests", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerServicerequests.Name()),
-					sm.Where(psql.Quote(FieldseekerServicerequests.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Speciesabundances: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Speciesabundances", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerSpeciesabundances.Name()),
-					sm.Where(psql.Quote(FieldseekerSpeciesabundances.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Stormdrains: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Stormdrains", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerStormdrains.Name()),
-					sm.Where(psql.Quote(FieldseekerStormdrains.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Timecards: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Timecards", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerTimecards.Name()),
-					sm.Where(psql.Quote(FieldseekerTimecards.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Trapdata: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Trapdata", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerTrapdata.Name()),
-					sm.Where(psql.Quote(FieldseekerTrapdata.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Traplocations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Traplocations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerTraplocations.Name()),
-					sm.Where(psql.Quote(FieldseekerTraplocations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Treatments: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Treatments", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerTreatments.Name()),
-					sm.Where(psql.Quote(FieldseekerTreatments.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Treatmentareas: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Treatmentareas", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerTreatmentareas.Name()),
-					sm.Where(psql.Quote(FieldseekerTreatmentareas.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Zones: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Zones", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerZones.Name()),
-					sm.Where(psql.Quote(FieldseekerZones.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Zones2s: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Zones2s", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerZones2s.Name()),
-					sm.Where(psql.Quote(FieldseekerZones2s.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		FieldseekerSyncs: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("FieldseekerSyncs", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FieldseekerSyncs.Name()),
-					sm.Where(psql.Quote(FieldseekerSyncs.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Files: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Files", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(FileuploadFiles.Name()),
-					sm.Where(psql.Quote(FileuploadFiles.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		H3Aggregations: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("H3Aggregations", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(H3Aggregations.Name()),
-					sm.Where(psql.Quote(H3Aggregations.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Leads: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Leads", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Leads.Name()),
-					sm.Where(psql.Quote(Leads.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		NoteAudios: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("NoteAudios", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteAudios.Name()),
-					sm.Where(psql.Quote(NoteAudios.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		NoteImages: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("NoteImages", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(NoteImages.Name()),
-					sm.Where(psql.Quote(NoteImages.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Nuisances: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Nuisances", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(PublicreportNuisances.Name()),
-					sm.Where(psql.Quote(PublicreportNuisances.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		PublicreportPool: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("PublicreportPool", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(PublicreportPools.Name()),
-					sm.Where(psql.Quote(PublicreportPools.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Quicks: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Quicks", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(PublicreportQuicks.Name()),
-					sm.Where(psql.Quote(PublicreportQuicks.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Signals: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("Signals", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Signals.Name()),
-					sm.Where(psql.Quote(Signals.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		User: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Organization]("User", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Organizations.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Users.Name()),
-					sm.Where(psql.Quote(Users.Alias(), "organization_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type organizationCountThenLoader[Q orm.Loadable] struct {
-	Accounts                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	AddressMappings         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ParcelMappings          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsamples       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsampledetails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Linelocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Locationtrackings       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Rodentlocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplecollections       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplelocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Servicerequests         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Speciesabundances       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Stormdrains             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Timecards               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Trapdata                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Traplocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatments              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatmentareas          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Files                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Leads                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Nuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PublicreportPool        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Quicks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Signals                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildOrganizationCountThenLoader[Q orm.Loadable]() organizationCountThenLoader[Q] {
-	type AccountsCountInterface interface {
-		LoadCountAccounts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type AddressMappingsCountInterface interface {
-		LoadCountAddressMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ParcelMappingsCountInterface interface {
-		LoadCountParcelMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type EmailContactsCountInterface interface {
-		LoadCountEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PhonesCountInterface interface {
-		LoadCountPhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ContainerrelatesCountInterface interface {
-		LoadCountContainerrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FieldscoutinglogsCountInterface interface {
-		LoadCountFieldscoutinglogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type HabitatrelatesCountInterface interface {
-		LoadCountHabitatrelates(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type InspectionsamplesCountInterface interface {
-		LoadCountInspectionsamples(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type InspectionsampledetailsCountInterface interface {
-		LoadCountInspectionsampledetails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type LinelocationsCountInterface interface {
-		LoadCountLinelocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type LocationtrackingsCountInterface interface {
-		LoadCountLocationtrackings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type MosquitoinspectionsCountInterface interface {
-		LoadCountMosquitoinspections(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PointlocationsCountInterface interface {
-		LoadCountPointlocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PolygonlocationsCountInterface interface {
-		LoadCountPolygonlocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FieldseekerPoolCountInterface interface {
-		LoadCountFieldseekerPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PooldetailsCountInterface interface {
-		LoadCountPooldetails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ProposedtreatmentareasCountInterface interface {
-		LoadCountProposedtreatmentareas(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type QamosquitoinspectionsCountInterface interface {
-		LoadCountQamosquitoinspections(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type RodentlocationsCountInterface interface {
-		LoadCountRodentlocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type SamplecollectionsCountInterface interface {
-		LoadCountSamplecollections(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type SamplelocationsCountInterface interface {
-		LoadCountSamplelocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ServicerequestsCountInterface interface {
-		LoadCountServicerequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type SpeciesabundancesCountInterface interface {
-		LoadCountSpeciesabundances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type StormdrainsCountInterface interface {
-		LoadCountStormdrains(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type TimecardsCountInterface interface {
-		LoadCountTimecards(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type TrapdataCountInterface interface {
-		LoadCountTrapdata(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type TraplocationsCountInterface interface {
-		LoadCountTraplocations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type TreatmentsCountInterface interface {
-		LoadCountTreatments(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type TreatmentareasCountInterface interface {
-		LoadCountTreatmentareas(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ZonesCountInterface interface {
-		LoadCountZones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type Zones2sCountInterface interface {
-		LoadCountZones2s(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FieldseekerSyncsCountInterface interface {
-		LoadCountFieldseekerSyncs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FilesCountInterface interface {
-		LoadCountFiles(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type H3AggregationsCountInterface interface {
-		LoadCountH3Aggregations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type LeadsCountInterface interface {
-		LoadCountLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type NoteAudiosCountInterface interface {
-		LoadCountNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type NoteImagesCountInterface interface {
-		LoadCountNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type NuisancesCountInterface interface {
-		LoadCountNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PublicreportPoolCountInterface interface {
-		LoadCountPublicreportPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type QuicksCountInterface interface {
-		LoadCountQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type SignalsCountInterface interface {
-		LoadCountSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type UserCountInterface interface {
-		LoadCountUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return organizationCountThenLoader[Q]{
-		Accounts: countThenLoadBuilder[Q](
-			"Accounts",
-			func(ctx context.Context, exec bob.Executor, retrieved AccountsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountAccounts(ctx, exec, mods...)
-			},
-		),
-		AddressMappings: countThenLoadBuilder[Q](
-			"AddressMappings",
-			func(ctx context.Context, exec bob.Executor, retrieved AddressMappingsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountAddressMappings(ctx, exec, mods...)
-			},
-		),
-		ParcelMappings: countThenLoadBuilder[Q](
-			"ParcelMappings",
-			func(ctx context.Context, exec bob.Executor, retrieved ParcelMappingsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountParcelMappings(ctx, exec, mods...)
-			},
-		),
-		EmailContacts: countThenLoadBuilder[Q](
-			"EmailContacts",
-			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountEmailContacts(ctx, exec, mods...)
-			},
-		),
-		Phones: countThenLoadBuilder[Q](
-			"Phones",
-			func(ctx context.Context, exec bob.Executor, retrieved PhonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPhones(ctx, exec, mods...)
-			},
-		),
-		Containerrelates: countThenLoadBuilder[Q](
-			"Containerrelates",
-			func(ctx context.Context, exec bob.Executor, retrieved ContainerrelatesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountContainerrelates(ctx, exec, mods...)
-			},
-		),
-		Fieldscoutinglogs: countThenLoadBuilder[Q](
-			"Fieldscoutinglogs",
-			func(ctx context.Context, exec bob.Executor, retrieved FieldscoutinglogsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountFieldscoutinglogs(ctx, exec, mods...)
-			},
-		),
-		Habitatrelates: countThenLoadBuilder[Q](
-			"Habitatrelates",
-			func(ctx context.Context, exec bob.Executor, retrieved HabitatrelatesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountHabitatrelates(ctx, exec, mods...)
-			},
-		),
-		Inspectionsamples: countThenLoadBuilder[Q](
-			"Inspectionsamples",
-			func(ctx context.Context, exec bob.Executor, retrieved InspectionsamplesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountInspectionsamples(ctx, exec, mods...)
-			},
-		),
-		Inspectionsampledetails: countThenLoadBuilder[Q](
-			"Inspectionsampledetails",
-			func(ctx context.Context, exec bob.Executor, retrieved InspectionsampledetailsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountInspectionsampledetails(ctx, exec, mods...)
-			},
-		),
-		Linelocations: countThenLoadBuilder[Q](
-			"Linelocations",
-			func(ctx context.Context, exec bob.Executor, retrieved LinelocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountLinelocations(ctx, exec, mods...)
-			},
-		),
-		Locationtrackings: countThenLoadBuilder[Q](
-			"Locationtrackings",
-			func(ctx context.Context, exec bob.Executor, retrieved LocationtrackingsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountLocationtrackings(ctx, exec, mods...)
-			},
-		),
-		Mosquitoinspections: countThenLoadBuilder[Q](
-			"Mosquitoinspections",
-			func(ctx context.Context, exec bob.Executor, retrieved MosquitoinspectionsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountMosquitoinspections(ctx, exec, mods...)
-			},
-		),
-		Pointlocations: countThenLoadBuilder[Q](
-			"Pointlocations",
-			func(ctx context.Context, exec bob.Executor, retrieved PointlocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPointlocations(ctx, exec, mods...)
-			},
-		),
-		Polygonlocations: countThenLoadBuilder[Q](
-			"Polygonlocations",
-			func(ctx context.Context, exec bob.Executor, retrieved PolygonlocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPolygonlocations(ctx, exec, mods...)
-			},
-		),
-		FieldseekerPool: countThenLoadBuilder[Q](
-			"FieldseekerPool",
-			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerPoolCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountFieldseekerPool(ctx, exec, mods...)
-			},
-		),
-		Pooldetails: countThenLoadBuilder[Q](
-			"Pooldetails",
-			func(ctx context.Context, exec bob.Executor, retrieved PooldetailsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPooldetails(ctx, exec, mods...)
-			},
-		),
-		Proposedtreatmentareas: countThenLoadBuilder[Q](
-			"Proposedtreatmentareas",
-			func(ctx context.Context, exec bob.Executor, retrieved ProposedtreatmentareasCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountProposedtreatmentareas(ctx, exec, mods...)
-			},
-		),
-		Qamosquitoinspections: countThenLoadBuilder[Q](
-			"Qamosquitoinspections",
-			func(ctx context.Context, exec bob.Executor, retrieved QamosquitoinspectionsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountQamosquitoinspections(ctx, exec, mods...)
-			},
-		),
-		Rodentlocations: countThenLoadBuilder[Q](
-			"Rodentlocations",
-			func(ctx context.Context, exec bob.Executor, retrieved RodentlocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountRodentlocations(ctx, exec, mods...)
-			},
-		),
-		Samplecollections: countThenLoadBuilder[Q](
-			"Samplecollections",
-			func(ctx context.Context, exec bob.Executor, retrieved SamplecollectionsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSamplecollections(ctx, exec, mods...)
-			},
-		),
-		Samplelocations: countThenLoadBuilder[Q](
-			"Samplelocations",
-			func(ctx context.Context, exec bob.Executor, retrieved SamplelocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSamplelocations(ctx, exec, mods...)
-			},
-		),
-		Servicerequests: countThenLoadBuilder[Q](
-			"Servicerequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ServicerequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountServicerequests(ctx, exec, mods...)
-			},
-		),
-		Speciesabundances: countThenLoadBuilder[Q](
-			"Speciesabundances",
-			func(ctx context.Context, exec bob.Executor, retrieved SpeciesabundancesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSpeciesabundances(ctx, exec, mods...)
-			},
-		),
-		Stormdrains: countThenLoadBuilder[Q](
-			"Stormdrains",
-			func(ctx context.Context, exec bob.Executor, retrieved StormdrainsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountStormdrains(ctx, exec, mods...)
-			},
-		),
-		Timecards: countThenLoadBuilder[Q](
-			"Timecards",
-			func(ctx context.Context, exec bob.Executor, retrieved TimecardsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTimecards(ctx, exec, mods...)
-			},
-		),
-		Trapdata: countThenLoadBuilder[Q](
-			"Trapdata",
-			func(ctx context.Context, exec bob.Executor, retrieved TrapdataCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTrapdata(ctx, exec, mods...)
-			},
-		),
-		Traplocations: countThenLoadBuilder[Q](
-			"Traplocations",
-			func(ctx context.Context, exec bob.Executor, retrieved TraplocationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTraplocations(ctx, exec, mods...)
-			},
-		),
-		Treatments: countThenLoadBuilder[Q](
-			"Treatments",
-			func(ctx context.Context, exec bob.Executor, retrieved TreatmentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTreatments(ctx, exec, mods...)
-			},
-		),
-		Treatmentareas: countThenLoadBuilder[Q](
-			"Treatmentareas",
-			func(ctx context.Context, exec bob.Executor, retrieved TreatmentareasCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountTreatmentareas(ctx, exec, mods...)
-			},
-		),
-		Zones: countThenLoadBuilder[Q](
-			"Zones",
-			func(ctx context.Context, exec bob.Executor, retrieved ZonesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountZones(ctx, exec, mods...)
-			},
-		),
-		Zones2s: countThenLoadBuilder[Q](
-			"Zones2s",
-			func(ctx context.Context, exec bob.Executor, retrieved Zones2sCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountZones2s(ctx, exec, mods...)
-			},
-		),
-		FieldseekerSyncs: countThenLoadBuilder[Q](
-			"FieldseekerSyncs",
-			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerSyncsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountFieldseekerSyncs(ctx, exec, mods...)
-			},
-		),
-		Files: countThenLoadBuilder[Q](
-			"Files",
-			func(ctx context.Context, exec bob.Executor, retrieved FilesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountFiles(ctx, exec, mods...)
-			},
-		),
-		H3Aggregations: countThenLoadBuilder[Q](
-			"H3Aggregations",
-			func(ctx context.Context, exec bob.Executor, retrieved H3AggregationsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountH3Aggregations(ctx, exec, mods...)
-			},
-		),
-		Leads: countThenLoadBuilder[Q](
-			"Leads",
-			func(ctx context.Context, exec bob.Executor, retrieved LeadsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountLeads(ctx, exec, mods...)
-			},
-		),
-		NoteAudios: countThenLoadBuilder[Q](
-			"NoteAudios",
-			func(ctx context.Context, exec bob.Executor, retrieved NoteAudiosCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountNoteAudios(ctx, exec, mods...)
-			},
-		),
-		NoteImages: countThenLoadBuilder[Q](
-			"NoteImages",
-			func(ctx context.Context, exec bob.Executor, retrieved NoteImagesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountNoteImages(ctx, exec, mods...)
-			},
-		),
-		Nuisances: countThenLoadBuilder[Q](
-			"Nuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved NuisancesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountNuisances(ctx, exec, mods...)
-			},
-		),
-		PublicreportPool: countThenLoadBuilder[Q](
-			"PublicreportPool",
-			func(ctx context.Context, exec bob.Executor, retrieved PublicreportPoolCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPublicreportPool(ctx, exec, mods...)
-			},
-		),
-		Quicks: countThenLoadBuilder[Q](
-			"Quicks",
-			func(ctx context.Context, exec bob.Executor, retrieved QuicksCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountQuicks(ctx, exec, mods...)
-			},
-		),
-		Signals: countThenLoadBuilder[Q](
-			"Signals",
-			func(ctx context.Context, exec bob.Executor, retrieved SignalsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSignals(ctx, exec, mods...)
-			},
-		),
-		User: countThenLoadBuilder[Q](
-			"User",
-			func(ctx context.Context, exec bob.Executor, retrieved UserCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountUser(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountAccounts loads the count of Accounts into the C struct
-func (o *Organization) LoadCountAccounts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Accounts(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Accounts = &count
-	return nil
-}
-
-// LoadCountAccounts loads the count of Accounts for a slice
-func (os OrganizationSlice) LoadCountAccounts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountAccounts(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountAddressMappings loads the count of AddressMappings into the C struct
-func (o *Organization) LoadCountAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.AddressMappings(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.AddressMappings = &count
-	return nil
-}
-
-// LoadCountAddressMappings loads the count of AddressMappings for a slice
-func (os OrganizationSlice) LoadCountAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountAddressMappings(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountParcelMappings loads the count of ParcelMappings into the C struct
-func (o *Organization) LoadCountParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.ParcelMappings(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.ParcelMappings = &count
-	return nil
-}
-
-// LoadCountParcelMappings loads the count of ParcelMappings for a slice
-func (os OrganizationSlice) LoadCountParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountParcelMappings(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountEmailContacts loads the count of EmailContacts into the C struct
-func (o *Organization) LoadCountEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.EmailContacts(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.EmailContacts = &count
-	return nil
-}
-
-// LoadCountEmailContacts loads the count of EmailContacts for a slice
-func (os OrganizationSlice) LoadCountEmailContacts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountEmailContacts(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPhones loads the count of Phones into the C struct
-func (o *Organization) LoadCountPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Phones(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Phones = &count
-	return nil
-}
-
-// LoadCountPhones loads the count of Phones for a slice
-func (os OrganizationSlice) LoadCountPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPhones(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountContainerrelates loads the count of Containerrelates into the C struct
-func (o *Organization) LoadCountContainerrelates(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Containerrelates(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Containerrelates = &count
-	return nil
-}
-
-// LoadCountContainerrelates loads the count of Containerrelates for a slice
-func (os OrganizationSlice) LoadCountContainerrelates(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountContainerrelates(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountFieldscoutinglogs loads the count of Fieldscoutinglogs into the C struct
-func (o *Organization) LoadCountFieldscoutinglogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Fieldscoutinglogs(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Fieldscoutinglogs = &count
-	return nil
-}
-
-// LoadCountFieldscoutinglogs loads the count of Fieldscoutinglogs for a slice
-func (os OrganizationSlice) LoadCountFieldscoutinglogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountFieldscoutinglogs(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountHabitatrelates loads the count of Habitatrelates into the C struct
-func (o *Organization) LoadCountHabitatrelates(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Habitatrelates(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Habitatrelates = &count
-	return nil
-}
-
-// LoadCountHabitatrelates loads the count of Habitatrelates for a slice
-func (os OrganizationSlice) LoadCountHabitatrelates(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountHabitatrelates(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountInspectionsamples loads the count of Inspectionsamples into the C struct
-func (o *Organization) LoadCountInspectionsamples(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Inspectionsamples(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Inspectionsamples = &count
-	return nil
-}
-
-// LoadCountInspectionsamples loads the count of Inspectionsamples for a slice
-func (os OrganizationSlice) LoadCountInspectionsamples(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountInspectionsamples(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountInspectionsampledetails loads the count of Inspectionsampledetails into the C struct
-func (o *Organization) LoadCountInspectionsampledetails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Inspectionsampledetails(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Inspectionsampledetails = &count
-	return nil
-}
-
-// LoadCountInspectionsampledetails loads the count of Inspectionsampledetails for a slice
-func (os OrganizationSlice) LoadCountInspectionsampledetails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountInspectionsampledetails(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountLinelocations loads the count of Linelocations into the C struct
-func (o *Organization) LoadCountLinelocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Linelocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Linelocations = &count
-	return nil
-}
-
-// LoadCountLinelocations loads the count of Linelocations for a slice
-func (os OrganizationSlice) LoadCountLinelocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountLinelocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountLocationtrackings loads the count of Locationtrackings into the C struct
-func (o *Organization) LoadCountLocationtrackings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Locationtrackings(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Locationtrackings = &count
-	return nil
-}
-
-// LoadCountLocationtrackings loads the count of Locationtrackings for a slice
-func (os OrganizationSlice) LoadCountLocationtrackings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountLocationtrackings(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountMosquitoinspections loads the count of Mosquitoinspections into the C struct
-func (o *Organization) LoadCountMosquitoinspections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Mosquitoinspections(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Mosquitoinspections = &count
-	return nil
-}
-
-// LoadCountMosquitoinspections loads the count of Mosquitoinspections for a slice
-func (os OrganizationSlice) LoadCountMosquitoinspections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountMosquitoinspections(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPointlocations loads the count of Pointlocations into the C struct
-func (o *Organization) LoadCountPointlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Pointlocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Pointlocations = &count
-	return nil
-}
-
-// LoadCountPointlocations loads the count of Pointlocations for a slice
-func (os OrganizationSlice) LoadCountPointlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPointlocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPolygonlocations loads the count of Polygonlocations into the C struct
-func (o *Organization) LoadCountPolygonlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Polygonlocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Polygonlocations = &count
-	return nil
-}
-
-// LoadCountPolygonlocations loads the count of Polygonlocations for a slice
-func (os OrganizationSlice) LoadCountPolygonlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPolygonlocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountFieldseekerPool loads the count of FieldseekerPool into the C struct
-func (o *Organization) LoadCountFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.FieldseekerPool(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.FieldseekerPool = &count
-	return nil
-}
-
-// LoadCountFieldseekerPool loads the count of FieldseekerPool for a slice
-func (os OrganizationSlice) LoadCountFieldseekerPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountFieldseekerPool(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPooldetails loads the count of Pooldetails into the C struct
-func (o *Organization) LoadCountPooldetails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Pooldetails(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Pooldetails = &count
-	return nil
-}
-
-// LoadCountPooldetails loads the count of Pooldetails for a slice
-func (os OrganizationSlice) LoadCountPooldetails(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPooldetails(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountProposedtreatmentareas loads the count of Proposedtreatmentareas into the C struct
-func (o *Organization) LoadCountProposedtreatmentareas(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Proposedtreatmentareas(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Proposedtreatmentareas = &count
-	return nil
-}
-
-// LoadCountProposedtreatmentareas loads the count of Proposedtreatmentareas for a slice
-func (os OrganizationSlice) LoadCountProposedtreatmentareas(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountProposedtreatmentareas(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountQamosquitoinspections loads the count of Qamosquitoinspections into the C struct
-func (o *Organization) LoadCountQamosquitoinspections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Qamosquitoinspections(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Qamosquitoinspections = &count
-	return nil
-}
-
-// LoadCountQamosquitoinspections loads the count of Qamosquitoinspections for a slice
-func (os OrganizationSlice) LoadCountQamosquitoinspections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountQamosquitoinspections(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountRodentlocations loads the count of Rodentlocations into the C struct
-func (o *Organization) LoadCountRodentlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Rodentlocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Rodentlocations = &count
-	return nil
-}
-
-// LoadCountRodentlocations loads the count of Rodentlocations for a slice
-func (os OrganizationSlice) LoadCountRodentlocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountRodentlocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountSamplecollections loads the count of Samplecollections into the C struct
-func (o *Organization) LoadCountSamplecollections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Samplecollections(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Samplecollections = &count
-	return nil
-}
-
-// LoadCountSamplecollections loads the count of Samplecollections for a slice
-func (os OrganizationSlice) LoadCountSamplecollections(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSamplecollections(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountSamplelocations loads the count of Samplelocations into the C struct
-func (o *Organization) LoadCountSamplelocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Samplelocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Samplelocations = &count
-	return nil
-}
-
-// LoadCountSamplelocations loads the count of Samplelocations for a slice
-func (os OrganizationSlice) LoadCountSamplelocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSamplelocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountServicerequests loads the count of Servicerequests into the C struct
-func (o *Organization) LoadCountServicerequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Servicerequests(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Servicerequests = &count
-	return nil
-}
-
-// LoadCountServicerequests loads the count of Servicerequests for a slice
-func (os OrganizationSlice) LoadCountServicerequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountServicerequests(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountSpeciesabundances loads the count of Speciesabundances into the C struct
-func (o *Organization) LoadCountSpeciesabundances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Speciesabundances(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Speciesabundances = &count
-	return nil
-}
-
-// LoadCountSpeciesabundances loads the count of Speciesabundances for a slice
-func (os OrganizationSlice) LoadCountSpeciesabundances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSpeciesabundances(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountStormdrains loads the count of Stormdrains into the C struct
-func (o *Organization) LoadCountStormdrains(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Stormdrains(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Stormdrains = &count
-	return nil
-}
-
-// LoadCountStormdrains loads the count of Stormdrains for a slice
-func (os OrganizationSlice) LoadCountStormdrains(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountStormdrains(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountTimecards loads the count of Timecards into the C struct
-func (o *Organization) LoadCountTimecards(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Timecards(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Timecards = &count
-	return nil
-}
-
-// LoadCountTimecards loads the count of Timecards for a slice
-func (os OrganizationSlice) LoadCountTimecards(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTimecards(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountTrapdata loads the count of Trapdata into the C struct
-func (o *Organization) LoadCountTrapdata(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Trapdata(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Trapdata = &count
-	return nil
-}
-
-// LoadCountTrapdata loads the count of Trapdata for a slice
-func (os OrganizationSlice) LoadCountTrapdata(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTrapdata(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountTraplocations loads the count of Traplocations into the C struct
-func (o *Organization) LoadCountTraplocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Traplocations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Traplocations = &count
-	return nil
-}
-
-// LoadCountTraplocations loads the count of Traplocations for a slice
-func (os OrganizationSlice) LoadCountTraplocations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTraplocations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountTreatments loads the count of Treatments into the C struct
-func (o *Organization) LoadCountTreatments(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Treatments(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Treatments = &count
-	return nil
-}
-
-// LoadCountTreatments loads the count of Treatments for a slice
-func (os OrganizationSlice) LoadCountTreatments(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTreatments(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountTreatmentareas loads the count of Treatmentareas into the C struct
-func (o *Organization) LoadCountTreatmentareas(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Treatmentareas(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Treatmentareas = &count
-	return nil
-}
-
-// LoadCountTreatmentareas loads the count of Treatmentareas for a slice
-func (os OrganizationSlice) LoadCountTreatmentareas(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountTreatmentareas(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountZones loads the count of Zones into the C struct
-func (o *Organization) LoadCountZones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Zones(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Zones = &count
-	return nil
-}
-
-// LoadCountZones loads the count of Zones for a slice
-func (os OrganizationSlice) LoadCountZones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountZones(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountZones2s loads the count of Zones2s into the C struct
-func (o *Organization) LoadCountZones2s(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Zones2s(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Zones2s = &count
-	return nil
-}
-
-// LoadCountZones2s loads the count of Zones2s for a slice
-func (os OrganizationSlice) LoadCountZones2s(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountZones2s(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountFieldseekerSyncs loads the count of FieldseekerSyncs into the C struct
-func (o *Organization) LoadCountFieldseekerSyncs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.FieldseekerSyncs(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.FieldseekerSyncs = &count
-	return nil
-}
-
-// LoadCountFieldseekerSyncs loads the count of FieldseekerSyncs for a slice
-func (os OrganizationSlice) LoadCountFieldseekerSyncs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountFieldseekerSyncs(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountFiles loads the count of Files into the C struct
-func (o *Organization) LoadCountFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Files(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Files = &count
-	return nil
-}
-
-// LoadCountFiles loads the count of Files for a slice
-func (os OrganizationSlice) LoadCountFiles(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountFiles(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountH3Aggregations loads the count of H3Aggregations into the C struct
-func (o *Organization) LoadCountH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.H3Aggregations(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.H3Aggregations = &count
-	return nil
-}
-
-// LoadCountH3Aggregations loads the count of H3Aggregations for a slice
-func (os OrganizationSlice) LoadCountH3Aggregations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountH3Aggregations(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountLeads loads the count of Leads into the C struct
-func (o *Organization) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Leads(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Leads = &count
-	return nil
-}
-
-// LoadCountLeads loads the count of Leads for a slice
-func (os OrganizationSlice) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountLeads(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountNoteAudios loads the count of NoteAudios into the C struct
-func (o *Organization) LoadCountNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.NoteAudios(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.NoteAudios = &count
-	return nil
-}
-
-// LoadCountNoteAudios loads the count of NoteAudios for a slice
-func (os OrganizationSlice) LoadCountNoteAudios(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountNoteAudios(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountNoteImages loads the count of NoteImages into the C struct
-func (o *Organization) LoadCountNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.NoteImages(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.NoteImages = &count
-	return nil
-}
-
-// LoadCountNoteImages loads the count of NoteImages for a slice
-func (os OrganizationSlice) LoadCountNoteImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountNoteImages(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountNuisances loads the count of Nuisances into the C struct
-func (o *Organization) LoadCountNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Nuisances(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Nuisances = &count
-	return nil
-}
-
-// LoadCountNuisances loads the count of Nuisances for a slice
-func (os OrganizationSlice) LoadCountNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountNuisances(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPublicreportPool loads the count of PublicreportPool into the C struct
-func (o *Organization) LoadCountPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.PublicreportPool(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.PublicreportPool = &count
-	return nil
-}
-
-// LoadCountPublicreportPool loads the count of PublicreportPool for a slice
-func (os OrganizationSlice) LoadCountPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPublicreportPool(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountQuicks loads the count of Quicks into the C struct
-func (o *Organization) LoadCountQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Quicks(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Quicks = &count
-	return nil
-}
-
-// LoadCountQuicks loads the count of Quicks for a slice
-func (os OrganizationSlice) LoadCountQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountQuicks(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountSignals loads the count of Signals into the C struct
-func (o *Organization) LoadCountSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Signals(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Signals = &count
-	return nil
-}
-
-// LoadCountSignals loads the count of Signals for a slice
-func (os OrganizationSlice) LoadCountSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSignals(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountUser loads the count of User into the C struct
-func (o *Organization) LoadCountUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.User(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.User = &count
-	return nil
-}
-
-// LoadCountUser loads the count of User for a slice
-func (os OrganizationSlice) LoadCountUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountUser(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type organizationJoins[Q dialect.Joinable] struct {
-	typ                                         string
-	Accounts                                    modAs[Q, arcgisAccountColumns]
-	AddressMappings                             modAs[Q, arcgisAddressMappingColumns]
-	ParcelMappings                              modAs[Q, arcgisParcelMappingColumns]
-	EmailContacts                               modAs[Q, commsEmailContactColumns]
-	Phones                                      modAs[Q, commsPhoneColumns]
-	Containerrelates                            modAs[Q, fieldseekerContainerrelateColumns]
-	Fieldscoutinglogs                           modAs[Q, fieldseekerFieldscoutinglogColumns]
-	Habitatrelates                              modAs[Q, fieldseekerHabitatrelateColumns]
-	Inspectionsamples                           modAs[Q, fieldseekerInspectionsampleColumns]
-	Inspectionsampledetails                     modAs[Q, fieldseekerInspectionsampledetailColumns]
-	Linelocations                               modAs[Q, fieldseekerLinelocationColumns]
-	Locationtrackings                           modAs[Q, fieldseekerLocationtrackingColumns]
-	Mosquitoinspections                         modAs[Q, fieldseekerMosquitoinspectionColumns]
-	Pointlocations                              modAs[Q, fieldseekerPointlocationColumns]
-	Polygonlocations                            modAs[Q, fieldseekerPolygonlocationColumns]
-	FieldseekerPool                             modAs[Q, fieldseekerPoolColumns]
-	Pooldetails                                 modAs[Q, fieldseekerPooldetailColumns]
-	Proposedtreatmentareas                      modAs[Q, fieldseekerProposedtreatmentareaColumns]
-	Qamosquitoinspections                       modAs[Q, fieldseekerQamosquitoinspectionColumns]
-	Rodentlocations                             modAs[Q, fieldseekerRodentlocationColumns]
-	Samplecollections                           modAs[Q, fieldseekerSamplecollectionColumns]
-	Samplelocations                             modAs[Q, fieldseekerSamplelocationColumns]
-	Servicerequests                             modAs[Q, fieldseekerServicerequestColumns]
-	Speciesabundances                           modAs[Q, fieldseekerSpeciesabundanceColumns]
-	Stormdrains                                 modAs[Q, fieldseekerStormdrainColumns]
-	Timecards                                   modAs[Q, fieldseekerTimecardColumns]
-	Trapdata                                    modAs[Q, fieldseekerTrapdatumColumns]
-	Traplocations                               modAs[Q, fieldseekerTraplocationColumns]
-	Treatments                                  modAs[Q, fieldseekerTreatmentColumns]
-	Treatmentareas                              modAs[Q, fieldseekerTreatmentareaColumns]
-	Zones                                       modAs[Q, fieldseekerZoneColumns]
-	Zones2s                                     modAs[Q, fieldseekerZones2Columns]
-	FieldseekerSyncs                            modAs[Q, fieldseekerSyncColumns]
-	Files                                       modAs[Q, fileuploadFileColumns]
-	H3Aggregations                              modAs[Q, h3AggregationColumns]
-	Leads                                       modAs[Q, leadColumns]
-	NoteAudios                                  modAs[Q, noteAudioColumns]
-	NoteImages                                  modAs[Q, noteImageColumns]
-	ArcgisAccountAccount                        modAs[Q, arcgisAccountColumns]
-	FieldseekerServiceFeatureItemServiceFeature modAs[Q, arcgisServiceFeatureColumns]
-	Nuisances                                   modAs[Q, publicreportNuisanceColumns]
-	PublicreportPool                            modAs[Q, publicreportPoolColumns]
-	Quicks                                      modAs[Q, publicreportQuickColumns]
-	Signals                                     modAs[Q, signalColumns]
-	User                                        modAs[Q, userColumns]
-}
-
-func (j organizationJoins[Q]) aliasedAs(alias string) organizationJoins[Q] {
-	return buildOrganizationJoins[Q](buildOrganizationColumns(alias), j.typ)
-}
-
-func buildOrganizationJoins[Q dialect.Joinable](cols organizationColumns, typ string) organizationJoins[Q] {
-	return organizationJoins[Q]{
-		typ: typ,
-		Accounts: modAs[Q, arcgisAccountColumns]{
-			c: ArcgisAccounts.Columns,
-			f: func(to arcgisAccountColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisAccounts.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		AddressMappings: modAs[Q, arcgisAddressMappingColumns]{
-			c: ArcgisAddressMappings.Columns,
-			f: func(to arcgisAddressMappingColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisAddressMappings.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		ParcelMappings: modAs[Q, arcgisParcelMappingColumns]{
-			c: ArcgisParcelMappings.Columns,
-			f: func(to arcgisParcelMappingColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisParcelMappings.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		EmailContacts: modAs[Q, commsEmailContactColumns]{
-			c: CommsEmailContacts.Columns,
-			f: func(to commsEmailContactColumns) bob.Mod[Q] {
-				random := strconv.FormatInt(randInt(), 10)
-				mods := make(mods.QueryMods[Q], 0, 2)
-
-				{
-					to := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, DistrictSubscriptionEmails.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-				{
-					cols := DistrictSubscriptionEmails.Columns.AliasedAs(DistrictSubscriptionEmails.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
-						to.Address.EQ(cols.EmailContactAddress),
-					))
-				}
-
-				return mods
-			},
-		},
-		Phones: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				random := strconv.FormatInt(randInt(), 10)
-				mods := make(mods.QueryMods[Q], 0, 2)
-
-				{
-					to := DistrictSubscriptionPhones.Columns.AliasedAs(DistrictSubscriptionPhones.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, DistrictSubscriptionPhones.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-				{
-					cols := DistrictSubscriptionPhones.Columns.AliasedAs(DistrictSubscriptionPhones.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-		Containerrelates: modAs[Q, fieldseekerContainerrelateColumns]{
-			c: FieldseekerContainerrelates.Columns,
-			f: func(to fieldseekerContainerrelateColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerContainerrelates.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Fieldscoutinglogs: modAs[Q, fieldseekerFieldscoutinglogColumns]{
-			c: FieldseekerFieldscoutinglogs.Columns,
-			f: func(to fieldseekerFieldscoutinglogColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerFieldscoutinglogs.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Habitatrelates: modAs[Q, fieldseekerHabitatrelateColumns]{
-			c: FieldseekerHabitatrelates.Columns,
-			f: func(to fieldseekerHabitatrelateColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerHabitatrelates.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Inspectionsamples: modAs[Q, fieldseekerInspectionsampleColumns]{
-			c: FieldseekerInspectionsamples.Columns,
-			f: func(to fieldseekerInspectionsampleColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerInspectionsamples.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Inspectionsampledetails: modAs[Q, fieldseekerInspectionsampledetailColumns]{
-			c: FieldseekerInspectionsampledetails.Columns,
-			f: func(to fieldseekerInspectionsampledetailColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerInspectionsampledetails.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Linelocations: modAs[Q, fieldseekerLinelocationColumns]{
-			c: FieldseekerLinelocations.Columns,
-			f: func(to fieldseekerLinelocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerLinelocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Locationtrackings: modAs[Q, fieldseekerLocationtrackingColumns]{
-			c: FieldseekerLocationtrackings.Columns,
-			f: func(to fieldseekerLocationtrackingColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerLocationtrackings.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Mosquitoinspections: modAs[Q, fieldseekerMosquitoinspectionColumns]{
-			c: FieldseekerMosquitoinspections.Columns,
-			f: func(to fieldseekerMosquitoinspectionColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerMosquitoinspections.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pointlocations: modAs[Q, fieldseekerPointlocationColumns]{
-			c: FieldseekerPointlocations.Columns,
-			f: func(to fieldseekerPointlocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerPointlocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Polygonlocations: modAs[Q, fieldseekerPolygonlocationColumns]{
-			c: FieldseekerPolygonlocations.Columns,
-			f: func(to fieldseekerPolygonlocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerPolygonlocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		FieldseekerPool: modAs[Q, fieldseekerPoolColumns]{
-			c: FieldseekerPools.Columns,
-			f: func(to fieldseekerPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerPools.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pooldetails: modAs[Q, fieldseekerPooldetailColumns]{
-			c: FieldseekerPooldetails.Columns,
-			f: func(to fieldseekerPooldetailColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerPooldetails.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Proposedtreatmentareas: modAs[Q, fieldseekerProposedtreatmentareaColumns]{
-			c: FieldseekerProposedtreatmentareas.Columns,
-			f: func(to fieldseekerProposedtreatmentareaColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerProposedtreatmentareas.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Qamosquitoinspections: modAs[Q, fieldseekerQamosquitoinspectionColumns]{
-			c: FieldseekerQamosquitoinspections.Columns,
-			f: func(to fieldseekerQamosquitoinspectionColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerQamosquitoinspections.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Rodentlocations: modAs[Q, fieldseekerRodentlocationColumns]{
-			c: FieldseekerRodentlocations.Columns,
-			f: func(to fieldseekerRodentlocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerRodentlocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Samplecollections: modAs[Q, fieldseekerSamplecollectionColumns]{
-			c: FieldseekerSamplecollections.Columns,
-			f: func(to fieldseekerSamplecollectionColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerSamplecollections.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Samplelocations: modAs[Q, fieldseekerSamplelocationColumns]{
-			c: FieldseekerSamplelocations.Columns,
-			f: func(to fieldseekerSamplelocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerSamplelocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Servicerequests: modAs[Q, fieldseekerServicerequestColumns]{
-			c: FieldseekerServicerequests.Columns,
-			f: func(to fieldseekerServicerequestColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerServicerequests.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Speciesabundances: modAs[Q, fieldseekerSpeciesabundanceColumns]{
-			c: FieldseekerSpeciesabundances.Columns,
-			f: func(to fieldseekerSpeciesabundanceColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerSpeciesabundances.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Stormdrains: modAs[Q, fieldseekerStormdrainColumns]{
-			c: FieldseekerStormdrains.Columns,
-			f: func(to fieldseekerStormdrainColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerStormdrains.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Timecards: modAs[Q, fieldseekerTimecardColumns]{
-			c: FieldseekerTimecards.Columns,
-			f: func(to fieldseekerTimecardColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerTimecards.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Trapdata: modAs[Q, fieldseekerTrapdatumColumns]{
-			c: FieldseekerTrapdata.Columns,
-			f: func(to fieldseekerTrapdatumColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerTrapdata.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Traplocations: modAs[Q, fieldseekerTraplocationColumns]{
-			c: FieldseekerTraplocations.Columns,
-			f: func(to fieldseekerTraplocationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerTraplocations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Treatments: modAs[Q, fieldseekerTreatmentColumns]{
-			c: FieldseekerTreatments.Columns,
-			f: func(to fieldseekerTreatmentColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerTreatments.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Treatmentareas: modAs[Q, fieldseekerTreatmentareaColumns]{
-			c: FieldseekerTreatmentareas.Columns,
-			f: func(to fieldseekerTreatmentareaColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerTreatmentareas.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Zones: modAs[Q, fieldseekerZoneColumns]{
-			c: FieldseekerZones.Columns,
-			f: func(to fieldseekerZoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerZones.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Zones2s: modAs[Q, fieldseekerZones2Columns]{
-			c: FieldseekerZones2s.Columns,
-			f: func(to fieldseekerZones2Columns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerZones2s.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		FieldseekerSyncs: modAs[Q, fieldseekerSyncColumns]{
-			c: FieldseekerSyncs.Columns,
-			f: func(to fieldseekerSyncColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FieldseekerSyncs.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Files: modAs[Q, fileuploadFileColumns]{
-			c: FileuploadFiles.Columns,
-			f: func(to fileuploadFileColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		H3Aggregations: modAs[Q, h3AggregationColumns]{
-			c: H3Aggregations.Columns,
-			f: func(to h3AggregationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, H3Aggregations.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Leads: modAs[Q, leadColumns]{
-			c: Leads.Columns,
-			f: func(to leadColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Leads.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		NoteAudios: modAs[Q, noteAudioColumns]{
-			c: NoteAudios.Columns,
-			f: func(to noteAudioColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteAudios.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		NoteImages: modAs[Q, noteImageColumns]{
-			c: NoteImages.Columns,
-			f: func(to noteImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteImages.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		ArcgisAccountAccount: modAs[Q, arcgisAccountColumns]{
-			c: ArcgisAccounts.Columns,
-			f: func(to arcgisAccountColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisAccounts.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ArcgisAccountID),
-					))
-				}
-
-				return mods
-			},
-		},
-		FieldseekerServiceFeatureItemServiceFeature: modAs[Q, arcgisServiceFeatureColumns]{
-			c: ArcgisServiceFeatures.Columns,
-			f: func(to arcgisServiceFeatureColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisServiceFeatures.Name().As(to.Alias())).On(
-						to.ItemID.EQ(cols.FieldseekerServiceFeatureItemID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Nuisances: modAs[Q, publicreportNuisanceColumns]{
-			c: PublicreportNuisances.Columns,
-			f: func(to publicreportNuisanceColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportNuisances.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		PublicreportPool: modAs[Q, publicreportPoolColumns]{
-			c: PublicreportPools.Columns,
-			f: func(to publicreportPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportPools.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Quicks: modAs[Q, publicreportQuickColumns]{
-			c: PublicreportQuicks.Columns,
-			f: func(to publicreportQuickColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, PublicreportQuicks.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Signals: modAs[Q, signalColumns]{
-			c: Signals.Columns,
-			f: func(to signalColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Signals.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		User: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.OrganizationID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

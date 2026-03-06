@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -36,8 +35,6 @@ type Lead struct {
 	Type           enums.Leadtype  `db:"type_" `
 
 	R leadR `db:"-" `
-
-	C leadC `db:"-" `
 }
 
 // LeadSlice is an alias for a slice of pointers to Lead.
@@ -1219,171 +1216,4 @@ func (os LeadSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob
 	}
 
 	return nil
-}
-
-// leadC is where relationship counts are stored.
-type leadC struct {
-	ComplianceReportRequests *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *Lead) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "ComplianceReportRequests":
-		o.C.ComplianceReportRequests = &count
-	}
-	return nil
-}
-
-type leadCountPreloader struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildLeadCountPreloader() leadCountPreloader {
-	return leadCountPreloader{
-		ComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Lead]("ComplianceReportRequests", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Leads.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ComplianceReportRequests.Name()),
-					sm.Where(psql.Quote(ComplianceReportRequests.Alias(), "lead_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type leadCountThenLoader[Q orm.Loadable] struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildLeadCountThenLoader[Q orm.Loadable]() leadCountThenLoader[Q] {
-	type ComplianceReportRequestsCountInterface interface {
-		LoadCountComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return leadCountThenLoader[Q]{
-		ComplianceReportRequests: countThenLoadBuilder[Q](
-			"ComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountComplianceReportRequests(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests into the C struct
-func (o *Lead) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.ComplianceReportRequests(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.ComplianceReportRequests = &count
-	return nil
-}
-
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests for a slice
-func (os LeadSlice) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountComplianceReportRequests(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type leadJoins[Q dialect.Joinable] struct {
-	typ                      string
-	ComplianceReportRequests modAs[Q, complianceReportRequestColumns]
-	CreatorUser              modAs[Q, userColumns]
-	Organization             modAs[Q, organizationColumns]
-	Site                     modAs[Q, siteColumns]
-}
-
-func (j leadJoins[Q]) aliasedAs(alias string) leadJoins[Q] {
-	return buildLeadJoins[Q](buildLeadColumns(alias), j.typ)
-}
-
-func buildLeadJoins[Q dialect.Joinable](cols leadColumns, typ string) leadJoins[Q] {
-	return leadJoins[Q]{
-		typ: typ,
-		ComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
-			c: ComplianceReportRequests.Columns,
-			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
-						to.LeadID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.Creator),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Site: modAs[Q, siteColumns]{
-			c: Sites.Columns,
-			f: func(to siteColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.SiteID), to.Version.EQ(cols.SiteVersion),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

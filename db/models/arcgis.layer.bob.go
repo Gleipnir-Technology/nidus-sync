@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -28,8 +27,6 @@ type ArcgisLayer struct {
 	Index                int32  `db:"index_,pk" `
 
 	R arcgisLayerR `db:"-" `
-
-	C arcgisLayerC `db:"-" `
 }
 
 // ArcgisLayerSlice is an alias for a slice of pointers to ArcgisLayer.
@@ -795,142 +792,4 @@ func (os ArcgisLayerSlice) LoadLayerFields(ctx context.Context, exec bob.Executo
 	}
 
 	return nil
-}
-
-// arcgisLayerC is where relationship counts are stored.
-type arcgisLayerC struct {
-	LayerFields *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *ArcgisLayer) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "LayerFields":
-		o.C.LayerFields = &count
-	}
-	return nil
-}
-
-type arcgisLayerCountPreloader struct {
-	LayerFields func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildArcgisLayerCountPreloader() arcgisLayerCountPreloader {
-	return arcgisLayerCountPreloader{
-		LayerFields: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*ArcgisLayer]("LayerFields", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = ArcgisLayers.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisLayerFields.Name()),
-					sm.Where(psql.Quote(ArcgisLayerFields.Alias(), "layer_feature_service_item_id").EQ(psql.Quote(parent, "feature_service_item_id"))),
-					sm.Where(psql.Quote(ArcgisLayerFields.Alias(), "layer_index").EQ(psql.Quote(parent, "index_"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type arcgisLayerCountThenLoader[Q orm.Loadable] struct {
-	LayerFields func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildArcgisLayerCountThenLoader[Q orm.Loadable]() arcgisLayerCountThenLoader[Q] {
-	type LayerFieldsCountInterface interface {
-		LoadCountLayerFields(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return arcgisLayerCountThenLoader[Q]{
-		LayerFields: countThenLoadBuilder[Q](
-			"LayerFields",
-			func(ctx context.Context, exec bob.Executor, retrieved LayerFieldsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountLayerFields(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountLayerFields loads the count of LayerFields into the C struct
-func (o *ArcgisLayer) LoadCountLayerFields(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.LayerFields(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.LayerFields = &count
-	return nil
-}
-
-// LoadCountLayerFields loads the count of LayerFields for a slice
-func (os ArcgisLayerSlice) LoadCountLayerFields(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountLayerFields(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type arcgisLayerJoins[Q dialect.Joinable] struct {
-	typ                              string
-	FeatureServiceItemServiceFeature modAs[Q, arcgisServiceFeatureColumns]
-	LayerFields                      modAs[Q, arcgisLayerFieldColumns]
-}
-
-func (j arcgisLayerJoins[Q]) aliasedAs(alias string) arcgisLayerJoins[Q] {
-	return buildArcgisLayerJoins[Q](buildArcgisLayerColumns(alias), j.typ)
-}
-
-func buildArcgisLayerJoins[Q dialect.Joinable](cols arcgisLayerColumns, typ string) arcgisLayerJoins[Q] {
-	return arcgisLayerJoins[Q]{
-		typ: typ,
-		FeatureServiceItemServiceFeature: modAs[Q, arcgisServiceFeatureColumns]{
-			c: ArcgisServiceFeatures.Columns,
-			f: func(to arcgisServiceFeatureColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisServiceFeatures.Name().As(to.Alias())).On(
-						to.ItemID.EQ(cols.FeatureServiceItemID),
-					))
-				}
-
-				return mods
-			},
-		},
-		LayerFields: modAs[Q, arcgisLayerFieldColumns]{
-			c: ArcgisLayerFields.Columns,
-			f: func(to arcgisLayerFieldColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisLayerFields.Name().As(to.Alias())).On(
-						to.LayerFeatureServiceItemID.EQ(cols.FeatureServiceItemID), to.LayerIndex.EQ(cols.Index),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

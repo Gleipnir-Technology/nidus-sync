@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -935,48 +934,4 @@ func (os CommsTextLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Execut
 	}
 
 	return nil
-}
-
-type commsTextLogJoins[Q dialect.Joinable] struct {
-	typ              string
-	DestinationPhone modAs[Q, commsPhoneColumns]
-	SourcePhone      modAs[Q, commsPhoneColumns]
-}
-
-func (j commsTextLogJoins[Q]) aliasedAs(alias string) commsTextLogJoins[Q] {
-	return buildCommsTextLogJoins[Q](buildCommsTextLogColumns(alias), j.typ)
-}
-
-func buildCommsTextLogJoins[Q dialect.Joinable](cols commsTextLogColumns, typ string) commsTextLogJoins[Q] {
-	return commsTextLogJoins[Q]{
-		typ: typ,
-		DestinationPhone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.Destination),
-					))
-				}
-
-				return mods
-			},
-		},
-		SourcePhone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.Source),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

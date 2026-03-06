@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -41,8 +40,6 @@ type Site struct {
 	Version        int32            `db:"version,pk" `
 
 	R siteR `db:"-" `
-
-	C siteC `db:"-" `
 }
 
 // SiteSlice is an alias for a slice of pointers to Site.
@@ -57,8 +54,8 @@ type SitesQuery = *psql.ViewQuery[*Site, SiteSlice]
 
 // siteR is where relationships are stored.
 type siteR struct {
+	Features    FeatureSlice    // feature.feature_site_id_site_version_fkey
 	Leads       LeadSlice       // lead.lead_site_id_site_version_fkey
-	Pools       PoolSlice       // pool.pool_site_id_site_version_fkey
 	Residents   ResidentSlice   // resident.resident_site_id_site_version_fkey
 	Address     *Address        // site.site_address_id_fkey
 	CreatorUser *User           // site.site_creator_id_fkey
@@ -642,6 +639,34 @@ func (o SiteSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	return nil
 }
 
+// Features starts a query for related objects on feature
+func (o *Site) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	return Features.Query(append(mods,
+		sm.Where(Features.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Features.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+	)...)
+}
+
+func (os SiteSlice) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+
+	pkVersion := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+		pkVersion = append(pkVersion, o.Version)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
+	))
+
+	return Features.Query(append(mods,
+		sm.Where(psql.Group(Features.Columns.SiteID, Features.Columns.SiteVersion).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Leads starts a query for related objects on lead
 func (o *Site) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
 	return Leads.Query(append(mods,
@@ -667,34 +692,6 @@ func (os SiteSlice) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
 
 	return Leads.Query(append(mods,
 		sm.Where(psql.Group(Leads.Columns.SiteID, Leads.Columns.SiteVersion).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Pools starts a query for related objects on pool
-func (o *Site) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
-	return Pools.Query(append(mods,
-		sm.Where(Pools.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Pools.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
-	)...)
-}
-
-func (os SiteSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) PoolsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkVersion := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-		pkVersion = append(pkVersion, o.Version)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
-	))
-
-	return Pools.Query(append(mods,
-		sm.Where(psql.Group(Pools.Columns.SiteID, Pools.Columns.SiteVersion).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -822,6 +819,76 @@ func (os SiteSlice) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
 	)...)
 }
 
+func insertSiteFeatures0(ctx context.Context, exec bob.Executor, features1 []*FeatureSetter, site0 *Site) (FeatureSlice, error) {
+	for i := range features1 {
+		features1[i].SiteID = omit.From(site0.ID)
+		features1[i].SiteVersion = omit.From(site0.Version)
+	}
+
+	ret, err := Features.Insert(bob.ToMods(features1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertSiteFeatures0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachSiteFeatures0(ctx context.Context, exec bob.Executor, count int, features1 FeatureSlice, site0 *Site) (FeatureSlice, error) {
+	setter := &FeatureSetter{
+		SiteID:      omit.From(site0.ID),
+		SiteVersion: omit.From(site0.Version),
+	}
+
+	err := features1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSiteFeatures0: %w", err)
+	}
+
+	return features1, nil
+}
+
+func (site0 *Site) InsertFeatures(ctx context.Context, exec bob.Executor, related ...*FeatureSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	features1, err := insertSiteFeatures0(ctx, exec, related, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Features = append(site0.R.Features, features1...)
+
+	for _, rel := range features1 {
+		rel.R.Site = site0
+	}
+	return nil
+}
+
+func (site0 *Site) AttachFeatures(ctx context.Context, exec bob.Executor, related ...*Feature) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	features1 := FeatureSlice(related)
+
+	_, err = attachSiteFeatures0(ctx, exec, len(related), features1, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Features = append(site0.R.Features, features1...)
+
+	for _, rel := range related {
+		rel.R.Site = site0
+	}
+
+	return nil
+}
+
 func insertSiteLeads0(ctx context.Context, exec bob.Executor, leads1 []*LeadSetter, site0 *Site) (LeadSlice, error) {
 	for i := range leads1 {
 		leads1[i].SiteID = omitnull.From(site0.ID)
@@ -884,76 +951,6 @@ func (site0 *Site) AttachLeads(ctx context.Context, exec bob.Executor, related .
 	}
 
 	site0.R.Leads = append(site0.R.Leads, leads1...)
-
-	for _, rel := range related {
-		rel.R.Site = site0
-	}
-
-	return nil
-}
-
-func insertSitePools0(ctx context.Context, exec bob.Executor, pools1 []*PoolSetter, site0 *Site) (PoolSlice, error) {
-	for i := range pools1 {
-		pools1[i].SiteID = omit.From(site0.ID)
-		pools1[i].SiteVersion = omit.From(site0.Version)
-	}
-
-	ret, err := Pools.Insert(bob.ToMods(pools1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertSitePools0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachSitePools0(ctx context.Context, exec bob.Executor, count int, pools1 PoolSlice, site0 *Site) (PoolSlice, error) {
-	setter := &PoolSetter{
-		SiteID:      omit.From(site0.ID),
-		SiteVersion: omit.From(site0.Version),
-	}
-
-	err := pools1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachSitePools0: %w", err)
-	}
-
-	return pools1, nil
-}
-
-func (site0 *Site) InsertPools(ctx context.Context, exec bob.Executor, related ...*PoolSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	pools1, err := insertSitePools0(ctx, exec, related, site0)
-	if err != nil {
-		return err
-	}
-
-	site0.R.Pools = append(site0.R.Pools, pools1...)
-
-	for _, rel := range pools1 {
-		rel.R.Site = site0
-	}
-	return nil
-}
-
-func (site0 *Site) AttachPools(ctx context.Context, exec bob.Executor, related ...*Pool) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	pools1 := PoolSlice(related)
-
-	_, err = attachSitePools0(ctx, exec, len(related), pools1, site0)
-	if err != nil {
-		return err
-	}
-
-	site0.R.Pools = append(site0.R.Pools, pools1...)
 
 	for _, rel := range related {
 		rel.R.Site = site0
@@ -1268,13 +1265,13 @@ func (o *Site) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "Leads":
-		rels, ok := retrieved.(LeadSlice)
+	case "Features":
+		rels, ok := retrieved.(FeatureSlice)
 		if !ok {
 			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Leads = rels
+		o.R.Features = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1282,13 +1279,13 @@ func (o *Site) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Pools":
-		rels, ok := retrieved.(PoolSlice)
+	case "Leads":
+		rels, ok := retrieved.(LeadSlice)
 		if !ok {
 			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Pools = rels
+		o.R.Leads = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1428,8 +1425,8 @@ func buildSitePreloader() sitePreloader {
 }
 
 type siteThenLoader[Q orm.Loadable] struct {
+	Features    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Leads       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Residents   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Address     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -1438,11 +1435,11 @@ type siteThenLoader[Q orm.Loadable] struct {
 }
 
 func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
+	type FeaturesLoadInterface interface {
+		LoadFeatures(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type LeadsLoadInterface interface {
 		LoadLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PoolsLoadInterface interface {
-		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ResidentsLoadInterface interface {
 		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1461,16 +1458,16 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 	}
 
 	return siteThenLoader[Q]{
+		Features: thenLoadBuilder[Q](
+			"Features",
+			func(ctx context.Context, exec bob.Executor, retrieved FeaturesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFeatures(ctx, exec, mods...)
+			},
+		),
 		Leads: thenLoadBuilder[Q](
 			"Leads",
 			func(ctx context.Context, exec bob.Executor, retrieved LeadsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadLeads(ctx, exec, mods...)
-			},
-		),
-		Pools: thenLoadBuilder[Q](
-			"Pools",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPools(ctx, exec, mods...)
 			},
 		),
 		Residents: thenLoadBuilder[Q](
@@ -1504,6 +1501,71 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadFeatures loads the site's Features into the .R struct
+func (o *Site) LoadFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Features = nil
+
+	related, err := o.Features(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Site = o
+	}
+
+	o.R.Features = related
+	return nil
+}
+
+// LoadFeatures loads the site's Features into the .R struct
+func (os SiteSlice) LoadFeatures(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	features, err := os.Features(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Features = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range features {
+
+			if !(o.ID == rel.SiteID) {
+				continue
+			}
+
+			if !(o.Version == rel.SiteVersion) {
+				continue
+			}
+
+			rel.R.Site = o
+
+			o.R.Features = append(o.R.Features, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadLeads loads the site's Leads into the .R struct
@@ -1571,71 +1633,6 @@ func (os SiteSlice) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bo
 			rel.R.Site = o
 
 			o.R.Leads = append(o.R.Leads, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadPools loads the site's Pools into the .R struct
-func (o *Site) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Pools = nil
-
-	related, err := o.Pools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Site = o
-	}
-
-	o.R.Pools = related
-	return nil
-}
-
-// LoadPools loads the site's Pools into the .R struct
-func (os SiteSlice) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	pools, err := os.Pools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.Pools = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range pools {
-
-			if !(o.ID == rel.SiteID) {
-				continue
-			}
-
-			if !(o.Version == rel.SiteVersion) {
-				continue
-			}
-
-			rel.R.Site = o
-
-			o.R.Pools = append(o.R.Pools, rel)
 		}
 	}
 
@@ -1919,341 +1916,4 @@ func (os SiteSlice) LoadParcel(ctx context.Context, exec bob.Executor, mods ...b
 	}
 
 	return nil
-}
-
-// siteC is where relationship counts are stored.
-type siteC struct {
-	Leads     *int64
-	Pools     *int64
-	Residents *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *Site) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "Leads":
-		o.C.Leads = &count
-	case "Pools":
-		o.C.Pools = &count
-	case "Residents":
-		o.C.Residents = &count
-	}
-	return nil
-}
-
-type siteCountPreloader struct {
-	Leads     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Pools     func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-	Residents func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildSiteCountPreloader() siteCountPreloader {
-	return siteCountPreloader{
-		Leads: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Site]("Leads", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Sites.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Leads.Name()),
-					sm.Where(psql.Quote(Leads.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
-					sm.Where(psql.Quote(Leads.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Pools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Site]("Pools", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Sites.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Pools.Name()),
-					sm.Where(psql.Quote(Pools.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
-					sm.Where(psql.Quote(Pools.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-		Residents: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Site]("Residents", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Sites.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Residents.Name()),
-					sm.Where(psql.Quote(Residents.Alias(), "site_id").EQ(psql.Quote(parent, "id"))),
-					sm.Where(psql.Quote(Residents.Alias(), "site_version").EQ(psql.Quote(parent, "version"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type siteCountThenLoader[Q orm.Loadable] struct {
-	Leads     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildSiteCountThenLoader[Q orm.Loadable]() siteCountThenLoader[Q] {
-	type LeadsCountInterface interface {
-		LoadCountLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PoolsCountInterface interface {
-		LoadCountPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ResidentsCountInterface interface {
-		LoadCountResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return siteCountThenLoader[Q]{
-		Leads: countThenLoadBuilder[Q](
-			"Leads",
-			func(ctx context.Context, exec bob.Executor, retrieved LeadsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountLeads(ctx, exec, mods...)
-			},
-		),
-		Pools: countThenLoadBuilder[Q](
-			"Pools",
-			func(ctx context.Context, exec bob.Executor, retrieved PoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountPools(ctx, exec, mods...)
-			},
-		),
-		Residents: countThenLoadBuilder[Q](
-			"Residents",
-			func(ctx context.Context, exec bob.Executor, retrieved ResidentsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountResidents(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountLeads loads the count of Leads into the C struct
-func (o *Site) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Leads(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Leads = &count
-	return nil
-}
-
-// LoadCountLeads loads the count of Leads for a slice
-func (os SiteSlice) LoadCountLeads(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountLeads(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountPools loads the count of Pools into the C struct
-func (o *Site) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Pools(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Pools = &count
-	return nil
-}
-
-// LoadCountPools loads the count of Pools for a slice
-func (os SiteSlice) LoadCountPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountPools(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadCountResidents loads the count of Residents into the C struct
-func (o *Site) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Residents(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Residents = &count
-	return nil
-}
-
-// LoadCountResidents loads the count of Residents for a slice
-func (os SiteSlice) LoadCountResidents(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountResidents(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type siteJoins[Q dialect.Joinable] struct {
-	typ         string
-	Leads       modAs[Q, leadColumns]
-	Pools       modAs[Q, poolColumns]
-	Residents   modAs[Q, residentColumns]
-	Address     modAs[Q, addressColumns]
-	CreatorUser modAs[Q, userColumns]
-	File        modAs[Q, fileuploadFileColumns]
-	Parcel      modAs[Q, parcelColumns]
-}
-
-func (j siteJoins[Q]) aliasedAs(alias string) siteJoins[Q] {
-	return buildSiteJoins[Q](buildSiteColumns(alias), j.typ)
-}
-
-func buildSiteJoins[Q dialect.Joinable](cols siteColumns, typ string) siteJoins[Q] {
-	return siteJoins[Q]{
-		typ: typ,
-		Leads: modAs[Q, leadColumns]{
-			c: Leads.Columns,
-			f: func(to leadColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Leads.Name().As(to.Alias())).On(
-						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
-					))
-				}
-
-				return mods
-			},
-		},
-		Pools: modAs[Q, poolColumns]{
-			c: Pools.Columns,
-			f: func(to poolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Pools.Name().As(to.Alias())).On(
-						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
-					))
-				}
-
-				return mods
-			},
-		},
-		Residents: modAs[Q, residentColumns]{
-			c: Residents.Columns,
-			f: func(to residentColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Residents.Name().As(to.Alias())).On(
-						to.SiteID.EQ(cols.ID), to.SiteVersion.EQ(cols.Version),
-					))
-				}
-
-				return mods
-			},
-		},
-		Address: modAs[Q, addressColumns]{
-			c: Addresses.Columns,
-			f: func(to addressColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Addresses.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.AddressID),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.CreatorID),
-					))
-				}
-
-				return mods
-			},
-		},
-		File: modAs[Q, fileuploadFileColumns]{
-			c: FileuploadFiles.Columns,
-			f: func(to fileuploadFileColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.FileID),
-					))
-				}
-
-				return mods
-			},
-		},
-		Parcel: modAs[Q, parcelColumns]{
-			c: Parcels.Columns,
-			f: func(to parcelColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Parcels.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ParcelID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -698,33 +697,4 @@ func (os H3AggregationSlice) LoadOrganization(ctx context.Context, exec bob.Exec
 	}
 
 	return nil
-}
-
-type h3AggregationJoins[Q dialect.Joinable] struct {
-	typ          string
-	Organization modAs[Q, organizationColumns]
-}
-
-func (j h3AggregationJoins[Q]) aliasedAs(alias string) h3AggregationJoins[Q] {
-	return buildH3AggregationJoins[Q](buildH3AggregationColumns(alias), j.typ)
-}
-
-func buildH3AggregationJoins[Q dialect.Joinable](cols h3AggregationColumns, typ string) h3AggregationJoins[Q] {
-	return h3AggregationJoins[Q]{
-		typ: typ,
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

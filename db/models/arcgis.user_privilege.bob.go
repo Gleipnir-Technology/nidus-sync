@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -580,33 +579,4 @@ func (os ArcgisUserPrivilegeSlice) LoadUserUser(ctx context.Context, exec bob.Ex
 	}
 
 	return nil
-}
-
-type arcgisUserPrivilegeJoins[Q dialect.Joinable] struct {
-	typ      string
-	UserUser modAs[Q, arcgisuserColumns]
-}
-
-func (j arcgisUserPrivilegeJoins[Q]) aliasedAs(alias string) arcgisUserPrivilegeJoins[Q] {
-	return buildArcgisUserPrivilegeJoins[Q](buildArcgisUserPrivilegeColumns(alias), j.typ)
-}
-
-func buildArcgisUserPrivilegeJoins[Q dialect.Joinable](cols arcgisUserPrivilegeColumns, typ string) arcgisUserPrivilegeJoins[Q] {
-	return arcgisUserPrivilegeJoins[Q]{
-		typ: typ,
-		UserUser: modAs[Q, arcgisuserColumns]{
-			c: ArcgisUsers.Columns,
-			f: func(to arcgisuserColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisUsers.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.UserID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

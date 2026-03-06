@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -987,48 +986,4 @@ func (os ArcgisOauthTokenSlice) LoadUserUser(ctx context.Context, exec bob.Execu
 	}
 
 	return nil
-}
-
-type arcgisOauthTokenJoins[Q dialect.Joinable] struct {
-	typ                  string
-	ArcgisAccountAccount modAs[Q, arcgisAccountColumns]
-	UserUser             modAs[Q, userColumns]
-}
-
-func (j arcgisOauthTokenJoins[Q]) aliasedAs(alias string) arcgisOauthTokenJoins[Q] {
-	return buildArcgisOauthTokenJoins[Q](buildArcgisOauthTokenColumns(alias), j.typ)
-}
-
-func buildArcgisOauthTokenJoins[Q dialect.Joinable](cols arcgisOauthTokenColumns, typ string) arcgisOauthTokenJoins[Q] {
-	return arcgisOauthTokenJoins[Q]{
-		typ: typ,
-		ArcgisAccountAccount: modAs[Q, arcgisAccountColumns]{
-			c: ArcgisAccounts.Columns,
-			f: func(to arcgisAccountColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisAccounts.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ArcgisAccountID),
-					))
-				}
-
-				return mods
-			},
-		},
-		UserUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.UserID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

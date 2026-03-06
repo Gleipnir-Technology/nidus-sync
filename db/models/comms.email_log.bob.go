@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -960,48 +959,4 @@ func (os CommsEmailLogSlice) LoadTemplateEmailTemplate(ctx context.Context, exec
 	}
 
 	return nil
-}
-
-type commsEmailLogJoins[Q dialect.Joinable] struct {
-	typ                     string
-	DestinationEmailContact modAs[Q, commsEmailContactColumns]
-	TemplateEmailTemplate   modAs[Q, commsEmailTemplateColumns]
-}
-
-func (j commsEmailLogJoins[Q]) aliasedAs(alias string) commsEmailLogJoins[Q] {
-	return buildCommsEmailLogJoins[Q](buildCommsEmailLogColumns(alias), j.typ)
-}
-
-func buildCommsEmailLogJoins[Q dialect.Joinable](cols commsEmailLogColumns, typ string) commsEmailLogJoins[Q] {
-	return commsEmailLogJoins[Q]{
-		typ: typ,
-		DestinationEmailContact: modAs[Q, commsEmailContactColumns]{
-			c: CommsEmailContacts.Columns,
-			f: func(to commsEmailContactColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailContacts.Name().As(to.Alias())).On(
-						to.Address.EQ(cols.Destination),
-					))
-				}
-
-				return mods
-			},
-		},
-		TemplateEmailTemplate: modAs[Q, commsEmailTemplateColumns]{
-			c: CommsEmailTemplates.Columns,
-			f: func(to commsEmailTemplateColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsEmailTemplates.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.TemplateID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -40,8 +39,6 @@ type ArcgisUser struct {
 	UserType          string    `db:"user_type" `
 
 	R arcgisuserR `db:"-" `
-
-	C arcgisuserC `db:"-" `
 }
 
 // ArcgisUserSlice is an alias for a slice of pointers to ArcgisUser.
@@ -1051,141 +1048,4 @@ func (os ArcgisUserSlice) LoadUserUserPrivileges(ctx context.Context, exec bob.E
 	}
 
 	return nil
-}
-
-// arcgisuserC is where relationship counts are stored.
-type arcgisuserC struct {
-	UserUserPrivileges *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *ArcgisUser) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "UserUserPrivileges":
-		o.C.UserUserPrivileges = &count
-	}
-	return nil
-}
-
-type arcgisuserCountPreloader struct {
-	UserUserPrivileges func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildArcgisUserCountPreloader() arcgisuserCountPreloader {
-	return arcgisuserCountPreloader{
-		UserUserPrivileges: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*ArcgisUser]("UserUserPrivileges", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = ArcgisUsers.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ArcgisUserPrivileges.Name()),
-					sm.Where(psql.Quote(ArcgisUserPrivileges.Alias(), "user_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type arcgisuserCountThenLoader[Q orm.Loadable] struct {
-	UserUserPrivileges func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildArcgisUserCountThenLoader[Q orm.Loadable]() arcgisuserCountThenLoader[Q] {
-	type UserUserPrivilegesCountInterface interface {
-		LoadCountUserUserPrivileges(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return arcgisuserCountThenLoader[Q]{
-		UserUserPrivileges: countThenLoadBuilder[Q](
-			"UserUserPrivileges",
-			func(ctx context.Context, exec bob.Executor, retrieved UserUserPrivilegesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountUserUserPrivileges(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountUserUserPrivileges loads the count of UserUserPrivileges into the C struct
-func (o *ArcgisUser) LoadCountUserUserPrivileges(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.UserUserPrivileges(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.UserUserPrivileges = &count
-	return nil
-}
-
-// LoadCountUserUserPrivileges loads the count of UserUserPrivileges for a slice
-func (os ArcgisUserSlice) LoadCountUserUserPrivileges(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountUserUserPrivileges(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type arcgisuserJoins[Q dialect.Joinable] struct {
-	typ                string
-	PublicUserUser     modAs[Q, userColumns]
-	UserUserPrivileges modAs[Q, arcgisUserPrivilegeColumns]
-}
-
-func (j arcgisuserJoins[Q]) aliasedAs(alias string) arcgisuserJoins[Q] {
-	return buildArcgisUserJoins[Q](buildArcgisUserColumns(alias), j.typ)
-}
-
-func buildArcgisUserJoins[Q dialect.Joinable](cols arcgisuserColumns, typ string) arcgisuserJoins[Q] {
-	return arcgisuserJoins[Q]{
-		typ: typ,
-		PublicUserUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.PublicUserID),
-					))
-				}
-
-				return mods
-			},
-		},
-		UserUserPrivileges: modAs[Q, arcgisUserPrivilegeColumns]{
-			c: ArcgisUserPrivileges.Columns,
-			f: func(to arcgisUserPrivilegeColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisUserPrivileges.Name().As(to.Alias())).On(
-						to.UserID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

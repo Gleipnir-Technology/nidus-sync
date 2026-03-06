@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -17,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -34,8 +32,6 @@ type CommsMailer struct {
 	UUID      uuid.UUID `db:"uuid" `
 
 	R commsMailerR `db:"-" `
-
-	C commsMailerC `db:"-" `
 }
 
 // CommsMailerSlice is an alias for a slice of pointers to CommsMailer.
@@ -786,152 +782,4 @@ func (os CommsMailerSlice) LoadComplianceReportRequests(ctx context.Context, exe
 	}
 
 	return nil
-}
-
-// commsMailerC is where relationship counts are stored.
-type commsMailerC struct {
-	ComplianceReportRequests *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *CommsMailer) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "ComplianceReportRequests":
-		o.C.ComplianceReportRequests = &count
-	}
-	return nil
-}
-
-type commsMailerCountPreloader struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildCommsMailerCountPreloader() commsMailerCountPreloader {
-	return commsMailerCountPreloader{
-		ComplianceReportRequests: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*CommsMailer]("ComplianceReportRequests", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = CommsMailers.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(ComplianceReportRequestMailers.Name()),
-					sm.Where(psql.Quote(ComplianceReportRequestMailers.Alias(), "mailer_id").EQ(psql.Quote(parent, "id"))),
-					sm.InnerJoin(ComplianceReportRequests.Name()).On(
-						psql.Quote(ComplianceReportRequests.Alias(), "id").EQ(psql.Quote(ComplianceReportRequestMailers.Alias(), "compliance_report_request_id")),
-					),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type commsMailerCountThenLoader[Q orm.Loadable] struct {
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildCommsMailerCountThenLoader[Q orm.Loadable]() commsMailerCountThenLoader[Q] {
-	type ComplianceReportRequestsCountInterface interface {
-		LoadCountComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return commsMailerCountThenLoader[Q]{
-		ComplianceReportRequests: countThenLoadBuilder[Q](
-			"ComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountComplianceReportRequests(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests into the C struct
-func (o *CommsMailer) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.ComplianceReportRequests(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.ComplianceReportRequests = &count
-	return nil
-}
-
-// LoadCountComplianceReportRequests loads the count of ComplianceReportRequests for a slice
-func (os CommsMailerSlice) LoadCountComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountComplianceReportRequests(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type commsMailerJoins[Q dialect.Joinable] struct {
-	typ                      string
-	Address                  modAs[Q, addressColumns]
-	ComplianceReportRequests modAs[Q, complianceReportRequestColumns]
-}
-
-func (j commsMailerJoins[Q]) aliasedAs(alias string) commsMailerJoins[Q] {
-	return buildCommsMailerJoins[Q](buildCommsMailerColumns(alias), j.typ)
-}
-
-func buildCommsMailerJoins[Q dialect.Joinable](cols commsMailerColumns, typ string) commsMailerJoins[Q] {
-	return commsMailerJoins[Q]{
-		typ: typ,
-		Address: modAs[Q, addressColumns]{
-			c: Addresses.Columns,
-			f: func(to addressColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Addresses.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.AddressID),
-					))
-				}
-
-				return mods
-			},
-		},
-		ComplianceReportRequests: modAs[Q, complianceReportRequestColumns]{
-			c: ComplianceReportRequests.Columns,
-			f: func(to complianceReportRequestColumns) bob.Mod[Q] {
-				random := strconv.FormatInt(randInt(), 10)
-				mods := make(mods.QueryMods[Q], 0, 2)
-
-				{
-					to := ComplianceReportRequestMailers.Columns.AliasedAs(ComplianceReportRequestMailers.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequestMailers.Name().As(to.Alias())).On(
-						to.MailerID.EQ(cols.ID),
-					))
-				}
-				{
-					cols := ComplianceReportRequestMailers.Columns.AliasedAs(ComplianceReportRequestMailers.Columns.Alias() + random)
-					mods = append(mods, dialect.Join[Q](typ, ComplianceReportRequests.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.ComplianceReportRequestID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

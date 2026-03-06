@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/null"
@@ -31,8 +30,6 @@ type Parcel struct {
 	Geometry    string           `db:"geometry" `
 
 	R parcelR `db:"-" `
-
-	C parcelC `db:"-" `
 }
 
 // ParcelSlice is an alias for a slice of pointers to Parcel.
@@ -642,126 +639,4 @@ func (os ParcelSlice) LoadSites(ctx context.Context, exec bob.Executor, mods ...
 	}
 
 	return nil
-}
-
-// parcelC is where relationship counts are stored.
-type parcelC struct {
-	Sites *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *Parcel) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "Sites":
-		o.C.Sites = &count
-	}
-	return nil
-}
-
-type parcelCountPreloader struct {
-	Sites func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildParcelCountPreloader() parcelCountPreloader {
-	return parcelCountPreloader{
-		Sites: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Parcel]("Sites", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Parcels.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(Sites.Name()),
-					sm.Where(psql.Quote(Sites.Alias(), "parcel_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type parcelCountThenLoader[Q orm.Loadable] struct {
-	Sites func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildParcelCountThenLoader[Q orm.Loadable]() parcelCountThenLoader[Q] {
-	type SitesCountInterface interface {
-		LoadCountSites(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return parcelCountThenLoader[Q]{
-		Sites: countThenLoadBuilder[Q](
-			"Sites",
-			func(ctx context.Context, exec bob.Executor, retrieved SitesCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSites(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountSites loads the count of Sites into the C struct
-func (o *Parcel) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.Sites(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.Sites = &count
-	return nil
-}
-
-// LoadCountSites loads the count of Sites for a slice
-func (os ParcelSlice) LoadCountSites(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSites(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type parcelJoins[Q dialect.Joinable] struct {
-	typ   string
-	Sites modAs[Q, siteColumns]
-}
-
-func (j parcelJoins[Q]) aliasedAs(alias string) parcelJoins[Q] {
-	return buildParcelJoins[Q](buildParcelColumns(alias), j.typ)
-}
-
-func buildParcelJoins[Q dialect.Joinable](cols parcelColumns, typ string) parcelJoins[Q] {
-	return parcelJoins[Q]{
-		typ: typ,
-		Sites: modAs[Q, siteColumns]{
-			c: Sites.Columns,
-			f: func(to siteColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Sites.Name().As(to.Alias())).On(
-						to.ParcelID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

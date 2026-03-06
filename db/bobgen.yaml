@@ -28,4 +28,28 @@ psql:
   queries:
     - ./sql
   uuid_pkg: google
-plugins_preset: "all"
+plugins:
+  counts:
+    disabled: true
+  dbinfo:
+    destination: "dbinfo"
+    disabled: false
+    pkgname: "dbinfo"
+  enums:
+    destination: "enums"
+    disabled: false
+    pkgname: "enums"
+  factory:
+    disabled: true
+    pkgname: "factory"
+    destination: "factory"
+  joins:
+    disabled: true
+  loaders:
+    disabled: false
+  models:
+    destination: "models"
+    disabled: false
+    pkgname: "models"
+  where:
+    disabled: false

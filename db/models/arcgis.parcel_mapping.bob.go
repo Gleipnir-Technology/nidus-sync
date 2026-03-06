@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -835,48 +834,4 @@ func (os ArcgisParcelMappingSlice) LoadOrganization(ctx context.Context, exec bo
 	}
 
 	return nil
-}
-
-type arcgisParcelMappingJoins[Q dialect.Joinable] struct {
-	typ          string
-	LayerField   modAs[Q, arcgisLayerFieldColumns]
-	Organization modAs[Q, organizationColumns]
-}
-
-func (j arcgisParcelMappingJoins[Q]) aliasedAs(alias string) arcgisParcelMappingJoins[Q] {
-	return buildArcgisParcelMappingJoins[Q](buildArcgisParcelMappingColumns(alias), j.typ)
-}
-
-func buildArcgisParcelMappingJoins[Q dialect.Joinable](cols arcgisParcelMappingColumns, typ string) arcgisParcelMappingJoins[Q] {
-	return arcgisParcelMappingJoins[Q]{
-		typ: typ,
-		LayerField: modAs[Q, arcgisLayerFieldColumns]{
-			c: ArcgisLayerFields.Columns,
-			f: func(to arcgisLayerFieldColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, ArcgisLayerFields.Name().As(to.Alias())).On(
-						to.LayerFeatureServiceItemID.EQ(cols.LayerFeatureServiceItemID), to.LayerIndex.EQ(cols.LayerIndex), to.Name.EQ(cols.LayerFieldName),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

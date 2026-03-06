@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -595,33 +594,4 @@ func (os FileuploadErrorFileSlice) LoadFile(ctx context.Context, exec bob.Execut
 	}
 
 	return nil
-}
-
-type fileuploadErrorFileJoins[Q dialect.Joinable] struct {
-	typ  string
-	File modAs[Q, fileuploadFileColumns]
-}
-
-func (j fileuploadErrorFileJoins[Q]) aliasedAs(alias string) fileuploadErrorFileJoins[Q] {
-	return buildFileuploadErrorFileJoins[Q](buildFileuploadErrorFileColumns(alias), j.typ)
-}
-
-func buildFileuploadErrorFileJoins[Q dialect.Joinable](cols fileuploadErrorFileColumns, typ string) fileuploadErrorFileJoins[Q] {
-	return fileuploadErrorFileJoins[Q]{
-		typ: typ,
-		File: modAs[Q, fileuploadFileColumns]{
-			c: FileuploadFiles.Columns,
-			f: func(to fileuploadFileColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, FileuploadFiles.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.FileID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

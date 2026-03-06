@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -38,8 +37,6 @@ type Signal struct {
 	Type           enums.Signaltype                `db:"type_" `
 
 	R signalR `db:"-" `
-
-	C signalC `db:"-" `
 }
 
 // SignalSlice is an alias for a slice of pointers to Signal.
@@ -54,10 +51,9 @@ type SignalsQuery = *psql.ViewQuery[*Signal, SignalSlice]
 
 // signalR is where relationships are stored.
 type signalR struct {
-	AddressorUser *User           // signal.signal_addressor_fkey
-	CreatorUser   *User           // signal.signal_creator_fkey
-	Organization  *Organization   // signal.signal_organization_id_fkey
-	SignalPools   SignalPoolSlice // signal_pool.signal_pool_signal_id_fkey
+	AddressorUser *User         // signal.signal_addressor_fkey
+	CreatorUser   *User         // signal.signal_creator_fkey
+	Organization  *Organization // signal.signal_organization_id_fkey
 }
 
 func buildSignalColumns(alias string) signalColumns {
@@ -610,30 +606,6 @@ func (os SignalSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 	)...)
 }
 
-// SignalPools starts a query for related objects on signal_pool
-func (o *Signal) SignalPools(mods ...bob.Mod[*dialect.SelectQuery]) SignalPoolsQuery {
-	return SignalPools.Query(append(mods,
-		sm.Where(SignalPools.Columns.SignalID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os SignalSlice) SignalPools(mods ...bob.Mod[*dialect.SelectQuery]) SignalPoolsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return SignalPools.Query(append(mods,
-		sm.Where(psql.Group(SignalPools.Columns.SignalID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 func attachSignalAddressorUser0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, user1 *User) (*Signal, error) {
 	setter := &SignalSetter{
 		Addressor: omitnull.From(user1.ID),
@@ -850,20 +822,6 @@ func (o *Signal) Preload(name string, retrieved any) error {
 			rel.R.Signals = SignalSlice{o}
 		}
 		return nil
-	case "SignalPools":
-		rels, ok := retrieved.(SignalPoolSlice)
-		if !ok {
-			return fmt.Errorf("signal cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.SignalPools = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Signal = o
-			}
-		}
-		return nil
 	default:
 		return fmt.Errorf("signal has no relationship %q", name)
 	}
@@ -923,7 +881,6 @@ type signalThenLoader[Q orm.Loadable] struct {
 	AddressorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SignalPools   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
@@ -935,9 +892,6 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type SignalPoolsLoadInterface interface {
-		LoadSignalPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return signalThenLoader[Q]{
@@ -957,12 +911,6 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
-			},
-		),
-		SignalPools: thenLoadBuilder[Q](
-			"SignalPools",
-			func(ctx context.Context, exec bob.Executor, retrieved SignalPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadSignalPools(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1125,232 +1073,4 @@ func (os SignalSlice) LoadOrganization(ctx context.Context, exec bob.Executor, m
 	}
 
 	return nil
-}
-
-// LoadSignalPools loads the signal's SignalPools into the .R struct
-func (o *Signal) LoadSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.SignalPools = nil
-
-	related, err := o.SignalPools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Signal = o
-	}
-
-	o.R.SignalPools = related
-	return nil
-}
-
-// LoadSignalPools loads the signal's SignalPools into the .R struct
-func (os SignalSlice) LoadSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	signalPools, err := os.SignalPools(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.SignalPools = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range signalPools {
-
-			if !(o.ID == rel.SignalID) {
-				continue
-			}
-
-			rel.R.Signal = o
-
-			o.R.SignalPools = append(o.R.SignalPools, rel)
-		}
-	}
-
-	return nil
-}
-
-// signalC is where relationship counts are stored.
-type signalC struct {
-	SignalPools *int64
-}
-
-// PreloadCount sets a count in the C struct by name
-func (o *Signal) PreloadCount(name string, count int64) error {
-	if o == nil {
-		return nil
-	}
-
-	switch name {
-	case "SignalPools":
-		o.C.SignalPools = &count
-	}
-	return nil
-}
-
-type signalCountPreloader struct {
-	SignalPools func(...bob.Mod[*dialect.SelectQuery]) psql.Preloader
-}
-
-func buildSignalCountPreloader() signalCountPreloader {
-	return signalCountPreloader{
-		SignalPools: func(mods ...bob.Mod[*dialect.SelectQuery]) psql.Preloader {
-			return countPreloader[*Signal]("SignalPools", func(parent string) bob.Expression {
-				// Build a correlated subquery: (SELECT COUNT(*) FROM related WHERE fk = parent.pk)
-				if parent == "" {
-					parent = Signals.Alias()
-				}
-
-				subqueryMods := []bob.Mod[*dialect.SelectQuery]{
-					sm.Columns(psql.Raw("count(*)")),
-
-					sm.From(SignalPools.Name()),
-					sm.Where(psql.Quote(SignalPools.Alias(), "signal_id").EQ(psql.Quote(parent, "id"))),
-				}
-				subqueryMods = append(subqueryMods, mods...)
-				return psql.Group(psql.Select(subqueryMods...).Expression)
-			})
-		},
-	}
-}
-
-type signalCountThenLoader[Q orm.Loadable] struct {
-	SignalPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-}
-
-func buildSignalCountThenLoader[Q orm.Loadable]() signalCountThenLoader[Q] {
-	type SignalPoolsCountInterface interface {
-		LoadCountSignalPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-
-	return signalCountThenLoader[Q]{
-		SignalPools: countThenLoadBuilder[Q](
-			"SignalPools",
-			func(ctx context.Context, exec bob.Executor, retrieved SignalPoolsCountInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadCountSignalPools(ctx, exec, mods...)
-			},
-		),
-	}
-}
-
-// LoadCountSignalPools loads the count of SignalPools into the C struct
-func (o *Signal) LoadCountSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	count, err := o.SignalPools(mods...).Count(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	o.C.SignalPools = &count
-	return nil
-}
-
-// LoadCountSignalPools loads the count of SignalPools for a slice
-func (os SignalSlice) LoadCountSignalPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	for _, o := range os {
-		if err := o.LoadCountSignalPools(ctx, exec, mods...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-type signalJoins[Q dialect.Joinable] struct {
-	typ           string
-	AddressorUser modAs[Q, userColumns]
-	CreatorUser   modAs[Q, userColumns]
-	Organization  modAs[Q, organizationColumns]
-	SignalPools   modAs[Q, signalPoolColumns]
-}
-
-func (j signalJoins[Q]) aliasedAs(alias string) signalJoins[Q] {
-	return buildSignalJoins[Q](buildSignalColumns(alias), j.typ)
-}
-
-func buildSignalJoins[Q dialect.Joinable](cols signalColumns, typ string) signalJoins[Q] {
-	return signalJoins[Q]{
-		typ: typ,
-		AddressorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.Addressor),
-					))
-				}
-
-				return mods
-			},
-		},
-		CreatorUser: modAs[Q, userColumns]{
-			c: Users.Columns,
-			f: func(to userColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Users.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.Creator),
-					))
-				}
-
-				return mods
-			},
-		},
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-		SignalPools: modAs[Q, signalPoolColumns]{
-			c: SignalPools.Columns,
-			f: func(to signalPoolColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, SignalPools.Name().As(to.Alias())).On(
-						to.SignalID.EQ(cols.ID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

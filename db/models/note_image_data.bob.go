@@ -16,7 +16,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -650,33 +649,4 @@ func (os NoteImageDatumSlice) LoadNoteImage(ctx context.Context, exec bob.Execut
 	}
 
 	return nil
-}
-
-type noteImageDatumJoins[Q dialect.Joinable] struct {
-	typ       string
-	NoteImage modAs[Q, noteImageColumns]
-}
-
-func (j noteImageDatumJoins[Q]) aliasedAs(alias string) noteImageDatumJoins[Q] {
-	return buildNoteImageDatumJoins[Q](buildNoteImageDatumColumns(alias), j.typ)
-}
-
-func buildNoteImageDatumJoins[Q dialect.Joinable](cols noteImageDatumColumns, typ string) noteImageDatumJoins[Q] {
-	return noteImageDatumJoins[Q]{
-		typ: typ,
-		NoteImage: modAs[Q, noteImageColumns]{
-			c: NoteImages.Columns,
-			f: func(to noteImageColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, NoteImages.Name().As(to.Alias())).On(
-						to.Version.EQ(cols.NoteImageVersion), to.UUID.EQ(cols.NoteImageUUID),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }

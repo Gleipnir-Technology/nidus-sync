@@ -15,7 +15,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
-	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
@@ -719,48 +718,4 @@ func (os DistrictSubscriptionPhoneSlice) LoadPhoneE164Phone(ctx context.Context,
 	}
 
 	return nil
-}
-
-type districtSubscriptionPhoneJoins[Q dialect.Joinable] struct {
-	typ            string
-	Organization   modAs[Q, organizationColumns]
-	PhoneE164Phone modAs[Q, commsPhoneColumns]
-}
-
-func (j districtSubscriptionPhoneJoins[Q]) aliasedAs(alias string) districtSubscriptionPhoneJoins[Q] {
-	return buildDistrictSubscriptionPhoneJoins[Q](buildDistrictSubscriptionPhoneColumns(alias), j.typ)
-}
-
-func buildDistrictSubscriptionPhoneJoins[Q dialect.Joinable](cols districtSubscriptionPhoneColumns, typ string) districtSubscriptionPhoneJoins[Q] {
-	return districtSubscriptionPhoneJoins[Q]{
-		typ: typ,
-		Organization: modAs[Q, organizationColumns]{
-			c: Organizations.Columns,
-			f: func(to organizationColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, Organizations.Name().As(to.Alias())).On(
-						to.ID.EQ(cols.OrganizationID),
-					))
-				}
-
-				return mods
-			},
-		},
-		PhoneE164Phone: modAs[Q, commsPhoneColumns]{
-			c: CommsPhones.Columns,
-			f: func(to commsPhoneColumns) bob.Mod[Q] {
-				mods := make(mods.QueryMods[Q], 0, 1)
-
-				{
-					mods = append(mods, dialect.Join[Q](typ, CommsPhones.Name().As(to.Alias())).On(
-						to.E164.EQ(cols.PhoneE164),
-					))
-				}
-
-				return mods
-			},
-		},
-	}
 }
