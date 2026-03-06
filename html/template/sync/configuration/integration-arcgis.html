@@ -33,7 +33,7 @@
 										<input
 											type="text"
 											class="form-control"
-											value="{{ .Organization.ArcgisID.GetOr "" }}"
+											value="{{ .C.ArcGISAccount.ID }}"
 											readonly
 										/>
 									</div>
@@ -45,7 +45,7 @@
 										<input
 											type="text"
 											class="form-control"
-											value="{{ .Organization.ArcgisName.GetOr "" }}"
+											value="{{ .C.ArcGISAccount.Name }}"
 											readonly
 										/>
 									</div>

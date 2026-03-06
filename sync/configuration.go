@@ -23,7 +23,8 @@ type contentSettingOrganization struct {
 }
 
 type contentSettingIntegration struct {
-	ArcGISOAuth *models.ArcgisOauthToken
+	ArcGISAccount *models.ArcgisAccount
+	ArcGISOAuth   *models.ArcgisOauthToken
 }
 
 func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
@@ -82,8 +83,16 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
+	var account *models.ArcgisAccount
+	if org.ArcgisAccountID.IsValue() {
+		account, err = models.FindArcgisAccount(ctx, db.PGInstance.BobDB, org.ArcgisAccountID.MustGet())
+		if err != nil {
+			return nil, nhttp.NewError("Failed to get arcgis: %w", err)
+		}
+	}
 	data := contentSettingIntegration{
-		ArcGISOAuth: oauth,
+		ArcGISAccount: account,
+		ArcGISOAuth:   oauth,
 	}
 	return html.NewResponse("sync/configuration/integration-arcgis.html", data), nil
 }
