@@ -110,6 +110,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		}
 		var feature *models.Feature
 		feature, err = models.Features.Query(
+			models.SelectWhere.Features.OrganizationID.EQ(org.ID),
 			models.SelectWhere.Features.SiteID.EQ(site.ID),
 			models.SelectWhere.Features.SiteVersion.EQ(site.Version),
 		).One(ctx, txn)
@@ -121,8 +122,9 @@ func JobCommit(ctx context.Context, file_id int32) error {
 				Created:   omit.From(time.Now()),
 				CreatorID: omit.From(file.Committer.MustGet()),
 				//ID: row.Address,
-				SiteID:      omit.From(site.ID),
-				SiteVersion: omit.From(site.Version),
+				OrganizationID: omit.From(org.ID),
+				SiteID:         omit.From(site.ID),
+				SiteVersion:    omit.From(site.Version),
 			}).One(ctx, txn)
 			if err != nil {
 				return fmt.Errorf("insert feature: %w", err)
