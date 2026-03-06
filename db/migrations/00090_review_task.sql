@@ -9,7 +9,7 @@ CREATE TABLE review_task (
 	PRIMARY KEY(id)
 );
 CREATE TABLE review_task_pool (
-	feature_pool INTEGER NOT NULL REFERENCES feature_pool(feature_id),
+	feature_pool_id INTEGER NOT NULL REFERENCES feature_pool(feature_id),
 	location geometry(Point, 4326),
 	geometry geometry(Polygon, 4326),
 	review_task_id INTEGER NOT NULL REFERENCES review_task(id),

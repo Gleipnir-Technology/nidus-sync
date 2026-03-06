@@ -15,8 +15,8 @@ var ReviewTaskPools = Table[
 	Schema: "",
 	Name:   "review_task_pool",
 	Columns: reviewTaskPoolColumns{
-		FeaturePool: column{
-			Name:      "feature_pool",
+		FeaturePoolID: column{
+			Name:      "feature_pool_id",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -80,7 +80,7 @@ var ReviewTaskPools = Table[
 		ReviewTaskPoolReviewTaskPoolFeaturePoolFkey: foreignKey{
 			constraint: constraint{
 				Name:    "review_task_pool.review_task_pool_feature_pool_fkey",
-				Columns: []string{"feature_pool"},
+				Columns: []string{"feature_pool_id"},
 				Comment: "",
 			},
 			ForeignTable:   "feature_pool",
@@ -101,15 +101,15 @@ var ReviewTaskPools = Table[
 }
 
 type reviewTaskPoolColumns struct {
-	FeaturePool  column
-	Location     column
-	Geometry     column
-	ReviewTaskID column
+	FeaturePoolID column
+	Location      column
+	Geometry      column
+	ReviewTaskID  column
 }
 
 func (c reviewTaskPoolColumns) AsSlice() []column {
 	return []column{
-		c.FeaturePool, c.Location, c.Geometry, c.ReviewTaskID,
+		c.FeaturePoolID, c.Location, c.Geometry, c.ReviewTaskID,
 	}
 }
 

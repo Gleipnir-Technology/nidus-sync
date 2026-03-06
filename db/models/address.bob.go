@@ -26,7 +26,7 @@ import (
 type Address struct {
 	Country    enums.Countrytype `db:"country" `
 	Created    time.Time         `db:"created" `
-	Geom       string            `db:"geom" `
+	Location   string            `db:"location" `
 	H3cell     string            `db:"h3cell" `
 	ID         int32             `db:"id,pk" `
 	Locality   string            `db:"locality" `
@@ -59,12 +59,12 @@ type addressR struct {
 func buildAddressColumns(alias string) addressColumns {
 	return addressColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"country", "created", "geom", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_",
+			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_",
 		).WithParent("address"),
 		tableAlias: alias,
 		Country:    psql.Quote(alias, "country"),
 		Created:    psql.Quote(alias, "created"),
-		Geom:       psql.Quote(alias, "geom"),
+		Location:   psql.Quote(alias, "location"),
 		H3cell:     psql.Quote(alias, "h3cell"),
 		ID:         psql.Quote(alias, "id"),
 		Locality:   psql.Quote(alias, "locality"),
@@ -81,7 +81,7 @@ type addressColumns struct {
 	tableAlias string
 	Country    psql.Expression
 	Created    psql.Expression
-	Geom       psql.Expression
+	Location   psql.Expression
 	H3cell     psql.Expression
 	ID         psql.Expression
 	Locality   psql.Expression
@@ -106,7 +106,7 @@ func (addressColumns) AliasedAs(alias string) addressColumns {
 type AddressSetter struct {
 	Country    omit.Val[enums.Countrytype] `db:"country" `
 	Created    omit.Val[time.Time]         `db:"created" `
-	Geom       omit.Val[string]            `db:"geom" `
+	Location   omit.Val[string]            `db:"location" `
 	H3cell     omit.Val[string]            `db:"h3cell" `
 	ID         omit.Val[int32]             `db:"id,pk" `
 	Locality   omit.Val[string]            `db:"locality" `
@@ -125,8 +125,8 @@ func (s AddressSetter) SetColumns() []string {
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
-	if s.Geom.IsValue() {
-		vals = append(vals, "geom")
+	if s.Location.IsValue() {
+		vals = append(vals, "location")
 	}
 	if s.H3cell.IsValue() {
 		vals = append(vals, "h3cell")
@@ -162,8 +162,8 @@ func (s AddressSetter) Overwrite(t *Address) {
 	if s.Created.IsValue() {
 		t.Created = s.Created.MustGet()
 	}
-	if s.Geom.IsValue() {
-		t.Geom = s.Geom.MustGet()
+	if s.Location.IsValue() {
+		t.Location = s.Location.MustGet()
 	}
 	if s.H3cell.IsValue() {
 		t.H3cell = s.H3cell.MustGet()
@@ -210,8 +210,8 @@ func (s *AddressSetter) Apply(q *dialect.InsertQuery) {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Geom.IsValue() {
-			vals[2] = psql.Arg(s.Geom.MustGet())
+		if s.Location.IsValue() {
+			vals[2] = psql.Arg(s.Location.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
@@ -289,10 +289,10 @@ func (s AddressSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Geom.IsValue() {
+	if s.Location.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "geom")...),
-			psql.Arg(s.Geom),
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -843,7 +843,7 @@ func (address0 *Address) AttachSite(ctx context.Context, exec bob.Executor, site
 type addressWhere[Q psql.Filterable] struct {
 	Country    psql.WhereMod[Q, enums.Countrytype]
 	Created    psql.WhereMod[Q, time.Time]
-	Geom       psql.WhereMod[Q, string]
+	Location   psql.WhereMod[Q, string]
 	H3cell     psql.WhereMod[Q, string]
 	ID         psql.WhereMod[Q, int32]
 	Locality   psql.WhereMod[Q, string]
@@ -862,7 +862,7 @@ func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 	return addressWhere[Q]{
 		Country:    psql.Where[Q, enums.Countrytype](cols.Country),
 		Created:    psql.Where[Q, time.Time](cols.Created),
-		Geom:       psql.Where[Q, string](cols.Geom),
+		Location:   psql.Where[Q, string](cols.Location),
 		H3cell:     psql.Where[Q, string](cols.H3cell),
 		ID:         psql.Where[Q, int32](cols.ID),
 		Locality:   psql.Where[Q, string](cols.Locality),

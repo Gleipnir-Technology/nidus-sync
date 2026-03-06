@@ -149,10 +149,10 @@ func JobCommit(ctx context.Context, file_id int32) error {
 			return fmt.Errorf("insert review task: %w", err)
 		}
 		_, err = models.ReviewTaskPools.Insert(&models.ReviewTaskPoolSetter{
-			FeaturePool:  omit.From(feature.ID),
-			Location:     omitnull.FromPtr[string](nil),
-			Geometry:     omitnull.FromPtr[string](nil),
-			ReviewTaskID: omit.From(review_task.ID),
+			FeaturePoolID: omit.From(feature.ID),
+			Location:      omitnull.FromPtr[string](nil),
+			Geometry:      omitnull.FromPtr[string](nil),
+			ReviewTaskID:  omit.From(review_task.ID),
 		}).One(ctx, txn)
 
 		if err != nil {

@@ -24,10 +24,10 @@ import (
 
 // ReviewTaskPool is an object representing the database table.
 type ReviewTaskPool struct {
-	FeaturePool  int32            `db:"feature_pool" `
-	Location     null.Val[string] `db:"location" `
-	Geometry     null.Val[string] `db:"geometry" `
-	ReviewTaskID int32            `db:"review_task_id,pk" `
+	FeaturePoolID int32            `db:"feature_pool_id" `
+	Location      null.Val[string] `db:"location" `
+	Geometry      null.Val[string] `db:"geometry" `
+	ReviewTaskID  int32            `db:"review_task_id,pk" `
 
 	R reviewTaskPoolR `db:"-" `
 }
@@ -51,23 +51,23 @@ type reviewTaskPoolR struct {
 func buildReviewTaskPoolColumns(alias string) reviewTaskPoolColumns {
 	return reviewTaskPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"feature_pool", "location", "geometry", "review_task_id",
+			"feature_pool_id", "location", "geometry", "review_task_id",
 		).WithParent("review_task_pool"),
-		tableAlias:   alias,
-		FeaturePool:  psql.Quote(alias, "feature_pool"),
-		Location:     psql.Quote(alias, "location"),
-		Geometry:     psql.Quote(alias, "geometry"),
-		ReviewTaskID: psql.Quote(alias, "review_task_id"),
+		tableAlias:    alias,
+		FeaturePoolID: psql.Quote(alias, "feature_pool_id"),
+		Location:      psql.Quote(alias, "location"),
+		Geometry:      psql.Quote(alias, "geometry"),
+		ReviewTaskID:  psql.Quote(alias, "review_task_id"),
 	}
 }
 
 type reviewTaskPoolColumns struct {
 	expr.ColumnsExpr
-	tableAlias   string
-	FeaturePool  psql.Expression
-	Location     psql.Expression
-	Geometry     psql.Expression
-	ReviewTaskID psql.Expression
+	tableAlias    string
+	FeaturePoolID psql.Expression
+	Location      psql.Expression
+	Geometry      psql.Expression
+	ReviewTaskID  psql.Expression
 }
 
 func (c reviewTaskPoolColumns) Alias() string {
@@ -82,16 +82,16 @@ func (reviewTaskPoolColumns) AliasedAs(alias string) reviewTaskPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type ReviewTaskPoolSetter struct {
-	FeaturePool  omit.Val[int32]      `db:"feature_pool" `
-	Location     omitnull.Val[string] `db:"location" `
-	Geometry     omitnull.Val[string] `db:"geometry" `
-	ReviewTaskID omit.Val[int32]      `db:"review_task_id,pk" `
+	FeaturePoolID omit.Val[int32]      `db:"feature_pool_id" `
+	Location      omitnull.Val[string] `db:"location" `
+	Geometry      omitnull.Val[string] `db:"geometry" `
+	ReviewTaskID  omit.Val[int32]      `db:"review_task_id,pk" `
 }
 
 func (s ReviewTaskPoolSetter) SetColumns() []string {
 	vals := make([]string, 0, 4)
-	if s.FeaturePool.IsValue() {
-		vals = append(vals, "feature_pool")
+	if s.FeaturePoolID.IsValue() {
+		vals = append(vals, "feature_pool_id")
 	}
 	if !s.Location.IsUnset() {
 		vals = append(vals, "location")
@@ -106,8 +106,8 @@ func (s ReviewTaskPoolSetter) SetColumns() []string {
 }
 
 func (s ReviewTaskPoolSetter) Overwrite(t *ReviewTaskPool) {
-	if s.FeaturePool.IsValue() {
-		t.FeaturePool = s.FeaturePool.MustGet()
+	if s.FeaturePoolID.IsValue() {
+		t.FeaturePoolID = s.FeaturePoolID.MustGet()
 	}
 	if !s.Location.IsUnset() {
 		t.Location = s.Location.MustGetNull()
@@ -127,8 +127,8 @@ func (s *ReviewTaskPoolSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 4)
-		if s.FeaturePool.IsValue() {
-			vals[0] = psql.Arg(s.FeaturePool.MustGet())
+		if s.FeaturePoolID.IsValue() {
+			vals[0] = psql.Arg(s.FeaturePoolID.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
@@ -162,10 +162,10 @@ func (s ReviewTaskPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 func (s ReviewTaskPoolSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 4)
 
-	if s.FeaturePool.IsValue() {
+	if s.FeaturePoolID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "feature_pool")...),
-			psql.Arg(s.FeaturePool),
+			psql.Quote(append(prefix, "feature_pool_id")...),
+			psql.Arg(s.FeaturePoolID),
 		}})
 	}
 
@@ -417,22 +417,22 @@ func (o ReviewTaskPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor) e
 }
 
 // FeaturePool starts a query for related objects on feature_pool
-func (o *ReviewTaskPool) RelatedFeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
+func (o *ReviewTaskPool) FeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
 	return FeaturePools.Query(append(mods,
-		sm.Where(FeaturePools.Columns.FeatureID.EQ(psql.Arg(o.FeaturePool))),
+		sm.Where(FeaturePools.Columns.FeatureID.EQ(psql.Arg(o.FeaturePoolID))),
 	)...)
 }
 
-func (os ReviewTaskPoolSlice) RelatedFeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
-	pkFeaturePool := make(pgtypes.Array[int32], 0, len(os))
+func (os ReviewTaskPoolSlice) FeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
+	pkFeaturePoolID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
-		pkFeaturePool = append(pkFeaturePool, o.FeaturePool)
+		pkFeaturePoolID = append(pkFeaturePoolID, o.FeaturePoolID)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkFeaturePool), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkFeaturePoolID), "integer[]")),
 	))
 
 	return FeaturePools.Query(append(mods,
@@ -466,7 +466,7 @@ func (os ReviewTaskPoolSlice) ReviewTask(mods ...bob.Mod[*dialect.SelectQuery]) 
 
 func attachReviewTaskPoolFeaturePool0(ctx context.Context, exec bob.Executor, count int, reviewTaskPool0 *ReviewTaskPool, featurePool1 *FeaturePool) (*ReviewTaskPool, error) {
 	setter := &ReviewTaskPoolSetter{
-		FeaturePool: omit.From(featurePool1.FeatureID),
+		FeaturePoolID: omit.From(featurePool1.FeatureID),
 	}
 
 	err := reviewTaskPool0.Update(ctx, exec, setter)
@@ -561,10 +561,10 @@ func (reviewTaskPool0 *ReviewTaskPool) AttachReviewTask(ctx context.Context, exe
 }
 
 type reviewTaskPoolWhere[Q psql.Filterable] struct {
-	FeaturePool  psql.WhereMod[Q, int32]
-	Location     psql.WhereNullMod[Q, string]
-	Geometry     psql.WhereNullMod[Q, string]
-	ReviewTaskID psql.WhereMod[Q, int32]
+	FeaturePoolID psql.WhereMod[Q, int32]
+	Location      psql.WhereNullMod[Q, string]
+	Geometry      psql.WhereNullMod[Q, string]
+	ReviewTaskID  psql.WhereMod[Q, int32]
 }
 
 func (reviewTaskPoolWhere[Q]) AliasedAs(alias string) reviewTaskPoolWhere[Q] {
@@ -573,10 +573,10 @@ func (reviewTaskPoolWhere[Q]) AliasedAs(alias string) reviewTaskPoolWhere[Q] {
 
 func buildReviewTaskPoolWhere[Q psql.Filterable](cols reviewTaskPoolColumns) reviewTaskPoolWhere[Q] {
 	return reviewTaskPoolWhere[Q]{
-		FeaturePool:  psql.Where[Q, int32](cols.FeaturePool),
-		Location:     psql.WhereNull[Q, string](cols.Location),
-		Geometry:     psql.WhereNull[Q, string](cols.Geometry),
-		ReviewTaskID: psql.Where[Q, int32](cols.ReviewTaskID),
+		FeaturePoolID: psql.Where[Q, int32](cols.FeaturePoolID),
+		Location:      psql.WhereNull[Q, string](cols.Location),
+		Geometry:      psql.WhereNull[Q, string](cols.Geometry),
+		ReviewTaskID:  psql.Where[Q, int32](cols.ReviewTaskID),
 	}
 }
 
@@ -629,7 +629,7 @@ func buildReviewTaskPoolPreloader() reviewTaskPoolPreloader {
 					{
 						From:        ReviewTaskPools,
 						To:          FeaturePools,
-						FromColumns: []string{"feature_pool"},
+						FromColumns: []string{"feature_pool_id"},
 						ToColumns:   []string{"feature_id"},
 					},
 				},
@@ -689,7 +689,7 @@ func (o *ReviewTaskPool) LoadFeaturePool(ctx context.Context, exec bob.Executor,
 	// Reset the relationship
 	o.R.FeaturePool = nil
 
-	related, err := o.RelatedFeaturePool(mods...).One(ctx, exec)
+	related, err := o.FeaturePool(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -706,7 +706,7 @@ func (os ReviewTaskPoolSlice) LoadFeaturePool(ctx context.Context, exec bob.Exec
 		return nil
 	}
 
-	featurePools, err := os.RelatedFeaturePool(mods...).All(ctx, exec)
+	featurePools, err := os.FeaturePool(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -718,7 +718,7 @@ func (os ReviewTaskPoolSlice) LoadFeaturePool(ctx context.Context, exec bob.Exec
 
 		for _, rel := range featurePools {
 
-			if !(o.FeaturePool == rel.FeatureID) {
+			if !(o.FeaturePoolID == rel.FeatureID) {
 				continue
 			}
 

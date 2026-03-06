@@ -94,10 +94,10 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a 
 	return &models.Address{
 		Country:    geo.Address.Country,
 		Created:    created,
-		Geom:       "",
 		H3cell:     "",
 		ID:         row.ID,
 		Locality:   geo.Address.Locality,
+		Location:   "",
 		PostalCode: geo.Address.PostalCode,
 		Street:     geo.Address.Street,
 		Unit:       geo.Address.Unit,
@@ -173,7 +173,7 @@ func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeR
 // Get the parcel for a given address, if one can be found
 func GetParcel(ctx context.Context, txn bob.Tx, a *models.Address) (*models.Parcel, error) {
 	result, err := models.Parcels.Query(
-		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.geom"))),
+		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.location"))),
 		models.SelectWhere.Addresses.ID.EQ(a.ID),
 	).One(ctx, txn)
 	if err != nil {

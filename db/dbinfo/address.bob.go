@@ -33,8 +33,8 @@ var Addresses = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Geom: column{
-			Name:      "geom",
+		Location: column{
+			Name:      "location",
 			DBType:    "geometry",
 			Default:   "",
 			Comment:   "",
@@ -138,7 +138,7 @@ var Addresses = Table[
 			Name: "idx_address_geom",
 			Columns: []indexColumn{
 				{
-					Name:         "geom",
+					Name:         "location",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -163,7 +163,7 @@ var Addresses = Table[
 type addressColumns struct {
 	Country    column
 	Created    column
-	Geom       column
+	Location   column
 	H3cell     column
 	ID         column
 	Locality   column
@@ -176,7 +176,7 @@ type addressColumns struct {
 
 func (c addressColumns) AsSlice() []column {
 	return []column{
-		c.Country, c.Created, c.Geom, c.H3cell, c.ID, c.Locality, c.PostalCode, c.Street, c.Unit, c.Region, c.Number,
+		c.Country, c.Created, c.Location, c.H3cell, c.ID, c.Locality, c.PostalCode, c.Street, c.Unit, c.Region, c.Number,
 	}
 }
 

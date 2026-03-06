@@ -444,7 +444,7 @@ func (os FeaturePoolSlice) Feature(mods ...bob.Mod[*dialect.SelectQuery]) Featur
 // ReviewTaskPools starts a query for related objects on review_task_pool
 func (o *FeaturePool) ReviewTaskPools(mods ...bob.Mod[*dialect.SelectQuery]) ReviewTaskPoolsQuery {
 	return ReviewTaskPools.Query(append(mods,
-		sm.Where(ReviewTaskPools.Columns.FeaturePool.EQ(psql.Arg(o.FeatureID))),
+		sm.Where(ReviewTaskPools.Columns.FeaturePoolID.EQ(psql.Arg(o.FeatureID))),
 	)...)
 }
 
@@ -461,7 +461,7 @@ func (os FeaturePoolSlice) ReviewTaskPools(mods ...bob.Mod[*dialect.SelectQuery]
 	))
 
 	return ReviewTaskPools.Query(append(mods,
-		sm.Where(psql.Group(ReviewTaskPools.Columns.FeaturePool).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(ReviewTaskPools.Columns.FeaturePoolID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -515,7 +515,7 @@ func (featurePool0 *FeaturePool) AttachFeature(ctx context.Context, exec bob.Exe
 
 func insertFeaturePoolReviewTaskPools0(ctx context.Context, exec bob.Executor, reviewTaskPools1 []*ReviewTaskPoolSetter, featurePool0 *FeaturePool) (ReviewTaskPoolSlice, error) {
 	for i := range reviewTaskPools1 {
-		reviewTaskPools1[i].FeaturePool = omit.From(featurePool0.FeatureID)
+		reviewTaskPools1[i].FeaturePoolID = omit.From(featurePool0.FeatureID)
 	}
 
 	ret, err := ReviewTaskPools.Insert(bob.ToMods(reviewTaskPools1...)).All(ctx, exec)
@@ -528,7 +528,7 @@ func insertFeaturePoolReviewTaskPools0(ctx context.Context, exec bob.Executor, r
 
 func attachFeaturePoolReviewTaskPools0(ctx context.Context, exec bob.Executor, count int, reviewTaskPools1 ReviewTaskPoolSlice, featurePool0 *FeaturePool) (ReviewTaskPoolSlice, error) {
 	setter := &ReviewTaskPoolSetter{
-		FeaturePool: omit.From(featurePool0.FeatureID),
+		FeaturePoolID: omit.From(featurePool0.FeatureID),
 	}
 
 	err := reviewTaskPools1.UpdateAll(ctx, exec, *setter)
@@ -789,7 +789,7 @@ func (os FeaturePoolSlice) LoadReviewTaskPools(ctx context.Context, exec bob.Exe
 
 		for _, rel := range reviewTaskPools {
 
-			if !(o.FeatureID == rel.FeaturePool) {
+			if !(o.FeatureID == rel.FeaturePoolID) {
 				continue
 			}
 
