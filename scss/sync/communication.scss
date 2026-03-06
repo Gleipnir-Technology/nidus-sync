@@ -1,0 +1,55 @@
+.reports-list {
+	height: calc(100vh - 56px);
+	overflow-y: auto;
+}
+.report-card {
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+.report-card:hover {
+	background-color: #f8f9fa;
+}
+.report-card.active {
+	border-left: 4px solid #0d6efd;
+	background-color: #e7f1ff;
+}
+.map-placeholder {
+	height: 300px;
+	background: linear-gradient(135deg, #e0e7ee 0%, #c9d6e3 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+}
+.details-section {
+	height: calc(100vh - 56px - 300px - 2rem);
+	overflow-y: auto;
+}
+.actions-panel {
+	height: calc(100vh - 56px);
+}
+.icon-nuisance {
+	color: #dc3545;
+}
+.icon-standing-water {
+	color: #0dcaf0;
+}
+.photo-thumbnail {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	cursor: pointer;
+	border-radius: 4px;
+}
+.badge-larvae {
+	background-color: #ffc107;
+	color: #000;
+}
+.badge-pupae {
+	background-color: #fd7e14;
+	color: #fff;
+}
+.badge-adult {
+	background-color: #dc3545;
+	color: #fff;
+}

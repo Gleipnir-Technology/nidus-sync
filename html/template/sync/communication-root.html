@@ -14,72 +14,18 @@
 		function onLoad() {}
 		window.addEventListener("load", onLoad);
 	</script>
-	<style>
-		html,
-		body {
-			height: 100%;
-		}
-		.reports-list {
-			height: calc(100vh - 56px);
-			overflow-y: auto;
-		}
-		.report-card {
-			cursor: pointer;
-			transition: all 0.2s ease;
-		}
-		.report-card:hover {
-			background-color: #f8f9fa;
-		}
-		.report-card.active {
-			border-left: 4px solid #0d6efd;
-			background-color: #e7f1ff;
-		}
-		.map-placeholder {
-			height: 300px;
-			background: linear-gradient(135deg, #e0e7ee 0%, #c9d6e3 100%);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			border-radius: 8px;
-		}
-		.details-section {
-			height: calc(100vh - 56px - 300px - 2rem);
-			overflow-y: auto;
-		}
-		.actions-panel {
-			height: calc(100vh - 56px);
-		}
-		.icon-nuisance {
-			color: #dc3545;
-		}
-		.icon-standing-water {
-			color: #0dcaf0;
-		}
-		.photo-thumbnail {
-			width: 80px;
-			height: 80px;
-			object-fit: cover;
-			cursor: pointer;
-			border-radius: 4px;
-		}
-		.badge-larvae {
-			background-color: #ffc107;
-			color: #000;
-		}
-		.badge-pupae {
-			background-color: #fd7e14;
-			color: #fff;
-		}
-		.badge-adult {
-			background-color: #dc3545;
-			color: #fff;
-		}
-	</style>
 	<script>
+		function filterMatches(filter, comm) {
+			return true;
+		}
+		function formatAddress(a) {
+			return a.number + " " + a.street + ", " + a.locality;
+		}
 		function communicationsApp() {
 			return {
+				apiBase: "/api",
 				// State
-				selectedReport: null,
+				selectedCommunication: null,
 				searchFilter: "",
 				typeFilter: "all",
 				messageText: "",
@@ -93,13 +39,17 @@
 				toastMessage: "",
 
 				// Sample data - replace with API call
-				reports: [
+				communications: [
 					{
-						id: 1001,
-						type: "nuisance",
 						createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-						address: "123 Oak Street, Springfield, FL 32801",
-						zipCode: "32801",
+						id: 1001,
+						public_report: {
+							address: {
+								postal_code: "32801",
+							},
+						},
+						type: "nuisance",
+
 						latitude: 28.5383,
 						longitude: -81.3792,
 						reporterName: "John Smith",
@@ -119,129 +69,54 @@
 							},
 						],
 					},
-					{
-						id: 1002,
-						type: "standing_water",
-						createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-						address: "456 Pine Avenue, Springfield, FL 32803",
-						zipCode: "32803",
-						latitude: 28.54,
-						longitude: -81.375,
-						reporterName: "Sarah Johnson",
-						reporterEmail: "sarah.j@email.com",
-						observedLarvae: true,
-						observedPupae: false,
-						observedAdult: true,
-						waterSourceType: "Abandoned pool",
-						photos: [
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+1",
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+2",
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Standing+Water+3",
-						],
-						activityLog: [
-							{
-								action: "Report created",
-								timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-							},
-						],
-					},
-					{
-						id: 1003,
-						type: "nuisance",
-						createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-						address: "789 Maple Drive, Springfield, FL 32801",
-						zipCode: "32801",
-						latitude: 28.542,
-						longitude: -81.38,
-						reporterName: "Mike Williams",
-						reporterEmail: "mike.w@email.com",
-						timeOfDay: "Morning (6am - 9am)",
-						propertyAreas: ["Front Yard"],
-						notes: "Getting bitten every morning when leaving for work.",
-						photos: [],
-						activityLog: [
-							{
-								action: "Report created",
-								timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-							},
-						],
-					},
-					{
-						id: 1004,
-						type: "standing_water",
-						createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-						address: "321 Elm Court, Springfield, FL 32805",
-						zipCode: "32805",
-						latitude: 28.535,
-						longitude: -81.385,
-						reporterName: "Emily Davis",
-						reporterEmail: "emily.d@email.com",
-						observedLarvae: true,
-						observedPupae: true,
-						observedAdult: false,
-						waterSourceType: "Clogged storm drain",
-						photos: [
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Drain+Photo",
-						],
-						activityLog: [
-							{
-								action: "Report created",
-								timestamp: new Date(Date.now() - 30 * 60 * 1000),
-							},
-						],
-					},
-					{
-						id: 1005,
-						type: "nuisance",
-						createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-						address: "555 Birch Lane, Springfield, FL 32803",
-						zipCode: "32803",
-						latitude: 28.545,
-						longitude: -81.37,
-						reporterName: "Robert Chen",
-						reporterEmail: "r.chen@email.com",
-						timeOfDay: "All Day",
-						propertyAreas: ["Backyard", "Front Yard", "Pool Area"],
-						notes:
-							"We have a serious mosquito problem throughout our entire property. Multiple family members have been bitten. We suspect there may be standing water in the vacant lot next door.",
-						photos: [
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Backyard+1",
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Backyard+2",
-						],
-						activityLog: [
-							{
-								action: "Report created",
-								timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-							},
-							{
-								action: "Viewed by supervisor",
-								timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-							},
-						],
-					},
 				],
 
+				init() {
+					this.loadFromAPI();
+				},
 				// Computed property for filtered reports
-				get filteredReports() {
-					return this.reports.filter((report) => {
+				get filteredCommunications() {
+					return this.communications.filter((report) => {
 						const matchesType =
 							this.typeFilter === "all" || report.type === this.typeFilter;
-						const matchesSearch =
-							this.searchFilter === "" ||
-							report.address
-								.toLowerCase()
-								.includes(this.searchFilter.toLowerCase()) ||
-							report.zipCode.includes(this.searchFilter) ||
-							report.reporterName
-								.toLowerCase()
-								.includes(this.searchFilter.toLowerCase());
-						return matchesType && matchesSearch;
+						return matchesType && filterMatches(this.searchFilter, report);
 					});
 				},
 
+				async loadCommunications() {
+					try {
+						// Build query parameters from filters
+						const params = new URLSearchParams();
+						if (this.typeFilter) params.append("type", this.typeFilter);
+
+						const response = await fetch(
+							`${this.apiBase}/communication?${params}`,
+						);
+
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+
+						const data = await response.json();
+						this.communications = data.communications || data; // Handle different response formats
+					} catch (err) {
+						console.error("Error loading communications:", err);
+						throw err;
+					}
+				},
+				async loadFromAPI() {
+					this.loading = true;
+					this.error = null;
+					try {
+						await Promise.all([this.loadCommunications()]);
+					} catch (err) {
+						this.error = err.message;
+						console.error("Error loading data:", err);
+					}
+				},
 				// Methods
 				selectReport(report) {
-					this.selectedReport = report;
+					this.selectedCommunication = report;
 					this.messageText = "";
 					this.moveMapToLocation(report.latitude, report.longitude);
 				},
@@ -307,10 +182,10 @@
 
 				applyMessageTemplate(template) {
 					const templates = {
-						received: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
-						scheduled: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
-						completed: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
-						need_info: `Dear ${this.selectedReport?.reporterName || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
+						received: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
+						scheduled: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
+						completed: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
+						need_info: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
 					};
 
 					if (templates[template]) {
@@ -320,46 +195,49 @@
 
 				createLead() {
 					// TODO: Implement API call to create lead
-					console.log("Creating lead for report:", this.selectedReport.id);
+					console.log(
+						"Creating lead for report:",
+						this.selectedCommunication.id,
+					);
 
 					// Add to activity log
-					if (!this.selectedReport.activityLog) {
-						this.selectedReport.activityLog = [];
+					if (!this.selectedCommunication.activityLog) {
+						this.selectedCommunication.activityLog = [];
 					}
-					this.selectedReport.activityLog.push({
+					this.selectedCommunication.activityLog.push({
 						action: "Lead created",
 						timestamp: new Date(),
 					});
 
 					this.showNotification(
 						"Lead Created",
-						`Lead successfully created for report #${this.selectedReport.id}`,
+						`Lead successfully created for report #${this.selectedCommunication.id}`,
 					);
 
 					// Remove from list after creating lead
-					// this.reports = this.reports.filter(r => r.id !== this.selectedReport.id);
-					// this.selectedReport = null;
+					// this.communications = this.communications.filter(r => r.id !== this.selectedCommunication.id);
+					// this.selectedCommunication = null;
 				},
 
 				markInvalid() {
 					// TODO: Implement API call to mark as invalid
 					console.log(
 						"Marking report as invalid:",
-						this.selectedReport.id,
+						this.selectedCommunication.id,
 						this.invalidReason,
 						this.invalidNotes,
 					);
 
 					this.showNotification(
 						"Report Marked Invalid",
-						`Report #${this.selectedReport.id} has been marked as ${this.invalidReason}`,
+						`Report #${this.selectedCommunication.id} has been marked as ${this.invalidReason}`,
 					);
 
 					// Remove from list
-					this.reports = this.reports.filter(
-						(r) => r.id !== this.selectedReport.id,
+					this.communications = this.communications.filter(
+						(r) => r.id !== this.selectedCommunication.id,
 					);
-					this.selectedReport = null;
+					this.selectedCommunication = null;
 					this.showInvalidModal = false;
 					this.invalidReason = "";
 					this.invalidNotes = "";
@@ -369,21 +247,24 @@
 					if (!this.messageText.trim()) return;
 
 					// TODO: Implement API call to send message
-					console.log("Sending message to:", this.selectedReport.reporterEmail);
+					console.log(
+						"Sending message to:",
+						this.selectedCommunication.reporterEmail,
+					);
 					console.log("Message:", this.messageText);
 
 					// Add to activity log
-					if (!this.selectedReport.activityLog) {
-						this.selectedReport.activityLog = [];
+					if (!this.selectedCommunication.activityLog) {
+						this.selectedCommunication.activityLog = [];
 					}
-					this.selectedReport.activityLog.push({
+					this.selectedCommunication.activityLog.push({
 						action: "Message sent to reporter",
 						timestamp: new Date(),
 					});
 
 					this.showNotification(
 						"Message Sent",
-						`Message successfully sent to ${this.selectedReport.reporterName}`,
+						`Message successfully sent to ${this.selectedCommunication.reporterName}`,
 					);
 					this.messageText = "";
 				},
@@ -417,7 +298,7 @@
 	<div x-data="communicationsApp()" class="h-100">
 		<div class="container-fluid h-100">
 			<div class="row h-100">
-				<!-- Left Column - Reports List -->
+				<!-- Left Column - Communications List -->
 				<div class="col-md-3 border-end p-0 reports-list">
 					<div class="p-3 bg-light border-bottom">
 						<div class="input-group input-group-sm">
@@ -455,36 +336,36 @@
 					</div>
 
 					<div class="list-group list-group-flush">
-						<template x-for="report in filteredReports" :key="report.id">
+						<template x-for="comm in filteredCommunications" :key="comm.id">
 							<div
 								class="list-group-item report-card p-3"
-								:class="{ 'active': selectedReport && selectedReport.id === report.id }"
-								@click="selectReport(report)"
+								:class="{ 'active': selectedCommunication && selectedCommunication.id === comm.id }"
+								@click="selectReport(comm)"
 							>
 								<!-- First row: icon, type badge, and time -->
 								<div
 									class="d-flex justify-content-between align-items-center mb-2"
 								>
 									<div class="d-flex align-items-center">
-										<template x-if="report.type === 'nuisance'">
+										<template x-if="comm.type === 'nuisance'">
 											<i
 												class="bi bi-exclamation-triangle-fill icon-nuisance fs-4 me-2"
 											></i>
 										</template>
-										<template x-if="report.type === 'standing_water'">
+										<template x-if="comm.type === 'standing_water'">
 											<i
 												class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
 											></i>
 										</template>
 										<span
 											class="badge"
-											:class="report.type === 'nuisance' ? 'bg-danger' : 'bg-info'"
-											x-text="report.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
+											:class="comm.type === 'nuisance' ? 'bg-danger' : 'bg-info'"
+											x-text="comm.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
 										></span>
 									</div>
 									<small
 										class="text-muted"
-										x-text="getRelativeTime(report.createdAt)"
+										x-text="getRelativeTime(comm.createdAt)"
 									></small>
 								</div>
 
@@ -492,17 +373,20 @@
 								<div>
 									<div>
 										<i class="bi bi-geo-alt text-muted"></i>
-										<span x-text="report.zipCode" class="fw-medium"></span>
+										<span
+											x-text="comm.public_report.address.postal_code"
+											class="fw-medium"
+										></span>
 									</div>
 									<small
 										class="text-muted"
-										x-text="report.address.substring(0, 30) + '...'"
+										x-text="formatAddress(comm.public_report.address).substring(0, 30) + '...'"
 									></small>
-									<template x-if="report.photos && report.photos.length > 0">
+									<template x-if="comm.photos && comm.photos.length > 0">
 										<div class="mt-1">
 											<small class="text-muted">
 												<i class="bi bi-camera"></i>
-												<span x-text="report.photos.length"></span> photo(s)
+												<span x-text="comm.photos.length"></span> photo(s)
 											</small>
 										</div>
 									</template>
@@ -511,7 +395,7 @@
 						</template>
 					</div>
 
-					<template x-if="filteredReports.length === 0">
+					<template x-if="filteredCommunications.length === 0">
 						<div class="text-center text-muted p-4">
 							<i class="bi bi-inbox fs-1"></i>
 							<p class="mt-2">No reports found</p>
@@ -521,7 +405,7 @@
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
-					<template x-if="!selectedReport">
+					<template x-if="!selectedCommunication">
 						<div
 							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted"
 						>
@@ -530,7 +414,7 @@
 						</div>
 					</template>
 
-					<template x-if="selectedReport">
+					<template x-if="selectedCommunication">
 						<div class="h-100 d-flex flex-column">
 							<!-- Map Placeholder -->
 							<div class="p-3">
@@ -539,7 +423,7 @@
 										<i class="bi bi-map fs-1"></i>
 										<p class="mb-0">Map View</p>
 										<small
-											x-text="selectedReport.latitude + ', ' + selectedReport.longitude"
+											x-text="selectedCommunication.latitude + ', ' + selectedCommunication.longitude"
 										></small>
 									</div>
 								</div>
@@ -552,7 +436,9 @@
 								>
 									<div>
 										<h5 class="mb-1">
-											<template x-if="selectedReport.type === 'nuisance'">
+											<template
+												x-if="selectedCommunication.type === 'nuisance'"
+											>
 												<span
 													><i
 														class="bi bi-exclamation-triangle-fill icon-nuisance"
@@ -560,7 +446,9 @@
 													Nuisance Report</span
 												>
 											</template>
-											<template x-if="selectedReport.type === 'standing_water'">
+											<template
+												x-if="selectedCommunication.type === 'standing_water'"
+											>
 												<span
 													><i
 														class="bi bi-droplet-fill icon-standing-water"
@@ -570,12 +458,14 @@
 											</template>
 										</h5>
 										<small class="text-muted"
-											>Report ID: #<span x-text="selectedReport.id"></span
+											>Report ID: #<span
+												x-text="selectedCommunication.id"
+											></span
 										></small>
 									</div>
 									<span
 										class="badge bg-secondary"
-										x-text="getRelativeTime(selectedReport.createdAt)"
+										x-text="getRelativeTime(selectedCommunication.createdAt)"
 									></span>
 								</div>
 
@@ -589,7 +479,7 @@
 												</label>
 												<div
 													class="fw-medium"
-													x-text="selectedReport.address"
+													x-text="formatAddress(selectedCommunication.public_report.address)"
 												></div>
 											</div>
 											<div class="col-md-6">
@@ -598,7 +488,7 @@
 												</label>
 												<div
 													class="fw-medium"
-													x-text="selectedReport.reporterName"
+													x-text="selectedCommunication.reporterName"
 												></div>
 											</div>
 											<div class="col-md-6">
@@ -607,7 +497,7 @@
 												</label>
 												<div
 													class="fw-medium"
-													x-text="selectedReport.reporterEmail"
+													x-text="selectedCommunication.reporterEmail"
 												></div>
 											</div>
 										</div>
@@ -615,7 +505,7 @@
 								</div>
 
 								<!-- Nuisance-specific Fields -->
-								<template x-if="selectedReport.type === 'nuisance'">
+								<template x-if="selectedCommunication.type === 'nuisance'">
 									<div class="card mb-3">
 										<div class="card-header bg-danger bg-opacity-10">
 											<i class="bi bi-exclamation-triangle"></i> Nuisance
@@ -629,7 +519,7 @@
 													</label>
 													<div
 														class="fw-medium"
-														x-text="selectedReport.timeOfDay"
+														x-text="selectedCommunication.timeOfDay"
 													></div>
 												</div>
 												<div class="col-md-6">
@@ -638,7 +528,7 @@
 													</label>
 													<div>
 														<template
-															x-for="area in selectedReport.propertyAreas"
+															x-for="area in selectedCommunication.propertyAreas"
 															:key="area"
 														>
 															<span
@@ -654,7 +544,7 @@
 													</label>
 													<div
 														class="p-2 bg-light rounded"
-														x-text="selectedReport.notes || 'No additional notes'"
+														x-text="selectedCommunication.notes || 'No additional notes'"
 													></div>
 												</div>
 											</div>
@@ -663,7 +553,9 @@
 								</template>
 
 								<!-- Standing Water-specific Fields -->
-								<template x-if="selectedReport.type === 'standing_water'">
+								<template
+									x-if="selectedCommunication.type === 'standing_water'"
+								>
 									<div class="card mb-3">
 										<div class="card-header bg-info bg-opacity-10">
 											<i class="bi bi-droplet"></i> Standing Water Details
@@ -675,43 +567,43 @@
 											<div class="mt-2">
 												<span
 													class="badge me-2"
-													:class="selectedReport.observedLarvae ? 'badge-larvae' : 'bg-light text-muted'"
+													:class="selectedCommunication.observedLarvae ? 'badge-larvae' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedReport.observedLarvae ? 'bi-check-circle' : 'bi-circle'"
+														:class="selectedCommunication.observedLarvae ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Larvae
 												</span>
 												<span
 													class="badge me-2"
-													:class="selectedReport.observedPupae ? 'badge-pupae' : 'bg-light text-muted'"
+													:class="selectedCommunication.observedPupae ? 'badge-pupae' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedReport.observedPupae ? 'bi-check-circle' : 'bi-circle'"
+														:class="selectedCommunication.observedPupae ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Pupae
 												</span>
 												<span
 													class="badge"
-													:class="selectedReport.observedAdult ? 'badge-adult' : 'bg-light text-muted'"
+													:class="selectedCommunication.observedAdult ? 'badge-adult' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedReport.observedAdult ? 'bi-check-circle' : 'bi-circle'"
+														:class="selectedCommunication.observedAdult ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Adult Mosquitoes
 												</span>
 											</div>
-											<template x-if="selectedReport.waterSourceType">
+											<template x-if="selectedCommunication.waterSourceType">
 												<div class="mt-3">
 													<label class="form-label text-muted small mb-0">
 														<i class="bi bi-water"></i> Water Source Type
 													</label>
 													<div
 														class="fw-medium"
-														x-text="selectedReport.waterSourceType"
+														x-text="selectedCommunication.waterSourceType"
 													></div>
 												</div>
 											</template>
@@ -727,16 +619,16 @@
 										<span><i class="bi bi-images"></i> Attached Photos</span>
 										<span
 											class="badge bg-primary"
-											x-text="selectedReport.photos ? selectedReport.photos.length : 0"
+											x-text="selectedCommunication.photos ? selectedCommunication.photos.length : 0"
 										></span>
 									</div>
 									<div class="card-body">
 										<template
-											x-if="selectedReport.photos && selectedReport.photos.length > 0"
+											x-if="selectedCommunication.photos && selectedCommunication.photos.length > 0"
 										>
 											<div class="d-flex flex-wrap gap-2">
 												<template
-													x-for="(photo, index) in selectedReport.photos"
+													x-for="(photo, index) in selectedCommunication.photos"
 													:key="index"
 												>
 													<img
@@ -749,7 +641,7 @@
 											</div>
 										</template>
 										<template
-											x-if="!selectedReport.photos || selectedReport.photos.length === 0"
+											x-if="!selectedCommunication.photos || selectedCommunication.photos.length === 0"
 										>
 											<div class="text-muted text-center py-3">
 												<i class="bi bi-camera-slash fs-4"></i>
@@ -765,7 +657,7 @@
 
 				<!-- Right Column - Actions -->
 				<div class="col-md-3 border-start p-0">
-					<template x-if="!selectedReport">
+					<template x-if="!selectedCommunication">
 						<div
 							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted p-3"
 						>
@@ -776,7 +668,7 @@
 						</div>
 					</template>
 
-					<template x-if="selectedReport">
+					<template x-if="selectedCommunication">
 						<div class="actions-panel d-flex flex-column">
 							<div class="p-3 bg-light border-bottom">
 								<h6 class="mb-0">
@@ -852,7 +744,7 @@
 									<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
 									<div class="small">
 										<template
-											x-for="activity in selectedReport.activityLog || []"
+											x-for="activity in selectedCommunication.activityLog || []"
 											:key="activity.timestamp"
 										>
 											<div class="border-start border-2 ps-2 mb-2">
@@ -864,7 +756,7 @@
 											</div>
 										</template>
 										<template
-											x-if="!selectedReport.activityLog || selectedReport.activityLog.length === 0"
+											x-if="!selectedCommunication.activityLog || selectedCommunication.activityLog.length === 0"
 										>
 											<div class="text-muted">No activity yet</div>
 										</template>
@@ -890,7 +782,7 @@
 					<div class="modal-header">
 						<h5 class="modal-title">
 							Photo <span x-text="currentPhotoIndex + 1"></span> of
-							<span x-text="selectedReport?.photos?.length || 0"></span>
+							<span x-text="selectedCommunication?.photos?.length || 0"></span>
 						</h5>
 						<button
 							type="button"
@@ -899,9 +791,11 @@
 						></button>
 					</div>
 					<div class="modal-body text-center">
-						<template x-if="selectedReport && selectedReport.photos">
+						<template
+							x-if="selectedCommunication && selectedCommunication.photos"
+						>
 							<img
-								:src="selectedReport.photos[currentPhotoIndex]"
+								:src="selectedCommunication.photos[currentPhotoIndex]"
 								class="img-fluid rounded"
 								style="max-height: 60vh;"
 							/>
@@ -917,8 +811,8 @@
 						</button>
 						<button
 							class="btn btn-outline-secondary"
-							@click="currentPhotoIndex = Math.min(selectedReport.photos.length - 1, currentPhotoIndex + 1)"
-							:disabled="currentPhotoIndex >= (selectedReport?.photos?.length || 1) - 1"
+							@click="currentPhotoIndex = Math.min(selectedCommunication.photos.length - 1, currentPhotoIndex + 1)"
+							:disabled="currentPhotoIndex >= (selectedCommunication?.photos?.length || 1) - 1"
 						>
 							Next <i class="bi bi-chevron-right"></i>
 						</button>
