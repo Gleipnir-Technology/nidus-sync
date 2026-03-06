@@ -76,6 +76,7 @@ func Router() chi.Router {
 	r.Method("GET", "/pool/{id}", authenticatedHandler(getPoolByID))
 	r.Method("GET", "/radar", authenticatedHandler(getRadar))
 	r.Method("GET", "/review", authenticatedHandler(getReviewRoot))
+	r.Method("GET", "/review/pool", authenticatedHandler(getReviewPool))
 	r.Method("GET", "/service-request", authenticatedHandler(getServiceRequestList))
 	r.Method("GET", "/service-request/{id}", authenticatedHandler(getServiceRequestDetail))
 	r.Method("GET", "/signout", auth.NewEnsureAuth(getSignout))
