@@ -11,6 +11,7 @@ func AddRoutes(r chi.Router) {
 	// Authenticated endpoints
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Method("GET", "/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource))
+	r.Method("GET", "/review-task/pool", authenticatedHandlerJSON(listReviewTaskPool))
 	r.Method("GET", "/service-request", auth.NewEnsureAuth(apiServiceRequest))
 	r.Method("GET", "/signal", authenticatedHandlerJSON(listSignal))
 	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))

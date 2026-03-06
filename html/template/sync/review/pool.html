@@ -6,9 +6,233 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
+	<script defer src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 	<script>
-		function onLoad() {}
-		window.addEventListener("load", onLoad);
+		function reviewApp() {
+			return {
+				// State
+				tasks: [],
+				totalPending: 0,
+				selectedTask: null,
+				originalValues: {},
+				loading: true,
+				submitting: false,
+				error: null,
+
+				// Form fields for the selected task
+				form: {
+					poolCondition: "",
+					ownerContact: "",
+					residentContact: "",
+					poolShape: "",
+				},
+
+				// Computed: track which fields have changed
+				get changes() {
+					if (!this.selectedTask) return { updated: [], unchanged: [] };
+
+					const updated = [];
+					const unchanged = [];
+
+					const fields = [
+						{ key: "poolCondition", label: "Pool condition" },
+						{ key: "ownerContact", label: "Owner contact" },
+						{ key: "residentContact", label: "Resident contact" },
+						{ key: "poolShape", label: "Pool shape" },
+					];
+
+					fields.forEach((field) => {
+						if (this.form[field.key] !== this.originalValues[field.key]) {
+							updated.push(field.label);
+						} else {
+							unchanged.push(field.label);
+						}
+					});
+
+					return { updated, unchanged };
+				},
+
+				// Initialize
+				async init() {
+					await this.fetchTasks();
+				},
+
+				// Fetch tasks from API
+				async fetchTasks() {
+					this.loading = true;
+					this.error = null;
+
+					try {
+						const response = await fetch("/api/review-task/pool");
+						if (!response.ok) {
+							throw new Error("Failed to fetch tasks");
+						}
+
+						const data = await response.json();
+						this.tasks = data.tasks || [];
+						this.totalPending = data.totalPending || this.tasks.length;
+
+						// Auto-select first task if available
+						if (this.tasks.length > 0 && !this.selectedTask) {
+							this.selectTask(this.tasks[0]);
+						}
+					} catch (err) {
+						this.error = err.message;
+						console.error("Error fetching tasks:", err);
+					} finally {
+						this.loading = false;
+					}
+				},
+
+				// Select a task
+				selectTask(task) {
+					this.selectedTask = task;
+
+					// Populate form with task values
+					this.form = {
+						poolCondition: task.poolCondition || "",
+						ownerContact: task.ownerContact || "",
+						residentContact: task.residentContact || "",
+						poolShape: task.poolShape || "",
+					};
+
+					// Store original values for change tracking
+					this.originalValues = { ...this.form };
+
+					// Update map and aerial image
+					this.updateMap(task);
+					this.updateAerialImage(task);
+				},
+
+				// Stub: Update map display
+				updateMap(task) {
+					console.log("Updating map for task:", task.id);
+					// TODO: Initialize/update MapLibre GL map
+					// Example implementation:
+					// if (this.map) {
+					//     this.map.flyTo({
+					//         center: [task.longitude, task.latitude],
+					//         zoom: 18
+					//     });
+					//     // Update or add marker
+					// } else {
+					//     this.map = new maplibregl.Map({
+					//         container: 'map-container',
+					//         style: 'https://tiles.example.com/style.json',
+					//         center: [task.longitude, task.latitude],
+					//         zoom: 18
+					//     });
+					// }
+				},
+
+				// Stub: Update aerial image display
+				updateAerialImage(task) {
+					console.log("Updating aerial image for task:", task.id);
+					// TODO: Load aerial image
+					// Example implementation:
+					// const imageEl = document.getElementById('aerial-image');
+					// if (imageEl && task.aerialImageUrl) {
+					//     imageEl.src = task.aerialImageUrl;
+					// }
+				},
+
+				// Format relative time
+				formatRelativeTime(dateString) {
+					if (!dateString) return "";
+
+					const date = new Date(dateString);
+					const now = new Date();
+					const diffMs = now - date;
+					const diffMins = Math.floor(diffMs / 60000);
+					const diffHours = Math.floor(diffMins / 60);
+					const diffDays = Math.floor(diffHours / 24);
+
+					if (diffMins < 1) return "just now";
+					if (diffMins < 60) return `${diffMins} min ago`;
+					if (diffHours < 24)
+						return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+					return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+				},
+
+				// Submit review action
+				async submitReview(action) {
+					if (!this.selectedTask || this.submitting) return;
+
+					this.submitting = true;
+					this.error = null;
+
+					try {
+						const payload = {
+							taskId: this.selectedTask.id,
+							action: action, // 'reviewed' or 'discarded'
+							updates: {},
+						};
+
+						// Include changed fields in the payload
+						if (action === "reviewed") {
+							Object.keys(this.form).forEach((key) => {
+								if (this.form[key] !== this.originalValues[key]) {
+									payload.updates[key] = this.form[key];
+								}
+							});
+						}
+
+						const response = await fetch("/api/review-task", {
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify(payload),
+						});
+
+						if (!response.ok) {
+							throw new Error("Failed to submit review");
+						}
+
+						// Remove task from list
+						const taskIndex = this.tasks.findIndex(
+							(t) => t.id === this.selectedTask.id,
+						);
+						if (taskIndex > -1) {
+							this.tasks.splice(taskIndex, 1);
+							this.totalPending = Math.max(0, this.totalPending - 1);
+						}
+
+						// Select next task or clear selection
+						if (this.tasks.length > 0) {
+							const nextIndex = Math.min(taskIndex, this.tasks.length - 1);
+							this.selectTask(this.tasks[nextIndex]);
+						} else {
+							this.selectedTask = null;
+							this.form = {
+								poolCondition: "",
+								ownerContact: "",
+								residentContact: "",
+								poolShape: "",
+							};
+							this.originalValues = {};
+						}
+					} catch (err) {
+						this.error = err.message;
+						console.error("Error submitting review:", err);
+					} finally {
+						this.submitting = false;
+					}
+				},
+
+				// Mark as reviewed
+				markReviewed() {
+					this.submitReview("reviewed");
+				},
+
+				// Discard entry
+				discardEntry() {
+					if (confirm("Are you sure you want to discard this entry?")) {
+						this.submitReview("discarded");
+					}
+				},
+			};
+		}
 	</script>
 	<style>
 		body {
@@ -74,158 +298,160 @@
 	</style>
 {{ end }}
 {{ define "content" }}
-	<div class="container-fluid">
+	<div class="container-fluid" x-data="reviewApp()">
 		<div class="row">
 			<!-- Left Column - Entry List -->
 			<div class="col-md-3 p-0 left-panel">
+				<!-- Error Alert -->
+				<div x-show="error" class="mt-3">
+					<span x-text="error"></span>
+					<button
+						type="button"
+						class="btn-close"
+						@click="error = null"
+					></button>
+				</div>
+
 				<div class="p-3 border-bottom bg-primary text-white">
 					<h5 class="mb-0"><i class="bi bi-list-ul"></i> Review Queue</h5>
-					<small>12 entries pending</small>
+					<small><span x-text="totalPending"></span> entries pending</small>
 				</div>
 
-				<div class="entry-item active">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2847</strong>
-							<span class="badge bg-warning status-badge ms-1">Pending</span>
-						</div>
-						<small class="text-muted">2 min ago</small>
-					</div>
-					<small class="text-muted d-block mt-1">1234 Oak Street</small>
+				<!-- Empty State -->
+				<div
+					x-show="!loading && tasks.length === 0"
+					class="p-4 text-center text-muted"
+				>
+					<i class="bi bi-check-circle" style="font-size: 48px;"></i>
+					<p class="mt-2">No entries to review!</p>
 				</div>
 
-				<div class="entry-item">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2846</strong>
-							<span class="badge bg-warning status-badge ms-1">Pending</span>
+				<!-- Task List -->
+				<template x-for="task in tasks" :key="task.id">
+					<div
+						class="entry-item"
+						:class="{ 'active': selectedTask && selectedTask.id === task.id }"
+						@click="selectTask(task)"
+					>
+						<div class="d-flex justify-content-between align-items-start">
+							<div>
+								<strong>Entry #<span x-text="task.id"></span></strong>
+							</div>
+							<small
+								class="text-muted"
+								x-text="formatRelativeTime(task.createdAt)"
+							></small>
 						</div>
-						<small class="text-muted">15 min ago</small>
+						<small
+							class="text-muted d-block mt-1"
+							x-text="task.shortAddress || task.address"
+						></small>
 					</div>
-					<small class="text-muted d-block mt-1">5678 Maple Avenue</small>
-				</div>
-
-				<div class="entry-item">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2845</strong>
-							<span class="badge bg-warning status-badge ms-1">Pending</span>
-						</div>
-						<small class="text-muted">32 min ago</small>
-					</div>
-					<small class="text-muted d-block mt-1">9012 Pine Road</small>
-				</div>
-
-				<div class="entry-item">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2844</strong>
-							<span class="badge bg-warning status-badge ms-1">Pending</span>
-						</div>
-						<small class="text-muted">1 hour ago</small>
-					</div>
-					<small class="text-muted d-block mt-1">3456 Elm Boulevard</small>
-				</div>
-
-				<div class="entry-item">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2843</strong>
-							<span class="badge bg-warning status-badge ms-1">Pending</span>
-						</div>
-						<small class="text-muted">2 hours ago</small>
-					</div>
-					<small class="text-muted d-block mt-1">7890 Birch Lane</small>
-				</div>
-
-				<div class="entry-item">
-					<div class="d-flex justify-content-between align-items-start">
-						<div>
-							<strong>Entry #2842</strong>
-							<span class="badge bg-success status-badge ms-1">Reviewed</span>
-						</div>
-						<small class="text-muted">3 hours ago</small>
-					</div>
-					<small class="text-muted d-block mt-1">2468 Cedar Court</small>
-				</div>
+				</template>
 			</div>
 
 			<!-- Middle Column - Details and Media -->
 			<div class="col-md-6 p-0 middle-panel">
-				<div class="mb-4">
-					<h4 class="mb-3">Entry #2847 Details</h4>
-
-					<form>
-						<div class="row mb-3">
-							<label class="col-sm-3 col-form-label fw-bold">Address:</label>
-							<div class="col-sm-9">
-								<input
-									type="text"
-									class="form-control"
-									value="1234 Oak Street, Springfield, CA 90210"
-									readonly
-								/>
-							</div>
-						</div>
-
-						<div class="row mb-3">
-							<label class="col-sm-3 col-form-label fw-bold"
-								>Pool Condition:</label
-							>
-							<div class="col-sm-9">
-								<select class="form-select">
-									<option selected>Good</option>
-									<option>Fair</option>
-									<option>Poor</option>
-									<option>Excellent</option>
-									<option>Needs Maintenance</option>
-								</select>
-							</div>
-						</div>
-
-						<div class="row mb-3">
-							<label class="col-sm-3 col-form-label fw-bold"
-								>Owner Contact:</label
-							>
-							<div class="col-sm-9">
-								<input
-									type="text"
-									class="form-control"
-									value="John Smith - (555) 123-4567"
-								/>
-							</div>
-						</div>
-
-						<div class="row mb-4">
-							<label class="col-sm-3 col-form-label fw-bold"
-								>Resident Contact:</label
-							>
-							<div class="col-sm-9">
-								<input
-									type="text"
-									class="form-control"
-									value="Jane Smith - (555) 123-4568"
-								/>
-							</div>
-						</div>
-					</form>
-				</div>
-
-				<!-- Map Placeholder -->
-				<div class="placeholder-box map-placeholder">
+				<!-- No Selection State -->
+				<div
+					x-show="!selectedTask && !loading"
+					class="h-100 d-flex align-items-center justify-content-center text-muted"
+				>
 					<div class="text-center">
-						<i class="bi bi-map" style="font-size: 48px;"></i>
-						<p class="mb-0 mt-2">Map View Placeholder</p>
-						<small>1234 Oak Street, Springfield, CA 90210</small>
+						<i class="bi bi-cursor-fill" style="font-size: 48px;"></i>
+						<p class="mt-2">Select an entry from the list to review</p>
 					</div>
 				</div>
 
-				<!-- Aerial Image Placeholder -->
-				<div class="placeholder-box image-placeholder">
-					<div class="text-center">
-						<i class="bi bi-image" style="font-size: 48px;"></i>
-						<p class="mb-0 mt-2">Aerial Pool Image Placeholder</p>
-						<small>Captured: March 15, 2024</small>
+				<!-- Selected Task Details -->
+				<div x-show="selectedTask">
+					<div class="mb-4">
+						<h4 class="mb-3">
+							Entry #<span x-text="selectedTask?.id"></span> Details
+						</h4>
+
+						<form @submit.prevent>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label fw-bold">Address:</label>
+								<div class="col-sm-9">
+									<input
+										type="text"
+										class="form-control"
+										:value="selectedTask?.address"
+										readonly
+									/>
+								</div>
+							</div>
+
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label fw-bold"
+									>Pool Condition:</label
+								>
+								<div class="col-sm-9">
+									<select
+										class="form-select"
+										x-model="form.poolCondition"
+										:class="{ 'border-warning': form.poolCondition !== originalValues.poolCondition }"
+									>
+										<option value="">-- Select --</option>
+										<option value="Excellent">Excellent</option>
+										<option value="Good">Good</option>
+										<option value="Fair">Fair</option>
+										<option value="Poor">Poor</option>
+										<option value="Needs Maintenance">Needs Maintenance</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label fw-bold"
+									>Owner Contact:</label
+								>
+								<div class="col-sm-9">
+									<input
+										type="text"
+										class="form-control"
+										x-model="form.ownerContact"
+										:class="{ 'border-warning': form.ownerContact !== originalValues.ownerContact }"
+									/>
+								</div>
+							</div>
+
+							<div class="row mb-4">
+								<label class="col-sm-3 col-form-label fw-bold"
+									>Resident Contact:</label
+								>
+								<div class="col-sm-9">
+									<input
+										type="text"
+										class="form-control"
+										x-model="form.residentContact"
+										:class="{ 'border-warning': form.residentContact !== originalValues.residentContact }"
+									/>
+								</div>
+							</div>
+						</form>
+					</div>
+
+					<!-- Map Placeholder -->
+					<div id="map-container" class="placeholder-box map-placeholder">
+						<div class="text-center">
+							<i class="bi bi-map" style="font-size: 48px;"></i>
+							<p class="mb-0 mt-2">Map View Placeholder</p>
+							<small x-text="selectedTask?.address"></small>
+						</div>
+					</div>
+
+					<!-- Aerial Image Placeholder -->
+					<div class="placeholder-box image-placeholder">
+						<div class="text-center">
+							<i class="bi bi-image" style="font-size: 48px;"></i>
+							<p class="mb-0 mt-2">Aerial Pool Image Placeholder</p>
+							<small
+								>Captured:
+								<span x-text="selectedTask?.capturedAt || 'N/A'"></span
+							></small>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -234,54 +460,59 @@
 			<div class="col-md-3 p-0 right-panel">
 				<h5 class="mb-4">Actions</h5>
 
-				<button class="btn btn-success action-btn">
-					<i class="bi bi-check-circle"></i> Mark Reviewed
+				<button
+					class="btn btn-success action-btn"
+					@click="markReviewed()"
+					:disabled="!selectedTask || submitting"
+				>
+					<span x-show="!submitting">
+						<i class="bi bi-check-circle"></i> Mark Reviewed
+					</span>
+					<span x-show="submitting">
+						<span class="spinner-border spinner-border-sm" role="status"></span>
+						Submitting...
+					</span>
 				</button>
 
-				<button class="btn btn-danger action-btn">
+				<button
+					class="btn btn-danger action-btn"
+					@click="discardEntry()"
+					:disabled="!selectedTask || submitting"
+				>
 					<i class="bi bi-trash"></i> Discard Entry
 				</button>
 
-				<hr class="my-4" />
-
-				<h6 class="mb-3">Additional Options</h6>
-
-				<button class="btn btn-outline-primary action-btn">
-					<i class="bi bi-flag"></i> Flag for Review
-				</button>
-
-				<button class="btn btn-outline-secondary action-btn">
-					<i class="bi bi-arrow-left"></i> Previous Entry
-				</button>
-
-				<button class="btn btn-outline-secondary action-btn">
-					<i class="bi bi-arrow-right"></i> Next Entry
-				</button>
-
-				<hr class="my-4" />
-
-				<div class="card">
-					<div class="card-body">
-						<h6 class="card-title">Review Statistics</h6>
-						<ul class="list-unstyled mb-0">
-							<li class="mb-2"><strong>Today:</strong> 8 reviewed</li>
-							<li class="mb-2"><strong>This Week:</strong> 47 reviewed</li>
-							<li><strong>Remaining:</strong> 12 pending</li>
+				<div class="card mt-3" x-show="selectedTask">
+					<div class="card-body" x-show="changes.updated.length > 0">
+						<h6 class="card-title">
+							<i class="bi bi-pencil-square text-warning"></i> Updates
+						</h6>
+						<ul class="mb-0">
+							<template x-for="item in changes.updated" :key="item">
+								<li x-text="item"></li>
+							</template>
+						</ul>
+					</div>
+					<div class="card-body" x-show="changes.unchanged.length > 0">
+						<h6 class="card-title">
+							<i class="bi bi-dash-circle text-muted"></i> Not changed
+						</h6>
+						<ul class="mb-0">
+							<template x-for="item in changes.unchanged" :key="item">
+								<li x-text="item"></li>
+							</template>
 						</ul>
 					</div>
 				</div>
 
+				<!-- Keyboard Shortcuts Help -->
 				<div class="card mt-3">
 					<div class="card-body">
-						<h6 class="card-title">Notes</h6>
-						<textarea
-							class="form-control"
-							rows="4"
-							placeholder="Add notes about this entry..."
-						></textarea>
-						<button class="btn btn-sm btn-primary mt-2 w-100">
-							Save Notes
-						</button>
+						<h6 class="card-title"><i class="bi bi-keyboard"></i> Tips</h6>
+						<small class="text-muted">
+							Fields with a yellow border have been modified from their original
+							values.
+						</small>
 					</div>
 				</div>
 			</div>
