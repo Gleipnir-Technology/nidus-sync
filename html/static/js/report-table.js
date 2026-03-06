@@ -3,7 +3,7 @@
 class ReportTable extends HTMLElement {
 	constructor() {
 		super();
-		this.attachShadow({ mode: 'open' });
+		this.attachShadow({ mode: "open" });
 		this._reports = [];
 	}
 
@@ -27,57 +27,18 @@ class ReportTable extends HTMLElement {
 	}
 
 	/**
-	 * Format timestamp to relative time (e.g., "2 days ago")
-	 */
-	formatRelativeTime(timestamp) {
-		const now = new Date();
-		const date = new Date(timestamp);
-		const diffInSeconds = Math.floor((now - date) / 1000);
-		
-		// Time units in seconds
-		const minute = 60;
-		const hour = minute * 60;
-		const day = hour * 24;
-		const week = day * 7;
-		const month = day * 30;
-		const year = day * 365;
-		
-		if (diffInSeconds < minute) {
-			return 'just now';
-		} else if (diffInSeconds < hour) {
-			const minutes = Math.floor(diffInSeconds / minute);
-			return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
-		} else if (diffInSeconds < day) {
-			const hours = Math.floor(diffInSeconds / hour);
-			return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-		} else if (diffInSeconds < week) {
-			const days = Math.floor(diffInSeconds / day);
-			return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-		} else if (diffInSeconds < month) {
-			const weeks = Math.floor(diffInSeconds / week);
-			return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-		} else if (diffInSeconds < year) {
-			const months = Math.floor(diffInSeconds / month);
-			return `${months} ${months === 1 ? 'month' : 'months'} ago`;
-		} else {
-			const years = Math.floor(diffInSeconds / year);
-			return `${years} ${years === 1 ? 'year' : 'years'} ago`;
-		}
-	}
-
-	/**
 	 * Get badge color class based on report type
 	 */
 	getTypeClass(type) {
-		switch(type) {
-			case 'nuisance':
-				return 'bg-danger';
-			case 'quick':
-				return 'bg-primary';
-			case 'pool':
-				return 'bg-success';
+		switch (type) {
+			case "nuisance":
+				return "bg-danger";
+			case "quick":
+				return "bg-primary";
+			case "pool":
+				return "bg-success";
 			default:
-				return 'bg-secondary';
+				return "bg-secondary";
 		}
 	}
 
@@ -85,17 +46,17 @@ class ReportTable extends HTMLElement {
 	 * Get badge color class based on report status
 	 */
 	getStatusClass(status) {
-		switch(status) {
-			case 'Reported':
-				return 'bg-warning text-dark';
-			case 'Assigned':
-				return 'bg-info text-dark';
-			case 'On-Hold':
-				return 'bg-secondary';
-			case 'Complete':
-				return 'bg-success';
+		switch (status) {
+			case "Reported":
+				return "bg-warning text-dark";
+			case "Assigned":
+				return "bg-info text-dark";
+			case "On-Hold":
+				return "bg-secondary";
+			case "Complete":
+				return "bg-success";
 			default:
-				return 'bg-secondary';
+				return "bg-secondary";
 		}
 	}
 
@@ -195,18 +156,17 @@ class ReportTable extends HTMLElement {
 
 		// Generate rows for each report
 		if (this._reports.length > 0) {
-			this._reports.forEach(report => {
+			this._reports.forEach((report) => {
 				const typeClass = this.getTypeClass(report.type);
 				const statusClass = this.getStatusClass(report.status);
 				const formattedId = this.formatId(report.id);
-				const relativeTime = this.formatRelativeTime(report.created);
 
 				tableHTML += `
 					<tr class="clickable-row" data-report-id="${report.id}">
 						<td><strong>${formattedId}</strong></td>
-						<td>${relativeTime}</td>
+						<td><time-relative time="${report.created}"</time-relative></td>
 						<td><span class="badge ${typeClass} report-type-badge">${report.type}</span></td>
-						<td>${report.address || 'N/A'}</td>
+						<td>${report.address || "N/A"}</td>
 						<td><span class="badge ${statusClass}">${report.status}</span></td>
 					</tr>
 				`;
@@ -225,23 +185,25 @@ class ReportTable extends HTMLElement {
 		// Set the shadow DOM content
 		this.shadowRoot.innerHTML = style + tableHTML;
 		// Add click handlers for the rows
-		this.shadowRoot.querySelectorAll("tr.clickable-row").forEach(el => {
-			el.addEventListener("click", e => {
-				let element = e.target
-				while (element.nodeName != "TR" ) {
+		this.shadowRoot.querySelectorAll("tr.clickable-row").forEach((el) => {
+			el.addEventListener("click", (e) => {
+				let element = e.target;
+				while (element.nodeName != "TR") {
 					element = element.parentElement;
 				}
-				this.dispatchEvent(new CustomEvent("row-clicked", {
-					bubbles: true,
-					composed: true, // Allows event to cross shadow DOM boundary
-					detail: {
-						reportId: element.dataset.reportId
-					}
-				}));
+				this.dispatchEvent(
+					new CustomEvent("row-clicked", {
+						bubbles: true,
+						composed: true, // Allows event to cross shadow DOM boundary
+						detail: {
+							reportId: element.dataset.reportId,
+						},
+					}),
+				);
 			});
-		})
+		});
 	}
 }
 
 // Register the custom element
-customElements.define('report-table', ReportTable);
+customElements.define("report-table", ReportTable);
