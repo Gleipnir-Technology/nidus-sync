@@ -6,13 +6,14 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-arcgis-tile.js"></script>
-	<script src="/static/js/map-multipoint.js"></script>
 	<script
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
 	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
+	<script src="/static/js/map-arcgis-tile.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
+	<script src="/static/js/time-relative.js"></script>
 
 	<script>
 		// Return two points defining a bounding box for the given points
@@ -43,7 +44,7 @@
 			);
 		}
 		function shortAddress(a) {
-			return a.number + " " + a.street + ", " + a.locality + ", " + a.region;
+			return a.number + " " + a.street + ", " + a.locality;
 		}
 		function updateMap(signals) {
 			const map = document.querySelector("map-multipoint");
@@ -512,23 +513,36 @@
 											</div>
 										</template>
 
-										<ul class="small mt-2" x-show="selectedSignals.length > 0">
-											<template
-												x-for="signal in selectedSignals"
-												:key="signal.id"
-											>
-												<li>
-													<span x-text="signal.title"></span>
-													<button
-														@click="toggleSignal(signal)"
-														class="btn btn-sm btn-link text-danger p-0 ms-1"
-														style="font-size: 0.7rem;"
-													>
-														✕
-													</button>
-												</li>
-											</template>
-										</ul>
+										<table
+											class="small mt-2 table"
+											x-show="selectedSignals.length > 0"
+										>
+											<tbody>
+												<template
+													x-for="signal in selectedSignals"
+													:key="signal.id"
+												>
+													<tr x-if="signal.type == 'flyover pool'">
+														<td>
+															<button
+																@click="toggleSignal(signal)"
+																class="btn btn-sm btn-link text-danger p-0 ms-1"
+																style="font-size: 0.7rem;"
+															>
+																<i class="bi bi-x"></i>
+															</button>
+														</td>
+														<td>Green pool</td>
+														<td>
+															<time-relative
+																:time="signal.created"
+															></time-relative>
+														</td>
+														<td x-text="shortAddress(signal.address)"></td>
+													</tr>
+												</template>
+											</tbody>
+										</table>
 
 										<button
 											x-show="selectedSignals.length > 0"
