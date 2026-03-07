@@ -369,11 +369,14 @@
 									<small
 										x-text="formatAddress(comm.public_report.address).substring(0, 30) + '...'"
 									></small>
-									<template x-if="comm.photos && comm.photos.length > 0">
+									<template
+										x-if="comm.public_report.images && comm.public_report.images.length > 0"
+									>
 										<div class="mt-1">
 											<small class="text-muted">
 												<i class="bi bi-camera"></i>
-												<span x-text="comm.photos.length"></span> photo(s)
+												<span x-text="comm.public_report.images.length"></span>
+												photo(s)
 											</small>
 										</div>
 									</template>
@@ -607,16 +610,16 @@
 										<span><i class="bi bi-images"></i> Attached Photos</span>
 										<span
 											class="badge bg-primary"
-											x-text="selectedCommunication.photos ? selectedCommunication.photos.length : 0"
+											x-text="selectedCommunication.public_report.images ? selectedCommunication.public_report.images.length : 0"
 										></span>
 									</div>
 									<div class="card-body">
 										<template
-											x-if="selectedCommunication.photos && selectedCommunication.photos.length > 0"
+											x-if="selectedCommunication.public_report.images && selectedCommunication.public_report.images.length > 0"
 										>
 											<div class="d-flex flex-wrap gap-2">
 												<template
-													x-for="(photo, index) in selectedCommunication.photos"
+													x-for="(photo, index) in selectedCommunication.public_report.images"
 													:key="index"
 												>
 													<img
@@ -629,11 +632,11 @@
 											</div>
 										</template>
 										<template
-											x-if="!selectedCommunication.photos || selectedCommunication.photos.length === 0"
+											x-if="!selectedCommunication.public_report.images || selectedCommunication.public_report.images.length === 0"
 										>
 											<div class="text-muted text-center py-3">
 												<i class="bi bi-camera-slash fs-4"></i>
-												<p class="mb-0 small">No photos attached</p>
+												<p class="mb-0 small">No images attached</p>
 											</div>
 										</template>
 									</div>
@@ -770,7 +773,9 @@
 					<div class="modal-header">
 						<h5 class="modal-title">
 							Photo <span x-text="currentPhotoIndex + 1"></span> of
-							<span x-text="selectedCommunication?.photos?.length || 0"></span>
+							<span
+								x-text="selectedCommunication?.public_report.images.length || 0"
+							></span>
 						</h5>
 						<button
 							type="button"
@@ -780,10 +785,10 @@
 					</div>
 					<div class="modal-body text-center">
 						<template
-							x-if="selectedCommunication && selectedCommunication.photos"
+							x-if="selectedCommunication && selectedCommunication.public_report.images"
 						>
 							<img
-								:src="selectedCommunication.photos[currentPhotoIndex]"
+								:src="selectedCommunication.public_report.images[currentPhotoIndex]"
 								class="img-fluid rounded"
 								style="max-height: 60vh;"
 							/>
@@ -799,8 +804,8 @@
 						</button>
 						<button
 							class="btn btn-outline-secondary"
-							@click="currentPhotoIndex = Math.min(selectedCommunication.photos.length - 1, currentPhotoIndex + 1)"
-							:disabled="currentPhotoIndex >= (selectedCommunication?.photos?.length || 1) - 1"
+							@click="currentPhotoIndex = Math.min(selectedCommunication.public_report.images.length - 1, currentPhotoIndex + 1)"
+							:disabled="currentPhotoIndex >= (selectedCommunication?.public_report.images?.length || 1) - 1"
 						>
 							Next <i class="bi bi-chevron-right"></i>
 						</button>
