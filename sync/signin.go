@@ -31,7 +31,11 @@ func getSignout(w http.ResponseWriter, r *http.Request, org *models.Organization
 
 func getSignup(w http.ResponseWriter, r *http.Request) {
 	data := contentSignup{}
-	html.RenderOrError(w, "sync/signup.html", data)
+	html.RenderOrError(w, "sync/signup.html", contentUnauthenticated[contentSignup]{
+		C:      data,
+		Config: html.NewContentConfig(),
+		URL:    html.NewContentURL(),
+	})
 }
 
 func postSignin(w http.ResponseWriter, r *http.Request) {
