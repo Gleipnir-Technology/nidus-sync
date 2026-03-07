@@ -136,46 +136,10 @@
 					}
 				},
 				// Methods
-				selectReport(report) {
+				selectCommunication(report) {
 					this.selectedCommunication = report;
 					this.messageText = "";
-					this.moveMapToLocation(report.latitude, report.longitude);
-				},
-
-				/**
-				 * Stub function to move map to a specific location
-				 * Replace this with actual map implementation (e.g., Leaflet, Google Maps, Mapbox)
-				 * @param {number} lat - Latitude
-				 * @param {number} lng - Longitude
-				 */
-				moveMapToLocation(lat, lng) {
-					console.log(`Moving map to location: ${lat}, ${lng}`);
-
-					// TODO: Implement actual map functionality
-					// Example with Leaflet:
-					// if (this.map) {
-					//     this.map.setView([lat, lng], 15);
-					//     if (this.marker) {
-					//         this.marker.setLatLng([lat, lng]);
-					//     } else {
-					//         this.marker = L.marker([lat, lng]).addTo(this.map);
-					//     }
-					// }
-
-					// Example with Google Maps:
-					// if (this.map) {
-					//     const position = { lat: lat, lng: lng };
-					//     this.map.setCenter(position);
-					//     this.map.setZoom(15);
-					//     if (this.marker) {
-					//         this.marker.setPosition(position);
-					//     } else {
-					//         this.marker = new google.maps.Marker({
-					//             position: position,
-					//             map: this.map
-					//         });
-					//     }
-					// }
+					this.updateMap();
 				},
 
 				formatDate(date) {
@@ -297,6 +261,24 @@
 						"Map initialization placeholder - implement with your preferred map library",
 					);
 				},
+				updateMap() {
+					const map = document.querySelector("map-multipoint");
+					const p = {
+						latitude:
+							this.selectedCommunication.public_report.location.latitude,
+						longitude:
+							this.selectedCommunication.public_report.location.longitude,
+					};
+					map.SetMarkers([p]);
+					const bounds = new maplibregl.LngLatBounds(
+						new maplibregl.LngLat(p.longitude - 0.01, p.latitude - 0.01),
+						new maplibregl.LngLat(p.longitude + 0.01, p.latitude + 0.01),
+					);
+
+					map.FitBounds(bounds, {
+						padding: 50,
+					});
+				},
 			};
 		}
 	</script>
@@ -347,7 +329,7 @@
 							<div
 								class="list-group-item report-card p-3"
 								:class="{ 'active': selectedCommunication && selectedCommunication.id === comm.id }"
-								@click="selectReport(comm)"
+								@click="selectCommunication(comm)"
 							>
 								<!-- First row: icon, type badge, and time -->
 								<div
