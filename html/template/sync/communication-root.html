@@ -10,6 +10,7 @@
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
+	<script src="/static/js/time-relative.js"></script>
 	<script>
 		function onLoad() {}
 		window.addEventListener("load", onLoad);
@@ -41,7 +42,7 @@
 				// Sample data - replace with API call
 				communications: [
 					{
-						createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+						created: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
 						id: 1001,
 						public_report: {
 							address: {
@@ -51,11 +52,13 @@
 								latitude: 28.5383,
 								longitude: -81.3792,
 							},
+							reporter: {
+								name: "John Smith",
+								has_email: true,
+							},
 						},
 						type: "nuisance",
 
-						reporterName: "John Smith",
-						reporterEmail: "john.smith@email.com",
 						timeOfDay: "Evening (6pm - 9pm)",
 						propertyAreas: ["Backyard", "Pool Area"],
 						notes:
@@ -159,20 +162,6 @@
 					// }
 				},
 
-				getRelativeTime(date) {
-					const now = new Date();
-					const diffMs = now - new Date(date);
-					const diffMins = Math.floor(diffMs / 60000);
-					const diffHours = Math.floor(diffMs / 3600000);
-					const diffDays = Math.floor(diffMs / 86400000);
-
-					if (diffMins < 1) return "Just now";
-					if (diffMins < 60) return `${diffMins}m ago`;
-					if (diffHours < 24) return `${diffHours}h ago`;
-					if (diffDays < 7) return `${diffDays}d ago`;
-					return new Date(date).toLocaleDateString();
-				},
-
 				formatDate(date) {
 					return new Date(date).toLocaleString();
 				},
@@ -184,10 +173,10 @@
 
 				applyMessageTemplate(template) {
 					const templates = {
-						received: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
-						scheduled: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
-						completed: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
-						need_info: `Dear ${this.selectedCommunication?.reporterName || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
+						received: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
+						scheduled: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
+						completed: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
+						need_info: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
 					};
 
 					if (templates[template]) {
@@ -251,7 +240,7 @@
 					// TODO: Implement API call to send message
 					console.log(
 						"Sending message to:",
-						this.selectedCommunication.reporterEmail,
+						this.selectedCommunication.public_report.reporter.has_email,
 					);
 					console.log("Message:", this.messageText);
 
@@ -266,7 +255,7 @@
 
 					this.showNotification(
 						"Message Sent",
-						`Message successfully sent to ${this.selectedCommunication.reporterName}`,
+						`Message successfully sent to ${this.selectedCommunication.public_report.reporter.name}`,
 					);
 					this.messageText = "";
 				},
@@ -365,10 +354,9 @@
 											x-text="comm.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
 										></span>
 									</div>
-									<small
-										class="text-muted"
-										x-text="getRelativeTime(comm.createdAt)"
-									></small>
+									<small class="text-muted"
+										><time-relative :time="comm.created"></time-relative>
+									</small>
 								</div>
 
 								<!-- Details section: full width -->
@@ -465,9 +453,10 @@
 											></span
 										></small>
 									</div>
-									<span
-										class="badge bg-secondary"
-										x-text="getRelativeTime(selectedCommunication.createdAt)"
+									<span class="badge bg-secondary"
+										><time-relative
+											:time="selectedCommunication.created"
+										></time-relative
 									></span>
 								</div>
 
@@ -490,7 +479,7 @@
 												</label>
 												<div
 													class="fw-medium"
-													x-text="selectedCommunication.reporterName"
+													x-text="selectedCommunication.public_report.reporter.name"
 												></div>
 											</div>
 											<div class="col-md-6">
@@ -499,7 +488,7 @@
 												</label>
 												<div
 													class="fw-medium"
-													x-text="selectedCommunication.reporterEmail"
+													x-text="selectedCommunication.public_report.reporter.has_email"
 												></div>
 											</div>
 										</div>
