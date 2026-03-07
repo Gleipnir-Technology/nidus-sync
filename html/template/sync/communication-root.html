@@ -354,7 +354,7 @@
 											x-text="comm.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
 										></span>
 									</div>
-									<small class="text-muted"
+									<small
 										><time-relative :time="comm.created"></time-relative>
 									</small>
 								</div>
@@ -369,7 +369,6 @@
 										></span>
 									</div>
 									<small
-										class="text-muted"
 										x-text="formatAddress(comm.public_report.address).substring(0, 30) + '...'"
 									></small>
 									<template x-if="comm.photos && comm.photos.length > 0">
