@@ -156,6 +156,16 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, org *models.Organizati
 	w.WriteHeader(http.StatusAccepted)
 }
 
+func apiImageContentGet(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	u_str := chi.URLParam(r, "uuid")
+	imageUUID, err := uuid.Parse(u_str)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to parse image UUID")
+		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
+	}
+	userfile.PublicImageFileToResponse(w, imageUUID)
+	w.WriteHeader(http.StatusOK)
+}
 func apiImageContentPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
 	u_str := chi.URLParam(r, "uuid")
 	imageUUID, err := uuid.Parse(u_str)
