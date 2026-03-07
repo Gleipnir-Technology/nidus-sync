@@ -114,6 +114,8 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 			name = *report.ReporterName
 		}
 		comms[i] = communication{
+			Created: report.Created,
+			ID:      report.PublicID,
 			PublicReport: publicReport{
 				Address: Address{
 					Country:  report.AddressCountry,
@@ -134,8 +136,7 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 					HasPhone: report.ReporterPhone != nil,
 				},
 			},
-			Created: report.Created,
-			ID:      report.PublicID,
+			Type: "nuisance",
 		}
 	}
 	return &contentListCommunication{
