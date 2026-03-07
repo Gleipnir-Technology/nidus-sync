@@ -149,8 +149,8 @@ func toImageURLs(m map[string][]uuid.UUID, id string) []string {
 		return []string{}
 	}
 	urls := make([]string, len(uuids))
-	for _, u := range uuids {
-		urls = append(urls, config.MakeURLNidus("/api/image/%s", u.String()))
+	for i, u := range uuids {
+		urls[i] = config.MakeURLNidus("/api/image/%s", u.String())
 	}
 	return urls
 }
