@@ -47,11 +47,13 @@
 							address: {
 								postal_code: "32801",
 							},
+							location: {
+								latitude: 28.5383,
+								longitude: -81.3792,
+							},
 						},
 						type: "nuisance",
 
-						latitude: 28.5383,
-						longitude: -81.3792,
 						reporterName: "John Smith",
 						reporterEmail: "john.smith@email.com",
 						timeOfDay: "Evening (6pm - 9pm)",
@@ -423,7 +425,7 @@
 										<i class="bi bi-map fs-1"></i>
 										<p class="mb-0">Map View</p>
 										<small
-											x-text="selectedCommunication.latitude + ', ' + selectedCommunication.longitude"
+											x-text="selectedCommunication.public_report.location.latitude + ', ' + selectedCommunication.public_report.location.longitude"
 										></small>
 									</div>
 								</div>

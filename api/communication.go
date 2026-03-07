@@ -26,6 +26,7 @@ type reporter struct {
 type publicReport struct {
 	Address  Address  `json:"address"`
 	Images   []string `json:"images"`
+	Location Location `json:"location"`
 	Reporter reporter `json:"reporter"`
 }
 type communication struct {
@@ -39,11 +40,40 @@ type contentListCommunication struct {
 }
 
 func listCommunication(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
-	reports, err := models.PublicreportNuisances.Query(
-		models.SelectWhere.PublicreportNuisances.OrganizationID.EQ(org.ID),
-	).All(ctx, db.PGInstance.BobDB)
+	type _Report struct {
+		AddressCountry  string    `db:"address_country" `
+		AddressPlace    string    `db:"address_place" `
+		AddressPostcode string    `db:"address_postcode" `
+		AddressRegion   string    `db:"address_region" `
+		AddressStreet   string    `db:"address_street" `
+		Created         time.Time `db:"created" `
+		Latitude        float64   `db:"latitude"`
+		Longitude       float64   `db:"longitude"`
+		PublicID        string    `db:"public_id" `
+		ReporterEmail   *string   `db:"reporter_email" `
+		ReporterName    *string   `db:"reporter_name" `
+		ReporterPhone   *string   `db:"reporter_phone" `
+	}
+	reports, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"address_country",
+			"address_place",
+			"address_postcode",
+			"address_region",
+			"address_street",
+			"created",
+			"ST_Y(location::geometry::geometry(point, 4326)) AS latitude",
+			"ST_X(location::geometry::geometry(point, 4326)) AS longitude",
+			"public_id",
+			"reporter_email",
+			"reporter_phone",
+			"reporter_name",
+		),
+		sm.From("publicreport.nuisance"),
+		sm.Where(psql.Quote("publicreport", "nuisance", "organization_id").EQ(psql.Arg(org.ID))),
+	), scan.StructMapper[_Report]())
 	if err != nil {
-		return nil, nhttp.NewError("get reports: %w")
+		return nil, nhttp.NewError("get reports: %w", err)
 	}
 	type _Row struct {
 		PublicID    string    `db:"nuisance_public_id"`
@@ -79,6 +109,10 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 	}
 	comms := make([]communication, len(reports))
 	for i, report := range reports {
+		name := ""
+		if report.ReporterName != nil {
+			name = *report.ReporterName
+		}
 		comms[i] = communication{
 			PublicReport: publicReport{
 				Address: Address{
@@ -90,10 +124,14 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 					Street:     report.AddressStreet,
 				},
 				Images: toImageURLs(id_to_images, report.PublicID),
+				Location: Location{
+					Latitude:  report.Latitude,
+					Longitude: report.Longitude,
+				},
 				Reporter: reporter{
-					Name:     report.ReporterName.GetOr(""),
-					HasEmail: report.ReporterEmail.IsValue(),
-					HasPhone: report.ReporterPhone.IsValue(),
+					Name:     name,
+					HasEmail: report.ReporterEmail != nil,
+					HasPhone: report.ReporterPhone != nil,
 				},
 			},
 			Created: report.Created,
