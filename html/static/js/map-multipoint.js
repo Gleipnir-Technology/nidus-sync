@@ -11,6 +11,8 @@ class MapMultipoint extends HTMLElement {
 		// Initial render
 		this.render();
 
+		// Keep track of any 'on' calls to add to the map as soon as we create it.
+		this._preOns = [];
 		this._map = null;
 		this._markers = [];
 	}
@@ -72,6 +74,9 @@ class MapMultipoint extends HTMLElement {
 				},
 			});
 		});
+		for (const on of this._preOns) {
+			this._map.on(on.a, on.b);
+		}
 	}
 
 	// Initial render of component
@@ -99,7 +104,11 @@ class MapMultipoint extends HTMLElement {
 		return this._map.jumpTo(args);
 	}
 	on(a, b) {
-		return this._map.on(a, b);
+		if (this._map != null) {
+			return this._map.on(a, b);
+		} else {
+			this._preOns.push({ a: a, b: b });
+		}
 	}
 	once(a, b) {
 		return this._map.once(a, b);
