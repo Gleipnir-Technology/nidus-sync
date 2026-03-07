@@ -11,6 +11,7 @@
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
 	<script src="/static/js/time-relative.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
 	<script>
 		function onLoad() {}
 		window.addEventListener("load", onLoad);
@@ -78,6 +79,21 @@
 
 				init() {
 					this.loadFromAPI();
+					document.addEventListener("DOMContentLoaded", () => {
+						const map = document.querySelector("map-multipoint");
+						map.on("load", () => {
+							map.addLayer({
+								id: "parcel",
+								minzoom: 14,
+								paint: {
+									"line-color": "#0f0",
+								},
+								source: "tegola",
+								"source-layer": "parcel",
+								type: "line",
+							});
+						});
+					});
 				},
 				// Computed property for filtered reports
 				get filteredCommunications() {
@@ -394,6 +410,19 @@
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
+					<div class="p-3">
+						<div class="map-container">
+							<map-multipoint
+								id="map"
+								organization-id="{{ .Organization.ID }}"
+								tegola="{{ .URL.Tegola }}"
+								xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
+								ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
+								xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
+								ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
+							></map-multipoint>
+						</div>
+					</div>
 					<template x-if="!selectedCommunication">
 						<div
 							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted"
@@ -405,19 +434,6 @@
 
 					<template x-if="selectedCommunication">
 						<div class="h-100 d-flex flex-column">
-							<!-- Map Placeholder -->
-							<div class="p-3">
-								<div class="map-placeholder" id="map-container">
-									<div class="text-center text-muted">
-										<i class="bi bi-map fs-1"></i>
-										<p class="mb-0">Map View</p>
-										<small
-											x-text="selectedCommunication.public_report.location.latitude + ', ' + selectedCommunication.public_report.location.longitude"
-										></small>
-									</div>
-								</div>
-							</div>
-
 							<!-- Report Details -->
 							<div class="details-section p-3 border-top">
 								<div

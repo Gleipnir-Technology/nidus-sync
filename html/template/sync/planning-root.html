@@ -79,8 +79,8 @@
 				// Initialize - runs when component loads
 				init() {
 					this.loadData();
-					const map = document.querySelector("map-multipoint");
-					window.addEventListener("load", () => {
+					document.addEventListener("DOMContentLoaded", () => {
+						const map = document.querySelector("map-multipoint");
 						map.on("load", () => {
 							map.addLayer({
 								id: "parcel",
