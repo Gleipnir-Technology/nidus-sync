@@ -120,7 +120,6 @@ type organizationR struct {
 	FieldseekerServiceFeatureItemServiceFeature *ArcgisServiceFeature                  // organization.organization_fieldseeker_service_feature_item_id_fkey
 	Nuisances                                   PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
 	PublicreportPool                            PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
-	Quicks                                      PublicreportQuickSlice                 // publicreport.quick.quick_organization_id_fkey
 	ReviewTasks                                 ReviewTaskSlice                        // review_task.review_task_organization_id_fkey
 	Signals                                     SignalSlice                            // signal.signal_organization_id_fkey
 	User                                        UserSlice                              // user_.user__organization_id_fkey
@@ -1995,30 +1994,6 @@ func (os OrganizationSlice) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuer
 
 	return PublicreportPools.Query(append(mods,
 		sm.Where(psql.Group(PublicreportPools.Columns.OrganizationID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Quicks starts a query for related objects on publicreport.quick
-func (o *Organization) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
-	return PublicreportQuicks.Query(append(mods,
-		sm.Where(PublicreportQuicks.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os OrganizationSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportQuicks.Query(append(mods,
-		sm.Where(psql.Group(PublicreportQuicks.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -5020,74 +4995,6 @@ func (organization0 *Organization) AttachPublicreportPool(ctx context.Context, e
 	return nil
 }
 
-func insertOrganizationQuicks0(ctx context.Context, exec bob.Executor, publicreportQuicks1 []*PublicreportQuickSetter, organization0 *Organization) (PublicreportQuickSlice, error) {
-	for i := range publicreportQuicks1 {
-		publicreportQuicks1[i].OrganizationID = omitnull.From(organization0.ID)
-	}
-
-	ret, err := PublicreportQuicks.Insert(bob.ToMods(publicreportQuicks1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationQuicks0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachOrganizationQuicks0(ctx context.Context, exec bob.Executor, count int, publicreportQuicks1 PublicreportQuickSlice, organization0 *Organization) (PublicreportQuickSlice, error) {
-	setter := &PublicreportQuickSetter{
-		OrganizationID: omitnull.From(organization0.ID),
-	}
-
-	err := publicreportQuicks1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationQuicks0: %w", err)
-	}
-
-	return publicreportQuicks1, nil
-}
-
-func (organization0 *Organization) InsertQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuickSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	publicreportQuicks1, err := insertOrganizationQuicks0(ctx, exec, related, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.Quicks = append(organization0.R.Quicks, publicreportQuicks1...)
-
-	for _, rel := range publicreportQuicks1 {
-		rel.R.Organization = organization0
-	}
-	return nil
-}
-
-func (organization0 *Organization) AttachQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuick) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportQuicks1 := PublicreportQuickSlice(related)
-
-	_, err = attachOrganizationQuicks0(ctx, exec, len(related), publicreportQuicks1, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.Quicks = append(organization0.R.Quicks, publicreportQuicks1...)
-
-	for _, rel := range related {
-		rel.R.Organization = organization0
-	}
-
-	return nil
-}
-
 func insertOrganizationReviewTasks0(ctx context.Context, exec bob.Executor, reviewTasks1 []*ReviewTaskSetter, organization0 *Organization) (ReviewTaskSlice, error) {
 	for i := range reviewTasks1 {
 		reviewTasks1[i].OrganizationID = omit.From(organization0.ID)
@@ -5986,20 +5893,6 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Quicks":
-		rels, ok := retrieved.(PublicreportQuickSlice)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Quicks = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Organization = o
-			}
-		}
-		return nil
 	case "ReviewTasks":
 		rels, ok := retrieved.(ReviewTaskSlice)
 		if !ok {
@@ -6142,7 +6035,6 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	FieldseekerServiceFeatureItemServiceFeature func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicreportPool                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Quicks                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReviewTasks                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Signals                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -6280,9 +6172,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 	type PublicreportPoolLoadInterface interface {
 		LoadPublicreportPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type QuicksLoadInterface interface {
-		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ReviewTasksLoadInterface interface {
 		LoadReviewTasks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6557,12 +6446,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			"PublicreportPool",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicreportPoolLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPublicreportPool(ctx, exec, mods...)
-			},
-		),
-		Quicks: thenLoadBuilder[Q](
-			"Quicks",
-			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadQuicks(ctx, exec, mods...)
 			},
 		),
 		ReviewTasks: thenLoadBuilder[Q](
@@ -9292,70 +9175,6 @@ func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.E
 			rel.R.Organization = o
 
 			o.R.PublicreportPool = append(o.R.PublicreportPool, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadQuicks loads the organization's Quicks into the .R struct
-func (o *Organization) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Quicks = nil
-
-	related, err := o.Quicks(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Organization = o
-	}
-
-	o.R.Quicks = related
-	return nil
-}
-
-// LoadQuicks loads the organization's Quicks into the .R struct
-func (os OrganizationSlice) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	publicreportQuicks, err := os.Quicks(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.Quicks = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportQuicks {
-
-			if !rel.OrganizationID.IsValue() {
-				continue
-			}
-			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
-				continue
-			}
-
-			rel.R.Organization = o
-
-			o.R.Quicks = append(o.R.Quicks, rel)
 		}
 	}
 

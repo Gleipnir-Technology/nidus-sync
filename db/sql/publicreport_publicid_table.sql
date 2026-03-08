@@ -13,13 +13,6 @@ WITH found_tables AS (
 		id
 	FROM publicreport.pool
 	WHERE public_id = $1
-    
-	UNION ALL
-    
-	SELECT 'quick' as table_name,
-		id
-	FROM publicreport.quick
-	WHERE public_id = $1
 )
 SELECT 
 	EXISTS (SELECT 1 FROM found_tables) as exists_somewhere,

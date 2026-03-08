@@ -95,8 +95,6 @@ type preloaders struct {
 	PublicreportNuisanceImage         publicreportNuisanceImagePreloader
 	PublicreportPool                  publicreportPoolPreloader
 	PublicreportPoolImage             publicreportPoolImagePreloader
-	PublicreportQuick                 publicreportQuickPreloader
-	PublicreportQuickImage            publicreportQuickImagePreloader
 	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
 	Resident                          residentPreloader
@@ -188,8 +186,6 @@ func getPreloaders() preloaders {
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImagePreloader(),
 		PublicreportPool:                  buildPublicreportPoolPreloader(),
 		PublicreportPoolImage:             buildPublicreportPoolImagePreloader(),
-		PublicreportQuick:                 buildPublicreportQuickPreloader(),
-		PublicreportQuickImage:            buildPublicreportQuickImagePreloader(),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
 		Resident:                          buildResidentPreloader(),
@@ -287,8 +283,6 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportNuisanceImage         publicreportNuisanceImageThenLoader[Q]
 	PublicreportPool                  publicreportPoolThenLoader[Q]
 	PublicreportPoolImage             publicreportPoolImageThenLoader[Q]
-	PublicreportQuick                 publicreportQuickThenLoader[Q]
-	PublicreportQuickImage            publicreportQuickImageThenLoader[Q]
 	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
 	Resident                          residentThenLoader[Q]
@@ -380,8 +374,6 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImageThenLoader[Q](),
 		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),
 		PublicreportPoolImage:             buildPublicreportPoolImageThenLoader[Q](),
-		PublicreportQuick:                 buildPublicreportQuickThenLoader[Q](),
-		PublicreportQuickImage:            buildPublicreportQuickImageThenLoader[Q](),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
 		Resident:                          buildResidentThenLoader[Q](),

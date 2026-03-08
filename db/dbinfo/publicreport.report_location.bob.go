@@ -51,7 +51,7 @@ var PublicreportReportLocations = Table[
 		},
 		Location: column{
 			Name:      "location",
-			DBType:    "geography",
+			DBType:    "geometry",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,

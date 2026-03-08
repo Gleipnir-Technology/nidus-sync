@@ -98,8 +98,6 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 	PublicreportPools                  publicreportPoolWhere[Q]
 	PublicreportPoolImages             publicreportPoolImageWhere[Q]
-	PublicreportQuicks                 publicreportQuickWhere[Q]
-	PublicreportQuickImages            publicreportQuickImageWhere[Q]
 	PublicreportReportLocations        publicreportReportLocationWhere[Q]
 	PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
 	PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
@@ -197,8 +195,6 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
 		PublicreportPools                  publicreportPoolWhere[Q]
 		PublicreportPoolImages             publicreportPoolImageWhere[Q]
-		PublicreportQuicks                 publicreportQuickWhere[Q]
-		PublicreportQuickImages            publicreportQuickImageWhere[Q]
 		PublicreportReportLocations        publicreportReportLocationWhere[Q]
 		PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
 		PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
@@ -295,8 +291,6 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportNuisanceImages:         buildPublicreportNuisanceImageWhere[Q](PublicreportNuisanceImages.Columns),
 		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),
 		PublicreportPoolImages:             buildPublicreportPoolImageWhere[Q](PublicreportPoolImages.Columns),
-		PublicreportQuicks:                 buildPublicreportQuickWhere[Q](PublicreportQuicks.Columns),
-		PublicreportQuickImages:            buildPublicreportQuickImageWhere[Q](PublicreportQuickImages.Columns),
 		PublicreportReportLocations:        buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
 		PublicreportSubscribeEmails:        buildPublicreportSubscribeEmailWhere[Q](PublicreportSubscribeEmails.Columns),
 		PublicreportSubscribePhones:        buildPublicreportSubscribePhoneWhere[Q](PublicreportSubscribePhones.Columns),

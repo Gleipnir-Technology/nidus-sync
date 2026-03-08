@@ -186,15 +186,6 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Location: column{
-			Name:      "location",
-			DBType:    "geography",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		MapZoom: column{
 			Name:      "map_zoom",
 			DBType:    "real",
@@ -321,6 +312,15 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Location: column{
+			Name:      "location",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportPoolIndexes{
 		PoolPkey: index{
@@ -405,7 +405,6 @@ type publicreportPoolColumns struct {
 	HasAdult               column
 	HasLarvae              column
 	HasPupae               column
-	Location               column
 	MapZoom                column
 	OwnerEmail             column
 	OwnerName              column
@@ -420,11 +419,12 @@ type publicreportPoolColumns struct {
 	IsReporterConfidential column
 	IsReporterOwner        column
 	ReporterContactConsent column
+	Location               column
 }
 
 func (c publicreportPoolColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.Location, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location,
 	}
 }
 

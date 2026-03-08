@@ -20,7 +20,7 @@ import (
 //go:embed publicreport_publicid_table.bob.sql
 var formattedQueries_publicreport_publicid_table string
 
-var publicreportIDTableSQL = formattedQueries_publicreport_publicid_table[157:638]
+var publicreportIDTableSQL = formattedQueries_publicreport_publicid_table[157:534]
 
 type PublicreportIDTableQuery = orm.ModQuery[*dialect.SelectQuery, publicreportIDTable, PublicreportIDTableRow, []PublicreportIDTableRow, publicreportIDTableTransformer]
 
@@ -51,9 +51,9 @@ func PublicreportIDTable(PublicID string) *PublicreportIDTableQuery {
 			},
 		},
 		Mod: bob.ModFunc[*dialect.SelectQuery](func(q *dialect.SelectQuery) {
-			q.AppendCTE(expressionTypArgs.subExpr(5, 325))
-			q.AppendSelect(expressionTypArgs.subExpr(335, 463))
-			q.SetTable(expressionTypArgs.subExpr(469, 481))
+			q.AppendCTE(expressionTypArgs.subExpr(5, 221))
+			q.AppendSelect(expressionTypArgs.subExpr(231, 359))
+			q.SetTable(expressionTypArgs.subExpr(365, 377))
 		}),
 	}
 }
@@ -85,15 +85,6 @@ func (o publicreportIDTable) args() iter.Seq[orm.ArgWithPosition] {
 			Name:       "publicID",
 			Start:      217,
 			Stop:       219,
-			Expression: o.PublicID,
-		}) {
-			return
-		}
-
-		if !yield(orm.ArgWithPosition{
-			Name:       "publicID",
-			Start:      321,
-			Stop:       323,
 			Expression: o.PublicID,
 		}) {
 			return

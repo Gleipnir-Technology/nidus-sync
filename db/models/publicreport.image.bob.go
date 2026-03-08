@@ -55,7 +55,6 @@ type publicreportImageR struct {
 	ImageExifs PublicreportImageExifSlice // publicreport.image_exif.image_exif_image_id_fkey
 	Nuisances  PublicreportNuisanceSlice  // publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey
 	Pools      PublicreportPoolSlice      // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
-	Quicks     PublicreportQuickSlice     // publicreport.quick_image.quick_image_image_id_fkeypublicreport.quick_image.quick_image_quick_id_fkey
 }
 
 func buildPublicreportImageColumns(alias string) publicreportImageColumns {
@@ -618,35 +617,6 @@ func (os PublicreportImageSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) Pu
 	)...)
 }
 
-// Quicks starts a query for related objects on publicreport.quick
-func (o *PublicreportImage) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
-	return PublicreportQuicks.Query(append(mods,
-		sm.InnerJoin(PublicreportQuickImages.NameAs()).On(
-			PublicreportQuicks.Columns.ID.EQ(PublicreportQuickImages.Columns.QuickID)),
-		sm.Where(PublicreportQuickImages.Columns.ImageID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os PublicreportImageSlice) Quicks(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportQuicksQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportQuicks.Query(append(mods,
-		sm.InnerJoin(PublicreportQuickImages.NameAs()).On(
-			PublicreportQuicks.Columns.ID.EQ(PublicreportQuickImages.Columns.QuickID),
-		),
-		sm.Where(psql.Group(PublicreportQuickImages.Columns.ImageID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 func insertPublicreportImageImageExifs0(ctx context.Context, exec bob.Executor, publicreportImageExifs1 []*PublicreportImageExifSetter, publicreportImage0 *PublicreportImage) (PublicreportImageExifSlice, error) {
 	for i := range publicreportImageExifs1 {
 		publicreportImageExifs1[i].ImageID = omit.From(publicreportImage0.ID)
@@ -845,71 +815,6 @@ func (publicreportImage0 *PublicreportImage) AttachPools(ctx context.Context, ex
 	return nil
 }
 
-func attachPublicreportImageQuicks0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportQuicks2 PublicreportQuickSlice) (PublicreportQuickImageSlice, error) {
-	setters := make([]*PublicreportQuickImageSetter, count)
-	for i := range count {
-		setters[i] = &PublicreportQuickImageSetter{
-			ImageID: omit.From(publicreportImage0.ID),
-			QuickID: omit.From(publicreportQuicks2[i].ID),
-		}
-	}
-
-	publicreportQuickImages1, err := PublicreportQuickImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportImageQuicks0: %w", err)
-	}
-
-	return publicreportQuickImages1, nil
-}
-
-func (publicreportImage0 *PublicreportImage) InsertQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuickSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	inserted, err := PublicreportQuicks.Insert(bob.ToMods(related...)).All(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-	publicreportQuicks2 := PublicreportQuickSlice(inserted)
-
-	_, err = attachPublicreportImageQuicks0(ctx, exec, len(related), publicreportImage0, publicreportQuicks2)
-	if err != nil {
-		return err
-	}
-
-	publicreportImage0.R.Quicks = append(publicreportImage0.R.Quicks, publicreportQuicks2...)
-
-	for _, rel := range publicreportQuicks2 {
-		rel.R.Images = append(rel.R.Images, publicreportImage0)
-	}
-	return nil
-}
-
-func (publicreportImage0 *PublicreportImage) AttachQuicks(ctx context.Context, exec bob.Executor, related ...*PublicreportQuick) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportQuicks2 := PublicreportQuickSlice(related)
-
-	_, err = attachPublicreportImageQuicks0(ctx, exec, len(related), publicreportImage0, publicreportQuicks2)
-	if err != nil {
-		return err
-	}
-
-	publicreportImage0.R.Quicks = append(publicreportImage0.R.Quicks, publicreportQuicks2...)
-
-	for _, rel := range related {
-		rel.R.Images = append(rel.R.Images, publicreportImage0)
-	}
-
-	return nil
-}
-
 type publicreportImageWhere[Q psql.Filterable] struct {
 	ID               psql.WhereMod[Q, int32]
 	ContentType      psql.WhereMod[Q, string]
@@ -988,20 +893,6 @@ func (o *PublicreportImage) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Quicks":
-		rels, ok := retrieved.(PublicreportQuickSlice)
-		if !ok {
-			return fmt.Errorf("publicreportImage cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Quicks = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Images = PublicreportImageSlice{o}
-			}
-		}
-		return nil
 	default:
 		return fmt.Errorf("publicreportImage has no relationship %q", name)
 	}
@@ -1017,7 +908,6 @@ type publicreportImageThenLoader[Q orm.Loadable] struct {
 	ImageExifs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Pools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Quicks     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportImageThenLoader[Q orm.Loadable]() publicreportImageThenLoader[Q] {
@@ -1029,9 +919,6 @@ func buildPublicreportImageThenLoader[Q orm.Loadable]() publicreportImageThenLoa
 	}
 	type PoolsLoadInterface interface {
 		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type QuicksLoadInterface interface {
-		LoadQuicks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportImageThenLoader[Q]{
@@ -1051,12 +938,6 @@ func buildPublicreportImageThenLoader[Q orm.Loadable]() publicreportImageThenLoa
 			"Pools",
 			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPools(ctx, exec, mods...)
-			},
-		),
-		Quicks: thenLoadBuilder[Q](
-			"Quicks",
-			func(ctx context.Context, exec bob.Executor, retrieved QuicksLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadQuicks(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1279,87 +1160,6 @@ func (os PublicreportImageSlice) LoadPools(ctx context.Context, exec bob.Executo
 			rel.R.Images = append(rel.R.Images, o)
 
 			o.R.Pools = append(o.R.Pools, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadQuicks loads the publicreportImage's Quicks into the .R struct
-func (o *PublicreportImage) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Quicks = nil
-
-	related, err := o.Quicks(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Images = PublicreportImageSlice{o}
-	}
-
-	o.R.Quicks = related
-	return nil
-}
-
-// LoadQuicks loads the publicreportImage's Quicks into the .R struct
-func (os PublicreportImageSlice) LoadQuicks(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	// since we are changing the columns, we need to check if the original columns were set or add the defaults
-	sq := dialect.SelectQuery{}
-	for _, mod := range mods {
-		mod.Apply(&sq)
-	}
-
-	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(PublicreportQuicks.Columns))
-	}
-
-	q := os.Quicks(append(
-		mods,
-		sm.Columns(PublicreportQuickImages.Columns.ImageID.As("related_publicreport.image.ID")),
-	)...)
-
-	IDSlice := []int32{}
-
-	mapper := scan.Mod(scan.StructMapper[*PublicreportQuick](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
-		return func(row *scan.Row) (any, error) {
-				IDSlice = append(IDSlice, *new(int32))
-				row.ScheduleScanByName("related_publicreport.image.ID", &IDSlice[len(IDSlice)-1])
-
-				return nil, nil
-			},
-			func(any, any) error {
-				return nil
-			}
-	})
-
-	publicreportQuicks, err := bob.Allx[bob.SliceTransformer[*PublicreportQuick, PublicreportQuickSlice]](ctx, exec, q, mapper)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		o.R.Quicks = nil
-	}
-
-	for _, o := range os {
-		for i, rel := range publicreportQuicks {
-			if !(o.ID == IDSlice[i]) {
-				continue
-			}
-
-			rel.R.Images = append(rel.R.Images, o)
-
-			o.R.Quicks = append(o.R.Quicks, rel)
 		}
 	}
 

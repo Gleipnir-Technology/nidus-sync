@@ -39,7 +39,6 @@ type PublicreportNuisance struct {
 	ReporterName           null.Val[string]                       `db:"reporter_name" `
 	ReporterPhone          null.Val[string]                       `db:"reporter_phone" `
 	Address                string                                 `db:"address" `
-	Location               null.Val[string]                       `db:"location" `
 	Status                 enums.PublicreportReportstatustype     `db:"status" `
 	OrganizationID         null.Val[int32]                        `db:"organization_id" `
 	SourceGutter           bool                                   `db:"source_gutter" `
@@ -62,6 +61,7 @@ type PublicreportNuisance struct {
 	LatlngAccuracyType     enums.PublicreportAccuracytype         `db:"latlng_accuracy_type" `
 	LatlngAccuracyValue    float32                                `db:"latlng_accuracy_value" `
 	ReporterContactConsent null.Val[bool]                         `db:"reporter_contact_consent" `
+	Location               null.Val[string]                       `db:"location" `
 
 	R publicreportNuisanceR `db:"-" `
 }
@@ -87,7 +87,7 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "location", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent",
+			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -102,7 +102,6 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		ReporterName:           psql.Quote(alias, "reporter_name"),
 		ReporterPhone:          psql.Quote(alias, "reporter_phone"),
 		Address:                psql.Quote(alias, "address"),
-		Location:               psql.Quote(alias, "location"),
 		Status:                 psql.Quote(alias, "status"),
 		OrganizationID:         psql.Quote(alias, "organization_id"),
 		SourceGutter:           psql.Quote(alias, "source_gutter"),
@@ -125,6 +124,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		LatlngAccuracyType:     psql.Quote(alias, "latlng_accuracy_type"),
 		LatlngAccuracyValue:    psql.Quote(alias, "latlng_accuracy_value"),
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
+		Location:               psql.Quote(alias, "location"),
 	}
 }
 
@@ -143,7 +143,6 @@ type publicreportNuisanceColumns struct {
 	ReporterName           psql.Expression
 	ReporterPhone          psql.Expression
 	Address                psql.Expression
-	Location               psql.Expression
 	Status                 psql.Expression
 	OrganizationID         psql.Expression
 	SourceGutter           psql.Expression
@@ -166,6 +165,7 @@ type publicreportNuisanceColumns struct {
 	LatlngAccuracyType     psql.Expression
 	LatlngAccuracyValue    psql.Expression
 	ReporterContactConsent psql.Expression
+	Location               psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -192,7 +192,6 @@ type PublicreportNuisanceSetter struct {
 	ReporterName           omitnull.Val[string]                             `db:"reporter_name" `
 	ReporterPhone          omitnull.Val[string]                             `db:"reporter_phone" `
 	Address                omit.Val[string]                                 `db:"address" `
-	Location               omitnull.Val[string]                             `db:"location" `
 	Status                 omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
 	OrganizationID         omitnull.Val[int32]                              `db:"organization_id" `
 	SourceGutter           omit.Val[bool]                                   `db:"source_gutter" `
@@ -215,6 +214,7 @@ type PublicreportNuisanceSetter struct {
 	LatlngAccuracyType     omit.Val[enums.PublicreportAccuracytype]         `db:"latlng_accuracy_type" `
 	LatlngAccuracyValue    omit.Val[float32]                                `db:"latlng_accuracy_value" `
 	ReporterContactConsent omitnull.Val[bool]                               `db:"reporter_contact_consent" `
+	Location               omitnull.Val[string]                             `db:"location" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
@@ -254,9 +254,6 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	}
 	if s.Address.IsValue() {
 		vals = append(vals, "address")
-	}
-	if !s.Location.IsUnset() {
-		vals = append(vals, "location")
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
@@ -324,6 +321,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if !s.ReporterContactConsent.IsUnset() {
 		vals = append(vals, "reporter_contact_consent")
 	}
+	if !s.Location.IsUnset() {
+		vals = append(vals, "location")
+	}
 	return vals
 }
 
@@ -363,9 +363,6 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	}
 	if s.Address.IsValue() {
 		t.Address = s.Address.MustGet()
-	}
-	if !s.Location.IsUnset() {
-		t.Location = s.Location.MustGetNull()
 	}
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
@@ -432,6 +429,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	}
 	if !s.ReporterContactConsent.IsUnset() {
 		t.ReporterContactConsent = s.ReporterContactConsent.MustGetNull()
+	}
+	if !s.Location.IsUnset() {
+		t.Location = s.Location.MustGetNull()
 	}
 }
 
@@ -514,140 +514,140 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Location.IsUnset() {
-			vals[12] = psql.Arg(s.Location.MustGetNull())
+		if s.Status.IsValue() {
+			vals[12] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[13] = psql.Arg(s.Status.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[13] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[14] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.SourceGutter.IsValue() {
+			vals[14] = psql.Arg(s.SourceGutter.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceGutter.IsValue() {
-			vals[15] = psql.Arg(s.SourceGutter.MustGet())
+		if !s.H3cell.IsUnset() {
+			vals[15] = psql.Arg(s.H3cell.MustGetNull())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[16] = psql.Arg(s.H3cell.MustGetNull())
+		if s.AddressCountry.IsValue() {
+			vals[16] = psql.Arg(s.AddressCountry.MustGet())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressCountry.IsValue() {
-			vals[17] = psql.Arg(s.AddressCountry.MustGet())
+		if s.AddressPlace.IsValue() {
+			vals[17] = psql.Arg(s.AddressPlace.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPlace.IsValue() {
-			vals[18] = psql.Arg(s.AddressPlace.MustGet())
+		if s.AddressPostcode.IsValue() {
+			vals[18] = psql.Arg(s.AddressPostcode.MustGet())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPostcode.IsValue() {
-			vals[19] = psql.Arg(s.AddressPostcode.MustGet())
+		if s.AddressRegion.IsValue() {
+			vals[19] = psql.Arg(s.AddressRegion.MustGet())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRegion.IsValue() {
-			vals[20] = psql.Arg(s.AddressRegion.MustGet())
+		if s.AddressStreet.IsValue() {
+			vals[20] = psql.Arg(s.AddressStreet.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressStreet.IsValue() {
-			vals[21] = psql.Arg(s.AddressStreet.MustGet())
+		if s.IsLocationBackyard.IsValue() {
+			vals[21] = psql.Arg(s.IsLocationBackyard.MustGet())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsLocationBackyard.IsValue() {
-			vals[22] = psql.Arg(s.IsLocationBackyard.MustGet())
+		if s.IsLocationFrontyard.IsValue() {
+			vals[22] = psql.Arg(s.IsLocationFrontyard.MustGet())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsLocationFrontyard.IsValue() {
-			vals[23] = psql.Arg(s.IsLocationFrontyard.MustGet())
+		if s.IsLocationGarden.IsValue() {
+			vals[23] = psql.Arg(s.IsLocationGarden.MustGet())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsLocationGarden.IsValue() {
-			vals[24] = psql.Arg(s.IsLocationGarden.MustGet())
+		if s.IsLocationOther.IsValue() {
+			vals[24] = psql.Arg(s.IsLocationOther.MustGet())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsLocationOther.IsValue() {
-			vals[25] = psql.Arg(s.IsLocationOther.MustGet())
+		if s.IsLocationPool.IsValue() {
+			vals[25] = psql.Arg(s.IsLocationPool.MustGet())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsLocationPool.IsValue() {
-			vals[26] = psql.Arg(s.IsLocationPool.MustGet())
+		if s.MapZoom.IsValue() {
+			vals[26] = psql.Arg(s.MapZoom.MustGet())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if s.MapZoom.IsValue() {
-			vals[27] = psql.Arg(s.MapZoom.MustGet())
+		if s.TodEarly.IsValue() {
+			vals[27] = psql.Arg(s.TodEarly.MustGet())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if s.TodEarly.IsValue() {
-			vals[28] = psql.Arg(s.TodEarly.MustGet())
+		if s.TodDay.IsValue() {
+			vals[28] = psql.Arg(s.TodDay.MustGet())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if s.TodDay.IsValue() {
-			vals[29] = psql.Arg(s.TodDay.MustGet())
+		if s.TodEvening.IsValue() {
+			vals[29] = psql.Arg(s.TodEvening.MustGet())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if s.TodEvening.IsValue() {
-			vals[30] = psql.Arg(s.TodEvening.MustGet())
+		if s.TodNight.IsValue() {
+			vals[30] = psql.Arg(s.TodNight.MustGet())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if s.TodNight.IsValue() {
-			vals[31] = psql.Arg(s.TodNight.MustGet())
+		if s.LatlngAccuracyType.IsValue() {
+			vals[31] = psql.Arg(s.LatlngAccuracyType.MustGet())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
 
-		if s.LatlngAccuracyType.IsValue() {
-			vals[32] = psql.Arg(s.LatlngAccuracyType.MustGet())
+		if s.LatlngAccuracyValue.IsValue() {
+			vals[32] = psql.Arg(s.LatlngAccuracyValue.MustGet())
 		} else {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
-		if s.LatlngAccuracyValue.IsValue() {
-			vals[33] = psql.Arg(s.LatlngAccuracyValue.MustGet())
+		if !s.ReporterContactConsent.IsUnset() {
+			vals[33] = psql.Arg(s.ReporterContactConsent.MustGetNull())
 		} else {
 			vals[33] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterContactConsent.IsUnset() {
-			vals[34] = psql.Arg(s.ReporterContactConsent.MustGetNull())
+		if !s.Location.IsUnset() {
+			vals[34] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[34] = psql.Raw("DEFAULT")
 		}
@@ -744,13 +744,6 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address")...),
 			psql.Arg(s.Address),
-		}})
-	}
-
-	if !s.Location.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "location")...),
-			psql.Arg(s.Location),
 		}})
 	}
 
@@ -905,6 +898,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_contact_consent")...),
 			psql.Arg(s.ReporterContactConsent),
+		}})
+	}
+
+	if !s.Location.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -1497,7 +1497,6 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ReporterName           psql.WhereNullMod[Q, string]
 	ReporterPhone          psql.WhereNullMod[Q, string]
 	Address                psql.WhereMod[Q, string]
-	Location               psql.WhereNullMod[Q, string]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
 	OrganizationID         psql.WhereNullMod[Q, int32]
 	SourceGutter           psql.WhereMod[Q, bool]
@@ -1520,6 +1519,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	LatlngAccuracyType     psql.WhereMod[Q, enums.PublicreportAccuracytype]
 	LatlngAccuracyValue    psql.WhereMod[Q, float32]
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
+	Location               psql.WhereNullMod[Q, string]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -1540,7 +1540,6 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		ReporterName:           psql.WhereNull[Q, string](cols.ReporterName),
 		ReporterPhone:          psql.WhereNull[Q, string](cols.ReporterPhone),
 		Address:                psql.Where[Q, string](cols.Address),
-		Location:               psql.WhereNull[Q, string](cols.Location),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
 		SourceGutter:           psql.Where[Q, bool](cols.SourceGutter),
@@ -1563,6 +1562,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		LatlngAccuracyType:     psql.Where[Q, enums.PublicreportAccuracytype](cols.LatlngAccuracyType),
 		LatlngAccuracyValue:    psql.Where[Q, float32](cols.LatlngAccuracyValue),
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
+		Location:               psql.WhereNull[Q, string](cols.Location),
 	}
 }
 

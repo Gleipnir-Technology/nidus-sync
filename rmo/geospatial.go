@@ -64,7 +64,7 @@ func geospatialFromForm(r *http.Request) (GeospatialData, error) {
 	cell, err := h3utils.GetCell(longitude, latitude, resolution)
 	return GeospatialData{
 		Cell:          cell,
-		GeometryQuery: fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", longitude, latitude),
+		GeometryQuery: fmt.Sprintf("ST_Point(%f, %f, 4326)", longitude, latitude),
 		Populated:     true,
 	}, nil
 }

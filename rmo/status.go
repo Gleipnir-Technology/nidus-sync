@@ -288,37 +288,6 @@ func contentFromPool(ctx context.Context, report_id string) (result ContentStatu
 	return result, err
 }
 
-func contentFromQuick(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
-	quick, err := models.PublicreportQuicks.Query(
-		models.SelectWhere.PublicreportQuicks.PublicID.EQ(report_id),
-	).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
-	}
-
-	result.Report.ID = report_id
-	result.Report.Address = quick.Address
-	result.Report.Comments = quick.Comments
-	result.Report.Created = quick.Created
-	result.Report.Type = "Quick"
-
-	type LocationGeoJSON struct {
-		Location string
-	}
-	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			psql.F("ST_AsGeoJSON", "location"),
-		),
-		sm.From("publicreport.quick"),
-		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	), scan.SingleColumnMapper[string])
-	if err != nil {
-		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
-	}
-	result.Report.Location = location
-
-	return result, err
-}
 func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	report_id := chi.URLParam(r, "report_id")
 	ctx := r.Context()

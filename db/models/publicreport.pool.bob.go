@@ -46,7 +46,6 @@ type PublicreportPool struct {
 	HasAdult               bool                               `db:"has_adult" `
 	HasLarvae              bool                               `db:"has_larvae" `
 	HasPupae               bool                               `db:"has_pupae" `
-	Location               null.Val[string]                   `db:"location" `
 	MapZoom                float32                            `db:"map_zoom" `
 	OwnerEmail             string                             `db:"owner_email" `
 	OwnerName              string                             `db:"owner_name" `
@@ -61,6 +60,7 @@ type PublicreportPool struct {
 	IsReporterConfidential bool                               `db:"is_reporter_confidential" `
 	IsReporterOwner        bool                               `db:"is_reporter_owner" `
 	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
+	Location               null.Val[string]                   `db:"location" `
 
 	R publicreportPoolR `db:"-" `
 }
@@ -86,7 +86,7 @@ type publicreportPoolR struct {
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "location", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location",
 		).WithParent("publicreport.pool"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -108,7 +108,6 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		HasAdult:               psql.Quote(alias, "has_adult"),
 		HasLarvae:              psql.Quote(alias, "has_larvae"),
 		HasPupae:               psql.Quote(alias, "has_pupae"),
-		Location:               psql.Quote(alias, "location"),
 		MapZoom:                psql.Quote(alias, "map_zoom"),
 		OwnerEmail:             psql.Quote(alias, "owner_email"),
 		OwnerName:              psql.Quote(alias, "owner_name"),
@@ -123,6 +122,7 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		IsReporterConfidential: psql.Quote(alias, "is_reporter_confidential"),
 		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
+		Location:               psql.Quote(alias, "location"),
 	}
 }
 
@@ -148,7 +148,6 @@ type publicreportPoolColumns struct {
 	HasAdult               psql.Expression
 	HasLarvae              psql.Expression
 	HasPupae               psql.Expression
-	Location               psql.Expression
 	MapZoom                psql.Expression
 	OwnerEmail             psql.Expression
 	OwnerName              psql.Expression
@@ -163,6 +162,7 @@ type publicreportPoolColumns struct {
 	IsReporterConfidential psql.Expression
 	IsReporterOwner        psql.Expression
 	ReporterContactConsent psql.Expression
+	Location               psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -196,7 +196,6 @@ type PublicreportPoolSetter struct {
 	HasAdult               omit.Val[bool]                               `db:"has_adult" `
 	HasLarvae              omit.Val[bool]                               `db:"has_larvae" `
 	HasPupae               omit.Val[bool]                               `db:"has_pupae" `
-	Location               omitnull.Val[string]                         `db:"location" `
 	MapZoom                omit.Val[float32]                            `db:"map_zoom" `
 	OwnerEmail             omit.Val[string]                             `db:"owner_email" `
 	OwnerName              omit.Val[string]                             `db:"owner_name" `
@@ -211,6 +210,7 @@ type PublicreportPoolSetter struct {
 	IsReporterConfidential omit.Val[bool]                               `db:"is_reporter_confidential" `
 	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
 	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
+	Location               omitnull.Val[string]                         `db:"location" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
@@ -272,9 +272,6 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	if s.HasPupae.IsValue() {
 		vals = append(vals, "has_pupae")
 	}
-	if !s.Location.IsUnset() {
-		vals = append(vals, "location")
-	}
 	if s.MapZoom.IsValue() {
 		vals = append(vals, "map_zoom")
 	}
@@ -316,6 +313,9 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	}
 	if !s.ReporterContactConsent.IsUnset() {
 		vals = append(vals, "reporter_contact_consent")
+	}
+	if !s.Location.IsUnset() {
+		vals = append(vals, "location")
 	}
 	return vals
 }
@@ -378,9 +378,6 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.HasPupae.IsValue() {
 		t.HasPupae = s.HasPupae.MustGet()
 	}
-	if !s.Location.IsUnset() {
-		t.Location = s.Location.MustGetNull()
-	}
 	if s.MapZoom.IsValue() {
 		t.MapZoom = s.MapZoom.MustGet()
 	}
@@ -422,6 +419,9 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	}
 	if !s.ReporterContactConsent.IsUnset() {
 		t.ReporterContactConsent = s.ReporterContactConsent.MustGetNull()
+	}
+	if !s.Location.IsUnset() {
+		t.Location = s.Location.MustGetNull()
 	}
 }
 
@@ -546,92 +546,92 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Location.IsUnset() {
-			vals[19] = psql.Arg(s.Location.MustGetNull())
+		if s.MapZoom.IsValue() {
+			vals[19] = psql.Arg(s.MapZoom.MustGet())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if s.MapZoom.IsValue() {
-			vals[20] = psql.Arg(s.MapZoom.MustGet())
+		if s.OwnerEmail.IsValue() {
+			vals[20] = psql.Arg(s.OwnerEmail.MustGet())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
 		}
 
-		if s.OwnerEmail.IsValue() {
-			vals[21] = psql.Arg(s.OwnerEmail.MustGet())
+		if s.OwnerName.IsValue() {
+			vals[21] = psql.Arg(s.OwnerName.MustGet())
 		} else {
 			vals[21] = psql.Raw("DEFAULT")
 		}
 
-		if s.OwnerName.IsValue() {
-			vals[22] = psql.Arg(s.OwnerName.MustGet())
+		if s.OwnerPhone.IsValue() {
+			vals[22] = psql.Arg(s.OwnerPhone.MustGet())
 		} else {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
-		if s.OwnerPhone.IsValue() {
-			vals[23] = psql.Arg(s.OwnerPhone.MustGet())
+		if s.PublicID.IsValue() {
+			vals[23] = psql.Arg(s.PublicID.MustGet())
 		} else {
 			vals[23] = psql.Raw("DEFAULT")
 		}
 
-		if s.PublicID.IsValue() {
-			vals[24] = psql.Arg(s.PublicID.MustGet())
+		if s.ReporterEmail.IsValue() {
+			vals[24] = psql.Arg(s.ReporterEmail.MustGet())
 		} else {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterEmail.IsValue() {
-			vals[25] = psql.Arg(s.ReporterEmail.MustGet())
+		if s.ReporterName.IsValue() {
+			vals[25] = psql.Arg(s.ReporterName.MustGet())
 		} else {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterName.IsValue() {
-			vals[26] = psql.Arg(s.ReporterName.MustGet())
+		if s.ReporterPhone.IsValue() {
+			vals[26] = psql.Arg(s.ReporterPhone.MustGet())
 		} else {
 			vals[26] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterPhone.IsValue() {
-			vals[27] = psql.Arg(s.ReporterPhone.MustGet())
+		if s.Status.IsValue() {
+			vals[27] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[28] = psql.Arg(s.Status.MustGet())
+		if !s.OrganizationID.IsUnset() {
+			vals[28] = psql.Arg(s.OrganizationID.MustGetNull())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[29] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.HasBackyardPermission.IsValue() {
+			vals[29] = psql.Arg(s.HasBackyardPermission.MustGet())
 		} else {
 			vals[29] = psql.Raw("DEFAULT")
 		}
 
-		if s.HasBackyardPermission.IsValue() {
-			vals[30] = psql.Arg(s.HasBackyardPermission.MustGet())
+		if s.IsReporterConfidential.IsValue() {
+			vals[30] = psql.Arg(s.IsReporterConfidential.MustGet())
 		} else {
 			vals[30] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsReporterConfidential.IsValue() {
-			vals[31] = psql.Arg(s.IsReporterConfidential.MustGet())
+		if s.IsReporterOwner.IsValue() {
+			vals[31] = psql.Arg(s.IsReporterOwner.MustGet())
 		} else {
 			vals[31] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsReporterOwner.IsValue() {
-			vals[32] = psql.Arg(s.IsReporterOwner.MustGet())
+		if !s.ReporterContactConsent.IsUnset() {
+			vals[32] = psql.Arg(s.ReporterContactConsent.MustGetNull())
 		} else {
 			vals[32] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterContactConsent.IsUnset() {
-			vals[33] = psql.Arg(s.ReporterContactConsent.MustGetNull())
+		if !s.Location.IsUnset() {
+			vals[33] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[33] = psql.Raw("DEFAULT")
 		}
@@ -780,13 +780,6 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Location.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "location")...),
-			psql.Arg(s.Location),
-		}})
-	}
-
 	if s.MapZoom.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "map_zoom")...),
@@ -882,6 +875,13 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reporter_contact_consent")...),
 			psql.Arg(s.ReporterContactConsent),
+		}})
+	}
+
+	if !s.Location.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -1481,7 +1481,6 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	HasAdult               psql.WhereMod[Q, bool]
 	HasLarvae              psql.WhereMod[Q, bool]
 	HasPupae               psql.WhereMod[Q, bool]
-	Location               psql.WhereNullMod[Q, string]
 	MapZoom                psql.WhereMod[Q, float32]
 	OwnerEmail             psql.WhereMod[Q, string]
 	OwnerName              psql.WhereMod[Q, string]
@@ -1496,6 +1495,7 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	IsReporterConfidential psql.WhereMod[Q, bool]
 	IsReporterOwner        psql.WhereMod[Q, bool]
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
+	Location               psql.WhereNullMod[Q, string]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1523,7 +1523,6 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		HasAdult:               psql.Where[Q, bool](cols.HasAdult),
 		HasLarvae:              psql.Where[Q, bool](cols.HasLarvae),
 		HasPupae:               psql.Where[Q, bool](cols.HasPupae),
-		Location:               psql.WhereNull[Q, string](cols.Location),
 		MapZoom:                psql.Where[Q, float32](cols.MapZoom),
 		OwnerEmail:             psql.Where[Q, string](cols.OwnerEmail),
 		OwnerName:              psql.Where[Q, string](cols.OwnerName),
@@ -1538,6 +1537,7 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
 		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
+		Location:               psql.WhereNull[Q, string](cols.Location),
 	}
 }
 
