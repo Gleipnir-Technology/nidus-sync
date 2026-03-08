@@ -62,6 +62,7 @@ type PublicreportNuisance struct {
 	LatlngAccuracyValue    float32                                `db:"latlng_accuracy_value" `
 	ReporterContactConsent null.Val[bool]                         `db:"reporter_contact_consent" `
 	Location               null.Val[string]                       `db:"location" `
+	AddressNumber          string                                 `db:"address_number" `
 
 	R publicreportNuisanceR `db:"-" `
 }
@@ -87,7 +88,7 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location",
+			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location", "address_number",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -125,6 +126,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		LatlngAccuracyValue:    psql.Quote(alias, "latlng_accuracy_value"),
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
 		Location:               psql.Quote(alias, "location"),
+		AddressNumber:          psql.Quote(alias, "address_number"),
 	}
 }
 
@@ -166,6 +168,7 @@ type publicreportNuisanceColumns struct {
 	LatlngAccuracyValue    psql.Expression
 	ReporterContactConsent psql.Expression
 	Location               psql.Expression
+	AddressNumber          psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -215,10 +218,11 @@ type PublicreportNuisanceSetter struct {
 	LatlngAccuracyValue    omit.Val[float32]                                `db:"latlng_accuracy_value" `
 	ReporterContactConsent omitnull.Val[bool]                               `db:"reporter_contact_consent" `
 	Location               omitnull.Val[string]                             `db:"location" `
+	AddressNumber          omit.Val[string]                                 `db:"address_number" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 35)
+	vals := make([]string, 0, 36)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -323,6 +327,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	}
 	if !s.Location.IsUnset() {
 		vals = append(vals, "location")
+	}
+	if s.AddressNumber.IsValue() {
+		vals = append(vals, "address_number")
 	}
 	return vals
 }
@@ -433,6 +440,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if !s.Location.IsUnset() {
 		t.Location = s.Location.MustGetNull()
 	}
+	if s.AddressNumber.IsValue() {
+		t.AddressNumber = s.AddressNumber.MustGet()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -441,7 +451,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 35)
+		vals := make([]bob.Expression, 36)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -652,6 +662,12 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[34] = psql.Raw("DEFAULT")
 		}
 
+		if s.AddressNumber.IsValue() {
+			vals[35] = psql.Arg(s.AddressNumber.MustGet())
+		} else {
+			vals[35] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -661,7 +677,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 35)
+	exprs := make([]bob.Expression, 0, 36)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -905,6 +921,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "location")...),
 			psql.Arg(s.Location),
+		}})
+	}
+
+	if s.AddressNumber.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_number")...),
+			psql.Arg(s.AddressNumber),
 		}})
 	}
 
@@ -1520,6 +1543,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	LatlngAccuracyValue    psql.WhereMod[Q, float32]
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
 	Location               psql.WhereNullMod[Q, string]
+	AddressNumber          psql.WhereMod[Q, string]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -1563,6 +1587,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		LatlngAccuracyValue:    psql.Where[Q, float32](cols.LatlngAccuracyValue),
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
 		Location:               psql.WhereNull[Q, string](cols.Location),
+		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
 	}
 }
 

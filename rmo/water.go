@@ -67,6 +67,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 	access_other := boolFromForm(r, "access-other")
 	address := r.FormValue("address")
 	address_country := r.FormValue("address-country")
+	address_number := r.FormValue("address-number")
 	address_postcode := r.FormValue("address-postcode")
 	address_place := r.FormValue("address-place")
 	address_region := r.FormValue("address-region")
@@ -133,6 +134,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		AccessOther:     omit.From(access_other),
 		Address:         omit.From(address),
 		AddressCountry:  omit.From(address_country),
+		AddressNumber:   omit.From(address_number),
 		AddressPostCode: omit.From(address_postcode),
 		AddressPlace:    omit.From(address_place),
 		AddressStreet:   omit.From(address_street),

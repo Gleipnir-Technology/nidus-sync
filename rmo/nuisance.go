@@ -85,6 +85,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	additional_info := r.PostFormValue("additional-info")
 	address := r.PostFormValue("address")
 	address_country := r.PostFormValue("address-country")
+	address_number := r.PostFormValue("address-number")
 	address_place := r.PostFormValue("address-place")
 	address_postcode := r.PostFormValue("address-postcode")
 	address_region := r.PostFormValue("address-region")
@@ -172,6 +173,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		AdditionalInfo:  omit.From(additional_info),
 		Address:         omit.From(address),
 		AddressCountry:  omit.From(address_country),
+		AddressNumber:   omit.From(address_number),
 		AddressPlace:    omit.From(address_place),
 		AddressPostcode: omit.From(address_postcode),
 		AddressRegion:   omit.From(address_region),

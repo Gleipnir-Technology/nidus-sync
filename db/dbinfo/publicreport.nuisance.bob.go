@@ -330,6 +330,15 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressNumber: column{
+			Name:      "address_number",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -430,11 +439,12 @@ type publicreportNuisanceColumns struct {
 	LatlngAccuracyValue    column
 	ReporterContactConsent column
 	Location               column
+	AddressNumber          column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressPlace, c.AddressPostcode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressPlace, c.AddressPostcode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber,
 	}
 }
 

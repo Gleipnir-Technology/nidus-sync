@@ -77,6 +77,7 @@ function setLocationInputs(location) {
        let longitude = document.getElementById('longitude');
        let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
        let latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
+       let number = document.getElementById('address-number');
        let postcode = document.getElementById('address-postcode');
        let place = document.getElementById('address-place');
        let region = document.getElementById('address-region');
@@ -92,10 +93,11 @@ function setLocationInputs(location) {
        longitude.value = props.coordinates.longitude;
        latlngAccuracyType.value = props.coordinates.accuracy;
        latlngAccuracyValue.value = "0";
+       number.value = context.address.address_number;
        postcode.value = context.postcode.name;
        place.value = context.place.name;
        region.value = context.region.name;
-       street.value = context.country.name;
+       street.value = context.street.name;
 }
 function toggleCollapse(something) {
 	el = document.getElementById(something)
@@ -236,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			</div>
 			<input type="hidden" id="map-zoom" name="map-zoom" />
 			<input type="hidden" id="address-country" name="address-country" />
+			<input type="hidden" id="address-number" name="address-number" />
 			<input type="hidden" id="address-postcode" name="address-postcode" />
 			<input type="hidden" id="address-place" name="address-place" />
 			<input type="hidden" id="address-region" name="address-region" />

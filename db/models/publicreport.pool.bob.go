@@ -61,6 +61,7 @@ type PublicreportPool struct {
 	IsReporterOwner        bool                               `db:"is_reporter_owner" `
 	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
 	Location               null.Val[string]                   `db:"location" `
+	AddressNumber          string                             `db:"address_number" `
 
 	R publicreportPoolR `db:"-" `
 }
@@ -86,7 +87,7 @@ type publicreportPoolR struct {
 func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 	return publicreportPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number",
 		).WithParent("publicreport.pool"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -123,6 +124,7 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
 		Location:               psql.Quote(alias, "location"),
+		AddressNumber:          psql.Quote(alias, "address_number"),
 	}
 }
 
@@ -163,6 +165,7 @@ type publicreportPoolColumns struct {
 	IsReporterOwner        psql.Expression
 	ReporterContactConsent psql.Expression
 	Location               psql.Expression
+	AddressNumber          psql.Expression
 }
 
 func (c publicreportPoolColumns) Alias() string {
@@ -211,10 +214,11 @@ type PublicreportPoolSetter struct {
 	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
 	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
 	Location               omitnull.Val[string]                         `db:"location" `
+	AddressNumber          omit.Val[string]                             `db:"address_number" `
 }
 
 func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 34)
+	vals := make([]string, 0, 35)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -316,6 +320,9 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	}
 	if !s.Location.IsUnset() {
 		vals = append(vals, "location")
+	}
+	if s.AddressNumber.IsValue() {
+		vals = append(vals, "address_number")
 	}
 	return vals
 }
@@ -423,6 +430,9 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if !s.Location.IsUnset() {
 		t.Location = s.Location.MustGetNull()
 	}
+	if s.AddressNumber.IsValue() {
+		t.AddressNumber = s.AddressNumber.MustGet()
+	}
 }
 
 func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -431,7 +441,7 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 34)
+		vals := make([]bob.Expression, 35)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -636,6 +646,12 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[33] = psql.Raw("DEFAULT")
 		}
 
+		if s.AddressNumber.IsValue() {
+			vals[34] = psql.Arg(s.AddressNumber.MustGet())
+		} else {
+			vals[34] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -645,7 +661,7 @@ func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 34)
+	exprs := make([]bob.Expression, 0, 35)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -882,6 +898,13 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "location")...),
 			psql.Arg(s.Location),
+		}})
+	}
+
+	if s.AddressNumber.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_number")...),
+			psql.Arg(s.AddressNumber),
 		}})
 	}
 
@@ -1496,6 +1519,7 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	IsReporterOwner        psql.WhereMod[Q, bool]
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
 	Location               psql.WhereNullMod[Q, string]
+	AddressNumber          psql.WhereMod[Q, string]
 }
 
 func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
@@ -1538,6 +1562,7 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
 		Location:               psql.WhereNull[Q, string](cols.Location),
+		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
 	}
 }
 

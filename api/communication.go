@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform"
 	//"github.com/aarondl/opt/null"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
 
@@ -26,6 +27,7 @@ type reporter struct {
 type publicReport struct {
 	AdditionalInfo      string   `json:"additional_info"`
 	Address             Address  `json:"address"`
+	AddressAsGiven      string   `json:"address_as_given"`
 	Duration            string   `json:"duration"`
 	Images              []string `json:"images"`
 	IsLocationBackyard  bool     `json:"is_location_backyard"`
@@ -57,13 +59,15 @@ type contentListCommunication struct {
 func listCommunication(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
 	type _Report struct {
 		AdditionalInfo      string    `db:"additional_info"`
-		AddressCountry      string    `db:"address_country" `
-		AddressPlace        string    `db:"address_place" `
-		AddressPostcode     string    `db:"address_postcode" `
-		AddressRegion       string    `db:"address_region" `
-		AddressStreet       string    `db:"address_street" `
-		Created             time.Time `db:"created" `
-		Duration            string    `db:"duration" `
+		AddressCountry      string    `db:"address_country"`
+		AddressAsGiven      string    `db:"address"`
+		AddressNumber       string    `db:"address_number"`
+		AddressPlace        string    `db:"address_place"`
+		AddressPostcode     string    `db:"address_postcode"`
+		AddressRegion       string    `db:"address_region"`
+		AddressStreet       string    `db:"address_street"`
+		Created             time.Time `db:"created"`
+		Duration            string    `db:"duration"`
 		IsLocationBackyard  bool      `db:"is_location_backyard"`
 		IsLocationFrontyard bool      `db:"is_location_frontyard"`
 		IsLocationGarden    bool      `db:"is_location_garden"`
@@ -71,10 +75,10 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 		IsLocationPool      bool      `db:"is_location_pool"`
 		Latitude            float64   `db:"latitude"`
 		Longitude           float64   `db:"longitude"`
-		PublicID            string    `db:"public_id" `
-		ReporterEmail       *string   `db:"reporter_email" `
-		ReporterName        *string   `db:"reporter_name" `
-		ReporterPhone       *string   `db:"reporter_phone" `
+		PublicID            string    `db:"public_id"`
+		ReporterEmail       *string   `db:"reporter_email"`
+		ReporterName        *string   `db:"reporter_name"`
+		ReporterPhone       *string   `db:"reporter_phone"`
 		SourceContainer     bool      `db:"source_container"`
 		SourceDescription   string    `db:"source_description"`
 		SourceGutter        bool      `db:"source_gutter"`
@@ -87,7 +91,9 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 	reports, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"additional_info",
+			"address",
 			"address_country",
+			"address_number",
 			"address_place",
 			"address_postcode",
 			"address_region",
@@ -163,13 +169,14 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 			ID:      report.PublicID,
 			PublicReport: publicReport{
 				Address: Address{
-					Country:  report.AddressCountry,
-					Locality: report.AddressPlace,
-					//Number: report.Address
+					Country:    report.AddressCountry,
+					Locality:   report.AddressPlace,
+					Number:     report.AddressNumber,
 					PostalCode: report.AddressPostcode,
 					Region:     report.AddressRegion,
 					Street:     report.AddressStreet,
 				},
+				AddressAsGiven:      report.AddressAsGiven,
 				AdditionalInfo:      report.AdditionalInfo,
 				Duration:            report.Duration,
 				Images:              toImageURLs(id_to_images, report.PublicID),
