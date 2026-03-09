@@ -42,15 +42,6 @@ var PublicreportImages = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Location: column{
-			Name:      "location",
-			DBType:    "geography",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		ResolutionX: column{
 			Name:      "resolution_x",
 			DBType:    "integer",
@@ -96,6 +87,15 @@ var PublicreportImages = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Location: column{
+			Name:      "location",
+			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportImageIndexes{
 		ImagePkey: index{
@@ -129,17 +129,17 @@ type publicreportImageColumns struct {
 	ID               column
 	ContentType      column
 	Created          column
-	Location         column
 	ResolutionX      column
 	ResolutionY      column
 	StorageUUID      column
 	StorageSize      column
 	UploadedFilename column
+	Location         column
 }
 
 func (c publicreportImageColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ContentType, c.Created, c.Location, c.ResolutionX, c.ResolutionY, c.StorageUUID, c.StorageSize, c.UploadedFilename,
+		c.ID, c.ContentType, c.Created, c.ResolutionX, c.ResolutionY, c.StorageUUID, c.StorageSize, c.UploadedFilename, c.Location,
 	}
 }
 

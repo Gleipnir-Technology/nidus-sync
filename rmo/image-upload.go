@@ -163,7 +163,7 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 			if u.Exif.GPS != nil {
 				_, err = psql.Update(
 					um.Table("publicreport.image"),
-					um.SetCol("location").To(fmt.Sprintf("ST_GeometryFromText('Point(%f %f)')", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
+					um.SetCol("location").To(fmt.Sprintf("ST_Point(%f, %f, 4326)", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
 					um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
 				).Exec(ctx, tx)
 			}
