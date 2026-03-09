@@ -35,7 +35,7 @@ func (e Exif) MarshalJSON() ([]byte, error) {
 }
 
 type Image struct {
-	DistanceToReporterMeters float64   `db:"distance_to_reporter_meters"`
+	DistanceToReporterMeters float64   `db:"distance_from_reporter_meters"`
 	Exif                     Exif      `db:"-" json:"exif"`
 	ExifMake                 string    `db:"exif_make" json:"-"`
 	ExifModel                string    `db:"exif_model" json:"-"`
@@ -48,7 +48,7 @@ type Image struct {
 
 func (i *Image) MarshalJSON() ([]byte, error) {
 	to_marshal := make(map[string]interface{}, 0)
-	to_marshal["distance_to_reporter_meters"] = i.DistanceToReporterMeters
+	to_marshal["distance_from_reporter_meters"] = i.DistanceToReporterMeters
 	to_marshal["exif"] = Exif{
 		Created: i.ExifDateTime,
 		Make:    i.ExifMake,

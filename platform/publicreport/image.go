@@ -35,7 +35,7 @@ func loadImagesForReportNuisance(ctx context.Context, org_id int32, report_ids [
 			"i.storage_uuid AS uuid",
 			"COALESCE(ST_X(i.location), 0) AS \"location.longitude\"",
 			"COALESCE(ST_Y(i.location), 0) AS \"location.latitude\"",
-			"ST_Distance(i.location::geography, n.location::geography) AS \"distance_to_reporter_meters\"",
+			"ST_Distance(i.location::geography, n.location::geography) AS \"distance_from_reporter_meters\"",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'Make'), '') AS exif_make",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'Model'), '') AS exif_model",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'DateTime'), '') AS exif_datetime",
