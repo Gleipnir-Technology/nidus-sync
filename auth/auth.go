@@ -89,7 +89,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		var msg []byte
 		// Separate return codes for different authentication failures
 		if _, ok := err.(*NoCredentialsError); ok {
-			fmt.Println("No credentials present and no session")
+			log.Info().Msg("No credentials present and no session")
 			w.Header().Set("WWW-Authenticate-Error", "no-credentials")
 			msg = []byte("Please provide credentials.\n")
 		} else if _, ok := err.(*NoUserError); ok {

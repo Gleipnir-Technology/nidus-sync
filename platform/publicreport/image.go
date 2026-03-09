@@ -1,0 +1,67 @@
+package publicreport
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	//"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	//"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	//"github.com/google/uuid"
+	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
+)
+
+/*
+SELECT
+    i.*,
+    MAX(e.value) FILTER (WHERE e.name = 'Make') as exif_make,
+    MAX(e.value) FILTER (WHERE e.name = 'Model') as exif_model,
+    MAX(e.value) FILTER (WHERE e.name = 'DateTime') as exif_datetime,
+    MAX(e.value) FILTER (WHERE e.name = 'GPSLatitude') as exif_gps_lat
+FROM publicreport.image i
+LEFT JOIN publicreport.image_exif e ON i.id = e.image_id
+WHERE i.id IN (1, 2, 3, 4)
+GROUP BY i.id;
+*/
+// Get all the images that belong to the list of report IDs
+func loadImagesForReportNuisance(ctx context.Context, org_id int32, report_ids []int32) (results map[int32][]types.Image, err error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"i.storage_uuid AS uuid",
+			"ST_X(location) AS location.longitude",
+			"ST_Y(location) AS location.latitude",
+			"MAX(e.value) FILTER (WHERE e.name = 'Make') AS exif_make",
+			"MAX(e.value) FILTER (WHERE e.name = 'Model') AS exif_model",
+			"MAX(e.value) FILTER (WHERE e.name = 'DateTime') AS exif_datetime",
+			"ni.nuisance_id AS nuisance_id",
+		),
+		sm.From("publicreport.image").As("i"),
+		sm.LeftJoin("publicreport.image_exif").As("e").OnEQ(
+			psql.Quote("r", "id"),
+			psql.Quote("e", "image_id"),
+		),
+		sm.InnerJoin("publicreport.nuisance_image").As("ni").OnEQ(
+			psql.Quote("ni", "image_id"),
+			psql.Quote("i", "id"),
+		),
+		sm.Where(psql.Quote("ni", "nuisance_id").In(psql.Arg(report_ids))),
+	), scan.StructMapper[types.Image]())
+	if err != nil {
+		return nil, fmt.Errorf("get images: %w", err)
+	}
+	results = make(map[int32][]types.Image, len(report_ids))
+	for _, row := range rows {
+		r, ok := results[row.NuisanceID]
+		if !ok {
+			r = make([]types.Image, 0)
+		}
+		r = append(r, row)
+		results[row.NuisanceID] = r
+	}
+	return results, nil
+}

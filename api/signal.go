@@ -12,12 +12,13 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/aarondl/opt/null"
 	"github.com/stephenafamo/scan"
 )
 
 type signal struct {
-	Address   Address        `json:"address"`
+	Address   types.Address  `json:"address"`
 	Addressed *time.Time     `json:"addressed"`
 	Addressor *platform.User `json:"addressor"`
 	Created   time.Time      `json:"created"`
@@ -34,18 +35,18 @@ type contentListSignal struct {
 
 func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {
 	type _Row struct {
-		Address   Address    `db:"address"`
-		Addressed *time.Time `db:"addressed"`
-		Addressor *int32     `db:"addressor"`
-		Created   time.Time  `db:"created"`
-		Creator   int32      `db:"creator_id"`
-		ID        int32      `db:"id"`
-		Latitude  float64    `db:"latitude"`
-		Longitude float64    `db:"longitude"`
-		Location  Location   `db:"location"`
-		Species   *string    `db:"species"`
-		Title     string     `db:"title"`
-		Type      string     `db:"type"`
+		Address   types.Address `db:"address"`
+		Addressed *time.Time    `db:"addressed"`
+		Addressor *int32        `db:"addressor"`
+		Created   time.Time     `db:"created"`
+		Creator   int32         `db:"creator_id"`
+		ID        int32         `db:"id"`
+		Latitude  float64       `db:"latitude"`
+		Longitude float64       `db:"longitude"`
+		Location  Location      `db:"location"`
+		Species   *string       `db:"species"`
+		Title     string        `db:"title"`
+		Type      string        `db:"type"`
 	}
 	limit := 20
 	if query.Limit != nil {

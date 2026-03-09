@@ -1,4 +1,4 @@
-package api
+package types
 
 type Address struct {
 	Country    string `db:"country" json:"country"`
