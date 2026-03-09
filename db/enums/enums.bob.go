@@ -1607,6 +1607,7 @@ const (
 	PublicreportAccuracytypeInterpolated PublicreportAccuracytype = "interpolated"
 	PublicreportAccuracytypeApproximate  PublicreportAccuracytype = "approximate"
 	PublicreportAccuracytypeIntersection PublicreportAccuracytype = "intersection"
+	PublicreportAccuracytypeCentroid     PublicreportAccuracytype = "centroid"
 	PublicreportAccuracytypeBrowser      PublicreportAccuracytype = "browser"
 	PublicreportAccuracytypeNone         PublicreportAccuracytype = "none"
 )
@@ -1619,6 +1620,7 @@ func AllPublicreportAccuracytype() []PublicreportAccuracytype {
 		PublicreportAccuracytypeInterpolated,
 		PublicreportAccuracytypeApproximate,
 		PublicreportAccuracytypeIntersection,
+		PublicreportAccuracytypeCentroid,
 		PublicreportAccuracytypeBrowser,
 		PublicreportAccuracytypeNone,
 	}
@@ -1638,6 +1640,7 @@ func (e PublicreportAccuracytype) Valid() bool {
 		PublicreportAccuracytypeInterpolated,
 		PublicreportAccuracytypeApproximate,
 		PublicreportAccuracytypeIntersection,
+		PublicreportAccuracytypeCentroid,
 		PublicreportAccuracytypeBrowser,
 		PublicreportAccuracytypeNone:
 		return true
