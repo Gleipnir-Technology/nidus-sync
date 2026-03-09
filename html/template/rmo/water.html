@@ -78,7 +78,7 @@ function setLocationInputs(location) {
        latlngAccuracyValue.value = props.distance;
        number.value = props.address_components.number;
        postalcode.value = props.address_components.postal_code;
-       locality.value = context.locality.name;
+       locality.value = context.whosonfirst.locality.name;
        region.value = props.context.whosonfirst.region.abbreviation;
        street.value = props.address_components.street;
 }

@@ -80,8 +80,8 @@
 			latlngAccuracyValue.value = props.distance;
 			number.value = props.address_components.number;
 			postalcode.value = props.address_components.postal_code;
-			locality.value = context.locality.name;
-			region.value = props.context.whosonfirst.region.abbreviation;
+			locality.value = context.whosonfirst.locality.name;
+			region.value = context.whosonfirst.region.abbreviation;
 			street.value = props.address_components.street;
 		}
 		function toggleCollapse(something) {
@@ -232,7 +232,7 @@
 			<input type="hidden" id="map-zoom" name="map-zoom" />
 			<input type="hidden" id="address-country" name="address-country" />
 			<input type="hidden" id="address-number" name="address-number" />
-			<input type="hidden" id="address-postcode" name="address-postcode" />
+			<input type="hidden" id="address-postalcode" name="address-postalcode" />
 			<input type="hidden" id="address-locality" name="address-locality" />
 			<input type="hidden" id="address-region" name="address-region" />
 			<input type="hidden" id="address-street" name="address-street" />
