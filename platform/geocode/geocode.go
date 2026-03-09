@@ -32,6 +32,63 @@ func InitializeStadia(key string) {
 	client = stadia.NewStadiaMaps(key)
 }
 
+// Ensure the provided address exists. If it doesn't add it to the database.
+func EnsureAddress(ctx context.Context, txn bob.Tx, a types.Address, l types.Location) (*models.Address, error) {
+	address, err := models.Addresses.Query(
+		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
+		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
+		models.SelectWhere.Addresses.Number.EQ(a.Number),
+		models.SelectWhere.Addresses.PostalCode.EQ(a.PostalCode),
+		models.SelectWhere.Addresses.Region.EQ(a.Region),
+		models.SelectWhere.Addresses.Street.EQ(a.Street),
+		models.SelectWhere.Addresses.Unit.EQ(a.Unit),
+	).One(ctx, txn)
+	if err == nil {
+		return address, nil
+	}
+	cell, err := h3utils.GetCell(l.Longitude, l.Latitude, 15)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", l.Longitude, l.Latitude)
+	}
+	type _row struct {
+		ID int32 `db:"id"`
+	}
+	created := time.Now()
+	row, err := bob.One(ctx, txn, psql.Insert(
+		im.Into("address", "country", "created", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+		im.Values(
+			psql.Arg(a.Country),
+			psql.Arg(created),
+			psql.Arg(cell),
+			psql.Raw("DEFAULT"),
+			psql.Arg(a.Locality),
+			psql.F("ST_Point", l.Longitude, l.Latitude, 4326),
+			psql.Arg(a.Number),
+			psql.Arg(a.PostalCode),
+			psql.Arg(a.Region),
+			psql.Arg(a.Street),
+			psql.Raw("''"),
+		),
+		im.Returning("id"),
+	), scan.StructMapper[_row]())
+	if err != nil {
+		return nil, fmt.Errorf("insert: %w", err)
+	}
+	return &models.Address{
+		Country:    a.CountryEnum(),
+		Created:    created,
+		H3cell:     "",
+		ID:         row.ID,
+		Locality:   a.Locality,
+		Location:   "",
+		PostalCode: a.PostalCode,
+		Street:     a.Street,
+		Unit:       a.Unit,
+		Region:     a.Region,
+		Number:     a.Number,
+	}, nil
+}
+
 // Either get an address that matches, or create a new address. Either way, return an address
 // This will make a call to a structured geocode service, so it's slow.
 func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organization, a types.Address) (*models.Address, error) {

@@ -13,7 +13,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -80,7 +82,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	additional_info := r.PostFormValue("additional-info")
-	address := r.PostFormValue("address")
+	address_raw := r.PostFormValue("address")
 	address_country := r.PostFormValue("address-country")
 	address_locality := r.PostFormValue("address-locality")
 	address_number := r.PostFormValue("address-number")
@@ -129,7 +131,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		is_location_pool = true
 	}
 	//log.Debug().Bool("is_location_backyard", is_location_backyard).Bool("is_location_frontyard", is_location_frontyard).Bool("is_location_garden", is_location_garden).Bool("is_location_other", is_location_other).Bool("is_location_pool", is_location_pool).Msg("parsed")
-
 	public_id, err := report.GenerateReportID()
 	if err != nil {
 		respondError(w, "Failed to create report public ID", err, http.StatusInternalServerError)
@@ -149,6 +150,23 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer txn.Rollback(ctx)
 
+	// If we've got an address_country value it was set by geocoding so we should save it
+	var address *models.Address
+	if address_country != "" && latlng.Latitude != nil && latlng.Longitude != nil {
+		address, err = geocode.EnsureAddress(ctx, txn, types.Address{
+			Country:    address_country,
+			Locality:   address_locality,
+			Number:     address_number,
+			PostalCode: address_postal_code,
+			Region:     address_region,
+			Street:     address_street,
+			Unit:       "",
+		}, types.Location{
+			Latitude:  *latlng.Latitude,
+			Longitude: *latlng.Longitude,
+		})
+	}
+
 	uploads, err := extractImageUploads(r)
 	log.Info().Int("len", len(uploads)).Msg("extracted uploads")
 	if err != nil {
@@ -167,8 +185,9 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setter := models.PublicreportNuisanceSetter{
-		AdditionalInfo:    omit.From(additional_info),
-		AddressRaw:        omit.From(address),
+		AdditionalInfo: omit.From(additional_info),
+		//AddressID:              omitnull.From(geospatial.Cell.String()),
+		AddressRaw:        omit.From(address_raw),
 		AddressCountry:    omit.From(address_country),
 		AddressNumber:     omit.From(address_number),
 		AddressLocality:   omit.From(address_locality),
@@ -202,6 +221,9 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		TodDay:            omit.From(tod_day),
 		TodEvening:        omit.From(tod_evening),
 		TodNight:          omit.From(tod_night),
+	}
+	if address != nil {
+		setter.AddressID = omitnull.From(address.ID)
 	}
 	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(ctx, txn)
 	if err != nil {
