@@ -21,7 +21,15 @@
 			return true;
 		}
 		function formatAddress(a) {
-			return a.number + " " + a.street + ", " + a.locality;
+			if (a.number == "" && a.street == "") {
+				return "no address provided";
+			}
+			const result = a.number + " " + a.street + ", " + a.locality;
+			if (result.length > 30) {
+				return result.substring(0, 30) + "...";
+			} else {
+				return result;
+			}
 		}
 		function communicationsApp() {
 			return {
@@ -366,7 +374,7 @@
 										></span>
 									</div>
 									<small
-										x-text="formatAddress(comm.public_report.address).substring(0, 30) + '...'"
+										x-text="formatAddress(comm.public_report.address)"
 									></small>
 									<template
 										x-if="comm.public_report.images && comm.public_report.images.length > 0"
