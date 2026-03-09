@@ -24,7 +24,7 @@ type Nuisance struct {
 	Created             time.Time      `db:"created" json:"created"`
 	Duration            string         `db:"duration" json:"duration"`
 	ID                  int32          `db:"id" json:"-"`
-	Images              []types.Image  `json:"images"`
+	Images              []types.Image  `db:"-" json:"images"`
 	IsLocationBackyard  bool           `db:"is_location_backyard" json:"is_location_backyard"`
 	IsLocationFrontyard bool           `db:"is_location_frontyard" json:"is_location_frontyard"`
 	IsLocationGarden    bool           `db:"is_location_garden" json:"is_location_garden"`
@@ -84,15 +84,15 @@ func NuisanceReportForOrganization(ctx context.Context, org_id int32) ([]Nuisanc
 		return nil, fmt.Errorf("get reports: %w", err)
 	}
 	report_ids := make([]int32, len(reports))
-	for _, report := range reports {
-		report_ids = append(report_ids, report.ID)
+	for i, report := range reports {
+		report_ids[i] = report.ID
 	}
 	images_by_id, err := loadImagesForReportNuisance(ctx, org_id, report_ids)
 	if err != nil {
 		return nil, fmt.Errorf("images for report: %w", err)
 	}
-	for _, report := range reports {
-		report.Images = images_by_id[report.ID]
+	for i := range reports {
+		reports[i].Images = images_by_id[reports[i].ID]
 	}
 	return reports, nil
 }
