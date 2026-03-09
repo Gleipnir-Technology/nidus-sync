@@ -1,7 +1,10 @@
 DELETE FROM publicreport.image_exif;
-DELETE FROM publicreport.pool_image;
-DELETE FROM publicreport.quick_image;
-DELETE FROM publicreport.pool;
-DELETE FROM publicreport.quick;
+DELETE FROM publicreport.water_image;
+DELETE FROM publicreport.nuisance_image;
 DELETE FROM publicreport.image;
+DELETE FROM publicreport.notify_email_nuisance;
+DELETE FROM publicreport.notify_email_water;
+DELETE FROM publicreport.notify_phone_nuisance;
+DELETE FROM publicreport.notify_phone_water;
 DELETE FROM publicreport.nuisance;
+DELETE FROM publicreport.water;
