@@ -202,20 +202,20 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 	return result, err
 }
 func contentFromWater(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
-	pool, err := models.PublicreportWaters.Query(
+	water, err := models.PublicreportWaters.Query(
 		models.SelectWhere.PublicreportWaters.PublicID.EQ(report_id),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return result, fmt.Errorf("Failed to query pool %s: %w", report_id, err)
+		return result, fmt.Errorf("Failed to query water %s: %w", report_id, err)
 	}
 
-	images, err := sql.PublicreportImageWithJSONByWaterID(pool.ID).All(ctx, db.PGInstance.BobDB)
+	images, err := sql.PublicreportImageWithJSONByWaterID(water.ID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
 
-	if !pool.OrganizationID.IsNull() {
-		org_id := pool.OrganizationID.MustGet()
+	if !water.OrganizationID.IsNull() {
+		org_id := water.OrganizationID.MustGet()
 		org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
 		if err != nil {
 			return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
@@ -224,44 +224,44 @@ func contentFromWater(ctx context.Context, report_id string) (result ContentStat
 	}
 
 	result.Report.ID = report_id
-	result.Report.Address = pool.AddressRaw
-	result.Report.Created = pool.Created
+	result.Report.Address = water.AddressRaw
+	result.Report.Created = water.Created
 	result.Report.ImageCount = len(images)
-	result.Report.Status = strings.Title(pool.Status.String())
+	result.Report.Status = strings.Title(water.Status.String())
 	result.Report.Type = "Mosquito Nuisance"
 	result.Report.Details = []DetailEntry{
 		DetailEntry{
 			Name:  "Has a gate that affects access?",
-			Value: strconv.FormatBool(pool.AccessGate),
+			Value: strconv.FormatBool(water.AccessGate),
 		},
 		DetailEntry{
 			Name:  "Has dog that affects access?",
-			Value: strconv.FormatBool(pool.AccessDog),
+			Value: strconv.FormatBool(water.AccessDog),
 		},
 		DetailEntry{
 			Name:  "Has a fence that affects access?",
-			Value: strconv.FormatBool(pool.AccessFence),
+			Value: strconv.FormatBool(water.AccessFence),
 		},
 		DetailEntry{
 			Name:  "Has a locked entrace that affects access?",
-			Value: strconv.FormatBool(pool.AccessLocked),
+			Value: strconv.FormatBool(water.AccessLocked),
 		},
 		DetailEntry{
 			Name:  "Reporter observed larvae (wigglers)?",
-			Value: strconv.FormatBool(pool.HasLarvae),
+			Value: strconv.FormatBool(water.HasLarvae),
 		},
 		DetailEntry{
 			Name:  "Reporter observed pupae (tumblers)?",
-			Value: strconv.FormatBool(pool.HasPupae),
+			Value: strconv.FormatBool(water.HasPupae),
 		},
 		DetailEntry{
 			Name:  "Reporter observed adult mosquitoes?",
-			Value: strconv.FormatBool(pool.HasAdult),
+			Value: strconv.FormatBool(water.HasAdult),
 		},
 	}
 	result.Timeline = []TimelineEntry{
 		TimelineEntry{
-			At:     pool.Created,
+			At:     water.Created,
 			Detail: "Initial report was submitted",
 			Title:  "Created",
 		},
@@ -273,11 +273,11 @@ func contentFromWater(ctx context.Context, report_id string) (result ContentStat
 		sm.Columns(
 			psql.F("ST_AsGeoJSON", "location"),
 		),
-		sm.From("publicreport.pool"),
+		sm.From("publicreport.water"),
 		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
 	), scan.SingleColumnMapper[string])
 	if err != nil {
-		return result, fmt.Errorf("Failed to query pool %s: %w", report_id, err)
+		return result, fmt.Errorf("Failed to query water %s: %w", report_id, err)
 	}
 	result.Report.Location = location
 
@@ -299,7 +299,7 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	switch location.TableName.MustGet() {
 	case "nuisance":
 		content, err = contentFromNuisance(ctx, report_id)
-	case "pool":
+	case "water":
 		content, err = contentFromWater(ctx, report_id)
 	}
 	if err != nil {

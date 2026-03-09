@@ -81,7 +81,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 
 	latlng, err := parseLatLng(r)
 	if err != nil {
-		respondError(w, "Failed to parse lat lng for pool report", err, http.StatusInternalServerError)
+		respondError(w, "Failed to parse lat lng for water report", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -92,7 +92,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 	}
 	public_id, err := report.GenerateReportID()
 	if err != nil {
-		respondError(w, "Failed to create pool report public ID", err, http.StatusInternalServerError)
+		respondError(w, "Failed to create water report public ID", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -156,7 +156,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		ReporterPhone:  omit.From(""),
 		Status:         omit.From(enums.PublicreportReportstatustypeReported),
 	}
-	pool, err := models.PublicreportWaters.Insert(&setter).One(ctx, tx)
+	water, err := models.PublicreportWaters.Insert(&setter).One(ctx, tx)
 	if err != nil {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
@@ -164,22 +164,22 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 
 	if geospatial.Populated {
 		_, err = psql.Update(
-			um.Table("publicreport.pool"),
+			um.Table("publicreport.water"),
 			um.SetCol("h3cell").ToArg(geospatial.Cell),
 			um.SetCol("location").To(geospatial.GeometryQuery),
-			um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
+			um.Where(psql.Quote("id").EQ(psql.Arg(water.ID))),
 		).Exec(ctx, tx)
 		if err != nil {
-			respondError(w, "Failed to update publicreport.pool geospatial", err, http.StatusInternalServerError)
+			respondError(w, "Failed to update publicreport.water geospatial", err, http.StatusInternalServerError)
 			return
 		}
 	}
-	log.Info().Int32("id", pool.ID).Str("public_id", pool.PublicID).Msg("Created pool report")
+	log.Info().Int32("id", water.ID).Str("public_id", water.PublicID).Msg("Created water report")
 	setters := make([]*models.PublicreportWaterImageSetter, 0)
 	for _, image := range images {
 		setters = append(setters, &models.PublicreportWaterImageSetter{
 			ImageID: omit.From(int32(image.ID)),
-			WaterID: omit.From(int32(pool.ID)),
+			WaterID: omit.From(int32(water.ID)),
 		})
 	}
 	if len(setters) > 0 {

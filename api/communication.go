@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 )
@@ -19,27 +20,39 @@ type reporter struct {
 	Name     string `json:"name"`
 }
 type communication struct {
-	Created      time.Time             `json:"created"`
-	ID           string                `json:"id"`
-	PublicReport publicreport.Nuisance `json:"public_report"`
-	Type         string                `json:"type"`
+	Created      time.Time          `json:"created"`
+	ID           string             `json:"id"`
+	PublicReport types.PublicReport `json:"public_report"`
+	Type         string             `json:"type"`
 }
 type contentListCommunication struct {
 	Communications []communication `json:"communications"`
 }
 
 func listCommunication(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
-	reports, err := publicreport.NuisanceReportForOrganization(ctx, org.ID)
+	nreports, err := publicreport.NuisanceReportForOrganization(ctx, org.ID)
 	if err != nil {
-		return nil, nhttp.NewError("query report: %w", err)
+		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}
-	comms := make([]communication, len(reports))
-	for i, report := range reports {
+	wreports, err := publicreport.WaterReportForOrganization(ctx, org.ID)
+	if err != nil {
+		return nil, nhttp.NewError("water report query: %w", err)
+	}
+	comms := make([]communication, len(nreports)+len(wreports))
+	for i, report := range nreports {
 		comms[i] = communication{
 			Created:      report.Created,
 			ID:           report.PublicID,
 			PublicReport: report,
 			Type:         "nuisance",
+		}
+	}
+	for i, report := range wreports {
+		comms[i+len(nreports)] = communication{
+			Created:      report.Created,
+			ID:           report.PublicID,
+			PublicReport: report,
+			Type:         "water",
 		}
 	}
 	return &contentListCommunication{

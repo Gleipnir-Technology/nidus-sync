@@ -7,6 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/google/uuid"
+	//"github.com/rs/zerolog/log"
 )
 
 type Exif struct {
@@ -35,13 +36,13 @@ func (e Exif) MarshalJSON() ([]byte, error) {
 }
 
 type Image struct {
-	DistanceToReporterMeters float64   `db:"distance_from_reporter_meters"`
+	DistanceToReporterMeters *float64  `db:"distance_from_reporter_meters"`
 	Exif                     Exif      `db:"-" json:"exif"`
 	ExifMake                 string    `db:"exif_make" json:"-"`
 	ExifModel                string    `db:"exif_model" json:"-"`
 	ExifDateTime             string    `db:"exif_datetime" json:"-"`
 	Location                 Location  `db:"location"`
-	NuisanceID               int32     `db:"nuisance_id"`
+	ReportID                 int32     `db:"report_id" json:"-"`
 	URLContent               string    `db:"-" json:"url_content"`
 	UUID                     uuid.UUID `db:"uuid"`
 }
@@ -55,7 +56,7 @@ func (i *Image) MarshalJSON() ([]byte, error) {
 		Model:   i.ExifModel,
 	}
 	to_marshal["location"] = i.Location
-	to_marshal["nuisance_id"] = i.NuisanceID
+	//to_marshal["report_id"] = i.ReportID
 	to_marshal["url_content"] = config.MakeURLNidus("/api/image/%s/content", i.UUID.String())
 	to_marshal["uuid"] = i.UUID
 
