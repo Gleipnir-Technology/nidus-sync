@@ -44,6 +44,11 @@ $theme-colors: map-merge(
   100% { transform: rotate(360deg); }
 }
 
+// Make custom SVG icons about the same size as other icons
+i.bi svg {
+	height: 18px;
+	width: 18px;
+}
 @import "./bootstrap/scss/bootstrap";
 
 @import "./sidebar.scss";

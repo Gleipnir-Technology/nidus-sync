@@ -313,7 +313,7 @@
 								:class="typeFilter === 'nuisance' ? 'btn-danger' : 'btn-outline-secondary'"
 								@click="typeFilter = 'nuisance'"
 							>
-								<i class="bi bi-exclamation-triangle"></i> Nuisance
+								<i class="bi">{{ template "mosquito.svg" }}</i> Nuisance
 							</button>
 							<button
 								class="btn btn-sm"
@@ -338,9 +338,7 @@
 								>
 									<div class="d-flex align-items-center">
 										<template x-if="comm.type === 'nuisance'">
-											<i
-												class="bi bi-exclamation-triangle-fill icon-nuisance fs-4 me-2"
-											></i>
+											<i class="bi fs-4 me-2">{{ template "mosquito.svg" }}</i>
 										</template>
 										<template x-if="comm.type === 'standing_water'">
 											<i
@@ -411,7 +409,7 @@
 					</div>
 					<template x-if="!selectedCommunication">
 						<div
-							class="h-100 d-flex flex-column align-items-center justify-content-center text-muted"
+							class="d-flex flex-column align-items-center justify-content-center text-muted"
 						>
 							<i class="bi bi-hand-index fs-1"></i>
 							<p class="mt-2">Select a report to view details</p>
@@ -431,9 +429,9 @@
 												x-if="selectedCommunication.type === 'nuisance'"
 											>
 												<span
-													><i
-														class="bi bi-exclamation-triangle-fill icon-nuisance"
-													></i>
+													><i class="bi icon-nuisance"
+														>{{ template "mosquito.svg" }}</i
+													>
 													Nuisance Report</span
 												>
 											</template>
@@ -482,16 +480,22 @@
 													class="fw-medium"
 													x-text="selectedCommunication.public_report.reporter.name"
 												></div>
+												<template
+													x-if="selectedCommunication.public_report.reporter.has_email"
+												>
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-envelope"></i>
+													</label>
+												</template>
+												<template
+													x-if="selectedCommunication.public_report.reporter.has_phone"
+												>
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-phone"></i>
+													</label>
+												</template>
 											</div>
-											<div class="col-md-6">
-												<label class="form-label text-muted small mb-0">
-													<i class="bi bi-envelope"></i> Contact
-												</label>
-												<div
-													class="fw-medium"
-													x-text="selectedCommunication.public_report.reporter.has_email"
-												></div>
-											</div>
+											<div class="col-md-6"></div>
 										</div>
 									</div>
 								</div>
