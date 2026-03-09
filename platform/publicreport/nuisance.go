@@ -37,10 +37,10 @@ type Nuisance struct {
 	SourceDescription   string         `db:"source_description" json:"source_description"`
 	SourceGutter        bool           `db:"source_gutter" json:"source_gutter"`
 	SourceStagnant      bool           `db:"source_stagnant" json:"source_stagnant"`
-	TODDay              bool           `db:"tod_day" json:"tod_day"`
-	TODEarly            bool           `db:"tod_early" json:"tod_early"`
-	TODEvening          bool           `db:"tod_evening" json:"tod_evening"`
-	TODNight            bool           `db:"tod_night" json:"tod_night"`
+	TODDay              bool           `db:"tod_day" json:"time_of_day_day"`
+	TODEarly            bool           `db:"tod_early" json:"time_of_day_early"`
+	TODEvening          bool           `db:"tod_evening" json:"time_of_day_evening"`
+	TODNight            bool           `db:"tod_night" json:"time_of_day_night"`
 }
 
 func NuisanceReportForOrganization(ctx context.Context, org_id int32) ([]Nuisance, error) {
