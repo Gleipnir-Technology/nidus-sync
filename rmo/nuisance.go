@@ -165,6 +165,10 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 			Latitude:  *latlng.Latitude,
 			Longitude: *latlng.Longitude,
 		})
+		if err != nil {
+			respondError(w, "Failed to ensure address: %w", err, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	uploads, err := extractImageUploads(r)
