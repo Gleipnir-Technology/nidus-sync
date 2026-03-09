@@ -24,12 +24,7 @@
 			if (a.number == "" && a.street == "") {
 				return "no address provided";
 			}
-			const result = a.number + " " + a.street + ", " + a.locality;
-			if (result.length > 30) {
-				return result.substring(0, 30) + "...";
-			} else {
-				return result;
-			}
+			return a.number + " " + a.street + ", " + a.locality;
 		}
 		function communicationsApp() {
 			return {
