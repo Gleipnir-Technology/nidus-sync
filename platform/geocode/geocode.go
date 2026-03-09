@@ -57,7 +57,7 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, a types.Address, l types.Loc
 	row, err := bob.One(ctx, txn, psql.Insert(
 		im.Into("address", "country", "created", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
 		im.Values(
-			psql.Arg(a.Country),
+			psql.Arg(a.CountryEnum()),
 			psql.Arg(created),
 			psql.Arg(cell),
 			psql.Raw("DEFAULT"),

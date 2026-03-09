@@ -33,8 +33,9 @@ func loadImagesForReportNuisance(ctx context.Context, org_id int32, report_ids [
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"i.storage_uuid AS uuid",
-			"COALESCE(ST_X(location), 0) AS \"location.longitude\"",
-			"COALESCE(ST_Y(location), 0) AS \"location.latitude\"",
+			"COALESCE(ST_X(i.location), 0) AS \"location.longitude\"",
+			"COALESCE(ST_Y(i.location), 0) AS \"location.latitude\"",
+			"ST_Distance(i.location::geography, n.location::geography) AS \"distance_to_reporter_meters\"",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'Make'), '') AS exif_make",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'Model'), '') AS exif_model",
 			"COALESCE(MAX(e.value) FILTER (WHERE e.name = 'DateTime'), '') AS exif_datetime",
@@ -49,11 +50,15 @@ func loadImagesForReportNuisance(ctx context.Context, org_id int32, report_ids [
 			psql.Quote("ni", "image_id"),
 			psql.Quote("i", "id"),
 		),
+		sm.InnerJoin("publicreport.nuisance").As("n").OnEQ(
+			psql.Quote("ni", "nuisance_id"),
+			psql.Quote("n", "id"),
+		),
 		sm.Where(psql.Quote("ni", "nuisance_id").EQ(psql.Any(report_ids))),
 		sm.GroupBy(
 			//psql.Quote("i", "id"),
 			//psql.Quote("ni", "nuisance_id"),
-			psql.Raw("i.id, ni.nuisance_id"),
+			psql.Raw("i.id, ni.nuisance_id, n.location"),
 		),
 	), scan.StructMapper[types.Image]())
 	if err != nil {
