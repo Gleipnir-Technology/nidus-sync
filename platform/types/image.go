@@ -15,7 +15,7 @@ type Exif struct {
 	Model   string `json:"model"`
 }
 
-func (e *Exif) MarshalJSON() ([]byte, error) {
+func (e Exif) MarshalJSON() ([]byte, error) {
 	to_marshal := make(map[string]interface{}, 0)
 	if e.Created != "" {
 		layout := "2006:01:02 15:04:05"
