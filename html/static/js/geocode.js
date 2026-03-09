@@ -1,5 +1,6 @@
-async function geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat) {
-	const url = `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lngLat.lng}&latitude=${lngLat.lat}&access_token=${MAPBOX_ACCESS_TOKEN}`
+async function geocodeReverse(lngLat) {
+	// curl "https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=59.444351&point.lon=24.750645&api_key=YOUR-API-KEY"
+	const url = `https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=${lngLat.lat}&point.lon=${lngLat.lng}`;
 	const response = await fetch(url);
 	const data = await response.json();
 	console.log("reverse geocoded to", data);
@@ -7,5 +8,5 @@ async function geocodeReverse(MAPBOX_ACCESS_TOKEN, lngLat) {
 		console.warn("No results for reverse geocode");
 		return;
 	}
-	return data
+	return data;
 }
