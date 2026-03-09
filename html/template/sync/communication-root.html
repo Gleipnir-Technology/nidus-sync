@@ -855,11 +855,40 @@
 						<template
 							x-if="selectedCommunication && selectedCommunication.public_report.images"
 						>
-							<img
-								:src="selectedCommunication.public_report.images[currentPhotoIndex].url_content"
-								class="img-fluid rounded"
-								style="max-height: 60vh;"
-							/>
+							<div>
+								<img
+									:src="selectedCommunication.public_report.images[currentPhotoIndex].url_content"
+									class="img-fluid rounded"
+									style="max-height: 60vh;"
+								/>
+
+								<!-- EXIF Data Section -->
+								<div class="mt-4 pt-3 border-top text-start">
+									<h6 class="text-muted mb-3">Photo Information</h6>
+									<div class="row g-3">
+										<div class="col-md-4">
+											<small class="text-muted d-block">Date Taken</small>
+											<span
+												x-text="selectedCommunication.public_report.images[currentPhotoIndex].exif?.created || 'N/A'"
+											></span>
+										</div>
+										<div class="col-md-4">
+											<small class="text-muted d-block">Camera</small>
+											<span
+												x-text="(selectedCommunication.public_report.images[currentPhotoIndex].exif?.make || '') + ' ' + (selectedCommunication.public_report.images[currentPhotoIndex].exif?.model || '') || 'N/A'"
+											></span>
+										</div>
+										<div class="col-md-4">
+											<small class="text-muted d-block"
+												>Distance from Reporter</small
+											>
+											<span
+												x-text="selectedCommunication.public_report.images[currentPhotoIndex].exif?.distance_from_reporter || 'N/A'"
+											></span>
+										</div>
+									</div>
+								</div>
+							</div>
 						</template>
 					</div>
 					<div class="modal-footer justify-content-between">
