@@ -691,7 +691,7 @@
 													:key="index"
 												>
 													<img
-														:src="photo"
+														:src="photo.url_content"
 														class="photo-thumbnail"
 														@click="openPhotoViewer(index)"
 														:alt="'Photo ' + (index + 1)"
@@ -856,7 +856,7 @@
 							x-if="selectedCommunication && selectedCommunication.public_report.images"
 						>
 							<img
-								:src="selectedCommunication.public_report.images[currentPhotoIndex]"
+								:src="selectedCommunication.public_report.images[currentPhotoIndex].url_content"
 								class="img-fluid rounded"
 								style="max-height: 60vh;"
 							/>
