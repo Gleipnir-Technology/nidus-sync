@@ -18,11 +18,10 @@ type MapMarker struct {
 	LatLng h3.LatLng
 }
 type ComponentMap struct {
-	Center      h3.LatLng
-	GeoJSON     interface{}
-	MapboxToken string
-	Markers     []MapMarker
-	Zoom        int
+	Center  h3.LatLng
+	GeoJSON interface{}
+	Markers []MapMarker
+	Zoom    int
 }
 type ContentMockURLs struct {
 	Dispatch            string

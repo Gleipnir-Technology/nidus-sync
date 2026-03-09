@@ -8,7 +8,6 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -19,20 +18,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ContentPool struct {
-	District    *ContentDistrict
-	MapboxToken string
-	URL         ContentURL
+type ContentWater struct {
+	District *ContentDistrict
+	URL      ContentURL
 }
 
 func getWater(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		"rmo/water.html",
-		ContentPool{
-			District:    nil,
-			MapboxToken: config.MapboxToken,
-			URL:         makeContentURL(nil),
+		ContentWater{
+			District: nil,
+			URL:      makeContentURL(nil),
 		},
 	)
 }
@@ -45,10 +42,9 @@ func getWaterDistrict(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(
 		w,
 		"rmo/water.html",
-		ContentPool{
-			District:    newContentDistrict(district),
-			MapboxToken: config.MapboxToken,
-			URL:         makeContentURL(district),
+		ContentWater{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(district),
 		},
 	)
 }
@@ -65,11 +61,11 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 	access_gate := boolFromForm(r, "access-gate")
 	access_locked := boolFromForm(r, "access-locked")
 	access_other := boolFromForm(r, "access-other")
-	address := r.FormValue("address")
+	address_raw := r.FormValue("address")
 	address_country := r.FormValue("address-country")
+	address_locality := r.FormValue("address-locality")
 	address_number := r.FormValue("address-number")
-	address_postcode := r.FormValue("address-postcode")
-	address_place := r.FormValue("address-place")
+	address_postalcode := r.FormValue("address-postalcode")
 	address_region := r.FormValue("address-region")
 	address_street := r.FormValue("address-street")
 	comments := r.FormValue("comments")
@@ -125,22 +121,22 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		log.Warn().Err(err).Msg("Failed to match district")
 	}
 
-	setter := models.PublicreportPoolSetter{
-		AccessComments:  omit.From(access_comments),
-		AccessDog:       omit.From(access_dog),
-		AccessFence:     omit.From(access_fence),
-		AccessGate:      omit.From(access_gate),
-		AccessLocked:    omit.From(access_locked),
-		AccessOther:     omit.From(access_other),
-		Address:         omit.From(address),
-		AddressCountry:  omit.From(address_country),
-		AddressNumber:   omit.From(address_number),
-		AddressPostCode: omit.From(address_postcode),
-		AddressPlace:    omit.From(address_place),
-		AddressStreet:   omit.From(address_street),
-		AddressRegion:   omit.From(address_region),
-		Comments:        omit.From(comments),
-		Created:         omit.From(time.Now()),
+	setter := models.PublicreportWaterSetter{
+		AccessComments:    omit.From(access_comments),
+		AccessDog:         omit.From(access_dog),
+		AccessFence:       omit.From(access_fence),
+		AccessGate:        omit.From(access_gate),
+		AccessLocked:      omit.From(access_locked),
+		AccessOther:       omit.From(access_other),
+		AddressRaw:        omit.From(address_raw),
+		AddressCountry:    omit.From(address_country),
+		AddressLocality:   omit.From(address_locality),
+		AddressNumber:     omit.From(address_number),
+		AddressPostalCode: omit.From(address_postalcode),
+		AddressStreet:     omit.From(address_street),
+		AddressRegion:     omit.From(address_region),
+		Comments:          omit.From(comments),
+		Created:           omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
 		HasAdult:               omit.From(has_adult),
 		HasBackyardPermission:  omit.From(has_backyard_permission),
@@ -160,7 +156,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		ReporterPhone:  omit.From(""),
 		Status:         omit.From(enums.PublicreportReportstatustypeReported),
 	}
-	pool, err := models.PublicreportPools.Insert(&setter).One(ctx, tx)
+	pool, err := models.PublicreportWaters.Insert(&setter).One(ctx, tx)
 	if err != nil {
 		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
 		return
@@ -179,15 +175,15 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Info().Int32("id", pool.ID).Str("public_id", pool.PublicID).Msg("Created pool report")
-	setters := make([]*models.PublicreportPoolImageSetter, 0)
+	setters := make([]*models.PublicreportWaterImageSetter, 0)
 	for _, image := range images {
-		setters = append(setters, &models.PublicreportPoolImageSetter{
+		setters = append(setters, &models.PublicreportWaterImageSetter{
 			ImageID: omit.From(int32(image.ID)),
-			PoolID:  omit.From(int32(pool.ID)),
+			WaterID: omit.From(int32(pool.ID)),
 		})
 	}
 	if len(setters) > 0 {
-		_, err = models.PublicreportPoolImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
+		_, err = models.PublicreportWaterImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
 		if err != nil {
 			respondError(w, "Failed to save upload relationships", err, http.StatusInternalServerError)
 			return

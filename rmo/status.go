@@ -11,7 +11,6 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
@@ -27,18 +26,16 @@ import (
 	*/)
 
 type ContentStatus struct {
-	District    *ContentDistrict
-	Error       string
-	MapboxToken string
-	ReportID    string
-	URL         ContentURL
+	District *ContentDistrict
+	Error    string
+	ReportID string
+	URL      ContentURL
 }
 type ContentStatusByID struct {
-	District    *ContentDistrict
-	MapboxToken string
-	Report      Report
-	Timeline    []TimelineEntry
-	URL         ContentURL
+	District *ContentDistrict
+	Report   Report
+	Timeline []TimelineEntry
+	URL      ContentURL
 }
 type DetailEntry struct {
 	Name  string
@@ -84,10 +81,9 @@ func formatReportID(s string) string {
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	report_id_str := r.URL.Query().Get("report")
 	content := ContentStatus{
-		Error:       "",
-		MapboxToken: config.MapboxToken,
-		ReportID:    "",
-		URL:         makeContentURL(nil),
+		Error:    "",
+		ReportID: "",
+		URL:      makeContentURL(nil),
 	}
 	if report_id_str == "" {
 		html.RenderOrError(w, "rmo/status.html", content)
@@ -121,7 +117,7 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		result.District = newContentDistrict(org)
 	}
 	result.Report.ID = report_id
-	result.Report.Address = nuisance.Address
+	result.Report.Address = nuisance.AddressRaw
 	result.Report.Created = nuisance.Created
 	result.Report.ImageCount = len(images)
 	result.Report.Status = strings.Title(nuisance.Status.String())
@@ -205,15 +201,15 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 
 	return result, err
 }
-func contentFromPool(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
-	pool, err := models.PublicreportPools.Query(
-		models.SelectWhere.PublicreportPools.PublicID.EQ(report_id),
+func contentFromWater(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
+	pool, err := models.PublicreportWaters.Query(
+		models.SelectWhere.PublicreportWaters.PublicID.EQ(report_id),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return result, fmt.Errorf("Failed to query pool %s: %w", report_id, err)
 	}
 
-	images, err := sql.PublicreportImageWithJSONByPoolID(pool.ID).All(ctx, db.PGInstance.BobDB)
+	images, err := sql.PublicreportImageWithJSONByWaterID(pool.ID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
@@ -228,7 +224,7 @@ func contentFromPool(ctx context.Context, report_id string) (result ContentStatu
 	}
 
 	result.Report.ID = report_id
-	result.Report.Address = pool.Address
+	result.Report.Address = pool.AddressRaw
 	result.Report.Created = pool.Created
 	result.Report.ImageCount = len(images)
 	result.Report.Status = strings.Title(pool.Status.String())
@@ -304,13 +300,12 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	case "nuisance":
 		content, err = contentFromNuisance(ctx, report_id)
 	case "pool":
-		content, err = contentFromPool(ctx, report_id)
+		content, err = contentFromWater(ctx, report_id)
 	}
 	if err != nil {
 		respondError(w, "Failed to generate report content", err, http.StatusInternalServerError)
 		return
 	}
-	content.MapboxToken = config.MapboxToken
 	content.URL = makeContentURL(nil)
 	html.RenderOrError(
 		w,

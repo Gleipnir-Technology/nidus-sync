@@ -38,14 +38,14 @@ type PublicreportNuisance struct {
 	ReporterEmail          null.Val[string]                       `db:"reporter_email" `
 	ReporterName           null.Val[string]                       `db:"reporter_name" `
 	ReporterPhone          null.Val[string]                       `db:"reporter_phone" `
-	Address                string                                 `db:"address" `
+	AddressRaw             string                                 `db:"address_raw" `
 	Status                 enums.PublicreportReportstatustype     `db:"status" `
 	OrganizationID         null.Val[int32]                        `db:"organization_id" `
 	SourceGutter           bool                                   `db:"source_gutter" `
 	H3cell                 null.Val[string]                       `db:"h3cell" `
 	AddressCountry         string                                 `db:"address_country" `
-	AddressPlace           string                                 `db:"address_place" `
-	AddressPostcode        string                                 `db:"address_postcode" `
+	AddressLocality        string                                 `db:"address_locality" `
+	AddressPostalCode      string                                 `db:"address_postal_code" `
 	AddressRegion          string                                 `db:"address_region" `
 	AddressStreet          string                                 `db:"address_street" `
 	IsLocationBackyard     bool                                   `db:"is_location_backyard" `
@@ -63,6 +63,7 @@ type PublicreportNuisance struct {
 	ReporterContactConsent null.Val[bool]                         `db:"reporter_contact_consent" `
 	Location               null.Val[string]                       `db:"location" `
 	AddressNumber          string                                 `db:"address_number" `
+	AddressID              null.Val[int32]                        `db:"address_id" `
 
 	R publicreportNuisanceR `db:"-" `
 }
@@ -81,6 +82,7 @@ type PublicreportNuisancesQuery = *psql.ViewQuery[*PublicreportNuisance, Publicr
 type publicreportNuisanceR struct {
 	NotifyEmailNuisances PublicreportNotifyEmailNuisanceSlice // publicreport.notify_email_nuisance.notify_email_nuisance_nuisance_id_fkey
 	NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_nuisance_id_fkey
+	Address              *Address                             // publicreport.nuisance.nuisance_address_id_fkey
 	Organization         *Organization                        // publicreport.nuisance.nuisance_organization_id_fkey
 	Images               PublicreportImageSlice               // publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey
 }
@@ -88,7 +90,7 @@ type publicreportNuisanceR struct {
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_place", "address_postcode", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location", "address_number",
+			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address_raw", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_locality", "address_postal_code", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location", "address_number", "address_id",
 		).WithParent("publicreport.nuisance"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -102,14 +104,14 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		ReporterEmail:          psql.Quote(alias, "reporter_email"),
 		ReporterName:           psql.Quote(alias, "reporter_name"),
 		ReporterPhone:          psql.Quote(alias, "reporter_phone"),
-		Address:                psql.Quote(alias, "address"),
+		AddressRaw:             psql.Quote(alias, "address_raw"),
 		Status:                 psql.Quote(alias, "status"),
 		OrganizationID:         psql.Quote(alias, "organization_id"),
 		SourceGutter:           psql.Quote(alias, "source_gutter"),
 		H3cell:                 psql.Quote(alias, "h3cell"),
 		AddressCountry:         psql.Quote(alias, "address_country"),
-		AddressPlace:           psql.Quote(alias, "address_place"),
-		AddressPostcode:        psql.Quote(alias, "address_postcode"),
+		AddressLocality:        psql.Quote(alias, "address_locality"),
+		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
 		AddressRegion:          psql.Quote(alias, "address_region"),
 		AddressStreet:          psql.Quote(alias, "address_street"),
 		IsLocationBackyard:     psql.Quote(alias, "is_location_backyard"),
@@ -127,6 +129,7 @@ func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns 
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
 		Location:               psql.Quote(alias, "location"),
 		AddressNumber:          psql.Quote(alias, "address_number"),
+		AddressID:              psql.Quote(alias, "address_id"),
 	}
 }
 
@@ -144,14 +147,14 @@ type publicreportNuisanceColumns struct {
 	ReporterEmail          psql.Expression
 	ReporterName           psql.Expression
 	ReporterPhone          psql.Expression
-	Address                psql.Expression
+	AddressRaw             psql.Expression
 	Status                 psql.Expression
 	OrganizationID         psql.Expression
 	SourceGutter           psql.Expression
 	H3cell                 psql.Expression
 	AddressCountry         psql.Expression
-	AddressPlace           psql.Expression
-	AddressPostcode        psql.Expression
+	AddressLocality        psql.Expression
+	AddressPostalCode      psql.Expression
 	AddressRegion          psql.Expression
 	AddressStreet          psql.Expression
 	IsLocationBackyard     psql.Expression
@@ -169,6 +172,7 @@ type publicreportNuisanceColumns struct {
 	ReporterContactConsent psql.Expression
 	Location               psql.Expression
 	AddressNumber          psql.Expression
+	AddressID              psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -194,14 +198,14 @@ type PublicreportNuisanceSetter struct {
 	ReporterEmail          omitnull.Val[string]                             `db:"reporter_email" `
 	ReporterName           omitnull.Val[string]                             `db:"reporter_name" `
 	ReporterPhone          omitnull.Val[string]                             `db:"reporter_phone" `
-	Address                omit.Val[string]                                 `db:"address" `
+	AddressRaw             omit.Val[string]                                 `db:"address_raw" `
 	Status                 omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
 	OrganizationID         omitnull.Val[int32]                              `db:"organization_id" `
 	SourceGutter           omit.Val[bool]                                   `db:"source_gutter" `
 	H3cell                 omitnull.Val[string]                             `db:"h3cell" `
 	AddressCountry         omit.Val[string]                                 `db:"address_country" `
-	AddressPlace           omit.Val[string]                                 `db:"address_place" `
-	AddressPostcode        omit.Val[string]                                 `db:"address_postcode" `
+	AddressLocality        omit.Val[string]                                 `db:"address_locality" `
+	AddressPostalCode      omit.Val[string]                                 `db:"address_postal_code" `
 	AddressRegion          omit.Val[string]                                 `db:"address_region" `
 	AddressStreet          omit.Val[string]                                 `db:"address_street" `
 	IsLocationBackyard     omit.Val[bool]                                   `db:"is_location_backyard" `
@@ -219,10 +223,11 @@ type PublicreportNuisanceSetter struct {
 	ReporterContactConsent omitnull.Val[bool]                               `db:"reporter_contact_consent" `
 	Location               omitnull.Val[string]                             `db:"location" `
 	AddressNumber          omit.Val[string]                                 `db:"address_number" `
+	AddressID              omitnull.Val[int32]                              `db:"address_id" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 36)
+	vals := make([]string, 0, 37)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -256,8 +261,8 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if !s.ReporterPhone.IsUnset() {
 		vals = append(vals, "reporter_phone")
 	}
-	if s.Address.IsValue() {
-		vals = append(vals, "address")
+	if s.AddressRaw.IsValue() {
+		vals = append(vals, "address_raw")
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
@@ -274,11 +279,11 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.AddressCountry.IsValue() {
 		vals = append(vals, "address_country")
 	}
-	if s.AddressPlace.IsValue() {
-		vals = append(vals, "address_place")
+	if s.AddressLocality.IsValue() {
+		vals = append(vals, "address_locality")
 	}
-	if s.AddressPostcode.IsValue() {
-		vals = append(vals, "address_postcode")
+	if s.AddressPostalCode.IsValue() {
+		vals = append(vals, "address_postal_code")
 	}
 	if s.AddressRegion.IsValue() {
 		vals = append(vals, "address_region")
@@ -331,6 +336,9 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.AddressNumber.IsValue() {
 		vals = append(vals, "address_number")
 	}
+	if !s.AddressID.IsUnset() {
+		vals = append(vals, "address_id")
+	}
 	return vals
 }
 
@@ -368,8 +376,8 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if !s.ReporterPhone.IsUnset() {
 		t.ReporterPhone = s.ReporterPhone.MustGetNull()
 	}
-	if s.Address.IsValue() {
-		t.Address = s.Address.MustGet()
+	if s.AddressRaw.IsValue() {
+		t.AddressRaw = s.AddressRaw.MustGet()
 	}
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
@@ -386,11 +394,11 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.AddressCountry.IsValue() {
 		t.AddressCountry = s.AddressCountry.MustGet()
 	}
-	if s.AddressPlace.IsValue() {
-		t.AddressPlace = s.AddressPlace.MustGet()
+	if s.AddressLocality.IsValue() {
+		t.AddressLocality = s.AddressLocality.MustGet()
 	}
-	if s.AddressPostcode.IsValue() {
-		t.AddressPostcode = s.AddressPostcode.MustGet()
+	if s.AddressPostalCode.IsValue() {
+		t.AddressPostalCode = s.AddressPostalCode.MustGet()
 	}
 	if s.AddressRegion.IsValue() {
 		t.AddressRegion = s.AddressRegion.MustGet()
@@ -443,6 +451,9 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.AddressNumber.IsValue() {
 		t.AddressNumber = s.AddressNumber.MustGet()
 	}
+	if !s.AddressID.IsUnset() {
+		t.AddressID = s.AddressID.MustGetNull()
+	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -451,7 +462,7 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 36)
+		vals := make([]bob.Expression, 37)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -518,8 +529,8 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.Address.IsValue() {
-			vals[11] = psql.Arg(s.Address.MustGet())
+		if s.AddressRaw.IsValue() {
+			vals[11] = psql.Arg(s.AddressRaw.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
@@ -554,14 +565,14 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPlace.IsValue() {
-			vals[17] = psql.Arg(s.AddressPlace.MustGet())
+		if s.AddressLocality.IsValue() {
+			vals[17] = psql.Arg(s.AddressLocality.MustGet())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPostcode.IsValue() {
-			vals[18] = psql.Arg(s.AddressPostcode.MustGet())
+		if s.AddressPostalCode.IsValue() {
+			vals[18] = psql.Arg(s.AddressPostalCode.MustGet())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
@@ -668,6 +679,12 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[35] = psql.Raw("DEFAULT")
 		}
 
+		if !s.AddressID.IsUnset() {
+			vals[36] = psql.Arg(s.AddressID.MustGetNull())
+		} else {
+			vals[36] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -677,7 +694,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 36)
+	exprs := make([]bob.Expression, 0, 37)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -756,10 +773,10 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.Address.IsValue() {
+	if s.AddressRaw.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address")...),
-			psql.Arg(s.Address),
+			psql.Quote(append(prefix, "address_raw")...),
+			psql.Arg(s.AddressRaw),
 		}})
 	}
 
@@ -798,17 +815,17 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.AddressPlace.IsValue() {
+	if s.AddressLocality.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_place")...),
-			psql.Arg(s.AddressPlace),
+			psql.Quote(append(prefix, "address_locality")...),
+			psql.Arg(s.AddressLocality),
 		}})
 	}
 
-	if s.AddressPostcode.IsValue() {
+	if s.AddressPostalCode.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_postcode")...),
-			psql.Arg(s.AddressPostcode),
+			psql.Quote(append(prefix, "address_postal_code")...),
+			psql.Arg(s.AddressPostalCode),
 		}})
 	}
 
@@ -928,6 +945,13 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address_number")...),
 			psql.Arg(s.AddressNumber),
+		}})
+	}
+
+	if !s.AddressID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_id")...),
+			psql.Arg(s.AddressID),
 		}})
 	}
 
@@ -1205,6 +1229,30 @@ func (os PublicreportNuisanceSlice) NotifyPhoneNuisances(mods ...bob.Mod[*dialec
 	)...)
 }
 
+// Address starts a query for related objects on address
+func (o *PublicreportNuisance) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	return Addresses.Query(append(mods,
+		sm.Where(Addresses.Columns.ID.EQ(psql.Arg(o.AddressID))),
+	)...)
+}
+
+func (os PublicreportNuisanceSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	pkAddressID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkAddressID = append(pkAddressID, o.AddressID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkAddressID), "integer[]")),
+	))
+
+	return Addresses.Query(append(mods,
+		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Organization starts a query for related objects on organization
 func (o *PublicreportNuisance) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
@@ -1394,6 +1442,54 @@ func (publicreportNuisance0 *PublicreportNuisance) AttachNotifyPhoneNuisances(ct
 	return nil
 }
 
+func attachPublicreportNuisanceAddress0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, address1 *Address) (*PublicreportNuisance, error) {
+	setter := &PublicreportNuisanceSetter{
+		AddressID: omitnull.From(address1.ID),
+	}
+
+	err := publicreportNuisance0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportNuisanceAddress0: %w", err)
+	}
+
+	return publicreportNuisance0, nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) InsertAddress(ctx context.Context, exec bob.Executor, related *AddressSetter) error {
+	var err error
+
+	address1, err := Addresses.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportNuisanceAddress0(ctx, exec, 1, publicreportNuisance0, address1)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Address = address1
+
+	address1.R.Nuisances = append(address1.R.Nuisances, publicreportNuisance0)
+
+	return nil
+}
+
+func (publicreportNuisance0 *PublicreportNuisance) AttachAddress(ctx context.Context, exec bob.Executor, address1 *Address) error {
+	var err error
+
+	_, err = attachPublicreportNuisanceAddress0(ctx, exec, 1, publicreportNuisance0, address1)
+	if err != nil {
+		return err
+	}
+
+	publicreportNuisance0.R.Address = address1
+
+	address1.R.Nuisances = append(address1.R.Nuisances, publicreportNuisance0)
+
+	return nil
+}
+
 func attachPublicreportNuisanceOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, organization1 *Organization) (*PublicreportNuisance, error) {
 	setter := &PublicreportNuisanceSetter{
 		OrganizationID: omitnull.From(organization1.ID),
@@ -1519,14 +1615,14 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ReporterEmail          psql.WhereNullMod[Q, string]
 	ReporterName           psql.WhereNullMod[Q, string]
 	ReporterPhone          psql.WhereNullMod[Q, string]
-	Address                psql.WhereMod[Q, string]
+	AddressRaw             psql.WhereMod[Q, string]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
 	OrganizationID         psql.WhereNullMod[Q, int32]
 	SourceGutter           psql.WhereMod[Q, bool]
 	H3cell                 psql.WhereNullMod[Q, string]
 	AddressCountry         psql.WhereMod[Q, string]
-	AddressPlace           psql.WhereMod[Q, string]
-	AddressPostcode        psql.WhereMod[Q, string]
+	AddressLocality        psql.WhereMod[Q, string]
+	AddressPostalCode      psql.WhereMod[Q, string]
 	AddressRegion          psql.WhereMod[Q, string]
 	AddressStreet          psql.WhereMod[Q, string]
 	IsLocationBackyard     psql.WhereMod[Q, bool]
@@ -1544,6 +1640,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
 	Location               psql.WhereNullMod[Q, string]
 	AddressNumber          psql.WhereMod[Q, string]
+	AddressID              psql.WhereNullMod[Q, int32]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -1563,14 +1660,14 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		ReporterEmail:          psql.WhereNull[Q, string](cols.ReporterEmail),
 		ReporterName:           psql.WhereNull[Q, string](cols.ReporterName),
 		ReporterPhone:          psql.WhereNull[Q, string](cols.ReporterPhone),
-		Address:                psql.Where[Q, string](cols.Address),
+		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
 		SourceGutter:           psql.Where[Q, bool](cols.SourceGutter),
 		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
 		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
-		AddressPlace:           psql.Where[Q, string](cols.AddressPlace),
-		AddressPostcode:        psql.Where[Q, string](cols.AddressPostcode),
+		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
+		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
 		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
 		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
 		IsLocationBackyard:     psql.Where[Q, bool](cols.IsLocationBackyard),
@@ -1588,6 +1685,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
 		Location:               psql.WhereNull[Q, string](cols.Location),
 		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
+		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
 	}
 }
 
@@ -1625,6 +1723,18 @@ func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Address":
+		rel, ok := retrieved.(*Address)
+		if !ok {
+			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Address = rel
+
+		if rel != nil {
+			rel.R.Nuisances = PublicreportNuisanceSlice{o}
+		}
+		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
@@ -1657,11 +1767,25 @@ func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
 }
 
 type publicreportNuisancePreloader struct {
+	Address      func(...psql.PreloadOption) psql.Preloader
 	Organization func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPublicreportNuisancePreloader() publicreportNuisancePreloader {
 	return publicreportNuisancePreloader{
+		Address: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Address, AddressSlice](psql.PreloadRel{
+				Name: "Address",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportNuisances,
+						To:          Addresses,
+						FromColumns: []string{"address_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Addresses.Columns.Names(), opts...)
+		},
 		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
 				Name: "Organization",
@@ -1681,6 +1805,7 @@ func buildPublicreportNuisancePreloader() publicreportNuisancePreloader {
 type publicreportNuisanceThenLoader[Q orm.Loadable] struct {
 	NotifyEmailNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Images               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -1691,6 +1816,9 @@ func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceT
 	}
 	type NotifyPhoneNuisancesLoadInterface interface {
 		LoadNotifyPhoneNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type AddressLoadInterface interface {
+		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1710,6 +1838,12 @@ func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceT
 			"NotifyPhoneNuisances",
 			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhoneNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadNotifyPhoneNuisances(ctx, exec, mods...)
+			},
+		),
+		Address: thenLoadBuilder[Q](
+			"Address",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadAddress(ctx, exec, mods...)
 			},
 		),
 		Organization: thenLoadBuilder[Q](
@@ -1843,6 +1977,61 @@ func (os PublicreportNuisanceSlice) LoadNotifyPhoneNuisances(ctx context.Context
 			rel.R.Nuisance = o
 
 			o.R.NotifyPhoneNuisances = append(o.R.NotifyPhoneNuisances, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadAddress loads the publicreportNuisance's Address into the .R struct
+func (o *PublicreportNuisance) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Address = nil
+
+	related, err := o.Address(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Nuisances = PublicreportNuisanceSlice{o}
+
+	o.R.Address = related
+	return nil
+}
+
+// LoadAddress loads the publicreportNuisance's Address into the .R struct
+func (os PublicreportNuisanceSlice) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	addresses, err := os.Address(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range addresses {
+			if !o.AddressID.IsValue() {
+				continue
+			}
+
+			if !(o.AddressID.IsValue() && o.AddressID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Nuisances = append(rel.R.Nuisances, o)
+
+			o.R.Address = rel
+			break
 		}
 	}
 

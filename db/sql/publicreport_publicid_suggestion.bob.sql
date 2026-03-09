@@ -14,11 +14,11 @@ WHERE
 UNION ALL
 
 SELECT 
-  'pool' AS table_name,
+  'water' AS table_name,
   public_id,
   location
 FROM 
-  publicreport.pool
+  publicreport.water
 WHERE 
   public_id LIKE $2
 ORDER BY

@@ -3,15 +3,15 @@
 
 package dberrors
 
-var PublicreportNotifyEmailPoolErrors = &publicreportNotifyEmailPoolErrors{
+var PublicreportNotifyEmailWaterErrors = &publicreportNotifyEmailWaterErrors{
 	ErrUniqueNotifyEmailPoolPkey: &UniqueConstraintError{
 		schema:  "publicreport",
-		table:   "notify_email_pool",
-		columns: []string{"pool_id", "email_address"},
+		table:   "notify_email_water",
+		columns: []string{"water_id", "email_address"},
 		s:       "notify_email_pool_pkey",
 	},
 }
 
-type publicreportNotifyEmailPoolErrors struct {
+type publicreportNotifyEmailWaterErrors struct {
 	ErrUniqueNotifyEmailPoolPkey *UniqueConstraintError
 }

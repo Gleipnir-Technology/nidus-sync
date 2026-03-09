@@ -10,33 +10,20 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
 )
 
-type Address struct {
-	Country    enums.Countrytype
-	Locality   string
-	Number     string
-	PostalCode string
-	Region     string
-	Street     string
-	Unit       string
-}
 type GeocodeResult struct {
-	Address   Address
+	Address   types.Address
 	Cell      h3.Cell
 	Longitude float64
 	Latitude  float64
-}
-
-func (a Address) String() string {
-	return fmt.Sprintf("%s %s, %s, %s, %s, %s", a.Number, a.Street, a.Locality, a.Region, a.PostalCode, a.Country)
 }
 
 var client *stadia.StadiaMaps
@@ -47,9 +34,9 @@ func InitializeStadia(key string) {
 
 // Either get an address that matches, or create a new address. Either way, return an address
 // This will make a call to a structured geocode service, so it's slow.
-func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a Address) (*models.Address, error) {
+func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organization, a types.Address) (*models.Address, error) {
 	address, err := models.Addresses.Query(
-		models.SelectWhere.Addresses.Country.EQ(a.Country),
+		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
 		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
 		models.SelectWhere.Addresses.Number.EQ(a.Number),
 		models.SelectWhere.Addresses.PostalCode.EQ(a.PostalCode),
@@ -92,7 +79,7 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a 
 	}
 
 	return &models.Address{
-		Country:    geo.Address.Country,
+		Country:    geo.Address.CountryEnum(),
 		Created:    created,
 		H3cell:     "",
 		ID:         row.ID,
@@ -106,9 +93,9 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, org *models.Organization, a 
 	}, nil
 }
 
-func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeResult, error) {
+func Geocode(ctx context.Context, org *models.Organization, a types.Address) (GeocodeResult, error) {
 	street := fmt.Sprintf("%s %s", a.Number, a.Street)
-	country_s := a.Country.String()
+	country_s := a.Country
 	/*
 		sublog := log.With().
 			Str("street", street).
@@ -148,15 +135,10 @@ func Geocode(ctx context.Context, org *models.Organization, a Address) (GeocodeR
 	if err != nil {
 		return GeocodeResult{}, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
 	}
-	var country enums.Countrytype
 	country_s = strings.ToLower(feature.Properties.CountryA)
-	err = country.Scan(country_s)
-	if err != nil {
-		return GeocodeResult{}, fmt.Errorf("failed to scan country '%s': %w", country_s, err)
-	}
 	return GeocodeResult{
-		Address: Address{
-			Country:    country,
+		Address: types.Address{
+			Country:    country_s,
 			Locality:   feature.Properties.Locality,
 			Number:     feature.Properties.HouseNumber,
 			PostalCode: feature.Properties.PostalCode,

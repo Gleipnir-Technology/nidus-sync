@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var PublicreportNotifyEmailPools = Table[
-	publicreportNotifyEmailPoolColumns,
-	publicreportNotifyEmailPoolIndexes,
-	publicreportNotifyEmailPoolForeignKeys,
-	publicreportNotifyEmailPoolUniques,
-	publicreportNotifyEmailPoolChecks,
+var PublicreportNotifyEmailWaters = Table[
+	publicreportNotifyEmailWaterColumns,
+	publicreportNotifyEmailWaterIndexes,
+	publicreportNotifyEmailWaterForeignKeys,
+	publicreportNotifyEmailWaterUniques,
+	publicreportNotifyEmailWaterChecks,
 ]{
 	Schema: "publicreport",
-	Name:   "notify_email_pool",
-	Columns: publicreportNotifyEmailPoolColumns{
+	Name:   "notify_email_water",
+	Columns: publicreportNotifyEmailWaterColumns{
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -33,8 +33,8 @@ var PublicreportNotifyEmailPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		PoolID: column{
-			Name:      "pool_id",
+		WaterID: column{
+			Name:      "water_id",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -52,13 +52,13 @@ var PublicreportNotifyEmailPools = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: publicreportNotifyEmailPoolIndexes{
+	Indexes: publicreportNotifyEmailWaterIndexes{
 		NotifyEmailPoolPkey: index{
 			Type: "btree",
 			Name: "notify_email_pool_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "pool_id",
+					Name:         "water_id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -78,26 +78,26 @@ var PublicreportNotifyEmailPools = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "notify_email_pool_pkey",
-		Columns: []string{"pool_id", "email_address"},
+		Columns: []string{"water_id", "email_address"},
 		Comment: "",
 	},
-	ForeignKeys: publicreportNotifyEmailPoolForeignKeys{
-		PublicreportNotifyEmailPoolNotifyEmailPoolEmailAddressFkey: foreignKey{
+	ForeignKeys: publicreportNotifyEmailWaterForeignKeys{
+		PublicreportNotifyEmailWaterNotifyEmailPoolEmailAddressFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.notify_email_pool.notify_email_pool_email_address_fkey",
+				Name:    "publicreport.notify_email_water.notify_email_pool_email_address_fkey",
 				Columns: []string{"email_address"},
 				Comment: "",
 			},
 			ForeignTable:   "comms.email_contact",
 			ForeignColumns: []string{"address"},
 		},
-		PublicreportNotifyEmailPoolNotifyEmailPoolPoolIDFkey: foreignKey{
+		PublicreportNotifyEmailWaterNotifyEmailPoolPoolIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.notify_email_pool.notify_email_pool_pool_id_fkey",
-				Columns: []string{"pool_id"},
+				Name:    "publicreport.notify_email_water.notify_email_pool_pool_id_fkey",
+				Columns: []string{"water_id"},
 				Comment: "",
 			},
-			ForeignTable:   "publicreport.pool",
+			ForeignTable:   "publicreport.water",
 			ForeignColumns: []string{"id"},
 		},
 	},
@@ -105,48 +105,48 @@ var PublicreportNotifyEmailPools = Table[
 	Comment: "",
 }
 
-type publicreportNotifyEmailPoolColumns struct {
+type publicreportNotifyEmailWaterColumns struct {
 	Created      column
 	Deleted      column
-	PoolID       column
+	WaterID      column
 	EmailAddress column
 }
 
-func (c publicreportNotifyEmailPoolColumns) AsSlice() []column {
+func (c publicreportNotifyEmailWaterColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.PoolID, c.EmailAddress,
+		c.Created, c.Deleted, c.WaterID, c.EmailAddress,
 	}
 }
 
-type publicreportNotifyEmailPoolIndexes struct {
+type publicreportNotifyEmailWaterIndexes struct {
 	NotifyEmailPoolPkey index
 }
 
-func (i publicreportNotifyEmailPoolIndexes) AsSlice() []index {
+func (i publicreportNotifyEmailWaterIndexes) AsSlice() []index {
 	return []index{
 		i.NotifyEmailPoolPkey,
 	}
 }
 
-type publicreportNotifyEmailPoolForeignKeys struct {
-	PublicreportNotifyEmailPoolNotifyEmailPoolEmailAddressFkey foreignKey
-	PublicreportNotifyEmailPoolNotifyEmailPoolPoolIDFkey       foreignKey
+type publicreportNotifyEmailWaterForeignKeys struct {
+	PublicreportNotifyEmailWaterNotifyEmailPoolEmailAddressFkey foreignKey
+	PublicreportNotifyEmailWaterNotifyEmailPoolPoolIDFkey       foreignKey
 }
 
-func (f publicreportNotifyEmailPoolForeignKeys) AsSlice() []foreignKey {
+func (f publicreportNotifyEmailWaterForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportNotifyEmailPoolNotifyEmailPoolEmailAddressFkey, f.PublicreportNotifyEmailPoolNotifyEmailPoolPoolIDFkey,
+		f.PublicreportNotifyEmailWaterNotifyEmailPoolEmailAddressFkey, f.PublicreportNotifyEmailWaterNotifyEmailPoolPoolIDFkey,
 	}
 }
 
-type publicreportNotifyEmailPoolUniques struct{}
+type publicreportNotifyEmailWaterUniques struct{}
 
-func (u publicreportNotifyEmailPoolUniques) AsSlice() []constraint {
+func (u publicreportNotifyEmailWaterUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type publicreportNotifyEmailPoolChecks struct{}
+type publicreportNotifyEmailWaterChecks struct{}
 
-func (c publicreportNotifyEmailPoolChecks) AsSlice() []check {
+func (c publicreportNotifyEmailWaterChecks) AsSlice() []check {
 	return []check{}
 }

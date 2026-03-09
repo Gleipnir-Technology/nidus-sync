@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var PublicreportPools = Table[
-	publicreportPoolColumns,
-	publicreportPoolIndexes,
-	publicreportPoolForeignKeys,
-	publicreportPoolUniques,
-	publicreportPoolChecks,
+var PublicreportWaters = Table[
+	publicreportWaterColumns,
+	publicreportWaterIndexes,
+	publicreportWaterForeignKeys,
+	publicreportWaterUniques,
+	publicreportWaterChecks,
 ]{
 	Schema: "publicreport",
-	Name:   "pool",
-	Columns: publicreportPoolColumns{
+	Name:   "water",
+	Columns: publicreportWaterColumns{
 		ID: column{
 			Name:      "id",
 			DBType:    "integer",
@@ -78,8 +78,8 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Address: column{
-			Name:      "address",
+		AddressRaw: column{
+			Name:      "address_raw",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -96,8 +96,8 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressPostCode: column{
-			Name:      "address_post_code",
+		AddressPostalCode: column{
+			Name:      "address_postal_code",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -105,8 +105,8 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressPlace: column{
-			Name:      "address_place",
+		AddressLocality: column{
+			Name:      "address_locality",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -330,8 +330,17 @@ var PublicreportPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressID: column{
+			Name:      "address_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
-	Indexes: publicreportPoolIndexes{
+	Indexes: publicreportWaterIndexes{
 		PoolPkey: index{
 			Type: "btree",
 			Name: "pool_pkey",
@@ -372,10 +381,19 @@ var PublicreportPools = Table[
 		Columns: []string{"id"},
 		Comment: "",
 	},
-	ForeignKeys: publicreportPoolForeignKeys{
-		PublicreportPoolPoolOrganizationIDFkey: foreignKey{
+	ForeignKeys: publicreportWaterForeignKeys{
+		PublicreportWaterPoolAddressIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.pool.pool_organization_id_fkey",
+				Name:    "publicreport.water.pool_address_id_fkey",
+				Columns: []string{"address_id"},
+				Comment: "",
+			},
+			ForeignTable:   "address",
+			ForeignColumns: []string{"id"},
+		},
+		PublicreportWaterPoolOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.water.pool_organization_id_fkey",
 				Columns: []string{"organization_id"},
 				Comment: "",
 			},
@@ -383,7 +401,7 @@ var PublicreportPools = Table[
 			ForeignColumns: []string{"id"},
 		},
 	},
-	Uniques: publicreportPoolUniques{
+	Uniques: publicreportWaterUniques{
 		PoolPublicIDKey: constraint{
 			Name:    "pool_public_id_key",
 			Columns: []string{"public_id"},
@@ -394,7 +412,7 @@ var PublicreportPools = Table[
 	Comment: "",
 }
 
-type publicreportPoolColumns struct {
+type publicreportWaterColumns struct {
 	ID                     column
 	AccessComments         column
 	AccessGate             column
@@ -402,10 +420,10 @@ type publicreportPoolColumns struct {
 	AccessLocked           column
 	AccessDog              column
 	AccessOther            column
-	Address                column
+	AddressRaw             column
 	AddressCountry         column
-	AddressPostCode        column
-	AddressPlace           column
+	AddressPostalCode      column
+	AddressLocality        column
 	AddressStreet          column
 	AddressRegion          column
 	Comments               column
@@ -430,47 +448,49 @@ type publicreportPoolColumns struct {
 	ReporterContactConsent column
 	Location               column
 	AddressNumber          column
+	AddressID              column
 }
 
-func (c publicreportPoolColumns) AsSlice() []column {
+func (c publicreportWaterColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Address, c.AddressCountry, c.AddressPostCode, c.AddressPlace, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location, c.AddressNumber,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.AddressRaw, c.AddressCountry, c.AddressPostalCode, c.AddressLocality, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID,
 	}
 }
 
-type publicreportPoolIndexes struct {
+type publicreportWaterIndexes struct {
 	PoolPkey        index
 	PoolPublicIDKey index
 }
 
-func (i publicreportPoolIndexes) AsSlice() []index {
+func (i publicreportWaterIndexes) AsSlice() []index {
 	return []index{
 		i.PoolPkey, i.PoolPublicIDKey,
 	}
 }
 
-type publicreportPoolForeignKeys struct {
-	PublicreportPoolPoolOrganizationIDFkey foreignKey
+type publicreportWaterForeignKeys struct {
+	PublicreportWaterPoolAddressIDFkey      foreignKey
+	PublicreportWaterPoolOrganizationIDFkey foreignKey
 }
 
-func (f publicreportPoolForeignKeys) AsSlice() []foreignKey {
+func (f publicreportWaterForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportPoolPoolOrganizationIDFkey,
+		f.PublicreportWaterPoolAddressIDFkey, f.PublicreportWaterPoolOrganizationIDFkey,
 	}
 }
 
-type publicreportPoolUniques struct {
+type publicreportWaterUniques struct {
 	PoolPublicIDKey constraint
 }
 
-func (u publicreportPoolUniques) AsSlice() []constraint {
+func (u publicreportWaterUniques) AsSlice() []constraint {
 	return []constraint{
 		u.PoolPublicIDKey,
 	}
 }
 
-type publicreportPoolChecks struct{}
+type publicreportWaterChecks struct{}
 
-func (c publicreportPoolChecks) AsSlice() []check {
+func (c publicreportWaterChecks) AsSlice() []check {
 	return []check{}
 }

@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var PublicreportNotifyPhonePools = Table[
-	publicreportNotifyPhonePoolColumns,
-	publicreportNotifyPhonePoolIndexes,
-	publicreportNotifyPhonePoolForeignKeys,
-	publicreportNotifyPhonePoolUniques,
-	publicreportNotifyPhonePoolChecks,
+var PublicreportNotifyPhoneWaters = Table[
+	publicreportNotifyPhoneWaterColumns,
+	publicreportNotifyPhoneWaterIndexes,
+	publicreportNotifyPhoneWaterForeignKeys,
+	publicreportNotifyPhoneWaterUniques,
+	publicreportNotifyPhoneWaterChecks,
 ]{
 	Schema: "publicreport",
-	Name:   "notify_phone_pool",
-	Columns: publicreportNotifyPhonePoolColumns{
+	Name:   "notify_phone_water",
+	Columns: publicreportNotifyPhoneWaterColumns{
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -42,8 +42,8 @@ var PublicreportNotifyPhonePools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		PoolID: column{
-			Name:      "pool_id",
+		WaterID: column{
+			Name:      "water_id",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
@@ -52,13 +52,13 @@ var PublicreportNotifyPhonePools = Table[
 			AutoIncr:  false,
 		},
 	},
-	Indexes: publicreportNotifyPhonePoolIndexes{
+	Indexes: publicreportNotifyPhoneWaterIndexes{
 		NotifyPhonePoolPkey: index{
 			Type: "btree",
 			Name: "notify_phone_pool_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "pool_id",
+					Name:         "water_id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -78,26 +78,26 @@ var PublicreportNotifyPhonePools = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "notify_phone_pool_pkey",
-		Columns: []string{"pool_id", "phone_e164"},
+		Columns: []string{"water_id", "phone_e164"},
 		Comment: "",
 	},
-	ForeignKeys: publicreportNotifyPhonePoolForeignKeys{
-		PublicreportNotifyPhonePoolNotifyPhonePoolPhoneE164Fkey: foreignKey{
+	ForeignKeys: publicreportNotifyPhoneWaterForeignKeys{
+		PublicreportNotifyPhoneWaterNotifyPhonePoolPhoneE164Fkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.notify_phone_pool.notify_phone_pool_phone_e164_fkey",
+				Name:    "publicreport.notify_phone_water.notify_phone_pool_phone_e164_fkey",
 				Columns: []string{"phone_e164"},
 				Comment: "",
 			},
 			ForeignTable:   "comms.phone",
 			ForeignColumns: []string{"e164"},
 		},
-		PublicreportNotifyPhonePoolNotifyPhonePoolPoolIDFkey: foreignKey{
+		PublicreportNotifyPhoneWaterNotifyPhonePoolPoolIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.notify_phone_pool.notify_phone_pool_pool_id_fkey",
-				Columns: []string{"pool_id"},
+				Name:    "publicreport.notify_phone_water.notify_phone_pool_pool_id_fkey",
+				Columns: []string{"water_id"},
 				Comment: "",
 			},
-			ForeignTable:   "publicreport.pool",
+			ForeignTable:   "publicreport.water",
 			ForeignColumns: []string{"id"},
 		},
 	},
@@ -105,48 +105,48 @@ var PublicreportNotifyPhonePools = Table[
 	Comment: "",
 }
 
-type publicreportNotifyPhonePoolColumns struct {
+type publicreportNotifyPhoneWaterColumns struct {
 	Created   column
 	Deleted   column
 	PhoneE164 column
-	PoolID    column
+	WaterID   column
 }
 
-func (c publicreportNotifyPhonePoolColumns) AsSlice() []column {
+func (c publicreportNotifyPhoneWaterColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Deleted, c.PhoneE164, c.PoolID,
+		c.Created, c.Deleted, c.PhoneE164, c.WaterID,
 	}
 }
 
-type publicreportNotifyPhonePoolIndexes struct {
+type publicreportNotifyPhoneWaterIndexes struct {
 	NotifyPhonePoolPkey index
 }
 
-func (i publicreportNotifyPhonePoolIndexes) AsSlice() []index {
+func (i publicreportNotifyPhoneWaterIndexes) AsSlice() []index {
 	return []index{
 		i.NotifyPhonePoolPkey,
 	}
 }
 
-type publicreportNotifyPhonePoolForeignKeys struct {
-	PublicreportNotifyPhonePoolNotifyPhonePoolPhoneE164Fkey foreignKey
-	PublicreportNotifyPhonePoolNotifyPhonePoolPoolIDFkey    foreignKey
+type publicreportNotifyPhoneWaterForeignKeys struct {
+	PublicreportNotifyPhoneWaterNotifyPhonePoolPhoneE164Fkey foreignKey
+	PublicreportNotifyPhoneWaterNotifyPhonePoolPoolIDFkey    foreignKey
 }
 
-func (f publicreportNotifyPhonePoolForeignKeys) AsSlice() []foreignKey {
+func (f publicreportNotifyPhoneWaterForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportNotifyPhonePoolNotifyPhonePoolPhoneE164Fkey, f.PublicreportNotifyPhonePoolNotifyPhonePoolPoolIDFkey,
+		f.PublicreportNotifyPhoneWaterNotifyPhonePoolPhoneE164Fkey, f.PublicreportNotifyPhoneWaterNotifyPhonePoolPoolIDFkey,
 	}
 }
 
-type publicreportNotifyPhonePoolUniques struct{}
+type publicreportNotifyPhoneWaterUniques struct{}
 
-func (u publicreportNotifyPhonePoolUniques) AsSlice() []constraint {
+func (u publicreportNotifyPhoneWaterUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type publicreportNotifyPhonePoolChecks struct{}
+type publicreportNotifyPhoneWaterChecks struct{}
 
-func (c publicreportNotifyPhonePoolChecks) AsSlice() []check {
+func (c publicreportNotifyPhoneWaterChecks) AsSlice() []check {
 	return []check{}
 }

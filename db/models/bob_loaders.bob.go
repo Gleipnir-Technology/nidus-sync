@@ -88,15 +88,15 @@ type preloaders struct {
 	PublicreportImage                 publicreportImagePreloader
 	PublicreportImageExif             publicreportImageExifPreloader
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisancePreloader
-	PublicreportNotifyEmailPool       publicreportNotifyEmailPoolPreloader
+	PublicreportNotifyEmailWater      publicreportNotifyEmailWaterPreloader
 	PublicreportNotifyPhoneNuisance   publicreportNotifyPhoneNuisancePreloader
-	PublicreportNotifyPhonePool       publicreportNotifyPhonePoolPreloader
+	PublicreportNotifyPhoneWater      publicreportNotifyPhoneWaterPreloader
 	PublicreportNuisance              publicreportNuisancePreloader
 	PublicreportNuisanceImage         publicreportNuisanceImagePreloader
-	PublicreportPool                  publicreportPoolPreloader
-	PublicreportPoolImage             publicreportPoolImagePreloader
 	PublicreportSubscribeEmail        publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone        publicreportSubscribePhonePreloader
+	PublicreportWater                 publicreportWaterPreloader
+	PublicreportWaterImage            publicreportWaterImagePreloader
 	Resident                          residentPreloader
 	ReviewTask                        reviewTaskPreloader
 	ReviewTaskPool                    reviewTaskPoolPreloader
@@ -179,15 +179,15 @@ func getPreloaders() preloaders {
 		PublicreportImage:                 buildPublicreportImagePreloader(),
 		PublicreportImageExif:             buildPublicreportImageExifPreloader(),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisancePreloader(),
-		PublicreportNotifyEmailPool:       buildPublicreportNotifyEmailPoolPreloader(),
+		PublicreportNotifyEmailWater:      buildPublicreportNotifyEmailWaterPreloader(),
 		PublicreportNotifyPhoneNuisance:   buildPublicreportNotifyPhoneNuisancePreloader(),
-		PublicreportNotifyPhonePool:       buildPublicreportNotifyPhonePoolPreloader(),
+		PublicreportNotifyPhoneWater:      buildPublicreportNotifyPhoneWaterPreloader(),
 		PublicreportNuisance:              buildPublicreportNuisancePreloader(),
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImagePreloader(),
-		PublicreportPool:                  buildPublicreportPoolPreloader(),
-		PublicreportPoolImage:             buildPublicreportPoolImagePreloader(),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhonePreloader(),
+		PublicreportWater:                 buildPublicreportWaterPreloader(),
+		PublicreportWaterImage:            buildPublicreportWaterImagePreloader(),
 		Resident:                          buildResidentPreloader(),
 		ReviewTask:                        buildReviewTaskPreloader(),
 		ReviewTaskPool:                    buildReviewTaskPoolPreloader(),
@@ -276,15 +276,15 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportImage                 publicreportImageThenLoader[Q]
 	PublicreportImageExif             publicreportImageExifThenLoader[Q]
 	PublicreportNotifyEmailNuisance   publicreportNotifyEmailNuisanceThenLoader[Q]
-	PublicreportNotifyEmailPool       publicreportNotifyEmailPoolThenLoader[Q]
+	PublicreportNotifyEmailWater      publicreportNotifyEmailWaterThenLoader[Q]
 	PublicreportNotifyPhoneNuisance   publicreportNotifyPhoneNuisanceThenLoader[Q]
-	PublicreportNotifyPhonePool       publicreportNotifyPhonePoolThenLoader[Q]
+	PublicreportNotifyPhoneWater      publicreportNotifyPhoneWaterThenLoader[Q]
 	PublicreportNuisance              publicreportNuisanceThenLoader[Q]
 	PublicreportNuisanceImage         publicreportNuisanceImageThenLoader[Q]
-	PublicreportPool                  publicreportPoolThenLoader[Q]
-	PublicreportPoolImage             publicreportPoolImageThenLoader[Q]
 	PublicreportSubscribeEmail        publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone        publicreportSubscribePhoneThenLoader[Q]
+	PublicreportWater                 publicreportWaterThenLoader[Q]
+	PublicreportWaterImage            publicreportWaterImageThenLoader[Q]
 	Resident                          residentThenLoader[Q]
 	ReviewTask                        reviewTaskThenLoader[Q]
 	ReviewTaskPool                    reviewTaskPoolThenLoader[Q]
@@ -367,15 +367,15 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportImage:                 buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:             buildPublicreportImageExifThenLoader[Q](),
 		PublicreportNotifyEmailNuisance:   buildPublicreportNotifyEmailNuisanceThenLoader[Q](),
-		PublicreportNotifyEmailPool:       buildPublicreportNotifyEmailPoolThenLoader[Q](),
+		PublicreportNotifyEmailWater:      buildPublicreportNotifyEmailWaterThenLoader[Q](),
 		PublicreportNotifyPhoneNuisance:   buildPublicreportNotifyPhoneNuisanceThenLoader[Q](),
-		PublicreportNotifyPhonePool:       buildPublicreportNotifyPhonePoolThenLoader[Q](),
+		PublicreportNotifyPhoneWater:      buildPublicreportNotifyPhoneWaterThenLoader[Q](),
 		PublicreportNuisance:              buildPublicreportNuisanceThenLoader[Q](),
 		PublicreportNuisanceImage:         buildPublicreportNuisanceImageThenLoader[Q](),
-		PublicreportPool:                  buildPublicreportPoolThenLoader[Q](),
-		PublicreportPoolImage:             buildPublicreportPoolImageThenLoader[Q](),
 		PublicreportSubscribeEmail:        buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:        buildPublicreportSubscribePhoneThenLoader[Q](),
+		PublicreportWater:                 buildPublicreportWaterThenLoader[Q](),
+		PublicreportWaterImage:            buildPublicreportWaterImageThenLoader[Q](),
 		Resident:                          buildResidentThenLoader[Q](),
 		ReviewTask:                        buildReviewTaskThenLoader[Q](),
 		ReviewTaskPool:                    buildReviewTaskPoolThenLoader[Q](),

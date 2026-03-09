@@ -269,7 +269,7 @@ function _formatReportID(id) {
 function _formatReportType(type) {
 	if (type == "nuisance") {
 		return "Mosquito Nuisance Report";
-	} else if (type == "pool") {
+	} else if (type == "water") {
 		return "Standing Water Report";
 	} else {
 		return "Unknown Report Type";

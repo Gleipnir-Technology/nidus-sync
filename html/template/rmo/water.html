@@ -61,7 +61,7 @@ function setLocationInputs(location) {
        let latlngAccuracyType = document.getElementById('latlng-accuracy-type');
        let latlngAccuracyValue = document.getElementById('latlng-accuracy-value');
        let number = document.getElementById('address-number');
-       let postcode = document.getElementById('address-postcode');
+       let postalcode = document.getElementById('address-postalcode');
        let place = document.getElementById('address-place');
        let region = document.getElementById('address-region');
        let street = document.getElementById('address-street');
@@ -71,16 +71,16 @@ function setLocationInputs(location) {
        const context = props.context || {};
 
        // Populate structured fields
-       country.value = context.country.name;
-       latitude.value = props.coordinates.latitude;
-       longitude.value = props.coordinates.longitude;
-       latlngAccuracyType.value = props.coordinates.accuracy;
-       latlngAccuracyValue.value = "0";
-       number.value = context.address.address_number;
-       postcode.value = context.postcode.name;
-       place.value = context.place.name;
-       region.value = context.region.name;
-       street.value = context.street.name;
+       country.value = context.iso_3166_a3;
+       latitude.value = location.geometry.coordinates[1];
+       longitude.value = location.geometry.coordinates[0];
+       latlngAccuracyType.value = props.precision;
+       latlngAccuracyValue.value = props.distance;
+       number.value = props.address_components.number;
+       postalcode.value = props.address_components.postal_code;
+       locality.value = context.locality.name;
+       region.value = props.context.whosonfirst.region.abbreviation;
+       street.value = props.address_components.street;
 }
 function toggleCollapse(something) {
 	el = document.getElementById(something)

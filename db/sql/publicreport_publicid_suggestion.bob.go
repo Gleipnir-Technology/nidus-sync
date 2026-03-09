@@ -21,7 +21,7 @@ import (
 //go:embed publicreport_publicid_suggestion.bob.sql
 var formattedQueries_publicreport_publicid_suggestion string
 
-var publicreportPublicIDSuggestionSQL = formattedQueries_publicreport_publicid_suggestion[168:426]
+var publicreportPublicIDSuggestionSQL = formattedQueries_publicreport_publicid_suggestion[168:428]
 
 type PublicreportPublicIDSuggestionQuery = orm.ModQuery[*dialect.SelectQuery, publicreportPublicIDSuggestion, PublicreportPublicIDSuggestionRow, []PublicreportPublicIDSuggestionRow, publicreportPublicIDSuggestionTransformer]
 
@@ -60,12 +60,12 @@ func PublicreportPublicIDSuggestion(Arg1 string) *PublicreportPublicIDSuggestion
 				Strategy: "UNION",
 				All:      true,
 				Query: bob.BaseQuery[bob.Expression]{
-					Expression: expressionTypArgs.subExpr(129, 237),
+					Expression: expressionTypArgs.subExpr(129, 239),
 					QueryType:  bob.QueryTypeSelect,
 					Dialect:    dialect.Dialect,
 				},
 			})
-			q.CombinedOrder.AppendOrder(expressionTypArgs.subExpr(249, 258))
+			q.CombinedOrder.AppendOrder(expressionTypArgs.subExpr(251, 260))
 		}),
 	}
 }
@@ -95,8 +95,8 @@ func (o publicreportPublicIDSuggestion) args() iter.Seq[orm.ArgWithPosition] {
 
 		if !yield(orm.ArgWithPosition{
 			Name:       "arg1",
-			Start:      235,
-			Stop:       237,
+			Start:      237,
+			Stop:       239,
 			Expression: o.Arg1,
 		}) {
 			return

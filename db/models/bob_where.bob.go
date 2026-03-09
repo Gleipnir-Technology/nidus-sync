@@ -91,16 +91,16 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportImages                 publicreportImageWhere[Q]
 	PublicreportImageExifs             publicreportImageExifWhere[Q]
 	PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
-	PublicreportNotifyEmailPools       publicreportNotifyEmailPoolWhere[Q]
+	PublicreportNotifyEmailWaters      publicreportNotifyEmailWaterWhere[Q]
 	PublicreportNotifyPhoneNuisances   publicreportNotifyPhoneNuisanceWhere[Q]
-	PublicreportNotifyPhonePools       publicreportNotifyPhonePoolWhere[Q]
+	PublicreportNotifyPhoneWaters      publicreportNotifyPhoneWaterWhere[Q]
 	PublicreportNuisances              publicreportNuisanceWhere[Q]
 	PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
-	PublicreportPools                  publicreportPoolWhere[Q]
-	PublicreportPoolImages             publicreportPoolImageWhere[Q]
 	PublicreportReportLocations        publicreportReportLocationWhere[Q]
 	PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
 	PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
+	PublicreportWaters                 publicreportWaterWhere[Q]
+	PublicreportWaterImages            publicreportWaterImageWhere[Q]
 	RasterColumns                      rasterColumnWhere[Q]
 	RasterOverviews                    rasterOverviewWhere[Q]
 	Residents                          residentWhere[Q]
@@ -188,16 +188,16 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportImages                 publicreportImageWhere[Q]
 		PublicreportImageExifs             publicreportImageExifWhere[Q]
 		PublicreportNotifyEmailNuisances   publicreportNotifyEmailNuisanceWhere[Q]
-		PublicreportNotifyEmailPools       publicreportNotifyEmailPoolWhere[Q]
+		PublicreportNotifyEmailWaters      publicreportNotifyEmailWaterWhere[Q]
 		PublicreportNotifyPhoneNuisances   publicreportNotifyPhoneNuisanceWhere[Q]
-		PublicreportNotifyPhonePools       publicreportNotifyPhonePoolWhere[Q]
+		PublicreportNotifyPhoneWaters      publicreportNotifyPhoneWaterWhere[Q]
 		PublicreportNuisances              publicreportNuisanceWhere[Q]
 		PublicreportNuisanceImages         publicreportNuisanceImageWhere[Q]
-		PublicreportPools                  publicreportPoolWhere[Q]
-		PublicreportPoolImages             publicreportPoolImageWhere[Q]
 		PublicreportReportLocations        publicreportReportLocationWhere[Q]
 		PublicreportSubscribeEmails        publicreportSubscribeEmailWhere[Q]
 		PublicreportSubscribePhones        publicreportSubscribePhoneWhere[Q]
+		PublicreportWaters                 publicreportWaterWhere[Q]
+		PublicreportWaterImages            publicreportWaterImageWhere[Q]
 		RasterColumns                      rasterColumnWhere[Q]
 		RasterOverviews                    rasterOverviewWhere[Q]
 		Residents                          residentWhere[Q]
@@ -284,16 +284,16 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportImages:                 buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:             buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNotifyEmailNuisances:   buildPublicreportNotifyEmailNuisanceWhere[Q](PublicreportNotifyEmailNuisances.Columns),
-		PublicreportNotifyEmailPools:       buildPublicreportNotifyEmailPoolWhere[Q](PublicreportNotifyEmailPools.Columns),
+		PublicreportNotifyEmailWaters:      buildPublicreportNotifyEmailWaterWhere[Q](PublicreportNotifyEmailWaters.Columns),
 		PublicreportNotifyPhoneNuisances:   buildPublicreportNotifyPhoneNuisanceWhere[Q](PublicreportNotifyPhoneNuisances.Columns),
-		PublicreportNotifyPhonePools:       buildPublicreportNotifyPhonePoolWhere[Q](PublicreportNotifyPhonePools.Columns),
+		PublicreportNotifyPhoneWaters:      buildPublicreportNotifyPhoneWaterWhere[Q](PublicreportNotifyPhoneWaters.Columns),
 		PublicreportNuisances:              buildPublicreportNuisanceWhere[Q](PublicreportNuisances.Columns),
 		PublicreportNuisanceImages:         buildPublicreportNuisanceImageWhere[Q](PublicreportNuisanceImages.Columns),
-		PublicreportPools:                  buildPublicreportPoolWhere[Q](PublicreportPools.Columns),
-		PublicreportPoolImages:             buildPublicreportPoolImageWhere[Q](PublicreportPoolImages.Columns),
 		PublicreportReportLocations:        buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
 		PublicreportSubscribeEmails:        buildPublicreportSubscribeEmailWhere[Q](PublicreportSubscribeEmails.Columns),
 		PublicreportSubscribePhones:        buildPublicreportSubscribePhoneWhere[Q](PublicreportSubscribePhones.Columns),
+		PublicreportWaters:                 buildPublicreportWaterWhere[Q](PublicreportWaters.Columns),
+		PublicreportWaterImages:            buildPublicreportWaterImageWhere[Q](PublicreportWaterImages.Columns),
 		RasterColumns:                      buildRasterColumnWhere[Q](RasterColumns.Columns),
 		RasterOverviews:                    buildRasterOverviewWhere[Q](RasterOverviews.Columns),
 		Residents:                          buildResidentWhere[Q](Residents.Columns),

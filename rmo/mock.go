@@ -9,18 +9,15 @@ import (
 )
 
 type ContentMock struct {
-	District    ContentDistrict
-	MapboxToken string
-	ReportID    string
-	URL         ContentURL
+	District ContentDistrict
+	ReportID string
+	URL      ContentURL
 }
 
 func addMockRoutes(r chi.Router) {
 	r.Get("/", renderMock("rmo/mock/root.html"))
 	r.Get("/district/{slug}", renderMock("rmo/mock/district-root.html"))
-	r.Get("/district/{slug}/nuisance", renderMock("rmo/mock/nuisance.html"))
 	r.Get("/district/{slug}/nuisance-submit-complete", renderMock("rmo/mock/nuisance-submit-complete.html"))
-	r.Get("/district/{slug}/water", renderMock("rmo/mock/water.html"))
 	r.Get("/nuisance", renderMock("rmo/mock/nuisance.html"))
 	r.Get("/nuisance-submit-complete", renderMock("rmo/mock/nuisance-submit-complete.html"))
 }
@@ -51,9 +48,8 @@ func renderMock(t string) func(http.ResponseWriter, *http.Request) {
 					URLLogo:    config.MakeURLNidus("/api/district/%s/logo", slug),
 					URLWebsite: "http://www.deltavcd.com/",
 				},
-				MapboxToken: config.MapboxToken,
-				ReportID:    "abcd-1234-5678",
-				URL:         makeContentURLMock(slug),
+				ReportID: "abcd-1234-5678",
+				URL:      makeContentURLMock(slug),
 			},
 		)
 	}

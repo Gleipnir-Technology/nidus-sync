@@ -10,7 +10,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
@@ -53,13 +52,10 @@ type contentLayoutTest struct {
 	User platform.User
 }
 type ContentDistrict struct {
-	MapboxToken string
 }
 
 func getDistrict(w http.ResponseWriter, r *http.Request) {
-	context := ContentDistrict{
-		MapboxToken: config.MapboxToken,
-	}
+	context := ContentDistrict{}
 	html.RenderOrError(w, "sync/district.html", &context)
 }
 
@@ -135,7 +131,6 @@ func getSource(ctx context.Context, r *http.Request, org *models.Organization, u
 		MapData: ComponentMap{
 			Center: latlng,
 			//GeoJSON:
-			MapboxToken: config.MapboxToken,
 			Markers: []MapMarker{
 				MapMarker{
 					LatLng: latlng,
@@ -155,9 +150,7 @@ func getSource(ctx context.Context, r *http.Request, org *models.Organization, u
 
 func getStadia(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentDashboard], *nhttp.ErrorWithStatus) {
 	data := contentDashboard{
-		MapData: ComponentMap{
-			MapboxToken: config.MapboxToken,
-		},
+		MapData: ComponentMap{},
 	}
 	return html.NewResponse("sync/stadia.html", data), nil
 }
@@ -189,7 +182,6 @@ func getTrap(ctx context.Context, r *http.Request, org *models.Organization, use
 		MapData: ComponentMap{
 			Center: latlng,
 			//GeoJSON:
-			MapboxToken: config.MapboxToken,
 			Markers: []MapMarker{
 				MapMarker{
 					LatLng: latlng,
@@ -250,10 +242,8 @@ func dashboard(ctx context.Context, w http.ResponseWriter, org *models.Organizat
 		CountServiceRequests: int(serviceCount),
 		IsSyncOngoing:        is_syncing,
 		LastSync:             lastSync,
-		MapData: ComponentMap{
-			MapboxToken: config.MapboxToken,
-		},
-		RecentRequests: requests,
+		MapData:              ComponentMap{},
+		RecentRequests:       requests,
 	}
 	userContent, err := auth.ContentForUser(ctx, user)
 	if err != nil {

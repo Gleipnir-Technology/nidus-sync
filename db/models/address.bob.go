@@ -20,6 +20,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 )
 
 // Address is an object representing the database table.
@@ -51,9 +52,11 @@ type AddressesQuery = *psql.ViewQuery[*Address, AddressSlice]
 
 // addressR is where relationships are stored.
 type addressR struct {
-	Mailers   CommsMailerSlice // comms.mailer.mailer_address_id_fkey
-	Residents ResidentSlice    // resident.resident_address_id_fkey
-	Site      *Site            // site.site_address_id_fkey
+	Mailers   CommsMailerSlice          // comms.mailer.mailer_address_id_fkey
+	Nuisances PublicreportNuisanceSlice // publicreport.nuisance.nuisance_address_id_fkey
+	Waters    PublicreportWaterSlice    // publicreport.water.pool_address_id_fkey
+	Residents ResidentSlice             // resident.resident_address_id_fkey
+	Site      *Site                     // site.site_address_id_fkey
 }
 
 func buildAddressColumns(alias string) addressColumns {
@@ -602,6 +605,54 @@ func (os AddressSlice) Mailers(mods ...bob.Mod[*dialect.SelectQuery]) CommsMaile
 	)...)
 }
 
+// Nuisances starts a query for related objects on publicreport.nuisance
+func (o *Address) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+	return PublicreportNuisances.Query(append(mods,
+		sm.Where(PublicreportNuisances.Columns.AddressID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os AddressSlice) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportNuisances.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNuisances.Columns.AddressID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Waters starts a query for related objects on publicreport.water
+func (o *Address) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
+	return PublicreportWaters.Query(append(mods,
+		sm.Where(PublicreportWaters.Columns.AddressID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os AddressSlice) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportWaters.Query(append(mods,
+		sm.Where(psql.Group(PublicreportWaters.Columns.AddressID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Residents starts a query for related objects on resident
 func (o *Address) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
 	return Residents.Query(append(mods,
@@ -710,6 +761,142 @@ func (address0 *Address) AttachMailers(ctx context.Context, exec bob.Executor, r
 	}
 
 	address0.R.Mailers = append(address0.R.Mailers, commsMailers1...)
+
+	for _, rel := range related {
+		rel.R.Address = address0
+	}
+
+	return nil
+}
+
+func insertAddressNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, address0 *Address) (PublicreportNuisanceSlice, error) {
+	for i := range publicreportNuisances1 {
+		publicreportNuisances1[i].AddressID = omitnull.From(address0.ID)
+	}
+
+	ret, err := PublicreportNuisances.Insert(bob.ToMods(publicreportNuisances1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertAddressNuisances0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachAddressNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNuisances1 PublicreportNuisanceSlice, address0 *Address) (PublicreportNuisanceSlice, error) {
+	setter := &PublicreportNuisanceSetter{
+		AddressID: omitnull.From(address0.ID),
+	}
+
+	err := publicreportNuisances1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachAddressNuisances0: %w", err)
+	}
+
+	return publicreportNuisances1, nil
+}
+
+func (address0 *Address) InsertNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNuisances1, err := insertAddressNuisances0(ctx, exec, related, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Nuisances = append(address0.R.Nuisances, publicreportNuisances1...)
+
+	for _, rel := range publicreportNuisances1 {
+		rel.R.Address = address0
+	}
+	return nil
+}
+
+func (address0 *Address) AttachNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisance) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNuisances1 := PublicreportNuisanceSlice(related)
+
+	_, err = attachAddressNuisances0(ctx, exec, len(related), publicreportNuisances1, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Nuisances = append(address0.R.Nuisances, publicreportNuisances1...)
+
+	for _, rel := range related {
+		rel.R.Address = address0
+	}
+
+	return nil
+}
+
+func insertAddressWaters0(ctx context.Context, exec bob.Executor, publicreportWaters1 []*PublicreportWaterSetter, address0 *Address) (PublicreportWaterSlice, error) {
+	for i := range publicreportWaters1 {
+		publicreportWaters1[i].AddressID = omitnull.From(address0.ID)
+	}
+
+	ret, err := PublicreportWaters.Insert(bob.ToMods(publicreportWaters1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertAddressWaters0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachAddressWaters0(ctx context.Context, exec bob.Executor, count int, publicreportWaters1 PublicreportWaterSlice, address0 *Address) (PublicreportWaterSlice, error) {
+	setter := &PublicreportWaterSetter{
+		AddressID: omitnull.From(address0.ID),
+	}
+
+	err := publicreportWaters1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachAddressWaters0: %w", err)
+	}
+
+	return publicreportWaters1, nil
+}
+
+func (address0 *Address) InsertWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportWaters1, err := insertAddressWaters0(ctx, exec, related, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Waters = append(address0.R.Waters, publicreportWaters1...)
+
+	for _, rel := range publicreportWaters1 {
+		rel.R.Address = address0
+	}
+	return nil
+}
+
+func (address0 *Address) AttachWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWater) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportWaters1 := PublicreportWaterSlice(related)
+
+	_, err = attachAddressWaters0(ctx, exec, len(related), publicreportWaters1, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Waters = append(address0.R.Waters, publicreportWaters1...)
 
 	for _, rel := range related {
 		rel.R.Address = address0
@@ -894,6 +1081,34 @@ func (o *Address) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Nuisances":
+		rels, ok := retrieved.(PublicreportNuisanceSlice)
+		if !ok {
+			return fmt.Errorf("address cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Nuisances = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Address = o
+			}
+		}
+		return nil
+	case "Waters":
+		rels, ok := retrieved.(PublicreportWaterSlice)
+		if !ok {
+			return fmt.Errorf("address cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Waters = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Address = o
+			}
+		}
+		return nil
 	case "Residents":
 		rels, ok := retrieved.(ResidentSlice)
 		if !ok {
@@ -949,6 +1164,8 @@ func buildAddressPreloader() addressPreloader {
 
 type addressThenLoader[Q orm.Loadable] struct {
 	Mailers   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Nuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Waters    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Residents func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Site      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -956,6 +1173,12 @@ type addressThenLoader[Q orm.Loadable] struct {
 func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 	type MailersLoadInterface interface {
 		LoadMailers(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type NuisancesLoadInterface interface {
+		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type WatersLoadInterface interface {
+		LoadWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ResidentsLoadInterface interface {
 		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -969,6 +1192,18 @@ func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 			"Mailers",
 			func(ctx context.Context, exec bob.Executor, retrieved MailersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadMailers(ctx, exec, mods...)
+			},
+		),
+		Nuisances: thenLoadBuilder[Q](
+			"Nuisances",
+			func(ctx context.Context, exec bob.Executor, retrieved NuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNuisances(ctx, exec, mods...)
+			},
+		),
+		Waters: thenLoadBuilder[Q](
+			"Waters",
+			func(ctx context.Context, exec bob.Executor, retrieved WatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadWaters(ctx, exec, mods...)
 			},
 		),
 		Residents: thenLoadBuilder[Q](
@@ -1041,6 +1276,134 @@ func (os AddressSlice) LoadMailers(ctx context.Context, exec bob.Executor, mods 
 			rel.R.Address = o
 
 			o.R.Mailers = append(o.R.Mailers, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadNuisances loads the address's Nuisances into the .R struct
+func (o *Address) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Nuisances = nil
+
+	related, err := o.Nuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Address = o
+	}
+
+	o.R.Nuisances = related
+	return nil
+}
+
+// LoadNuisances loads the address's Nuisances into the .R struct
+func (os AddressSlice) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNuisances, err := os.Nuisances(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Nuisances = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNuisances {
+
+			if !rel.AddressID.IsValue() {
+				continue
+			}
+			if !(rel.AddressID.IsValue() && o.ID == rel.AddressID.MustGet()) {
+				continue
+			}
+
+			rel.R.Address = o
+
+			o.R.Nuisances = append(o.R.Nuisances, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadWaters loads the address's Waters into the .R struct
+func (o *Address) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Waters = nil
+
+	related, err := o.Waters(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Address = o
+	}
+
+	o.R.Waters = related
+	return nil
+}
+
+// LoadWaters loads the address's Waters into the .R struct
+func (os AddressSlice) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportWaters, err := os.Waters(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Waters = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportWaters {
+
+			if !rel.AddressID.IsValue() {
+				continue
+			}
+			if !(rel.AddressID.IsValue() && o.ID == rel.AddressID.MustGet()) {
+				continue
+			}
+
+			rel.R.Address = o
+
+			o.R.Waters = append(o.R.Waters, rel)
 		}
 	}
 

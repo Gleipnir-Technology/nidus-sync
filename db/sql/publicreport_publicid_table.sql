@@ -9,9 +9,9 @@ WITH found_tables AS (
 	UNION ALL
     
 	SELECT
-		'pool'  as table_name,
+		'water'  as table_name,
 		id
-	FROM publicreport.pool
+	FROM publicreport.water
 	WHERE public_id = $1
 )
 SELECT 

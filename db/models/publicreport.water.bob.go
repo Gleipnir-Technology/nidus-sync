@@ -25,8 +25,8 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-// PublicreportPool is an object representing the database table.
-type PublicreportPool struct {
+// PublicreportWater is an object representing the database table.
+type PublicreportWater struct {
 	ID                     int32                              `db:"id,pk" `
 	AccessComments         string                             `db:"access_comments" `
 	AccessGate             bool                               `db:"access_gate" `
@@ -34,10 +34,10 @@ type PublicreportPool struct {
 	AccessLocked           bool                               `db:"access_locked" `
 	AccessDog              bool                               `db:"access_dog" `
 	AccessOther            bool                               `db:"access_other" `
-	Address                string                             `db:"address" `
+	AddressRaw             string                             `db:"address_raw" `
 	AddressCountry         string                             `db:"address_country" `
-	AddressPostCode        string                             `db:"address_post_code" `
-	AddressPlace           string                             `db:"address_place" `
+	AddressPostalCode      string                             `db:"address_postal_code" `
+	AddressLocality        string                             `db:"address_locality" `
 	AddressStreet          string                             `db:"address_street" `
 	AddressRegion          string                             `db:"address_region" `
 	Comments               string                             `db:"comments" `
@@ -62,33 +62,35 @@ type PublicreportPool struct {
 	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
 	Location               null.Val[string]                   `db:"location" `
 	AddressNumber          string                             `db:"address_number" `
+	AddressID              null.Val[int32]                    `db:"address_id" `
 
-	R publicreportPoolR `db:"-" `
+	R publicreportWaterR `db:"-" `
 }
 
-// PublicreportPoolSlice is an alias for a slice of pointers to PublicreportPool.
-// This should almost always be used instead of []*PublicreportPool.
-type PublicreportPoolSlice []*PublicreportPool
+// PublicreportWaterSlice is an alias for a slice of pointers to PublicreportWater.
+// This should almost always be used instead of []*PublicreportWater.
+type PublicreportWaterSlice []*PublicreportWater
 
-// PublicreportPools contains methods to work with the pool table
-var PublicreportPools = psql.NewTablex[*PublicreportPool, PublicreportPoolSlice, *PublicreportPoolSetter]("publicreport", "pool", buildPublicreportPoolColumns("publicreport.pool"))
+// PublicreportWaters contains methods to work with the water table
+var PublicreportWaters = psql.NewTablex[*PublicreportWater, PublicreportWaterSlice, *PublicreportWaterSetter]("publicreport", "water", buildPublicreportWaterColumns("publicreport.water"))
 
-// PublicreportPoolsQuery is a query on the pool table
-type PublicreportPoolsQuery = *psql.ViewQuery[*PublicreportPool, PublicreportPoolSlice]
+// PublicreportWatersQuery is a query on the water table
+type PublicreportWatersQuery = *psql.ViewQuery[*PublicreportWater, PublicreportWaterSlice]
 
-// publicreportPoolR is where relationships are stored.
-type publicreportPoolR struct {
-	NotifyEmailPools PublicreportNotifyEmailPoolSlice // publicreport.notify_email_pool.notify_email_pool_pool_id_fkey
-	NotifyPhonePools PublicreportNotifyPhonePoolSlice // publicreport.notify_phone_pool.notify_phone_pool_pool_id_fkey
-	Organization     *Organization                    // publicreport.pool.pool_organization_id_fkey
-	Images           PublicreportImageSlice           // publicreport.pool_image.pool_image_image_id_fkeypublicreport.pool_image.pool_image_pool_id_fkey
+// publicreportWaterR is where relationships are stored.
+type publicreportWaterR struct {
+	NotifyEmailWaters PublicreportNotifyEmailWaterSlice // publicreport.notify_email_water.notify_email_pool_pool_id_fkey
+	NotifyPhoneWaters PublicreportNotifyPhoneWaterSlice // publicreport.notify_phone_water.notify_phone_pool_pool_id_fkey
+	Address           *Address                          // publicreport.water.pool_address_id_fkey
+	Organization      *Organization                     // publicreport.water.pool_organization_id_fkey
+	Images            PublicreportImageSlice            // publicreport.water_image.pool_image_image_id_fkeypublicreport.water_image.pool_image_pool_id_fkey
 }
 
-func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
-	return publicreportPoolColumns{
+func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
+	return publicreportWaterColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address", "address_country", "address_post_code", "address_place", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number",
-		).WithParent("publicreport.pool"),
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address_raw", "address_country", "address_postal_code", "address_locality", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number", "address_id",
+		).WithParent("publicreport.water"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
 		AccessComments:         psql.Quote(alias, "access_comments"),
@@ -97,10 +99,10 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		AccessLocked:           psql.Quote(alias, "access_locked"),
 		AccessDog:              psql.Quote(alias, "access_dog"),
 		AccessOther:            psql.Quote(alias, "access_other"),
-		Address:                psql.Quote(alias, "address"),
+		AddressRaw:             psql.Quote(alias, "address_raw"),
 		AddressCountry:         psql.Quote(alias, "address_country"),
-		AddressPostCode:        psql.Quote(alias, "address_post_code"),
-		AddressPlace:           psql.Quote(alias, "address_place"),
+		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
+		AddressLocality:        psql.Quote(alias, "address_locality"),
 		AddressStreet:          psql.Quote(alias, "address_street"),
 		AddressRegion:          psql.Quote(alias, "address_region"),
 		Comments:               psql.Quote(alias, "comments"),
@@ -125,10 +127,11 @@ func buildPublicreportPoolColumns(alias string) publicreportPoolColumns {
 		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
 		Location:               psql.Quote(alias, "location"),
 		AddressNumber:          psql.Quote(alias, "address_number"),
+		AddressID:              psql.Quote(alias, "address_id"),
 	}
 }
 
-type publicreportPoolColumns struct {
+type publicreportWaterColumns struct {
 	expr.ColumnsExpr
 	tableAlias             string
 	ID                     psql.Expression
@@ -138,10 +141,10 @@ type publicreportPoolColumns struct {
 	AccessLocked           psql.Expression
 	AccessDog              psql.Expression
 	AccessOther            psql.Expression
-	Address                psql.Expression
+	AddressRaw             psql.Expression
 	AddressCountry         psql.Expression
-	AddressPostCode        psql.Expression
-	AddressPlace           psql.Expression
+	AddressPostalCode      psql.Expression
+	AddressLocality        psql.Expression
 	AddressStreet          psql.Expression
 	AddressRegion          psql.Expression
 	Comments               psql.Expression
@@ -166,20 +169,21 @@ type publicreportPoolColumns struct {
 	ReporterContactConsent psql.Expression
 	Location               psql.Expression
 	AddressNumber          psql.Expression
+	AddressID              psql.Expression
 }
 
-func (c publicreportPoolColumns) Alias() string {
+func (c publicreportWaterColumns) Alias() string {
 	return c.tableAlias
 }
 
-func (publicreportPoolColumns) AliasedAs(alias string) publicreportPoolColumns {
-	return buildPublicreportPoolColumns(alias)
+func (publicreportWaterColumns) AliasedAs(alias string) publicreportWaterColumns {
+	return buildPublicreportWaterColumns(alias)
 }
 
-// PublicreportPoolSetter is used for insert/upsert/update operations
+// PublicreportWaterSetter is used for insert/upsert/update operations
 // All values are optional, and do not have to be set
 // Generated columns are not included
-type PublicreportPoolSetter struct {
+type PublicreportWaterSetter struct {
 	ID                     omit.Val[int32]                              `db:"id,pk" `
 	AccessComments         omit.Val[string]                             `db:"access_comments" `
 	AccessGate             omit.Val[bool]                               `db:"access_gate" `
@@ -187,10 +191,10 @@ type PublicreportPoolSetter struct {
 	AccessLocked           omit.Val[bool]                               `db:"access_locked" `
 	AccessDog              omit.Val[bool]                               `db:"access_dog" `
 	AccessOther            omit.Val[bool]                               `db:"access_other" `
-	Address                omit.Val[string]                             `db:"address" `
+	AddressRaw             omit.Val[string]                             `db:"address_raw" `
 	AddressCountry         omit.Val[string]                             `db:"address_country" `
-	AddressPostCode        omit.Val[string]                             `db:"address_post_code" `
-	AddressPlace           omit.Val[string]                             `db:"address_place" `
+	AddressPostalCode      omit.Val[string]                             `db:"address_postal_code" `
+	AddressLocality        omit.Val[string]                             `db:"address_locality" `
 	AddressStreet          omit.Val[string]                             `db:"address_street" `
 	AddressRegion          omit.Val[string]                             `db:"address_region" `
 	Comments               omit.Val[string]                             `db:"comments" `
@@ -215,10 +219,11 @@ type PublicreportPoolSetter struct {
 	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
 	Location               omitnull.Val[string]                         `db:"location" `
 	AddressNumber          omit.Val[string]                             `db:"address_number" `
+	AddressID              omitnull.Val[int32]                          `db:"address_id" `
 }
 
-func (s PublicreportPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 35)
+func (s PublicreportWaterSetter) SetColumns() []string {
+	vals := make([]string, 0, 36)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -240,17 +245,17 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	if s.AccessOther.IsValue() {
 		vals = append(vals, "access_other")
 	}
-	if s.Address.IsValue() {
-		vals = append(vals, "address")
+	if s.AddressRaw.IsValue() {
+		vals = append(vals, "address_raw")
 	}
 	if s.AddressCountry.IsValue() {
 		vals = append(vals, "address_country")
 	}
-	if s.AddressPostCode.IsValue() {
-		vals = append(vals, "address_post_code")
+	if s.AddressPostalCode.IsValue() {
+		vals = append(vals, "address_postal_code")
 	}
-	if s.AddressPlace.IsValue() {
-		vals = append(vals, "address_place")
+	if s.AddressLocality.IsValue() {
+		vals = append(vals, "address_locality")
 	}
 	if s.AddressStreet.IsValue() {
 		vals = append(vals, "address_street")
@@ -324,10 +329,13 @@ func (s PublicreportPoolSetter) SetColumns() []string {
 	if s.AddressNumber.IsValue() {
 		vals = append(vals, "address_number")
 	}
+	if !s.AddressID.IsUnset() {
+		vals = append(vals, "address_id")
+	}
 	return vals
 }
 
-func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
+func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if s.ID.IsValue() {
 		t.ID = s.ID.MustGet()
 	}
@@ -349,17 +357,17 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.AccessOther.IsValue() {
 		t.AccessOther = s.AccessOther.MustGet()
 	}
-	if s.Address.IsValue() {
-		t.Address = s.Address.MustGet()
+	if s.AddressRaw.IsValue() {
+		t.AddressRaw = s.AddressRaw.MustGet()
 	}
 	if s.AddressCountry.IsValue() {
 		t.AddressCountry = s.AddressCountry.MustGet()
 	}
-	if s.AddressPostCode.IsValue() {
-		t.AddressPostCode = s.AddressPostCode.MustGet()
+	if s.AddressPostalCode.IsValue() {
+		t.AddressPostalCode = s.AddressPostalCode.MustGet()
 	}
-	if s.AddressPlace.IsValue() {
-		t.AddressPlace = s.AddressPlace.MustGet()
+	if s.AddressLocality.IsValue() {
+		t.AddressLocality = s.AddressLocality.MustGet()
 	}
 	if s.AddressStreet.IsValue() {
 		t.AddressStreet = s.AddressStreet.MustGet()
@@ -433,15 +441,18 @@ func (s PublicreportPoolSetter) Overwrite(t *PublicreportPool) {
 	if s.AddressNumber.IsValue() {
 		t.AddressNumber = s.AddressNumber.MustGet()
 	}
+	if !s.AddressID.IsUnset() {
+		t.AddressID = s.AddressID.MustGetNull()
+	}
 }
 
-func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
+func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-		return PublicreportPools.BeforeInsertHooks.RunHooks(ctx, exec, s)
+		return PublicreportWaters.BeforeInsertHooks.RunHooks(ctx, exec, s)
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 35)
+		vals := make([]bob.Expression, 36)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -484,8 +495,8 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.Address.IsValue() {
-			vals[7] = psql.Arg(s.Address.MustGet())
+		if s.AddressRaw.IsValue() {
+			vals[7] = psql.Arg(s.AddressRaw.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
@@ -496,14 +507,14 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPostCode.IsValue() {
-			vals[9] = psql.Arg(s.AddressPostCode.MustGet())
+		if s.AddressPostalCode.IsValue() {
+			vals[9] = psql.Arg(s.AddressPostalCode.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPlace.IsValue() {
-			vals[10] = psql.Arg(s.AddressPlace.MustGet())
+		if s.AddressLocality.IsValue() {
+			vals[10] = psql.Arg(s.AddressLocality.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
@@ -652,16 +663,22 @@ func (s *PublicreportPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[34] = psql.Raw("DEFAULT")
 		}
 
+		if !s.AddressID.IsUnset() {
+			vals[35] = psql.Arg(s.AddressID.MustGetNull())
+		} else {
+			vals[35] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
 
-func (s PublicreportPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (s PublicreportWaterSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return um.Set(s.Expressions()...)
 }
 
-func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 35)
+func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression {
+	exprs := make([]bob.Expression, 0, 36)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -712,10 +729,10 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Address.IsValue() {
+	if s.AddressRaw.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address")...),
-			psql.Arg(s.Address),
+			psql.Quote(append(prefix, "address_raw")...),
+			psql.Arg(s.AddressRaw),
 		}})
 	}
 
@@ -726,17 +743,17 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.AddressPostCode.IsValue() {
+	if s.AddressPostalCode.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_post_code")...),
-			psql.Arg(s.AddressPostCode),
+			psql.Quote(append(prefix, "address_postal_code")...),
+			psql.Arg(s.AddressPostalCode),
 		}})
 	}
 
-	if s.AddressPlace.IsValue() {
+	if s.AddressLocality.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_place")...),
-			psql.Arg(s.AddressPlace),
+			psql.Quote(append(prefix, "address_locality")...),
+			psql.Arg(s.AddressLocality),
 		}})
 	}
 
@@ -908,63 +925,70 @@ func (s PublicreportPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if !s.AddressID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_id")...),
+			psql.Arg(s.AddressID),
+		}})
+	}
+
 	return exprs
 }
 
-// FindPublicreportPool retrieves a single record by primary key
+// FindPublicreportWater retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindPublicreportPool(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*PublicreportPool, error) {
+func FindPublicreportWater(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*PublicreportWater, error) {
 	if len(cols) == 0 {
-		return PublicreportPools.Query(
-			sm.Where(PublicreportPools.Columns.ID.EQ(psql.Arg(IDPK))),
+		return PublicreportWaters.Query(
+			sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
 		).One(ctx, exec)
 	}
 
-	return PublicreportPools.Query(
-		sm.Where(PublicreportPools.Columns.ID.EQ(psql.Arg(IDPK))),
-		sm.Columns(PublicreportPools.Columns.Only(cols...)),
+	return PublicreportWaters.Query(
+		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Columns(PublicreportWaters.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
-// PublicreportPoolExists checks the presence of a single record by primary key
-func PublicreportPoolExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
-	return PublicreportPools.Query(
-		sm.Where(PublicreportPools.Columns.ID.EQ(psql.Arg(IDPK))),
+// PublicreportWaterExists checks the presence of a single record by primary key
+func PublicreportWaterExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
+	return PublicreportWaters.Query(
+		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
 	).Exists(ctx, exec)
 }
 
-// AfterQueryHook is called after PublicreportPool is retrieved from the database
-func (o *PublicreportPool) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after PublicreportWater is retrieved from the database
+func (o *PublicreportWater) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = PublicreportPools.AfterSelectHooks.RunHooks(ctx, exec, PublicreportPoolSlice{o})
+		ctx, err = PublicreportWaters.AfterSelectHooks.RunHooks(ctx, exec, PublicreportWaterSlice{o})
 	case bob.QueryTypeInsert:
-		ctx, err = PublicreportPools.AfterInsertHooks.RunHooks(ctx, exec, PublicreportPoolSlice{o})
+		ctx, err = PublicreportWaters.AfterInsertHooks.RunHooks(ctx, exec, PublicreportWaterSlice{o})
 	case bob.QueryTypeUpdate:
-		ctx, err = PublicreportPools.AfterUpdateHooks.RunHooks(ctx, exec, PublicreportPoolSlice{o})
+		ctx, err = PublicreportWaters.AfterUpdateHooks.RunHooks(ctx, exec, PublicreportWaterSlice{o})
 	case bob.QueryTypeDelete:
-		ctx, err = PublicreportPools.AfterDeleteHooks.RunHooks(ctx, exec, PublicreportPoolSlice{o})
+		ctx, err = PublicreportWaters.AfterDeleteHooks.RunHooks(ctx, exec, PublicreportWaterSlice{o})
 	}
 
 	return err
 }
 
-// primaryKeyVals returns the primary key values of the PublicreportPool
-func (o *PublicreportPool) primaryKeyVals() bob.Expression {
+// primaryKeyVals returns the primary key values of the PublicreportWater
+func (o *PublicreportWater) primaryKeyVals() bob.Expression {
 	return psql.Arg(o.ID)
 }
 
-func (o *PublicreportPool) pkEQ() dialect.Expression {
-	return psql.Quote("publicreport.pool", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+func (o *PublicreportWater) pkEQ() dialect.Expression {
+	return psql.Quote("publicreport.water", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
 
-// Update uses an executor to update the PublicreportPool
-func (o *PublicreportPool) Update(ctx context.Context, exec bob.Executor, s *PublicreportPoolSetter) error {
-	v, err := PublicreportPools.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
+// Update uses an executor to update the PublicreportWater
+func (o *PublicreportWater) Update(ctx context.Context, exec bob.Executor, s *PublicreportWaterSetter) error {
+	v, err := PublicreportWaters.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -975,16 +999,16 @@ func (o *PublicreportPool) Update(ctx context.Context, exec bob.Executor, s *Pub
 	return nil
 }
 
-// Delete deletes a single PublicreportPool record with an executor
-func (o *PublicreportPool) Delete(ctx context.Context, exec bob.Executor) error {
-	_, err := PublicreportPools.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
+// Delete deletes a single PublicreportWater record with an executor
+func (o *PublicreportWater) Delete(ctx context.Context, exec bob.Executor) error {
+	_, err := PublicreportWaters.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
 	return err
 }
 
-// Reload refreshes the PublicreportPool using the executor
-func (o *PublicreportPool) Reload(ctx context.Context, exec bob.Executor) error {
-	o2, err := PublicreportPools.Query(
-		sm.Where(PublicreportPools.Columns.ID.EQ(psql.Arg(o.ID))),
+// Reload refreshes the PublicreportWater using the executor
+func (o *PublicreportWater) Reload(ctx context.Context, exec bob.Executor) error {
+	o2, err := PublicreportWaters.Query(
+		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(o.ID))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -995,30 +1019,30 @@ func (o *PublicreportPool) Reload(ctx context.Context, exec bob.Executor) error 
 	return nil
 }
 
-// AfterQueryHook is called after PublicreportPoolSlice is retrieved from the database
-func (o PublicreportPoolSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
+// AfterQueryHook is called after PublicreportWaterSlice is retrieved from the database
+func (o PublicreportWaterSlice) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType bob.QueryType) error {
 	var err error
 
 	switch queryType {
 	case bob.QueryTypeSelect:
-		ctx, err = PublicreportPools.AfterSelectHooks.RunHooks(ctx, exec, o)
+		ctx, err = PublicreportWaters.AfterSelectHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeInsert:
-		ctx, err = PublicreportPools.AfterInsertHooks.RunHooks(ctx, exec, o)
+		ctx, err = PublicreportWaters.AfterInsertHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeUpdate:
-		ctx, err = PublicreportPools.AfterUpdateHooks.RunHooks(ctx, exec, o)
+		ctx, err = PublicreportWaters.AfterUpdateHooks.RunHooks(ctx, exec, o)
 	case bob.QueryTypeDelete:
-		ctx, err = PublicreportPools.AfterDeleteHooks.RunHooks(ctx, exec, o)
+		ctx, err = PublicreportWaters.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
 }
 
-func (o PublicreportPoolSlice) pkIN() dialect.Expression {
+func (o PublicreportWaterSlice) pkIN() dialect.Expression {
 	if len(o) == 0 {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Quote("publicreport.pool", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("publicreport.water", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1030,7 +1054,7 @@ func (o PublicreportPoolSlice) pkIN() dialect.Expression {
 // copyMatchingRows finds models in the given slice that have the same primary key
 // then it first copies the existing relationships from the old model to the new model
 // and then replaces the old model in the slice with the new model
-func (o PublicreportPoolSlice) copyMatchingRows(from ...*PublicreportPool) {
+func (o PublicreportWaterSlice) copyMatchingRows(from ...*PublicreportWater) {
 	for i, old := range o {
 		for _, new := range from {
 			if new.ID != old.ID {
@@ -1044,25 +1068,25 @@ func (o PublicreportPoolSlice) copyMatchingRows(from ...*PublicreportPool) {
 }
 
 // UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
-func (o PublicreportPoolSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+func (o PublicreportWaterSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return PublicreportPools.BeforeUpdateHooks.RunHooks(ctx, exec, o)
+			return PublicreportWaters.BeforeUpdateHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *PublicreportPool:
+			case *PublicreportWater:
 				o.copyMatchingRows(retrieved)
-			case []*PublicreportPool:
+			case []*PublicreportWater:
 				o.copyMatchingRows(retrieved...)
-			case PublicreportPoolSlice:
+			case PublicreportWaterSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a PublicreportPool or a slice of PublicreportPool
+				// If the retrieved value is not a PublicreportWater or a slice of PublicreportWater
 				// then run the AfterUpdateHooks on the slice
-				_, err = PublicreportPools.AfterUpdateHooks.RunHooks(ctx, exec, o)
+				_, err = PublicreportWaters.AfterUpdateHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -1073,25 +1097,25 @@ func (o PublicreportPoolSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 // DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
-func (o PublicreportPoolSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
+func (o PublicreportWaterSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
 		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
-			return PublicreportPools.BeforeDeleteHooks.RunHooks(ctx, exec, o)
+			return PublicreportWaters.BeforeDeleteHooks.RunHooks(ctx, exec, o)
 		})
 
 		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
 			var err error
 			switch retrieved := retrieved.(type) {
-			case *PublicreportPool:
+			case *PublicreportWater:
 				o.copyMatchingRows(retrieved)
-			case []*PublicreportPool:
+			case []*PublicreportWater:
 				o.copyMatchingRows(retrieved...)
-			case PublicreportPoolSlice:
+			case PublicreportWaterSlice:
 				o.copyMatchingRows(retrieved...)
 			default:
-				// If the retrieved value is not a PublicreportPool or a slice of PublicreportPool
+				// If the retrieved value is not a PublicreportWater or a slice of PublicreportWater
 				// then run the AfterDeleteHooks on the slice
-				_, err = PublicreportPools.AfterDeleteHooks.RunHooks(ctx, exec, o)
+				_, err = PublicreportWaters.AfterDeleteHooks.RunHooks(ctx, exec, o)
 			}
 
 			return err
@@ -1101,30 +1125,30 @@ func (o PublicreportPoolSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
 	})
 }
 
-func (o PublicreportPoolSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals PublicreportPoolSetter) error {
+func (o PublicreportWaterSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals PublicreportWaterSetter) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := PublicreportPools.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
+	_, err := PublicreportWaters.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
 	return err
 }
 
-func (o PublicreportPoolSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
+func (o PublicreportWaterSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	_, err := PublicreportPools.Delete(o.DeleteMod()).Exec(ctx, exec)
+	_, err := PublicreportWaters.Delete(o.DeleteMod()).Exec(ctx, exec)
 	return err
 }
 
-func (o PublicreportPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
+func (o PublicreportWaterSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	if len(o) == 0 {
 		return nil
 	}
 
-	o2, err := PublicreportPools.Query(sm.Where(o.pkIN())).All(ctx, exec)
+	o2, err := PublicreportWaters.Query(sm.Where(o.pkIN())).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1134,14 +1158,14 @@ func (o PublicreportPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor)
 	return nil
 }
 
-// NotifyEmailPools starts a query for related objects on publicreport.notify_email_pool
-func (o *PublicreportPool) NotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
-	return PublicreportNotifyEmailPools.Query(append(mods,
-		sm.Where(PublicreportNotifyEmailPools.Columns.PoolID.EQ(psql.Arg(o.ID))),
+// NotifyEmailWaters starts a query for related objects on publicreport.notify_email_water
+func (o *PublicreportWater) NotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
+	return PublicreportNotifyEmailWaters.Query(append(mods,
+		sm.Where(PublicreportNotifyEmailWaters.Columns.WaterID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportPoolSlice) NotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
+func (os PublicreportWaterSlice) NotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1153,19 +1177,19 @@ func (os PublicreportPoolSlice) NotifyEmailPools(mods ...bob.Mod[*dialect.Select
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportNotifyEmailPools.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyEmailPools.Columns.PoolID).OP("IN", PKArgExpr)),
+	return PublicreportNotifyEmailWaters.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyEmailWaters.Columns.WaterID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// NotifyPhonePools starts a query for related objects on publicreport.notify_phone_pool
-func (o *PublicreportPool) NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
-	return PublicreportNotifyPhonePools.Query(append(mods,
-		sm.Where(PublicreportNotifyPhonePools.Columns.PoolID.EQ(psql.Arg(o.ID))),
+// NotifyPhoneWaters starts a query for related objects on publicreport.notify_phone_water
+func (o *PublicreportWater) NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
+	return PublicreportNotifyPhoneWaters.Query(append(mods,
+		sm.Where(PublicreportNotifyPhoneWaters.Columns.WaterID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportPoolSlice) NotifyPhonePools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonePoolsQuery {
+func (os PublicreportWaterSlice) NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1177,19 +1201,43 @@ func (os PublicreportPoolSlice) NotifyPhonePools(mods ...bob.Mod[*dialect.Select
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportNotifyPhonePools.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyPhonePools.Columns.PoolID).OP("IN", PKArgExpr)),
+	return PublicreportNotifyPhoneWaters.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhoneWaters.Columns.WaterID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Address starts a query for related objects on address
+func (o *PublicreportWater) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	return Addresses.Query(append(mods,
+		sm.Where(Addresses.Columns.ID.EQ(psql.Arg(o.AddressID))),
+	)...)
+}
+
+func (os PublicreportWaterSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	pkAddressID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkAddressID = append(pkAddressID, o.AddressID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkAddressID), "integer[]")),
+	))
+
+	return Addresses.Query(append(mods,
+		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
 // Organization starts a query for related objects on organization
-func (o *PublicreportPool) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+func (o *PublicreportWater) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
 		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
 	)...)
 }
 
-func (os PublicreportPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+func (os PublicreportWaterSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1207,15 +1255,15 @@ func (os PublicreportPoolSlice) Organization(mods ...bob.Mod[*dialect.SelectQuer
 }
 
 // Images starts a query for related objects on publicreport.image
-func (o *PublicreportPool) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+func (o *PublicreportWater) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportPoolImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportPoolImages.Columns.ImageID)),
-		sm.Where(PublicreportPoolImages.Columns.PoolID.EQ(psql.Arg(o.ID))),
+		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportWaterImages.Columns.ImageID)),
+		sm.Where(PublicreportWaterImages.Columns.WaterID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportPoolSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
+func (os PublicreportWaterSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1228,163 +1276,211 @@ func (os PublicreportPoolSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) Pu
 	))
 
 	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportPoolImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportPoolImages.Columns.ImageID),
+		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
+			PublicreportImages.Columns.ID.EQ(PublicreportWaterImages.Columns.ImageID),
 		),
-		sm.Where(psql.Group(PublicreportPoolImages.Columns.PoolID).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(PublicreportWaterImages.Columns.WaterID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-func insertPublicreportPoolNotifyEmailPools0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailPools1 []*PublicreportNotifyEmailPoolSetter, publicreportPool0 *PublicreportPool) (PublicreportNotifyEmailPoolSlice, error) {
-	for i := range publicreportNotifyEmailPools1 {
-		publicreportNotifyEmailPools1[i].PoolID = omit.From(publicreportPool0.ID)
+func insertPublicreportWaterNotifyEmailWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailWaters1 []*PublicreportNotifyEmailWaterSetter, publicreportWater0 *PublicreportWater) (PublicreportNotifyEmailWaterSlice, error) {
+	for i := range publicreportNotifyEmailWaters1 {
+		publicreportNotifyEmailWaters1[i].WaterID = omit.From(publicreportWater0.ID)
 	}
 
-	ret, err := PublicreportNotifyEmailPools.Insert(bob.ToMods(publicreportNotifyEmailPools1...)).All(ctx, exec)
+	ret, err := PublicreportNotifyEmailWaters.Insert(bob.ToMods(publicreportNotifyEmailWaters1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportPoolNotifyEmailPools0: %w", err)
+		return ret, fmt.Errorf("insertPublicreportWaterNotifyEmailWaters0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachPublicreportPoolNotifyEmailPools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailPools1 PublicreportNotifyEmailPoolSlice, publicreportPool0 *PublicreportPool) (PublicreportNotifyEmailPoolSlice, error) {
-	setter := &PublicreportNotifyEmailPoolSetter{
-		PoolID: omit.From(publicreportPool0.ID),
+func attachPublicreportWaterNotifyEmailWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailWaters1 PublicreportNotifyEmailWaterSlice, publicreportWater0 *PublicreportWater) (PublicreportNotifyEmailWaterSlice, error) {
+	setter := &PublicreportNotifyEmailWaterSetter{
+		WaterID: omit.From(publicreportWater0.ID),
 	}
 
-	err := publicreportNotifyEmailPools1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNotifyEmailWaters1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportPoolNotifyEmailPools0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportWaterNotifyEmailWaters0: %w", err)
 	}
 
-	return publicreportNotifyEmailPools1, nil
+	return publicreportNotifyEmailWaters1, nil
 }
 
-func (publicreportPool0 *PublicreportPool) InsertNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPoolSetter) error {
+func (publicreportWater0 *PublicreportWater) InsertNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWaterSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNotifyEmailPools1, err := insertPublicreportPoolNotifyEmailPools0(ctx, exec, related, publicreportPool0)
+	publicreportNotifyEmailWaters1, err := insertPublicreportWaterNotifyEmailWaters0(ctx, exec, related, publicreportWater0)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.NotifyEmailPools = append(publicreportPool0.R.NotifyEmailPools, publicreportNotifyEmailPools1...)
+	publicreportWater0.R.NotifyEmailWaters = append(publicreportWater0.R.NotifyEmailWaters, publicreportNotifyEmailWaters1...)
 
-	for _, rel := range publicreportNotifyEmailPools1 {
-		rel.R.Pool = publicreportPool0
+	for _, rel := range publicreportNotifyEmailWaters1 {
+		rel.R.Water = publicreportWater0
 	}
 	return nil
 }
 
-func (publicreportPool0 *PublicreportPool) AttachNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPool) error {
+func (publicreportWater0 *PublicreportWater) AttachNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWater) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNotifyEmailPools1 := PublicreportNotifyEmailPoolSlice(related)
+	publicreportNotifyEmailWaters1 := PublicreportNotifyEmailWaterSlice(related)
 
-	_, err = attachPublicreportPoolNotifyEmailPools0(ctx, exec, len(related), publicreportNotifyEmailPools1, publicreportPool0)
+	_, err = attachPublicreportWaterNotifyEmailWaters0(ctx, exec, len(related), publicreportNotifyEmailWaters1, publicreportWater0)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.NotifyEmailPools = append(publicreportPool0.R.NotifyEmailPools, publicreportNotifyEmailPools1...)
+	publicreportWater0.R.NotifyEmailWaters = append(publicreportWater0.R.NotifyEmailWaters, publicreportNotifyEmailWaters1...)
 
 	for _, rel := range related {
-		rel.R.Pool = publicreportPool0
+		rel.R.Water = publicreportWater0
 	}
 
 	return nil
 }
 
-func insertPublicreportPoolNotifyPhonePools0(ctx context.Context, exec bob.Executor, publicreportNotifyPhonePools1 []*PublicreportNotifyPhonePoolSetter, publicreportPool0 *PublicreportPool) (PublicreportNotifyPhonePoolSlice, error) {
-	for i := range publicreportNotifyPhonePools1 {
-		publicreportNotifyPhonePools1[i].PoolID = omit.From(publicreportPool0.ID)
+func insertPublicreportWaterNotifyPhoneWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneWaters1 []*PublicreportNotifyPhoneWaterSetter, publicreportWater0 *PublicreportWater) (PublicreportNotifyPhoneWaterSlice, error) {
+	for i := range publicreportNotifyPhoneWaters1 {
+		publicreportNotifyPhoneWaters1[i].WaterID = omit.From(publicreportWater0.ID)
 	}
 
-	ret, err := PublicreportNotifyPhonePools.Insert(bob.ToMods(publicreportNotifyPhonePools1...)).All(ctx, exec)
+	ret, err := PublicreportNotifyPhoneWaters.Insert(bob.ToMods(publicreportNotifyPhoneWaters1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportPoolNotifyPhonePools0: %w", err)
+		return ret, fmt.Errorf("insertPublicreportWaterNotifyPhoneWaters0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachPublicreportPoolNotifyPhonePools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhonePools1 PublicreportNotifyPhonePoolSlice, publicreportPool0 *PublicreportPool) (PublicreportNotifyPhonePoolSlice, error) {
-	setter := &PublicreportNotifyPhonePoolSetter{
-		PoolID: omit.From(publicreportPool0.ID),
+func attachPublicreportWaterNotifyPhoneWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneWaters1 PublicreportNotifyPhoneWaterSlice, publicreportWater0 *PublicreportWater) (PublicreportNotifyPhoneWaterSlice, error) {
+	setter := &PublicreportNotifyPhoneWaterSetter{
+		WaterID: omit.From(publicreportWater0.ID),
 	}
 
-	err := publicreportNotifyPhonePools1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNotifyPhoneWaters1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportPoolNotifyPhonePools0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportWaterNotifyPhoneWaters0: %w", err)
 	}
 
-	return publicreportNotifyPhonePools1, nil
+	return publicreportNotifyPhoneWaters1, nil
 }
 
-func (publicreportPool0 *PublicreportPool) InsertNotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePoolSetter) error {
+func (publicreportWater0 *PublicreportWater) InsertNotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWaterSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNotifyPhonePools1, err := insertPublicreportPoolNotifyPhonePools0(ctx, exec, related, publicreportPool0)
+	publicreportNotifyPhoneWaters1, err := insertPublicreportWaterNotifyPhoneWaters0(ctx, exec, related, publicreportWater0)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.NotifyPhonePools = append(publicreportPool0.R.NotifyPhonePools, publicreportNotifyPhonePools1...)
+	publicreportWater0.R.NotifyPhoneWaters = append(publicreportWater0.R.NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
 
-	for _, rel := range publicreportNotifyPhonePools1 {
-		rel.R.Pool = publicreportPool0
+	for _, rel := range publicreportNotifyPhoneWaters1 {
+		rel.R.Water = publicreportWater0
 	}
 	return nil
 }
 
-func (publicreportPool0 *PublicreportPool) AttachNotifyPhonePools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhonePool) error {
+func (publicreportWater0 *PublicreportWater) AttachNotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWater) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNotifyPhonePools1 := PublicreportNotifyPhonePoolSlice(related)
+	publicreportNotifyPhoneWaters1 := PublicreportNotifyPhoneWaterSlice(related)
 
-	_, err = attachPublicreportPoolNotifyPhonePools0(ctx, exec, len(related), publicreportNotifyPhonePools1, publicreportPool0)
+	_, err = attachPublicreportWaterNotifyPhoneWaters0(ctx, exec, len(related), publicreportNotifyPhoneWaters1, publicreportWater0)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.NotifyPhonePools = append(publicreportPool0.R.NotifyPhonePools, publicreportNotifyPhonePools1...)
+	publicreportWater0.R.NotifyPhoneWaters = append(publicreportWater0.R.NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
 
 	for _, rel := range related {
-		rel.R.Pool = publicreportPool0
+		rel.R.Water = publicreportWater0
 	}
 
 	return nil
 }
 
-func attachPublicreportPoolOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, organization1 *Organization) (*PublicreportPool, error) {
-	setter := &PublicreportPoolSetter{
+func attachPublicreportWaterAddress0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, address1 *Address) (*PublicreportWater, error) {
+	setter := &PublicreportWaterSetter{
+		AddressID: omitnull.From(address1.ID),
+	}
+
+	err := publicreportWater0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportWaterAddress0: %w", err)
+	}
+
+	return publicreportWater0, nil
+}
+
+func (publicreportWater0 *PublicreportWater) InsertAddress(ctx context.Context, exec bob.Executor, related *AddressSetter) error {
+	var err error
+
+	address1, err := Addresses.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportWaterAddress0(ctx, exec, 1, publicreportWater0, address1)
+	if err != nil {
+		return err
+	}
+
+	publicreportWater0.R.Address = address1
+
+	address1.R.Waters = append(address1.R.Waters, publicreportWater0)
+
+	return nil
+}
+
+func (publicreportWater0 *PublicreportWater) AttachAddress(ctx context.Context, exec bob.Executor, address1 *Address) error {
+	var err error
+
+	_, err = attachPublicreportWaterAddress0(ctx, exec, 1, publicreportWater0, address1)
+	if err != nil {
+		return err
+	}
+
+	publicreportWater0.R.Address = address1
+
+	address1.R.Waters = append(address1.R.Waters, publicreportWater0)
+
+	return nil
+}
+
+func attachPublicreportWaterOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, organization1 *Organization) (*PublicreportWater, error) {
+	setter := &PublicreportWaterSetter{
 		OrganizationID: omitnull.From(organization1.ID),
 	}
 
-	err := publicreportPool0.Update(ctx, exec, setter)
+	err := publicreportWater0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportPoolOrganization0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportWaterOrganization0: %w", err)
 	}
 
-	return publicreportPool0, nil
+	return publicreportWater0, nil
 }
 
-func (publicreportPool0 *PublicreportPool) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+func (publicreportWater0 *PublicreportWater) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
 	var err error
 
 	organization1, err := Organizations.Insert(related).One(ctx, exec)
@@ -1392,51 +1488,51 @@ func (publicreportPool0 *PublicreportPool) InsertOrganization(ctx context.Contex
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachPublicreportPoolOrganization0(ctx, exec, 1, publicreportPool0, organization1)
+	_, err = attachPublicreportWaterOrganization0(ctx, exec, 1, publicreportWater0, organization1)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.Organization = organization1
+	publicreportWater0.R.Organization = organization1
 
-	organization1.R.PublicreportPool = append(organization1.R.PublicreportPool, publicreportPool0)
+	organization1.R.Waters = append(organization1.R.Waters, publicreportWater0)
 
 	return nil
 }
 
-func (publicreportPool0 *PublicreportPool) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+func (publicreportWater0 *PublicreportWater) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
 	var err error
 
-	_, err = attachPublicreportPoolOrganization0(ctx, exec, 1, publicreportPool0, organization1)
+	_, err = attachPublicreportWaterOrganization0(ctx, exec, 1, publicreportWater0, organization1)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.Organization = organization1
+	publicreportWater0.R.Organization = organization1
 
-	organization1.R.PublicreportPool = append(organization1.R.PublicreportPool, publicreportPool0)
+	organization1.R.Waters = append(organization1.R.Waters, publicreportWater0)
 
 	return nil
 }
 
-func attachPublicreportPoolImages0(ctx context.Context, exec bob.Executor, count int, publicreportPool0 *PublicreportPool, publicreportImages2 PublicreportImageSlice) (PublicreportPoolImageSlice, error) {
-	setters := make([]*PublicreportPoolImageSetter, count)
+func attachPublicreportWaterImages0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, publicreportImages2 PublicreportImageSlice) (PublicreportWaterImageSlice, error) {
+	setters := make([]*PublicreportWaterImageSetter, count)
 	for i := range count {
-		setters[i] = &PublicreportPoolImageSetter{
-			PoolID:  omit.From(publicreportPool0.ID),
+		setters[i] = &PublicreportWaterImageSetter{
+			WaterID: omit.From(publicreportWater0.ID),
 			ImageID: omit.From(publicreportImages2[i].ID),
 		}
 	}
 
-	publicreportPoolImages1, err := PublicreportPoolImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	publicreportWaterImages1, err := PublicreportWaterImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportPoolImages0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportWaterImages0: %w", err)
 	}
 
-	return publicreportPoolImages1, nil
+	return publicreportWaterImages1, nil
 }
 
-func (publicreportPool0 *PublicreportPool) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
+func (publicreportWater0 *PublicreportWater) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
@@ -1449,20 +1545,20 @@ func (publicreportPool0 *PublicreportPool) InsertImages(ctx context.Context, exe
 	}
 	publicreportImages2 := PublicreportImageSlice(inserted)
 
-	_, err = attachPublicreportPoolImages0(ctx, exec, len(related), publicreportPool0, publicreportImages2)
+	_, err = attachPublicreportWaterImages0(ctx, exec, len(related), publicreportWater0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.Images = append(publicreportPool0.R.Images, publicreportImages2...)
+	publicreportWater0.R.Images = append(publicreportWater0.R.Images, publicreportImages2...)
 
 	for _, rel := range publicreportImages2 {
-		rel.R.Pools = append(rel.R.Pools, publicreportPool0)
+		rel.R.Waters = append(rel.R.Waters, publicreportWater0)
 	}
 	return nil
 }
 
-func (publicreportPool0 *PublicreportPool) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
+func (publicreportWater0 *PublicreportWater) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
 	if len(related) == 0 {
 		return nil
 	}
@@ -1470,21 +1566,21 @@ func (publicreportPool0 *PublicreportPool) AttachImages(ctx context.Context, exe
 	var err error
 	publicreportImages2 := PublicreportImageSlice(related)
 
-	_, err = attachPublicreportPoolImages0(ctx, exec, len(related), publicreportPool0, publicreportImages2)
+	_, err = attachPublicreportWaterImages0(ctx, exec, len(related), publicreportWater0, publicreportImages2)
 	if err != nil {
 		return err
 	}
 
-	publicreportPool0.R.Images = append(publicreportPool0.R.Images, publicreportImages2...)
+	publicreportWater0.R.Images = append(publicreportWater0.R.Images, publicreportImages2...)
 
 	for _, rel := range related {
-		rel.R.Pools = append(rel.R.Pools, publicreportPool0)
+		rel.R.Waters = append(rel.R.Waters, publicreportWater0)
 	}
 
 	return nil
 }
 
-type publicreportPoolWhere[Q psql.Filterable] struct {
+type publicreportWaterWhere[Q psql.Filterable] struct {
 	ID                     psql.WhereMod[Q, int32]
 	AccessComments         psql.WhereMod[Q, string]
 	AccessGate             psql.WhereMod[Q, bool]
@@ -1492,10 +1588,10 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	AccessLocked           psql.WhereMod[Q, bool]
 	AccessDog              psql.WhereMod[Q, bool]
 	AccessOther            psql.WhereMod[Q, bool]
-	Address                psql.WhereMod[Q, string]
+	AddressRaw             psql.WhereMod[Q, string]
 	AddressCountry         psql.WhereMod[Q, string]
-	AddressPostCode        psql.WhereMod[Q, string]
-	AddressPlace           psql.WhereMod[Q, string]
+	AddressPostalCode      psql.WhereMod[Q, string]
+	AddressLocality        psql.WhereMod[Q, string]
 	AddressStreet          psql.WhereMod[Q, string]
 	AddressRegion          psql.WhereMod[Q, string]
 	Comments               psql.WhereMod[Q, string]
@@ -1520,14 +1616,15 @@ type publicreportPoolWhere[Q psql.Filterable] struct {
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
 	Location               psql.WhereNullMod[Q, string]
 	AddressNumber          psql.WhereMod[Q, string]
+	AddressID              psql.WhereNullMod[Q, int32]
 }
 
-func (publicreportPoolWhere[Q]) AliasedAs(alias string) publicreportPoolWhere[Q] {
-	return buildPublicreportPoolWhere[Q](buildPublicreportPoolColumns(alias))
+func (publicreportWaterWhere[Q]) AliasedAs(alias string) publicreportWaterWhere[Q] {
+	return buildPublicreportWaterWhere[Q](buildPublicreportWaterColumns(alias))
 }
 
-func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns) publicreportPoolWhere[Q] {
-	return publicreportPoolWhere[Q]{
+func buildPublicreportWaterWhere[Q psql.Filterable](cols publicreportWaterColumns) publicreportWaterWhere[Q] {
+	return publicreportWaterWhere[Q]{
 		ID:                     psql.Where[Q, int32](cols.ID),
 		AccessComments:         psql.Where[Q, string](cols.AccessComments),
 		AccessGate:             psql.Where[Q, bool](cols.AccessGate),
@@ -1535,10 +1632,10 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		AccessLocked:           psql.Where[Q, bool](cols.AccessLocked),
 		AccessDog:              psql.Where[Q, bool](cols.AccessDog),
 		AccessOther:            psql.Where[Q, bool](cols.AccessOther),
-		Address:                psql.Where[Q, string](cols.Address),
+		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
 		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
-		AddressPostCode:        psql.Where[Q, string](cols.AddressPostCode),
-		AddressPlace:           psql.Where[Q, string](cols.AddressPlace),
+		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
+		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
 		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
 		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
 		Comments:               psql.Where[Q, string](cols.Comments),
@@ -1563,86 +1660,113 @@ func buildPublicreportPoolWhere[Q psql.Filterable](cols publicreportPoolColumns)
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
 		Location:               psql.WhereNull[Q, string](cols.Location),
 		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
+		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
 	}
 }
 
-func (o *PublicreportPool) Preload(name string, retrieved any) error {
+func (o *PublicreportWater) Preload(name string, retrieved any) error {
 	if o == nil {
 		return nil
 	}
 
 	switch name {
-	case "NotifyEmailPools":
-		rels, ok := retrieved.(PublicreportNotifyEmailPoolSlice)
+	case "NotifyEmailWaters":
+		rels, ok := retrieved.(PublicreportNotifyEmailWaterSlice)
 		if !ok {
-			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.NotifyEmailPools = rels
+		o.R.NotifyEmailWaters = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Pool = o
+				rel.R.Water = o
 			}
 		}
 		return nil
-	case "NotifyPhonePools":
-		rels, ok := retrieved.(PublicreportNotifyPhonePoolSlice)
+	case "NotifyPhoneWaters":
+		rels, ok := retrieved.(PublicreportNotifyPhoneWaterSlice)
 		if !ok {
-			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.NotifyPhonePools = rels
+		o.R.NotifyPhoneWaters = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Pool = o
+				rel.R.Water = o
 			}
+		}
+		return nil
+	case "Address":
+		rel, ok := retrieved.(*Address)
+		if !ok {
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Address = rel
+
+		if rel != nil {
+			rel.R.Waters = PublicreportWaterSlice{o}
 		}
 		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
-			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
 		}
 
 		o.R.Organization = rel
 
 		if rel != nil {
-			rel.R.PublicreportPool = PublicreportPoolSlice{o}
+			rel.R.Waters = PublicreportWaterSlice{o}
 		}
 		return nil
 	case "Images":
 		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
-			return fmt.Errorf("publicreportPool cannot load %T as %q", retrieved, name)
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
 		}
 
 		o.R.Images = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Pools = PublicreportPoolSlice{o}
+				rel.R.Waters = PublicreportWaterSlice{o}
 			}
 		}
 		return nil
 	default:
-		return fmt.Errorf("publicreportPool has no relationship %q", name)
+		return fmt.Errorf("publicreportWater has no relationship %q", name)
 	}
 }
 
-type publicreportPoolPreloader struct {
+type publicreportWaterPreloader struct {
+	Address      func(...psql.PreloadOption) psql.Preloader
 	Organization func(...psql.PreloadOption) psql.Preloader
 }
 
-func buildPublicreportPoolPreloader() publicreportPoolPreloader {
-	return publicreportPoolPreloader{
+func buildPublicreportWaterPreloader() publicreportWaterPreloader {
+	return publicreportWaterPreloader{
+		Address: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Address, AddressSlice](psql.PreloadRel{
+				Name: "Address",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportWaters,
+						To:          Addresses,
+						FromColumns: []string{"address_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Addresses.Columns.Names(), opts...)
+		},
 		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
 				Name: "Organization",
 				Sides: []psql.PreloadSide{
 					{
-						From:        PublicreportPools,
+						From:        PublicreportWaters,
 						To:          Organizations,
 						FromColumns: []string{"organization_id"},
 						ToColumns:   []string{"id"},
@@ -1653,19 +1777,23 @@ func buildPublicreportPoolPreloader() publicreportPoolPreloader {
 	}
 }
 
-type publicreportPoolThenLoader[Q orm.Loadable] struct {
-	NotifyEmailPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NotifyPhonePools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Images           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+type publicreportWaterThenLoader[Q orm.Loadable] struct {
+	NotifyEmailWaters func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyPhoneWaters func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
-func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoader[Q] {
-	type NotifyEmailPoolsLoadInterface interface {
-		LoadNotifyEmailPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+func buildPublicreportWaterThenLoader[Q orm.Loadable]() publicreportWaterThenLoader[Q] {
+	type NotifyEmailWatersLoadInterface interface {
+		LoadNotifyEmailWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type NotifyPhonePoolsLoadInterface interface {
-		LoadNotifyPhonePools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type NotifyPhoneWatersLoadInterface interface {
+		LoadNotifyPhoneWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type AddressLoadInterface interface {
+		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1674,17 +1802,23 @@ func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoade
 		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
-	return publicreportPoolThenLoader[Q]{
-		NotifyEmailPools: thenLoadBuilder[Q](
-			"NotifyEmailPools",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyEmailPools(ctx, exec, mods...)
+	return publicreportWaterThenLoader[Q]{
+		NotifyEmailWaters: thenLoadBuilder[Q](
+			"NotifyEmailWaters",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNotifyEmailWaters(ctx, exec, mods...)
 			},
 		),
-		NotifyPhonePools: thenLoadBuilder[Q](
-			"NotifyPhonePools",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhonePoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyPhonePools(ctx, exec, mods...)
+		NotifyPhoneWaters: thenLoadBuilder[Q](
+			"NotifyPhoneWaters",
+			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhoneWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNotifyPhoneWaters(ctx, exec, mods...)
+			},
+		),
+		Address: thenLoadBuilder[Q](
+			"Address",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadAddress(ctx, exec, mods...)
 			},
 		),
 		Organization: thenLoadBuilder[Q](
@@ -1702,35 +1836,35 @@ func buildPublicreportPoolThenLoader[Q orm.Loadable]() publicreportPoolThenLoade
 	}
 }
 
-// LoadNotifyEmailPools loads the publicreportPool's NotifyEmailPools into the .R struct
-func (o *PublicreportPool) LoadNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNotifyEmailWaters loads the publicreportWater's NotifyEmailWaters into the .R struct
+func (o *PublicreportWater) LoadNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.NotifyEmailPools = nil
+	o.R.NotifyEmailWaters = nil
 
-	related, err := o.NotifyEmailPools(mods...).All(ctx, exec)
+	related, err := o.NotifyEmailWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, rel := range related {
-		rel.R.Pool = o
+		rel.R.Water = o
 	}
 
-	o.R.NotifyEmailPools = related
+	o.R.NotifyEmailWaters = related
 	return nil
 }
 
-// LoadNotifyEmailPools loads the publicreportPool's NotifyEmailPools into the .R struct
-func (os PublicreportPoolSlice) LoadNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNotifyEmailWaters loads the publicreportWater's NotifyEmailWaters into the .R struct
+func (os PublicreportWaterSlice) LoadNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyEmailPools, err := os.NotifyEmailPools(mods...).All(ctx, exec)
+	publicreportNotifyEmailWaters, err := os.NotifyEmailWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1740,7 +1874,7 @@ func (os PublicreportPoolSlice) LoadNotifyEmailPools(ctx context.Context, exec b
 			continue
 		}
 
-		o.R.NotifyEmailPools = nil
+		o.R.NotifyEmailWaters = nil
 	}
 
 	for _, o := range os {
@@ -1748,50 +1882,50 @@ func (os PublicreportPoolSlice) LoadNotifyEmailPools(ctx context.Context, exec b
 			continue
 		}
 
-		for _, rel := range publicreportNotifyEmailPools {
+		for _, rel := range publicreportNotifyEmailWaters {
 
-			if !(o.ID == rel.PoolID) {
+			if !(o.ID == rel.WaterID) {
 				continue
 			}
 
-			rel.R.Pool = o
+			rel.R.Water = o
 
-			o.R.NotifyEmailPools = append(o.R.NotifyEmailPools, rel)
+			o.R.NotifyEmailWaters = append(o.R.NotifyEmailWaters, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadNotifyPhonePools loads the publicreportPool's NotifyPhonePools into the .R struct
-func (o *PublicreportPool) LoadNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNotifyPhoneWaters loads the publicreportWater's NotifyPhoneWaters into the .R struct
+func (o *PublicreportWater) LoadNotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.NotifyPhonePools = nil
+	o.R.NotifyPhoneWaters = nil
 
-	related, err := o.NotifyPhonePools(mods...).All(ctx, exec)
+	related, err := o.NotifyPhoneWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, rel := range related {
-		rel.R.Pool = o
+		rel.R.Water = o
 	}
 
-	o.R.NotifyPhonePools = related
+	o.R.NotifyPhoneWaters = related
 	return nil
 }
 
-// LoadNotifyPhonePools loads the publicreportPool's NotifyPhonePools into the .R struct
-func (os PublicreportPoolSlice) LoadNotifyPhonePools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNotifyPhoneWaters loads the publicreportWater's NotifyPhoneWaters into the .R struct
+func (os PublicreportWaterSlice) LoadNotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyPhonePools, err := os.NotifyPhonePools(mods...).All(ctx, exec)
+	publicreportNotifyPhoneWaters, err := os.NotifyPhoneWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1801,7 +1935,7 @@ func (os PublicreportPoolSlice) LoadNotifyPhonePools(ctx context.Context, exec b
 			continue
 		}
 
-		o.R.NotifyPhonePools = nil
+		o.R.NotifyPhoneWaters = nil
 	}
 
 	for _, o := range os {
@@ -1809,23 +1943,78 @@ func (os PublicreportPoolSlice) LoadNotifyPhonePools(ctx context.Context, exec b
 			continue
 		}
 
-		for _, rel := range publicreportNotifyPhonePools {
+		for _, rel := range publicreportNotifyPhoneWaters {
 
-			if !(o.ID == rel.PoolID) {
+			if !(o.ID == rel.WaterID) {
 				continue
 			}
 
-			rel.R.Pool = o
+			rel.R.Water = o
 
-			o.R.NotifyPhonePools = append(o.R.NotifyPhonePools, rel)
+			o.R.NotifyPhoneWaters = append(o.R.NotifyPhoneWaters, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadOrganization loads the publicreportPool's Organization into the .R struct
-func (o *PublicreportPool) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadAddress loads the publicreportWater's Address into the .R struct
+func (o *PublicreportWater) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Address = nil
+
+	related, err := o.Address(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Waters = PublicreportWaterSlice{o}
+
+	o.R.Address = related
+	return nil
+}
+
+// LoadAddress loads the publicreportWater's Address into the .R struct
+func (os PublicreportWaterSlice) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	addresses, err := os.Address(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range addresses {
+			if !o.AddressID.IsValue() {
+				continue
+			}
+
+			if !(o.AddressID.IsValue() && o.AddressID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Waters = append(rel.R.Waters, o)
+
+			o.R.Address = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadOrganization loads the publicreportWater's Organization into the .R struct
+func (o *PublicreportWater) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
@@ -1838,14 +2027,14 @@ func (o *PublicreportPool) LoadOrganization(ctx context.Context, exec bob.Execut
 		return err
 	}
 
-	related.R.PublicreportPool = PublicreportPoolSlice{o}
+	related.R.Waters = PublicreportWaterSlice{o}
 
 	o.R.Organization = related
 	return nil
 }
 
-// LoadOrganization loads the publicreportPool's Organization into the .R struct
-func (os PublicreportPoolSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadOrganization loads the publicreportWater's Organization into the .R struct
+func (os PublicreportWaterSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -1869,7 +2058,7 @@ func (os PublicreportPoolSlice) LoadOrganization(ctx context.Context, exec bob.E
 				continue
 			}
 
-			rel.R.PublicreportPool = append(rel.R.PublicreportPool, o)
+			rel.R.Waters = append(rel.R.Waters, o)
 
 			o.R.Organization = rel
 			break
@@ -1879,8 +2068,8 @@ func (os PublicreportPoolSlice) LoadOrganization(ctx context.Context, exec bob.E
 	return nil
 }
 
-// LoadImages loads the publicreportPool's Images into the .R struct
-func (o *PublicreportPool) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportWater's Images into the .R struct
+func (o *PublicreportWater) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
@@ -1894,15 +2083,15 @@ func (o *PublicreportPool) LoadImages(ctx context.Context, exec bob.Executor, mo
 	}
 
 	for _, rel := range related {
-		rel.R.Pools = PublicreportPoolSlice{o}
+		rel.R.Waters = PublicreportWaterSlice{o}
 	}
 
 	o.R.Images = related
 	return nil
 }
 
-// LoadImages loads the publicreportPool's Images into the .R struct
-func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadImages loads the publicreportWater's Images into the .R struct
+func (os PublicreportWaterSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -1919,7 +2108,7 @@ func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executo
 
 	q := os.Images(append(
 		mods,
-		sm.Columns(PublicreportPoolImages.Columns.PoolID.As("related_publicreport.pool.ID")),
+		sm.Columns(PublicreportWaterImages.Columns.WaterID.As("related_publicreport.water.ID")),
 	)...)
 
 	IDSlice := []int32{}
@@ -1927,7 +2116,7 @@ func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executo
 	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
 		return func(row *scan.Row) (any, error) {
 				IDSlice = append(IDSlice, *new(int32))
-				row.ScheduleScanByName("related_publicreport.pool.ID", &IDSlice[len(IDSlice)-1])
+				row.ScheduleScanByName("related_publicreport.water.ID", &IDSlice[len(IDSlice)-1])
 
 				return nil, nil
 			},
@@ -1951,7 +2140,7 @@ func (os PublicreportPoolSlice) LoadImages(ctx context.Context, exec bob.Executo
 				continue
 			}
 
-			rel.R.Pools = append(rel.R.Pools, o)
+			rel.R.Waters = append(rel.R.Waters, o)
 
 			o.R.Images = append(o.R.Images, rel)
 		}

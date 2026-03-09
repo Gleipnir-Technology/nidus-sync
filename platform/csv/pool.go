@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
@@ -132,7 +133,7 @@ type jobGeocode struct {
 
 func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jobGeocode) error {
 	pool := job.pool
-	a := geocode.Address{
+	a := types.Address{
 		Number:     pool.AddressNumber,
 		Locality:   pool.AddressLocality,
 		PostalCode: pool.AddressPostalCode,

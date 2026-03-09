@@ -3,23 +3,23 @@
 
 package dberrors
 
-var PublicreportPoolErrors = &publicreportPoolErrors{
+var PublicreportWaterErrors = &publicreportWaterErrors{
 	ErrUniquePoolPkey: &UniqueConstraintError{
 		schema:  "publicreport",
-		table:   "pool",
+		table:   "water",
 		columns: []string{"id"},
 		s:       "pool_pkey",
 	},
 
 	ErrUniquePoolPublicIdKey: &UniqueConstraintError{
 		schema:  "publicreport",
-		table:   "pool",
+		table:   "water",
 		columns: []string{"public_id"},
 		s:       "pool_public_id_key",
 	},
 }
 
-type publicreportPoolErrors struct {
+type publicreportWaterErrors struct {
 	ErrUniquePoolPkey *UniqueConstraintError
 
 	ErrUniquePoolPublicIdKey *UniqueConstraintError

@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/text"
@@ -53,8 +54,8 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		return fmt.Errorf("Failed to get all rows of file %d: %w", file_id, err)
 	}
 	for _, row := range rows {
-		a := geocode.Address{
-			Country:    enums.CountrytypeUsa,
+		a := types.Address{
+			Country:    "usa",
 			Locality:   row.AddressLocality,
 			Number:     row.AddressNumber,
 			PostalCode: row.AddressPostalCode,
@@ -62,7 +63,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 			Street:     row.AddressStreet,
 			Unit:       "",
 		}
-		address, err := geocode.EnsureAddress(ctx, txn, org, a)
+		address, err := geocode.EnsureAddressWithGeocode(ctx, txn, org, a)
 		if err != nil {
 			//return fmt.Errorf("ensure address: %w", err)
 			if address == nil {

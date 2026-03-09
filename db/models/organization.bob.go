@@ -119,7 +119,7 @@ type organizationR struct {
 	ArcgisMapServiceServiceMap                  *ArcgisServiceMap                      // organization.organization_arcgis_map_service_id_fkey
 	FieldseekerServiceFeatureItemServiceFeature *ArcgisServiceFeature                  // organization.organization_fieldseeker_service_feature_item_id_fkey
 	Nuisances                                   PublicreportNuisanceSlice              // publicreport.nuisance.nuisance_organization_id_fkey
-	PublicreportPool                            PublicreportPoolSlice                  // publicreport.pool.pool_organization_id_fkey
+	Waters                                      PublicreportWaterSlice                 // publicreport.water.pool_organization_id_fkey
 	ReviewTasks                                 ReviewTaskSlice                        // review_task.review_task_organization_id_fkey
 	Signals                                     SignalSlice                            // signal.signal_organization_id_fkey
 	User                                        UserSlice                              // user_.user__organization_id_fkey
@@ -1973,14 +1973,14 @@ func (os OrganizationSlice) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) Pub
 	)...)
 }
 
-// PublicreportPool starts a query for related objects on publicreport.pool
-func (o *Organization) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolsQuery {
-	return PublicreportPools.Query(append(mods,
-		sm.Where(PublicreportPools.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+// Waters starts a query for related objects on publicreport.water
+func (o *Organization) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
+	return PublicreportWaters.Query(append(mods,
+		sm.Where(PublicreportWaters.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os OrganizationSlice) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportPoolsQuery {
+func (os OrganizationSlice) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1992,8 +1992,8 @@ func (os OrganizationSlice) PublicreportPool(mods ...bob.Mod[*dialect.SelectQuer
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportPools.Query(append(mods,
-		sm.Where(psql.Group(PublicreportPools.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	return PublicreportWaters.Query(append(mods,
+		sm.Where(psql.Group(PublicreportWaters.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -4927,66 +4927,66 @@ func (organization0 *Organization) AttachNuisances(ctx context.Context, exec bob
 	return nil
 }
 
-func insertOrganizationPublicreportPool0(ctx context.Context, exec bob.Executor, publicreportPools1 []*PublicreportPoolSetter, organization0 *Organization) (PublicreportPoolSlice, error) {
-	for i := range publicreportPools1 {
-		publicreportPools1[i].OrganizationID = omitnull.From(organization0.ID)
+func insertOrganizationWaters0(ctx context.Context, exec bob.Executor, publicreportWaters1 []*PublicreportWaterSetter, organization0 *Organization) (PublicreportWaterSlice, error) {
+	for i := range publicreportWaters1 {
+		publicreportWaters1[i].OrganizationID = omitnull.From(organization0.ID)
 	}
 
-	ret, err := PublicreportPools.Insert(bob.ToMods(publicreportPools1...)).All(ctx, exec)
+	ret, err := PublicreportWaters.Insert(bob.ToMods(publicreportWaters1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationPublicreportPool0: %w", err)
+		return ret, fmt.Errorf("insertOrganizationWaters0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachOrganizationPublicreportPool0(ctx context.Context, exec bob.Executor, count int, publicreportPools1 PublicreportPoolSlice, organization0 *Organization) (PublicreportPoolSlice, error) {
-	setter := &PublicreportPoolSetter{
+func attachOrganizationWaters0(ctx context.Context, exec bob.Executor, count int, publicreportWaters1 PublicreportWaterSlice, organization0 *Organization) (PublicreportWaterSlice, error) {
+	setter := &PublicreportWaterSetter{
 		OrganizationID: omitnull.From(organization0.ID),
 	}
 
-	err := publicreportPools1.UpdateAll(ctx, exec, *setter)
+	err := publicreportWaters1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationPublicreportPool0: %w", err)
+		return nil, fmt.Errorf("attachOrganizationWaters0: %w", err)
 	}
 
-	return publicreportPools1, nil
+	return publicreportWaters1, nil
 }
 
-func (organization0 *Organization) InsertPublicreportPool(ctx context.Context, exec bob.Executor, related ...*PublicreportPoolSetter) error {
+func (organization0 *Organization) InsertWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportPools1, err := insertOrganizationPublicreportPool0(ctx, exec, related, organization0)
+	publicreportWaters1, err := insertOrganizationWaters0(ctx, exec, related, organization0)
 	if err != nil {
 		return err
 	}
 
-	organization0.R.PublicreportPool = append(organization0.R.PublicreportPool, publicreportPools1...)
+	organization0.R.Waters = append(organization0.R.Waters, publicreportWaters1...)
 
-	for _, rel := range publicreportPools1 {
+	for _, rel := range publicreportWaters1 {
 		rel.R.Organization = organization0
 	}
 	return nil
 }
 
-func (organization0 *Organization) AttachPublicreportPool(ctx context.Context, exec bob.Executor, related ...*PublicreportPool) error {
+func (organization0 *Organization) AttachWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWater) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportPools1 := PublicreportPoolSlice(related)
+	publicreportWaters1 := PublicreportWaterSlice(related)
 
-	_, err = attachOrganizationPublicreportPool0(ctx, exec, len(related), publicreportPools1, organization0)
+	_, err = attachOrganizationWaters0(ctx, exec, len(related), publicreportWaters1, organization0)
 	if err != nil {
 		return err
 	}
 
-	organization0.R.PublicreportPool = append(organization0.R.PublicreportPool, publicreportPools1...)
+	organization0.R.Waters = append(organization0.R.Waters, publicreportWaters1...)
 
 	for _, rel := range related {
 		rel.R.Organization = organization0
@@ -5879,13 +5879,13 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "PublicreportPool":
-		rels, ok := retrieved.(PublicreportPoolSlice)
+	case "Waters":
+		rels, ok := retrieved.(PublicreportWaterSlice)
 		if !ok {
 			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.PublicreportPool = rels
+		o.R.Waters = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -6034,7 +6034,7 @@ type organizationThenLoader[Q orm.Loadable] struct {
 	ArcgisMapServiceServiceMap                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FieldseekerServiceFeatureItemServiceFeature func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisances                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PublicreportPool                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Waters                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReviewTasks                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Signals                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	User                                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -6170,8 +6170,8 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	type NuisancesLoadInterface interface {
 		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type PublicreportPoolLoadInterface interface {
-		LoadPublicreportPool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type WatersLoadInterface interface {
+		LoadWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ReviewTasksLoadInterface interface {
 		LoadReviewTasks(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -6442,10 +6442,10 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 				return retrieved.LoadNuisances(ctx, exec, mods...)
 			},
 		),
-		PublicreportPool: thenLoadBuilder[Q](
-			"PublicreportPool",
-			func(ctx context.Context, exec bob.Executor, retrieved PublicreportPoolLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPublicreportPool(ctx, exec, mods...)
+		Waters: thenLoadBuilder[Q](
+			"Waters",
+			func(ctx context.Context, exec bob.Executor, retrieved WatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadWaters(ctx, exec, mods...)
 			},
 		),
 		ReviewTasks: thenLoadBuilder[Q](
@@ -9117,16 +9117,16 @@ func (os OrganizationSlice) LoadNuisances(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// LoadPublicreportPool loads the organization's PublicreportPool into the .R struct
-func (o *Organization) LoadPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadWaters loads the organization's Waters into the .R struct
+func (o *Organization) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.PublicreportPool = nil
+	o.R.Waters = nil
 
-	related, err := o.PublicreportPool(mods...).All(ctx, exec)
+	related, err := o.Waters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -9135,17 +9135,17 @@ func (o *Organization) LoadPublicreportPool(ctx context.Context, exec bob.Execut
 		rel.R.Organization = o
 	}
 
-	o.R.PublicreportPool = related
+	o.R.Waters = related
 	return nil
 }
 
-// LoadPublicreportPool loads the organization's PublicreportPool into the .R struct
-func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadWaters loads the organization's Waters into the .R struct
+func (os OrganizationSlice) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportPools, err := os.PublicreportPool(mods...).All(ctx, exec)
+	publicreportWaters, err := os.Waters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -9155,7 +9155,7 @@ func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.E
 			continue
 		}
 
-		o.R.PublicreportPool = nil
+		o.R.Waters = nil
 	}
 
 	for _, o := range os {
@@ -9163,7 +9163,7 @@ func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.E
 			continue
 		}
 
-		for _, rel := range publicreportPools {
+		for _, rel := range publicreportWaters {
 
 			if !rel.OrganizationID.IsValue() {
 				continue
@@ -9174,7 +9174,7 @@ func (os OrganizationSlice) LoadPublicreportPool(ctx context.Context, exec bob.E
 
 			rel.R.Organization = o
 
-			o.R.PublicreportPool = append(o.R.PublicreportPool, rel)
+			o.R.Waters = append(o.R.Waters, rel)
 		}
 	}
 

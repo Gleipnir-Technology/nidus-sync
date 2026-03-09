@@ -114,8 +114,8 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Address: column{
-			Name:      "address",
+		AddressRaw: column{
+			Name:      "address_raw",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -168,8 +168,8 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressPlace: column{
-			Name:      "address_place",
+		AddressLocality: column{
+			Name:      "address_locality",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -177,8 +177,8 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressPostcode: column{
-			Name:      "address_postcode",
+		AddressPostalCode: column{
+			Name:      "address_postal_code",
 			DBType:    "text",
 			Default:   "",
 			Comment:   "",
@@ -339,6 +339,15 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressID: column{
+			Name:      "address_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -382,6 +391,15 @@ var PublicreportNuisances = Table[
 		Comment: "",
 	},
 	ForeignKeys: publicreportNuisanceForeignKeys{
+		PublicreportNuisanceNuisanceAddressIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.nuisance.nuisance_address_id_fkey",
+				Columns: []string{"address_id"},
+				Comment: "",
+			},
+			ForeignTable:   "address",
+			ForeignColumns: []string{"id"},
+		},
 		PublicreportNuisanceNuisanceOrganizationIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "publicreport.nuisance.nuisance_organization_id_fkey",
@@ -415,14 +433,14 @@ type publicreportNuisanceColumns struct {
 	ReporterEmail          column
 	ReporterName           column
 	ReporterPhone          column
-	Address                column
+	AddressRaw             column
 	Status                 column
 	OrganizationID         column
 	SourceGutter           column
 	H3cell                 column
 	AddressCountry         column
-	AddressPlace           column
-	AddressPostcode        column
+	AddressLocality        column
+	AddressPostalCode      column
 	AddressRegion          column
 	AddressStreet          column
 	IsLocationBackyard     column
@@ -440,11 +458,12 @@ type publicreportNuisanceColumns struct {
 	ReporterContactConsent column
 	Location               column
 	AddressNumber          column
+	AddressID              column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Address, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressPlace, c.AddressPostcode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.AddressRaw, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressLocality, c.AddressPostalCode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID,
 	}
 }
 
@@ -460,12 +479,13 @@ func (i publicreportNuisanceIndexes) AsSlice() []index {
 }
 
 type publicreportNuisanceForeignKeys struct {
+	PublicreportNuisanceNuisanceAddressIDFkey      foreignKey
 	PublicreportNuisanceNuisanceOrganizationIDFkey foreignKey
 }
 
 func (f publicreportNuisanceForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportNuisanceNuisanceOrganizationIDFkey,
+		f.PublicreportNuisanceNuisanceAddressIDFkey, f.PublicreportNuisanceNuisanceOrganizationIDFkey,
 	}
 }
 

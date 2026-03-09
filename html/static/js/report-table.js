@@ -35,7 +35,7 @@ class ReportTable extends HTMLElement {
 				return "bg-danger";
 			case "quick":
 				return "bg-primary";
-			case "pool":
+			case "water":
 				return "bg-success";
 			default:
 				return "bg-secondary";

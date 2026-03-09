@@ -46,7 +46,7 @@ type commsEmailContactR struct {
 	DestinationEmailLogs             CommsEmailLogSlice                   // comms.email_log.email_log_destination_fkey
 	Organizations                    OrganizationSlice                    // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
 	EmailAddressNotifyEmailNuisances PublicreportNotifyEmailNuisanceSlice // publicreport.notify_email_nuisance.notify_email_nuisance_email_address_fkey
-	EmailAddressNotifyEmailPools     PublicreportNotifyEmailPoolSlice     // publicreport.notify_email_pool.notify_email_pool_email_address_fkey
+	EmailAddressNotifyEmailWaters    PublicreportNotifyEmailWaterSlice    // publicreport.notify_email_water.notify_email_pool_email_address_fkey
 	EmailAddressSubscribeEmails      PublicreportSubscribeEmailSlice      // publicreport.subscribe_email.subscribe_email_email_address_fkey
 }
 
@@ -495,14 +495,14 @@ func (os CommsEmailContactSlice) EmailAddressNotifyEmailNuisances(mods ...bob.Mo
 	)...)
 }
 
-// EmailAddressNotifyEmailPools starts a query for related objects on publicreport.notify_email_pool
-func (o *CommsEmailContact) EmailAddressNotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
-	return PublicreportNotifyEmailPools.Query(append(mods,
-		sm.Where(PublicreportNotifyEmailPools.Columns.EmailAddress.EQ(psql.Arg(o.Address))),
+// EmailAddressNotifyEmailWaters starts a query for related objects on publicreport.notify_email_water
+func (o *CommsEmailContact) EmailAddressNotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
+	return PublicreportNotifyEmailWaters.Query(append(mods,
+		sm.Where(PublicreportNotifyEmailWaters.Columns.EmailAddress.EQ(psql.Arg(o.Address))),
 	)...)
 }
 
-func (os CommsEmailContactSlice) EmailAddressNotifyEmailPools(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailPoolsQuery {
+func (os CommsEmailContactSlice) EmailAddressNotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
 	pkAddress := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -514,8 +514,8 @@ func (os CommsEmailContactSlice) EmailAddressNotifyEmailPools(mods ...bob.Mod[*d
 		psql.F("unnest", psql.Cast(psql.Arg(pkAddress), "text[]")),
 	))
 
-	return PublicreportNotifyEmailPools.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyEmailPools.Columns.EmailAddress).OP("IN", PKArgExpr)),
+	return PublicreportNotifyEmailWaters.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyEmailWaters.Columns.EmailAddress).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -744,66 +744,66 @@ func (commsEmailContact0 *CommsEmailContact) AttachEmailAddressNotifyEmailNuisan
 	return nil
 }
 
-func insertCommsEmailContactEmailAddressNotifyEmailPools0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailPools1 []*PublicreportNotifyEmailPoolSetter, commsEmailContact0 *CommsEmailContact) (PublicreportNotifyEmailPoolSlice, error) {
-	for i := range publicreportNotifyEmailPools1 {
-		publicreportNotifyEmailPools1[i].EmailAddress = omit.From(commsEmailContact0.Address)
+func insertCommsEmailContactEmailAddressNotifyEmailWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailWaters1 []*PublicreportNotifyEmailWaterSetter, commsEmailContact0 *CommsEmailContact) (PublicreportNotifyEmailWaterSlice, error) {
+	for i := range publicreportNotifyEmailWaters1 {
+		publicreportNotifyEmailWaters1[i].EmailAddress = omit.From(commsEmailContact0.Address)
 	}
 
-	ret, err := PublicreportNotifyEmailPools.Insert(bob.ToMods(publicreportNotifyEmailPools1...)).All(ctx, exec)
+	ret, err := PublicreportNotifyEmailWaters.Insert(bob.ToMods(publicreportNotifyEmailWaters1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertCommsEmailContactEmailAddressNotifyEmailPools0: %w", err)
+		return ret, fmt.Errorf("insertCommsEmailContactEmailAddressNotifyEmailWaters0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachCommsEmailContactEmailAddressNotifyEmailPools0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailPools1 PublicreportNotifyEmailPoolSlice, commsEmailContact0 *CommsEmailContact) (PublicreportNotifyEmailPoolSlice, error) {
-	setter := &PublicreportNotifyEmailPoolSetter{
+func attachCommsEmailContactEmailAddressNotifyEmailWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailWaters1 PublicreportNotifyEmailWaterSlice, commsEmailContact0 *CommsEmailContact) (PublicreportNotifyEmailWaterSlice, error) {
+	setter := &PublicreportNotifyEmailWaterSetter{
 		EmailAddress: omit.From(commsEmailContact0.Address),
 	}
 
-	err := publicreportNotifyEmailPools1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNotifyEmailWaters1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsEmailContactEmailAddressNotifyEmailPools0: %w", err)
+		return nil, fmt.Errorf("attachCommsEmailContactEmailAddressNotifyEmailWaters0: %w", err)
 	}
 
-	return publicreportNotifyEmailPools1, nil
+	return publicreportNotifyEmailWaters1, nil
 }
 
-func (commsEmailContact0 *CommsEmailContact) InsertEmailAddressNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPoolSetter) error {
+func (commsEmailContact0 *CommsEmailContact) InsertEmailAddressNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWaterSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNotifyEmailPools1, err := insertCommsEmailContactEmailAddressNotifyEmailPools0(ctx, exec, related, commsEmailContact0)
+	publicreportNotifyEmailWaters1, err := insertCommsEmailContactEmailAddressNotifyEmailWaters0(ctx, exec, related, commsEmailContact0)
 	if err != nil {
 		return err
 	}
 
-	commsEmailContact0.R.EmailAddressNotifyEmailPools = append(commsEmailContact0.R.EmailAddressNotifyEmailPools, publicreportNotifyEmailPools1...)
+	commsEmailContact0.R.EmailAddressNotifyEmailWaters = append(commsEmailContact0.R.EmailAddressNotifyEmailWaters, publicreportNotifyEmailWaters1...)
 
-	for _, rel := range publicreportNotifyEmailPools1 {
+	for _, rel := range publicreportNotifyEmailWaters1 {
 		rel.R.EmailAddressEmailContact = commsEmailContact0
 	}
 	return nil
 }
 
-func (commsEmailContact0 *CommsEmailContact) AttachEmailAddressNotifyEmailPools(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailPool) error {
+func (commsEmailContact0 *CommsEmailContact) AttachEmailAddressNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWater) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNotifyEmailPools1 := PublicreportNotifyEmailPoolSlice(related)
+	publicreportNotifyEmailWaters1 := PublicreportNotifyEmailWaterSlice(related)
 
-	_, err = attachCommsEmailContactEmailAddressNotifyEmailPools0(ctx, exec, len(related), publicreportNotifyEmailPools1, commsEmailContact0)
+	_, err = attachCommsEmailContactEmailAddressNotifyEmailWaters0(ctx, exec, len(related), publicreportNotifyEmailWaters1, commsEmailContact0)
 	if err != nil {
 		return err
 	}
 
-	commsEmailContact0.R.EmailAddressNotifyEmailPools = append(commsEmailContact0.R.EmailAddressNotifyEmailPools, publicreportNotifyEmailPools1...)
+	commsEmailContact0.R.EmailAddressNotifyEmailWaters = append(commsEmailContact0.R.EmailAddressNotifyEmailWaters, publicreportNotifyEmailWaters1...)
 
 	for _, rel := range related {
 		rel.R.EmailAddressEmailContact = commsEmailContact0
@@ -948,13 +948,13 @@ func (o *CommsEmailContact) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "EmailAddressNotifyEmailPools":
-		rels, ok := retrieved.(PublicreportNotifyEmailPoolSlice)
+	case "EmailAddressNotifyEmailWaters":
+		rels, ok := retrieved.(PublicreportNotifyEmailWaterSlice)
 		if !ok {
 			return fmt.Errorf("commsEmailContact cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.EmailAddressNotifyEmailPools = rels
+		o.R.EmailAddressNotifyEmailWaters = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -991,7 +991,7 @@ type commsEmailContactThenLoader[Q orm.Loadable] struct {
 	DestinationEmailLogs             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organizations                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailAddressNotifyEmailNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	EmailAddressNotifyEmailPools     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	EmailAddressNotifyEmailWaters    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailAddressSubscribeEmails      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -1005,8 +1005,8 @@ func buildCommsEmailContactThenLoader[Q orm.Loadable]() commsEmailContactThenLoa
 	type EmailAddressNotifyEmailNuisancesLoadInterface interface {
 		LoadEmailAddressNotifyEmailNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type EmailAddressNotifyEmailPoolsLoadInterface interface {
-		LoadEmailAddressNotifyEmailPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type EmailAddressNotifyEmailWatersLoadInterface interface {
+		LoadEmailAddressNotifyEmailWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type EmailAddressSubscribeEmailsLoadInterface interface {
 		LoadEmailAddressSubscribeEmails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1031,10 +1031,10 @@ func buildCommsEmailContactThenLoader[Q orm.Loadable]() commsEmailContactThenLoa
 				return retrieved.LoadEmailAddressNotifyEmailNuisances(ctx, exec, mods...)
 			},
 		),
-		EmailAddressNotifyEmailPools: thenLoadBuilder[Q](
-			"EmailAddressNotifyEmailPools",
-			func(ctx context.Context, exec bob.Executor, retrieved EmailAddressNotifyEmailPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadEmailAddressNotifyEmailPools(ctx, exec, mods...)
+		EmailAddressNotifyEmailWaters: thenLoadBuilder[Q](
+			"EmailAddressNotifyEmailWaters",
+			func(ctx context.Context, exec bob.Executor, retrieved EmailAddressNotifyEmailWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadEmailAddressNotifyEmailWaters(ctx, exec, mods...)
 			},
 		),
 		EmailAddressSubscribeEmails: thenLoadBuilder[Q](
@@ -1249,16 +1249,16 @@ func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailNuisances(ctx contex
 	return nil
 }
 
-// LoadEmailAddressNotifyEmailPools loads the commsEmailContact's EmailAddressNotifyEmailPools into the .R struct
-func (o *CommsEmailContact) LoadEmailAddressNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadEmailAddressNotifyEmailWaters loads the commsEmailContact's EmailAddressNotifyEmailWaters into the .R struct
+func (o *CommsEmailContact) LoadEmailAddressNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.EmailAddressNotifyEmailPools = nil
+	o.R.EmailAddressNotifyEmailWaters = nil
 
-	related, err := o.EmailAddressNotifyEmailPools(mods...).All(ctx, exec)
+	related, err := o.EmailAddressNotifyEmailWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1267,17 +1267,17 @@ func (o *CommsEmailContact) LoadEmailAddressNotifyEmailPools(ctx context.Context
 		rel.R.EmailAddressEmailContact = o
 	}
 
-	o.R.EmailAddressNotifyEmailPools = related
+	o.R.EmailAddressNotifyEmailWaters = related
 	return nil
 }
 
-// LoadEmailAddressNotifyEmailPools loads the commsEmailContact's EmailAddressNotifyEmailPools into the .R struct
-func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadEmailAddressNotifyEmailWaters loads the commsEmailContact's EmailAddressNotifyEmailWaters into the .R struct
+func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyEmailPools, err := os.EmailAddressNotifyEmailPools(mods...).All(ctx, exec)
+	publicreportNotifyEmailWaters, err := os.EmailAddressNotifyEmailWaters(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1287,7 +1287,7 @@ func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailPools(ctx context.Co
 			continue
 		}
 
-		o.R.EmailAddressNotifyEmailPools = nil
+		o.R.EmailAddressNotifyEmailWaters = nil
 	}
 
 	for _, o := range os {
@@ -1295,7 +1295,7 @@ func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailPools(ctx context.Co
 			continue
 		}
 
-		for _, rel := range publicreportNotifyEmailPools {
+		for _, rel := range publicreportNotifyEmailWaters {
 
 			if !(o.Address == rel.EmailAddress) {
 				continue
@@ -1303,7 +1303,7 @@ func (os CommsEmailContactSlice) LoadEmailAddressNotifyEmailPools(ctx context.Co
 
 			rel.R.EmailAddressEmailContact = o
 
-			o.R.EmailAddressNotifyEmailPools = append(o.R.EmailAddressNotifyEmailPools, rel)
+			o.R.EmailAddressNotifyEmailWaters = append(o.R.EmailAddressNotifyEmailWaters, rel)
 		}
 	}
 

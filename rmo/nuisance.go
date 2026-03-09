@@ -9,7 +9,6 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -36,9 +35,8 @@ func getNuisance(w http.ResponseWriter, r *http.Request) {
 		w,
 		"rmo/nuisance.html",
 		ContentNuisance{
-			District:    nil,
-			MapboxToken: config.MapboxToken,
-			URL:         makeContentURL(nil),
+			District: nil,
+			URL:      makeContentURL(nil),
 		},
 	)
 }
@@ -52,9 +50,8 @@ func getNuisanceDistrict(w http.ResponseWriter, r *http.Request) {
 		w,
 		"rmo/nuisance.html",
 		ContentNuisance{
-			District:    newContentDistrict(district),
-			MapboxToken: config.MapboxToken,
-			URL:         makeContentURL(nil),
+			District: newContentDistrict(district),
+			URL:      makeContentURL(nil),
 		},
 	)
 }
@@ -85,9 +82,9 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	additional_info := r.PostFormValue("additional-info")
 	address := r.PostFormValue("address")
 	address_country := r.PostFormValue("address-country")
+	address_locality := r.PostFormValue("address-locality")
 	address_number := r.PostFormValue("address-number")
-	address_place := r.PostFormValue("address-place")
-	address_postcode := r.PostFormValue("address-postcode")
+	address_postal_code := r.PostFormValue("address-postalcode")
 	address_region := r.PostFormValue("address-region")
 	address_street := r.PostFormValue("address-street")
 	duration_str := postFormValueOrNone(r, "duration")
@@ -170,16 +167,16 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setter := models.PublicreportNuisanceSetter{
-		AdditionalInfo:  omit.From(additional_info),
-		Address:         omit.From(address),
-		AddressCountry:  omit.From(address_country),
-		AddressNumber:   omit.From(address_number),
-		AddressPlace:    omit.From(address_place),
-		AddressPostcode: omit.From(address_postcode),
-		AddressRegion:   omit.From(address_region),
-		AddressStreet:   omit.From(address_street),
-		Created:         omit.From(time.Now()),
-		Duration:        omit.From(duration),
+		AdditionalInfo:    omit.From(additional_info),
+		AddressRaw:        omit.From(address),
+		AddressCountry:    omit.From(address_country),
+		AddressNumber:     omit.From(address_number),
+		AddressLocality:   omit.From(address_locality),
+		AddressPostalCode: omit.From(address_postal_code),
+		AddressRegion:     omit.From(address_region),
+		AddressStreet:     omit.From(address_street),
+		Created:           omit.From(time.Now()),
+		Duration:          omit.From(duration),
 		//H3cell:              omitnull.From(geospatial.Cell.String()),
 		IsLocationBackyard:  omit.From(is_location_backyard),
 		IsLocationFrontyard: omit.From(is_location_frontyard),

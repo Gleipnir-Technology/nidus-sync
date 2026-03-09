@@ -18,45 +18,40 @@ import (
 )
 
 type Nuisance struct {
-	AdditionalInfo      string        `db:"additional_info"`
-	Address             types.Address `db:"address"`
-	AddressAsGiven      string        `db:"address_as_given"`
-	Created             time.Time     `db:"created"`
-	Duration            string        `db:"duration"`
-	ID                  int32         `db:"id"`
-	Images              []types.Image
-	IsLocationBackyard  bool           `db:"is_location_backyard"`
-	IsLocationFrontyard bool           `db:"is_location_frontyard"`
-	IsLocationGarden    bool           `db:"is_location_garden"`
-	IsLocationOther     bool           `db:"is_location_other"`
-	IsLocationPool      bool           `db:"is_location_pool"`
-	Location            types.Location `db:"location"`
-	PublicID            string         `db:"public_id"`
-	Reporter            Reporter       `db:"reporter"`
-	SourceContainer     bool           `db:"source_container"`
-	SourceDescription   string         `db:"source_description"`
-	SourceGutter        bool           `db:"source_gutter"`
-	SourceStagnant      bool           `db:"source_stagnant"`
-	TODDay              bool           `db:"tod_day"`
-	TODEarly            bool           `db:"tod_early"`
-	TODEvening          bool           `db:"tod_evening"`
-	TODNight            bool           `db:"tod_night"`
-}
-type Reporter struct {
-	Email *string `db:"reporter_email"`
-	Name  *string `db:"reporter_name"`
-	Phone *string `db:"reporter_phone"`
+	AdditionalInfo      string         `db:"additional_info" json:"additional_info"`
+	Address             types.Address  `db:"address" json:"address"`
+	AddressRaw          string         `db:"address_raw" json:"address_raw"`
+	Created             time.Time      `db:"created" json:"created"`
+	Duration            string         `db:"duration" json:"duration"`
+	ID                  int32          `db:"id" json:"-"`
+	Images              []types.Image  `json:"images"`
+	IsLocationBackyard  bool           `db:"is_location_backyard" json:"is_location_backyard"`
+	IsLocationFrontyard bool           `db:"is_location_frontyard" json:"is_location_frontyard"`
+	IsLocationGarden    bool           `db:"is_location_garden" json:"is_location_garden"`
+	IsLocationOther     bool           `db:"is_location_other" json:"is_location_other"`
+	IsLocationPool      bool           `db:"is_location_pool" json:"is_location_pool"`
+	Location            types.Location `db:"location" json:"location"`
+	PublicID            string         `db:"public_id" json:"public_id"`
+	Reporter            types.Contact  `db:"reporter" json:"reporter"`
+	SourceContainer     bool           `db:"source_container" json:"source_container"`
+	SourceDescription   string         `db:"source_description" json:"source_description"`
+	SourceGutter        bool           `db:"source_gutter" json:"source_gutter"`
+	SourceStagnant      bool           `db:"source_stagnant" json:"source_stagnant"`
+	TODDay              bool           `db:"tod_day" json:"tod_day"`
+	TODEarly            bool           `db:"tod_early" json:"tod_early"`
+	TODEvening          bool           `db:"tod_evening" json:"tod_evening"`
+	TODNight            bool           `db:"tod_night" json:"tod_night"`
 }
 
 func NuisanceReportForOrganization(ctx context.Context, org_id int32) ([]Nuisance, error) {
 	reports, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"additional_info",
-			"address AS address_as_given",
+			"address_raw AS address_raw",
 			"address_country AS \"address.country\"",
+			"address_locality AS \"address.locality\"",
 			"address_number AS \"address.number\"",
-			"address_place AS \"address.place\"",
-			"address_postcode AS \"address.postcode\"",
+			"address_postal_code AS \"address.postal_code\"",
 			"address_region AS \"address.region\"",
 			"address_street AS \"address.street\"",
 			"created",

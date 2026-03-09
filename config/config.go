@@ -26,7 +26,6 @@ var (
 	ForwardEmailNidusAddress   string
 	ForwardEmailNidusPassword  string
 	ForwardEmailNidusUsername  string
-	MapboxToken                string
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
 	PhoneNumberReportStr       string
@@ -135,10 +134,6 @@ func Parse() (err error) {
 	ForwardEmailNidusPassword = os.Getenv("FORWARDEMAIL_NIDUS_PASSWORD")
 	if ForwardEmailNidusPassword == "" {
 		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_NIDUS_PASSWORD")
-	}
-	MapboxToken = os.Getenv("MAPBOX_TOKEN")
-	if MapboxToken == "" {
-		return fmt.Errorf("You must specify a non-empty MAPBOX_TOKEN")
 	}
 	PGDSN = os.Getenv("POSTGRES_DSN")
 	if PGDSN == "" {

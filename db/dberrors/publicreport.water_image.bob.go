@@ -3,15 +3,15 @@
 
 package dberrors
 
-var PublicreportPoolImageErrors = &publicreportPoolImageErrors{
+var PublicreportWaterImageErrors = &publicreportWaterImageErrors{
 	ErrUniquePoolImagePkey: &UniqueConstraintError{
 		schema:  "publicreport",
-		table:   "pool_image",
-		columns: []string{"image_id", "pool_id"},
+		table:   "water_image",
+		columns: []string{"image_id", "water_id"},
 		s:       "pool_image_pkey",
 	},
 }
 
-type publicreportPoolImageErrors struct {
+type publicreportWaterImageErrors struct {
 	ErrUniquePoolImagePkey *UniqueConstraintError
 }

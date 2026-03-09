@@ -193,8 +193,8 @@ func findSomeReport(ctx context.Context, report_id string) (result SomeReport, e
 	switch row.FoundInTables[0] {
 	case "nuisance":
 		return newNuisance(ctx, report_id, int32(t))
-	case "pool":
-		return newPool(ctx, report_id, int32(t))
+	case "water":
+		return newWater(ctx, report_id, int32(t))
 	default:
 		log.Error().Err(e).Str("table_name", row.FoundInTables[0]).Msg("Unrecognized table")
 		return Nuisance{}, newErrorWithCode("internal-error", fmt.Sprintf("Unrecognized table '%s'", row.FoundInTables[0]))
