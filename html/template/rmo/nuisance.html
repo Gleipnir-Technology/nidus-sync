@@ -173,6 +173,21 @@
 
 				setLocationInputs(l);
 			});
+			document.querySelectorAll(".source-card").forEach((card) => {
+				card.style.cursor = "pointer";
+				card.addEventListener("click", function (e) {
+					// Don't toggle if user clicked directly on the checkbox or label
+					if (e.target.type === "checkbox" || e.target.tagName === "LABEL") {
+						return;
+					}
+
+					const checkbox = this.querySelector(".form-check-input");
+					checkbox.checked = !checkbox.checked;
+
+					// Trigger change event in case you have listeners on the checkbox
+					checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+				});
+			});
 		});
 	</script>
 	<style></style>
