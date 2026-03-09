@@ -170,10 +170,11 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 
 			exif_setters := make([]*models.PublicreportImageExifSetter, 0)
 			for k, v := range u.Exif.Tags {
+				to_save := trimQuotes(v)
 				exif_setters = append(exif_setters, &models.PublicreportImageExifSetter{
 					ImageID: omit.From(image.ID),
 					Name:    omit.From(k),
-					Value:   omit.From(v),
+					Value:   omit.From(to_save),
 				})
 			}
 			if len(exif_setters) > 0 {
@@ -189,4 +190,12 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 		images = append(images, image)
 	}
 	return images, nil
+}
+
+// Given a string like "\"foo\"" return "foo".
+func trimQuotes(s string) string {
+	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
+		return s[1 : len(s)-1]
+	}
+	return s
 }
