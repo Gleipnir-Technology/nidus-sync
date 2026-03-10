@@ -8,6 +8,12 @@
 	></script>
 	<script defer src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 	<script>
+		function formatAddress(a) {
+			if (a.number == "" && a.street == "") {
+				return "no address provided";
+			}
+			return a.number + " " + a.street + ", " + a.locality;
+		}
 		function reviewApp() {
 			return {
 				// State
@@ -81,11 +87,13 @@
 						console.error("Error fetching tasks:", err);
 					} finally {
 						this.loading = false;
+						console.log("set loading", this.loading);
 					}
 				},
 
 				// Select a task
 				selectTask(task) {
+					console.log("Selected task", task);
 					this.selectedTask = task;
 
 					// Populate form with task values
@@ -335,16 +343,14 @@
 					>
 						<div class="d-flex justify-content-between align-items-start">
 							<div>
-								<strong>Entry #<span x-text="task.id"></span></strong>
+								<i class="bi bi-droplet"></i>
+								<strong>Pool <span x-text="task.id"></span></strong>
 							</div>
-							<small
-								class="text-muted"
-								x-text="formatRelativeTime(task.createdAt)"
-							></small>
+							<small class="text-muted" x-text="task.condition"></small>
 						</div>
 						<small
 							class="text-muted d-block mt-1"
-							x-text="task.shortAddress || task.address"
+							x-text="formatAddress(task.address)"
 						></small>
 					</div>
 				</template>
@@ -353,15 +359,16 @@
 			<!-- Middle Column - Details and Media -->
 			<div class="col-md-6 p-0 middle-panel">
 				<!-- No Selection State -->
-				<div
-					x-show="!selectedTask && !loading"
-					class="h-100 d-flex align-items-center justify-content-center text-muted"
-				>
-					<div class="text-center">
-						<i class="bi bi-cursor-fill" style="font-size: 48px;"></i>
-						<p class="mt-2">Select an entry from the list to review</p>
+				<template x-show="selectedTask == null">
+					<div
+						class="h-100 d-flex align-items-center justify-content-center text-muted"
+					>
+						<div class="text-center">
+							<i class="bi bi-cursor-fill" style="font-size: 48px;"></i>
+							<p class="mt-2">Select an entry from the list to review</p>
+						</div>
 					</div>
-				</div>
+				</template>
 
 				<!-- Selected Task Details -->
 				<div x-show="selectedTask">
