@@ -6,9 +6,17 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script defer src="//unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+	<script
+		defer
+		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+	></script>
+	<script src="/static/js/time-relative.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
 	<script>
 		function formatAddress(a) {
+			if (a == undefined) {
+				return "undefined";
+			}
 			if (a.number == "" && a.street == "") {
 				return "no address provided";
 			}
@@ -60,6 +68,21 @@
 
 				// Initialize
 				async init() {
+					document.addEventListener("DOMContentLoaded", () => {
+						const map = document.querySelector("map-multipoint");
+						map.on("load", () => {
+							map.addLayer({
+								id: "parcel",
+								minzoom: 14,
+								paint: {
+									"line-color": "#0f0",
+								},
+								source: "tegola",
+								"source-layer": "parcel",
+								type: "line",
+							});
+						});
+					});
 					await this.fetchTasks();
 				},
 
@@ -446,12 +469,16 @@
 					</div>
 
 					<!-- Map Placeholder -->
-					<div id="map-container" class="placeholder-box map-placeholder">
-						<div class="text-center">
-							<i class="bi bi-map" style="font-size: 48px;"></i>
-							<p class="mb-0 mt-2">Map View Placeholder</p>
-							<small x-text="selectedTask?.address"></small>
-						</div>
+					<div class="map-container">
+						<map-multipoint
+							id="map"
+							organization-id="{{ .Organization.ID }}"
+							tegola="{{ .URL.Tegola }}"
+							xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
+							ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
+							xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
+							ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
+						></map-multipoint>
 					</div>
 
 					<!-- Aerial Image Placeholder -->
