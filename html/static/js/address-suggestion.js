@@ -83,10 +83,33 @@ class AddressInput extends HTMLElement {
 			});
 		}, 300);
 	}
+	async _handleClick(gid) {
+		try {
+			const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${gid}`;
+			const response = await fetch(url);
+			const data = await response.json();
+			const suggestion = data.features[0];
+			this.SetValue(suggestion);
+
+			// Dispatch custom event for clients of this library
+			this.dispatchEvent(
+				new CustomEvent("address-selected", {
+					bubbles: true,
+					composed: true, // Allows event to cross shadow DOM boundary
+					detail: {
+						location: suggestion,
+					},
+				}),
+			);
+		} catch (error) {
+			console.error("Error fetching geocode of suggestion:", error);
+		}
+	}
 
 	async _fetchAddressSuggestions(text) {
 		try {
-			const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&access_token=${this._apiKey}`;
+			//const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&access_token=${this._apiKey}`;
+			const url = `https://api.stadiamaps.com/geocoding/v2/autocomplete?text=${encodeURIComponent(text)}&focus.point.lat=35&focus.point.lon=-115`;
 
 			const response = await fetch(url);
 			const data = await response.json();
@@ -100,44 +123,19 @@ class AddressInput extends HTMLElement {
 		console.log("Rendering suggestions", suggestions);
 		this._suggestions.innerHTML = suggestions
 			.map((item, index) => {
-				if (item.properties.place_formatted != "") {
-					return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.geometry.coordinates[1]}"
-						data-lng="${item.geometry.coordinates[0]}">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`;
-				} else {
-					return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.coordinates.lat}"
-						data-lng="${item.coordinates.lng}">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`;
-				}
+				return `
+				<div class="suggestion-item list-group-item"
+					data-gid="${item.properties.gid}">
+						<div class="main-address">${item.properties.name}</div>
+						<div class="place-info">${item.properties.coarse_location}</div>
+				</div>`;
 			})
 			.join("");
 
 		// Add click listeners to suggestions
 		this.shadowRoot.querySelectorAll(".suggestion-item").forEach((el) => {
 			el.addEventListener("click", (e) => {
-				const index = parseInt(el.dataset.index);
-				const suggestion = suggestions[index];
-				this.SetValue(suggestion);
-				// Dispatch custom event
-				this.dispatchEvent(
-					new CustomEvent("address-selected", {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: {
-							location: suggestion,
-						},
-					}),
-				);
+				this._handleClick(el.dataset.gid);
 			});
 		});
 	}
