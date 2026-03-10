@@ -19,12 +19,6 @@ import (
 
 var decoder = schema.NewDecoder()
 
-type queryParams struct {
-	Limit *int    `schema:"limit"`
-	Sort  *string `schema:"sort"`
-	Type  *string `schema:"type"`
-}
-
 type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User, queryParams) (*T, *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {

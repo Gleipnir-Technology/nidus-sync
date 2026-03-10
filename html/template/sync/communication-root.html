@@ -130,6 +130,7 @@
 					try {
 						// Build query parameters from filters
 						const params = new URLSearchParams();
+						params.append("sort", "-created");
 						if (this.typeFilter) params.append("type", this.typeFilter);
 
 						const response = await fetch(

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -72,6 +73,16 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 			Type:         "water",
 		}
 	}
+	_by_created := func(a, b communication) int {
+		if a.Created == b.Created {
+			return 0
+		} else if a.Created.Before(b.Created) {
+			return 1
+		} else {
+			return -1
+		}
+	}
+	slices.SortFunc(comms, _by_created)
 	return &contentListCommunication{
 		Communications: comms,
 	}, nil
