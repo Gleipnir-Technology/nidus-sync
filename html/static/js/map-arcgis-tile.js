@@ -16,7 +16,7 @@ class MapArcgisTile extends HTMLElement {
 
 	attributeChangedCallback(name, old_value, new_value) {
 		//console.log("map-arcgis-tile: attribute changed", name, old_value, new_value);
-		if (name == "latitude" || (name == "longitude" && this._map != null)) {
+		if ((name == "latitude" || name == "longitude") && this._map != null) {
 			const latitude = parseFloat(this.getAttribute("latitude"));
 			const longitude = parseFloat(this.getAttribute("longitude"));
 			this._map.jumpTo({
