@@ -98,7 +98,7 @@
 
 					// Populate form with task values
 					this.form = {
-						poolCondition: task.poolCondition || "",
+						poolCondition: task.condition || "",
 						ownerContact: task.ownerContact || "",
 						residentContact: task.residentContact || "",
 						poolShape: task.poolShape || "",
@@ -384,7 +384,7 @@
 									<input
 										type="text"
 										class="form-control"
-										:value="selectedTask?.address"
+										:value="formatAddress(selectedTask?.address)"
 										readonly
 									/>
 								</div>
@@ -401,42 +401,47 @@
 										:class="{ 'border-warning': form.poolCondition !== originalValues.poolCondition }"
 									>
 										<option value="">-- Select --</option>
-										<option value="Excellent">Excellent</option>
-										<option value="Good">Good</option>
-										<option value="Fair">Fair</option>
-										<option value="Poor">Poor</option>
-										<option value="Needs Maintenance">Needs Maintenance</option>
+										<option value="blue">Blue</option>
+										<option value="dry">Dry</option>
+										<option value="false pool">False Pool</option>
+										<option value="unknown">Unknown</option>
+										<option value="green">Green</option>
+										<option value="murky">Murky</option>
 									</select>
 								</div>
 							</div>
 
-							<div class="row mb-3">
-								<label class="col-sm-3 col-form-label fw-bold"
-									>Owner Contact:</label
-								>
-								<div class="col-sm-9">
-									<input
-										type="text"
-										class="form-control"
-										x-model="form.ownerContact"
-										:class="{ 'border-warning': form.ownerContact !== originalValues.ownerContact }"
-									/>
+							<template x-if="form.ownerContact != ''">
+								<div class="row mb-3">
+									<label class="col-sm-3 col-form-label fw-bold"
+										>Owner Contact:</label
+									>
+									<div class="col-sm-9">
+										<input
+											type="text"
+											class="form-control"
+											x-model="form.ownerContact"
+											:class="{ 'border-warning': form.ownerContact !== originalValues.ownerContact }"
+										/>
+									</div>
 								</div>
-							</div>
+							</template>
 
-							<div class="row mb-4">
-								<label class="col-sm-3 col-form-label fw-bold"
-									>Resident Contact:</label
-								>
-								<div class="col-sm-9">
-									<input
-										type="text"
-										class="form-control"
-										x-model="form.residentContact"
-										:class="{ 'border-warning': form.residentContact !== originalValues.residentContact }"
-									/>
+							<template x-if="form.residentContact != ''">
+								<div class="row mb-4">
+									<label class="col-sm-3 col-form-label fw-bold"
+										>Resident Contact:</label
+									>
+									<div class="col-sm-9">
+										<input
+											type="text"
+											class="form-control"
+											x-model="form.residentContact"
+											:class="{ 'border-warning': form.residentContact !== originalValues.residentContact }"
+										/>
+									</div>
 								</div>
-							</div>
+							</template>
 						</form>
 					</div>
 
