@@ -26,6 +26,24 @@
 			}
 			return a.number + " " + a.street + ", " + a.locality;
 		}
+		function formatDistance(meters) {
+			if (meters == undefined || meters == null) {
+				return "unknown";
+			}
+			if (meters < 1) {
+				// Convert to millimeters
+				const mm = Math.round(meters * 1000);
+				return `${mm} mm`;
+			} else if (meters >= 1000) {
+				// Convert to kilometers
+				const km = Math.round(meters / 1000);
+				return `${km} km`;
+			} else {
+				// Keep in meters
+				const m = Math.round(meters);
+				return `${m} m`;
+			}
+		}
 		function communicationsApp() {
 			return {
 				apiBase: "/api",
@@ -72,7 +90,7 @@
 							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+1",
 							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+2",
 						],
-						activityLog: [
+						history: [
 							{
 								action: "Report created",
 								timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
@@ -176,10 +194,10 @@
 					);
 
 					// Add to activity log
-					if (!this.selectedCommunication.activityLog) {
-						this.selectedCommunication.activityLog = [];
+					if (!this.selectedCommunication.history) {
+						this.selectedCommunication.history = [];
 					}
-					this.selectedCommunication.activityLog.push({
+					this.selectedCommunication.history.push({
 						action: "Lead created",
 						timestamp: new Date(),
 					});
@@ -229,10 +247,10 @@
 					console.log("Message:", this.messageText);
 
 					// Add to activity log
-					if (!this.selectedCommunication.activityLog) {
-						this.selectedCommunication.activityLog = [];
+					if (!this.selectedCommunication.history) {
+						this.selectedCommunication.history = [];
 					}
-					this.selectedCommunication.activityLog.push({
+					this.selectedCommunication.history.push({
 						action: "Message sent to reporter",
 						timestamp: new Date(),
 					});
@@ -824,7 +842,7 @@
 									<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
 									<div class="small">
 										<template
-											x-for="activity in selectedCommunication.activityLog || []"
+											x-for="activity in selectedCommunication.history || []"
 											:key="activity.timestamp"
 										>
 											<div class="border-start border-2 ps-2 mb-2">
@@ -836,7 +854,7 @@
 											</div>
 										</template>
 										<template
-											x-if="!selectedCommunication.activityLog || selectedCommunication.activityLog.length === 0"
+											x-if="!selectedCommunication.history || selectedCommunication.history.length === 0"
 										>
 											<div class="text-muted">No activity yet</div>
 										</template>
@@ -904,7 +922,7 @@
 												>Distance from Reporter</small
 											>
 											<span
-												x-text="selectedCommunication.public_report.images[currentPhotoIndex].distance_from_reporter_meters || 'N/A'"
+												x-text="formatDistance(selectedCommunication.public_report.images[currentPhotoIndex].distance_from_reporter_meters)"
 											></span>
 										</div>
 									</div>
