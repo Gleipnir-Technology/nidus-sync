@@ -48,7 +48,12 @@
 		}
 		function updateMap(signals) {
 			const map = document.querySelector("map-multipoint");
-			const markers = signals.map((s) => s.location);
+			const markers = signals.map((s) =>
+				new maplibregl.Marker({
+					color: "#FF0000",
+					draggable: false,
+				}).setLatLng([s.location.longitude, s.location.latitude]),
+			);
 			map.SetMarkers(markers);
 			bounds = getBoundingBox(markers);
 			map.FitBounds(bounds, {

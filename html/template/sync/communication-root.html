@@ -267,16 +267,34 @@
 				},
 				updateMap() {
 					const map = document.querySelector("map-multipoint");
-					const p = {
-						latitude:
-							this.selectedCommunication.public_report.location.latitude,
-						longitude:
-							this.selectedCommunication.public_report.location.longitude,
-					};
-					map.SetMarkers([p]);
+					const loc = this.selectedCommunication.public_report.location;
+					let markers = [
+						new maplibregl.Marker({
+							color: "#FF0000",
+							draggable: false,
+						}).setLngLat([loc.longitude, loc.latitude]),
+					];
+					let min = { lat: loc.latitude, lng: loc.longitude };
+					let max = { lat: loc.latitude, lng: loc.longitude };
+					for (const i of this.selectedCommunication.public_report.images) {
+						if (i.location.latitude != 0 && i.location.longitude != 0) {
+							markers.push(
+								new maplibregl.Marker({
+									color: "#00FF00",
+									draggable: false,
+								}).setLngLat([i.location.longitude, i.location.latitude]),
+							);
+							min.lat = Math.min(min.lat, i.location.latitude);
+							min.lng = Math.min(min.lng, i.location.longitude);
+							max.lat = Math.max(max.lat, i.location.latitude);
+							max.lng = Math.max(max.lng, i.location.longitude);
+						}
+					}
+					map.SetMarkers(markers);
+
 					const bounds = new maplibregl.LngLatBounds(
-						new maplibregl.LngLat(p.longitude - 0.01, p.latitude - 0.01),
-						new maplibregl.LngLat(p.longitude + 0.01, p.latitude + 0.01),
+						new maplibregl.LngLat(min.lng - 0.01, min.lat - 0.01),
+						new maplibregl.LngLat(max.lng + 0.01, max.lat + 0.01),
 					);
 
 					map.FitBounds(bounds, {

@@ -126,14 +126,10 @@ class MapMultipoint extends HTMLElement {
 	SetMarkers(markers) {
 		console.log("Setting map markers", markers);
 		this._markers.forEach((marker) => marker.remove());
-		this._markers = markers.map((m) => {
-			return new maplibregl.Marker({
-				color: "#FF0000",
-				draggable: false,
-			})
-				.setLngLat([m.longitude, m.latitude])
-				.addTo(this._map);
-		});
+		this._markers = markers;
+		for (let m of markers) {
+			m.addTo(this._map);
+		}
 	}
 }
 
