@@ -922,9 +922,18 @@
 											<small class="text-muted d-block"
 												>Distance from Reporter</small
 											>
-											<span
-												x-text="formatDistance(selectedCommunication.public_report.images[currentPhotoIndex].distance_from_reporter_meters)"
-											></span>
+											<template
+												x-if="selectedCommunication.public_report.images[currentPhotoIndex].location.latitude != 0"
+											>
+												<span
+													x-text="formatDistance(selectedCommunication.public_report.images[currentPhotoIndex].distance_from_reporter_meters)"
+												></span>
+											</template>
+											<template
+												x-if="selectedCommunication.public_report.images[currentPhotoIndex].location.latitude == 0"
+											>
+												<span>No location data in image</span>
+											</template>
 										</div>
 									</div>
 								</div>
