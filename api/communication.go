@@ -14,6 +14,10 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
+type historyEntry struct {
+	Action    string    `json:"action"`
+	Timestamp time.Time `json:"timestamp"`
+}
 type reporter struct {
 	HasEmail bool   `json:"has_email"`
 	HasPhone bool   `json:"has_phone"`
@@ -21,6 +25,7 @@ type reporter struct {
 }
 type communication struct {
 	Created      time.Time          `json:"created"`
+	History      []historyEntry     `json:"history"`
 	ID           string             `json:"id"`
 	PublicReport types.PublicReport `json:"public_report"`
 	Type         string             `json:"type"`
@@ -41,7 +46,13 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 	comms := make([]communication, len(nreports)+len(wreports))
 	for i, report := range nreports {
 		comms[i] = communication{
-			Created:      report.Created,
+			Created: report.Created,
+			History: []historyEntry{
+				historyEntry{
+					Action:    "created",
+					Timestamp: report.Created,
+				},
+			},
 			ID:           report.PublicID,
 			PublicReport: report,
 			Type:         "nuisance",
@@ -49,7 +60,13 @@ func listCommunication(ctx context.Context, r *http.Request, org *models.Organiz
 	}
 	for i, report := range wreports {
 		comms[i+len(nreports)] = communication{
-			Created:      report.Created,
+			Created: report.Created,
+			History: []historyEntry{
+				historyEntry{
+					Action:    "created",
+					Timestamp: report.Created,
+				},
+			},
 			ID:           report.PublicID,
 			PublicReport: report,
 			Type:         "water",
