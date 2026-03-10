@@ -1,5 +1,6 @@
 // A map that can show ArcGIS map tiles
 class MapArcgisTile extends HTMLElement {
+	static observedAttributes = ["latitude", "longitude"];
 	constructor() {
 		super();
 
@@ -11,6 +12,18 @@ class MapArcgisTile extends HTMLElement {
 
 		this._map = null;
 		this._markers = [];
+	}
+
+	attributeChangedCallback(name, old_value, new_value) {
+		//console.log("map-arcgis-tile: attribute changed", name, old_value, new_value);
+		if (name == "latitude" || (name == "longitude" && this._map != null)) {
+			const latitude = parseFloat(this.getAttribute("latitude"));
+			const longitude = parseFloat(this.getAttribute("longitude"));
+			this._map.jumpTo({
+				center: [longitude, latitude],
+				zoom: 19,
+			});
+		}
 	}
 
 	// Lifecycle: when element is added to the DOM

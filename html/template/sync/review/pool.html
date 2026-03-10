@@ -10,8 +10,10 @@
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
-	<script src="/static/js/time-relative.js"></script>
+	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
+	<script src="/static/js/map-arcgis-tile.js"></script>
 	<script src="/static/js/map-multipoint.js"></script>
+	<script src="/static/js/time-relative.js"></script>
 	<script>
 		function formatAddress(a) {
 			if (a == undefined) {
@@ -264,6 +266,16 @@
 						this.submitReview("discarded");
 					}
 				},
+				updatePoolLocation(event, signal_id) {
+					console.log("map click", signal_id, event.detail);
+					const map = event.detail.map;
+					const loc = {
+						latitude: event.detail.lat,
+						longitude: event.detail.lng,
+					};
+					map.SetMarkers([loc]);
+					this.poolLocations[signal_id] = loc;
+				},
 			};
 		}
 	</script>
@@ -484,15 +496,17 @@
 					</div>
 
 					<!-- Aerial Image Placeholder -->
-					<div class="placeholder-box image-placeholder">
-						<div class="text-center">
-							<i class="bi bi-image" style="font-size: 48px;"></i>
-							<p class="mb-0 mt-2">Aerial Pool Image Placeholder</p>
-							<small
-								>Captured:
-								<span x-text="selectedTask?.capturedAt || 'N/A'"></span
-							></small>
-						</div>
+					<div class="map-container">
+						<map-arcgis-tile
+							class="map"
+							arcgis-access-token="{{ .C.ArcgisAccessToken }}"
+							organization-id="{{ .Organization.ID }}"
+							tegola="{{ .URL.Tegola }}"
+							@map-click="updatePoolLocation($event, selectedTask.id)"
+							:latitude="selectedTask?.location.latitude ?? 0"
+							:longitude="selectedTask?.location.longitude ?? 0"
+						>
+						</map-arcgis-tile>
 					</div>
 				</div>
 			</div>
