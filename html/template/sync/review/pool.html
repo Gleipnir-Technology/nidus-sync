@@ -138,22 +138,24 @@
 				// Stub: Update map display
 				updateMap(task) {
 					console.log("Updating map for task:", task.id);
-					// TODO: Initialize/update MapLibre GL map
-					// Example implementation:
-					// if (this.map) {
-					//     this.map.flyTo({
-					//         center: [task.longitude, task.latitude],
-					//         zoom: 18
-					//     });
-					//     // Update or add marker
-					// } else {
-					//     this.map = new maplibregl.Map({
-					//         container: 'map-container',
-					//         style: 'https://tiles.example.com/style.json',
-					//         center: [task.longitude, task.latitude],
-					//         zoom: 18
-					//     });
-					// }
+					const map = document.querySelector("map-multipoint");
+					const loc = this.selectedTask.location;
+					let markers = [
+						new maplibregl.Marker({
+							color: "#FF0000",
+							draggable: false,
+						}).setLngLat([loc.longitude, loc.latitude]),
+					];
+					map.SetMarkers(markers);
+
+					const bounds = new maplibregl.LngLatBounds(
+						new maplibregl.LngLat(loc.longitude - 0.01, loc.latitude - 0.01),
+						new maplibregl.LngLat(loc.longitude + 0.01, loc.latitude + 0.01),
+					);
+
+					map.FitBounds(bounds, {
+						padding: 50,
+					});
 				},
 
 				// Stub: Update aerial image display
