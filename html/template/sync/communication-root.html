@@ -61,43 +61,7 @@
 				toastTitle: "",
 				toastMessage: "",
 
-				// Sample data - replace with API call
-				communications: [
-					{
-						created: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-						id: 1001,
-						public_report: {
-							address: {
-								postal_code: "32801",
-							},
-							location: {
-								latitude: 28.5383,
-								longitude: -81.3792,
-							},
-							reporter: {
-								name: "John Smith",
-								has_email: true,
-							},
-							tod_evening: true,
-						},
-						type: "nuisance",
-
-						timeOfDay: "Evening (6pm - 9pm)",
-						propertyAreas: ["Backyard", "Pool Area"],
-						notes:
-							"Mosquitoes have been extremely bad for the past week. Cannot enjoy outdoor activities anymore. They seem to be coming from the drainage ditch behind our property.",
-						photos: [
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+1",
-							"https://via.placeholder.com/400x300/cccccc/666666?text=Photo+2",
-						],
-						history: [
-							{
-								action: "Report created",
-								timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-							},
-						],
-					},
-				],
+				communications: [],
 
 				init() {
 					this.loadFromAPI();
