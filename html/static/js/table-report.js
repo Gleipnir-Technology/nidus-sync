@@ -1,6 +1,4 @@
-// report-table.js
-
-class ReportTable extends HTMLElement {
+class TableReport extends HTMLElement {
 	constructor() {
 		super();
 		this.attachShadow({ mode: "open" });
@@ -206,4 +204,4 @@ class ReportTable extends HTMLElement {
 }
 
 // Register the custom element
-customElements.define("report-table", ReportTable);
+customElements.define("table-report", TableReport);
