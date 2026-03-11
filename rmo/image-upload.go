@@ -3,6 +3,7 @@ package rmo
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/gif"  // register GIF format
@@ -70,6 +71,8 @@ func extractExif(content_type string, file_bytes []byte) (result *ExifCollection
 	e, err := exif.Decode(bytes.NewReader(file_bytes))
 	if err != nil {
 		if err.Error() == "exif: failed to find exif intro marker" {
+			return nil, nil
+		} else if errors.Is(err, io.EOF) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Failed to decode image meta: %w", err)
