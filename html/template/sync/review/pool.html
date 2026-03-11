@@ -10,8 +10,7 @@
 		defer
 		src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
 	></script>
-	<script src="https://unpkg.com/@esri/maplibre-arcgis@1.1.0/dist/umd/maplibre-arcgis.min.js"></script>
-	<script src="/static/js/map-arcgis-tile.js"></script>
+	<script src="/static/js/map-proxied-arcgis-tile.js"></script>
 	<script src="/static/js/map-multipoint.js"></script>
 	<script src="/static/js/time-relative.js"></script>
 	<script>
@@ -38,9 +37,13 @@
 				// Form fields for the selected task
 				form: {
 					poolCondition: "",
+					poolShape: "",
+					poolLocation: {
+						latitude: 0,
+						longitude: 0,
+					},
 					ownerContact: "",
 					residentContact: "",
-					poolShape: "",
 				},
 
 				// Computed: track which fields have changed
@@ -123,6 +126,8 @@
 
 					// Populate form with task values
 					this.form = {
+						latitude: task.location.latitude,
+						longitude: task.location.longitude,
 						poolCondition: task.condition || "",
 						ownerContact: task.ownerContact || "",
 						residentContact: task.residentContact || "",
@@ -274,7 +279,7 @@
 						longitude: event.detail.lng,
 					};
 					map.SetMarkers([loc]);
-					this.poolLocations[signal_id] = loc;
+					this.form.poolLocation[signal_id] = loc;
 				},
 			};
 		}
@@ -429,6 +434,30 @@
 
 							<div class="row mb-3">
 								<label class="col-sm-3 col-form-label fw-bold"
+									>Longitude:</label
+								>
+								<div class="col-sm-9">
+									<input
+										type="text"
+										class="form-control"
+										x-model="form.longitude"
+										:class="{ 'border-warning': form.longitude !== originalValues.longitude }"
+									/>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label fw-bold">Latitude:</label>
+								<div class="col-sm-9">
+									<input
+										type="text"
+										class="form-control"
+										x-model="form.latitude"
+										:class="{ 'border-warning': form.latitude !== originalValues.latitude }"
+									/>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label fw-bold"
 									>Pool Condition:</label
 								>
 								<div class="col-sm-9">
@@ -497,16 +526,17 @@
 
 					<!-- Aerial Image Placeholder -->
 					<div class="map-container">
-						<map-arcgis-tile
+						<map-proxied-arcgis-tile
 							class="map"
 							arcgis-access-token="{{ .C.ArcgisAccessToken }}"
 							organization-id="{{ .Organization.ID }}"
 							tegola="{{ .URL.Tegola }}"
+							{{ .C.URLTiles }}
 							@map-click="updatePoolLocation($event, selectedTask.id)"
 							:latitude="selectedTask?.location.latitude ?? 0"
 							:longitude="selectedTask?.location.longitude ?? 0"
 						>
-						</map-arcgis-tile>
+						</map-proxied-arcgis-tile>
 					</div>
 				</div>
 			</div>

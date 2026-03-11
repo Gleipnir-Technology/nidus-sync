@@ -16,6 +16,7 @@ func audioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
 }
 
 var collectionToExtension map[Collection]string = map[Collection]string{
+	CollectionAudioNormalized: "ogg",
 	CollectionAudioRaw:        "raw",
 	CollectionAudioTranscoded: "ogg",
 	CollectionCSV:             "csv",
@@ -24,6 +25,7 @@ var collectionToExtension map[Collection]string = map[Collection]string{
 	CollectionImageRaw:        "raw",
 }
 var collectionToSubdir map[Collection]string = map[Collection]string{
+	CollectionAudioNormalized: "audio-normalized",
 	CollectionAudioRaw:        "audio-raw",
 	CollectionAudioTranscoded: "audio-transcoded",
 	CollectionCSV:             "csv",
