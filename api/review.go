@@ -91,7 +91,7 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user *models.User, req cr
 	}
 	if up.Condition != nil {
 		var condition enums.Poolconditiontype
-		err := condition.Scan(up.Condition)
+		err := condition.Scan(*up.Condition)
 		if err != nil {
 			return nhttp.NewErrorStatus(http.StatusBadRequest, "unrecognized condition %s", up.Condition)
 		}

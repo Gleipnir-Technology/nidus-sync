@@ -36,7 +36,7 @@
 
 				// Form fields for the selected task
 				form: {
-					poolCondition: "",
+					condition: "",
 					poolShape: "",
 					poolLocation: {
 						latitude: 0,
@@ -56,7 +56,7 @@
 					const fields = [
 						{ key: "latitude", label: "Latitude" },
 						{ key: "longitude", label: "Longitude" },
-						{ key: "poolCondition", label: "Pool condition" },
+						{ key: "condition", label: "Pool condition" },
 						{ key: "ownerContact", label: "Owner contact" },
 						{ key: "residentContact", label: "Resident contact" },
 						{ key: "poolShape", label: "Pool shape" },
@@ -130,7 +130,7 @@
 					this.form = {
 						latitude: task.location.latitude,
 						longitude: task.location.longitude,
-						poolCondition: task.condition || "",
+						condition: task.condition || "",
 						ownerContact: task.ownerContact || "",
 						residentContact: task.residentContact || "",
 						poolShape: task.poolShape || "",
@@ -247,7 +247,7 @@
 						} else {
 							this.selectedTask = null;
 							this.form = {
-								poolCondition: "",
+								condition: "",
 								ownerContact: "",
 								residentContact: "",
 								poolShape: "",
@@ -469,8 +469,8 @@
 								<div class="col-sm-9">
 									<select
 										class="form-select"
-										x-model="form.poolCondition"
-										:class="{ 'border-warning': form.poolCondition !== originalValues.poolCondition }"
+										x-model="form.condition"
+										:class="{ 'border-warning': form.condition !== originalValues.condition }"
 									>
 										<option value="">-- Select --</option>
 										<option value="blue">Blue</option>
