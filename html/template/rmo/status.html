@@ -144,8 +144,18 @@ function onLoad() {
 	report_table.addEventListener("row-clicked", (e) => {
 		window.location = "/status/" + e.detail.reportId;
 	})
-
-	document.querySelector("address-or-report-input").addEventListener("suggestion-selected", maybeEnableLookupButton);
+	document.querySelector("address-or-report-input").addEventListener("suggestion-selected", (e) => {
+		maybeEnableLookupButton(e)
+		if (e.detail.type == "address") {
+			map.flyTo({
+				center: {
+					lng: e.detail.content.geometry.coordinates[0],
+					lat: e.detail.content.geometry.coordinates[1],
+				},
+				zoom: 15,
+			});
+		}
+	});
 	document.querySelector("address-or-report-input").addEventListener("input", maybeEnableLookupButton);
 	document.getElementById("lookup-form").addEventListener("submit", handleLookupFormSubmit);
 }

@@ -88,7 +88,7 @@ class AddressOrReportInput extends HTMLElement {
 
 	async _fetchAddressSuggestions(text) {
 		try {
-			const url = `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(text)}&access_token=${this._apiKey}`;
+			const url = `https://api.stadiamaps.com/geocoding/v2/autocomplete?text=${encodeURIComponent(text)}&focus.point.lat=35&focus.point.lon=-115`;
 
 			const response = await fetch(url);
 			const data = await response.json();
@@ -111,6 +111,33 @@ class AddressOrReportInput extends HTMLElement {
 		}
 	}
 
+	async _handleClick(el) {
+		const type = el.dataset.type;
+		let content = null;
+		if (type == "report") {
+			const index = parseInt(el.dataset.index);
+			content = this._reports[index];
+			this.value = _formatReportID(content.id);
+			this._suggestionsContainer.innerHTML = "";
+		} else if (type == "address") {
+			const gid = el.dataset.gid;
+			const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${gid}`;
+			const response = await fetch(url);
+			const data = await response.json();
+			content = data.features[0];
+			this.SetValue(content);
+		}
+		this.dispatchEvent(
+			new CustomEvent("suggestion-selected", {
+				bubbles: true,
+				composed: true, // Allows event to cross shadow DOM boundary
+				detail: {
+					content: content,
+					type: type,
+				},
+			}),
+		);
+	}
 	async _handleSuggestions(text) {
 		await Promise.all([
 			(async () => {
@@ -141,53 +168,20 @@ class AddressOrReportInput extends HTMLElement {
 			.join("");
 		const addressElements = addresses
 			.map((item, index) => {
-				if (item.properties.place_formatted != "") {
-					return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.geometry.coordinates[1]}"
-						data-lng="${item.geometry.coordinates[0]}"
-						data-type="address">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`;
-				} else {
-					return `
-					<div class="suggestion-item list-group-item"
-						data-index="${index}"
-						data-lat="${item.coordinates.lat}"
-						data-lng="${item.coordinates.lng}"
-						data-type="address">
-							<div class="main-address">${item.properties.name || item.properties.full_address}</div>
-							<div class="place-info">${item.properties.place_formatted}</div>
-					</div>`;
-				}
+				return `
+				<div class="suggestion-item list-group-item"
+					data-gid="${item.properties.gid}"
+					data-type="address">
+						<div class="main-address">${item.properties.name}</div>
+						<div class="place-info">${item.properties.coarse_location}</div>
+				</div>`;
 			})
 			.join("");
 		this._suggestionsContainer.innerHTML = reportElements + addressElements;
 		// Add click listeners to suggestions
 		this.shadowRoot.querySelectorAll(".suggestion-item").forEach((el) => {
 			el.addEventListener("click", (e) => {
-				const type = el.dataset.type;
-				let detail = null;
-				if (type == "report") {
-					const index = parseInt(el.dataset.index);
-					detail = this._reports[index];
-					this.value = _formatReportID(detail.id);
-					this._suggestionsContainer.innerHTML = "";
-				} else if (type == "address") {
-					const index = parseInt(el.dataset.index);
-					detail = this._addresses[index];
-					this.SetValue(detail);
-					// Dispatch custom event
-				}
-				this.dispatchEvent(
-					new CustomEvent("suggestion-selected", {
-						bubbles: true,
-						composed: true, // Allows event to cross shadow DOM boundary
-						detail: detail,
-					}),
-				);
+				this._handleClick(el);
 			});
 		});
 	}
@@ -254,7 +248,7 @@ class AddressOrReportInput extends HTMLElement {
 	}
 
 	SetValue(suggestion) {
-		this.value = suggestion.properties.full_address;
+		this.value = suggestion.properties.formatted_address_line;
 		this._suggestionsContainer.innerHTML = "";
 	}
 }

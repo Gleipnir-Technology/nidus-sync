@@ -100,6 +100,9 @@ class MapMultipoint extends HTMLElement {
 	addSource(a, b) {
 		return this._map.addSource(a, b);
 	}
+	flyTo(a, b) {
+		return this._map.flyTo(a, b);
+	}
 	jumpTo(args) {
 		return this._map.jumpTo(args);
 	}
@@ -112,6 +115,9 @@ class MapMultipoint extends HTMLElement {
 	}
 	once(a, b) {
 		return this._map.once(a, b);
+	}
+	panTo(a, b) {
+		return this._map.panTo(a, b);
 	}
 	queryRenderedFeatures(a) {
 		return this._map.queryRenderedFeatures(a);
