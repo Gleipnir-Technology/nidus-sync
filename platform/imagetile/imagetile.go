@@ -3,64 +3,89 @@ package imagetile
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
 	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 //go:embed empty-tile.png
 var emptyTileFS embed.FS
 
-var ErrNoTile = errors.New("used placeholder tile")
-
 var clientByOrgID = make(map[int32]*fieldseeker.FieldSeeker, 0)
+var tileRasterPlaceholder *TileRaster
 
-func ImageAtPoint(ctx context.Context, org *models.Organization, level uint, lat, lng float64) ([]byte, error) {
+type TileRaster struct {
+	Content       []byte
+	IsPlaceholder bool
+}
+
+func ImageAtPoint(ctx context.Context, org *models.Organization, level uint, lat, lng float64) (*TileRaster, error) {
 	fssync, err := getFieldseeker(ctx, org)
 	if err != nil {
-		return []byte{}, fmt.Errorf("create fssync: %w", err)
+		return nil, fmt.Errorf("create fssync: %w", err)
 	}
 	map_service, err := aerialImageService(ctx, fssync.Arcgis)
 	if err != nil {
-		return []byte{}, fmt.Errorf("no map service: %w", err)
+		return nil, fmt.Errorf("no map service: %w", err)
 	}
-	return map_service.TileGPS(ctx, level, lat, lng)
+	data, e := map_service.TileGPS(ctx, level, lat, lng)
+	if e != nil {
+		return nil, fmt.Errorf("tilegps: %w", e)
+	}
+	if len(data) == 0 {
+		return TileRasterPlaceholder(), nil
+	}
+	return &TileRaster{
+		Content:       data,
+		IsPlaceholder: false,
+	}, nil
 }
-func ImageAtTile(ctx context.Context, org *models.Organization, level, y, x uint) ([]byte, error) {
+func ImageAtTile(ctx context.Context, org *models.Organization, level, y, x uint) (*TileRaster, error) {
 	oauth, err := background.GetOAuthForOrg(ctx, org)
 	if err != nil {
-		return []byte{}, fmt.Errorf("get oauth for org: %w", err)
+		return nil, fmt.Errorf("get oauth for org: %w", err)
 	}
 	fssync, err := background.NewFieldSeeker(
 		ctx,
 		oauth,
 	)
 	if err != nil {
-		return []byte{}, fmt.Errorf("create fssync: %w", err)
+		return nil, fmt.Errorf("create fssync: %w", err)
 	}
 	map_service, err := aerialImageService(ctx, fssync.Arcgis)
 	if err != nil {
-		return []byte{}, fmt.Errorf("no map service: %w", err)
+		return nil, fmt.Errorf("no map service: %w", err)
 	}
 	data, e := map_service.Tile(ctx, level, y, x)
 	if e != nil {
-		log.Error().Err(e).Msg("error getting tile")
-		return []byte{}, fmt.Errorf("tile: %w", e)
+		return nil, fmt.Errorf("tile: %w", e)
 	}
 	// No data at this location, so supply the empty tile placeholder
 	if len(data) == 0 {
-		empty, err := emptyTileFS.ReadFile("empty-tile.png")
-		if err != nil {
-			return []byte{}, fmt.Errorf("read empty tile: %w", err)
-		}
-		return empty, ErrNoTile
+		return TileRasterPlaceholder(), nil
 	}
-	return data, nil
+	return &TileRaster{
+		Content:       data,
+		IsPlaceholder: false,
+	}, nil
+}
+func TileRasterPlaceholder() *TileRaster {
+	if tileRasterPlaceholder != nil {
+		return tileRasterPlaceholder
+	}
+	empty, err := emptyTileFS.ReadFile("empty-tile.png")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read empty-tile.png: %v", err))
+	}
+	tileRasterPlaceholder = &TileRaster{
+		Content:       empty,
+		IsPlaceholder: true,
+	}
+	return tileRasterPlaceholder
 }
 
 func aerialImageService(ctx context.Context, gis *arcgis.ArcGIS) (*arcgis.MapService, error) {

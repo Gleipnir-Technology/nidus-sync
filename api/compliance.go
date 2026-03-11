@@ -98,10 +98,10 @@ func writeImage(ctx context.Context, w http.ResponseWriter, org *models.Organiza
 	if err != nil {
 		return fmt.Errorf("image at point: %w", err)
 	}
-	log.Info().Int("size", len(img)).Msg("image")
+	log.Info().Int("size", len(img.Content)).Msg("image")
 	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img)))
-	_, err = io.Copy(w, bytes.NewBuffer(img))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img.Content)))
+	_, err = io.Copy(w, bytes.NewBuffer(img.Content))
 	if err != nil {
 		return fmt.Errorf("copy bytes: %w", err)
 	}

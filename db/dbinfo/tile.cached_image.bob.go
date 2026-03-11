@@ -51,11 +51,20 @@ var TileCachedImages = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		IsEmpty: column{
+			Name:      "is_empty",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: tileCachedImageIndexes{
-		CachedImageArcgisIDXYZKey: index{
+		CachedImagePkey: index{
 			Type: "btree",
-			Name: "cached_image_arcgis_id_x_y_z_key",
+			Name: "cached_image_pkey",
 			Columns: []indexColumn{
 				{
 					Name:         "arcgis_id",
@@ -86,7 +95,11 @@ var TileCachedImages = Table[
 			Include:       []string{},
 		},
 	},
-
+	PrimaryKey: &constraint{
+		Name:    "cached_image_pkey",
+		Columns: []string{"arcgis_id", "x", "y", "z"},
+		Comment: "",
+	},
 	ForeignKeys: tileCachedImageForeignKeys{
 		TileCachedImageCachedImageArcgisIDFkey: foreignKey{
 			constraint: constraint{
@@ -98,13 +111,6 @@ var TileCachedImages = Table[
 			ForeignColumns: []string{"arcgis_id"},
 		},
 	},
-	Uniques: tileCachedImageUniques{
-		CachedImageArcgisIDXYZKey: constraint{
-			Name:    "cached_image_arcgis_id_x_y_z_key",
-			Columns: []string{"arcgis_id", "x", "y", "z"},
-			Comment: "",
-		},
-	},
 
 	Comment: "",
 }
@@ -114,21 +120,22 @@ type tileCachedImageColumns struct {
 	X        column
 	Y        column
 	Z        column
+	IsEmpty  column
 }
 
 func (c tileCachedImageColumns) AsSlice() []column {
 	return []column{
-		c.ArcgisID, c.X, c.Y, c.Z,
+		c.ArcgisID, c.X, c.Y, c.Z, c.IsEmpty,
 	}
 }
 
 type tileCachedImageIndexes struct {
-	CachedImageArcgisIDXYZKey index
+	CachedImagePkey index
 }
 
 func (i tileCachedImageIndexes) AsSlice() []index {
 	return []index{
-		i.CachedImageArcgisIDXYZKey,
+		i.CachedImagePkey,
 	}
 }
 
@@ -142,14 +149,10 @@ func (f tileCachedImageForeignKeys) AsSlice() []foreignKey {
 	}
 }
 
-type tileCachedImageUniques struct {
-	CachedImageArcgisIDXYZKey constraint
-}
+type tileCachedImageUniques struct{}
 
 func (u tileCachedImageUniques) AsSlice() []constraint {
-	return []constraint{
-		u.CachedImageArcgisIDXYZKey,
-	}
+	return []constraint{}
 }
 
 type tileCachedImageChecks struct{}

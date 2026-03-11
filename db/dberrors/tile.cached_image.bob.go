@@ -4,14 +4,14 @@
 package dberrors
 
 var TileCachedImageErrors = &tileCachedImageErrors{
-	ErrUniqueCachedImageArcgisIdXYZKey: &UniqueConstraintError{
+	ErrUniqueCachedImagePkey: &UniqueConstraintError{
 		schema:  "tile",
 		table:   "cached_image",
 		columns: []string{"arcgis_id", "x", "y", "z"},
-		s:       "cached_image_arcgis_id_x_y_z_key",
+		s:       "cached_image_pkey",
 	},
 }
 
 type tileCachedImageErrors struct {
-	ErrUniqueCachedImageArcgisIdXYZKey *UniqueConstraintError
+	ErrUniqueCachedImagePkey *UniqueConstraintError
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/bob/expr"
@@ -21,10 +22,11 @@ import (
 
 // TileCachedImage is an object representing the database table.
 type TileCachedImage struct {
-	ArcgisID string `db:"arcgis_id" `
-	X        int32  `db:"x" `
-	Y        int32  `db:"y" `
-	Z        int32  `db:"z" `
+	ArcgisID string `db:"arcgis_id,pk" `
+	X        int32  `db:"x,pk" `
+	Y        int32  `db:"y,pk" `
+	Z        int32  `db:"z,pk" `
+	IsEmpty  bool   `db:"is_empty" `
 
 	R tileCachedImageR `db:"-" `
 }
@@ -33,10 +35,10 @@ type TileCachedImage struct {
 // This should almost always be used instead of []*TileCachedImage.
 type TileCachedImageSlice []*TileCachedImage
 
-// TileCachedImages contains methods to work with the cached_image view
-var TileCachedImages = psql.NewViewx[*TileCachedImage, TileCachedImageSlice]("tile", "cached_image", buildTileCachedImageColumns("tile.cached_image"))
+// TileCachedImages contains methods to work with the cached_image table
+var TileCachedImages = psql.NewTablex[*TileCachedImage, TileCachedImageSlice, *TileCachedImageSetter]("tile", "cached_image", buildTileCachedImageColumns("tile.cached_image"))
 
-// TileCachedImagesQuery is a query on the cached_image view
+// TileCachedImagesQuery is a query on the cached_image table
 type TileCachedImagesQuery = *psql.ViewQuery[*TileCachedImage, TileCachedImageSlice]
 
 // tileCachedImageR is where relationships are stored.
@@ -47,13 +49,14 @@ type tileCachedImageR struct {
 func buildTileCachedImageColumns(alias string) tileCachedImageColumns {
 	return tileCachedImageColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"arcgis_id", "x", "y", "z",
+			"arcgis_id", "x", "y", "z", "is_empty",
 		).WithParent("tile.cached_image"),
 		tableAlias: alias,
 		ArcgisID:   psql.Quote(alias, "arcgis_id"),
 		X:          psql.Quote(alias, "x"),
 		Y:          psql.Quote(alias, "y"),
 		Z:          psql.Quote(alias, "z"),
+		IsEmpty:    psql.Quote(alias, "is_empty"),
 	}
 }
 
@@ -64,6 +67,7 @@ type tileCachedImageColumns struct {
 	X          psql.Expression
 	Y          psql.Expression
 	Z          psql.Expression
+	IsEmpty    psql.Expression
 }
 
 func (c tileCachedImageColumns) Alias() string {
@@ -78,14 +82,15 @@ func (tileCachedImageColumns) AliasedAs(alias string) tileCachedImageColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type TileCachedImageSetter struct {
-	ArcgisID omit.Val[string] `db:"arcgis_id" `
-	X        omit.Val[int32]  `db:"x" `
-	Y        omit.Val[int32]  `db:"y" `
-	Z        omit.Val[int32]  `db:"z" `
+	ArcgisID omit.Val[string] `db:"arcgis_id,pk" `
+	X        omit.Val[int32]  `db:"x,pk" `
+	Y        omit.Val[int32]  `db:"y,pk" `
+	Z        omit.Val[int32]  `db:"z,pk" `
+	IsEmpty  omit.Val[bool]   `db:"is_empty" `
 }
 
 func (s TileCachedImageSetter) SetColumns() []string {
-	vals := make([]string, 0, 4)
+	vals := make([]string, 0, 5)
 	if s.ArcgisID.IsValue() {
 		vals = append(vals, "arcgis_id")
 	}
@@ -97,6 +102,9 @@ func (s TileCachedImageSetter) SetColumns() []string {
 	}
 	if s.Z.IsValue() {
 		vals = append(vals, "z")
+	}
+	if s.IsEmpty.IsValue() {
+		vals = append(vals, "is_empty")
 	}
 	return vals
 }
@@ -114,11 +122,18 @@ func (s TileCachedImageSetter) Overwrite(t *TileCachedImage) {
 	if s.Z.IsValue() {
 		t.Z = s.Z.MustGet()
 	}
+	if s.IsEmpty.IsValue() {
+		t.IsEmpty = s.IsEmpty.MustGet()
+	}
 }
 
 func (s *TileCachedImageSetter) Apply(q *dialect.InsertQuery) {
+	q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+		return TileCachedImages.BeforeInsertHooks.RunHooks(ctx, exec, s)
+	})
+
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 4)
+		vals := make([]bob.Expression, 5)
 		if s.ArcgisID.IsValue() {
 			vals[0] = psql.Arg(s.ArcgisID.MustGet())
 		} else {
@@ -143,6 +158,12 @@ func (s *TileCachedImageSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
+		if s.IsEmpty.IsValue() {
+			vals[4] = psql.Arg(s.IsEmpty.MustGet())
+		} else {
+			vals[4] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -152,7 +173,7 @@ func (s TileCachedImageSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s TileCachedImageSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 4)
+	exprs := make([]bob.Expression, 0, 5)
 
 	if s.ArcgisID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -182,7 +203,45 @@ func (s TileCachedImageSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.IsEmpty.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_empty")...),
+			psql.Arg(s.IsEmpty),
+		}})
+	}
+
 	return exprs
+}
+
+// FindTileCachedImage retrieves a single record by primary key
+// If cols is empty Find will return all columns.
+func FindTileCachedImage(ctx context.Context, exec bob.Executor, ArcgisIDPK string, XPK int32, YPK int32, ZPK int32, cols ...string) (*TileCachedImage, error) {
+	if len(cols) == 0 {
+		return TileCachedImages.Query(
+			sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+			sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
+			sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
+			sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
+		).One(ctx, exec)
+	}
+
+	return TileCachedImages.Query(
+		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
+		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
+		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
+		sm.Columns(TileCachedImages.Columns.Only(cols...)),
+	).One(ctx, exec)
+}
+
+// TileCachedImageExists checks the presence of a single record by primary key
+func TileCachedImageExists(ctx context.Context, exec bob.Executor, ArcgisIDPK string, XPK int32, YPK int32, ZPK int32) (bool, error) {
+	return TileCachedImages.Query(
+		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
+		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
+		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
+	).Exists(ctx, exec)
 }
 
 // AfterQueryHook is called after TileCachedImage is retrieved from the database
@@ -192,9 +251,67 @@ func (o *TileCachedImage) AfterQueryHook(ctx context.Context, exec bob.Executor,
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = TileCachedImages.AfterSelectHooks.RunHooks(ctx, exec, TileCachedImageSlice{o})
+	case bob.QueryTypeInsert:
+		ctx, err = TileCachedImages.AfterInsertHooks.RunHooks(ctx, exec, TileCachedImageSlice{o})
+	case bob.QueryTypeUpdate:
+		ctx, err = TileCachedImages.AfterUpdateHooks.RunHooks(ctx, exec, TileCachedImageSlice{o})
+	case bob.QueryTypeDelete:
+		ctx, err = TileCachedImages.AfterDeleteHooks.RunHooks(ctx, exec, TileCachedImageSlice{o})
 	}
 
 	return err
+}
+
+// primaryKeyVals returns the primary key values of the TileCachedImage
+func (o *TileCachedImage) primaryKeyVals() bob.Expression {
+	return psql.ArgGroup(
+		o.ArcgisID,
+		o.X,
+		o.Y,
+		o.Z,
+	)
+}
+
+func (o *TileCachedImage) pkEQ() dialect.Expression {
+	return psql.Group(psql.Quote("tile.cached_image", "arcgis_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
+	}))
+}
+
+// Update uses an executor to update the TileCachedImage
+func (o *TileCachedImage) Update(ctx context.Context, exec bob.Executor, s *TileCachedImageSetter) error {
+	v, err := TileCachedImages.Update(s.UpdateMod(), um.Where(o.pkEQ())).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.R = v.R
+	*o = *v
+
+	return nil
+}
+
+// Delete deletes a single TileCachedImage record with an executor
+func (o *TileCachedImage) Delete(ctx context.Context, exec bob.Executor) error {
+	_, err := TileCachedImages.Delete(dm.Where(o.pkEQ())).Exec(ctx, exec)
+	return err
+}
+
+// Reload refreshes the TileCachedImage using the executor
+func (o *TileCachedImage) Reload(ctx context.Context, exec bob.Executor) error {
+	o2, err := TileCachedImages.Query(
+		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisID))),
+		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(o.X))),
+		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(o.Y))),
+		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(o.Z))),
+	).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+	o2.R = o.R
+	*o = *o2
+
+	return nil
 }
 
 // AfterQueryHook is called after TileCachedImageSlice is retrieved from the database
@@ -204,9 +321,145 @@ func (o TileCachedImageSlice) AfterQueryHook(ctx context.Context, exec bob.Execu
 	switch queryType {
 	case bob.QueryTypeSelect:
 		ctx, err = TileCachedImages.AfterSelectHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeInsert:
+		ctx, err = TileCachedImages.AfterInsertHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeUpdate:
+		ctx, err = TileCachedImages.AfterUpdateHooks.RunHooks(ctx, exec, o)
+	case bob.QueryTypeDelete:
+		ctx, err = TileCachedImages.AfterDeleteHooks.RunHooks(ctx, exec, o)
 	}
 
 	return err
+}
+
+func (o TileCachedImageSlice) pkIN() dialect.Expression {
+	if len(o) == 0 {
+		return psql.Raw("NULL")
+	}
+
+	return psql.Group(psql.Quote("tile.cached_image", "arcgis_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+		pkPairs := make([]bob.Expression, len(o))
+		for i, row := range o {
+			pkPairs[i] = row.primaryKeyVals()
+		}
+		return bob.ExpressSlice(ctx, w, d, start, pkPairs, "", ", ", "")
+	}))
+}
+
+// copyMatchingRows finds models in the given slice that have the same primary key
+// then it first copies the existing relationships from the old model to the new model
+// and then replaces the old model in the slice with the new model
+func (o TileCachedImageSlice) copyMatchingRows(from ...*TileCachedImage) {
+	for i, old := range o {
+		for _, new := range from {
+			if new.ArcgisID != old.ArcgisID {
+				continue
+			}
+			if new.X != old.X {
+				continue
+			}
+			if new.Y != old.Y {
+				continue
+			}
+			if new.Z != old.Z {
+				continue
+			}
+			new.R = old.R
+			o[i] = new
+			break
+		}
+	}
+}
+
+// UpdateMod modifies an update query with "WHERE primary_key IN (o...)"
+func (o TileCachedImageSlice) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
+	return bob.ModFunc[*dialect.UpdateQuery](func(q *dialect.UpdateQuery) {
+		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+			return TileCachedImages.BeforeUpdateHooks.RunHooks(ctx, exec, o)
+		})
+
+		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
+			var err error
+			switch retrieved := retrieved.(type) {
+			case *TileCachedImage:
+				o.copyMatchingRows(retrieved)
+			case []*TileCachedImage:
+				o.copyMatchingRows(retrieved...)
+			case TileCachedImageSlice:
+				o.copyMatchingRows(retrieved...)
+			default:
+				// If the retrieved value is not a TileCachedImage or a slice of TileCachedImage
+				// then run the AfterUpdateHooks on the slice
+				_, err = TileCachedImages.AfterUpdateHooks.RunHooks(ctx, exec, o)
+			}
+
+			return err
+		}))
+
+		q.AppendWhere(o.pkIN())
+	})
+}
+
+// DeleteMod modifies an delete query with "WHERE primary_key IN (o...)"
+func (o TileCachedImageSlice) DeleteMod() bob.Mod[*dialect.DeleteQuery] {
+	return bob.ModFunc[*dialect.DeleteQuery](func(q *dialect.DeleteQuery) {
+		q.AppendHooks(func(ctx context.Context, exec bob.Executor) (context.Context, error) {
+			return TileCachedImages.BeforeDeleteHooks.RunHooks(ctx, exec, o)
+		})
+
+		q.AppendLoader(bob.LoaderFunc(func(ctx context.Context, exec bob.Executor, retrieved any) error {
+			var err error
+			switch retrieved := retrieved.(type) {
+			case *TileCachedImage:
+				o.copyMatchingRows(retrieved)
+			case []*TileCachedImage:
+				o.copyMatchingRows(retrieved...)
+			case TileCachedImageSlice:
+				o.copyMatchingRows(retrieved...)
+			default:
+				// If the retrieved value is not a TileCachedImage or a slice of TileCachedImage
+				// then run the AfterDeleteHooks on the slice
+				_, err = TileCachedImages.AfterDeleteHooks.RunHooks(ctx, exec, o)
+			}
+
+			return err
+		}))
+
+		q.AppendWhere(o.pkIN())
+	})
+}
+
+func (o TileCachedImageSlice) UpdateAll(ctx context.Context, exec bob.Executor, vals TileCachedImageSetter) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	_, err := TileCachedImages.Update(vals.UpdateMod(), o.UpdateMod()).All(ctx, exec)
+	return err
+}
+
+func (o TileCachedImageSlice) DeleteAll(ctx context.Context, exec bob.Executor) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	_, err := TileCachedImages.Delete(o.DeleteMod()).Exec(ctx, exec)
+	return err
+}
+
+func (o TileCachedImageSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
+	if len(o) == 0 {
+		return nil
+	}
+
+	o2, err := TileCachedImages.Query(sm.Where(o.pkIN())).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	o.copyMatchingRows(o2...)
+
+	return nil
 }
 
 // ArcgisServiceMap starts a query for related objects on arcgis.service_map
@@ -233,11 +486,60 @@ func (os TileCachedImageSlice) ArcgisServiceMap(mods ...bob.Mod[*dialect.SelectQ
 	)...)
 }
 
+func attachTileCachedImageArcgisServiceMap0(ctx context.Context, exec bob.Executor, count int, tileCachedImage0 *TileCachedImage, arcgisServiceMap1 *ArcgisServiceMap) (*TileCachedImage, error) {
+	setter := &TileCachedImageSetter{
+		ArcgisID: omit.From(arcgisServiceMap1.ArcgisID),
+	}
+
+	err := tileCachedImage0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachTileCachedImageArcgisServiceMap0: %w", err)
+	}
+
+	return tileCachedImage0, nil
+}
+
+func (tileCachedImage0 *TileCachedImage) InsertArcgisServiceMap(ctx context.Context, exec bob.Executor, related *ArcgisServiceMapSetter) error {
+	var err error
+
+	arcgisServiceMap1, err := ArcgisServiceMaps.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachTileCachedImageArcgisServiceMap0(ctx, exec, 1, tileCachedImage0, arcgisServiceMap1)
+	if err != nil {
+		return err
+	}
+
+	tileCachedImage0.R.ArcgisServiceMap = arcgisServiceMap1
+
+	arcgisServiceMap1.R.ArcgisCachedImages = append(arcgisServiceMap1.R.ArcgisCachedImages, tileCachedImage0)
+
+	return nil
+}
+
+func (tileCachedImage0 *TileCachedImage) AttachArcgisServiceMap(ctx context.Context, exec bob.Executor, arcgisServiceMap1 *ArcgisServiceMap) error {
+	var err error
+
+	_, err = attachTileCachedImageArcgisServiceMap0(ctx, exec, 1, tileCachedImage0, arcgisServiceMap1)
+	if err != nil {
+		return err
+	}
+
+	tileCachedImage0.R.ArcgisServiceMap = arcgisServiceMap1
+
+	arcgisServiceMap1.R.ArcgisCachedImages = append(arcgisServiceMap1.R.ArcgisCachedImages, tileCachedImage0)
+
+	return nil
+}
+
 type tileCachedImageWhere[Q psql.Filterable] struct {
 	ArcgisID psql.WhereMod[Q, string]
 	X        psql.WhereMod[Q, int32]
 	Y        psql.WhereMod[Q, int32]
 	Z        psql.WhereMod[Q, int32]
+	IsEmpty  psql.WhereMod[Q, bool]
 }
 
 func (tileCachedImageWhere[Q]) AliasedAs(alias string) tileCachedImageWhere[Q] {
@@ -250,6 +552,7 @@ func buildTileCachedImageWhere[Q psql.Filterable](cols tileCachedImageColumns) t
 		X:        psql.Where[Q, int32](cols.X),
 		Y:        psql.Where[Q, int32](cols.Y),
 		Z:        psql.Where[Q, int32](cols.Z),
+		IsEmpty:  psql.Where[Q, bool](cols.IsEmpty),
 	}
 }
 

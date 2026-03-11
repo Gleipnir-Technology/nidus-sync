@@ -205,8 +205,8 @@
 
 					try {
 						const payload = {
-							taskId: this.selectedTask.id,
-							action: action, // 'reviewed' or 'discarded'
+							task_id: this.selectedTask.id,
+							status: action, // 'reviewed' or 'discarded'
 							updates: {},
 						};
 
@@ -219,7 +219,7 @@
 							});
 						}
 
-						const response = await fetch("/api/review-task", {
+						const response = await fetch(`/api/review/`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
@@ -559,7 +559,7 @@
 					:disabled="!selectedTask || submitting"
 				>
 					<span x-show="!submitting">
-						<i class="bi bi-check-circle"></i> Mark Reviewed
+						<i class="bi bi-check-circle"></i> Complete Review
 					</span>
 					<span x-show="submitting">
 						<span class="spinner-border spinner-border-sm" role="status"></span>

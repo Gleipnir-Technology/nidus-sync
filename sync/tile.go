@@ -46,8 +46,8 @@ func getTileGPS(w http.ResponseWriter, r *http.Request, org *models.Organization
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img)))
-	_, err = io.Copy(w, bytes.NewBuffer(img))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(img.Content)))
+	_, err = io.Copy(w, bytes.NewBuffer(img.Content))
 	if err != nil {
 		respondError(w, "copy bytes", err, http.StatusInternalServerError)
 		return

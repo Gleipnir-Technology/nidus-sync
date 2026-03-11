@@ -627,6 +627,74 @@ func (arcgisServiceMap0 *ArcgisServiceMap) AttachArcgisMapServiceOrganizations(c
 	return nil
 }
 
+func insertArcgisServiceMapArcgisCachedImages0(ctx context.Context, exec bob.Executor, tileCachedImages1 []*TileCachedImageSetter, arcgisServiceMap0 *ArcgisServiceMap) (TileCachedImageSlice, error) {
+	for i := range tileCachedImages1 {
+		tileCachedImages1[i].ArcgisID = omit.From(arcgisServiceMap0.ArcgisID)
+	}
+
+	ret, err := TileCachedImages.Insert(bob.ToMods(tileCachedImages1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertArcgisServiceMapArcgisCachedImages0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachArcgisServiceMapArcgisCachedImages0(ctx context.Context, exec bob.Executor, count int, tileCachedImages1 TileCachedImageSlice, arcgisServiceMap0 *ArcgisServiceMap) (TileCachedImageSlice, error) {
+	setter := &TileCachedImageSetter{
+		ArcgisID: omit.From(arcgisServiceMap0.ArcgisID),
+	}
+
+	err := tileCachedImages1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachArcgisServiceMapArcgisCachedImages0: %w", err)
+	}
+
+	return tileCachedImages1, nil
+}
+
+func (arcgisServiceMap0 *ArcgisServiceMap) InsertArcgisCachedImages(ctx context.Context, exec bob.Executor, related ...*TileCachedImageSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	tileCachedImages1, err := insertArcgisServiceMapArcgisCachedImages0(ctx, exec, related, arcgisServiceMap0)
+	if err != nil {
+		return err
+	}
+
+	arcgisServiceMap0.R.ArcgisCachedImages = append(arcgisServiceMap0.R.ArcgisCachedImages, tileCachedImages1...)
+
+	for _, rel := range tileCachedImages1 {
+		rel.R.ArcgisServiceMap = arcgisServiceMap0
+	}
+	return nil
+}
+
+func (arcgisServiceMap0 *ArcgisServiceMap) AttachArcgisCachedImages(ctx context.Context, exec bob.Executor, related ...*TileCachedImage) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	tileCachedImages1 := TileCachedImageSlice(related)
+
+	_, err = attachArcgisServiceMapArcgisCachedImages0(ctx, exec, len(related), tileCachedImages1, arcgisServiceMap0)
+	if err != nil {
+		return err
+	}
+
+	arcgisServiceMap0.R.ArcgisCachedImages = append(arcgisServiceMap0.R.ArcgisCachedImages, tileCachedImages1...)
+
+	for _, rel := range related {
+		rel.R.ArcgisServiceMap = arcgisServiceMap0
+	}
+
+	return nil
+}
+
 type arcgisServiceMapWhere[Q psql.Filterable] struct {
 	AccountID psql.WhereMod[Q, string]
 	ArcgisID  psql.WhereMod[Q, string]
