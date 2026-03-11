@@ -40,7 +40,7 @@ type Water struct {
 	Owner                  types.Contact  `db:"owner" json:"owner"`
 	PublicID               string         `db:"public_id" json:"public_id"`
 	Reporter               types.Contact  `db:"reporter" json:"reporter"`
-	ReporterContactConsent bool           `db:"reporter_contact_consent" json:"reporter_contact_consent"`
+	ReporterContactConsent *bool          `db:"reporter_contact_consent" json:"reporter_contact_consent"`
 	Status                 string         `db:"status" json:"status"`
 }
 
