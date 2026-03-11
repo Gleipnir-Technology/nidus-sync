@@ -55,7 +55,7 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		//log.Info().Str("template", template).Err(e).Msg("handler done")
 		if e != nil {
-			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from sync pages")
+			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
 			body, err = json.Marshal(ErrorAPI{Message: e.Error()})
 			if err != nil {
 				log.Error().Err(err).Msg("failed to marshal error")
@@ -93,7 +93,14 @@ func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFuncti
 		ctx := r.Context()
 		response, e := f(ctx, r, org, u, req)
 		if e != nil {
-			http.Error(w, e.Error(), e.Status)
+			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
+			body, err = json.Marshal(ErrorAPI{Message: e.Error()})
+			if err != nil {
+				log.Error().Err(err).Msg("failed to marshal error")
+				http.Error(w, "{\"message\": \"boom. I can't even tell you what went wrong\"}", http.StatusInternalServerError)
+				return
+			}
+			http.Error(w, string(body), e.Status)
 			return
 		}
 		resp_body, err := json.Marshal(response)
