@@ -16,7 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -266,9 +266,6 @@ func contentFromWater(ctx context.Context, report_id string) (result ContentStat
 			Title:  "Created",
 		},
 	}
-	type LocationGeoJSON struct {
-		Location string
-	}
 	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			psql.F("ST_AsGeoJSON", "location"),
@@ -301,6 +298,8 @@ func getStatusByID(w http.ResponseWriter, r *http.Request) {
 		content, err = contentFromNuisance(ctx, report_id)
 	case "water":
 		content, err = contentFromWater(ctx, report_id)
+	default:
+		err = fmt.Errorf("table name %s not in switch", location.TableName.MustGet())
 	}
 	if err != nil {
 		respondError(w, "Failed to generate report content", err, http.StatusInternalServerError)

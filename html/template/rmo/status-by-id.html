@@ -2,8 +2,12 @@
 
 {{ define "title" }}Status of report {{ .Report.ID|publicReportID }}{{ end }}
 {{ define "extraheader" }}
+	<script
+		type="text/javascript"
+		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
+	></script>
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js"></script>
-	<script src="/static/js/map-with-markers.js"></script>
+	<script src="/static/js/map-locator-ro.js"></script>
 	<style>
 		.timeline {
 			border-left: 3px solid #dee2e6;
@@ -28,32 +32,14 @@
 			font-size: 0.85rem;
 			color: #6c757d;
 		}
-		.map-container {
-			height: 300px;
-		}
-		@media (max-width: 768px) {
-			.map-container {
-				height: 200px;
-			}
-		}
 		.status-badge {
 			font-size: 1rem;
 		}
 	</style>
-<script>
-const GEOJSON_LOCATION = {{.Report.Location|json}};
-function onLoad() {
-	const map = document.querySelector("map-with-markers");
-	map.addEventListener("load", (event) => {
-		map.jumpTo({
-			center: GEOJSON_LOCATION.coordinates,
-			zoom: 14,
-		});
-		map.addMarker(GEOJSON_LOCATION.coordinates, "#DC3545");
-	});
-}
-document.addEventListener("DOMContentLoaded", onLoad);
-</script>
+	<script>
+		function onLoad() {}
+		document.addEventListener("DOMContentLoaded", onLoad);
+	</script>
 {{ end }}
 {{ define "content" }}
 	{{ if (eq .District nil) }}
@@ -133,7 +119,12 @@ document.addEventListener("DOMContentLoaded", onLoad);
 				</h5>
 			</div>
 			<div class="card-body p-0">
-				<map-with-markers zoom="14" />
+				<div class="map-container">
+					<map-locator-ro
+						id="map"
+						marker="{{ .Report.Location|json }}"
+					></map-locator-ro>
+				</div>
 			</div>
 		</div>
 

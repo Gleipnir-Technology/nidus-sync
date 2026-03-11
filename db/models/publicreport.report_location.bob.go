@@ -16,13 +16,13 @@ import (
 
 // PublicreportReportLocation is an object representing the database table.
 type PublicreportReportLocation struct {
-	ID        null.Val[int64]                              `db:"id" `
-	TableName null.Val[string]                             `db:"table_name" `
-	Address   null.Val[string]                             `db:"address" `
-	Created   null.Val[time.Time]                          `db:"created" `
-	Location  null.Val[string]                             `db:"location" `
-	PublicID  null.Val[string]                             `db:"public_id" `
-	Status    null.Val[enums.PublicreportReportstatustype] `db:"status" `
+	ID         null.Val[int64]                              `db:"id" `
+	TableName  null.Val[string]                             `db:"table_name" `
+	AddressRaw null.Val[string]                             `db:"address_raw" `
+	Created    null.Val[time.Time]                          `db:"created" `
+	Location   null.Val[string]                             `db:"location" `
+	PublicID   null.Val[string]                             `db:"public_id" `
+	Status     null.Val[enums.PublicreportReportstatustype] `db:"status" `
 }
 
 // PublicreportReportLocationSlice is an alias for a slice of pointers to PublicreportReportLocation.
@@ -38,12 +38,12 @@ type PublicreportReportLocationsQuery = *psql.ViewQuery[*PublicreportReportLocat
 func buildPublicreportReportLocationColumns(alias string) publicreportReportLocationColumns {
 	return publicreportReportLocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "table_name", "address", "created", "location", "public_id", "status",
+			"id", "table_name", "address_raw", "created", "location", "public_id", "status",
 		).WithParent("publicreport.report_location"),
 		tableAlias: alias,
 		ID:         psql.Quote(alias, "id"),
 		TableName:  psql.Quote(alias, "table_name"),
-		Address:    psql.Quote(alias, "address"),
+		AddressRaw: psql.Quote(alias, "address_raw"),
 		Created:    psql.Quote(alias, "created"),
 		Location:   psql.Quote(alias, "location"),
 		PublicID:   psql.Quote(alias, "public_id"),
@@ -56,7 +56,7 @@ type publicreportReportLocationColumns struct {
 	tableAlias string
 	ID         psql.Expression
 	TableName  psql.Expression
-	Address    psql.Expression
+	AddressRaw psql.Expression
 	Created    psql.Expression
 	Location   psql.Expression
 	PublicID   psql.Expression
@@ -96,13 +96,13 @@ func (o PublicreportReportLocationSlice) AfterQueryHook(ctx context.Context, exe
 }
 
 type publicreportReportLocationWhere[Q psql.Filterable] struct {
-	ID        psql.WhereNullMod[Q, int64]
-	TableName psql.WhereNullMod[Q, string]
-	Address   psql.WhereNullMod[Q, string]
-	Created   psql.WhereNullMod[Q, time.Time]
-	Location  psql.WhereNullMod[Q, string]
-	PublicID  psql.WhereNullMod[Q, string]
-	Status    psql.WhereNullMod[Q, enums.PublicreportReportstatustype]
+	ID         psql.WhereNullMod[Q, int64]
+	TableName  psql.WhereNullMod[Q, string]
+	AddressRaw psql.WhereNullMod[Q, string]
+	Created    psql.WhereNullMod[Q, time.Time]
+	Location   psql.WhereNullMod[Q, string]
+	PublicID   psql.WhereNullMod[Q, string]
+	Status     psql.WhereNullMod[Q, enums.PublicreportReportstatustype]
 }
 
 func (publicreportReportLocationWhere[Q]) AliasedAs(alias string) publicreportReportLocationWhere[Q] {
@@ -111,12 +111,12 @@ func (publicreportReportLocationWhere[Q]) AliasedAs(alias string) publicreportRe
 
 func buildPublicreportReportLocationWhere[Q psql.Filterable](cols publicreportReportLocationColumns) publicreportReportLocationWhere[Q] {
 	return publicreportReportLocationWhere[Q]{
-		ID:        psql.WhereNull[Q, int64](cols.ID),
-		TableName: psql.WhereNull[Q, string](cols.TableName),
-		Address:   psql.WhereNull[Q, string](cols.Address),
-		Created:   psql.WhereNull[Q, time.Time](cols.Created),
-		Location:  psql.WhereNull[Q, string](cols.Location),
-		PublicID:  psql.WhereNull[Q, string](cols.PublicID),
-		Status:    psql.WhereNull[Q, enums.PublicreportReportstatustype](cols.Status),
+		ID:         psql.WhereNull[Q, int64](cols.ID),
+		TableName:  psql.WhereNull[Q, string](cols.TableName),
+		AddressRaw: psql.WhereNull[Q, string](cols.AddressRaw),
+		Created:    psql.WhereNull[Q, time.Time](cols.Created),
+		Location:   psql.WhereNull[Q, string](cols.Location),
+		PublicID:   psql.WhereNull[Q, string](cols.PublicID),
+		Status:     psql.WhereNull[Q, enums.PublicreportReportstatustype](cols.Status),
 	}
 }

@@ -47,7 +47,6 @@ class MapLocatorReadOnly extends HTMLElement {
 			})
 				.setLngLat(marker.coordinates)
 				.addTo(this._map);
-			this.dispatchEvent(markerDraggedEvent);
 			this.dispatchEvent(
 				new CustomEvent("load", {
 					bubbles: true,
