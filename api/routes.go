@@ -10,20 +10,21 @@ import (
 func AddRoutes(r chi.Router) {
 	// Authenticated endpoints
 	r.Use(render.SetContentType(render.ContentTypeJSON))
-	r.Method("GET", "/communication", authenticatedHandlerJSON(listCommunication))
-	r.Method("GET", "/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource))
-	r.Method("GET", "/review-task/pool", authenticatedHandlerJSON(listReviewTaskPool))
-	r.Method("GET", "/service-request", auth.NewEnsureAuth(apiServiceRequest))
-	r.Method("GET", "/signal", authenticatedHandlerJSON(listSignal))
-	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))
-	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
 	r.Method("POST", "/audio/{uuid}", auth.NewEnsureAuth(apiAudioPost))
 	r.Method("POST", "/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost))
+	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
+	r.Method("GET", "/communication", authenticatedHandlerJSON(listCommunication))
 	r.Method("POST", "/image/{uuid}", auth.NewEnsureAuth(apiImagePost))
 	r.Method("GET", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentGet))
 	r.Method("POST", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentPost))
 	r.Method("GET", "/leads", authenticatedHandlerJSON(listLead))
 	r.Method("POST", "/leads", authenticatedHandlerJSONPost(postLeads))
+	r.Method("GET", "/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource))
+	r.Method("POST", "/review/pool", authenticatedHandlerJSONPost(postReviewPool))
+	r.Method("GET", "/review-task/pool", authenticatedHandlerJSON(listReviewTaskPool))
+	r.Method("GET", "/service-request", auth.NewEnsureAuth(apiServiceRequest))
+	r.Method("GET", "/signal", authenticatedHandlerJSON(listSignal))
+	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))
 	r.Method("GET", "/tile/{z}/{y}/{x}", auth.NewEnsureAuth(getTile))
 
 	// Unauthenticated endpoints

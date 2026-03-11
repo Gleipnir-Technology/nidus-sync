@@ -219,7 +219,7 @@
 							});
 						}
 
-						const response = await fetch(`/api/review/`, {
+						const response = await fetch(`/api/review/pool`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
@@ -262,16 +262,14 @@
 					}
 				},
 
-				// Mark as reviewed
+				// Mark as committed
 				markReviewed() {
-					this.submitReview("reviewed");
+					this.submitReview("committed");
 				},
 
 				// Discard entry
 				discardEntry() {
-					if (confirm("Are you sure you want to discard this entry?")) {
-						this.submitReview("discarded");
-					}
+					this.submitReview("discarded");
 				},
 				updatePoolLocation(e, pool_id) {
 					console.log("map click", pool_id, e.detail);
