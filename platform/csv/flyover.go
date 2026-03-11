@@ -223,7 +223,7 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		um.From("fileupload.csv").As("csv"),
 		um.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
 		um.InnerJoin("organization").As("org").OnEQ(psql.Raw("file.organization_id"), psql.Raw("org.id")),
-		um.Where(psql.Raw("pool.id").EQ(psql.Arg(flyover.ID))),
+		um.Where(psql.Quote("pool", "id").EQ(psql.Arg(flyover.ID))),
 	).Exec(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update flyover geometry: %w", err)
