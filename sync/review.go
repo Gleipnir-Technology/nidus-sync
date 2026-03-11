@@ -40,3 +40,6 @@ func getReviewPool(ctx context.Context, r *http.Request, org *models.Organizatio
 func getReviewRoot(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
 	return html.NewResponse("sync/review/root.html", contentReviewRoot{}), nil
 }
+func getReviewSite(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
+	return html.NewResponse("sync/review/site.html", contentReviewRoot{}), nil
+}
