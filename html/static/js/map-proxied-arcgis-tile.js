@@ -90,6 +90,20 @@ class MapProxiedArcgisTile extends HTMLElement {
 					map: this,
 				},
 			});
+			this._map.on("click", (e) => {
+				this.dispatchEvent(
+					new CustomEvent("map-click", {
+						bubbles: true,
+						composed: true,
+						detail: {
+							lng: e.lngLat.lng,
+							lat: e.lngLat.lat,
+							map: this,
+							point: e.point,
+						},
+					}),
+				);
+			});
 		});
 		for (const on of this._preOns) {
 			this._map.on(on.a, on.b);

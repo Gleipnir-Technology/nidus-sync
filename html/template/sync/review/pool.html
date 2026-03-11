@@ -271,15 +271,21 @@
 						this.submitReview("discarded");
 					}
 				},
-				updatePoolLocation(event, signal_id) {
-					console.log("map click", signal_id, event.detail);
-					const map = event.detail.map;
+				updatePoolLocation(e, pool_id) {
+					console.log("map click", pool_id, e.detail);
+					const map = e.detail.map;
 					const loc = {
-						latitude: event.detail.lat,
-						longitude: event.detail.lng,
+						latitude: e.detail.lat,
+						longitude: e.detail.lng,
 					};
-					map.SetMarkers([loc]);
-					this.form.poolLocation[signal_id] = loc;
+					map.SetMarkers([
+						new maplibregl.Marker({
+							color: "#FF0000",
+							draggable: false,
+						}).setLngLat([e.detail.lng, e.detail.lat]),
+					]);
+					this.form.latitude = e.detail.lat;
+					this.form.longitude = e.detail.lng;
 				},
 			};
 		}
