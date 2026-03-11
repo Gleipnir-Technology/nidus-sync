@@ -206,12 +206,12 @@
 					try {
 						const payload = {
 							task_id: this.selectedTask.id,
-							status: action, // 'reviewed' or 'discarded'
+							status: action, // 'committed' or 'discarded'
 							updates: {},
 						};
 
 						// Include changed fields in the payload
-						if (action === "reviewed") {
+						if (action === "committed") {
 							Object.keys(this.form).forEach((key) => {
 								if (this.form[key] !== this.originalValues[key]) {
 									payload.updates[key] = this.form[key];

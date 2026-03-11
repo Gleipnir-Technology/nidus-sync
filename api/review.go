@@ -14,12 +14,12 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/rs/zerolog/log"
 	/*
 	   "github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	   "github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	   "github.com/aarondl/opt/omit"
 	   "github.com/aarondl/opt/omitnull"
-	   "github.com/rs/zerolog/log"
 	   "github.com/stephenafamo/scan"
 	*/)
 
@@ -74,6 +74,7 @@ func postReviewPool(ctx context.Context, r *http.Request, org *models.Organizati
 		return nil, e
 	}
 	txn.Commit(ctx)
+	log.Info().Int32("id", review_task.ID).Str("status", req.Status).Msg("committed")
 	return &createdReviewPool{}, e
 }
 func discardReviewPool(ctx context.Context, txn bob.Tx, user *models.User, req createReviewPool, review_task_pool *models.ReviewTaskPool) *nhttp.ErrorWithStatus {
@@ -121,7 +122,7 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user *models.User, req cr
 					), psql.Arg(4326),
 				),
 			),
-			um.Where(psql.Quote("review_task_pool", "id").EQ(psql.Arg(review_task_pool.ReviewTaskID))),
+			um.Where(psql.Quote("review_task_pool", "review_task_id").EQ(psql.Arg(review_task_pool.ReviewTaskID))),
 		).Exec(ctx, txn)
 		if err != nil {
 			return nhttp.NewError("save task: %w", err)
