@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -25,12 +26,13 @@ import (
 
 // ReviewTask is an object representing the database table.
 type ReviewTask struct {
-	Created        time.Time           `db:"created" `
-	CreatorID      null.Val[int32]     `db:"creator_id" `
-	ID             int32               `db:"id,pk" `
-	OrganizationID int32               `db:"organization_id" `
-	Reviewed       null.Val[time.Time] `db:"reviewed" `
-	ReviewerID     null.Val[int32]     `db:"reviewer_id" `
+	Created        time.Time                                `db:"created" `
+	CreatorID      null.Val[int32]                          `db:"creator_id" `
+	ID             int32                                    `db:"id,pk" `
+	OrganizationID int32                                    `db:"organization_id" `
+	Reviewed       null.Val[time.Time]                      `db:"reviewed" `
+	ReviewerID     null.Val[int32]                          `db:"reviewer_id" `
+	Resolution     null.Val[enums.Reviewtaskresolutiontype] `db:"resolution" `
 
 	R reviewTaskR `db:"-" `
 }
@@ -56,7 +58,7 @@ type reviewTaskR struct {
 func buildReviewTaskColumns(alias string) reviewTaskColumns {
 	return reviewTaskColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "id", "organization_id", "reviewed", "reviewer_id",
+			"created", "creator_id", "id", "organization_id", "reviewed", "reviewer_id", "resolution",
 		).WithParent("review_task"),
 		tableAlias:     alias,
 		Created:        psql.Quote(alias, "created"),
@@ -65,6 +67,7 @@ func buildReviewTaskColumns(alias string) reviewTaskColumns {
 		OrganizationID: psql.Quote(alias, "organization_id"),
 		Reviewed:       psql.Quote(alias, "reviewed"),
 		ReviewerID:     psql.Quote(alias, "reviewer_id"),
+		Resolution:     psql.Quote(alias, "resolution"),
 	}
 }
 
@@ -77,6 +80,7 @@ type reviewTaskColumns struct {
 	OrganizationID psql.Expression
 	Reviewed       psql.Expression
 	ReviewerID     psql.Expression
+	Resolution     psql.Expression
 }
 
 func (c reviewTaskColumns) Alias() string {
@@ -91,16 +95,17 @@ func (reviewTaskColumns) AliasedAs(alias string) reviewTaskColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type ReviewTaskSetter struct {
-	Created        omit.Val[time.Time]     `db:"created" `
-	CreatorID      omitnull.Val[int32]     `db:"creator_id" `
-	ID             omit.Val[int32]         `db:"id,pk" `
-	OrganizationID omit.Val[int32]         `db:"organization_id" `
-	Reviewed       omitnull.Val[time.Time] `db:"reviewed" `
-	ReviewerID     omitnull.Val[int32]     `db:"reviewer_id" `
+	Created        omit.Val[time.Time]                          `db:"created" `
+	CreatorID      omitnull.Val[int32]                          `db:"creator_id" `
+	ID             omit.Val[int32]                              `db:"id,pk" `
+	OrganizationID omit.Val[int32]                              `db:"organization_id" `
+	Reviewed       omitnull.Val[time.Time]                      `db:"reviewed" `
+	ReviewerID     omitnull.Val[int32]                          `db:"reviewer_id" `
+	Resolution     omitnull.Val[enums.Reviewtaskresolutiontype] `db:"resolution" `
 }
 
 func (s ReviewTaskSetter) SetColumns() []string {
-	vals := make([]string, 0, 6)
+	vals := make([]string, 0, 7)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
@@ -118,6 +123,9 @@ func (s ReviewTaskSetter) SetColumns() []string {
 	}
 	if !s.ReviewerID.IsUnset() {
 		vals = append(vals, "reviewer_id")
+	}
+	if !s.Resolution.IsUnset() {
+		vals = append(vals, "resolution")
 	}
 	return vals
 }
@@ -141,6 +149,9 @@ func (s ReviewTaskSetter) Overwrite(t *ReviewTask) {
 	if !s.ReviewerID.IsUnset() {
 		t.ReviewerID = s.ReviewerID.MustGetNull()
 	}
+	if !s.Resolution.IsUnset() {
+		t.Resolution = s.Resolution.MustGetNull()
+	}
 }
 
 func (s *ReviewTaskSetter) Apply(q *dialect.InsertQuery) {
@@ -149,7 +160,7 @@ func (s *ReviewTaskSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 6)
+		vals := make([]bob.Expression, 7)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -186,6 +197,12 @@ func (s *ReviewTaskSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Resolution.IsUnset() {
+			vals[6] = psql.Arg(s.Resolution.MustGetNull())
+		} else {
+			vals[6] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -195,7 +212,7 @@ func (s ReviewTaskSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s ReviewTaskSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 6)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -236,6 +253,13 @@ func (s ReviewTaskSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "reviewer_id")...),
 			psql.Arg(s.ReviewerID),
+		}})
+	}
+
+	if !s.Resolution.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "resolution")...),
+			psql.Arg(s.Resolution),
 		}})
 	}
 
@@ -766,6 +790,7 @@ type reviewTaskWhere[Q psql.Filterable] struct {
 	OrganizationID psql.WhereMod[Q, int32]
 	Reviewed       psql.WhereNullMod[Q, time.Time]
 	ReviewerID     psql.WhereNullMod[Q, int32]
+	Resolution     psql.WhereNullMod[Q, enums.Reviewtaskresolutiontype]
 }
 
 func (reviewTaskWhere[Q]) AliasedAs(alias string) reviewTaskWhere[Q] {
@@ -780,6 +805,7 @@ func buildReviewTaskWhere[Q psql.Filterable](cols reviewTaskColumns) reviewTaskW
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Reviewed:       psql.WhereNull[Q, time.Time](cols.Reviewed),
 		ReviewerID:     psql.WhereNull[Q, int32](cols.ReviewerID),
+		Resolution:     psql.WhereNull[Q, enums.Reviewtaskresolutiontype](cols.Resolution),
 	}
 }
 

@@ -69,8 +69,8 @@ var Features = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Geometry: column{
-			Name:      "geometry",
+		Location: column{
+			Name:      "location",
 			DBType:    "geometry",
 			Default:   "NULL",
 			Comment:   "",
@@ -143,12 +143,12 @@ type featureColumns struct {
 	OrganizationID column
 	SiteID         column
 	SiteVersion    column
-	Geometry       column
+	Location       column
 }
 
 func (c featureColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.SiteVersion, c.Geometry,
+		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.SiteVersion, c.Location,
 	}
 }
 

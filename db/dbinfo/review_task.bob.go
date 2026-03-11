@@ -69,6 +69,15 @@ var ReviewTasks = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Resolution: column{
+			Name:      "resolution",
+			DBType:    "public.reviewtaskresolutiontype",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: reviewTaskIndexes{
 		ReviewTaskPkey: index{
@@ -134,11 +143,12 @@ type reviewTaskColumns struct {
 	OrganizationID column
 	Reviewed       column
 	ReviewerID     column
+	Resolution     column
 }
 
 func (c reviewTaskColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.Reviewed, c.ReviewerID,
+		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.Reviewed, c.ReviewerID, c.Resolution,
 	}
 }
 

@@ -1945,6 +1945,79 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Reviewtaskresolutiontype
+const (
+	ReviewtaskresolutiontypeCommitted Reviewtaskresolutiontype = "committed"
+	ReviewtaskresolutiontypeDiscarded Reviewtaskresolutiontype = "discarded"
+)
+
+func AllReviewtaskresolutiontype() []Reviewtaskresolutiontype {
+	return []Reviewtaskresolutiontype{
+		ReviewtaskresolutiontypeCommitted,
+		ReviewtaskresolutiontypeDiscarded,
+	}
+}
+
+type Reviewtaskresolutiontype string
+
+func (e Reviewtaskresolutiontype) String() string {
+	return string(e)
+}
+
+func (e Reviewtaskresolutiontype) Valid() bool {
+	switch e {
+	case ReviewtaskresolutiontypeCommitted,
+		ReviewtaskresolutiontypeDiscarded:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Reviewtaskresolutiontype) All() []Reviewtaskresolutiontype {
+	return AllReviewtaskresolutiontype()
+}
+
+func (e Reviewtaskresolutiontype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Reviewtaskresolutiontype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Reviewtaskresolutiontype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Reviewtaskresolutiontype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Reviewtaskresolutiontype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Reviewtaskresolutiontype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Reviewtaskresolutiontype(x)
+	case []byte:
+		*e = Reviewtaskresolutiontype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Reviewtaskresolutiontype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Reviewtaskresolutiontype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Signaltype
 const (
 	SignaltypeFlyoverPool             Signaltype = "flyover pool"

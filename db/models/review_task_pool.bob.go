@@ -17,6 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -24,10 +25,11 @@ import (
 
 // ReviewTaskPool is an object representing the database table.
 type ReviewTaskPool struct {
-	FeaturePoolID int32            `db:"feature_pool_id" `
-	Location      null.Val[string] `db:"location" `
-	Geometry      null.Val[string] `db:"geometry" `
-	ReviewTaskID  int32            `db:"review_task_id,pk" `
+	FeaturePoolID int32                             `db:"feature_pool_id" `
+	Location      null.Val[string]                  `db:"location" `
+	Geometry      null.Val[string]                  `db:"geometry" `
+	ReviewTaskID  int32                             `db:"review_task_id,pk" `
+	Condition     null.Val[enums.Poolconditiontype] `db:"condition" `
 
 	R reviewTaskPoolR `db:"-" `
 }
@@ -51,13 +53,14 @@ type reviewTaskPoolR struct {
 func buildReviewTaskPoolColumns(alias string) reviewTaskPoolColumns {
 	return reviewTaskPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"feature_pool_id", "location", "geometry", "review_task_id",
+			"feature_pool_id", "location", "geometry", "review_task_id", "condition",
 		).WithParent("review_task_pool"),
 		tableAlias:    alias,
 		FeaturePoolID: psql.Quote(alias, "feature_pool_id"),
 		Location:      psql.Quote(alias, "location"),
 		Geometry:      psql.Quote(alias, "geometry"),
 		ReviewTaskID:  psql.Quote(alias, "review_task_id"),
+		Condition:     psql.Quote(alias, "condition"),
 	}
 }
 
@@ -68,6 +71,7 @@ type reviewTaskPoolColumns struct {
 	Location      psql.Expression
 	Geometry      psql.Expression
 	ReviewTaskID  psql.Expression
+	Condition     psql.Expression
 }
 
 func (c reviewTaskPoolColumns) Alias() string {
@@ -82,14 +86,15 @@ func (reviewTaskPoolColumns) AliasedAs(alias string) reviewTaskPoolColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type ReviewTaskPoolSetter struct {
-	FeaturePoolID omit.Val[int32]      `db:"feature_pool_id" `
-	Location      omitnull.Val[string] `db:"location" `
-	Geometry      omitnull.Val[string] `db:"geometry" `
-	ReviewTaskID  omit.Val[int32]      `db:"review_task_id,pk" `
+	FeaturePoolID omit.Val[int32]                       `db:"feature_pool_id" `
+	Location      omitnull.Val[string]                  `db:"location" `
+	Geometry      omitnull.Val[string]                  `db:"geometry" `
+	ReviewTaskID  omit.Val[int32]                       `db:"review_task_id,pk" `
+	Condition     omitnull.Val[enums.Poolconditiontype] `db:"condition" `
 }
 
 func (s ReviewTaskPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 4)
+	vals := make([]string, 0, 5)
 	if s.FeaturePoolID.IsValue() {
 		vals = append(vals, "feature_pool_id")
 	}
@@ -101,6 +106,9 @@ func (s ReviewTaskPoolSetter) SetColumns() []string {
 	}
 	if s.ReviewTaskID.IsValue() {
 		vals = append(vals, "review_task_id")
+	}
+	if !s.Condition.IsUnset() {
+		vals = append(vals, "condition")
 	}
 	return vals
 }
@@ -118,6 +126,9 @@ func (s ReviewTaskPoolSetter) Overwrite(t *ReviewTaskPool) {
 	if s.ReviewTaskID.IsValue() {
 		t.ReviewTaskID = s.ReviewTaskID.MustGet()
 	}
+	if !s.Condition.IsUnset() {
+		t.Condition = s.Condition.MustGetNull()
+	}
 }
 
 func (s *ReviewTaskPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -126,7 +137,7 @@ func (s *ReviewTaskPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 4)
+		vals := make([]bob.Expression, 5)
 		if s.FeaturePoolID.IsValue() {
 			vals[0] = psql.Arg(s.FeaturePoolID.MustGet())
 		} else {
@@ -151,6 +162,12 @@ func (s *ReviewTaskPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Condition.IsUnset() {
+			vals[4] = psql.Arg(s.Condition.MustGetNull())
+		} else {
+			vals[4] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -160,7 +177,7 @@ func (s ReviewTaskPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s ReviewTaskPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 4)
+	exprs := make([]bob.Expression, 0, 5)
 
 	if s.FeaturePoolID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -187,6 +204,13 @@ func (s ReviewTaskPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "review_task_id")...),
 			psql.Arg(s.ReviewTaskID),
+		}})
+	}
+
+	if !s.Condition.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "condition")...),
+			psql.Arg(s.Condition),
 		}})
 	}
 
@@ -565,6 +589,7 @@ type reviewTaskPoolWhere[Q psql.Filterable] struct {
 	Location      psql.WhereNullMod[Q, string]
 	Geometry      psql.WhereNullMod[Q, string]
 	ReviewTaskID  psql.WhereMod[Q, int32]
+	Condition     psql.WhereNullMod[Q, enums.Poolconditiontype]
 }
 
 func (reviewTaskPoolWhere[Q]) AliasedAs(alias string) reviewTaskPoolWhere[Q] {
@@ -577,6 +602,7 @@ func buildReviewTaskPoolWhere[Q psql.Filterable](cols reviewTaskPoolColumns) rev
 		Location:      psql.WhereNull[Q, string](cols.Location),
 		Geometry:      psql.WhereNull[Q, string](cols.Geometry),
 		ReviewTaskID:  psql.Where[Q, int32](cols.ReviewTaskID),
+		Condition:     psql.WhereNull[Q, enums.Poolconditiontype](cols.Condition),
 	}
 }
 

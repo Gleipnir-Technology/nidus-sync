@@ -31,7 +31,7 @@ type Feature struct {
 	OrganizationID int32            `db:"organization_id" `
 	SiteID         int32            `db:"site_id" `
 	SiteVersion    int32            `db:"site_version" `
-	Geometry       null.Val[string] `db:"geometry" `
+	Location       null.Val[string] `db:"location" `
 
 	R featureR `db:"-" `
 }
@@ -57,7 +57,7 @@ type featureR struct {
 func buildFeatureColumns(alias string) featureColumns {
 	return featureColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "id", "organization_id", "site_id", "site_version", "geometry",
+			"created", "creator_id", "id", "organization_id", "site_id", "site_version", "location",
 		).WithParent("feature"),
 		tableAlias:     alias,
 		Created:        psql.Quote(alias, "created"),
@@ -66,7 +66,7 @@ func buildFeatureColumns(alias string) featureColumns {
 		OrganizationID: psql.Quote(alias, "organization_id"),
 		SiteID:         psql.Quote(alias, "site_id"),
 		SiteVersion:    psql.Quote(alias, "site_version"),
-		Geometry:       psql.Quote(alias, "geometry"),
+		Location:       psql.Quote(alias, "location"),
 	}
 }
 
@@ -79,7 +79,7 @@ type featureColumns struct {
 	OrganizationID psql.Expression
 	SiteID         psql.Expression
 	SiteVersion    psql.Expression
-	Geometry       psql.Expression
+	Location       psql.Expression
 }
 
 func (c featureColumns) Alias() string {
@@ -100,7 +100,7 @@ type FeatureSetter struct {
 	OrganizationID omit.Val[int32]      `db:"organization_id" `
 	SiteID         omit.Val[int32]      `db:"site_id" `
 	SiteVersion    omit.Val[int32]      `db:"site_version" `
-	Geometry       omitnull.Val[string] `db:"geometry" `
+	Location       omitnull.Val[string] `db:"location" `
 }
 
 func (s FeatureSetter) SetColumns() []string {
@@ -123,8 +123,8 @@ func (s FeatureSetter) SetColumns() []string {
 	if s.SiteVersion.IsValue() {
 		vals = append(vals, "site_version")
 	}
-	if !s.Geometry.IsUnset() {
-		vals = append(vals, "geometry")
+	if !s.Location.IsUnset() {
+		vals = append(vals, "location")
 	}
 	return vals
 }
@@ -148,8 +148,8 @@ func (s FeatureSetter) Overwrite(t *Feature) {
 	if s.SiteVersion.IsValue() {
 		t.SiteVersion = s.SiteVersion.MustGet()
 	}
-	if !s.Geometry.IsUnset() {
-		t.Geometry = s.Geometry.MustGetNull()
+	if !s.Location.IsUnset() {
+		t.Location = s.Location.MustGetNull()
 	}
 }
 
@@ -196,8 +196,8 @@ func (s *FeatureSetter) Apply(q *dialect.InsertQuery) {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Geometry.IsUnset() {
-			vals[6] = psql.Arg(s.Geometry.MustGetNull())
+		if !s.Location.IsUnset() {
+			vals[6] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
@@ -255,10 +255,10 @@ func (s FeatureSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if !s.Geometry.IsUnset() {
+	if !s.Location.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "geometry")...),
-			psql.Arg(s.Geometry),
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -794,7 +794,7 @@ type featureWhere[Q psql.Filterable] struct {
 	OrganizationID psql.WhereMod[Q, int32]
 	SiteID         psql.WhereMod[Q, int32]
 	SiteVersion    psql.WhereMod[Q, int32]
-	Geometry       psql.WhereNullMod[Q, string]
+	Location       psql.WhereNullMod[Q, string]
 }
 
 func (featureWhere[Q]) AliasedAs(alias string) featureWhere[Q] {
@@ -809,7 +809,7 @@ func buildFeatureWhere[Q psql.Filterable](cols featureColumns) featureWhere[Q] {
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		SiteID:         psql.Where[Q, int32](cols.SiteID),
 		SiteVersion:    psql.Where[Q, int32](cols.SiteVersion),
-		Geometry:       psql.WhereNull[Q, string](cols.Geometry),
+		Location:       psql.WhereNull[Q, string](cols.Location),
 	}
 }
 

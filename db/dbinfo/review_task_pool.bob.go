@@ -51,6 +51,15 @@ var ReviewTaskPools = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Condition: column{
+			Name:      "condition",
+			DBType:    "public.poolconditiontype",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: reviewTaskPoolIndexes{
 		ReviewTaskPoolPkey: index{
@@ -105,11 +114,12 @@ type reviewTaskPoolColumns struct {
 	Location      column
 	Geometry      column
 	ReviewTaskID  column
+	Condition     column
 }
 
 func (c reviewTaskPoolColumns) AsSlice() []column {
 	return []column{
-		c.FeaturePoolID, c.Location, c.Geometry, c.ReviewTaskID,
+		c.FeaturePoolID, c.Location, c.Geometry, c.ReviewTaskID, c.Condition,
 	}
 }
 
