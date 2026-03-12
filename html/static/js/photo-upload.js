@@ -110,7 +110,8 @@ class PhotoUpload extends HTMLElement {
                                 <path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
                         </svg>
                         <div class="file-upload-container" id="photoDropArea">
-                                <input type="file" id="photos" name="photos" class="d-none" accept="image/*" multiple>
+                                <input type="file" id="photos" name="photos" class="d-none"
+					accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp" multiple>
                                 <button type="button" class="btn btn-outline-primary mb-2" onclick="this.getRootNode().handleButtonClick()">Add Photos</button>
                         </div>
                         <small class="d-block text-muted">Take pictures of the mosquito problem area</small>
