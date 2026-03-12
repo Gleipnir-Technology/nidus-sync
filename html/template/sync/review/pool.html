@@ -565,14 +565,6 @@
 					</span>
 				</button>
 
-				<button
-					class="btn btn-danger action-btn"
-					@click="discardEntry()"
-					:disabled="!selectedTask || submitting"
-				>
-					<i class="bi bi-trash"></i> Discard Entry
-				</button>
-
 				<div class="card mt-3" x-show="selectedTask">
 					<div class="card-body" x-show="changes.updated.length > 0">
 						<h6 class="card-title">
@@ -595,6 +587,14 @@
 						</ul>
 					</div>
 				</div>
+
+				<button
+					class="btn btn-danger action-btn"
+					@click="discardEntry()"
+					:disabled="!selectedTask || submitting"
+				>
+					<i class="bi bi-trash"></i> Discard Entry
+				</button>
 
 				<!-- Keyboard Shortcuts Help -->
 				<div class="card mt-3">
