@@ -29,9 +29,29 @@ type reviewTaskPool struct {
 }
 type contentListReviewTaskPool struct {
 	Tasks []reviewTaskPool `json:"tasks"`
+	Total int32            `json:"total"`
 }
 
 func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListReviewTaskPool, *nhttp.ErrorWithStatus) {
+	limit := 20
+	if query.Limit != nil {
+		limit = *query.Limit
+	}
+	type _RowTotal struct {
+		Total int32 `db:"total"`
+	}
+	row_total, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"COUNT(*) AS total",
+		),
+		sm.From("review_task"),
+		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("review_task", "reviewed").IsNull()),
+	), scan.StructMapper[_RowTotal]())
+	if err != nil {
+		return nil, nhttp.NewError("failed to total count: %w", err)
+	}
+
 	type _Row struct {
 		Address    types.Address `db:"address"`
 		Condition  string        `db:"condition"`
@@ -45,10 +65,6 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organi
 		Species    *string       `db:"species"`
 		Title      string        `db:"title"`
 		Type       string        `db:"type"`
-	}
-	limit := 20
-	if query.Limit != nil {
-		limit = *query.Limit
 	}
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -96,7 +112,7 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organi
 		sm.Limit(limit),
 	), scan.StructMapper[_Row]())
 	if err != nil {
-		return nil, nhttp.NewError("failed to get signals: %w", err)
+		return nil, nhttp.NewError("failed to get review tasks: %w", err)
 	}
 	users_by_id, err := platform.UsersByID(ctx, org)
 	if err != nil {
@@ -120,5 +136,6 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organi
 	}
 	return &contentListReviewTaskPool{
 		Tasks: tasks,
+		Total: row_total.Total,
 	}, nil
 }

@@ -106,7 +106,7 @@
 
 						const data = await response.json();
 						this.tasks = data.tasks || [];
-						this.totalPending = data.totalPending || this.tasks.length;
+						this.totalPending = data.total || this.tasks.length;
 
 						// Auto-select first task if available
 						if (this.tasks.length > 0 && !this.selectedTask) {
