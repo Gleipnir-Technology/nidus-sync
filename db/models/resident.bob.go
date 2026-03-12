@@ -32,7 +32,6 @@ type Resident struct {
 	Name        string           `db:"name" `
 	PhoneMobile null.Val[string] `db:"phone_mobile" `
 	SiteID      int32            `db:"site_id" `
-	SiteVersion int32            `db:"site_version" `
 
 	R residentR `db:"-" `
 }
@@ -52,13 +51,13 @@ type residentR struct {
 	Address          *Address    // resident.resident_address_id_fkey
 	CreatorUser      *User       // resident.resident_creator_fkey
 	PhoneMobilePhone *CommsPhone // resident.resident_phone_mobile_fkey
-	Site             *Site       // resident.resident_site_id_site_version_fkey
+	Site             *Site       // resident.resident_site_id_fkey
 }
 
 func buildResidentColumns(alias string) residentColumns {
 	return residentColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_id", "created", "creator", "id", "name", "phone_mobile", "site_id", "site_version",
+			"address_id", "created", "creator", "id", "name", "phone_mobile", "site_id",
 		).WithParent("resident"),
 		tableAlias:  alias,
 		AddressID:   psql.Quote(alias, "address_id"),
@@ -68,7 +67,6 @@ func buildResidentColumns(alias string) residentColumns {
 		Name:        psql.Quote(alias, "name"),
 		PhoneMobile: psql.Quote(alias, "phone_mobile"),
 		SiteID:      psql.Quote(alias, "site_id"),
-		SiteVersion: psql.Quote(alias, "site_version"),
 	}
 }
 
@@ -82,7 +80,6 @@ type residentColumns struct {
 	Name        psql.Expression
 	PhoneMobile psql.Expression
 	SiteID      psql.Expression
-	SiteVersion psql.Expression
 }
 
 func (c residentColumns) Alias() string {
@@ -104,11 +101,10 @@ type ResidentSetter struct {
 	Name        omit.Val[string]     `db:"name" `
 	PhoneMobile omitnull.Val[string] `db:"phone_mobile" `
 	SiteID      omit.Val[int32]      `db:"site_id" `
-	SiteVersion omit.Val[int32]      `db:"site_version" `
 }
 
 func (s ResidentSetter) SetColumns() []string {
-	vals := make([]string, 0, 8)
+	vals := make([]string, 0, 7)
 	if s.AddressID.IsValue() {
 		vals = append(vals, "address_id")
 	}
@@ -129,9 +125,6 @@ func (s ResidentSetter) SetColumns() []string {
 	}
 	if s.SiteID.IsValue() {
 		vals = append(vals, "site_id")
-	}
-	if s.SiteVersion.IsValue() {
-		vals = append(vals, "site_version")
 	}
 	return vals
 }
@@ -158,9 +151,6 @@ func (s ResidentSetter) Overwrite(t *Resident) {
 	if s.SiteID.IsValue() {
 		t.SiteID = s.SiteID.MustGet()
 	}
-	if s.SiteVersion.IsValue() {
-		t.SiteVersion = s.SiteVersion.MustGet()
-	}
 }
 
 func (s *ResidentSetter) Apply(q *dialect.InsertQuery) {
@@ -169,7 +159,7 @@ func (s *ResidentSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 8)
+		vals := make([]bob.Expression, 7)
 		if s.AddressID.IsValue() {
 			vals[0] = psql.Arg(s.AddressID.MustGet())
 		} else {
@@ -212,12 +202,6 @@ func (s *ResidentSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.SiteVersion.IsValue() {
-			vals[7] = psql.Arg(s.SiteVersion.MustGet())
-		} else {
-			vals[7] = psql.Raw("DEFAULT")
-		}
-
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -227,7 +211,7 @@ func (s ResidentSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s ResidentSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 8)
+	exprs := make([]bob.Expression, 0, 7)
 
 	if s.AddressID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -275,13 +259,6 @@ func (s ResidentSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_id")...),
 			psql.Arg(s.SiteID),
-		}})
-	}
-
-	if s.SiteVersion.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "site_version")...),
-			psql.Arg(s.SiteVersion),
 		}})
 	}
 
@@ -586,28 +563,24 @@ func (os ResidentSlice) PhoneMobilePhone(mods ...bob.Mod[*dialect.SelectQuery]) 
 // Site starts a query for related objects on site
 func (o *Resident) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
-		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))), sm.Where(Sites.Columns.Version.EQ(psql.Arg(o.SiteVersion))),
+		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))),
 	)...)
 }
 
 func (os ResidentSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	pkSiteID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkSiteVersion := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkSiteID = append(pkSiteID, o.SiteID)
-		pkSiteVersion = append(pkSiteVersion, o.SiteVersion)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkSiteID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkSiteVersion), "integer[]")),
 	))
 
 	return Sites.Query(append(mods,
-		sm.Where(psql.Group(Sites.Columns.ID, Sites.Columns.Version).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Sites.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -757,8 +730,7 @@ func (resident0 *Resident) AttachPhoneMobilePhone(ctx context.Context, exec bob.
 
 func attachResidentSite0(ctx context.Context, exec bob.Executor, count int, resident0 *Resident, site1 *Site) (*Resident, error) {
 	setter := &ResidentSetter{
-		SiteID:      omit.From(site1.ID),
-		SiteVersion: omit.From(site1.Version),
+		SiteID: omit.From(site1.ID),
 	}
 
 	err := resident0.Update(ctx, exec, setter)
@@ -812,7 +784,6 @@ type residentWhere[Q psql.Filterable] struct {
 	Name        psql.WhereMod[Q, string]
 	PhoneMobile psql.WhereNullMod[Q, string]
 	SiteID      psql.WhereMod[Q, int32]
-	SiteVersion psql.WhereMod[Q, int32]
 }
 
 func (residentWhere[Q]) AliasedAs(alias string) residentWhere[Q] {
@@ -828,7 +799,6 @@ func buildResidentWhere[Q psql.Filterable](cols residentColumns) residentWhere[Q
 		Name:        psql.Where[Q, string](cols.Name),
 		PhoneMobile: psql.WhereNull[Q, string](cols.PhoneMobile),
 		SiteID:      psql.Where[Q, int32](cols.SiteID),
-		SiteVersion: psql.Where[Q, int32](cols.SiteVersion),
 	}
 }
 
@@ -946,8 +916,8 @@ func buildResidentPreloader() residentPreloader {
 					{
 						From:        Residents,
 						To:          Sites,
-						FromColumns: []string{"site_id", "site_version"},
-						ToColumns:   []string{"id", "version"},
+						FromColumns: []string{"site_id"},
+						ToColumns:   []string{"id"},
 					},
 				},
 			}, Sites.Columns.Names(), opts...)
@@ -1202,10 +1172,6 @@ func (os ResidentSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ..
 		for _, rel := range sites {
 
 			if !(o.SiteID == rel.ID) {
-				continue
-			}
-
-			if !(o.SiteVersion == rel.Version) {
 				continue
 			}
 

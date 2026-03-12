@@ -1868,10 +1868,11 @@ func (e *PublicreportPoolsourceduration) Scan(value any) error {
 
 // Enum values for PublicreportReportstatustype
 const (
-	PublicreportReportstatustypeReported  PublicreportReportstatustype = "reported"
-	PublicreportReportstatustypeReviewed  PublicreportReportstatustype = "reviewed"
-	PublicreportReportstatustypeScheduled PublicreportReportstatustype = "scheduled"
-	PublicreportReportstatustypeTreated   PublicreportReportstatustype = "treated"
+	PublicreportReportstatustypeReported    PublicreportReportstatustype = "reported"
+	PublicreportReportstatustypeReviewed    PublicreportReportstatustype = "reviewed"
+	PublicreportReportstatustypeScheduled   PublicreportReportstatustype = "scheduled"
+	PublicreportReportstatustypeTreated     PublicreportReportstatustype = "treated"
+	PublicreportReportstatustypeInvalidated PublicreportReportstatustype = "invalidated"
 )
 
 func AllPublicreportReportstatustype() []PublicreportReportstatustype {
@@ -1880,6 +1881,7 @@ func AllPublicreportReportstatustype() []PublicreportReportstatustype {
 		PublicreportReportstatustypeReviewed,
 		PublicreportReportstatustypeScheduled,
 		PublicreportReportstatustypeTreated,
+		PublicreportReportstatustypeInvalidated,
 	}
 }
 
@@ -1894,7 +1896,8 @@ func (e PublicreportReportstatustype) Valid() bool {
 	case PublicreportReportstatustypeReported,
 		PublicreportReportstatustypeReviewed,
 		PublicreportReportstatustypeScheduled,
-		PublicreportReportstatustypeTreated:
+		PublicreportReportstatustypeTreated,
+		PublicreportReportstatustypeInvalidated:
 		return true
 	default:
 		return false

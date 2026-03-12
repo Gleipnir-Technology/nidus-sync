@@ -60,15 +60,6 @@ var Leads = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SiteVersion: column{
-			Name:      "site_version",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Type: column{
 			Name:      "type_",
 			DBType:    "public.leadtype",
@@ -122,14 +113,14 @@ var Leads = Table[
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
 		},
-		LeadLeadSiteIDSiteVersionFkey: foreignKey{
+		LeadLeadSiteIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "lead.lead_site_id_site_version_fkey",
-				Columns: []string{"site_id", "site_version"},
+				Name:    "lead.lead_site_id_fkey",
+				Columns: []string{"site_id"},
 				Comment: "",
 			},
 			ForeignTable:   "site",
-			ForeignColumns: []string{"id", "version"},
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -142,13 +133,12 @@ type leadColumns struct {
 	ID             column
 	OrganizationID column
 	SiteID         column
-	SiteVersion    column
 	Type           column
 }
 
 func (c leadColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.Creator, c.ID, c.OrganizationID, c.SiteID, c.SiteVersion, c.Type,
+		c.Created, c.Creator, c.ID, c.OrganizationID, c.SiteID, c.Type,
 	}
 }
 
@@ -163,14 +153,14 @@ func (i leadIndexes) AsSlice() []index {
 }
 
 type leadForeignKeys struct {
-	LeadLeadCreatorFkey           foreignKey
-	LeadLeadOrganizationIDFkey    foreignKey
-	LeadLeadSiteIDSiteVersionFkey foreignKey
+	LeadLeadCreatorFkey        foreignKey
+	LeadLeadOrganizationIDFkey foreignKey
+	LeadLeadSiteIDFkey         foreignKey
 }
 
 func (f leadForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.LeadLeadCreatorFkey, f.LeadLeadOrganizationIDFkey, f.LeadLeadSiteIDSiteVersionFkey,
+		f.LeadLeadCreatorFkey, f.LeadLeadOrganizationIDFkey, f.LeadLeadSiteIDFkey,
 	}
 }
 

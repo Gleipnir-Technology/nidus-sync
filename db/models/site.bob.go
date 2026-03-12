@@ -37,7 +37,7 @@ type Site struct {
 	ParcelID       null.Val[int32]  `db:"parcel_id" `
 	ResidentOwned  null.Val[bool]   `db:"resident_owned" `
 	Tags           pgtypes.HStore   `db:"tags" `
-	Version        int32            `db:"version,pk" `
+	Version        int32            `db:"version" `
 
 	R siteR `db:"-" `
 }
@@ -54,9 +54,9 @@ type SitesQuery = *psql.ViewQuery[*Site, SiteSlice]
 
 // siteR is where relationships are stored.
 type siteR struct {
-	Features    FeatureSlice    // feature.feature_site_id_site_version_fkey
-	Leads       LeadSlice       // lead.lead_site_id_site_version_fkey
-	Residents   ResidentSlice   // resident.resident_site_id_site_version_fkey
+	Features    FeatureSlice    // feature.feature_site_id_fkey
+	Leads       LeadSlice       // lead.lead_site_id_fkey
+	Residents   ResidentSlice   // resident.resident_site_id_fkey
 	Address     *Address        // site.site_address_id_fkey
 	CreatorUser *User           // site.site_creator_id_fkey
 	File        *FileuploadFile // site.site_file_id_fkey
@@ -127,7 +127,7 @@ type SiteSetter struct {
 	ParcelID       omitnull.Val[int32]      `db:"parcel_id" `
 	ResidentOwned  omitnull.Val[bool]       `db:"resident_owned" `
 	Tags           omit.Val[pgtypes.HStore] `db:"tags" `
-	Version        omit.Val[int32]          `db:"version,pk" `
+	Version        omit.Val[int32]          `db:"version" `
 }
 
 func (s SiteSetter) SetColumns() []string {
@@ -408,26 +408,23 @@ func (s SiteSetter) Expressions(prefix ...string) []bob.Expression {
 
 // FindSite retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindSite(ctx context.Context, exec bob.Executor, IDPK int32, VersionPK int32, cols ...string) (*Site, error) {
+func FindSite(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*Site, error) {
 	if len(cols) == 0 {
 		return Sites.Query(
 			sm.Where(Sites.Columns.ID.EQ(psql.Arg(IDPK))),
-			sm.Where(Sites.Columns.Version.EQ(psql.Arg(VersionPK))),
 		).One(ctx, exec)
 	}
 
 	return Sites.Query(
 		sm.Where(Sites.Columns.ID.EQ(psql.Arg(IDPK))),
-		sm.Where(Sites.Columns.Version.EQ(psql.Arg(VersionPK))),
 		sm.Columns(Sites.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // SiteExists checks the presence of a single record by primary key
-func SiteExists(ctx context.Context, exec bob.Executor, IDPK int32, VersionPK int32) (bool, error) {
+func SiteExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
 	return Sites.Query(
 		sm.Where(Sites.Columns.ID.EQ(psql.Arg(IDPK))),
-		sm.Where(Sites.Columns.Version.EQ(psql.Arg(VersionPK))),
 	).Exists(ctx, exec)
 }
 
@@ -451,14 +448,11 @@ func (o *Site) AfterQueryHook(ctx context.Context, exec bob.Executor, queryType 
 
 // primaryKeyVals returns the primary key values of the Site
 func (o *Site) primaryKeyVals() bob.Expression {
-	return psql.ArgGroup(
-		o.ID,
-		o.Version,
-	)
+	return psql.Arg(o.ID)
 }
 
 func (o *Site) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("site", "id"), psql.Quote("site", "version")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("site", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -486,7 +480,6 @@ func (o *Site) Delete(ctx context.Context, exec bob.Executor) error {
 func (o *Site) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := Sites.Query(
 		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.ID))),
-		sm.Where(Sites.Columns.Version.EQ(psql.Arg(o.Version))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -520,7 +513,7 @@ func (o SiteSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("site", "id"), psql.Quote("site", "version")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("site", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -536,9 +529,6 @@ func (o SiteSlice) copyMatchingRows(from ...*Site) {
 	for i, old := range o {
 		for _, new := range from {
 			if new.ID != old.ID {
-				continue
-			}
-			if new.Version != old.Version {
 				continue
 			}
 			new.R = old.R
@@ -642,84 +632,72 @@ func (o SiteSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 // Features starts a query for related objects on feature
 func (o *Site) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
 	return Features.Query(append(mods,
-		sm.Where(Features.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Features.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+		sm.Where(Features.Columns.SiteID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
 func (os SiteSlice) Features(mods ...bob.Mod[*dialect.SelectQuery]) FeaturesQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkVersion := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkID = append(pkID, o.ID)
-		pkVersion = append(pkVersion, o.Version)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
 	))
 
 	return Features.Query(append(mods,
-		sm.Where(psql.Group(Features.Columns.SiteID, Features.Columns.SiteVersion).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Features.Columns.SiteID).OP("IN", PKArgExpr)),
 	)...)
 }
 
 // Leads starts a query for related objects on lead
 func (o *Site) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
 	return Leads.Query(append(mods,
-		sm.Where(Leads.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Leads.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+		sm.Where(Leads.Columns.SiteID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
 func (os SiteSlice) Leads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkVersion := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkID = append(pkID, o.ID)
-		pkVersion = append(pkVersion, o.Version)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
 	))
 
 	return Leads.Query(append(mods,
-		sm.Where(psql.Group(Leads.Columns.SiteID, Leads.Columns.SiteVersion).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Leads.Columns.SiteID).OP("IN", PKArgExpr)),
 	)...)
 }
 
 // Residents starts a query for related objects on resident
 func (o *Site) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
 	return Residents.Query(append(mods,
-		sm.Where(Residents.Columns.SiteID.EQ(psql.Arg(o.ID))), sm.Where(Residents.Columns.SiteVersion.EQ(psql.Arg(o.Version))),
+		sm.Where(Residents.Columns.SiteID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
 func (os SiteSlice) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkVersion := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkID = append(pkID, o.ID)
-		pkVersion = append(pkVersion, o.Version)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkVersion), "integer[]")),
 	))
 
 	return Residents.Query(append(mods,
-		sm.Where(psql.Group(Residents.Columns.SiteID, Residents.Columns.SiteVersion).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Residents.Columns.SiteID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -822,7 +800,6 @@ func (os SiteSlice) Parcel(mods ...bob.Mod[*dialect.SelectQuery]) ParcelsQuery {
 func insertSiteFeatures0(ctx context.Context, exec bob.Executor, features1 []*FeatureSetter, site0 *Site) (FeatureSlice, error) {
 	for i := range features1 {
 		features1[i].SiteID = omit.From(site0.ID)
-		features1[i].SiteVersion = omit.From(site0.Version)
 	}
 
 	ret, err := Features.Insert(bob.ToMods(features1...)).All(ctx, exec)
@@ -835,8 +812,7 @@ func insertSiteFeatures0(ctx context.Context, exec bob.Executor, features1 []*Fe
 
 func attachSiteFeatures0(ctx context.Context, exec bob.Executor, count int, features1 FeatureSlice, site0 *Site) (FeatureSlice, error) {
 	setter := &FeatureSetter{
-		SiteID:      omit.From(site0.ID),
-		SiteVersion: omit.From(site0.Version),
+		SiteID: omit.From(site0.ID),
 	}
 
 	err := features1.UpdateAll(ctx, exec, *setter)
@@ -892,7 +868,6 @@ func (site0 *Site) AttachFeatures(ctx context.Context, exec bob.Executor, relate
 func insertSiteLeads0(ctx context.Context, exec bob.Executor, leads1 []*LeadSetter, site0 *Site) (LeadSlice, error) {
 	for i := range leads1 {
 		leads1[i].SiteID = omitnull.From(site0.ID)
-		leads1[i].SiteVersion = omitnull.From(site0.Version)
 	}
 
 	ret, err := Leads.Insert(bob.ToMods(leads1...)).All(ctx, exec)
@@ -905,8 +880,7 @@ func insertSiteLeads0(ctx context.Context, exec bob.Executor, leads1 []*LeadSett
 
 func attachSiteLeads0(ctx context.Context, exec bob.Executor, count int, leads1 LeadSlice, site0 *Site) (LeadSlice, error) {
 	setter := &LeadSetter{
-		SiteID:      omitnull.From(site0.ID),
-		SiteVersion: omitnull.From(site0.Version),
+		SiteID: omitnull.From(site0.ID),
 	}
 
 	err := leads1.UpdateAll(ctx, exec, *setter)
@@ -962,7 +936,6 @@ func (site0 *Site) AttachLeads(ctx context.Context, exec bob.Executor, related .
 func insertSiteResidents0(ctx context.Context, exec bob.Executor, residents1 []*ResidentSetter, site0 *Site) (ResidentSlice, error) {
 	for i := range residents1 {
 		residents1[i].SiteID = omit.From(site0.ID)
-		residents1[i].SiteVersion = omit.From(site0.Version)
 	}
 
 	ret, err := Residents.Insert(bob.ToMods(residents1...)).All(ctx, exec)
@@ -975,8 +948,7 @@ func insertSiteResidents0(ctx context.Context, exec bob.Executor, residents1 []*
 
 func attachSiteResidents0(ctx context.Context, exec bob.Executor, count int, residents1 ResidentSlice, site0 *Site) (ResidentSlice, error) {
 	setter := &ResidentSetter{
-		SiteID:      omit.From(site0.ID),
-		SiteVersion: omit.From(site0.Version),
+		SiteID: omit.From(site0.ID),
 	}
 
 	err := residents1.UpdateAll(ctx, exec, *setter)
@@ -1555,10 +1527,6 @@ func (os SiteSlice) LoadFeatures(ctx context.Context, exec bob.Executor, mods ..
 				continue
 			}
 
-			if !(o.Version == rel.SiteVersion) {
-				continue
-			}
-
 			rel.R.Site = o
 
 			o.R.Features = append(o.R.Features, rel)
@@ -1623,13 +1591,6 @@ func (os SiteSlice) LoadLeads(ctx context.Context, exec bob.Executor, mods ...bo
 				continue
 			}
 
-			if !rel.SiteVersion.IsValue() {
-				continue
-			}
-			if !(rel.SiteVersion.IsValue() && o.Version == rel.SiteVersion.MustGet()) {
-				continue
-			}
-
 			rel.R.Site = o
 
 			o.R.Leads = append(o.R.Leads, rel)
@@ -1688,10 +1649,6 @@ func (os SiteSlice) LoadResidents(ctx context.Context, exec bob.Executor, mods .
 		for _, rel := range residents {
 
 			if !(o.ID == rel.SiteID) {
-				continue
-			}
-
-			if !(o.Version == rel.SiteVersion) {
 				continue
 			}
 

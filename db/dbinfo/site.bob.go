@@ -143,15 +143,10 @@ var Sites = Table[
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
-				{
-					Name:         "version",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
 			},
 			Unique:        true,
 			Comment:       "",
-			NullsFirst:    []bool{false, false},
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -173,10 +168,32 @@ var Sites = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		SiteIDVersionUnique: index{
+			Type: "btree",
+			Name: "site_id_version_unique",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+				{
+					Name:         "version",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false, false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 	},
 	PrimaryKey: &constraint{
 		Name:    "site_pkey",
-		Columns: []string{"id", "version"},
+		Columns: []string{"id"},
 		Comment: "",
 	},
 	ForeignKeys: siteForeignKeys{
@@ -223,6 +240,11 @@ var Sites = Table[
 			Columns: []string{"address_id"},
 			Comment: "",
 		},
+		SiteIDVersionUnique: constraint{
+			Name:    "site_id_version_unique",
+			Columns: []string{"id", "version"},
+			Comment: "",
+		},
 	},
 
 	Comment: "",
@@ -251,13 +273,14 @@ func (c siteColumns) AsSlice() []column {
 }
 
 type siteIndexes struct {
-	SitePkey         index
-	SiteAddressIDKey index
+	SitePkey            index
+	SiteAddressIDKey    index
+	SiteIDVersionUnique index
 }
 
 func (i siteIndexes) AsSlice() []index {
 	return []index{
-		i.SitePkey, i.SiteAddressIDKey,
+		i.SitePkey, i.SiteAddressIDKey, i.SiteIDVersionUnique,
 	}
 }
 
@@ -275,12 +298,13 @@ func (f siteForeignKeys) AsSlice() []foreignKey {
 }
 
 type siteUniques struct {
-	SiteAddressIDKey constraint
+	SiteAddressIDKey    constraint
+	SiteIDVersionUnique constraint
 }
 
 func (u siteUniques) AsSlice() []constraint {
 	return []constraint{
-		u.SiteAddressIDKey,
+		u.SiteAddressIDKey, u.SiteIDVersionUnique,
 	}
 }
 

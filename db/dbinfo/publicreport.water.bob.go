@@ -339,6 +339,24 @@ var PublicreportWaters = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Reviewed: column{
+			Name:      "reviewed",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReviewerID: column{
+			Name:      "reviewer_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportWaterIndexes{
 		PoolPkey: index{
@@ -400,6 +418,15 @@ var PublicreportWaters = Table[
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
 		},
+		PublicreportWaterWaterReviewerIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.water.water_reviewer_id_fkey",
+				Columns: []string{"reviewer_id"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
 	},
 	Uniques: publicreportWaterUniques{
 		PoolPublicIDKey: constraint{
@@ -449,11 +476,13 @@ type publicreportWaterColumns struct {
 	Location               column
 	AddressNumber          column
 	AddressID              column
+	Reviewed               column
+	ReviewerID             column
 }
 
 func (c publicreportWaterColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.AddressRaw, c.AddressCountry, c.AddressPostalCode, c.AddressLocality, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID,
+		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.AddressRaw, c.AddressCountry, c.AddressPostalCode, c.AddressLocality, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID, c.Reviewed, c.ReviewerID,
 	}
 }
 
@@ -471,11 +500,12 @@ func (i publicreportWaterIndexes) AsSlice() []index {
 type publicreportWaterForeignKeys struct {
 	PublicreportWaterPoolAddressIDFkey      foreignKey
 	PublicreportWaterPoolOrganizationIDFkey foreignKey
+	PublicreportWaterWaterReviewerIDFkey    foreignKey
 }
 
 func (f publicreportWaterForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportWaterPoolAddressIDFkey, f.PublicreportWaterPoolOrganizationIDFkey,
+		f.PublicreportWaterPoolAddressIDFkey, f.PublicreportWaterPoolOrganizationIDFkey, f.PublicreportWaterWaterReviewerIDFkey,
 	}
 }
 

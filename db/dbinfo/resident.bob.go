@@ -78,15 +78,6 @@ var Residents = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SiteVersion: column{
-			Name:      "site_version",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 	},
 	Indexes: residentIndexes{
 		ResidentPkey: index{
@@ -140,14 +131,14 @@ var Residents = Table[
 			ForeignTable:   "comms.phone",
 			ForeignColumns: []string{"e164"},
 		},
-		ResidentResidentSiteIDSiteVersionFkey: foreignKey{
+		ResidentResidentSiteIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "resident.resident_site_id_site_version_fkey",
-				Columns: []string{"site_id", "site_version"},
+				Name:    "resident.resident_site_id_fkey",
+				Columns: []string{"site_id"},
 				Comment: "",
 			},
 			ForeignTable:   "site",
-			ForeignColumns: []string{"id", "version"},
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -162,12 +153,11 @@ type residentColumns struct {
 	Name        column
 	PhoneMobile column
 	SiteID      column
-	SiteVersion column
 }
 
 func (c residentColumns) AsSlice() []column {
 	return []column{
-		c.AddressID, c.Created, c.Creator, c.ID, c.Name, c.PhoneMobile, c.SiteID, c.SiteVersion,
+		c.AddressID, c.Created, c.Creator, c.ID, c.Name, c.PhoneMobile, c.SiteID,
 	}
 }
 
@@ -182,15 +172,15 @@ func (i residentIndexes) AsSlice() []index {
 }
 
 type residentForeignKeys struct {
-	ResidentResidentAddressIDFkey         foreignKey
-	ResidentResidentCreatorFkey           foreignKey
-	ResidentResidentPhoneMobileFkey       foreignKey
-	ResidentResidentSiteIDSiteVersionFkey foreignKey
+	ResidentResidentAddressIDFkey   foreignKey
+	ResidentResidentCreatorFkey     foreignKey
+	ResidentResidentPhoneMobileFkey foreignKey
+	ResidentResidentSiteIDFkey      foreignKey
 }
 
 func (f residentForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.ResidentResidentAddressIDFkey, f.ResidentResidentCreatorFkey, f.ResidentResidentPhoneMobileFkey, f.ResidentResidentSiteIDSiteVersionFkey,
+		f.ResidentResidentAddressIDFkey, f.ResidentResidentCreatorFkey, f.ResidentResidentPhoneMobileFkey, f.ResidentResidentSiteIDFkey,
 	}
 }
 

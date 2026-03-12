@@ -60,15 +60,6 @@ var Features = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SiteVersion: column{
-			Name:      "site_version",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Location: column{
 			Name:      "location",
 			DBType:    "geometry",
@@ -122,14 +113,14 @@ var Features = Table[
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
 		},
-		FeatureFeatureSiteIDSiteVersionFkey: foreignKey{
+		FeatureFeatureSiteIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "feature.feature_site_id_site_version_fkey",
-				Columns: []string{"site_id", "site_version"},
+				Name:    "feature.feature_site_id_fkey",
+				Columns: []string{"site_id"},
 				Comment: "",
 			},
 			ForeignTable:   "site",
-			ForeignColumns: []string{"id", "version"},
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -142,13 +133,12 @@ type featureColumns struct {
 	ID             column
 	OrganizationID column
 	SiteID         column
-	SiteVersion    column
 	Location       column
 }
 
 func (c featureColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.SiteVersion, c.Location,
+		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.Location,
 	}
 }
 
@@ -163,14 +153,14 @@ func (i featureIndexes) AsSlice() []index {
 }
 
 type featureForeignKeys struct {
-	FeatureFeatureCreatorIDFkey         foreignKey
-	FeatureFeatureOrganizationIDFkey    foreignKey
-	FeatureFeatureSiteIDSiteVersionFkey foreignKey
+	FeatureFeatureCreatorIDFkey      foreignKey
+	FeatureFeatureOrganizationIDFkey foreignKey
+	FeatureFeatureSiteIDFkey         foreignKey
 }
 
 func (f featureForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.FeatureFeatureCreatorIDFkey, f.FeatureFeatureOrganizationIDFkey, f.FeatureFeatureSiteIDSiteVersionFkey,
+		f.FeatureFeatureCreatorIDFkey, f.FeatureFeatureOrganizationIDFkey, f.FeatureFeatureSiteIDFkey,
 	}
 }
 

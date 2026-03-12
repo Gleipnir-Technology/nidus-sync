@@ -63,6 +63,8 @@ type PublicreportWater struct {
 	Location               null.Val[string]                   `db:"location" `
 	AddressNumber          string                             `db:"address_number" `
 	AddressID              null.Val[int32]                    `db:"address_id" `
+	Reviewed               null.Val[time.Time]                `db:"reviewed" `
+	ReviewerID             null.Val[int32]                    `db:"reviewer_id" `
 
 	R publicreportWaterR `db:"-" `
 }
@@ -83,13 +85,14 @@ type publicreportWaterR struct {
 	NotifyPhoneWaters PublicreportNotifyPhoneWaterSlice // publicreport.notify_phone_water.notify_phone_pool_pool_id_fkey
 	Address           *Address                          // publicreport.water.pool_address_id_fkey
 	Organization      *Organization                     // publicreport.water.pool_organization_id_fkey
+	ReviewerUser      *User                             // publicreport.water.water_reviewer_id_fkey
 	Images            PublicreportImageSlice            // publicreport.water_image.pool_image_image_id_fkeypublicreport.water_image.pool_image_pool_id_fkey
 }
 
 func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
 	return publicreportWaterColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address_raw", "address_country", "address_postal_code", "address_locality", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number", "address_id",
+			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address_raw", "address_country", "address_postal_code", "address_locality", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number", "address_id", "reviewed", "reviewer_id",
 		).WithParent("publicreport.water"),
 		tableAlias:             alias,
 		ID:                     psql.Quote(alias, "id"),
@@ -128,6 +131,8 @@ func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
 		Location:               psql.Quote(alias, "location"),
 		AddressNumber:          psql.Quote(alias, "address_number"),
 		AddressID:              psql.Quote(alias, "address_id"),
+		Reviewed:               psql.Quote(alias, "reviewed"),
+		ReviewerID:             psql.Quote(alias, "reviewer_id"),
 	}
 }
 
@@ -170,6 +175,8 @@ type publicreportWaterColumns struct {
 	Location               psql.Expression
 	AddressNumber          psql.Expression
 	AddressID              psql.Expression
+	Reviewed               psql.Expression
+	ReviewerID             psql.Expression
 }
 
 func (c publicreportWaterColumns) Alias() string {
@@ -220,10 +227,12 @@ type PublicreportWaterSetter struct {
 	Location               omitnull.Val[string]                         `db:"location" `
 	AddressNumber          omit.Val[string]                             `db:"address_number" `
 	AddressID              omitnull.Val[int32]                          `db:"address_id" `
+	Reviewed               omitnull.Val[time.Time]                      `db:"reviewed" `
+	ReviewerID             omitnull.Val[int32]                          `db:"reviewer_id" `
 }
 
 func (s PublicreportWaterSetter) SetColumns() []string {
-	vals := make([]string, 0, 36)
+	vals := make([]string, 0, 38)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -331,6 +340,12 @@ func (s PublicreportWaterSetter) SetColumns() []string {
 	}
 	if !s.AddressID.IsUnset() {
 		vals = append(vals, "address_id")
+	}
+	if !s.Reviewed.IsUnset() {
+		vals = append(vals, "reviewed")
+	}
+	if !s.ReviewerID.IsUnset() {
+		vals = append(vals, "reviewer_id")
 	}
 	return vals
 }
@@ -444,6 +459,12 @@ func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if !s.AddressID.IsUnset() {
 		t.AddressID = s.AddressID.MustGetNull()
 	}
+	if !s.Reviewed.IsUnset() {
+		t.Reviewed = s.Reviewed.MustGetNull()
+	}
+	if !s.ReviewerID.IsUnset() {
+		t.ReviewerID = s.ReviewerID.MustGetNull()
+	}
 }
 
 func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
@@ -452,7 +473,7 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 36)
+		vals := make([]bob.Expression, 38)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -669,6 +690,18 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 			vals[35] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Reviewed.IsUnset() {
+			vals[36] = psql.Arg(s.Reviewed.MustGetNull())
+		} else {
+			vals[36] = psql.Raw("DEFAULT")
+		}
+
+		if !s.ReviewerID.IsUnset() {
+			vals[37] = psql.Arg(s.ReviewerID.MustGetNull())
+		} else {
+			vals[37] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -678,7 +711,7 @@ func (s PublicreportWaterSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 36)
+	exprs := make([]bob.Expression, 0, 38)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -929,6 +962,20 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address_id")...),
 			psql.Arg(s.AddressID),
+		}})
+	}
+
+	if !s.Reviewed.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "reviewed")...),
+			psql.Arg(s.Reviewed),
+		}})
+	}
+
+	if !s.ReviewerID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "reviewer_id")...),
+			psql.Arg(s.ReviewerID),
 		}})
 	}
 
@@ -1254,6 +1301,30 @@ func (os PublicreportWaterSlice) Organization(mods ...bob.Mod[*dialect.SelectQue
 	)...)
 }
 
+// ReviewerUser starts a query for related objects on user_
+func (o *PublicreportWater) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	return Users.Query(append(mods,
+		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.ReviewerID))),
+	)...)
+}
+
+func (os PublicreportWaterSlice) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	pkReviewerID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkReviewerID = append(pkReviewerID, o.ReviewerID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkReviewerID), "integer[]")),
+	))
+
+	return Users.Query(append(mods,
+		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Images starts a query for related objects on publicreport.image
 func (o *PublicreportWater) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
 	return PublicreportImages.Query(append(mods,
@@ -1515,6 +1586,54 @@ func (publicreportWater0 *PublicreportWater) AttachOrganization(ctx context.Cont
 	return nil
 }
 
+func attachPublicreportWaterReviewerUser0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, user1 *User) (*PublicreportWater, error) {
+	setter := &PublicreportWaterSetter{
+		ReviewerID: omitnull.From(user1.ID),
+	}
+
+	err := publicreportWater0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportWaterReviewerUser0: %w", err)
+	}
+
+	return publicreportWater0, nil
+}
+
+func (publicreportWater0 *PublicreportWater) InsertReviewerUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
+	var err error
+
+	user1, err := Users.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportWaterReviewerUser0(ctx, exec, 1, publicreportWater0, user1)
+	if err != nil {
+		return err
+	}
+
+	publicreportWater0.R.ReviewerUser = user1
+
+	user1.R.ReviewerWaters = append(user1.R.ReviewerWaters, publicreportWater0)
+
+	return nil
+}
+
+func (publicreportWater0 *PublicreportWater) AttachReviewerUser(ctx context.Context, exec bob.Executor, user1 *User) error {
+	var err error
+
+	_, err = attachPublicreportWaterReviewerUser0(ctx, exec, 1, publicreportWater0, user1)
+	if err != nil {
+		return err
+	}
+
+	publicreportWater0.R.ReviewerUser = user1
+
+	user1.R.ReviewerWaters = append(user1.R.ReviewerWaters, publicreportWater0)
+
+	return nil
+}
+
 func attachPublicreportWaterImages0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, publicreportImages2 PublicreportImageSlice) (PublicreportWaterImageSlice, error) {
 	setters := make([]*PublicreportWaterImageSetter, count)
 	for i := range count {
@@ -1617,6 +1736,8 @@ type publicreportWaterWhere[Q psql.Filterable] struct {
 	Location               psql.WhereNullMod[Q, string]
 	AddressNumber          psql.WhereMod[Q, string]
 	AddressID              psql.WhereNullMod[Q, int32]
+	Reviewed               psql.WhereNullMod[Q, time.Time]
+	ReviewerID             psql.WhereNullMod[Q, int32]
 }
 
 func (publicreportWaterWhere[Q]) AliasedAs(alias string) publicreportWaterWhere[Q] {
@@ -1661,6 +1782,8 @@ func buildPublicreportWaterWhere[Q psql.Filterable](cols publicreportWaterColumn
 		Location:               psql.WhereNull[Q, string](cols.Location),
 		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
 		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
+		Reviewed:               psql.WhereNull[Q, time.Time](cols.Reviewed),
+		ReviewerID:             psql.WhereNull[Q, int32](cols.ReviewerID),
 	}
 }
 
@@ -1722,6 +1845,18 @@ func (o *PublicreportWater) Preload(name string, retrieved any) error {
 			rel.R.Waters = PublicreportWaterSlice{o}
 		}
 		return nil
+	case "ReviewerUser":
+		rel, ok := retrieved.(*User)
+		if !ok {
+			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReviewerUser = rel
+
+		if rel != nil {
+			rel.R.ReviewerWaters = PublicreportWaterSlice{o}
+		}
+		return nil
 	case "Images":
 		rels, ok := retrieved.(PublicreportImageSlice)
 		if !ok {
@@ -1744,6 +1879,7 @@ func (o *PublicreportWater) Preload(name string, retrieved any) error {
 type publicreportWaterPreloader struct {
 	Address      func(...psql.PreloadOption) psql.Preloader
 	Organization func(...psql.PreloadOption) psql.Preloader
+	ReviewerUser func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPublicreportWaterPreloader() publicreportWaterPreloader {
@@ -1774,6 +1910,19 @@ func buildPublicreportWaterPreloader() publicreportWaterPreloader {
 				},
 			}, Organizations.Columns.Names(), opts...)
 		},
+		ReviewerUser: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*User, UserSlice](psql.PreloadRel{
+				Name: "ReviewerUser",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportWaters,
+						To:          Users,
+						FromColumns: []string{"reviewer_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Users.Columns.Names(), opts...)
+		},
 	}
 }
 
@@ -1782,6 +1931,7 @@ type publicreportWaterThenLoader[Q orm.Loadable] struct {
 	NotifyPhoneWaters func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Address           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerUser      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Images            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -1797,6 +1947,9 @@ func buildPublicreportWaterThenLoader[Q orm.Loadable]() publicreportWaterThenLoa
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReviewerUserLoadInterface interface {
+		LoadReviewerUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ImagesLoadInterface interface {
 		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1825,6 +1978,12 @@ func buildPublicreportWaterThenLoader[Q orm.Loadable]() publicreportWaterThenLoa
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+		ReviewerUser: thenLoadBuilder[Q](
+			"ReviewerUser",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewerUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewerUser(ctx, exec, mods...)
 			},
 		),
 		Images: thenLoadBuilder[Q](
@@ -2061,6 +2220,61 @@ func (os PublicreportWaterSlice) LoadOrganization(ctx context.Context, exec bob.
 			rel.R.Waters = append(rel.R.Waters, o)
 
 			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadReviewerUser loads the publicreportWater's ReviewerUser into the .R struct
+func (o *PublicreportWater) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReviewerUser = nil
+
+	related, err := o.ReviewerUser(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.ReviewerWaters = PublicreportWaterSlice{o}
+
+	o.R.ReviewerUser = related
+	return nil
+}
+
+// LoadReviewerUser loads the publicreportWater's ReviewerUser into the .R struct
+func (os PublicreportWaterSlice) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	users, err := os.ReviewerUser(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range users {
+			if !o.ReviewerID.IsValue() {
+				continue
+			}
+
+			if !(o.ReviewerID.IsValue() && o.ReviewerID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.ReviewerWaters = append(rel.R.ReviewerWaters, o)
+
+			o.R.ReviewerUser = rel
 			break
 		}
 	}

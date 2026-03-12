@@ -7,7 +7,7 @@ var SiteErrors = &siteErrors{
 	ErrUniqueSitePkey: &UniqueConstraintError{
 		schema:  "",
 		table:   "site",
-		columns: []string{"id", "version"},
+		columns: []string{"id"},
 		s:       "site_pkey",
 	},
 
@@ -17,10 +17,19 @@ var SiteErrors = &siteErrors{
 		columns: []string{"address_id"},
 		s:       "site_address_id_key",
 	},
+
+	ErrUniqueSiteIdVersionUnique: &UniqueConstraintError{
+		schema:  "",
+		table:   "site",
+		columns: []string{"id", "version"},
+		s:       "site_id_version_unique",
+	},
 }
 
 type siteErrors struct {
 	ErrUniqueSitePkey *UniqueConstraintError
 
 	ErrUniqueSiteAddressIdKey *UniqueConstraintError
+
+	ErrUniqueSiteIdVersionUnique *UniqueConstraintError
 }

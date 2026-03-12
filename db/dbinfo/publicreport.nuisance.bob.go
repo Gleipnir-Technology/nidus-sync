@@ -348,6 +348,24 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Reviewed: column{
+			Name:      "reviewed",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReviewerID: column{
+			Name:      "reviewer_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportNuisanceIndexes{
 		NuisancePkey: index{
@@ -409,6 +427,15 @@ var PublicreportNuisances = Table[
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
 		},
+		PublicreportNuisanceNuisanceReviewerIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.nuisance.nuisance_reviewer_id_fkey",
+				Columns: []string{"reviewer_id"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
 	},
 	Uniques: publicreportNuisanceUniques{
 		NuisancePublicIDKey: constraint{
@@ -459,11 +486,13 @@ type publicreportNuisanceColumns struct {
 	Location               column
 	AddressNumber          column
 	AddressID              column
+	Reviewed               column
+	ReviewerID             column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.AddressRaw, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressLocality, c.AddressPostalCode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID,
+		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.AddressRaw, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressLocality, c.AddressPostalCode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID, c.Reviewed, c.ReviewerID,
 	}
 }
 
@@ -481,11 +510,12 @@ func (i publicreportNuisanceIndexes) AsSlice() []index {
 type publicreportNuisanceForeignKeys struct {
 	PublicreportNuisanceNuisanceAddressIDFkey      foreignKey
 	PublicreportNuisanceNuisanceOrganizationIDFkey foreignKey
+	PublicreportNuisanceNuisanceReviewerIDFkey     foreignKey
 }
 
 func (f publicreportNuisanceForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportNuisanceNuisanceAddressIDFkey, f.PublicreportNuisanceNuisanceOrganizationIDFkey,
+		f.PublicreportNuisanceNuisanceAddressIDFkey, f.PublicreportNuisanceNuisanceOrganizationIDFkey, f.PublicreportNuisanceNuisanceReviewerIDFkey,
 	}
 }
 

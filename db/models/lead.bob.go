@@ -31,7 +31,6 @@ type Lead struct {
 	ID             int32           `db:"id,pk" `
 	OrganizationID int32           `db:"organization_id" `
 	SiteID         null.Val[int32] `db:"site_id" `
-	SiteVersion    null.Val[int32] `db:"site_version" `
 	Type           enums.Leadtype  `db:"type_" `
 
 	R leadR `db:"-" `
@@ -52,13 +51,13 @@ type leadR struct {
 	ComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_lead_id_fkey
 	CreatorUser              *User                        // lead.lead_creator_fkey
 	Organization             *Organization                // lead.lead_organization_id_fkey
-	Site                     *Site                        // lead.lead_site_id_site_version_fkey
+	Site                     *Site                        // lead.lead_site_id_fkey
 }
 
 func buildLeadColumns(alias string) leadColumns {
 	return leadColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator", "id", "organization_id", "site_id", "site_version", "type_",
+			"created", "creator", "id", "organization_id", "site_id", "type_",
 		).WithParent("lead"),
 		tableAlias:     alias,
 		Created:        psql.Quote(alias, "created"),
@@ -66,7 +65,6 @@ func buildLeadColumns(alias string) leadColumns {
 		ID:             psql.Quote(alias, "id"),
 		OrganizationID: psql.Quote(alias, "organization_id"),
 		SiteID:         psql.Quote(alias, "site_id"),
-		SiteVersion:    psql.Quote(alias, "site_version"),
 		Type:           psql.Quote(alias, "type_"),
 	}
 }
@@ -79,7 +77,6 @@ type leadColumns struct {
 	ID             psql.Expression
 	OrganizationID psql.Expression
 	SiteID         psql.Expression
-	SiteVersion    psql.Expression
 	Type           psql.Expression
 }
 
@@ -100,12 +97,11 @@ type LeadSetter struct {
 	ID             omit.Val[int32]          `db:"id,pk" `
 	OrganizationID omit.Val[int32]          `db:"organization_id" `
 	SiteID         omitnull.Val[int32]      `db:"site_id" `
-	SiteVersion    omitnull.Val[int32]      `db:"site_version" `
 	Type           omit.Val[enums.Leadtype] `db:"type_" `
 }
 
 func (s LeadSetter) SetColumns() []string {
-	vals := make([]string, 0, 7)
+	vals := make([]string, 0, 6)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
@@ -120,9 +116,6 @@ func (s LeadSetter) SetColumns() []string {
 	}
 	if !s.SiteID.IsUnset() {
 		vals = append(vals, "site_id")
-	}
-	if !s.SiteVersion.IsUnset() {
-		vals = append(vals, "site_version")
 	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type_")
@@ -146,9 +139,6 @@ func (s LeadSetter) Overwrite(t *Lead) {
 	if !s.SiteID.IsUnset() {
 		t.SiteID = s.SiteID.MustGetNull()
 	}
-	if !s.SiteVersion.IsUnset() {
-		t.SiteVersion = s.SiteVersion.MustGetNull()
-	}
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
 	}
@@ -160,7 +150,7 @@ func (s *LeadSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 7)
+		vals := make([]bob.Expression, 6)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -191,16 +181,10 @@ func (s *LeadSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SiteVersion.IsUnset() {
-			vals[5] = psql.Arg(s.SiteVersion.MustGetNull())
+		if s.Type.IsValue() {
+			vals[5] = psql.Arg(s.Type.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
-		}
-
-		if s.Type.IsValue() {
-			vals[6] = psql.Arg(s.Type.MustGet())
-		} else {
-			vals[6] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -212,7 +196,7 @@ func (s LeadSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s LeadSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 7)
+	exprs := make([]bob.Expression, 0, 6)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -246,13 +230,6 @@ func (s LeadSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_id")...),
 			psql.Arg(s.SiteID),
-		}})
-	}
-
-	if !s.SiteVersion.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "site_version")...),
-			psql.Arg(s.SiteVersion),
 		}})
 	}
 
@@ -564,28 +541,24 @@ func (os LeadSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 // Site starts a query for related objects on site
 func (o *Lead) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
-		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))), sm.Where(Sites.Columns.Version.EQ(psql.Arg(o.SiteVersion))),
+		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))),
 	)...)
 }
 
 func (os LeadSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	pkSiteID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-
-	pkSiteVersion := make(pgtypes.Array[null.Val[int32]], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkSiteID = append(pkSiteID, o.SiteID)
-		pkSiteVersion = append(pkSiteVersion, o.SiteVersion)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkSiteID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkSiteVersion), "integer[]")),
 	))
 
 	return Sites.Query(append(mods,
-		sm.Where(psql.Group(Sites.Columns.ID, Sites.Columns.Version).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Sites.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -755,8 +728,7 @@ func (lead0 *Lead) AttachOrganization(ctx context.Context, exec bob.Executor, or
 
 func attachLeadSite0(ctx context.Context, exec bob.Executor, count int, lead0 *Lead, site1 *Site) (*Lead, error) {
 	setter := &LeadSetter{
-		SiteID:      omitnull.From(site1.ID),
-		SiteVersion: omitnull.From(site1.Version),
+		SiteID: omitnull.From(site1.ID),
 	}
 
 	err := lead0.Update(ctx, exec, setter)
@@ -808,7 +780,6 @@ type leadWhere[Q psql.Filterable] struct {
 	ID             psql.WhereMod[Q, int32]
 	OrganizationID psql.WhereMod[Q, int32]
 	SiteID         psql.WhereNullMod[Q, int32]
-	SiteVersion    psql.WhereNullMod[Q, int32]
 	Type           psql.WhereMod[Q, enums.Leadtype]
 }
 
@@ -823,7 +794,6 @@ func buildLeadWhere[Q psql.Filterable](cols leadColumns) leadWhere[Q] {
 		ID:             psql.Where[Q, int32](cols.ID),
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		SiteID:         psql.WhereNull[Q, int32](cols.SiteID),
-		SiteVersion:    psql.WhereNull[Q, int32](cols.SiteVersion),
 		Type:           psql.Where[Q, enums.Leadtype](cols.Type),
 	}
 }
@@ -930,8 +900,8 @@ func buildLeadPreloader() leadPreloader {
 					{
 						From:        Leads,
 						To:          Sites,
-						FromColumns: []string{"site_id", "site_version"},
-						ToColumns:   []string{"id", "version"},
+						FromColumns: []string{"site_id"},
+						ToColumns:   []string{"id"},
 					},
 				},
 			}, Sites.Columns.Names(), opts...)
@@ -1198,13 +1168,6 @@ func (os LeadSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob
 			}
 
 			if !(o.SiteID.IsValue() && o.SiteID.MustGet() == rel.ID) {
-				continue
-			}
-			if !o.SiteVersion.IsValue() {
-				continue
-			}
-
-			if !(o.SiteVersion.IsValue() && o.SiteVersion.MustGet() == rel.Version) {
 				continue
 			}
 

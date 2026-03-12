@@ -30,7 +30,6 @@ type Feature struct {
 	ID             int32            `db:"id,pk" `
 	OrganizationID int32            `db:"organization_id" `
 	SiteID         int32            `db:"site_id" `
-	SiteVersion    int32            `db:"site_version" `
 	Location       null.Val[string] `db:"location" `
 
 	R featureR `db:"-" `
@@ -50,14 +49,14 @@ type FeaturesQuery = *psql.ViewQuery[*Feature, FeatureSlice]
 type featureR struct {
 	CreatorUser  *User         // feature.feature_creator_id_fkey
 	Organization *Organization // feature.feature_organization_id_fkey
-	Site         *Site         // feature.feature_site_id_site_version_fkey
+	Site         *Site         // feature.feature_site_id_fkey
 	FeaturePool  *FeaturePool  // feature_pool.feature_pool_feature_id_fkey
 }
 
 func buildFeatureColumns(alias string) featureColumns {
 	return featureColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "id", "organization_id", "site_id", "site_version", "location",
+			"created", "creator_id", "id", "organization_id", "site_id", "location",
 		).WithParent("feature"),
 		tableAlias:     alias,
 		Created:        psql.Quote(alias, "created"),
@@ -65,7 +64,6 @@ func buildFeatureColumns(alias string) featureColumns {
 		ID:             psql.Quote(alias, "id"),
 		OrganizationID: psql.Quote(alias, "organization_id"),
 		SiteID:         psql.Quote(alias, "site_id"),
-		SiteVersion:    psql.Quote(alias, "site_version"),
 		Location:       psql.Quote(alias, "location"),
 	}
 }
@@ -78,7 +76,6 @@ type featureColumns struct {
 	ID             psql.Expression
 	OrganizationID psql.Expression
 	SiteID         psql.Expression
-	SiteVersion    psql.Expression
 	Location       psql.Expression
 }
 
@@ -99,12 +96,11 @@ type FeatureSetter struct {
 	ID             omit.Val[int32]      `db:"id,pk" `
 	OrganizationID omit.Val[int32]      `db:"organization_id" `
 	SiteID         omit.Val[int32]      `db:"site_id" `
-	SiteVersion    omit.Val[int32]      `db:"site_version" `
 	Location       omitnull.Val[string] `db:"location" `
 }
 
 func (s FeatureSetter) SetColumns() []string {
-	vals := make([]string, 0, 7)
+	vals := make([]string, 0, 6)
 	if s.Created.IsValue() {
 		vals = append(vals, "created")
 	}
@@ -119,9 +115,6 @@ func (s FeatureSetter) SetColumns() []string {
 	}
 	if s.SiteID.IsValue() {
 		vals = append(vals, "site_id")
-	}
-	if s.SiteVersion.IsValue() {
-		vals = append(vals, "site_version")
 	}
 	if !s.Location.IsUnset() {
 		vals = append(vals, "location")
@@ -145,9 +138,6 @@ func (s FeatureSetter) Overwrite(t *Feature) {
 	if s.SiteID.IsValue() {
 		t.SiteID = s.SiteID.MustGet()
 	}
-	if s.SiteVersion.IsValue() {
-		t.SiteVersion = s.SiteVersion.MustGet()
-	}
 	if !s.Location.IsUnset() {
 		t.Location = s.Location.MustGetNull()
 	}
@@ -159,7 +149,7 @@ func (s *FeatureSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 7)
+		vals := make([]bob.Expression, 6)
 		if s.Created.IsValue() {
 			vals[0] = psql.Arg(s.Created.MustGet())
 		} else {
@@ -190,16 +180,10 @@ func (s *FeatureSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.SiteVersion.IsValue() {
-			vals[5] = psql.Arg(s.SiteVersion.MustGet())
+		if !s.Location.IsUnset() {
+			vals[5] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Location.IsUnset() {
-			vals[6] = psql.Arg(s.Location.MustGetNull())
-		} else {
-			vals[6] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -211,7 +195,7 @@ func (s FeatureSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FeatureSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 7)
+	exprs := make([]bob.Expression, 0, 6)
 
 	if s.Created.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -245,13 +229,6 @@ func (s FeatureSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_id")...),
 			psql.Arg(s.SiteID),
-		}})
-	}
-
-	if s.SiteVersion.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "site_version")...),
-			psql.Arg(s.SiteVersion),
 		}})
 	}
 
@@ -539,28 +516,24 @@ func (os FeatureSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organ
 // Site starts a query for related objects on site
 func (o *Feature) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	return Sites.Query(append(mods,
-		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))), sm.Where(Sites.Columns.Version.EQ(psql.Arg(o.SiteVersion))),
+		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))),
 	)...)
 }
 
 func (os FeatureSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
 	pkSiteID := make(pgtypes.Array[int32], 0, len(os))
-
-	pkSiteVersion := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
 		pkSiteID = append(pkSiteID, o.SiteID)
-		pkSiteVersion = append(pkSiteVersion, o.SiteVersion)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkSiteID), "integer[]")),
-		psql.F("unnest", psql.Cast(psql.Arg(pkSiteVersion), "integer[]")),
 	))
 
 	return Sites.Query(append(mods,
-		sm.Where(psql.Group(Sites.Columns.ID, Sites.Columns.Version).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(Sites.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -686,8 +659,7 @@ func (feature0 *Feature) AttachOrganization(ctx context.Context, exec bob.Execut
 
 func attachFeatureSite0(ctx context.Context, exec bob.Executor, count int, feature0 *Feature, site1 *Site) (*Feature, error) {
 	setter := &FeatureSetter{
-		SiteID:      omit.From(site1.ID),
-		SiteVersion: omit.From(site1.Version),
+		SiteID: omit.From(site1.ID),
 	}
 
 	err := feature0.Update(ctx, exec, setter)
@@ -793,7 +765,6 @@ type featureWhere[Q psql.Filterable] struct {
 	ID             psql.WhereMod[Q, int32]
 	OrganizationID psql.WhereMod[Q, int32]
 	SiteID         psql.WhereMod[Q, int32]
-	SiteVersion    psql.WhereMod[Q, int32]
 	Location       psql.WhereNullMod[Q, string]
 }
 
@@ -808,7 +779,6 @@ func buildFeatureWhere[Q psql.Filterable](cols featureColumns) featureWhere[Q] {
 		ID:             psql.Where[Q, int32](cols.ID),
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		SiteID:         psql.Where[Q, int32](cols.SiteID),
-		SiteVersion:    psql.Where[Q, int32](cols.SiteVersion),
 		Location:       psql.WhereNull[Q, string](cols.Location),
 	}
 }
@@ -914,8 +884,8 @@ func buildFeaturePreloader() featurePreloader {
 					{
 						From:        Features,
 						To:          Sites,
-						FromColumns: []string{"site_id", "site_version"},
-						ToColumns:   []string{"id", "version"},
+						FromColumns: []string{"site_id"},
+						ToColumns:   []string{"id"},
 					},
 				},
 			}, Sites.Columns.Names(), opts...)
@@ -1128,10 +1098,6 @@ func (os FeatureSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...
 		for _, rel := range sites {
 
 			if !(o.SiteID == rel.ID) {
-				continue
-			}
-
-			if !(o.SiteVersion == rel.Version) {
 				continue
 			}
 
