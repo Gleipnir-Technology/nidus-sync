@@ -242,6 +242,8 @@
 							};
 							this.originalValues = {};
 						}
+						// Update list of tasks
+						this.fetchTasks();
 					} catch (err) {
 						this.error = err.message;
 						console.error("Error submitting review:", err);
