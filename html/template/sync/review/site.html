@@ -7,34 +7,25 @@
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
 	<script src="/static/js/address-suggestion.js"></script>
-	<script src="/static/js/location.js"></script>
 	<script src="/static/js/map-multipoint.js"></script>
 	<!-- ordering matters since report table depends on time-relative -->
 	<script src="/static/js/time-relative.js"></script>
 	<script src="/static/js/table-site.js"></script>
 <script>
-var markers = [];
+function formatAddress(props) {
+	return `${props.address_number} ${props.address_street} ${props.address_locality}, ${props.address_region}, ${props.address_country}`;
+}
 // Because features come from tiled vector data, feature geometries may be split
 // or duplicated across tile boundaries. As a result, features may appear
 // multiple times in query results.
-function getUniqueFeatures(nuisances, waters, comparatorProperty) {
+function getUniqueFeatures(features, comparatorProperty) {
 	const uniqueIds = new Set();
 	const uniqueFeatures = [];
-	for (const feature of nuisances) {
+	for (const feature of features) {
 		const id = feature.properties[comparatorProperty];
 		if (!uniqueIds.has(id)) {
 			uniqueIds.add(id);
 			let f = structuredClone(feature);
-			f.type = "nuisance";
-			uniqueFeatures.push(f);
-		}
-	}
-	for (const feature of waters) {
-		const id = feature.properties[comparatorProperty];
-		if (!uniqueIds.has(id)) {
-			uniqueIds.add(id);
-			let f = structuredClone(feature);
-			f.type = "water";
 			uniqueFeatures.push(f);
 		}
 	}
@@ -42,7 +33,7 @@ function getUniqueFeatures(nuisances, waters, comparatorProperty) {
 }
 
 function handleLookupFormSubmit(e) {
-	const report_id = e.target.elements["address-or-report"].value.replace(/-/g, "");
+	const report_id = e.target.elements["address"].value.replace(/-/g, "");
 	window.location = "/status/" + report_id;
 	return false;
 }
@@ -70,25 +61,13 @@ function onLoad() {
 		map.addSource('tegola', {
 			'type': 'vector',
 			'tiles': [
-				'{{.URL.Tegola}}maps/rmo/{z}/{x}/{y}'
+				'{{.URL.Tegola}}maps/nidus/{z}/{x}/{y}'
 			]
 		});
 		map.addLayer({
-			'id': 'nuisance',
+			'id': 'feature-pool',
 			'source': 'tegola',
-			'source-layer': 'nuisance_location',
-			'type': 'circle',
-			'paint': {
-				'circle-color': "#DC4535",
-				'circle-radius': 7,
-				'circle-stroke-width': 2,
-				'circle-stroke-color': "#9C1C28"
-			}
-		});
-		map.addLayer({
-			'id': 'rmo_water',
-			'source': 'tegola',
-			'source-layer': 'water_location',
+			'source-layer': 'feature-pool',
 			'type': 'circle',
 			'paint': {
 				'circle-color': "#0D6EfD",
@@ -97,53 +76,22 @@ function onLoad() {
 				'circle-stroke-color': "#024AB6"
 			}
 		});
-		map.on("idle", () => {
-			function _addCheckboxClick(checkbox, layer_id) {
-				checkbox.onclick = function(e) {
-					if (checkbox.checked) {
-						map.SetLayoutProperty(layer_id, "visibility", "visible");
-					} else {
-						map.SetLayoutProperty(layer_id, "visibility", "none");
-					}
-				}
-			}
-			_addCheckboxClick(checkboxNuisance, "nuisance");
-			_addCheckboxClick(checkboxWater, "rmo_water");
-			checkboxNuisance.onclick()
-			checkboxWater.onclick()
-		});
-		function _updateReports() {
-			const nuisances = map.queryRenderedFeatures({target: {layerId: 'nuisance'}});
-			const waters = map.queryRenderedFeatures({target: {layerId: 'water'}});
-			const nidus_nuisances = nuisances.filter((feature) => feature.source == "tegola");
-			const nidus_waters = waters.filter((feature) => feature.source == "tegola");
-			const uniqueFeatures = getUniqueFeatures(nidus_nuisances, nidus_waters, 'public_id');
+		function _updateSiteList() {
+			const features = map.queryRenderedFeatures({target: {layerId: 'feature-pool'}});
+			const nidus_features = features.filter((feature) => feature.source == "tegola");
+			//const uniqueFeatures = getUniqueFeatures(nidus_features);
 			// Populate features for the listing overlay.
-			renderReports(uniqueFeatures);
+			renderFeatures(nidus_features);
 		}
-		map.once("idle", _updateReports);
-		map.on('moveend', _updateReports);
-		getGeolocation({
-			enableHighAccuracy: true,
-			timeout: 10000,
-			maximumAge: 0
-		}).then(position => {
-			map.jumpTo({
-				center: {
-					lng: position.coords.longitude,
-					lat: position.coords.latitude,
-				},
-				zoom: 14,
-			});
-		}).catch(error => {
-			console.log("location error", error);
-		})
+		map.once("idle", _updateSiteList);
+		map.on('moveend', _updateSiteList);
 	});
-	const report_table = document.querySelector('report-table');
-	report_table.addEventListener("row-clicked", (e) => {
-		window.location = "/status/" + e.detail.reportId;
+	const table_site = document.querySelector('table-site');
+	table_site.addEventListener("row-clicked", (e) => {
+		//window.location = "/status/" + e.detail.reportId;
+		console.log("Clicked on site", e.detail);
 	})
-	document.querySelector("address-or-report-input").addEventListener("suggestion-selected", (e) => {
+	document.querySelector("address-input").addEventListener("suggestion-selected", (e) => {
 		maybeEnableLookupButton(e)
 		if (e.detail.type == "address") {
 			map.flyTo({
@@ -155,27 +103,26 @@ function onLoad() {
 			});
 		}
 	});
-	document.querySelector("address-or-report-input").addEventListener("input", maybeEnableLookupButton);
+	document.querySelector("address-input").addEventListener("input", maybeEnableLookupButton);
 	document.getElementById("lookup-form").addEventListener("submit", handleLookupFormSubmit);
 }
-function renderReports(features) {
-	//console.log("render reports", features);
+function renderFeatures(features) {
+	console.log("render features", features);
 
-	const report_table = document.querySelector('report-table');
-	let reports = [];
+	const site_table = document.querySelector('table-site');
+	let sites = [];
 	for (const feature of features) {
-		reports.push({
-			address: feature.properties.address,
-			created: feature.properties.created,
-			id: feature.properties.public_id,
-			status: feature.properties.status,
+		sites.push({
+			address: formatAddress(feature.properties),
+			condition: feature.properties.condition,
+			id: feature.id,
 			type: feature.type,
 		});
 	}
-	report_table.reports = reports;
+	site_table.sites = sites;
 
-	const report_count = document.getElementById("report-count");
-	report_count.innerHTML = reports.length + " Sites Found";
+	const sites_count = document.getElementById("site-count");
+	sites_count.innerHTML = sites.length + " Sites Found";
 }
 document.addEventListener('DOMContentLoaded', onLoad);
 </script>
@@ -188,7 +135,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				<form class="row g-3 align-items-center" action="#" id="lookup-form">
 					<div class="col-md-9">
 						<address-input
-							name="address-or-report"
+							name="address"
 							placeholder="Enter an address, neighborhood, or zip code"
 						></address-input>
 					</div>
@@ -222,13 +169,13 @@ document.addEventListener('DOMContentLoaded', onLoad);
 				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
 			>
 				<h5 class="mb-0"><i class="bi bi-geo-fill me-2"></i>Sites List</h5>
-				<span class="badge bg-light text-dark" id="report-count"
+				<span class="badge bg-light text-dark" id="site-count"
 					>- Sites Found</span
 				>
 			</div>
 			<div class="card-body p-0">
 				<div class="table-responsive">
-					<report-table />
+					<table-site />
 				</div>
 			</div>
 			<!--
