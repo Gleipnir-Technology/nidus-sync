@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,11 +10,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/go-chi/chi/v5"
@@ -24,7 +23,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func apiAudioPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	id := chi.URLParam(r, "uuid")
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
@@ -43,9 +42,10 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, org *models.Organizati
 		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
 	setter := models.NoteAudioSetter{
 		Created:                 omit.From(payload.Created),
-		CreatorID:               omit.From(u.ID),
+		CreatorID:               omit.From(int32(u.ID)),
 		Deleted:                 omitnull.FromPtr(payload.Deleted),
 		DeletorID:               omitnull.FromPtr(payload.DeletorID),
 		Duration:                omit.From(payload.Duration),
@@ -54,21 +54,21 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, org *models.Organizati
 		Version:                 omit.From(payload.Version),
 		UUID:                    omit.From(noteUUID),
 	}
-	if err := db.NoteAudioCreate(context.Background(), u.R.Organization, u.ID, setter); err != nil {
+	if err := platform.NoteAudioCreate(ctx, u, setter); err != nil {
 		render.Render(w, r, errRender(err))
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func apiAudioContentPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	u_str := chi.URLParam(r, "uuid")
 	audioUUID, err := uuid.Parse(u_str)
 	if err != nil {
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 		return
 	}
-	err = userfile.FileContentWrite(r.Body, userfile.CollectionAudioRaw, audioUUID)
+	err = file.FileContentWrite(r.Body, file.CollectionAudioRaw, audioUUID)
 	if err != nil {
 		log.Printf("Failed to write content file: %v", err)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
@@ -78,7 +78,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, org *models.Org
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleClientIos(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 	var sinceStr string
 	err := r.ParseForm()
 	if err != nil {
@@ -121,69 +121,7 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, org *models.Organiz
 	}
 }
 
-func apiImagePost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
-	id := chi.URLParam(r, "uuid")
-	noteUUID, err := uuid.Parse(id)
-	if err != nil {
-		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
-		return
-	}
-
-	var payload NoteImagePayload
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
-		return
-	}
-	if err := json.Unmarshal(body, &payload); err != nil {
-		//debugSaveRequest(body, err, "Image note POST JSON decode error")
-		http.Error(w, "Failed to decode the payload", http.StatusBadRequest)
-		return
-	}
-	setter := models.NoteImageSetter{
-		Created:   omit.From(payload.Created),
-		CreatorID: omit.From(u.ID),
-		Deleted:   omitnull.FromPtr(payload.Deleted),
-		DeletorID: omitnull.FromPtr(payload.DeletorID),
-		Version:   omit.From(payload.Version),
-		UUID:      omit.From(noteUUID),
-	}
-	err = db.NoteImageCreate(context.Background(), u.R.Organization, u.ID, setter)
-	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
-	}
-	w.WriteHeader(http.StatusAccepted)
-}
-
-func apiImageContentGet(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
-	u_str := chi.URLParam(r, "uuid")
-	imageUUID, err := uuid.Parse(u_str)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse image UUID")
-		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
-	}
-	userfile.PublicImageFileToResponse(w, imageUUID)
-	w.WriteHeader(http.StatusOK)
-}
-func apiImageContentPost(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
-	u_str := chi.URLParam(r, "uuid")
-	imageUUID, err := uuid.Parse(u_str)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to parse image UUID")
-		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
-	}
-	err = userfile.ImageFileContentWrite(imageUUID, r.Body)
-	if err != nil {
-		render.Render(w, r, errRender(err))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	log.Printf("Saved image file %s\n", imageUUID)
-	fmt.Fprintf(w, "PNG uploaded successfully")
-}
-
-func apiMosquitoSource(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
@@ -208,7 +146,7 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, org *models.Organ
 	}
 }
 
-func apiTrapData(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))
@@ -233,7 +171,7 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, org *models.Organizatio
 	}
 }
 
-func apiServiceRequest(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
 		render.Render(w, r, errRender(err))

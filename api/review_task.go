@@ -9,7 +9,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -32,7 +31,7 @@ type contentListReviewTaskPool struct {
 	Total int32            `json:"total"`
 }
 
-func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListReviewTaskPool, *nhttp.ErrorWithStatus) {
+func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListReviewTaskPool, *nhttp.ErrorWithStatus) {
 	limit := 20
 	if query.Limit != nil {
 		limit = *query.Limit
@@ -45,7 +44,7 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organi
 			"COUNT(*) AS total",
 		),
 		sm.From("review_task"),
-		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
 		sm.Where(psql.Quote("review_task", "reviewed").IsNull()),
 	), scan.StructMapper[_RowTotal]())
 	if err != nil {
@@ -98,23 +97,20 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, org *models.Organi
 			psql.Quote("feature", "id"),
 		),
 		sm.InnerJoin("site").On(
-			psql.And(
-				psql.Quote("feature", "site_id").EQ(psql.Quote("site", "id")),
-				psql.Quote("feature", "site_version").EQ(psql.Quote("site", "version")),
-			),
+			psql.Quote("feature", "site_id").EQ(psql.Quote("site", "id")),
 		),
 		sm.InnerJoin("address").OnEQ(
 			psql.Quote("site", "address_id"),
 			psql.Quote("address", "id"),
 		),
-		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
 		sm.Where(psql.Quote("review_task", "reviewed").IsNull()),
 		sm.Limit(limit),
 	), scan.StructMapper[_Row]())
 	if err != nil {
 		return nil, nhttp.NewError("failed to get review tasks: %w", err)
 	}
-	users_by_id, err := platform.UsersByID(ctx, org)
+	users_by_id, err := platform.UsersByOrg(ctx, user.Organization)
 	if err != nil {
 		return nil, nhttp.NewError("users by id: %w", err)
 	}

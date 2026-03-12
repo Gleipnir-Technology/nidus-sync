@@ -9,11 +9,11 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -41,7 +41,7 @@ type UploadSummary struct {
 	Type        string    `db:"type"`
 }
 
-func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, t enums.FileuploadCsvtype) (Upload, error) {
+func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.FileuploadCsvtype) (Upload, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return Upload{}, fmt.Errorf("Failed to begin transaction: %w", err)
@@ -51,10 +51,10 @@ func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, 
 	file, err := models.FileuploadFiles.Insert(&models.FileuploadFileSetter{
 		ContentType:    omit.From(upload.ContentType),
 		Created:        omit.From(time.Now()),
-		CreatorID:      omit.From(u.ID),
+		CreatorID:      omit.From(int32(u.ID)),
 		Deleted:        omitnull.FromPtr[time.Time](nil),
 		Name:           omit.From(upload.Name),
-		OrganizationID: omit.From(u.OrganizationID),
+		OrganizationID: omit.From(u.Organization.ID()),
 		Status:         omit.From(enums.FileuploadFilestatustypeUploaded),
 		SizeBytes:      omit.From(int32(upload.SizeBytes)),
 		FileUUID:       omit.From(upload.UUID),
@@ -78,7 +78,7 @@ func NewUpload(ctx context.Context, u *models.User, upload userfile.FileUpload, 
 		ID: file.ID,
 	}, nil
 }
-func UploadCommit(ctx context.Context, org *models.Organization, file_id int32, committer *models.User) error {
+func UploadCommit(ctx context.Context, org Organization, file_id int32, committer User) error {
 	// Create addresses for each row
 	// Create sites for each row
 	// Create pools for each row
@@ -92,7 +92,7 @@ func UploadCommit(ctx context.Context, org *models.Organization, file_id int32, 
 	background.CommitUpload(file_id)
 	return err
 }
-func UploadDiscard(ctx context.Context, org *models.Organization, file_id int32) error {
+func UploadDiscard(ctx context.Context, org Organization, file_id int32) error {
 	_, err := psql.Update(
 		um.Table(models.FileuploadFiles.Alias()),
 		um.SetCol("status").ToArg("discarded"),
@@ -101,7 +101,7 @@ func UploadDiscard(ctx context.Context, org *models.Organization, file_id int32)
 	).Exec(ctx, db.PGInstance.BobDB)
 	return err
 }
-func UploadSummaryList(ctx context.Context, org *models.Organization) ([]UploadSummary, error) {
+func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, error) {
 	results := make([]UploadSummary, 0)
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(

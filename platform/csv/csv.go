@@ -113,7 +113,6 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		feature, err = models.Features.Query(
 			models.SelectWhere.Features.OrganizationID.EQ(org.ID),
 			models.SelectWhere.Features.SiteID.EQ(site.ID),
-			models.SelectWhere.Features.SiteVersion.EQ(site.Version),
 		).One(ctx, txn)
 		if err != nil {
 			if err.Error() != "sql: no rows in result set" {
@@ -125,7 +124,6 @@ func JobCommit(ctx context.Context, file_id int32) error {
 				//ID: row.Address,
 				OrganizationID: omit.From(org.ID),
 				SiteID:         omit.From(site.ID),
-				SiteVersion:    omit.From(site.Version),
 			}).One(ctx, txn)
 			if err != nil {
 				return fmt.Errorf("insert feature: %w", err)

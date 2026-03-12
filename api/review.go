@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -35,7 +36,7 @@ type createReviewPool struct {
 }
 type createdReviewPool struct{}
 
-func postReviewPool(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, req createReviewPool) (*createdReviewPool, *nhttp.ErrorWithStatus) {
+func postReviewPool(ctx context.Context, r *http.Request, user platform.User, req createReviewPool) (*createdReviewPool, *nhttp.ErrorWithStatus) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, nhttp.NewError("start txn: %w", err)
@@ -43,7 +44,7 @@ func postReviewPool(ctx context.Context, r *http.Request, org *models.Organizati
 	defer txn.Rollback(ctx)
 	review_task, err := models.ReviewTasks.Query(
 		models.SelectWhere.ReviewTasks.ID.EQ(req.TaskID),
-		models.SelectWhere.ReviewTasks.OrganizationID.EQ(org.ID),
+		models.SelectWhere.ReviewTasks.OrganizationID.EQ(user.Organization.ID()),
 	).One(ctx, txn)
 	if err != nil {
 		return nil, nhttp.NewErrorStatus(http.StatusNotFound, "review task %d not found", req.TaskID)
@@ -56,7 +57,7 @@ func postReviewPool(ctx context.Context, r *http.Request, org *models.Organizati
 	review_task.Update(ctx, txn, &models.ReviewTaskSetter{
 		Resolution: omitnull.From(resolution),
 		Reviewed:   omitnull.From(time.Now()),
-		ReviewerID: omitnull.From(user.ID),
+		ReviewerID: omitnull.From(int32(user.ID)),
 	})
 	review_task_pool, err := models.ReviewTaskPools.Query(
 		models.SelectWhere.ReviewTaskPools.ReviewTaskID.EQ(review_task.ID),
@@ -77,10 +78,10 @@ func postReviewPool(ctx context.Context, r *http.Request, org *models.Organizati
 	log.Info().Int32("id", review_task.ID).Str("status", req.Status).Msg("committed")
 	return &createdReviewPool{}, e
 }
-func discardReviewPool(ctx context.Context, txn bob.Tx, user *models.User, req createReviewPool, review_task_pool *models.ReviewTaskPool) *nhttp.ErrorWithStatus {
+func discardReviewPool(ctx context.Context, txn bob.Tx, user platform.User, req createReviewPool, review_task_pool *models.ReviewTaskPool) *nhttp.ErrorWithStatus {
 	return nil
 }
-func commitReviewPool(ctx context.Context, txn bob.Tx, user *models.User, req createReviewPool, review_task_pool *models.ReviewTaskPool) *nhttp.ErrorWithStatus {
+func commitReviewPool(ctx context.Context, txn bob.Tx, user platform.User, req createReviewPool, review_task_pool *models.ReviewTaskPool) *nhttp.ErrorWithStatus {
 	if req.Updates == nil {
 		return nil
 	}

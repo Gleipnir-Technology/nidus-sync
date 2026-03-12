@@ -4,24 +4,24 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/go-chi/chi/v5"
 	"github.com/uber/h3-go/v4"
 )
 
 type contentCell struct {
-	BreedingSources []BreedingSourceSummary
+	BreedingSources []platform.BreedingSourceSummary
 	CellBoundary    h3.CellBoundary
-	Inspections     []Inspection
+	Inspections     []platform.Inspection
 	MapData         ComponentMap
-	Traps           []TrapSummary
-	Treatments      []Treatment
+	Traps           []platform.TrapSummary
+	Treatments      []platform.Treatment
 }
 
-func getCellDetails(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentCell], *nhttp.ErrorWithStatus) {
+func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentCell], *nhttp.ErrorWithStatus) {
 	cell_str := chi.URLParam(r, "cell")
 	if cell_str == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "There should always be a cell")
@@ -38,7 +38,7 @@ func getCellDetails(ctx context.Context, r *http.Request, org *models.Organizati
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get boundary: %w", err)
 	}
-	inspections, err := inspectionsByCell(ctx, org, h3.Cell(c))
+	inspections, err := platform.InspectionsByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get inspections by cell: %w", err)
 	}
@@ -47,16 +47,16 @@ func getCellDetails(ctx context.Context, r *http.Request, org *models.Organizati
 		return nil, nhttp.NewError("Failed to get boundaries: %w", err)
 	}
 	resolution := h3.Cell(c).Resolution()
-	sources, err := breedingSourcesByCell(ctx, org, h3.Cell(c))
+	sources, err := platform.BreedingSourcesByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get sources: %w", err)
 	}
-	traps, err := trapsByCell(ctx, org, h3.Cell(c))
+	traps, err := platform.TrapsByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get traps: %w", err)
 	}
 
-	treatments, err := treatmentsByCell(ctx, org, h3.Cell(c))
+	treatments, err := platform.TreatmentsByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get treatments: %w", err)
 	}

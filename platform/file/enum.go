@@ -1,4 +1,4 @@
-package userfile
+package file
 
 type Collection int
 

@@ -6,11 +6,11 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,11 +20,11 @@ type contentReviewPool struct {
 }
 type contentReviewRoot struct{}
 
-func getReviewPool(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentReviewPool], *nhttp.ErrorWithStatus) {
+func getReviewPool(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentReviewPool], *nhttp.ErrorWithStatus) {
 	var oauth_token *models.ArcgisOauthToken
 	var err error
 	var access_token string
-	oauth_token, err = background.GetOAuthForOrg(ctx, org)
+	oauth_token, err = platform.GetOAuthForOrg(ctx, user.Organization)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to get oauth")
 		oauth_token = nil
@@ -37,9 +37,9 @@ func getReviewPool(ctx context.Context, r *http.Request, org *models.Organizatio
 		URLTiles:          template.HTMLAttr(fmt.Sprintf(`url-tiles="%s"`, config.MakeURLNidus("/api/tile/{z}/{y}/{x}"))),
 	}), nil
 }
-func getReviewRoot(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
+func getReviewRoot(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
 	return html.NewResponse("sync/review/root.html", contentReviewRoot{}), nil
 }
-func getReviewSite(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
+func getReviewSite(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentReviewRoot], *nhttp.ErrorWithStatus) {
 	return html.NewResponse("sync/review/site.html", contentReviewRoot{}), nil
 }

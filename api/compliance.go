@@ -12,9 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/imagetile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/go-chi/chi/v5"
 	"github.com/paulmach/orb/geojson"
 	"github.com/rs/zerolog/log"
@@ -61,10 +59,7 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 			psql.Quote("organization.id"),
 		),
 		sm.InnerJoin("site").On(
-			psql.And(
-				psql.Quote("lead.site_id").EQ(psql.Quote("site.id")),
-				psql.Quote("lead.site_version").EQ(psql.Quote("site.version")),
-			),
+			psql.Quote("lead.site_id").EQ(psql.Quote("site.id")),
 		),
 		sm.InnerJoin("parcel").OnEQ(
 			psql.Quote("site.parcel_id"),
@@ -72,9 +67,13 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 		),
 		sm.Where(psql.Quote("compliance_report_request").EQ(psql.Arg(code))),
 	), scan.StructMapper[_Row]())
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, row.OrganizationID)
+	org, err := platform.OrganizationByID(ctx, int(row.OrganizationID))
 	if err != nil {
-		http.Error(w, "no org", http.StatusInternalServerError)
+		http.Error(w, "org err", http.StatusInternalServerError)
+		return
+	}
+	if org == nil {
+		http.Error(w, "no org", http.StatusBadRequest)
 		return
 	}
 	var polygon geojson.Polygon
@@ -86,15 +85,15 @@ func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
 	}
 	ring := polygon[0]
 	p := ring[0]
-	err = writeImage(ctx, w, org, 19, p[1], p[0])
+	err = writeImage(ctx, w, *org, 19, p[1], p[0])
 	if err != nil {
 		log.Error().Err(err).Msg("write image")
 		http.Error(w, "failed to write image", http.StatusInternalServerError)
 		return
 	}
 }
-func writeImage(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
-	img, err := imagetile.ImageAtPoint(ctx, org, level, lat, lng)
+func writeImage(ctx context.Context, w http.ResponseWriter, org platform.Organization, level uint, lat, lng float64) error {
+	img, err := platform.ImageAtPoint(ctx, org, level, lat, lng)
 	if err != nil {
 		return fmt.Errorf("image at point: %w", err)
 	}

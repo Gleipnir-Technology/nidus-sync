@@ -1,4 +1,4 @@
-package userfile
+package file
 
 import (
 	"fmt"
@@ -34,6 +34,9 @@ var collectionToSubdir map[Collection]string = map[Collection]string{
 	CollectionImageRaw:        "image-raw",
 }
 
+func ContentPath(collection Collection, uid uuid.UUID) string {
+	return fileContentPath(collection, uid)
+}
 func fileContentPath(collection Collection, uid uuid.UUID) string {
 	subdir, ok := collectionToSubdir[collection]
 	if !ok {

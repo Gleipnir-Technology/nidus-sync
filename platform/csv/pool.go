@@ -16,12 +16,12 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -155,22 +155,22 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 	}
 	return nil
 }
-func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV) ([]*models.FileuploadPool, error) {
+func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile, c *models.FileuploadCSV) ([]*models.FileuploadPool, error) {
 	pools := make([]*models.FileuploadPool, 0)
-	r, err := userfile.NewFileReader(userfile.CollectionCSV, file.FileUUID)
+	r, err := file.NewFileReader(file.CollectionCSV, f.FileUUID)
 	if err != nil {
-		return pools, fmt.Errorf("Failed to get filereader for %d: %w", file.ID, err)
+		return pools, fmt.Errorf("Failed to get filereader for %d: %w", f.ID, err)
 	}
 	reader := csv.NewReader(r)
 	h, err := reader.Read()
 	if err != nil {
-		return pools, fmt.Errorf("Failed to read header of CSV for file %d: %w", file.ID, err)
+		return pools, fmt.Errorf("Failed to read header of CSV for file %d: %w", f.ID, err)
 	}
 	header_types, header_names := parseHeaders(h)
 	missing_headers := missingRequiredHeaders(header_types)
 	for _, mh := range missing_headers {
 		errorMissingHeader(ctx, txn, c, mh)
-		file.Update(ctx, txn, &models.FileuploadFileSetter{
+		f.Update(ctx, txn, &models.FileuploadFileSetter{
 			Status: omit.From(enums.FileuploadFilestatustypeError),
 		})
 		return pools, nil
@@ -183,7 +183,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 			if err == io.EOF {
 				return pools, nil
 			}
-			return pools, fmt.Errorf("Failed to read all CSV records for file %d: %w", file.ID, err)
+			return pools, fmt.Errorf("Failed to read all CSV records for file %d: %w", f.ID, err)
 		}
 		tags := make(map[string]string, 0)
 		setter := models.FileuploadPoolSetter{
@@ -196,8 +196,8 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 			Committed: omit.From(false),
 			Condition: omit.From(enums.PoolconditiontypeUnknown),
 			Created:   omit.From(time.Now()),
-			CreatorID: omit.From(file.CreatorID),
-			CSVFile:   omit.From(file.ID),
+			CreatorID: omit.From(f.CreatorID),
+			CSVFile:   omit.From(f.ID),
 			Deleted:   omitnull.FromPtr[time.Time](nil),
 			Geom:      omitnull.FromPtr[string](nil),
 			H3cell:    omitnull.FromPtr[string](nil),
@@ -287,12 +287,12 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFi
 		line_number = line_number + 1
 	}
 }
-func processCSVPoollist(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, parsed []*models.FileuploadPool) error {
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, file.OrganizationID)
+func processCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile, c *models.FileuploadCSV, parsed []*models.FileuploadPool) error {
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, f.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("get org: %w", err)
 	}
-	err = bulkGeocode(ctx, txn, file, c, parsed, org)
+	err = bulkGeocode(ctx, txn, f, c, parsed, org)
 	if err != nil {
 		log.Error().Err(err).Msg("Failure during geocoding")
 	}

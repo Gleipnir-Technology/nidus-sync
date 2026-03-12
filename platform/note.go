@@ -1,15 +1,16 @@
-package db
+package platform
 
 import (
 	"context"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
-func NoteAudioCreate(ctx context.Context, org *models.Organization, userID int32, setter models.NoteAudioSetter) error {
-	err := org.InsertNoteAudios(ctx, PGInstance.BobDB, &setter)
+func NoteAudioCreate(ctx context.Context, user User, setter models.NoteAudioSetter) error {
+	err := user.Organization.model.InsertNoteAudios(ctx, db.PGInstance.BobDB, &setter)
 	if err == nil {
 		return nil
 	}
@@ -21,17 +22,14 @@ func NoteAudioCreate(ctx context.Context, org *models.Organization, userID int32
 	return err
 }
 
-func NoteAudioGetLatest(ctx context.Context, uuid string) (*models.NoteAudio, error) {
-	return nil, nil
-}
 func NoteAudioNormalized(uuid string) error {
 	return nil
 }
 func NoteAudioTranscodedToOgg(uuid string) error {
 	return nil
 }
-func NoteImageCreate(ctx context.Context, org *models.Organization, userID int32, setter models.NoteImageSetter) error {
-	err := org.InsertNoteImages(ctx, PGInstance.BobDB, &setter)
+func NoteImageCreate(ctx context.Context, user User, setter models.NoteImageSetter) error {
+	err := user.Organization.model.InsertNoteImages(ctx, db.PGInstance.BobDB, &setter)
 	if err == nil {
 		return nil
 	}

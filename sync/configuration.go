@@ -6,22 +6,22 @@ import (
 
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
 type contentConfigurationRoot struct{}
 
-func getConfigurationRoot(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentConfigurationRoot], *nhttp.ErrorWithStatus) {
+func getConfigurationRoot(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentConfigurationRoot], *nhttp.ErrorWithStatus) {
 	return html.NewResponse("sync/configuration/root.html", contentConfigurationRoot{}), nil
 }
 
 type contentSettingOrganization struct {
-	Organization *models.Organization
+	Organization platform.Organization
 }
 
 type contentSettingIntegration struct {
@@ -30,11 +30,7 @@ type contentSettingIntegration struct {
 	ServiceMaps   []*models.ArcgisServiceMap
 }
 
-func getConfigurationOrganization(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
-	org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, nhttp.NewError("get organization: %w", err)
-	}
+func getConfigurationOrganization(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
 	/*
 		var district contentDistrict
 		district, err = bob.One[contentDistrict](ctx, db.PGInstance.BobDB, psql.Select(
@@ -67,12 +63,12 @@ func getConfigurationOrganization(ctx context.Context, r *http.Request, org *mod
 		}
 	*/
 	data := contentSettingOrganization{
-		Organization: org,
+		Organization: u.Organization,
 	}
 	return html.NewResponse("sync/configuration/organization.html", data), nil
 }
-func getConfigurationIntegration(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
-	oauth, err := arcgis.GetOAuthForUser(ctx, u)
+func getConfigurationIntegration(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
+	oauth, err := platform.GetOAuthForUser(ctx, u)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
@@ -81,15 +77,16 @@ func getConfigurationIntegration(ctx context.Context, r *http.Request, org *mode
 	}
 	return html.NewResponse("sync/configuration/integration.html", data), nil
 }
-func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
-	oauth, err := arcgis.GetOAuthForUser(ctx, u)
+func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentSettingIntegration], *nhttp.ErrorWithStatus) {
+	oauth, err := platform.GetOAuthForUser(ctx, u)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
 	var account *models.ArcgisAccount
 	var service_maps []*models.ArcgisServiceMap
-	if org.ArcgisAccountID.IsValue() {
-		account, err = models.FindArcgisAccount(ctx, db.PGInstance.BobDB, org.ArcgisAccountID.MustGet())
+	account_id := u.Organization.ArcgisAccountID()
+	if account_id != "" {
+		account, err = models.FindArcgisAccount(ctx, db.PGInstance.BobDB, account_id)
 		if err != nil {
 			return nil, nhttp.NewError("Failed to get arcgis: %w", err)
 		}
@@ -110,19 +107,19 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org
 
 type contentSettingPlaceholder struct{}
 
-func getConfigurationPesticide(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
+func getConfigurationPesticide(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
 	return html.NewResponse("sync/configuration/pesticide.html", content), nil
 }
-func getConfigurationPesticideAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
+func getConfigurationPesticideAdd(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
 	return html.NewResponse("sync/configuration/pesticide-add.html", content), nil
 }
-func getConfigurationUserAdd(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
+func getConfigurationUserAdd(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
 	return html.NewResponse("sync/configuration/user-add.html", content), nil
 }
-func getConfigurationUserList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
+func getConfigurationUserList(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSettingPlaceholder], *nhttp.ErrorWithStatus) {
 	content := contentSettingPlaceholder{}
 	return html.NewResponse("sync/configuration/user-list.html", content), nil
 }
@@ -131,17 +128,17 @@ type formArcgisConfiguration struct {
 	MapService *string `schema:"map-service"`
 }
 
-func postConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, org *models.Organization, u *models.User, f formArcgisConfiguration) (string, *nhttp.ErrorWithStatus) {
+func postConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u platform.User, f formArcgisConfiguration) (string, *nhttp.ErrorWithStatus) {
 	if f.MapService != nil {
 		_, err := psql.Update(
 			um.Table("organization"),
 			um.SetCol("arcgis_map_service_id").ToArg(f.MapService),
-			um.Where(psql.Quote("id").EQ(psql.Arg(org.ID))),
+			um.Where(psql.Quote("id").EQ(psql.Arg(u.Organization.ID()))),
 		).Exec(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			return "", nhttp.NewError("Failed to update map service config: %w", err)
 		}
-		log.Info().Str("map-service", *f.MapService).Int32("org-id", org.ID).Msg("changed map service")
+		log.Info().Str("map-service", *f.MapService).Int32("org-id", u.Organization.ID()).Msg("changed map service")
 	} else {
 		log.Info().Msg("no map service")
 	}

@@ -1,4 +1,4 @@
-package userfile
+package file
 
 import (
 	"bytes"

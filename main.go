@@ -12,17 +12,17 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/getsentry/sentry-go/zerolog"
@@ -107,9 +107,9 @@ func main() {
 		os.Exit(6)
 	}
 
-	err = userfile.CreateDirectories()
+	err = file.CreateDirectories()
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create userfile directories")
+		log.Error().Err(err).Msg("Failed to create file directories")
 		os.Exit(7)
 	}
 
@@ -143,7 +143,7 @@ func main() {
 	// Start up background processes
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	background.Start(ctx)
+	platform.BackgroundStart(ctx)
 
 	openai_logger := log.With().Logger()
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)
@@ -176,7 +176,7 @@ func main() {
 	}
 
 	cancel()
-	background.WaitForExit()
+	platform.BackgroundWaitForExit()
 
 	log.Info().Msg("Shutdown complete")
 }

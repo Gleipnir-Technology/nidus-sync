@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/imagetile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 )
 
-func getTileGPS(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+func getTileGPS(w http.ResponseWriter, r *http.Request, u platform.User) {
 	ctx := r.Context()
 	if err := r.ParseForm(); err != nil {
 		respondError(w, "Could not parse form", err, http.StatusBadRequest)
@@ -40,7 +39,7 @@ func getTileGPS(w http.ResponseWriter, r *http.Request, org *models.Organization
 		respondError(w, "couldn't parse lng", err, http.StatusBadRequest)
 		return
 	}
-	img, err := imagetile.ImageAtPoint(ctx, org, uint(level), lat, lng)
+	img, err := platform.ImageAtPoint(ctx, u.Organization, uint(level), lat, lng)
 	if err != nil {
 		respondError(w, "image at point", err, http.StatusInternalServerError)
 		return

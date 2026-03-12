@@ -7,11 +7,10 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/Gleipnir-Technology/nidus-sync/background"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
@@ -59,7 +58,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "You're not currently authenticated, which really shouldn't happen.", err, http.StatusUnauthorized)
 		return
 	}
-	err = background.HandleOauthAccessCode(r.Context(), user, code)
+	err = platform.HandleOauthAccessCode(r.Context(), *user, code)
 	if err != nil {
 		respondError(w, "Failed to handle access code", err, http.StatusInternalServerError)
 		return
@@ -67,7 +66,7 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.MakeURLNidus("/"), http.StatusFound)
 }
 
-func getOAuthRefresh(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentOauthPrompt], *nhttp.ErrorWithStatus) {
+func getOAuthRefresh(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentOauthPrompt], *nhttp.ErrorWithStatus) {
 	data := contentOauthPrompt{}
 	return html.NewResponse("sync/oauth-prompt.html", data), nil
 }

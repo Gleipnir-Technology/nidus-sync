@@ -8,8 +8,6 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -19,7 +17,7 @@ import (
 
 var decoder = schema.NewDecoder()
 
-type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User, queryParams) (*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User, queryParams) (*T, *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {
 	C      T
@@ -32,26 +30,17 @@ type ErrorAPI struct {
 }
 
 func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		ctx := r.Context()
-		org, err := u.Organization().One(ctx, db.PGInstance.BobDB)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if org == nil {
-			http.Error(w, "nil org", http.StatusInternalServerError)
-			return
-		}
 		var body []byte
 		var params queryParams
-		err = decoder.Decode(&params, r.URL.Query())
+		err := decoder.Decode(&params, r.URL.Query())
 		if err != nil {
 			log.Error().Err(err).Msg("decode query failure")
 			http.Error(w, "failed to decode query", http.StatusInternalServerError)
 			return
 		}
-		resp, e := f(ctx, r, org, u, params)
+		resp, e := f(ctx, r, u, params)
 		w.Header().Set("Content-Type", "application/json")
 		//log.Info().Str("template", template).Err(e).Msg("handler done")
 		if e != nil {
@@ -74,10 +63,10 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 	})
 }
 
-type handlerFunctionPost[ReqType any, ResponseType any] func(context.Context, *http.Request, *models.Organization, *models.User, ReqType) (ResponseType, *nhttp.ErrorWithStatus)
+type handlerFunctionPost[ReqType any, ResponseType any] func(context.Context, *http.Request, platform.User, ReqType) (ResponseType, *nhttp.ErrorWithStatus)
 
 func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFunctionPost[ReqType, ResponseType]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		w.Header().Set("Content-Type", "application/json")
 		var req ReqType
 		body, err := io.ReadAll(r.Body)
@@ -91,7 +80,7 @@ func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFuncti
 			return
 		}
 		ctx := r.Context()
-		response, e := f(ctx, r, org, u, req)
+		response, e := f(ctx, r, u, req)
 		if e != nil {
 			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
 			body, err = json.Marshal(ErrorAPI{Message: e.Error()})

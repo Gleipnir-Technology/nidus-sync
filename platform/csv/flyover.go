@@ -16,8 +16,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -80,19 +80,19 @@ var parseCSVFlyover = makeParseCSV(
 )
 
 type insertModelFunc[ModelType any, HeaderType Enum] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV, int32, []HeaderType, []string, []string) (ModelType, error)
-type parseCSVFunc[ModelType any] = func(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV) ([]ModelType, error)
+type parseCSVFunc[ModelType any] = func(ctx context.Context, txn bob.Tx, f *models.FileuploadFile, c *models.FileuploadCSV) ([]ModelType, error)
 
 func makeParseCSV[ModelType any, HeaderType Enum](parseHeader parseHeaderFunc[HeaderType], insertModel insertModelFunc[ModelType, HeaderType]) parseCSVFunc[ModelType] {
-	return func(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV) ([]ModelType, error) {
+	return func(ctx context.Context, txn bob.Tx, f *models.FileuploadFile, c *models.FileuploadCSV) ([]ModelType, error) {
 		rows := make([]ModelType, 0)
-		r, err := userfile.NewFileReader(userfile.CollectionCSV, file.FileUUID)
+		r, err := file.NewFileReader(file.CollectionCSV, f.FileUUID)
 		if err != nil {
-			return rows, fmt.Errorf("Failed to get filereader for %d: %w", file.ID, err)
+			return rows, fmt.Errorf("Failed to get filereader for %d: %w", f.ID, err)
 		}
 		reader := csv.NewReader(r)
 		h, err := reader.Read()
 		if err != nil {
-			return rows, fmt.Errorf("Failed to read header of CSV for file %d: %w", file.ID, err)
+			return rows, fmt.Errorf("Failed to read header of CSV for file %d: %w", f.ID, err)
 		}
 		header_types, header_names := parseHeader(h)
 		/*
@@ -114,9 +114,9 @@ func makeParseCSV[ModelType any, HeaderType Enum](parseHeader parseHeaderFunc[He
 				if err == io.EOF {
 					return rows, nil
 				}
-				return rows, fmt.Errorf("Failed to read all CSV records for file %d: %w", file.ID, err)
+				return rows, fmt.Errorf("Failed to read all CSV records for file %d: %w", f.ID, err)
 			}
-			m, err := insertModel(ctx, txn, file, c, line_number, header_types, header_names, row)
+			m, err := insertModel(ctx, txn, f, c, line_number, header_types, header_names, row)
 			if err != nil {
 				return rows, fmt.Errorf("insert models: %w", err)
 			}

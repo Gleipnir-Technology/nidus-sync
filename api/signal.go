@@ -9,7 +9,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -33,7 +32,7 @@ type contentListSignal struct {
 	Signals []signal `json:"signals"`
 }
 
-func listSignal(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {
+func listSignal(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {
 	type _Row struct {
 		Address   types.Address `db:"address"`
 		Addressed *time.Time    `db:"addressed"`
@@ -82,16 +81,13 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 			psql.Quote("pool", "id"),
 		),
 		sm.InnerJoin("site").On(
-			psql.And(
-				psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
-				psql.Quote("pool", "site_version").EQ(psql.Quote("site", "version")),
-			),
+			psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
 		),
 		sm.InnerJoin("address").OnEQ(
 			psql.Quote("site", "address_id"),
 			psql.Quote("address", "id"),
 		),
-		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
 		sm.Where(psql.Quote("signal", "addressed").IsNull()),
 		sm.Limit(limit),
 	), scan.StructMapper[_Row]())
@@ -105,7 +101,7 @@ func listSignal(ctx context.Context, r *http.Request, org *models.Organization, 
 	if err != nil {
 		return nil, nhttp.NewError("failed to get signals: %w", err)
 	}
-	users_by_id, err := platform.UsersByID(ctx, org)
+	users_by_id, err := platform.UsersByOrg(ctx, user.Organization)
 	if err != nil {
 		return nil, nhttp.NewError("users by id: %w", err)
 	}

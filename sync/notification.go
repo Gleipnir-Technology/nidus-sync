@@ -7,10 +7,9 @@ import (
 	//"strings"
 	//"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
-	"github.com/Gleipnir-Technology/nidus-sync/notification"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	//"github.com/Gleipnir-Technology/bob"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
@@ -21,11 +20,11 @@ import (
 )
 
 type contentNotificationList struct {
-	Notifications []notification.Notification
+	Notifications []platform.Notification
 }
 
-func getNotificationList(ctx context.Context, r *http.Request, org *models.Organization, u *models.User) (*html.Response[contentNotificationList], *nhttp.ErrorWithStatus) {
-	notifications, err := notification.ForUser(ctx, u)
+func getNotificationList(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentNotificationList], *nhttp.ErrorWithStatus) {
+	notifications, err := platform.NotificationsForUser(ctx, u)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get notifications: %w", err)
 	}

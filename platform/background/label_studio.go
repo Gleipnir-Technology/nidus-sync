@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/label-studio"
 	"github.com/Gleipnir-Technology/nidus-sync/minio"
@@ -98,13 +97,15 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 
 	return labelStudioClient, nil
 }
-
+func noteAudioGetLatest(ctx context.Context, uuid string) (*models.NoteAudio, error) {
+	return nil, nil
+}
 func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, project *labelstudio.Project, job jobLabelStudio) error {
 	customer := os.Getenv("CUSTOMER")
 	if customer == "" {
 		return errors.New("You must specify a CUSTOMER env var")
 	}
-	note, err := db.NoteAudioGetLatest(ctx, job.UUID.String())
+	note, err := noteAudioGetLatest(ctx, job.UUID.String())
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to get note %s", note.UUID))
 	}

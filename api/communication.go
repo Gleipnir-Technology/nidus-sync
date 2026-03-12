@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/google/uuid"
@@ -35,12 +35,12 @@ type contentListCommunication struct {
 	Communications []communication `json:"communications"`
 }
 
-func listCommunication(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
-	nreports, err := publicreport.NuisanceReportForOrganization(ctx, org.ID)
+func listCommunication(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
+	nreports, err := publicreport.NuisanceReportForOrganization(ctx, user.Organization.ID())
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}
-	wreports, err := publicreport.WaterReportForOrganization(ctx, org.ID)
+	wreports, err := publicreport.WaterReportForOrganization(ctx, user.Organization.ID())
 	if err != nil {
 		return nil, nhttp.NewError("water report query: %w", err)
 	}

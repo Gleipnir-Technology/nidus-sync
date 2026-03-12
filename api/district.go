@@ -8,7 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 )
@@ -73,7 +73,7 @@ func apiGetDistrictLogo(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Logo not found", http.StatusNotFound)
 			return
 		}
-		userfile.ImageFileContentWriteLogo(w, org.LogoUUID.MustGet())
+		file.ImageFileContentWriteLogo(w, org.LogoUUID.MustGet())
 		return
 	default:
 		http.Error(w, "Too many organizations, this is a programmer error", http.StatusInternalServerError)

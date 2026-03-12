@@ -7,8 +7,8 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,7 +24,7 @@ func getSignin(w http.ResponseWriter, r *http.Request) {
 	signin(w, errorCode, next)
 }
 
-func getSignout(w http.ResponseWriter, r *http.Request, org *models.Organization, user *models.User) {
+func getSignout(w http.ResponseWriter, r *http.Request, user platform.User) {
 	auth.SignoutUser(r, user)
 	http.Redirect(w, r, "/signin", http.StatusFound)
 }

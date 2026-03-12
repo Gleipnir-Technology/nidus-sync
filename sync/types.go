@@ -3,16 +3,8 @@ package sync
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/uber/h3-go/v4"
 )
-
-type BreedingSourceSummary struct {
-	ID            uuid.UUID
-	Type          string
-	LastInspected *time.Time
-	LastTreated   *time.Time
-}
 
 type MapMarker struct {
 	LatLng h3.LatLng
@@ -47,13 +39,6 @@ type ContentReportDetail struct {
 type ContentReportDiagnostic struct {
 }
 
-type Inspection struct {
-	Action     string
-	Date       *time.Time
-	Notes      string
-	Location   string
-	LocationID uuid.UUID
-}
 type Link struct {
 	Href  string
 	Title string

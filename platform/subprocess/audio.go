@@ -1,4 +1,4 @@
-package userfile
+package subprocess
 
 import (
 	"errors"
@@ -6,20 +6,24 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
+func fileContentPathAudioNormalized(u uuid.UUID) string {
+	//destination := AudioFileContentPathNormalized(audioUUID.String())
+	return file.ContentPath(file.CollectionAudioNormalized, u)
+}
 func NormalizeAudio(audioUUID uuid.UUID) error {
 	//source := AudioFileContentPathRaw(audioUUID.String())
-	source := fileContentPath(CollectionAudioRaw, audioUUID)
+	source := file.ContentPath(file.CollectionAudioRaw, audioUUID)
 	_, err := os.Stat(source)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Warn().Str("source", source).Msg("file doesn't exist, skipping normalization")
 		return nil
 	}
-	log.Info().Str("sourcce", source).Msg("Normalizing")
+	log.Info().Str("source", source).Msg("Normalizing")
 	//destination := AudioFileContentPathNormalized(audioUUID.String())
 	destination := fileContentPathAudioNormalized(audioUUID)
 	// Use "ffmpeg" directly, assuming it's in the system PATH
@@ -28,10 +32,6 @@ func NormalizeAudio(audioUUID uuid.UUID) error {
 	if err != nil {
 		log.Printf("FFmpeg output for normalization: %s", out)
 		return fmt.Errorf("ffmpeg normalization failed: %v", err)
-	}
-	err = db.NoteAudioNormalized(audioUUID.String())
-	if err != nil {
-		return fmt.Errorf("failed to update database for normalized audio %s: %v", audioUUID, err)
 	}
 	log.Info().Str("destination", destination).Msg("Normalized audio")
 	return nil
@@ -47,7 +47,7 @@ func TranscodeToOgg(audioUUID uuid.UUID) error {
 	}
 	log.Info().Str("source", source).Msg("Transcoding to ogg")
 	//destination := userfile.AudioFileContentPathOgg(audioUUID.String())
-	destination := fileContentPath(CollectionAudioTranscoded, audioUUID)
+	destination := file.ContentPath(file.CollectionAudioTranscoded, audioUUID)
 	// Use "ffmpeg" directly, assuming it's in the system PATH
 	cmd := exec.Command("ffmpeg", "-i", source, "-vn", "-acodec", "libvorbis", destination)
 	out, err := cmd.CombinedOutput()
@@ -55,15 +55,6 @@ func TranscodeToOgg(audioUUID uuid.UUID) error {
 		log.Error().Err(err).Bytes("out", out).Msg("FFmpeg output for OGG transcoding")
 		return fmt.Errorf("ffmpeg OGG transcoding failed: %v", err)
 	}
-	err = db.NoteAudioTranscodedToOgg(audioUUID.String())
-	if err != nil {
-		return fmt.Errorf("failed to update database for OGG transcoded audio %s: %v", audioUUID, err)
-	}
 	log.Info().Str("destination", destination).Msg("Transcoded audio")
 	return nil
-}
-
-func fileContentPathAudioNormalized(u uuid.UUID) string {
-	//destination := AudioFileContentPathNormalized(audioUUID.String())
-	return fileContentPath(CollectionAudioNormalized, u)
 }

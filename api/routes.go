@@ -14,6 +14,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost))
 	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
 	r.Method("GET", "/communication", authenticatedHandlerJSON(listCommunication))
+	r.Method("GET", "/events", auth.NewEnsureAuth(streamEvents))
 	r.Method("POST", "/image/{uuid}", auth.NewEnsureAuth(apiImagePost))
 	r.Method("GET", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentGet))
 	r.Method("POST", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentPost))

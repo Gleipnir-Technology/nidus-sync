@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -34,7 +33,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
-	"github.com/Gleipnir-Technology/nidus-sync/notification"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/alitto/pond/v2"
@@ -45,29 +44,25 @@ import (
 
 var syncStatusByOrg map[int32]bool
 
-// When the API responds that the token is now invalidated
-type InvalidatedTokenError struct{}
-
-func (e InvalidatedTokenError) Error() string { return "The token has been invalidated by the server" }
-
-// When there is no oauth for an organization
-type NoOAuthForOrg struct{}
-
-func (e NoOAuthForOrg) Error() string { return "No oauth available for organization" }
-
 var newOAuthTokenChannel chan struct{}
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
 
-type OAuthTokenResponse struct {
-	AccessToken           string `json:"access_token"`
-	ExpiresIn             int    `json:"expires_in"`
-	RefreshToken          string `json:"refresh_token"`
-	RefreshTokenExpiresIn int    `json:"refresh_token_expires_in"`
-	SSL                   bool   `json:"ssl"`
-	Username              string `json:"username"`
+func HasFieldseekerConnection(ctx context.Context, user_id int32) (bool, error) {
+	result, err := models.ArcgisOauthTokens.Query(
+		sm.Where(
+			models.ArcgisOauthTokens.Columns.UserID.EQ(psql.Arg(user_id)),
+		),
+	).Exists(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
 }
 
-func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*models.ArcgisOauthToken, error) {
+func IsSyncOngoing(org_id int32) bool {
+	return syncStatusByOrg[org_id]
+}
+func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.ArcgisOauthToken, error) {
 	users, err := org.User().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
@@ -81,57 +76,7 @@ func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*models.Arcg
 			return oauth, nil
 		}
 	}
-	return nil, &NoOAuthForOrg{}
-}
-
-func HandleOauthAccessCode(ctx context.Context, user *models.User, code string) error {
-	form := url.Values{
-		"grant_type":   []string{"authorization_code"},
-		"code":         []string{code},
-		"redirect_uri": []string{config.ArcGISOauthRedirectURL()},
-	}
-
-	token, err := doTokenRequest(ctx, form)
-	if err != nil {
-		return fmt.Errorf("Failed to exchange authorization code for token: %w", err)
-	}
-	accessExpires := futureUTCTimestamp(token.ExpiresIn)
-	refreshExpires := futureUTCTimestamp(token.RefreshTokenExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		AccessToken:        omit.From(token.AccessToken),
-		AccessTokenExpires: omit.From(accessExpires),
-		//ArcgisAccountID:     omit.From(
-		ArcgisID:            omitnull.FromPtr[string](nil),
-		ArcgisLicenseTypeID: omitnull.FromPtr[string](nil),
-		Created:             omit.From(time.Now()),
-		InvalidatedAt:       omitnull.FromPtr[time.Time](nil),
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		UserID:              omit.From(user.ID),
-		Username:            omit.From(token.Username),
-	}
-	oauth, err := models.ArcgisOauthTokens.Insert(&setter).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return fmt.Errorf("Failed to save token to database: %w", err)
-	}
-	go updateArcgisUserData(context.Background(), user, oauth)
-	return nil
-}
-
-func HasFieldseekerConnection(ctx context.Context, user *models.User) (bool, error) {
-	result, err := models.ArcgisOauthTokens.Query(
-		sm.Where(
-			models.ArcgisOauthTokens.Columns.UserID.EQ(psql.Arg(user.ID)),
-		),
-	).Exists(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return false, err
-	}
-	return result, nil
-}
-
-func IsSyncOngoing(org_id int32) bool {
-	return syncStatusByOrg[org_id]
+	return nil, nil
 }
 
 // This is a goroutine that is in charge of getting Fieldseeker data and keeping it fresh.
@@ -181,10 +126,6 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 				defer wg.Done()
 				err := periodicallyExportFieldseeker(workerCtx, org)
 				if err != nil {
-					if errors.Is(err, &NoOAuthForOrg{}) {
-						log.Debug().Int("organization_id", int(org.ID)).Msg("No oauth available for organization, exiting exporter.")
-						return
-					}
 					log.Error().Err(err).Msg("Crashed fieldseeker export goroutine")
 				}
 			}()
@@ -261,10 +202,6 @@ func extractURLParts(urlString string) (string, []string, error) {
 	return host, pathParts, nil
 }
 
-func futureUTCTimestamp(secondsFromNow int) time.Time {
-	return time.Now().UTC().Add(time.Duration(secondsFromNow) * time.Second)
-}
-
 // Helper function to generate code challenge from code verifier
 func generateCodeChallenge(codeVerifier string) string {
 	hash := sha256.Sum256([]byte(codeVerifier))
@@ -279,7 +216,7 @@ func generateCodeVerifier() string {
 }
 
 // Find out what we can about this user
-func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.ArcgisOauthToken) {
+func UpdateArcgisUserData(ctx context.Context, user *models.User, oauth *models.ArcgisOauthToken) {
 	client, err := arcgis.NewArcGISAuth(
 		ctx,
 		&arcgis.AuthenticatorOAuth{
@@ -392,14 +329,14 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 	}
 	maybeCreateWebhook(ctx, fssync)
 	downloadFieldseekerSchema(ctx, fssync, account.ID)
-	notification.ClearOauth(ctx, user)
+	//notification.ClearOauth(ctx, user)
 	newOAuthTokenChannel <- struct{}{}
 }
 
-func NewFieldSeeker(ctx context.Context, oauth *models.ArcgisOauthToken) (*fieldseeker.FieldSeeker, error) {
-	row, err := sql.OrgByOauthId(oauth.ID).One(ctx, db.PGInstance.BobDB)
+func NewFieldSeeker(ctx context.Context, oa *models.ArcgisOauthToken) (*fieldseeker.FieldSeeker, error) {
+	row, err := sql.OrgByOauthId(oa.ID).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get org ID from oauth %d: %w", oauth.ID, err)
+		return nil, fmt.Errorf("Failed to get org ID from oauth %d: %w", oa.ID, err)
 	}
 	// The URL for fieldseeker should be something like
 	// https://foo.arcgis.com/123abc/arcgis/rest/services/FieldSeekerGIS/FeatureServer
@@ -415,17 +352,17 @@ func NewFieldSeeker(ctx context.Context, oauth *models.ArcgisOauthToken) (*field
 	ar, err := arcgis.NewArcGISAuth(
 		ctx,
 		arcgis.AuthenticatorOAuth{
-			AccessToken:         oauth.AccessToken,
-			AccessTokenExpires:  oauth.AccessTokenExpires,
-			RefreshToken:        oauth.RefreshToken,
-			RefreshTokenExpires: oauth.RefreshTokenExpires,
+			AccessToken:         oa.AccessToken,
+			AccessTokenExpires:  oa.AccessTokenExpires,
+			RefreshToken:        oa.RefreshToken,
+			RefreshTokenExpires: oa.RefreshTokenExpires,
 		},
 	)
 	if err != nil {
 		if errors.Is(err, arcgis.ErrorInvalidAuthToken) {
-			return nil, InvalidatedTokenError{}
+			return nil, oauth.InvalidatedTokenError{}
 		} else if errors.Is(err, arcgis.ErrorInvalidRefreshToken) {
-			return nil, InvalidatedTokenError{}
+			return nil, oauth.InvalidatedTokenError{}
 		}
 		return nil, fmt.Errorf("Failed to create ArcGIS client: %w", err)
 	}
@@ -617,16 +554,17 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 			return nil
 		case <-pollTicker.C:
 			pollTicker = time.NewTicker(15 * time.Minute)
-			oauth, err := GetOAuthForOrg(ctx, org)
+			oa, err := getOAuthForOrg(ctx, org)
 			if err != nil {
 				return fmt.Errorf("Failed to get oauth for org: %w", err)
 			}
-			fssync, err := NewFieldSeeker(
-				ctx,
-				oauth,
-			)
+			if oa == nil {
+				log.Debug().Int32("org.id", org.ID).Msg("No oauth for org")
+				continue
+			}
+			fssync, err := NewFieldSeeker(ctx, oa)
 			if err != nil {
-				if errors.Is(err, &InvalidatedTokenError{}) {
+				if errors.Is(err, &oauth.InvalidatedTokenError{}) {
 					log.Info().Int32("org", org.ID).Msg("oauth token for org is invalid, waiting for refresh")
 					continue
 				}
@@ -723,39 +661,39 @@ func logPermissions(ctx context.Context, fssync *fieldseeker.FieldSeeker) {
 	}
 }
 
-func maintainOAuth(ctx context.Context, oauth *models.ArcgisOauthToken) error {
+func maintainOAuth(ctx context.Context, aot *models.ArcgisOauthToken) error {
 	for {
 		// Refresh from the database
-		oauth, err := models.FindArcgisOauthToken(ctx, db.PGInstance.BobDB, oauth.ID)
+		oa, err := models.FindArcgisOauthToken(ctx, db.PGInstance.BobDB, aot.ID)
 		if err != nil {
 			return fmt.Errorf("Failed to update oauth token from database: %w", err)
 		}
 		var accessTokenDelay time.Duration
-		if oauth.AccessTokenExpires.Before(time.Now()) || time.Until(oauth.AccessTokenExpires) < (3*time.Second) {
+		if oa.AccessTokenExpires.Before(time.Now()) || time.Until(oa.AccessTokenExpires) < (3*time.Second) {
 			accessTokenDelay = time.Second
 		} else {
-			accessTokenDelay = time.Until(oauth.AccessTokenExpires) - (3 * time.Second)
+			accessTokenDelay = time.Until(oa.AccessTokenExpires) - (3 * time.Second)
 		}
 		var refreshTokenDelay time.Duration
-		if oauth.RefreshTokenExpires.Before(time.Now()) || time.Until(oauth.RefreshTokenExpires) < (3*time.Second) {
+		if oa.RefreshTokenExpires.Before(time.Now()) || time.Until(oa.RefreshTokenExpires) < (3*time.Second) {
 			refreshTokenDelay = time.Second
 		} else {
-			refreshTokenDelay = time.Until(oauth.RefreshTokenExpires) - (3 * time.Second)
+			refreshTokenDelay = time.Until(oa.RefreshTokenExpires) - (3 * time.Second)
 		}
-		log.Info().Int("id", int(oauth.ID)).Float64("seconds", accessTokenDelay.Seconds()).Msg("Need to refresh access token")
-		log.Info().Int("id", int(oauth.ID)).Float64("seconds", refreshTokenDelay.Seconds()).Msg("Need to refresh refresh token")
+		log.Info().Int("id", int(oa.ID)).Float64("seconds", accessTokenDelay.Seconds()).Msg("Need to refresh access token")
+		log.Info().Int("id", int(oa.ID)).Float64("seconds", refreshTokenDelay.Seconds()).Msg("Need to refresh refresh token")
 		accessTokenTicker := time.NewTicker(accessTokenDelay)
 		refreshTokenTicker := time.NewTicker(refreshTokenDelay)
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-accessTokenTicker.C:
-			err := refreshAccessToken(ctx, oauth)
+			err := oauth.RefreshAccessToken(ctx, oa)
 			if err != nil {
 				return fmt.Errorf("Failed to refresh access token: %w", err)
 			}
 		case <-refreshTokenTicker.C:
-			err := refreshRefreshToken(ctx, oauth)
+			err := oauth.RefreshRefreshToken(ctx, oa)
 			if err != nil {
 				return fmt.Errorf("Failed to maintain refresh token: %w", err)
 			}
@@ -774,124 +712,20 @@ func markTokenFailed(ctx context.Context, oauth *models.ArcgisOauthToken) {
 	if err != nil {
 		log.Error().Str("err", err.Error()).Msg("Failed to mark token failed")
 	}
-	user, err := models.FindUser(ctx, db.PGInstance.BobDB, oauth.UserID)
-	if err != nil {
-		log.Error().Str("err", err.Error()).Msg("Failed to get oauth user")
-		return
-	}
-	notification.NotifyOauthInvalid(ctx, user)
+	/*
+		user, err := models.FindUser(ctx, db.PGInstance.BobDB, oauth.UserID)
+		if err != nil {
+			log.Error().Str("err", err.Error()).Msg("Failed to get oauth user")
+			return
+		}
+		notification.NotifyOauthInvalid(ctx, user)
+	*/
 	log.Info().Int("id", int(oauth.ID)).Msg("Marked oauth token invalid")
-}
-
-// Update the access token to keep it fresh and alive
-func refreshAccessToken(ctx context.Context, oauth *models.ArcgisOauthToken) error {
-	form := url.Values{
-		"grant_type":    []string{"refresh_token"},
-		"client_id":     []string{config.ClientID},
-		"refresh_token": []string{oauth.RefreshToken},
-	}
-	token, err := doTokenRequest(ctx, form)
-	if err != nil {
-		return fmt.Errorf("Failed to handle request: %w", err)
-	}
-	accessExpires := futureUTCTimestamp(token.ExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		AccessToken:        omit.From(token.AccessToken),
-		AccessTokenExpires: omit.From(accessExpires),
-		Username:           omit.From(token.Username),
-	}
-	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
-	if err != nil {
-		return fmt.Errorf("Failed to update oauth in database: %w", err)
-	}
-	log.Info().Int("oauth token id", int(oauth.ID)).Msg("Updated oauth token")
-	return nil
-}
-
-// Update the refresh token to keep it fresh and alive
-func refreshRefreshToken(ctx context.Context, oauth *models.ArcgisOauthToken) error {
-
-	form := url.Values{
-		"grant_type":    []string{"exchange_refresh_token"},
-		"redirect_uri":  []string{config.ArcGISOauthRedirectURL()},
-		"refresh_token": []string{oauth.RefreshToken},
-	}
-
-	token, err := doTokenRequest(ctx, form)
-	if err != nil {
-		return fmt.Errorf("Failed to handle request: %w", err)
-	}
-	refreshExpires := futureUTCTimestamp(token.ExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		Username:            omit.From(token.Username),
-	}
-	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
-	if err != nil {
-		return fmt.Errorf("Failed to update oauth in database: %w", err)
-	}
-	log.Info().Int("oauth token id", int(oauth.ID)).Msg("Updated oauth token")
-	return nil
 }
 
 func newTimestampedFilename(prefix, suffix string) string {
 	timestamp := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS format
 	return prefix + timestamp + suffix
-}
-
-func doTokenRequest(ctx context.Context, form url.Values) (*OAuthTokenResponse, error) {
-	form.Set("client_id", config.ClientID)
-
-	baseURL := "https://www.arcgis.com/sharing/rest/oauth2/token/"
-	req, err := http.NewRequest("POST", baseURL, strings.NewReader(form.Encode()))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create request: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	client := http.Client{}
-	log.Info().Str("url", req.URL.String()).Msg("POST")
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to do request: %w", err)
-	}
-	defer resp.Body.Close()
-	bodyBytes, err := io.ReadAll(resp.Body)
-	log.Info().Int("status", resp.StatusCode).Msg("Token request")
-	if resp.StatusCode >= http.StatusBadRequest {
-		if err != nil {
-			return nil, fmt.Errorf("Got status code %d and failed to read response body: %w", resp.StatusCode, err)
-		}
-		bodyString := string(bodyBytes)
-		var errorResp arcgis.ErrorResponse
-		if err := json.Unmarshal(bodyBytes, &errorResp); err == nil {
-			if errorResp.Error.Code == 498 && errorResp.Error.Description == "invalidated refresh_token" {
-				return nil, InvalidatedTokenError{}
-			}
-			return nil, fmt.Errorf("API response JSON error: %d: %d %s", resp.StatusCode, errorResp.Error.Code, errorResp.Error.Description)
-		}
-		return nil, fmt.Errorf("API returned error status %d: %s", resp.StatusCode, bodyString)
-	}
-	//logResponseHeaders(resp)
-	var tokenResponse OAuthTokenResponse
-	err = json.Unmarshal(bodyBytes, &tokenResponse)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal JSON: %w", err)
-	}
-	// Just because we got a 200-level status code doesn't mean it worked. Experience has taught us that
-	// we can get errors without anything indicated in the headers or the status code
-	if tokenResponse == (OAuthTokenResponse{}) {
-		var errorResponse arcgis.ErrorResponse
-		err = json.Unmarshal(bodyBytes, &errorResponse)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to unmarshal error JSON: %w", err)
-		}
-		if errorResponse.Error.Code > 0 {
-			return nil, errorResponse.AsError(ctx)
-		}
-	}
-	log.Info().Str("refresh token", tokenResponse.RefreshToken).Str("access token", tokenResponse.AccessToken).Int("access expires", tokenResponse.ExpiresIn).Int("refresh expires", tokenResponse.RefreshTokenExpiresIn).Msg("Oauth token acquired")
-	return &tokenResponse, nil
 }
 
 func logResponseHeaders(resp *http.Response) {

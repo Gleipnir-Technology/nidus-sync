@@ -10,20 +10,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync FieldseekerRecordsSync, err error) {
-	if u == nil {
-		return fsync, fmt.Errorf("Wha! Nil user!")
-	}
-	org := u.R.Organization
-	if org == nil {
-		return fsync, fmt.Errorf("Whoa nil org from user %d and org %d.", u.ID, u.OrganizationID)
-	}
+func getFieldseekerRecordsSync(ctx context.Context, u User, since *time.Time) (fsync FieldseekerRecordsSync, err error) {
 	db_connection := db.PGInstance.BobDB
-	pl, err := org.Pointlocations().All(ctx, db_connection)
+	pl, err := u.Organization.model.Pointlocations().All(ctx, db_connection)
 	if err != nil {
 		return fsync, fmt.Errorf("Failed to get point locations: %w", err)
 	}
-	inspections, err := u.R.Organization.Mosquitoinspections().All(ctx, db.PGInstance.BobDB)
+	inspections, err := u.Organization.model.Mosquitoinspections().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fsync, fmt.Errorf("Failed to get mosquito inspections: %w", err)
 	}
@@ -40,7 +33,7 @@ func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync F
 		insp = append(insp, i)
 		inspections_by_location[locid] = insp
 	}
-	treatments, err := u.R.Organization.Treatments().All(ctx, db.PGInstance.BobDB)
+	treatments, err := u.Organization.model.Treatments().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fsync, fmt.Errorf("Failed to get treatment data: %w", err)
 	}
@@ -78,8 +71,8 @@ func fieldseeker(ctx context.Context, u *models.User, since *time.Time) (fsync F
 	return fsync, err
 }
 
-func ContentClientIos(ctx context.Context, u *models.User, since *time.Time) (csync ClientSync, err error) {
-	fsync, err := fieldseeker(ctx, u, since)
+func ContentClientIos(ctx context.Context, u User, since *time.Time) (csync ClientSync, err error) {
+	fsync, err := getFieldseekerRecordsSync(ctx, u, since)
 	return ClientSync{
 		Fieldseeker: fsync,
 	}, err

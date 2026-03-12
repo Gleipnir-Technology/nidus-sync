@@ -1,4 +1,4 @@
-package sync
+package platform
 
 import (
 	"sort"
@@ -17,7 +17,7 @@ type TreatmentModel struct {
 	Errors         []time.Duration
 }
 
-func modelTreatment(treatments []Treatment) []TreatmentModel {
+func ModelTreatment(treatments []Treatment) []TreatmentModel {
 	treatment_times := make([]time.Time, 0)
 	for _, treatment := range treatments {
 		if treatment.Date != nil {

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -15,26 +14,21 @@ import (
 
 var decoder = schema.NewDecoder()
 
-type handlerFunctionGet[T any] func(context.Context, *http.Request, *models.Organization, *models.User) (*html.Response[T], *nhttp.ErrorWithStatus)
+type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User) (*html.Response[T], *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {
 	C            T
 	Config       html.ContentConfig
-	Organization *models.Organization
+	Organization platform.Organization
 	URL          html.ContentURL
 	User         platform.User
 }
 
-// w http.ResponseWriter, r *http.Request, u *models.User) {
+// w http.ResponseWriter, r *http.Request, u platform.User) {
 func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		ctx := r.Context()
-		userContent, err := auth.ContentForUser(ctx, u)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		resp, e := f(ctx, r, org, u)
+		resp, e := f(ctx, r, u)
 		//log.Info().Str("template", template).Err(e).Msg("handler done")
 		if e != nil {
 			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from sync pages")
@@ -44,17 +38,17 @@ func authenticatedHandler[T any](f handlerFunctionGet[T]) http.Handler {
 		html.RenderOrError(w, resp.Template, contentAuthenticated[T]{
 			C:            resp.Content,
 			Config:       html.NewContentConfig(),
-			Organization: org,
+			Organization: u.Organization,
 			URL:          html.NewContentURL(),
-			User:         userContent,
+			User:         u,
 		})
 	})
 }
 
-type handlerFunctionPost[T any] func(context.Context, *http.Request, *models.Organization, *models.User, T) (string, *nhttp.ErrorWithStatus)
+type handlerFunctionPost[T any] func(context.Context, *http.Request, platform.User, T) (string, *nhttp.ErrorWithStatus)
 
 func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		err := r.ParseForm()
 		if err != nil {
 			respondError(w, "Failed to parse form", err, http.StatusBadRequest)
@@ -69,7 +63,7 @@ func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, org, u, content)
+		path, e := f(ctx, r, u, content)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return
@@ -78,7 +72,7 @@ func authenticatedHandlerPost[T any](f handlerFunctionPost[T]) http.Handler {
 	})
 }
 func authenticatedHandlerPostMultipart[T any](f handlerFunctionPost[T]) http.Handler {
-	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, org *models.Organization, u *models.User) {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 		if err != nil {
 			respondError(w, "Failed to parse form", err, http.StatusBadRequest)
@@ -93,7 +87,7 @@ func authenticatedHandlerPostMultipart[T any](f handlerFunctionPost[T]) http.Han
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, org, u, content)
+		path, e := f(ctx, r, u, content)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return

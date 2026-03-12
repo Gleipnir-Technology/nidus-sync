@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 )
 
 type contentActiveServiceRequest struct {
@@ -34,11 +34,11 @@ type contentServiceRequestList struct {
 	ClosedRequests []contentClosedServiceRequest
 }
 
-func getServiceRequestDetail(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentServiceRequestDetail], *nhttp.ErrorWithStatus) {
+func getServiceRequestDetail(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentServiceRequestDetail], *nhttp.ErrorWithStatus) {
 	content := contentServiceRequestDetail{}
 	return html.NewResponse("sync/service-request-detail.html", content), nil
 }
-func getServiceRequestList(ctx context.Context, r *http.Request, org *models.Organization, user *models.User) (*html.Response[contentServiceRequestList], *nhttp.ErrorWithStatus) {
+func getServiceRequestList(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentServiceRequestList], *nhttp.ErrorWithStatus) {
 	now := time.Now()
 	content := contentServiceRequestList{
 		ActiveRequests: []contentActiveServiceRequest{

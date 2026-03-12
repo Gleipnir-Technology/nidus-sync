@@ -18,7 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
@@ -90,13 +90,13 @@ func extractExif(content_type string, file_bytes []byte) (result *ExifCollection
 }
 
 func extractImageUpload(headers *multipart.FileHeader) (upload ImageUpload, err error) {
-	file, err := headers.Open()
+	f, err := headers.Open()
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
 	}
-	defer file.Close()
+	defer f.Close()
 
-	file_bytes, err := io.ReadAll(file)
+	file_bytes, err := io.ReadAll(f)
 	content_type := http.DetectContentType(file_bytes)
 
 	exif, err := extractExif(content_type, file_bytes)
@@ -112,7 +112,7 @@ func extractImageUpload(headers *multipart.FileHeader) (upload ImageUpload, err 
 	if err != nil {
 		return upload, fmt.Errorf("Failed to create quick report photo uuid", err)
 	}
-	err = userfile.PublicImageFileContentWrite(u, bytes.NewReader(file_bytes))
+	err = file.PublicImageFileContentWrite(u, bytes.NewReader(file_bytes))
 	if err != nil {
 		return upload, fmt.Errorf("Failed to write image file to disk: %w", err)
 	}

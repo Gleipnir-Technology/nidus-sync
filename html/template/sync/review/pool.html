@@ -513,10 +513,10 @@
 							id="map"
 							organization-id="{{ .Organization.ID }}"
 							tegola="{{ .URL.Tegola }}"
-							xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
-							ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
-							xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
-							ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
+							xmin="{{ .Organization.ServiceArea.Min.X }}"
+							ymin="{{ .Organization.ServiceArea.Min.Y }}"
+							xmax="{{ .Organization.ServiceArea.Max.X }}"
+							ymax="{{ .Organization.ServiceArea.Max.Y }}"
 						></map-multipoint>
 					</div>
 

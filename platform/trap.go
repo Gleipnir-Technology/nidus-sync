@@ -1,4 +1,4 @@
-package sync
+package platform
 
 import (
 	"errors"
@@ -74,6 +74,13 @@ type BreedingSourceDetail struct {
 	EditedAt *time.Time `json:"editedAt"`
 	Editor   string     `json:"editor"`
 	Comments string     `json:"comments"`
+}
+
+type BreedingSourceSummary struct {
+	ID            uuid.UUID
+	Type          string
+	LastInspected *time.Time
+	LastTreated   *time.Time
 }
 
 type Trap struct {
@@ -181,7 +188,7 @@ type Treatment struct {
 	Product      string
 }
 
-func toTemplateTrap(trap *models.FieldseekerTraplocation, trap_data []sql.TrapDataByLocationIDRecentRow, count_slice []sql.TrapCountByLocationIDRow) (result Trap, err error) {
+func toTrap(trap *models.FieldseekerTraplocation, trap_data []sql.TrapDataByLocationIDRecentRow, count_slice []sql.TrapCountByLocationIDRow) (result Trap, err error) {
 	log.Debug().Str("globalid", trap.Globalid.String()).Msg("Working on trap")
 	cell, err := h3utils.ToCell(trap.H3cell.MustGet())
 	if err != nil {
@@ -360,7 +367,7 @@ func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData,
 	}
 	return results, nil
 }
-func toTemplateTreatment(rows models.FieldseekerTreatmentSlice) ([]Treatment, error) {
+func toTreatment(rows models.FieldseekerTreatmentSlice) ([]Treatment, error) {
 	var results []Treatment
 	for _, r := range rows {
 		results = append(results, Treatment{
@@ -407,15 +414,13 @@ func fsIntToBool(val null.Val[int16]) bool {
 }
 
 // toTemplateBreedingSource transforms the DB model into the display model
-func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *BreedingSourceDetail {
+func toBreedingSource(source *models.FieldseekerPointlocation) (*BreedingSourceDetail, error) {
 	if source.H3cell.IsNull() {
-		log.Error().Msg("h3 cell is null")
-		return nil
+		return nil, fmt.Errorf("h3 cell is null")
 	}
 	cell, err := h3utils.ToCell(source.H3cell.MustGet())
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get h3 cell from point location")
-		return nil
+		return nil, fmt.Errorf("Failed to get h3 cell from point location: %w", err)
 	}
 	return &BreedingSourceDetail{
 		// Basic Information
@@ -477,7 +482,7 @@ func toTemplateBreedingSource(source *models.FieldseekerPointlocation) *Breeding
 		EditedAt: getTimeOrNull(source.Editdate),
 		Editor:   source.Editor.GetOr(""),
 		Comments: source.Comments.GetOr(""),
-	}
+	}, nil
 }
 
 func getTimeOrNull(v null.Val[time.Time]) *time.Time {

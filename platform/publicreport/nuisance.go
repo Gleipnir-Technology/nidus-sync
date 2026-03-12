@@ -96,3 +96,19 @@ func NuisanceReportForOrganization(ctx context.Context, org_id int32) ([]Nuisanc
 	}
 	return reports, nil
 }
+func NuisanceReportForOrganizationCount(ctx context.Context, org_id int32) (uint, error) {
+	type _Row struct {
+		Count uint `db:"count"`
+	}
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"COUNT(*) AS count",
+		),
+		sm.From("publicreport.nuisance"),
+		sm.Where(psql.Quote("publicreport", "nuisance", "organization_id").EQ(psql.Arg(org_id))),
+	), scan.StructMapper[_Row]())
+	if err != nil {
+		return 0, fmt.Errorf("query count: %w", err)
+	}
+	return row.Count, nil
+}

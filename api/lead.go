@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -34,12 +35,12 @@ type lead struct {
 	ID int32 `json:"id"`
 }
 
-func listLead(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, query queryParams) (*contentListLead, *nhttp.ErrorWithStatus) {
+func listLead(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListLead, *nhttp.ErrorWithStatus) {
 	return &contentListLead{
 		Leads: make([]lead, 0),
 	}, nil
 }
-func postLeads(ctx context.Context, r *http.Request, org *models.Organization, user *models.User, req createLead) (*createdLead, *nhttp.ErrorWithStatus) {
+func postLeads(ctx context.Context, r *http.Request, user platform.User, req createLead) (*createdLead, *nhttp.ErrorWithStatus) {
 	if len(req.SignalIDs) == 0 {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "can't make a lead with no signals")
 	}
@@ -54,13 +55,11 @@ func postLeads(ctx context.Context, r *http.Request, org *models.Organization, u
 		return nil, nhttp.NewError("start transaction: %w", err)
 	}
 	type _Row struct {
-		ID      int32 `db:"site_id"`
-		Version int32 `db:"site_version"`
+		ID int32 `db:"site_id"`
 	}
 	site, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"pool.site_id AS site_id",
-			"pool.site_version AS site_version",
 		),
 		sm.From("signal_pool"),
 		sm.InnerJoin("pool").OnEQ(
@@ -68,13 +67,10 @@ func postLeads(ctx context.Context, r *http.Request, org *models.Organization, u
 			psql.Quote("pool", "id"),
 		),
 		sm.InnerJoin("site").On(
-			psql.And(
-				psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
-				psql.Quote("pool", "site_version").EQ(psql.Quote("site", "version")),
-			),
+			psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
 		),
 		sm.Where(psql.Quote("signal_pool", "signal_id").EQ(psql.Arg(signal_id))),
-		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
 	), scan.StructMapper[_Row]())
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -85,11 +81,10 @@ func postLeads(ctx context.Context, r *http.Request, org *models.Organization, u
 
 	lead, err := models.Leads.Insert(&models.LeadSetter{
 		Created: omit.From(time.Now()),
-		Creator: omit.From(user.ID),
+		Creator: omit.From(int32(user.ID)),
 		// ID
-		OrganizationID: omit.From(org.ID),
+		OrganizationID: omit.From(int32(user.Organization.ID())),
 		SiteID:         omitnull.From(site.ID),
-		SiteVersion:    omitnull.From(site.Version),
 		Type:           omit.From(enums.LeadtypeGreenPool),
 	}).One(ctx, txn)
 	if err != nil {

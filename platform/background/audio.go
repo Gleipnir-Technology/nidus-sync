@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/subprocess"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -53,13 +53,13 @@ func enqueueAudioJob(job jobAudio) {
 
 func processAudioFile(audioUUID uuid.UUID) error {
 	// Normalize audio
-	err := userfile.NormalizeAudio(audioUUID)
+	err := subprocess.NormalizeAudio(audioUUID)
 	if err != nil {
 		return fmt.Errorf("failed to normalize audio %s: %v", audioUUID, err)
 	}
 
 	// Transcode to OGG
-	err = userfile.TranscodeToOgg(audioUUID)
+	err = subprocess.TranscodeToOgg(audioUUID)
 	if err != nil {
 		return fmt.Errorf("failed to transcode audio %s to OGG: %v", audioUUID, err)
 	}

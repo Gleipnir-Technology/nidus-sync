@@ -3,7 +3,7 @@ package rmo
 import (
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/userfile"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -20,5 +20,5 @@ func getImageByUUID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse uuid", http.StatusBadRequest)
 		return
 	}
-	userfile.PublicImageFileToResponse(w, uid)
+	file.PublicImageFileToResponse(w, uid)
 }

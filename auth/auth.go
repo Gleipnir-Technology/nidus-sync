@@ -8,14 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/debug"
-	"github.com/aarondl/opt/omit"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,10 +16,6 @@ import (
 type NoCredentialsError struct{}
 
 func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
-
-type NoUserError struct{}
-
-func (e NoUserError) Error() string { return "That user does not exist" }
 
 type InvalidCredentials struct{}
 
@@ -36,28 +25,28 @@ type InvalidUsername struct{}
 
 func (e InvalidUsername) Error() string { return "That username doesn't exist" }
 
-type AuthenticatedHandler func(http.ResponseWriter, *http.Request, *models.Organization, *models.User)
+type AuthenticatedHandler func(http.ResponseWriter, *http.Request, platform.User)
 type EnsureAuth struct {
 	handler AuthenticatedHandler
 }
 
-func AddUserSession(r *http.Request, user *models.User) {
+func AddUserSession(r *http.Request, user *platform.User) {
 	id := strconv.Itoa(int(user.ID))
 	sessionManager.Put(r.Context(), "user_id", id)
 	sessionManager.Put(r.Context(), "username", user.Username)
 }
 
-func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
-	//user_id := sessionManager.GetInt(r.Context(), "user_id")
-	user_id_str := sessionManager.GetString(r.Context(), "user_id")
+func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
+	ctx := r.Context()
+	user_id_str := sessionManager.GetString(ctx, "user_id")
 	if user_id_str != "" {
 		user_id, err := strconv.Atoi(user_id_str)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to convert user_id to int: %w", err)
 		}
-		username := sessionManager.GetString(r.Context(), "username")
+		username := sessionManager.GetString(ctx, "username")
 		if user_id > 0 && username != "" {
-			return findUser(r.Context(), user_id)
+			return platform.UserByID(ctx, user_id)
 		}
 	}
 	// If we can't get the user from the session try to get from auth headers
@@ -65,7 +54,7 @@ func GetAuthenticatedUser(r *http.Request) (*models.User, error) {
 	if !ok {
 		return nil, &NoCredentialsError{}
 	}
-	user, err := validateUser(r.Context(), username, password)
+	user, err := validateUser(ctx, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +71,6 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	accept := r.Header.Values("Accept")
 	offers := []string{"application/json", "text/html"}
 
-	ctx := r.Context()
 	content_type := NegotiateContent(accept, offers)
 	user, err := GetAuthenticatedUser(r)
 	if err != nil || user == nil {
@@ -92,7 +80,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Info().Msg("No credentials present and no session")
 			w.Header().Set("WWW-Authenticate-Error", "no-credentials")
 			msg = []byte("Please provide credentials.\n")
-		} else if _, ok := err.(*NoUserError); ok {
+		} else if _, ok := err.(*platform.NoUserError); ok {
 			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
 			msg = []byte("Invalid credentials provided.\n")
 		} else if _, ok := err.(*InvalidCredentials); ok {
@@ -109,15 +97,9 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write(msg)
 		return
 	}
-	org, err := user.Organization().One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	ea.handler(w, r, org, user)
+	ea.handler(w, r, *user)
 }
-func SigninUser(r *http.Request, username string, password string) (*models.User, error) {
+func SigninUser(r *http.Request, username string, password string) (*platform.User, error) {
 	user, err := validateUser(r.Context(), username, password)
 	if err != nil {
 		return nil, err
@@ -129,60 +111,22 @@ func SigninUser(r *http.Request, username string, password string) (*models.User
 	return user, nil
 }
 
-func SignoutUser(r *http.Request, user *models.User) {
+func SignoutUser(r *http.Request, user platform.User) {
 	sessionManager.Put(r.Context(), "user_id", "")
 	sessionManager.Put(r.Context(), "username", "")
-	log.Info().Str("username", user.Username).Int32("user_id", user.ID).Msg("Ended user session")
+	log.Info().Str("username", user.Username).Int32("user_id", int32(user.ID)).Msg("Ended user session")
 }
 
-func SignupUser(ctx context.Context, username string, name string, password string) (*models.User, error) {
-	passwordHash, err := HashPassword(password)
+func SignupUser(ctx context.Context, username string, name string, password string) (*platform.User, error) {
+	password_hash, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot signup user, failed to create hashed password: %w", err)
 	}
-	o_setter := models.OrganizationSetter{
-		Name: omit.From(fmt.Sprintf("%s's organization", username)),
-	}
-	o, err := models.Organizations.Insert(&o_setter).One(ctx, db.PGInstance.BobDB)
+	u, err := platform.CreateUser(ctx, username, name, password_hash)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create organization: %w", err)
+		return nil, fmt.Errorf("create user: %s", err)
 	}
-	log.Info().Int32("id", o.ID).Msg("Created organization")
-	u_setter := models.UserSetter{
-		DisplayName:      omit.From(name),
-		OrganizationID:   omit.From(o.ID),
-		PasswordHash:     omit.From(passwordHash),
-		PasswordHashType: omit.From(enums.HashtypeBcrypt14),
-		Role:             omit.From(enums.UserroleAccountOwner),
-		Username:         omit.From(username),
-	}
-	u, err := models.Users.Insert(&u_setter).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create user: %w", err)
-	}
-	log.Info().Int32("id", u.ID).Str("username", u.Username).Msg("Created user")
-
 	return u, nil
-}
-
-// Helper function to translate strings into solid error types for operating on
-func findUser(ctx context.Context, user_id int) (*models.User, error) {
-	//user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
-	user, err := models.Users.Query(
-		models.Preload.User.Organization(),
-		sm.Where(models.Users.Columns.ID.EQ(psql.Arg(user_id))),
-	).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
-			return nil, &NoUserError{}
-		} else {
-			debug.LogErrorTypeInfo(err)
-			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
-			return nil, err
-		}
-	}
-	//log.Info().Int32("user_id", user.ID).Int32("org_id", user.OrganizationID).Msg("Found user")
-	return user, err
 }
 
 func HashPassword(password string) (string, error) {
@@ -207,41 +151,22 @@ func validatePassword(password, hash string) bool {
 	return err == nil
 }
 
-func validateUser(ctx context.Context, username string, password string) (*models.User, error) {
+func validateUser(ctx context.Context, username string, password string) (*platform.User, error) {
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
-	result, err := sql.UserByUsername(username).All(ctx, db.PGInstance.BobDB)
+	user, err := platform.UserByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query for user: %w", err)
 	}
-	switch len(result) {
-	case 0:
+	if user == nil {
 		log.Info().Str("username", username).Str("password", redact(password)).Msg("Invalid username")
 		return nil, InvalidUsername{}
-	case 1:
-		row := result[0]
-		if !validatePassword(password, row.PasswordHash) {
-			log.Info().Str("username", username).Str("password", redact(password)).Str("hash", passwordHash).Msg("Invalid password for user")
-			return nil, InvalidCredentials{}
-		}
-		user := models.User{
-			ID:                        row.ID,
-			ArcgisAccessToken:         row.ArcgisAccessToken,
-			ArcgisLicense:             row.ArcgisLicense,
-			ArcgisRefreshToken:        row.ArcgisRefreshToken,
-			ArcgisRefreshTokenExpires: row.ArcgisRefreshTokenExpires,
-			ArcgisRole:                row.ArcgisRole,
-			DisplayName:               row.DisplayName,
-			Email:                     row.Email,
-			OrganizationID:            row.OrganizationID,
-			Username:                  row.Username,
-		}
-		log.Info().Str("username", username).Msg("Validated user")
-		return &user, nil
-	default:
-		return nil, errors.New("More than one matching row, this should be impossible.")
-
 	}
+	if !validatePassword(password, user.PasswordHash) {
+		log.Info().Str("username", username).Str("password", redact(password)).Str("hash", passwordHash).Msg("Invalid password for user")
+		return nil, InvalidCredentials{}
+	}
+	return user, nil
 }

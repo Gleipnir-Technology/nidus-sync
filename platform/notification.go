@@ -1,4 +1,4 @@
-package notification
+package platform
 
 import (
 	"context"
@@ -82,9 +82,9 @@ func NotifyOauthInvalid(ctx context.Context, user *models.User) {
 	}
 }
 
-func ForUser(ctx context.Context, u *models.User) ([]Notification, error) {
+func NotificationsForUser(ctx context.Context, u User) ([]Notification, error) {
 	results := make([]Notification, 0)
-	notifications, err := u.UserNotifications(
+	notifications, err := u.model.UserNotifications(
 		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
