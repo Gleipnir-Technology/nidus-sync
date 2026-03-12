@@ -141,7 +141,6 @@
 
 					// Update map and aerial image
 					this.updateMap(task);
-					this.updateAerialImage(task);
 				},
 
 				// Stub: Update map display
@@ -158,24 +157,13 @@
 					map.SetMarkers(markers);
 
 					const bounds = new maplibregl.LngLatBounds(
-						new maplibregl.LngLat(loc.longitude - 0.01, loc.latitude - 0.01),
-						new maplibregl.LngLat(loc.longitude + 0.01, loc.latitude + 0.01),
+						new maplibregl.LngLat(loc.longitude - 0.005, loc.latitude - 0.005),
+						new maplibregl.LngLat(loc.longitude + 0.005, loc.latitude + 0.005),
 					);
 
 					map.FitBounds(bounds, {
 						padding: 50,
 					});
-				},
-
-				// Stub: Update aerial image display
-				updateAerialImage(task) {
-					console.log("Updating aerial image for task:", task.id);
-					// TODO: Load aerial image
-					// Example implementation:
-					// const imageEl = document.getElementById('aerial-image');
-					// if (imageEl && task.aerialImageUrl) {
-					//     imageEl.src = task.aerialImageUrl;
-					// }
 				},
 
 				// Format relative time
