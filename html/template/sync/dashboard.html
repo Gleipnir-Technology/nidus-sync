@@ -142,20 +142,17 @@
 	<h3 class="section-title">Mosquito Activity Heatmap</h3>
 	<div class="row">
 		<div class="col-12">
-			{{ if not (eq .Organization nil) }}
-				{{ if not (eq .Organization.ServiceAreaCentroidGeojson nil) }}
-					<map-aggregate
-						centroid="{{ if .Organization.ServiceAreaCentroidGeojson.IsValue }}
-							{{ .Organization.ServiceAreaCentroidGeojson.MustGet|json }}
-						{{ end }}"
-						organization-id="{{ .Organization.ID }}"
-						tegola="{{ .URL.Tegola }}"
-						xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
-						ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
-						xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
-						ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
-					/>
-				{{ end }}
+			{{ if eq .Organization.ServiceArea.Min.X 0.0 }}
+				<p>No service area for this organization yet</p>
+			{{ else }}
+				<map-aggregate
+					organization-id="{{ .Organization.ID }}"
+					tegola="{{ .URL.Tegola }}"
+					xmin="{{ .Organization.ServiceArea.Min.X }}"
+					ymin="{{ .Organization.ServiceArea.Min.Y }}"
+					xmax="{{ .Organization.ServiceArea.Max.X }}"
+					ymax="{{ .Organization.ServiceArea.Max.Y }}"
+				/>
 			{{ end }}
 		</div>
 	</div>
