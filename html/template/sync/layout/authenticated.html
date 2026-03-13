@@ -14,7 +14,11 @@
 		{{ block "extraheader" . }}{{ end }}
 		<script>
 			SSEManager.subscribe("*", function (e) {
-				console.log("event", e);
+				if (e.type == "created") {
+					console.log("created event", e);
+				} else {
+					console.log("other event", e);
+				}
 			});
 			function restoreLocalStorage() {
 				const expanded = localStorage.getItem("sidebar.expanded");

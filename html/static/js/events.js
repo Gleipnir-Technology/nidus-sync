@@ -59,6 +59,11 @@ window.SSEManager = (function () {
 				console.error("SSE error:", err);
 				isConnected = false;
 
+				// Close old connection
+				if (eventSource) {
+					eventSource.close();
+				}
+
 				// Reconnect after delay
 				setTimeout(() => {
 					connectionPromise = null;

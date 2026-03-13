@@ -20,8 +20,20 @@ type ConnectionSSE struct {
 	userID         int
 }
 
+type Message struct {
+	Resource string    `json:"resource"`
+	Time     time.Time `json:"time"`
+	Type     string    `json:"type"`
+	URI      string    `json:"uri"`
+}
+
 func (c *ConnectionSSE) SendEvent(w http.ResponseWriter, m platform.Event) error {
-	return send(w, m)
+	return send(w, Message{
+		Resource: m.Resource,
+		Time:     m.Time,
+		Type:     m.Type.String(),
+		URI:      m.URI,
+	})
 }
 func (c *ConnectionSSE) SendHeartbeat(w http.ResponseWriter, t time.Time) error {
 	return send(w, platform.Event{

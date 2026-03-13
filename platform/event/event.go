@@ -1,8 +1,9 @@
 package event
 
 import (
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 )
 
 var chanEvents chan<- Envelope
@@ -27,10 +28,26 @@ type EventType int
 const (
 	EventTypeCreated EventType = iota
 	EventTypeDeleted
-	EventTypeModified
 	EventTypeHeartbeat
 	EventTypeSudo
+	EventTypeUpdated
 )
+
+func (et EventType) String() string {
+	switch et {
+	case EventTypeCreated:
+		return "created"
+	case EventTypeDeleted:
+		return "deleted"
+	case EventTypeHeartbeat:
+		return "heartbeat"
+	case EventTypeSudo:
+		return "sudo"
+	case EventTypeUpdated:
+		return "updated"
+	}
+	return "unknown"
+}
 
 type ResourceType int
 
