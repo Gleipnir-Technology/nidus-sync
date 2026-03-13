@@ -11,15 +11,18 @@
 		<!-- favicon -->
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
 		<script src="/static/js/events.js"></script>
+		<script defer src="/static/js/alpine-3.15.8-min.js"></script>
 		{{ block "extraheader" . }}{{ end }}
 		<script>
+			const USER = {{ .User.AsJSON|json }};
 			SSEManager.subscribe("*", function (e) {
-				if (e.type == "created") {
-					console.log("created event", e);
-				} else {
-					console.log("other event", e);
+				if (e.type == "created" && e.resource.startsWith("rmo:")) {
+					updateUserState();
 				}
 			});
+			document.addEventListener("alpine:init", () => {
+				Alpine.store("user", USER);
+			})
 			function restoreLocalStorage() {
 				const expanded = localStorage.getItem("sidebar.expanded");
 				if (expanded == "false") {
@@ -47,6 +50,11 @@
 					}
 				});
 			}
+			async function updateUserState() {
+				const response = await fetch("/api/user");
+				const data = await response.json();
+				Alpine.store("user", data);
+			}
 			document.addEventListener("DOMContentLoaded", function () {
 				var popoverTriggerList = [].slice.call(
 					document.querySelectorAll('[data-bs-toggle="popover"]'),
@@ -67,8 +75,7 @@
 				restoreLocalStorage();
 				setTooltipsForSidebar();
 			});
-		</script>
-		{{ if not .Config.IsProductionEnvironment }}
+		</script> {{ if not .Config.IsProductionEnvironment }}
 			<script src="/.flogo/injector.js"></script>
 		{{ end }}
 	</head>

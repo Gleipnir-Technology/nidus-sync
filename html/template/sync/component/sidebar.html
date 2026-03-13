@@ -1,5 +1,5 @@
 {{ define "sync/component/sidebar.html" }}
-	<div id="sidebar">
+	<div id="sidebar" x-data="$store.user">
 		<div class="sidebar-header">
 			<div class="logo-container">
 				<img class="logo" src="/static/img/nidus-logo-256-transparent.png" />
@@ -41,18 +41,16 @@
 				>
 					<div class="menu-icon">{{ template "messaging.svg" }}</div>
 					<span class="menu-text ms-2">Communication</span>
-					{{ if gt (len .User.Notifications) 0 }}
+					<span
+						x-show="notification_counts.communication > 0"
+						x-cloak
+						class="position-absolute translate-middle badge rounded-pill bg-primary"
+					>
 						<span
-							class="position-absolute translate-middle badge rounded-pill bg-primary"
-						>
-							{{ if gt (len .User.Notifications) 99 }}
-								99+
-							{{ else }}
-								{{ len .User.Notifications }}
-							{{ end }}
-							<span class="visually-hidden">unread notifications</span>
-						</span>
-					{{ end }}
+							x-text="notification_counts.communication > 99 ? '99+' : notification_counts.communication"
+						></span>
+						<span class="visually-hidden">unread notifications</span>
+					</span>
 				</a>
 			</li>
 			<li>

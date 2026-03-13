@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -21,36 +22,51 @@ type NoUserError struct{}
 func (e NoUserError) Error() string { return "That user does not exist" }
 
 type User struct {
-	DisplayName      string         `json:"display_name"`
-	ID               int            `json:"-"`
-	Initials         string         `json:"initials"`
-	Notifications    []Notification `json:"-"`
-	Organization     Organization   `json:"organization"`
-	PasswordHash     string         `json:"-"`
-	PasswordHashType string         `json:"-"`
-	Role             string         `json:"role"`
-	Username         string         `json:"username"`
+	DisplayName        string                 `json:"display_name"`
+	ID                 int                    `json:"-"`
+	Initials           string                 `json:"initials"`
+	Notifications      []Notification         `json:"notifications"`
+	NotificationCounts UserNotificationCounts `json:"notification_counts"`
+	Organization       Organization           `json:"organization"`
+	PasswordHash       string                 `json:"-"`
+	PasswordHashType   string                 `json:"-"`
+	Role               string                 `json:"role"`
+	Username           string                 `json:"username"`
 
 	model *models.User
 }
 
+func (u User) AsJSON() string {
+	content, err := json.Marshal(u)
+	if err != nil {
+		return fmt.Sprintf("{error: \"%s\"}", err.Error())
+	}
+	return string(content)
+}
 func (u User) HasRoot() bool {
 	return u.model.Role == enums.UserroleRoot
 }
-func newUser(org Organization, user *models.User) User {
-	return User{
-		DisplayName:      user.DisplayName,
-		ID:               int(user.ID),
-		Initials:         extractInitials(user.DisplayName),
-		Notifications:    []Notification{},
-		Organization:     org,
-		PasswordHash:     user.PasswordHash,
-		PasswordHashType: string(user.PasswordHashType),
-		Role:             user.Role.String(),
-		Username:         user.Username,
+func newUser(ctx context.Context, org Organization, user *models.User) User {
+	u := User{
+		DisplayName:        user.DisplayName,
+		ID:                 int(user.ID),
+		Initials:           extractInitials(user.DisplayName),
+		Notifications:      []Notification{},
+		NotificationCounts: UserNotificationCounts{},
+		Organization:       org,
+		PasswordHash:       user.PasswordHash,
+		PasswordHashType:   string(user.PasswordHashType),
+		Role:               user.Role.String(),
+		Username:           user.Username,
 
 		model: user,
 	}
+	counts, err := NotificationCountsForUser(ctx, u)
+	if err != nil {
+		log.Error().Err(err).Int32("id", user.ID).Msg("failed to get notification counts for user")
+	}
+	u.NotificationCounts = *counts
+	return u
 }
 
 func CreateUser(ctx context.Context, username string, name string, password_hash string) (*User, error) {
@@ -75,7 +91,7 @@ func CreateUser(ctx context.Context, username string, name string, password_hash
 		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
 	log.Info().Int32("id", user.ID).Str("username", user.Username).Msg("Created user")
-	u := newUser(newOrganization(o), user)
+	u := newUser(ctx, newOrganization(o), user)
 	return &u, nil
 }
 func UserByID(ctx context.Context, user_id int32) (*User, error) {
@@ -91,7 +107,7 @@ func UsersByOrg(ctx context.Context, org Organization) (map[int32]*User, error) 
 	}
 	results := make(map[int32]*User, len(users))
 	for _, user := range users {
-		u := newUser(org, user)
+		u := newUser(ctx, org, user)
 		results[user.ID] = &u
 	}
 	return results, nil
@@ -113,7 +129,7 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 	}
 	org := newOrganization(user.R.Organization)
 
-	u := newUser(org, user)
+	u := newUser(ctx, org, user)
 	return &u, nil
 }
 func extractInitials(name string) string {

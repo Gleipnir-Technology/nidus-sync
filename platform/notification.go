@@ -27,6 +27,10 @@ type Notification struct {
 	Time    time.Time
 	Type    string
 }
+type UserNotificationCounts struct {
+	Communications uint `json:"communication"`
+	Home           uint `json:"home"`
+}
 
 // Clear all notifications for a given user with the given path
 func ClearOauth(ctx context.Context, user *models.User) {
@@ -99,6 +103,26 @@ func NotificationsForUser(ctx context.Context, u User) ([]Notification, error) {
 		})
 	}
 	return results, nil
+}
+func NotificationCountsForUser(ctx context.Context, u User) (*UserNotificationCounts, error) {
+	count_home, err := u.model.UserNotifications(
+		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
+	).Count(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get home notification count: %w", err)
+	}
+	count_nuisance, err := u.Organization.model.Waters().Count(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get nuisance notification count: %w", err)
+	}
+	count_water, err := u.Organization.model.Waters().Count(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get water notification count: %w", err)
+	}
+	return &UserNotificationCounts{
+		Communications: uint(count_nuisance + count_water),
+		Home:           uint(count_home),
+	}, nil
 }
 
 func notificationTypeName(t enums.Notificationtype) string {

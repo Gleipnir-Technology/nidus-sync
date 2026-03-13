@@ -46,7 +46,9 @@ window.SSEManager = (function () {
 					handlers.forEach((handler) => {
 						eventSource.addEventListener("message", (message) => {
 							const data = JSON.parse(message.data);
-							handler(data);
+							if (eventType == "*" || eventType == data.type) {
+								handler(data);
+							}
 						});
 					});
 				});
