@@ -5,17 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	"github.com/rs/zerolog/log"
 )
 
 type ContentWater struct {
@@ -65,7 +59,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 	address_country := r.FormValue("address-country")
 	address_locality := r.FormValue("address-locality")
 	address_number := r.FormValue("address-number")
-	address_postalcode := r.FormValue("address-postalcode")
+	address_postal_code := r.FormValue("address-postalcode")
 	address_region := r.FormValue("address-region")
 	address_street := r.FormValue("address-street")
 	comments := r.FormValue("comments")
@@ -85,42 +79,24 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	geospatial, err := geospatialFromForm(r)
-	if err != nil {
-		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
-		return
-	}
-	public_id, err := report.GenerateReportID()
-	if err != nil {
-		respondError(w, "Failed to create water report public ID", err, http.StatusInternalServerError)
-		return
-	}
-
 	ctx := r.Context()
-	tx, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
-	if err != nil {
-		respondError(w, "Failed to create transaction", err, http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback(ctx)
 
 	uploads, err := extractImageUploads(r)
 	if err != nil {
 		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	images, err := saveImageUploads(r.Context(), tx, uploads)
-	if err != nil {
-		respondError(w, "Failed to save image uploads", err, http.StatusInternalServerError)
-		return
-	}
 
-	var organization_id *int32
-	organization_id, err = matchDistrict(ctx, latlng.Longitude, latlng.Latitude, uploads)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to match district")
+	address := platform.Address{
+		Country:    address_country,
+		Locality:   address_locality,
+		Number:     address_number,
+		PostalCode: address_postal_code,
+		Raw:        address_raw,
+		Region:     address_region,
+		Street:     address_street,
+		Unit:       "",
 	}
-
 	setter := models.PublicreportWaterSetter{
 		AccessComments:    omit.From(access_comments),
 		AccessDog:         omit.From(access_dog),
@@ -132,7 +108,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		AddressCountry:    omit.From(address_country),
 		AddressLocality:   omit.From(address_locality),
 		AddressNumber:     omit.From(address_number),
-		AddressPostalCode: omit.From(address_postalcode),
+		AddressPostalCode: omit.From(address_postal_code),
 		AddressStreet:     omit.From(address_street),
 		AddressRegion:     omit.From(address_region),
 		Comments:          omit.From(comments),
@@ -145,51 +121,22 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		IsReporterConfidential: omit.From(is_reporter_confidential),
 		IsReporterOwner:        omit.From(is_reporter_owner),
 		//Location: add later
-		MapZoom:        omit.From(latlng.MapZoom),
-		OrganizationID: omitnull.FromPtr(organization_id),
-		OwnerEmail:     omit.From(owner_email),
-		OwnerName:      omit.From(owner_name),
-		OwnerPhone:     omit.From(owner_phone),
-		PublicID:       omit.From(public_id),
-		ReporterEmail:  omit.From(""),
-		ReporterName:   omit.From(""),
-		ReporterPhone:  omit.From(""),
-		Status:         omit.From(enums.PublicreportReportstatustypeReported),
+		MapZoom: omit.From(latlng.MapZoom),
+		//OrganizationID: omitnull.FromPtr(organization_id),
+		OwnerEmail: omit.From(owner_email),
+		OwnerName:  omit.From(owner_name),
+		OwnerPhone: omit.From(owner_phone),
+		//PublicID:       omit.From(public_id),
+		ReporterEmail: omit.From(""),
+		ReporterName:  omit.From(""),
+		ReporterPhone: omit.From(""),
+		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
-	water, err := models.PublicreportWaters.Insert(&setter).One(ctx, tx)
+	public_id, err := platform.WaterCreate(ctx, setter, latlng, address, uploads)
 	if err != nil {
-		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
+		respondError(w, "Failed to save new report", err, http.StatusInternalServerError)
 		return
 	}
-
-	if geospatial.Populated {
-		_, err = psql.Update(
-			um.Table("publicreport.water"),
-			um.SetCol("h3cell").ToArg(geospatial.Cell),
-			um.SetCol("location").To(geospatial.GeometryQuery),
-			um.Where(psql.Quote("id").EQ(psql.Arg(water.ID))),
-		).Exec(ctx, tx)
-		if err != nil {
-			respondError(w, "Failed to update publicreport.water geospatial", err, http.StatusInternalServerError)
-			return
-		}
-	}
-	log.Info().Int32("id", water.ID).Str("public_id", water.PublicID).Msg("Created water report")
-	setters := make([]*models.PublicreportWaterImageSetter, 0)
-	for _, image := range images {
-		setters = append(setters, &models.PublicreportWaterImageSetter{
-			ImageID: omit.From(int32(image.ID)),
-			WaterID: omit.From(int32(water.ID)),
-		})
-	}
-	if len(setters) > 0 {
-		_, err = models.PublicreportWaterImages.Insert(bob.ToMods(setters...)).Exec(r.Context(), tx)
-		if err != nil {
-			respondError(w, "Failed to save upload relationships", err, http.StatusInternalServerError)
-			return
-		}
-	}
-	tx.Commit(ctx)
 	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
 }
 func postWaterDistrict(w http.ResponseWriter, r *http.Request) {

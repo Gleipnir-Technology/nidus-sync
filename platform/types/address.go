@@ -11,6 +11,7 @@ type Address struct {
 	Locality   string `db:"locality" json:"locality"`
 	Number     string `db:"number" json:"number"`
 	PostalCode string `db:"postal_code" json:"postal_code"`
+	Raw        string `db:"-" json:"raw"`
 	Region     string `db:"region" json:"region"`
 	Street     string `db:"street" json:"street"`
 	Unit       string `db:"unit" json:"unit"`

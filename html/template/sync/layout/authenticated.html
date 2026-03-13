@@ -10,8 +10,12 @@
 		<link rel="stylesheet" href="/static/vendor/css/bootstrap-icons.min.css" />
 		<!-- favicon -->
 		<link rel="icon" href="/static/favicon-sync.ico" type="image/x-icon" />
+		<script src="/static/js/events.js"></script>
 		{{ block "extraheader" . }}{{ end }}
 		<script>
+			SSEManager.subscribe("*", function (e) {
+				console.log("event", e);
+			});
 			function restoreLocalStorage() {
 				const expanded = localStorage.getItem("sidebar.expanded");
 				if (expanded == "false") {
@@ -60,7 +64,6 @@
 				setTooltipsForSidebar();
 			});
 		</script>
-		<script src="/static/js/events.js"></script>
 		{{ if not .Config.IsProductionEnvironment }}
 			<script src="/.flogo/injector.js"></script>
 		{{ end }}

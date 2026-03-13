@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	//"github.com/go-chi/chi/v5"
 	//"github.com/rs/zerolog/log"
 )
@@ -67,16 +68,8 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBody)
 }
 
-type LatLngForm struct {
-	Latitude      *float64
-	Longitude     *float64
-	MapZoom       float32
-	AccuracyValue float32
-	AccuracyType  enums.PublicreportAccuracytype
-}
-
-func parseLatLng(r *http.Request) (LatLngForm, error) {
-	result := LatLngForm{
+func parseLatLng(r *http.Request) (platform.LatLng, error) {
+	result := platform.LatLng{
 		AccuracyType:  enums.PublicreportAccuracytypeNone,
 		AccuracyValue: 0.0,
 		Latitude:      nil,
@@ -102,7 +95,7 @@ func parseLatLng(r *http.Request) (LatLngForm, error) {
 		if err != nil {
 			return result, fmt.Errorf("Failed to parse latlng_accuracy_value '%s': %w", latlng_accuracy_value_str, err)
 		}
-		result.AccuracyValue = float32(t)
+		result.AccuracyValue = float64(t)
 	}
 
 	if latitude_str != "" {

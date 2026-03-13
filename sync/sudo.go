@@ -84,3 +84,19 @@ func postSudoSMS(ctx context.Context, r *http.Request, u platform.User, sms Form
 	}
 	return "/sudo", nil
 }
+
+type FormSSE struct {
+	Content        string `schema:"content"`
+	OrganizationID int32  `schema:"organizationID"`
+}
+
+func postSudoSSE(ctx context.Context, r *http.Request, u platform.User, sse FormSSE) (string, *nhttp.ErrorWithStatus) {
+	if !u.HasRoot() {
+		return "", &nhttp.ErrorWithStatus{
+			Message: "You must have sudo powers to do this",
+			Status:  http.StatusForbidden,
+		}
+	}
+	platform.SudoEvent(sse.OrganizationID, sse.Content)
+	return "/sudo", nil
+}

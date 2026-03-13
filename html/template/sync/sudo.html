@@ -196,6 +196,50 @@
 			</div>
 		</div>
 
+		<!-- SSE Testing -->
+		<div class="card mb-5">
+			<div class="card-header bg-danger text-white">
+				<i class="bi bi-bell"></i> Server-sent event testing
+			</div>
+			<div class="card-body">
+				<form action="/sudo/sse" method="POST">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="organizationID" class="form-label"
+									>Organization ID</label
+								>
+								<input
+									class="form-control"
+									id="organization-id"
+									name="organizationID"
+									placeholder="Organization ID"
+									type="text"
+									value="{{ .Organization.ID }}"
+								/>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="content" class="form-label">Content</label>
+								<input
+									class="form-control"
+									id="content"
+									name="content"
+									placeholder="Message content"
+									type="text"
+								/>
+							</div>
+						</div>
+					</div>
+					<button type="submit" class="btn btn-danger">
+						Send SSE<i class="bi bi-send"></i>
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<hr class="my-5" />
 		<!-- Push Notification Testing -->
 		<div class="card mb-5">
 			<div class="card-header bg-danger text-white">

@@ -6,16 +6,11 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -130,46 +125,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 	if slices.Contains(source_locations, "pool-area") {
 		is_location_pool = true
 	}
-	//log.Debug().Bool("is_location_backyard", is_location_backyard).Bool("is_location_frontyard", is_location_frontyard).Bool("is_location_garden", is_location_garden).Bool("is_location_other", is_location_other).Bool("is_location_pool", is_location_pool).Msg("parsed")
-	public_id, err := report.GenerateReportID()
-	if err != nil {
-		respondError(w, "Failed to create report public ID", err, http.StatusInternalServerError)
-		return
-	}
-
-	geospatial, err := geospatialFromForm(r)
-	if err != nil {
-		respondError(w, "Failed to handle geospatial data", err, http.StatusInternalServerError)
-		return
-	}
-
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
-	if err != nil {
-		respondError(w, "Failed to create transaction", err, http.StatusInternalServerError)
-		return
-	}
-	defer txn.Rollback(ctx)
-
-	// If we've got an address_country value it was set by geocoding so we should save it
-	var address *models.Address
-	if address_country != "" && latlng.Latitude != nil && latlng.Longitude != nil {
-		address, err = geocode.EnsureAddress(ctx, txn, types.Address{
-			Country:    address_country,
-			Locality:   address_locality,
-			Number:     address_number,
-			PostalCode: address_postal_code,
-			Region:     address_region,
-			Street:     address_street,
-			Unit:       "",
-		}, types.Location{
-			Latitude:  *latlng.Latitude,
-			Longitude: *latlng.Longitude,
-		})
-		if err != nil {
-			respondError(w, "Failed to ensure address: %w", err, http.StatusInternalServerError)
-			return
-		}
-	}
 
 	uploads, err := extractImageUploads(r)
 	log.Info().Int("len", len(uploads)).Msg("extracted uploads")
@@ -177,42 +132,41 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
 		return
 	}
-	images, err := saveImageUploads(ctx, txn, uploads)
-	if err != nil {
-		respondError(w, "Failed to save image uploads", err, http.StatusInternalServerError)
-		return
+	address := platform.Address{
+		Country:    address_country,
+		Locality:   address_locality,
+		Number:     address_number,
+		PostalCode: address_postal_code,
+		Raw:        address_raw,
+		Region:     address_region,
+		Street:     address_street,
+		Unit:       "",
 	}
-	var organization_id *int32
-	organization_id, err = matchDistrict(ctx, latlng.Longitude, latlng.Latitude, uploads)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to match district")
-	}
-
 	setter := models.PublicreportNuisanceSetter{
 		AdditionalInfo: omit.From(additional_info),
-		//AddressID:              omitnull.From(geospatial.Cell.String()),
-		AddressRaw:        omit.From(address_raw),
-		AddressCountry:    omit.From(address_country),
-		AddressNumber:     omit.From(address_number),
-		AddressLocality:   omit.From(address_locality),
-		AddressPostalCode: omit.From(address_postal_code),
-		AddressRegion:     omit.From(address_region),
-		AddressStreet:     omit.From(address_street),
+		//AddressID:              omitnull.From(latlng.Cell.String()),
+		AddressRaw:        omit.From(address.Raw),
+		AddressCountry:    omit.From(address.Country),
+		AddressNumber:     omit.From(address.Number),
+		AddressLocality:   omit.From(address.Locality),
+		AddressPostalCode: omit.From(address.PostalCode),
+		AddressRegion:     omit.From(address.Region),
+		AddressStreet:     omit.From(address.Street),
 		Created:           omit.From(time.Now()),
 		Duration:          omit.From(duration),
-		//H3cell:              omitnull.From(geospatial.Cell.String()),
+		//H3cell:              omitnull.From(latlng.Cell.String()),
 		IsLocationBackyard:  omit.From(is_location_backyard),
 		IsLocationFrontyard: omit.From(is_location_frontyard),
 		IsLocationGarden:    omit.From(is_location_garden),
 		IsLocationOther:     omit.From(is_location_other),
 		IsLocationPool:      omit.From(is_location_pool),
 		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
-		LatlngAccuracyValue: omit.From(latlng.AccuracyValue),
+		LatlngAccuracyValue: omit.From(float32(latlng.AccuracyValue)),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
-		Location:          omitnull.FromPtr[string](nil),
-		MapZoom:           omit.From(latlng.MapZoom),
-		OrganizationID:    omitnull.FromPtr(organization_id),
-		PublicID:          omit.From(public_id),
+		Location: omitnull.FromPtr[string](nil),
+		MapZoom:  omit.From(latlng.MapZoom),
+		//OrganizationID:    omitnull.FromPtr(organization_id),
+		//PublicID:          omit.From(public_id),
 		ReporterEmail:     omitnull.FromPtr[string](nil),
 		ReporterName:      omitnull.FromPtr[string](nil),
 		ReporterPhone:     omitnull.FromPtr[string](nil),
@@ -226,42 +180,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		TodEvening:        omit.From(tod_evening),
 		TodNight:          omit.From(tod_night),
 	}
-	if address != nil {
-		setter.AddressID = omitnull.From(address.ID)
-	}
-	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(ctx, txn)
-	if err != nil {
-		respondError(w, "Failed to create database record", err, http.StatusInternalServerError)
-		return
-	}
-	if geospatial.Populated {
-		_, err = psql.Update(
-			um.Table("publicreport.nuisance"),
-			um.SetCol("h3cell").ToArg(geospatial.Cell),
-			um.SetCol("location").To(geospatial.GeometryQuery),
-			um.Where(psql.Quote("id").EQ(psql.Arg(nuisance.ID))),
-		).Exec(ctx, txn)
-		if err != nil {
-			respondError(w, "Failed to insert publicreport.nuisance geospatial", err, http.StatusInternalServerError)
-			return
-		}
-	}
-	log.Info().Str("public_id", public_id).Int32("id", nuisance.ID).Msg("Created nuisance report")
-	if len(images) > 0 {
-		setters := make([]*models.PublicreportNuisanceImageSetter, 0)
-		for _, image := range images {
-			setters = append(setters, &models.PublicreportNuisanceImageSetter{
-				ImageID:    omit.From(int32(image.ID)),
-				NuisanceID: omit.From(int32(nuisance.ID)),
-			})
-		}
-		_, err = models.PublicreportNuisanceImages.Insert(bob.ToMods(setters...)).Exec(ctx, txn)
-		if err != nil {
-			respondError(w, "Failed to save reference to images", err, http.StatusInternalServerError)
-			return
-		}
-		log.Info().Int("len", len(images)).Msg("saved uploads")
-	}
-	txn.Commit(ctx)
+	public_id, err := platform.NuisanceCreate(ctx, setter, latlng, address, uploads)
 	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
 }

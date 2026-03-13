@@ -34,3 +34,38 @@ func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models
 		return nil, errors.New("too many organizations")
 	}
 }
+func MatchDistrict(ctx context.Context, longitude, latitude *float64, images []ImageUpload) (*int32, error) {
+	var err error
+	var org *models.Organization
+	for _, image := range images {
+		if image.Exif == nil {
+			continue
+		}
+		if image.Exif.GPS == nil {
+			continue
+		}
+		org, err = DistrictForLocation(ctx, image.Exif.GPS.Longitude, image.Exif.GPS.Latitude)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get district for location")
+			continue
+		}
+		if org != nil {
+			return &org.ID, nil
+		}
+	}
+	if longitude == nil || latitude == nil {
+		log.Debug().Msg("No location from images, no latlng for the report itself, cannot match")
+		return nil, nil
+	}
+	org, err = DistrictForLocation(ctx, *longitude, *latitude)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get district for location")
+		return nil, fmt.Errorf("Failed to get district for location: %w", err)
+	}
+	if org == nil {
+		log.Debug().Err(err).Float64("lng", *longitude).Float64("lat", *latitude).Msg("No district match by report location")
+		return nil, nil
+	}
+	log.Debug().Err(err).Int32("org_id", org.ID).Float64("lng", *longitude).Float64("lat", *latitude).Msg("Found district match by report location")
+	return &org.ID, nil
+}

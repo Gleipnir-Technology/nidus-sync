@@ -87,6 +87,7 @@ func Router() chi.Router {
 	r.Method("GET", "/sudo", authenticatedHandler(getSudo))
 	r.Method("POST", "/sudo/email", authenticatedHandlerPost(postSudoEmail))
 	r.Method("POST", "/sudo/sms", authenticatedHandlerPost(postSudoSMS))
+	r.Method("POST", "/sudo/sse", authenticatedHandlerPost(postSudoSSE))
 	r.Method("GET", "/trap/{globalid}", authenticatedHandler(getTrap))
 	r.Method("GET", "/text/{destination}", authenticatedHandler(getTextMessages))
 	r.Method("GET", "/tile/gps", auth.NewEnsureAuth(getTileGPS))

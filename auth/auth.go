@@ -34,6 +34,7 @@ func AddUserSession(r *http.Request, user *platform.User) {
 	id := strconv.Itoa(int(user.ID))
 	sessionManager.Put(r.Context(), "user_id", id)
 	sessionManager.Put(r.Context(), "username", user.Username)
+	log.Debug().Str("id", id).Str("username", user.Username).Msg("added user session")
 }
 
 func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
@@ -46,7 +47,7 @@ func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
 		}
 		username := sessionManager.GetString(ctx, "username")
 		if user_id > 0 && username != "" {
-			return platform.UserByID(ctx, user_id)
+			return platform.UserByID(ctx, int32(user_id))
 		}
 	}
 	// If we can't get the user from the session try to get from auth headers
@@ -114,7 +115,7 @@ func SigninUser(r *http.Request, username string, password string) (*platform.Us
 func SignoutUser(r *http.Request, user platform.User) {
 	sessionManager.Put(r.Context(), "user_id", "")
 	sessionManager.Put(r.Context(), "username", "")
-	log.Info().Str("username", user.Username).Int32("user_id", int32(user.ID)).Msg("Ended user session")
+	log.Info().Str("username", user.Username).Int("user_id", (user.ID)).Msg("Ended user session")
 }
 
 func SignupUser(ctx context.Context, username string, name string, password string) (*platform.User, error) {
@@ -148,6 +149,9 @@ func redact(s string) string {
 
 func validatePassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		log.Debug().Err(err).Str("password", password).Str("hash", hash).Msg("!validate password")
+	}
 	return err == nil
 }
 

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -162,6 +163,10 @@ func main() {
 		}
 	}()
 
+	chan_envelope := make(chan platform.Envelope, 10)
+	platform.SetEventChannel(chan_envelope)
+	api.SetEventChannel(chan_envelope)
+
 	// Wait for the interrupt signal to gracefully shut down
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
@@ -176,6 +181,7 @@ func main() {
 	}
 
 	cancel()
+	close(chan_envelope)
 	platform.BackgroundWaitForExit()
 
 	log.Info().Msg("Shutdown complete")

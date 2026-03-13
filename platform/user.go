@@ -35,7 +35,22 @@ type User struct {
 }
 
 func (u User) HasRoot() bool {
-	return u.model.Role != enums.UserroleRoot
+	return u.model.Role == enums.UserroleRoot
+}
+func newUser(org Organization, user *models.User) User {
+	return User{
+		DisplayName:      user.DisplayName,
+		ID:               int(user.ID),
+		Initials:         extractInitials(user.DisplayName),
+		Notifications:    []Notification{},
+		Organization:     org,
+		PasswordHash:     user.PasswordHash,
+		PasswordHashType: string(user.PasswordHashType),
+		Role:             user.Role.String(),
+		Username:         user.Username,
+
+		model: user,
+	}
 }
 
 func CreateUser(ctx context.Context, username string, name string, password_hash string) (*User, error) {
@@ -60,19 +75,11 @@ func CreateUser(ctx context.Context, username string, name string, password_hash
 		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
 	log.Info().Int32("id", user.ID).Str("username", user.Username).Msg("Created user")
-	return &User{
-		DisplayName:   user.DisplayName,
-		Initials:      extractInitials(user.DisplayName),
-		Notifications: []Notification{},
-		Organization:  newOrganization(o),
-		Role:          user.Role.String(),
-		Username:      user.Username,
-
-		model: user,
-	}, nil
+	u := newUser(newOrganization(o), user)
+	return &u, nil
 }
-func UserByID(ctx context.Context, user_id int) (*User, error) {
-	return getUser(ctx, models.SelectWhere.Users.ID.EQ(int32(user_id)))
+func UserByID(ctx context.Context, user_id int32) (*User, error) {
+	return getUser(ctx, models.SelectWhere.Users.ID.EQ(user_id))
 }
 func UserByUsername(ctx context.Context, username string) (*User, error) {
 	return getUser(ctx, models.SelectWhere.Users.Username.EQ(username))
@@ -84,15 +91,8 @@ func UsersByOrg(ctx context.Context, org Organization) (map[int32]*User, error) 
 	}
 	results := make(map[int32]*User, len(users))
 	for _, user := range users {
-		results[user.ID] = &User{
-			DisplayName:   user.DisplayName,
-			Initials:      "",
-			Notifications: []Notification{},
-			Organization:  org,
-			Role:          user.Role.String(),
-			Username:      user.Username,
-			model:         user,
-		}
+		u := newUser(org, user)
+		results[user.ID] = &u
 	}
 	return results, nil
 }
@@ -102,6 +102,7 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 		where,
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
+		log.Debug().Err(err).Msg("getUser failed")
 		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}
 		} else {
@@ -112,14 +113,8 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 	}
 	org := newOrganization(user.R.Organization)
 
-	return &User{
-		DisplayName:   user.DisplayName,
-		Initials:      extractInitials(user.DisplayName),
-		Notifications: []Notification{},
-		Organization:  org,
-		Role:          user.Role.String(),
-		Username:      user.Username,
-	}, nil
+	u := newUser(org, user)
+	return &u, nil
 }
 func extractInitials(name string) string {
 	parts := strings.Fields(name)
