@@ -86,8 +86,10 @@ func postSudoSMS(ctx context.Context, r *http.Request, u platform.User, sms Form
 }
 
 type FormSSE struct {
-	Content        string `schema:"content"`
 	OrganizationID int32  `schema:"organizationID"`
+	Resource       string `schema:"resource"`
+	Type           string `schema:"type"`
+	URIPath        string `schema:"uriPath"`
 }
 
 func postSudoSSE(ctx context.Context, r *http.Request, u platform.User, sse FormSSE) (string, *nhttp.ErrorWithStatus) {
@@ -97,6 +99,6 @@ func postSudoSSE(ctx context.Context, r *http.Request, u platform.User, sse Form
 			Status:  http.StatusForbidden,
 		}
 	}
-	platform.SudoEvent(sse.OrganizationID, sse.Content)
+	platform.SudoEvent(sse.OrganizationID, sse.Resource, sse.Type, sse.URIPath)
 	return "/sudo", nil
 }

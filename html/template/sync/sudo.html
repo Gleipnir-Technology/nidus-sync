@@ -218,16 +218,36 @@
 									value="{{ .Organization.ID }}"
 								/>
 							</div>
+							<div class="mb-3">
+								<label for="type" class="form-label">Type</label>
+								<select class="form-select" id="type" name="type">
+									<option value="created">Created</option>
+									<option value="deleted">Deleted</option>
+									<option value="heartbeat">Heartbeat</option>
+									<option value="sudo">Sudo</option>
+									<option value="updated">Updated</option>
+								</select>
+							</div>
 						</div>
 						<div class="col-md-6">
 							<div class="mb-3">
-								<label for="content" class="form-label">Content</label>
+								<label for="resource" class="form-label">Resource</label>
 								<input
 									class="form-control"
-									id="content"
-									name="content"
-									placeholder="Message content"
+									id="resource"
+									name="resource"
 									type="text"
+									value="rmo:nuisance"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="uriPath" class="form-label">URI path</label>
+								<input
+									class="form-control"
+									id="uri-path"
+									name="uriPath"
+									type="text"
+									value="/report/abcd-1234"
 								/>
 							</div>
 						</div>

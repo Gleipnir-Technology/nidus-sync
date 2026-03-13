@@ -30,6 +30,7 @@ const (
 	EventTypeDeleted
 	EventTypeHeartbeat
 	EventTypeSudo
+	EventTypeUnknown
 	EventTypeUpdated
 )
 
@@ -43,10 +44,28 @@ func (et EventType) String() string {
 		return "heartbeat"
 	case EventTypeSudo:
 		return "sudo"
+	case EventTypeUnknown:
+		return "unknown"
 	case EventTypeUpdated:
 		return "updated"
 	}
 	return "unknown"
+}
+func EventTypeFromString(s string) EventType {
+	switch s {
+	case "created":
+		return EventTypeCreated
+	case "deleted":
+		return EventTypeDeleted
+	case "heartbeat":
+		return EventTypeHeartbeat
+	case "sudo":
+		return EventTypeSudo
+	case "updated":
+		return EventTypeUpdated
+	default:
+		return EventTypeUnknown
+	}
 }
 
 type ResourceType int
