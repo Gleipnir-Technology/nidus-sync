@@ -61,10 +61,11 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 			"organization.slug",
 		),
 		sm.From("compliance_report_request").As("crr"),
-		sm.InnerJoin("site").OnEQ(psql.Raw("crr.site_id"), psql.Raw("site.id")),
-		sm.InnerJoin("organization").OnEQ(psql.Raw("site.organization_id"), psql.Raw("organization.id")),
-		sm.InnerJoin("address").OnEQ(psql.Raw("site.address_id"), psql.Raw("address.id")),
-		sm.Where(psql.Raw("crr.public_id").EQ(psql.Arg(public_id))),
+		sm.InnerJoin("lead").OnEQ(psql.Quote("crr", "lead_id"), psql.Quote("lead", "id")),
+		sm.InnerJoin("site").OnEQ(psql.Quote("lead", "site_id"), psql.Quote("site", "id")),
+		sm.InnerJoin("organization").OnEQ(psql.Quote("lead", "organization_id"), psql.Quote("organization", "id")),
+		sm.InnerJoin("address").OnEQ(psql.Quote("site", "address_id"), psql.Quote("address", "id")),
+		sm.Where(psql.Quote("crr", "public_id").EQ(psql.Arg(public_id))),
 	), scan.StructMapper[address]())
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to get compliance report")
