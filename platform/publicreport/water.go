@@ -97,7 +97,12 @@ func WaterReportForOrganization(ctx context.Context, org_id int32) ([]Water, err
 		return nil, fmt.Errorf("images for report: %w", err)
 	}
 	for i := range reports {
-		reports[i].Images = images_by_id[reports[i].ID]
+		images, ok := images_by_id[reports[i].ID]
+		if ok {
+			reports[i].Images = images
+		} else {
+			reports[i].Images = []types.Image{}
+		}
 	}
 	return reports, nil
 }
