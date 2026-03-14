@@ -67,6 +67,9 @@ class AddressInput extends HTMLElement {
 	_handleInput(event) {
 		const searchText = event.target.value.trim();
 
+		// Set the form input value if they submit the form without choosing an option
+		this.value = event.target.value;
+
 		// Clear previous timer
 		clearTimeout(this._debounceTimer);
 
