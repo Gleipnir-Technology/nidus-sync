@@ -55,6 +55,11 @@
 				init() {
 					this.loadFromAPI();
 					document.addEventListener("DOMContentLoaded", () => {
+						SSEManager.subscribe("*", (e) => {
+							if (e.resource.startsWith("rmo:")) {
+								this.fetchCommunications();
+							}
+						});
 						const map = document.querySelector("map-multipoint");
 						map.on("load", () => {
 							map.addLayer({
