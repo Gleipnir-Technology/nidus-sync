@@ -779,7 +779,7 @@
 
 								<!-- Message Reporter -->
 								<template
-									x-if="!(this.selectedCommunication?.public_report.reporter.has_email && this.selectedCommunication?.public_report.reporter.has_phone)"
+									x-if="!(selectedCommunication?.public_report.reporter.has_email && selectedCommunication?.public_report.reporter.has_phone)"
 								>
 									<div class="mb-3">
 										<h6>
@@ -789,7 +789,7 @@
 									</div>
 								</template>
 								<template
-									x-if="this.selectedCommunication?.public_report.reporter.has_email || this.selectedCommunication?.public_report.reporter.has_phone"
+									x-if="selectedCommunication?.public_report.reporter.has_email || selectedCommunication?.public_report.reporter.has_phone"
 								>
 									<div class="mb-3">
 										<h6><i class="bi bi-chat-dots"></i> Message Reporter</h6>
