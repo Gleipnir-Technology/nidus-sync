@@ -37,10 +37,16 @@ class MapMultipoint extends HTMLElement {
 		const ymin = parseFloat(this.getAttribute("ymin"));
 		const xmax = parseFloat(this.getAttribute("xmax"));
 		const ymax = parseFloat(this.getAttribute("ymax"));
-		const bounds = [
+		let bounds = [
 			[xmin, ymin],
 			[xmax, ymax],
 		];
+		if (xmin == 0 || xmax == 0 || ymin == 0 || ymax == 0) {
+			bounds = [
+				[-125, 25],
+				[-70, 50],
+			];
+		}
 
 		const mapElement = this.shadowRoot.querySelector("#map");
 		this._map = new maplibregl.Map({
