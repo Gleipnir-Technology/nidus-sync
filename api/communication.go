@@ -19,11 +19,6 @@ type historyEntry struct {
 	Action    string    `json:"action"`
 	Timestamp time.Time `json:"timestamp"`
 }
-type reporter struct {
-	HasEmail bool   `json:"has_email"`
-	HasPhone bool   `json:"has_phone"`
-	Name     string `json:"name"`
-}
 type communication struct {
 	Created      time.Time          `json:"created"`
 	History      []historyEntry     `json:"history"`

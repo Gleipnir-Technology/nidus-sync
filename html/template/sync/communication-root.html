@@ -101,6 +101,15 @@
 
 						const data = await response.json();
 						this.communications = data.communications || data; // Handle different response formats
+						// if we already had something selected, reset it using the new data
+						if (this.selectedCommunication) {
+							const matching = this.communications.filter((report) => {
+								return report.id == this.selectedCommunication.id;
+							});
+							if (matching.length > 0) {
+								this.selectedCommunication = matching[0];
+							}
+						}
 					} catch (err) {
 						console.error("Error loading communications:", err);
 						throw err;
