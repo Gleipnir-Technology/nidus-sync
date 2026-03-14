@@ -8,7 +8,7 @@ type Contact struct {
 	Email    *string `db:"email" json:"-"`
 	HasEmail bool    `json:"has_email"`
 	HasPhone bool    `json:"has_phone"`
-	Name     *string `db:"name"`
+	Name     *string `db:"name" json:"name"`
 	Phone    *string `db:"phone" json:"-"`
 }
 
