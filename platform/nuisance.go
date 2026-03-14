@@ -57,7 +57,7 @@ func NuisanceCreate(ctx context.Context, setter models.PublicreportNuisanceSette
 		setter.AddressID = omitnull.From(a.ID)
 	}
 	if organization_id != nil {
-		setter.OrganizationID = omitnull.FromPtr(organization_id)
+		setter.OrganizationID = omit.FromPtr(organization_id)
 	}
 	nuisance, err := models.PublicreportNuisances.Insert(&setter).One(ctx, txn)
 	if err != nil {

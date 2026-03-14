@@ -108,14 +108,12 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
 
-	if !nuisance.OrganizationID.IsNull() {
-		org_id := nuisance.OrganizationID.MustGet()
-		org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
-		if err != nil {
-			return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
-		}
-		result.District = newContentDistrict(org)
+	org_id := nuisance.OrganizationID
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
 	}
+	result.District = newContentDistrict(org)
 	result.Report.ID = report_id
 	result.Report.Address = nuisance.AddressRaw
 	result.Report.Created = nuisance.Created
@@ -214,15 +212,12 @@ func contentFromWater(ctx context.Context, report_id string) (result ContentStat
 		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
 	}
 
-	if !water.OrganizationID.IsNull() {
-		org_id := water.OrganizationID.MustGet()
-		org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
-		if err != nil {
-			return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
-		}
-		result.District = newContentDistrict(org)
+	org_id := water.OrganizationID
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
+	if err != nil {
+		return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
 	}
-
+	result.District = newContentDistrict(org)
 	result.Report.ID = report_id
 	result.Report.Address = water.AddressRaw
 	result.Report.Created = water.Created

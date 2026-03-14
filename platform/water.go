@@ -56,7 +56,7 @@ func WaterCreate(ctx context.Context, setter models.PublicreportWaterSetter, lat
 		setter.AddressID = omitnull.From(a.ID)
 	}
 	if organization_id != nil {
-		setter.OrganizationID = omitnull.FromPtr(organization_id)
+		setter.OrganizationID = omit.FromPtr(organization_id)
 	}
 
 	water, err := models.PublicreportWaters.Insert(&setter).One(ctx, txn)

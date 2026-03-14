@@ -55,7 +55,7 @@ type PublicreportWater struct {
 	ReporterName           string                             `db:"reporter_name" `
 	ReporterPhone          string                             `db:"reporter_phone" `
 	Status                 enums.PublicreportReportstatustype `db:"status" `
-	OrganizationID         null.Val[int32]                    `db:"organization_id" `
+	OrganizationID         int32                              `db:"organization_id" `
 	HasBackyardPermission  bool                               `db:"has_backyard_permission" `
 	IsReporterConfidential bool                               `db:"is_reporter_confidential" `
 	IsReporterOwner        bool                               `db:"is_reporter_owner" `
@@ -219,7 +219,7 @@ type PublicreportWaterSetter struct {
 	ReporterName           omit.Val[string]                             `db:"reporter_name" `
 	ReporterPhone          omit.Val[string]                             `db:"reporter_phone" `
 	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
-	OrganizationID         omitnull.Val[int32]                          `db:"organization_id" `
+	OrganizationID         omit.Val[int32]                              `db:"organization_id" `
 	HasBackyardPermission  omit.Val[bool]                               `db:"has_backyard_permission" `
 	IsReporterConfidential omit.Val[bool]                               `db:"is_reporter_confidential" `
 	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
@@ -317,7 +317,7 @@ func (s PublicreportWaterSetter) SetColumns() []string {
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
 	}
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if s.HasBackyardPermission.IsValue() {
@@ -435,8 +435,8 @@ func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if s.HasBackyardPermission.IsValue() {
 		t.HasBackyardPermission = s.HasBackyardPermission.MustGet()
@@ -642,8 +642,8 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 			vals[27] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[28] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[28] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[28] = psql.Raw("DEFAULT")
 		}
@@ -909,7 +909,7 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1285,7 +1285,7 @@ func (o *PublicreportWater) Organization(mods ...bob.Mod[*dialect.SelectQuery]) 
 }
 
 func (os PublicreportWaterSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1540,7 +1540,7 @@ func (publicreportWater0 *PublicreportWater) AttachAddress(ctx context.Context, 
 
 func attachPublicreportWaterOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, organization1 *Organization) (*PublicreportWater, error) {
 	setter := &PublicreportWaterSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := publicreportWater0.Update(ctx, exec, setter)
@@ -1728,7 +1728,7 @@ type publicreportWaterWhere[Q psql.Filterable] struct {
 	ReporterName           psql.WhereMod[Q, string]
 	ReporterPhone          psql.WhereMod[Q, string]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID         psql.WhereNullMod[Q, int32]
+	OrganizationID         psql.WhereMod[Q, int32]
 	HasBackyardPermission  psql.WhereMod[Q, bool]
 	IsReporterConfidential psql.WhereMod[Q, bool]
 	IsReporterOwner        psql.WhereMod[Q, bool]
@@ -1774,7 +1774,7 @@ func buildPublicreportWaterWhere[Q psql.Filterable](cols publicreportWaterColumn
 		ReporterName:           psql.Where[Q, string](cols.ReporterName),
 		ReporterPhone:          psql.Where[Q, string](cols.ReporterPhone),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		HasBackyardPermission:  psql.Where[Q, bool](cols.HasBackyardPermission),
 		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
 		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
@@ -2209,11 +2209,8 @@ func (os PublicreportWaterSlice) LoadOrganization(ctx context.Context, exec bob.
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

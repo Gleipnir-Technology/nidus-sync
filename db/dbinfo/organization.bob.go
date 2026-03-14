@@ -312,6 +312,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		IsCatchall: column{
+			Name:      "is_catchall",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -329,6 +338,23 @@ var Organizations = Table[
 			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
+			Include:       []string{},
+		},
+		OnlyOneCatchall: index{
+			Type: "btree",
+			Name: "only_one_catchall",
+			Columns: []indexColumn{
+				{
+					Name:         "is_catchall",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "(is_catchall = true)",
 			Include:       []string{},
 		},
 		OrganizationImportDistrictGidKey: index{
@@ -459,23 +485,25 @@ type organizationColumns struct {
 	ArcgisAccountID                 column
 	FieldseekerServiceFeatureItemID column
 	ArcgisMapServiceID              column
+	IsCatchall                      column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID, c.ArcgisMapServiceID,
+		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID, c.ArcgisMapServiceID, c.IsCatchall,
 	}
 }
 
 type organizationIndexes struct {
 	OrganizationPkey                 index
+	OnlyOneCatchall                  index
 	OrganizationImportDistrictGidKey index
 	OrganizationSlugKey              index
 }
 
 func (i organizationIndexes) AsSlice() []index {
 	return []index{
-		i.OrganizationPkey, i.OrganizationImportDistrictGidKey, i.OrganizationSlugKey,
+		i.OrganizationPkey, i.OnlyOneCatchall, i.OrganizationImportDistrictGidKey, i.OrganizationSlugKey,
 	}
 }
 

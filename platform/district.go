@@ -13,6 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func DistrictCatchall(ctx context.Context) (*models.Organization, error) {
+	return models.Organizations.Query(
+		models.SelectWhere.Organizations.IsCatchall.EQ(true),
+	).One(ctx, db.PGInstance.BobDB)
+}
 func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models.Organization, error) {
 	organizations, err := models.Organizations.Query(
 		sm.Where(
@@ -54,8 +59,12 @@ func MatchDistrict(ctx context.Context, longitude, latitude *float64, images []I
 		}
 	}
 	if longitude == nil || latitude == nil {
-		log.Debug().Msg("No location from images, no latlng for the report itself, cannot match")
-		return nil, nil
+		org, err = DistrictCatchall(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get catchall: %w", err)
+		}
+		log.Debug().Int32("id", org.ID).Msg("No location from images, no latlng for the report itself, using catchall")
+		return &org.ID, nil
 	}
 	org, err = DistrictForLocation(ctx, *longitude, *latitude)
 	if err != nil {
@@ -63,8 +72,12 @@ func MatchDistrict(ctx context.Context, longitude, latitude *float64, images []I
 		return nil, fmt.Errorf("Failed to get district for location: %w", err)
 	}
 	if org == nil {
-		log.Debug().Err(err).Float64("lng", *longitude).Float64("lat", *latitude).Msg("No district match by report location")
-		return nil, nil
+		org, err = DistrictCatchall(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get catchall: %w", err)
+		}
+		log.Debug().Err(err).Float64("lng", *longitude).Float64("lat", *latitude).Int32("id", org.ID).Msg("No district match by report location, using catchall")
+		return &org.ID, nil
 	}
 	log.Debug().Err(err).Int32("org_id", org.ID).Float64("lng", *longitude).Float64("lat", *latitude).Msg("Found district match by report location")
 	return &org.ID, nil

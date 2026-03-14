@@ -40,7 +40,7 @@ type PublicreportNuisance struct {
 	ReporterPhone          null.Val[string]                       `db:"reporter_phone" `
 	AddressRaw             string                                 `db:"address_raw" `
 	Status                 enums.PublicreportReportstatustype     `db:"status" `
-	OrganizationID         null.Val[int32]                        `db:"organization_id" `
+	OrganizationID         int32                                  `db:"organization_id" `
 	SourceGutter           bool                                   `db:"source_gutter" `
 	H3cell                 null.Val[string]                       `db:"h3cell" `
 	AddressCountry         string                                 `db:"address_country" `
@@ -207,7 +207,7 @@ type PublicreportNuisanceSetter struct {
 	ReporterPhone          omitnull.Val[string]                             `db:"reporter_phone" `
 	AddressRaw             omit.Val[string]                                 `db:"address_raw" `
 	Status                 omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
-	OrganizationID         omitnull.Val[int32]                              `db:"organization_id" `
+	OrganizationID         omit.Val[int32]                                  `db:"organization_id" `
 	SourceGutter           omit.Val[bool]                                   `db:"source_gutter" `
 	H3cell                 omitnull.Val[string]                             `db:"h3cell" `
 	AddressCountry         omit.Val[string]                                 `db:"address_country" `
@@ -276,7 +276,7 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
 	}
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		vals = append(vals, "organization_id")
 	}
 	if s.SourceGutter.IsValue() {
@@ -397,8 +397,8 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
-	if !s.OrganizationID.IsUnset() {
-		t.OrganizationID = s.OrganizationID.MustGetNull()
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
 	}
 	if s.SourceGutter.IsValue() {
 		t.SourceGutter = s.SourceGutter.MustGet()
@@ -562,8 +562,8 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.OrganizationID.IsUnset() {
-			vals[13] = psql.Arg(s.OrganizationID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[13] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
@@ -820,7 +820,7 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if !s.OrganizationID.IsUnset() {
+	if s.OrganizationID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "organization_id")...),
 			psql.Arg(s.OrganizationID),
@@ -1308,7 +1308,7 @@ func (o *PublicreportNuisance) Organization(mods ...bob.Mod[*dialect.SelectQuery
 }
 
 func (os PublicreportNuisanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
@@ -1563,7 +1563,7 @@ func (publicreportNuisance0 *PublicreportNuisance) AttachAddress(ctx context.Con
 
 func attachPublicreportNuisanceOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, organization1 *Organization) (*PublicreportNuisance, error) {
 	setter := &PublicreportNuisanceSetter{
-		OrganizationID: omitnull.From(organization1.ID),
+		OrganizationID: omit.From(organization1.ID),
 	}
 
 	err := publicreportNuisance0.Update(ctx, exec, setter)
@@ -1736,7 +1736,7 @@ type publicreportNuisanceWhere[Q psql.Filterable] struct {
 	ReporterPhone          psql.WhereNullMod[Q, string]
 	AddressRaw             psql.WhereMod[Q, string]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID         psql.WhereNullMod[Q, int32]
+	OrganizationID         psql.WhereMod[Q, int32]
 	SourceGutter           psql.WhereMod[Q, bool]
 	H3cell                 psql.WhereNullMod[Q, string]
 	AddressCountry         psql.WhereMod[Q, string]
@@ -1783,7 +1783,7 @@ func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisance
 		ReporterPhone:          psql.WhereNull[Q, string](cols.ReporterPhone),
 		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:         psql.WhereNull[Q, int32](cols.OrganizationID),
+		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
 		SourceGutter:           psql.Where[Q, bool](cols.SourceGutter),
 		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
 		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
@@ -2234,11 +2234,8 @@ func (os PublicreportNuisanceSlice) LoadOrganization(ctx context.Context, exec b
 		}
 
 		for _, rel := range organizations {
-			if !o.OrganizationID.IsValue() {
-				continue
-			}
 
-			if !(o.OrganizationID.IsValue() && o.OrganizationID.MustGet() == rel.ID) {
+			if !(o.OrganizationID == rel.ID) {
 				continue
 			}
 

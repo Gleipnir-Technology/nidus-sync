@@ -60,6 +60,7 @@ type Organization struct {
 	ArcgisAccountID                 null.Val[string]          `db:"arcgis_account_id" `
 	FieldseekerServiceFeatureItemID null.Val[string]          `db:"fieldseeker_service_feature_item_id" `
 	ArcgisMapServiceID              null.Val[string]          `db:"arcgis_map_service_id" `
+	IsCatchall                      bool                      `db:"is_catchall" `
 
 	R organizationR `db:"-" `
 }
@@ -128,7 +129,7 @@ type organizationR struct {
 func buildOrganizationColumns(alias string) organizationColumns {
 	return organizationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "name", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson", "service_area_centroid_x", "service_area_centroid_y", "mailing_address_country", "mailing_address_state", "office_address_country", "office_address_state", "arcgis_account_id", "fieldseeker_service_feature_item_id", "arcgis_map_service_id",
+			"id", "name", "import_district_gid", "website", "logo_uuid", "slug", "general_manager_name", "mailing_address_city", "mailing_address_postal_code", "mailing_address_street", "office_address_city", "office_address_postal_code", "office_address_street", "service_area_geometry", "service_area_square_meters", "service_area_centroid", "service_area_extent", "office_fax", "office_phone", "service_area_xmin", "service_area_ymin", "service_area_xmax", "service_area_ymax", "service_area_centroid_geojson", "service_area_centroid_x", "service_area_centroid_y", "mailing_address_country", "mailing_address_state", "office_address_country", "office_address_state", "arcgis_account_id", "fieldseeker_service_feature_item_id", "arcgis_map_service_id", "is_catchall",
 		).WithParent("organization"),
 		tableAlias:                      alias,
 		ID:                              psql.Quote(alias, "id"),
@@ -164,6 +165,7 @@ func buildOrganizationColumns(alias string) organizationColumns {
 		ArcgisAccountID:                 psql.Quote(alias, "arcgis_account_id"),
 		FieldseekerServiceFeatureItemID: psql.Quote(alias, "fieldseeker_service_feature_item_id"),
 		ArcgisMapServiceID:              psql.Quote(alias, "arcgis_map_service_id"),
+		IsCatchall:                      psql.Quote(alias, "is_catchall"),
 	}
 }
 
@@ -203,6 +205,7 @@ type organizationColumns struct {
 	ArcgisAccountID                 psql.Expression
 	FieldseekerServiceFeatureItemID psql.Expression
 	ArcgisMapServiceID              psql.Expression
+	IsCatchall                      psql.Expression
 }
 
 func (c organizationColumns) Alias() string {
@@ -240,10 +243,11 @@ type OrganizationSetter struct {
 	ArcgisAccountID                 omitnull.Val[string]    `db:"arcgis_account_id" `
 	FieldseekerServiceFeatureItemID omitnull.Val[string]    `db:"fieldseeker_service_feature_item_id" `
 	ArcgisMapServiceID              omitnull.Val[string]    `db:"arcgis_map_service_id" `
+	IsCatchall                      omit.Val[bool]          `db:"is_catchall" `
 }
 
 func (s OrganizationSetter) SetColumns() []string {
-	vals := make([]string, 0, 23)
+	vals := make([]string, 0, 24)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -312,6 +316,9 @@ func (s OrganizationSetter) SetColumns() []string {
 	}
 	if !s.ArcgisMapServiceID.IsUnset() {
 		vals = append(vals, "arcgis_map_service_id")
+	}
+	if s.IsCatchall.IsValue() {
+		vals = append(vals, "is_catchall")
 	}
 	return vals
 }
@@ -386,6 +393,9 @@ func (s OrganizationSetter) Overwrite(t *Organization) {
 	if !s.ArcgisMapServiceID.IsUnset() {
 		t.ArcgisMapServiceID = s.ArcgisMapServiceID.MustGetNull()
 	}
+	if s.IsCatchall.IsValue() {
+		t.IsCatchall = s.IsCatchall.MustGet()
+	}
 }
 
 func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
@@ -394,7 +404,7 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 23)
+		vals := make([]bob.Expression, 24)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -533,6 +543,12 @@ func (s *OrganizationSetter) Apply(q *dialect.InsertQuery) {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
+		if s.IsCatchall.IsValue() {
+			vals[23] = psql.Arg(s.IsCatchall.MustGet())
+		} else {
+			vals[23] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -542,7 +558,7 @@ func (s OrganizationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 23)
+	exprs := make([]bob.Expression, 0, 24)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -702,6 +718,13 @@ func (s OrganizationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "arcgis_map_service_id")...),
 			psql.Arg(s.ArcgisMapServiceID),
+		}})
+	}
+
+	if s.IsCatchall.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "is_catchall")...),
+			psql.Arg(s.IsCatchall),
 		}})
 	}
 
@@ -4861,7 +4884,7 @@ func (organization0 *Organization) AttachFieldseekerServiceFeatureItemServiceFea
 
 func insertOrganizationNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, organization0 *Organization) (PublicreportNuisanceSlice, error) {
 	for i := range publicreportNuisances1 {
-		publicreportNuisances1[i].OrganizationID = omitnull.From(organization0.ID)
+		publicreportNuisances1[i].OrganizationID = omit.From(organization0.ID)
 	}
 
 	ret, err := PublicreportNuisances.Insert(bob.ToMods(publicreportNuisances1...)).All(ctx, exec)
@@ -4874,7 +4897,7 @@ func insertOrganizationNuisances0(ctx context.Context, exec bob.Executor, public
 
 func attachOrganizationNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNuisances1 PublicreportNuisanceSlice, organization0 *Organization) (PublicreportNuisanceSlice, error) {
 	setter := &PublicreportNuisanceSetter{
-		OrganizationID: omitnull.From(organization0.ID),
+		OrganizationID: omit.From(organization0.ID),
 	}
 
 	err := publicreportNuisances1.UpdateAll(ctx, exec, *setter)
@@ -4929,7 +4952,7 @@ func (organization0 *Organization) AttachNuisances(ctx context.Context, exec bob
 
 func insertOrganizationWaters0(ctx context.Context, exec bob.Executor, publicreportWaters1 []*PublicreportWaterSetter, organization0 *Organization) (PublicreportWaterSlice, error) {
 	for i := range publicreportWaters1 {
-		publicreportWaters1[i].OrganizationID = omitnull.From(organization0.ID)
+		publicreportWaters1[i].OrganizationID = omit.From(organization0.ID)
 	}
 
 	ret, err := PublicreportWaters.Insert(bob.ToMods(publicreportWaters1...)).All(ctx, exec)
@@ -4942,7 +4965,7 @@ func insertOrganizationWaters0(ctx context.Context, exec bob.Executor, publicrep
 
 func attachOrganizationWaters0(ctx context.Context, exec bob.Executor, count int, publicreportWaters1 PublicreportWaterSlice, organization0 *Organization) (PublicreportWaterSlice, error) {
 	setter := &PublicreportWaterSetter{
-		OrganizationID: omitnull.From(organization0.ID),
+		OrganizationID: omit.From(organization0.ID),
 	}
 
 	err := publicreportWaters1.UpdateAll(ctx, exec, *setter)
@@ -5233,6 +5256,7 @@ type organizationWhere[Q psql.Filterable] struct {
 	ArcgisAccountID                 psql.WhereNullMod[Q, string]
 	FieldseekerServiceFeatureItemID psql.WhereNullMod[Q, string]
 	ArcgisMapServiceID              psql.WhereNullMod[Q, string]
+	IsCatchall                      psql.WhereMod[Q, bool]
 }
 
 func (organizationWhere[Q]) AliasedAs(alias string) organizationWhere[Q] {
@@ -5274,6 +5298,7 @@ func buildOrganizationWhere[Q psql.Filterable](cols organizationColumns) organiz
 		ArcgisAccountID:                 psql.WhereNull[Q, string](cols.ArcgisAccountID),
 		FieldseekerServiceFeatureItemID: psql.WhereNull[Q, string](cols.FieldseekerServiceFeatureItemID),
 		ArcgisMapServiceID:              psql.WhereNull[Q, string](cols.ArcgisMapServiceID),
+		IsCatchall:                      psql.Where[Q, bool](cols.IsCatchall),
 	}
 }
 
@@ -9101,10 +9126,7 @@ func (os OrganizationSlice) LoadNuisances(ctx context.Context, exec bob.Executor
 
 		for _, rel := range publicreportNuisances {
 
-			if !rel.OrganizationID.IsValue() {
-				continue
-			}
-			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+			if !(o.ID == rel.OrganizationID) {
 				continue
 			}
 
@@ -9165,10 +9187,7 @@ func (os OrganizationSlice) LoadWaters(ctx context.Context, exec bob.Executor, m
 
 		for _, rel := range publicreportWaters {
 
-			if !rel.OrganizationID.IsValue() {
-				continue
-			}
-			if !(rel.OrganizationID.IsValue() && o.ID == rel.OrganizationID.MustGet()) {
+			if !(o.ID == rel.OrganizationID) {
 				continue
 			}
 
