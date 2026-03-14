@@ -71,34 +71,53 @@ func EventTypeFromString(s string) EventType {
 type ResourceType int
 
 const (
-	TypeRMONuisance = iota
+	TypeUnknown = iota
+	TypeRMONuisance
 	TypeRMOWater
 )
 
-func Created(type_ ResourceType, organization_id int32, uri_id string) {
-	var resource string
-	var uri string
-	switch type_ {
-	case TypeRMONuisance:
-		resource = "rmo:nuisance"
-		uri = config.MakeURLReport("/report/%s", uri_id)
-	case TypeRMOWater:
-		resource = "rmo:water"
-		uri = config.MakeURLReport("/report/%s", uri_id)
-	default:
-
-	}
+func Created(t ResourceType, organization_id int32, uri_id string) {
 	go Send(Envelope{
 		Event: Event{
-			Resource: resource,
+			Resource: resourceString(t),
 			Time:     time.Now(),
 			Type:     EventTypeCreated,
-			URI:      uri,
+			URI:      makeURI(t, uri_id),
+		},
+		OrganizationID: organization_id,
+	})
+}
+func Updated(t ResourceType, organization_id int32, uri_id string) {
+	go Send(Envelope{
+		Event: Event{
+			Resource: resourceString(t),
+			Time:     time.Now(),
+			Type:     EventTypeUpdated,
+			URI:      makeURI(t, uri_id),
 		},
 		OrganizationID: organization_id,
 	})
 }
 func Send(env Envelope) {
 	chanEvents <- env
-
+}
+func resourceString(t ResourceType) string {
+	switch t {
+	case TypeRMONuisance:
+		return "rmo:nuisance"
+	case TypeRMOWater:
+		return "rmo:water"
+	default:
+		return "unknown"
+	}
+}
+func makeURI(t ResourceType, id string) string {
+	switch t {
+	case TypeRMONuisance:
+		return config.MakeURLReport("/report/%s", id)
+	case TypeRMOWater:
+		return config.MakeURLReport("/report/%s", id)
+	default:
+		return config.MakeURLReport("/unknown")
+	}
 }
