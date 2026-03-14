@@ -187,18 +187,18 @@ func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResul
 	return toGeocodeResult(*resp, location.String())
 
 }
-func toGeocodeResult(resp stadia.GeocodeResponse, address string) (*GeocodeResult, error) {
+func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeResult, error) {
 	if len(resp.Features) < 1 {
-		return nil, fmt.Errorf("%s matched no locations", address)
+		return nil, fmt.Errorf("%s matched no locations", address_msg)
 	}
 	feature := resp.Features[0]
 	if len(resp.Features) > 1 {
 		if !allFeaturesIdenticalEnough(resp.Features) {
-			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address)
+			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address_msg)
 		}
 	}
 	if feature.Geometry.Type != "Point" {
-		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address)
+		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address_msg)
 	}
 	longitude := feature.Geometry.Coordinates[0]
 	latitude := feature.Geometry.Coordinates[1]
@@ -207,17 +207,28 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address string) (*GeocodeResul
 		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
 	}
 	country_s := strings.ToLower(feature.Properties.CountryA)
+	// Depending on what kind of request we made we'll get wildly different result structures
+	// This first structure generally works for forword geocoding
+	address := types.Address{
+		Country:    country_s,
+		Locality:   feature.Properties.Locality,
+		Number:     feature.Properties.HouseNumber,
+		PostalCode: feature.Properties.PostalCode,
+		Region:     feature.Properties.Region,
+		Street:     feature.Properties.Street,
+		Unit:       "",
+	}
+	// If we don't have a locality, try populating for reverse geocoding
+	if address.Country == "" {
+		address.Country = strings.ToLower(feature.Properties.Context.ISO3166A3)
+		address.Locality = feature.Properties.Context.WhosOnFirst.Locality.Name
+		address.Number = feature.Properties.AddressComponents.Number
+		address.PostalCode = feature.Properties.AddressComponents.PostalCode
+		address.Street = feature.Properties.AddressComponents.Street
+	}
 	return &GeocodeResult{
-		Address: types.Address{
-			Country:    country_s,
-			Locality:   feature.Properties.Locality,
-			Number:     feature.Properties.HouseNumber,
-			PostalCode: feature.Properties.PostalCode,
-			Region:     feature.Properties.Region,
-			Street:     feature.Properties.Street,
-			Unit:       "",
-		},
-		Cell: cell,
+		Address: address,
+		Cell:    cell,
 		Location: types.Location{
 			Longitude: feature.Geometry.Coordinates[0],
 			Latitude:  feature.Geometry.Coordinates[1],
