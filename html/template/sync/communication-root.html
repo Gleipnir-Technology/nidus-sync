@@ -854,9 +854,7 @@
 						></button>
 					</div>
 					<div class="modal-body text-center">
-						<template
-							x-if="selectedCommunication && selectedCommunication.public_report.images"
-						>
+						<template x-if="selectedCommunication && showPhotoModal">
 							<div>
 								<img
 									:src="selectedCommunication.public_report.images[currentPhotoIndex].url_content"
