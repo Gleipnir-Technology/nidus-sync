@@ -83,6 +83,7 @@ func WaterReportForOrganization(ctx context.Context, org_id int32) ([]Water, err
 		),
 		sm.From("publicreport.water"),
 		sm.Where(psql.Quote("publicreport", "water", "organization_id").EQ(psql.Arg(org_id))),
+		sm.Where(psql.Quote("publicreport", "water", "reviewed").IsNull()),
 	), scan.StructMapper[Water]())
 	if err != nil {
 		return nil, fmt.Errorf("get reports: %w", err)

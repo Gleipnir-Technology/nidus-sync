@@ -7,8 +7,8 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
-// StructuredGeocodeRequest represents the query parameters for structured geocoding
-type StructuredGeocodeRequest struct {
+// RequestGeocodeStructured represents the query parameters for structured geocoding
+type RequestGeocodeStructured struct {
 	// Address components
 	Address       *string `url:"address,omitempty" json:"address,omitempty"`
 	Neighbourhood *string `url:"neighbourhood,omitempty" json:"neighbourhood,omitempty"`
@@ -24,7 +24,7 @@ type StructuredGeocodeRequest struct {
 	BoundaryCircleLon    *float64 `url:"boundary.circle.lon,omitempty"`
 	BoundaryCircleRadius *float64 `url:"boundary.circle.radius,omitempty"`
 
-	BoundaryCountry []string `url:"boundary.country,omitempty,comma" json:"boundary.country,omitempty,comma"`
+	BoundaryCountry []string `url:"boundary.country,omitempty,comma" json:"boundary.country,omitempty"`
 
 	BoundaryGid *string `url:"boundary.gid,omitempty" json:"boundary.gid,omitempty"`
 	// Boundary parameters
@@ -38,13 +38,24 @@ type StructuredGeocodeRequest struct {
 	FocusPointLng *float64 `url:"focus.point.lon,omitempty" json:",omitempty"`
 
 	// Other parameters
-	Layers  []string `url:"layers,omitempty,comma" json:"layers,omitempty,comma"`
-	Sources []string `url:"sources,omitempty,comma" json:"sources,omitempty,comma"`
+	Layers  []string `url:"layers,omitempty,comma" json:"layers,omitempty"`
+	Sources []string `url:"sources,omitempty,comma" json:"sources,omitempty"`
 	Size    *int     `url:"size,omitempty" json:"size,omitempty"`
 	Lang    *string  `url:"lang,omitempty" json:"lang,omitempty"`
 }
 
-func (s *StadiaMaps) StructuredGeocode(ctx context.Context, req StructuredGeocodeRequest) (*GeocodeResponse, error) {
+func (r *RequestGeocodeStructured) SetBoundaryRect(xmin, ymin, xmax, ymax float64) {
+	r.BoundaryRectMaxLat = &ymax
+	r.BoundaryRectMinLat = &ymin
+	r.BoundaryRectMaxLon = &xmax
+	r.BoundaryRectMinLon = &xmin
+}
+func (r *RequestGeocodeStructured) SetFocusPoint(x, y float64) {
+	r.FocusPointLat = &y
+	r.FocusPointLng = &x
+}
+
+func (s *StadiaMaps) GeocodeStructured(ctx context.Context, req RequestGeocodeStructured) (*GeocodeResponse, error) {
 	// https://docs.stadiamaps.com/geocoding-search-autocomplete/structured-search/
 	// curl "https://api.stadiamaps.com/geocoding/v1/search/structured?address=P%C3%B5hja%20pst%2027a&region=Harju&country=EE&api_key=YOUR-API-KEY"
 	var result GeocodeResponse
@@ -69,8 +80,4 @@ func (s *StadiaMaps) StructuredGeocode(ctx context.Context, req StructuredGeocod
 		return nil, parseError(resp)
 	}
 	return &result, nil
-}
-
-func (sgr StructuredGeocodeRequest) endpoint() string {
-	return "/v1/search/structured"
 }

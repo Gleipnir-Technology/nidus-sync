@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 )
+
+type Location = types.Location
 
 type ClientSync struct {
 	Fieldseeker FieldseekerRecordsSync

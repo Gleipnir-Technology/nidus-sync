@@ -45,10 +45,7 @@
 				typeFilter: "all",
 				messageText: "",
 				showPhotoModal: false,
-				showInvalidModal: false,
 				currentPhotoIndex: 0,
-				invalidReason: "",
-				invalidNotes: "",
 				showToast: false,
 				toastTitle: "",
 				toastMessage: "",
@@ -82,7 +79,7 @@
 					});
 				},
 
-				async loadCommunications() {
+				async fetchCommunications() {
 					try {
 						// Build query parameters from filters
 						const params = new URLSearchParams();
@@ -108,7 +105,7 @@
 					this.loading = true;
 					this.error = null;
 					try {
-						await Promise.all([this.loadCommunications()]);
+						await Promise.all([this.fetchCommunications()]);
 					} catch (err) {
 						this.error = err.message;
 						console.error("Error loading data:", err);
@@ -143,54 +140,66 @@
 					}
 				},
 
-				createLead() {
-					// TODO: Implement API call to create lead
-					console.log(
-						"Creating lead for report:",
-						this.selectedCommunication.id,
-					);
-
-					// Add to activity log
-					if (!this.selectedCommunication.history) {
-						this.selectedCommunication.history = [];
+				async createLead() {
+					try {
+						const payload = {
+							reportID: this.selectedCommunication.id,
+						};
+						const response = await fetch(`api/publicreport/lead`, {
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify(payload),
+						});
+						if (!response.ok) {
+							throw new Error("Failed to submit lead");
+						}
+						// Remove from list after creating lead
+						this.removeCurrentFromList();
+						this.fetchCommunications();
+					} catch (err) {
+						this.error = err.message;
+						console.error("Error creating lead:", err);
 					}
-					this.selectedCommunication.history.push({
-						action: "Lead created",
-						timestamp: new Date(),
-					});
-
-					this.showNotification(
-						"Lead Created",
-						`Lead successfully created for report #${this.selectedCommunication.id}`,
-					);
-
-					// Remove from list after creating lead
-					// this.communications = this.communications.filter(r => r.id !== this.selectedCommunication.id);
-					// this.selectedCommunication = null;
 				},
 
-				markInvalid() {
-					// TODO: Implement API call to mark as invalid
+				async markInvalid() {
 					console.log(
 						"Marking report as invalid:",
 						this.selectedCommunication.id,
-						this.invalidReason,
-						this.invalidNotes,
 					);
+					const payload = {
+						reportID: this.selectedCommunication.id,
+					};
+					const response = await fetch(`api/publicreport/invalid`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(payload),
+					});
 
 					this.showNotification(
 						"Report Marked Invalid",
-						`Report #${this.selectedCommunication.id} has been marked as ${this.invalidReason}`,
+						`Report #${this.selectedCommunication.id} has been marked as invalid`,
 					);
-
-					// Remove from list
-					this.communications = this.communications.filter(
-						(r) => r.id !== this.selectedCommunication.id,
+					this.removeCurrentFromList();
+					this.fetchCommunications();
+				},
+				removeCurrentFromList() {
+					const index = this.communications.findIndex(
+						(c) => c.id === this.selectedCommunication.id,
 					);
-					this.selectedCommunication = null;
-					this.showInvalidModal = false;
-					this.invalidReason = "";
-					this.invalidNotes = "";
+					if (index > -1) {
+						this.communications = this.communications.splice(index, 1);
+					}
+					if (this.communications.length > 0) {
+						const nextIndex = Math.min(index, this.communications.length - 1);
+						this.selectedCommunication = this.communications[nextIndex];
+					} else {
+						this.selectedCommunication = null;
+					}
 				},
 
 				sendMessage() {
@@ -744,10 +753,7 @@
 
 								<!-- Mark Invalid -->
 								<div class="d-grid mb-3">
-									<button
-										class="btn btn-outline-danger"
-										@click="showInvalidModal = true"
-									>
+									<button class="btn btn-outline-danger" @click="markInvalid()">
 										<i class="bi bi-x-circle me-2"></i>Mark Invalid
 									</button>
 									<small class="text-muted mt-1">
@@ -919,122 +925,6 @@
 			class="modal-backdrop fade show"
 			x-show="showPhotoModal"
 			@click="showPhotoModal = false"
-		></div>
-
-		<!-- Invalid Report Modal -->
-		<div
-			class="modal fade"
-			:class="{ 'show d-block': showInvalidModal }"
-			tabindex="-1"
-			x-show="showInvalidModal"
-			@click.self="showInvalidModal = false"
-		>
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							<i class="bi bi-x-circle text-danger"></i> Mark as Invalid
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							@click="showInvalidModal = false"
-						></button>
-					</div>
-					<div class="modal-body">
-						<p>Please select a reason for marking this report as invalid:</p>
-						<div class="form-check mb-2">
-							<input
-								class="form-check-input"
-								type="radio"
-								name="invalidReason"
-								id="reason1"
-								value="spam"
-								x-model="invalidReason"
-							/>
-							<label class="form-check-label" for="reason1">Spam or junk</label>
-						</div>
-						<div class="form-check mb-2">
-							<input
-								class="form-check-input"
-								type="radio"
-								name="invalidReason"
-								id="reason2"
-								value="duplicate"
-								x-model="invalidReason"
-							/>
-							<label class="form-check-label" for="reason2"
-								>Duplicate report</label
-							>
-						</div>
-						<div class="form-check mb-2">
-							<input
-								class="form-check-input"
-								type="radio"
-								name="invalidReason"
-								id="reason3"
-								value="out_of_district"
-								x-model="invalidReason"
-							/>
-							<label class="form-check-label" for="reason3"
-								>Outside service district</label
-							>
-						</div>
-						<div class="form-check mb-2">
-							<input
-								class="form-check-input"
-								type="radio"
-								name="invalidReason"
-								id="reason4"
-								value="insufficient"
-								x-model="invalidReason"
-							/>
-							<label class="form-check-label" for="reason4"
-								>Insufficient information</label
-							>
-						</div>
-						<div class="form-check mb-3">
-							<input
-								class="form-check-input"
-								type="radio"
-								name="invalidReason"
-								id="reason5"
-								value="other"
-								x-model="invalidReason"
-							/>
-							<label class="form-check-label" for="reason5">Other</label>
-						</div>
-						<textarea
-							class="form-control"
-							rows="2"
-							placeholder="Additional notes (optional)"
-							x-model="invalidNotes"
-						></textarea>
-					</div>
-					<div class="modal-footer">
-						<button
-							type="button"
-							class="btn btn-secondary"
-							@click="showInvalidModal = false"
-						>
-							Cancel
-						</button>
-						<button
-							type="button"
-							class="btn btn-danger"
-							@click="markInvalid()"
-							:disabled="!invalidReason"
-						>
-							Confirm Invalid
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div
-			class="modal-backdrop fade show"
-			x-show="showInvalidModal"
-			@click="showInvalidModal = false"
 		></div>
 
 		<!-- Toast Notifications -->

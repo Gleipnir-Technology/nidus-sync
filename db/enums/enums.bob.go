@@ -1294,12 +1294,18 @@ func (e *Imagedatatype) Scan(value any) error {
 
 // Enum values for Leadtype
 const (
-	LeadtypeGreenPool Leadtype = "green-pool"
+	LeadtypeUnknown              Leadtype = "unknown"
+	LeadtypeGreenPool            Leadtype = "green-pool"
+	LeadtypePublicreportNuisance Leadtype = "publicreport-nuisance"
+	LeadtypePublicreportWater    Leadtype = "publicreport-water"
 )
 
 func AllLeadtype() []Leadtype {
 	return []Leadtype{
+		LeadtypeUnknown,
 		LeadtypeGreenPool,
+		LeadtypePublicreportNuisance,
+		LeadtypePublicreportWater,
 	}
 }
 
@@ -1311,7 +1317,10 @@ func (e Leadtype) String() string {
 
 func (e Leadtype) Valid() bool {
 	switch e {
-	case LeadtypeGreenPool:
+	case LeadtypeUnknown,
+		LeadtypeGreenPool,
+		LeadtypePublicreportNuisance,
+		LeadtypePublicreportWater:
 		return true
 	default:
 		return false

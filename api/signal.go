@@ -23,7 +23,7 @@ type signal struct {
 	Created   time.Time      `json:"created"`
 	Creator   platform.User  `json:"creator"`
 	ID        int32          `json:"id"`
-	Location  Location       `json:"location"`
+	Location  types.Location `json:"location"`
 	Species   string         `json:"species"`
 	Title     string         `json:"title"`
 	Type      string         `json:"type"`
@@ -34,18 +34,18 @@ type contentListSignal struct {
 
 func listSignal(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {
 	type _Row struct {
-		Address   types.Address `db:"address"`
-		Addressed *time.Time    `db:"addressed"`
-		Addressor *int32        `db:"addressor"`
-		Created   time.Time     `db:"created"`
-		Creator   int32         `db:"creator_id"`
-		ID        int32         `db:"id"`
-		Latitude  float64       `db:"latitude"`
-		Longitude float64       `db:"longitude"`
-		Location  Location      `db:"location"`
-		Species   *string       `db:"species"`
-		Title     string        `db:"title"`
-		Type      string        `db:"type"`
+		Address   types.Address  `db:"address"`
+		Addressed *time.Time     `db:"addressed"`
+		Addressor *int32         `db:"addressor"`
+		Created   time.Time      `db:"created"`
+		Creator   int32          `db:"creator_id"`
+		ID        int32          `db:"id"`
+		Latitude  float64        `db:"latitude"`
+		Longitude float64        `db:"longitude"`
+		Location  types.Location `db:"location"`
+		Species   *string        `db:"species"`
+		Title     string         `db:"title"`
+		Type      string         `db:"type"`
 	}
 	limit := 20
 	if query.Limit != nil {
@@ -118,7 +118,7 @@ func listSignal(ctx context.Context, r *http.Request, user platform.User, query 
 			Created:   row.Created,
 			Creator:   *users_by_id[row.Creator],
 			ID:        row.ID,
-			Location: Location{
+			Location: types.Location{
 				Latitude:  row.Latitude,
 				Longitude: row.Longitude,
 			},

@@ -2,8 +2,10 @@ package geom
 
 import (
 	"fmt"
+
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 )
 
-func PostgisPointQuery(longitude, latitude float64) string {
-	return fmt.Sprintf("ST_SetSRID(ST_MakePoint(%f, %f), 4326)", longitude, latitude)
+func PostgisPointQuery(location types.Location) string {
+	return fmt.Sprintf("ST_SetSRID(ST_MakePoint(%f, %f), 4326)", location.Longitude, location.Latitude)
 }

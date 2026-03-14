@@ -31,6 +31,15 @@ var PublicreportReportLocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		AddressID: column{
+			Name:      "address_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		AddressRaw: column{
 			Name:      "address_raw",
 			DBType:    "text",
@@ -52,6 +61,33 @@ var PublicreportReportLocations = Table[
 		Location: column{
 			Name:      "location",
 			DBType:    "geometry",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		LocationLatitude: column{
+			Name:      "location_latitude",
+			DBType:    "double precision",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		LocationLongitude: column{
+			Name:      "location_longitude",
+			DBType:    "double precision",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
 			Default:   "NULL",
 			Comment:   "",
 			Nullable:  true,
@@ -82,18 +118,22 @@ var PublicreportReportLocations = Table[
 }
 
 type publicreportReportLocationColumns struct {
-	ID         column
-	TableName  column
-	AddressRaw column
-	Created    column
-	Location   column
-	PublicID   column
-	Status     column
+	ID                column
+	TableName         column
+	AddressID         column
+	AddressRaw        column
+	Created           column
+	Location          column
+	LocationLatitude  column
+	LocationLongitude column
+	OrganizationID    column
+	PublicID          column
+	Status            column
 }
 
 func (c publicreportReportLocationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.TableName, c.AddressRaw, c.Created, c.Location, c.PublicID, c.Status,
+		c.ID, c.TableName, c.AddressID, c.AddressRaw, c.Created, c.Location, c.LocationLatitude, c.LocationLongitude, c.OrganizationID, c.PublicID, c.Status,
 	}
 }
 

@@ -22,7 +22,7 @@ type reviewTaskPool struct {
 	Created   time.Time      `json:"created"`
 	Creator   platform.User  `json:"creator"`
 	ID        int32          `json:"id"`
-	Location  Location       `json:"location"`
+	Location  types.Location `json:"location"`
 	Reviewed  *time.Time     `json:"addressed"`
 	Reviewer  *platform.User `json:"addressor"`
 }
@@ -122,7 +122,7 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User
 			Created:   row.Created,
 			Creator:   *users_by_id[row.CreatorID],
 			ID:        row.ID,
-			Location: Location{
+			Location: types.Location{
 				Latitude:  row.Latitude,
 				Longitude: row.Longitude,
 			},

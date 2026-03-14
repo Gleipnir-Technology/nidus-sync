@@ -20,10 +20,9 @@ import (
 )
 
 type GeocodeResult struct {
-	Address   types.Address
-	Cell      h3.Cell
-	Longitude float64
-	Latitude  float64
+	Address  types.Address
+	Cell     h3.Cell
+	Location types.Location
 }
 
 var client *stadia.StadiaMaps
@@ -105,7 +104,7 @@ func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organ
 		return address, nil
 	}
 	// Geocode
-	geo, err := Geocode(ctx, org, a)
+	geo, err := GeocodeStructured(ctx, org, a)
 	if err != nil {
 		return nil, fmt.Errorf("geocode: %w", err)
 	}
@@ -122,7 +121,7 @@ func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organ
 			psql.Arg(geo.Cell),
 			psql.Raw("DEFAULT"),
 			psql.Arg(geo.Address.Locality),
-			psql.F("ST_Point", geo.Longitude, geo.Latitude, 4326),
+			psql.F("ST_Point", geo.Location.Longitude, geo.Location.Latitude, 4326),
 			psql.Arg(geo.Address.Number),
 			psql.Arg(geo.Address.PostalCode),
 			psql.Arg(geo.Address.Region),
@@ -149,51 +148,66 @@ func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organ
 		Number:     geo.Address.Number,
 	}, nil
 }
-
-func Geocode(ctx context.Context, org *models.Organization, a types.Address) (GeocodeResult, error) {
+func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (*GeocodeResult, error) {
+	req := stadia.RequestGeocodeRaw{
+		Text: address,
+	}
+	maybeAddServiceArea(&req, org)
+	resp, err := client.GeocodeRaw(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("client raw geocode failure on %s: %w", address, err)
+	}
+	return toGeocodeResult(*resp, address)
+}
+func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Address) (*GeocodeResult, error) {
 	street := fmt.Sprintf("%s %s", a.Number, a.Street)
-	country_s := a.Country
-	/*
-		sublog := log.With().
-			Str("street", street).
-			Str("country", country).
-			Str("locality", a.Locality).
-			Str("postal", a.PostalCode).
-			Str("region", a.Region).
-			Logger()
-	*/
-	req := stadia.StructuredGeocodeRequest{
-		Address:    &street,
-		Country:    &country_s,
+	req := stadia.RequestGeocodeStructured{
+		Address: &street,
+		//Country:    &a.Country,
 		Locality:   &a.Locality,
 		PostalCode: &a.PostalCode,
 		Region:     &a.Region,
 	}
 	maybeAddServiceArea(&req, org)
-	resp, err := client.StructuredGeocode(ctx, req)
+	resp, err := client.GeocodeStructured(ctx, req)
 	if err != nil {
-		return GeocodeResult{}, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
+		return nil, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
 	}
+	return toGeocodeResult(*resp, a.String())
+}
+func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResult, error) {
+	req := stadia.RequestReverseGeocode{
+		Latitude:  location.Latitude,
+		Longitude: location.Longitude,
+	}
+	resp, err := client.ReverseGeocode(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
+	}
+	return toGeocodeResult(*resp, location.String())
+
+}
+func toGeocodeResult(resp stadia.GeocodeResponse, address string) (*GeocodeResult, error) {
 	if len(resp.Features) < 1 {
-		return GeocodeResult{}, fmt.Errorf("%s matched no locations", a.String())
+		return nil, fmt.Errorf("%s matched no locations", address)
 	}
 	feature := resp.Features[0]
 	if len(resp.Features) > 1 {
 		if !allFeaturesIdenticalEnough(resp.Features) {
-			return GeocodeResult{}, fmt.Errorf("%s matched more than one location, and they differ a lot", a.String())
+			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address)
 		}
 	}
 	if feature.Geometry.Type != "Point" {
-		return GeocodeResult{}, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, a.String())
+		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address)
 	}
 	longitude := feature.Geometry.Coordinates[0]
 	latitude := feature.Geometry.Coordinates[1]
 	cell, err := h3utils.GetCell(longitude, latitude, 15)
 	if err != nil {
-		return GeocodeResult{}, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
+		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
 	}
-	country_s = strings.ToLower(feature.Properties.CountryA)
-	return GeocodeResult{
+	country_s := strings.ToLower(feature.Properties.CountryA)
+	return &GeocodeResult{
 		Address: types.Address{
 			Country:    country_s,
 			Locality:   feature.Properties.Locality,
@@ -203,9 +217,11 @@ func Geocode(ctx context.Context, org *models.Organization, a types.Address) (Ge
 			Street:     feature.Properties.Street,
 			Unit:       "",
 		},
-		Cell:      cell,
-		Longitude: feature.Geometry.Coordinates[0],
-		Latitude:  feature.Geometry.Coordinates[1],
+		Cell: cell,
+		Location: types.Location{
+			Longitude: feature.Geometry.Coordinates[0],
+			Latitude:  feature.Geometry.Coordinates[1],
+		},
 	}, nil
 }
 
@@ -239,7 +255,7 @@ func allFeaturesIdenticalEnough(features []stadia.GeocodeFeature) bool {
 	}
 	return true
 }
-func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organization) {
+func maybeAddServiceArea(req stadia.RequestGeocode, org *models.Organization) {
 	if org.ServiceAreaXmax.IsNull() ||
 		org.ServiceAreaYmax.IsNull() ||
 		org.ServiceAreaXmin.IsNull() ||
@@ -250,10 +266,7 @@ func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organ
 	ymax := org.ServiceAreaYmax.MustGet()
 	xmin := org.ServiceAreaXmin.MustGet()
 	ymin := org.ServiceAreaYmin.MustGet()
-	req.BoundaryRectMaxLon = &xmax
-	req.BoundaryRectMaxLat = &ymax
-	req.BoundaryRectMinLon = &xmin
-	req.BoundaryRectMinLat = &ymin
+	req.SetBoundaryRect(xmin, ymin, xmax, ymax)
 
 	if org.ServiceAreaCentroidX.IsNull() || org.ServiceAreaCentroidY.IsNull() {
 		return
@@ -261,6 +274,5 @@ func maybeAddServiceArea(req *stadia.StructuredGeocodeRequest, org *models.Organ
 	centroid_x := org.ServiceAreaCentroidX.MustGet()
 	centroid_y := org.ServiceAreaCentroidY.MustGet()
 
-	req.FocusPointLat = &centroid_y
-	req.FocusPointLng = &centroid_x
+	req.SetFocusPoint(centroid_x, centroid_y)
 }

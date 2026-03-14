@@ -18,6 +18,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -214,7 +215,10 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", lng, lat)
 	}
-	geom_query := geom.PostgisPointQuery(lng, lat)
+	geom_query := geom.PostgisPointQuery(types.Location{
+		Latitude:  lat,
+		Longitude: lng,
+	})
 	_, err = psql.Update(
 		um.TableAs("fileupload.pool", "pool"),
 		um.SetCol("h3cell").ToArg(cell),
