@@ -23,7 +23,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type E164 = phonenumbers.PhoneNumber
+type E164 struct {
+	number *phonenumbers.PhoneNumber
+}
+
+func NewE164(n *phonenumbers.PhoneNumber) *E164 {
+	return &E164{
+		number: n,
+	}
+}
 
 func EnsureInDB(ctx context.Context, ex bob.Executor, destination E164) (err error) {
 	return ensureInDB(ctx, ex, PhoneString(destination))
@@ -96,11 +104,17 @@ func HandleTextMessage(src string, dst string, body string) {
 }
 
 func ParsePhoneNumber(input string) (*E164, error) {
-	return phonenumbers.Parse(input, "US")
+	n, err := phonenumbers.Parse(input, "US")
+	if err != nil {
+		return nil, err
+	}
+	return &E164{
+		number: n,
+	}, nil
 }
 
 func PhoneString(p E164) string {
-	return phonenumbers.Format(&p, phonenumbers.E164)
+	return phonenumbers.Format(p.number, phonenumbers.E164)
 }
 
 func StoreSources() error {

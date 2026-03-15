@@ -10,11 +10,14 @@ import (
 
 var channelJobText chan text.Job
 
+func ReportUserText(destination text.E164, report_id string, message string) {
+	//enqueueJobText(text.N
+}
 func ReportSubscriptionConfirmationText(destination text.E164, report_id string) {
 	enqueueJobText(text.NewJobReportSubscriptionConfirmation(
 		destination,
 		report_id,
-		config.PhoneNumberReport,
+		*text.NewE164(&config.PhoneNumberReport),
 	))
 }
 

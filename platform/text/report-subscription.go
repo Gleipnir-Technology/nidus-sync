@@ -31,7 +31,7 @@ func (j jobReportSubscription) content() string {
 	return fmt.Sprintf("Thanks for submitting mosquito report %s. Text for any questions. We'll send you updates as we get them.", j.reportID)
 }
 func (j jobReportSubscription) destination() string {
-	return phonenumbers.Format(&j.dst, phonenumbers.E164)
+	return phonenumbers.Format(j.dst.number, phonenumbers.E164)
 }
 func (j jobReportSubscription) messageType() MessageType {
 	return ReportSubscription
@@ -40,7 +40,7 @@ func (j jobReportSubscription) messageTypeName() string {
 	return "report-subscription"
 }
 func (j jobReportSubscription) source() string {
-	return phonenumbers.Format(&j.src, phonenumbers.E164)
+	return phonenumbers.Format(j.src.number, phonenumbers.E164)
 }
 
 func sendReportSubscription(ctx context.Context, job Job) error {

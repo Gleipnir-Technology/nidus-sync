@@ -216,15 +216,26 @@
 					}
 				},
 
-				sendMessage() {
+				async sendMessage() {
 					if (!this.messageText.trim()) return;
 
-					// TODO: Implement API call to send message
-					console.log(
-						"Sending message to:",
-						this.selectedCommunication.public_report.reporter.has_email,
-					);
-					console.log("Message:", this.messageText);
+					console.log("Sending message reporter:", this.messageText);
+
+					const payload = {
+						message: this.messageText,
+						reportID: this.selectedCommunication.id,
+					};
+					const response = await fetch(`${this.apiBase}/publicreport/message`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(payload),
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
 
 					// Add to activity log
 					if (!this.selectedCommunication.history) {

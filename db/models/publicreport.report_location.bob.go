@@ -26,6 +26,8 @@ type PublicreportReportLocation struct {
 	LocationLongitude null.Val[float64]                            `db:"location_longitude" `
 	OrganizationID    null.Val[int32]                              `db:"organization_id" `
 	PublicID          null.Val[string]                             `db:"public_id" `
+	ReporterEmail     null.Val[string]                             `db:"reporter_email" `
+	ReporterPhone     null.Val[string]                             `db:"reporter_phone" `
 	Status            null.Val[enums.PublicreportReportstatustype] `db:"status" `
 }
 
@@ -42,7 +44,7 @@ type PublicreportReportLocationsQuery = *psql.ViewQuery[*PublicreportReportLocat
 func buildPublicreportReportLocationColumns(alias string) publicreportReportLocationColumns {
 	return publicreportReportLocationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "table_name", "address_id", "address_raw", "created", "location", "location_latitude", "location_longitude", "organization_id", "public_id", "status",
+			"id", "table_name", "address_id", "address_raw", "created", "location", "location_latitude", "location_longitude", "organization_id", "public_id", "reporter_email", "reporter_phone", "status",
 		).WithParent("publicreport.report_location"),
 		tableAlias:        alias,
 		ID:                psql.Quote(alias, "id"),
@@ -55,6 +57,8 @@ func buildPublicreportReportLocationColumns(alias string) publicreportReportLoca
 		LocationLongitude: psql.Quote(alias, "location_longitude"),
 		OrganizationID:    psql.Quote(alias, "organization_id"),
 		PublicID:          psql.Quote(alias, "public_id"),
+		ReporterEmail:     psql.Quote(alias, "reporter_email"),
+		ReporterPhone:     psql.Quote(alias, "reporter_phone"),
 		Status:            psql.Quote(alias, "status"),
 	}
 }
@@ -72,6 +76,8 @@ type publicreportReportLocationColumns struct {
 	LocationLongitude psql.Expression
 	OrganizationID    psql.Expression
 	PublicID          psql.Expression
+	ReporterEmail     psql.Expression
+	ReporterPhone     psql.Expression
 	Status            psql.Expression
 }
 
@@ -118,6 +124,8 @@ type publicreportReportLocationWhere[Q psql.Filterable] struct {
 	LocationLongitude psql.WhereNullMod[Q, float64]
 	OrganizationID    psql.WhereNullMod[Q, int32]
 	PublicID          psql.WhereNullMod[Q, string]
+	ReporterEmail     psql.WhereNullMod[Q, string]
+	ReporterPhone     psql.WhereNullMod[Q, string]
 	Status            psql.WhereNullMod[Q, enums.PublicreportReportstatustype]
 }
 
@@ -137,6 +145,8 @@ func buildPublicreportReportLocationWhere[Q psql.Filterable](cols publicreportRe
 		LocationLongitude: psql.WhereNull[Q, float64](cols.LocationLongitude),
 		OrganizationID:    psql.WhereNull[Q, int32](cols.OrganizationID),
 		PublicID:          psql.WhereNull[Q, string](cols.PublicID),
+		ReporterEmail:     psql.WhereNull[Q, string](cols.ReporterEmail),
+		ReporterPhone:     psql.WhereNull[Q, string](cols.ReporterPhone),
 		Status:            psql.WhereNull[Q, enums.PublicreportReportstatustype](cols.Status),
 	}
 }

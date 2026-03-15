@@ -103,6 +103,24 @@ var PublicreportReportLocations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ReporterEmail: column{
+			Name:      "reporter_email",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReporterPhone: column{
+			Name:      "reporter_phone",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		Status: column{
 			Name:      "status",
 			DBType:    "publicreport.reportstatustype",
@@ -128,12 +146,14 @@ type publicreportReportLocationColumns struct {
 	LocationLongitude column
 	OrganizationID    column
 	PublicID          column
+	ReporterEmail     column
+	ReporterPhone     column
 	Status            column
 }
 
 func (c publicreportReportLocationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.TableName, c.AddressID, c.AddressRaw, c.Created, c.Location, c.LocationLatitude, c.LocationLongitude, c.OrganizationID, c.PublicID, c.Status,
+		c.ID, c.TableName, c.AddressID, c.AddressRaw, c.Created, c.Location, c.LocationLatitude, c.LocationLongitude, c.OrganizationID, c.PublicID, c.ReporterEmail, c.ReporterPhone, c.Status,
 	}
 }
 

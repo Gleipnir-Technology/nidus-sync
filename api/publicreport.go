@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
@@ -37,5 +38,23 @@ func postPublicreportInvalid(ctx context.Context, r *http.Request, user platform
 	}
 	return &createdReport{
 		URI: config.MakeURLNidus("/publicreport/%s", req.ReportID),
+	}, nil
+}
+
+type formPublicreportMessage struct {
+	Message  string `json:"message"`
+	ReportID string `json:"reportID"`
+}
+type createdMessage struct {
+	URI string `json:"uri"`
+}
+
+func postPublicreportMessage(ctx context.Context, r *http.Request, user platform.User, req formPublicreportMessage) (*createdMessage, *nhttp.ErrorWithStatus) {
+	msg_id, err := platform.PublicReportMessageCreate(ctx, user, req.ReportID, req.Message)
+	if err != nil {
+		return nil, nhttp.NewError("failed to create message: %s", err)
+	}
+	return &createdMessage{
+		URI: config.MakeURLNidus("/message/%s", strconv.Itoa(int(*msg_id))),
 	}, nil
 }
