@@ -54,7 +54,9 @@ func (r *RequestGeocodeStructured) SetFocusPoint(x, y float64) {
 	r.FocusPointLat = &y
 	r.FocusPointLng = &x
 }
-
+func (r RequestGeocodeStructured) endpoint() string {
+	return "/v1/search/structured"
+}
 func (s *StadiaMaps) GeocodeStructured(ctx context.Context, req RequestGeocodeStructured) (*GeocodeResponse, error) {
 	// https://docs.stadiamaps.com/geocoding-search-autocomplete/structured-search/
 	// curl "https://api.stadiamaps.com/geocoding/v1/search/structured?address=P%C3%B5hja%20pst%2027a&region=Harju&country=EE&api_key=YOUR-API-KEY"

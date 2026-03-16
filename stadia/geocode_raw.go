@@ -42,6 +42,9 @@ func (r *RequestGeocodeRaw) SetFocusPoint(x, y float64) {
 	r.FocusPointLat = &y
 	r.FocusPointLng = &x
 }
+func (r RequestGeocodeRaw) endpoint() string {
+	return "/v1/search"
+}
 func (s *StadiaMaps) GeocodeRaw(ctx context.Context, req RequestGeocodeRaw) (*GeocodeResponse, error) {
 	// https://docs.stadiamaps.com/geocoding-search-autocomplete/search/
 	var result GeocodeResponse
