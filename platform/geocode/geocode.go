@@ -32,7 +32,7 @@ func InitializeStadia(key string) {
 }
 
 // Ensure the provided address exists. If it doesn't add it to the database.
-func EnsureAddress(ctx context.Context, txn bob.Tx, a types.Address, l types.Location) (*models.Address, error) {
+func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address, l types.Location) (*models.Address, error) {
 	address, err := models.Addresses.Query(
 		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
 		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
@@ -90,7 +90,7 @@ func EnsureAddress(ctx context.Context, txn bob.Tx, a types.Address, l types.Loc
 
 // Either get an address that matches, or create a new address. Either way, return an address
 // This will make a call to a structured geocode service, so it's slow.
-func EnsureAddressWithGeocode(ctx context.Context, txn bob.Tx, org *models.Organization, a types.Address) (*models.Address, error) {
+func EnsureAddressWithGeocode(ctx context.Context, txn bob.Executor, org *models.Organization, a types.Address) (*models.Address, error) {
 	address, err := models.Addresses.Query(
 		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
 		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
@@ -237,7 +237,7 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 }
 
 // Get the parcel for a given address, if one can be found
-func GetParcel(ctx context.Context, txn bob.Tx, a *models.Address) (*models.Parcel, error) {
+func GetParcel(ctx context.Context, txn bob.Executor, a *models.Address) (*models.Parcel, error) {
 	result, err := models.Parcels.Query(
 		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.location"))),
 		models.SelectWhere.Addresses.ID.EQ(a.ID),

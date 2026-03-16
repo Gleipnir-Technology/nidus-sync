@@ -105,6 +105,15 @@ var NoteAudios = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "IDENTITY",
+			Comment:   "",
+			Nullable:  false,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: noteAudioIndexes{
 		NoteAudioPkey: index{
@@ -125,6 +134,23 @@ var NoteAudios = Table[
 			Unique:        true,
 			Comment:       "",
 			NullsFirst:    []bool{false, false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		NoteAudioIDUnique: index{
+			Type: "btree",
+			Name: "note_audio_id_unique",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -164,6 +190,13 @@ var NoteAudios = Table[
 			ForeignColumns: []string{"id"},
 		},
 	},
+	Uniques: noteAudioUniques{
+		NoteAudioIDUnique: constraint{
+			Name:    "note_audio_id_unique",
+			Columns: []string{"id"},
+			Comment: "",
+		},
+	},
 
 	Comment: "",
 }
@@ -179,21 +212,23 @@ type noteAudioColumns struct {
 	TranscriptionUserEdited column
 	Version                 column
 	UUID                    column
+	ID                      column
 }
 
 func (c noteAudioColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.Deleted, c.DeletorID, c.Duration, c.OrganizationID, c.Transcription, c.TranscriptionUserEdited, c.Version, c.UUID,
+		c.Created, c.CreatorID, c.Deleted, c.DeletorID, c.Duration, c.OrganizationID, c.Transcription, c.TranscriptionUserEdited, c.Version, c.UUID, c.ID,
 	}
 }
 
 type noteAudioIndexes struct {
-	NoteAudioPkey index
+	NoteAudioPkey     index
+	NoteAudioIDUnique index
 }
 
 func (i noteAudioIndexes) AsSlice() []index {
 	return []index{
-		i.NoteAudioPkey,
+		i.NoteAudioPkey, i.NoteAudioIDUnique,
 	}
 }
 
@@ -209,10 +244,14 @@ func (f noteAudioForeignKeys) AsSlice() []foreignKey {
 	}
 }
 
-type noteAudioUniques struct{}
+type noteAudioUniques struct {
+	NoteAudioIDUnique constraint
+}
 
 func (u noteAudioUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.NoteAudioIDUnique,
+	}
 }
 
 type noteAudioChecks struct{}

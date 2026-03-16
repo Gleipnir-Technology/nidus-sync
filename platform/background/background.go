@@ -3,82 +3,40 @@ package background
 import (
 	"context"
 	"fmt"
-	"sync"
 
-	//commsemail "github.com/Gleipnir-Technology/nidus-sync/comms/email"
-	//"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
-	"github.com/rs/zerolog/log"
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/aarondl/opt/omit"
+	//"github.com/rs/zerolog/log"
 )
 
-var waitGroup sync.WaitGroup
-
-func Start(ctx context.Context) {
-	newOAuthTokenChannel = make(chan struct{}, 10)
-
-	channelJobAudio = make(chan jobAudio, 100)  // Buffered channel to prevent blocking
-	channelJobCSV = make(chan jobCSV, 100)      // Buffered channel to prevent blocking
-	channelJobEmail = make(chan email.Job, 100) // Buffered channel to prevent blocking
-	channelJobText = make(chan text.Job, 100)   // Buffered channel to prevent blocking
-
-	/*
-		waitGroup.Add(1)
-		go func() {
-			defer waitGroup.Done()
-			commsemail.StartWebsocket(ctx, config.ForwardEmailAPIToken)
-		}()
-	*/
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		refreshFieldseekerData(ctx, newOAuthTokenChannel)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		startWorkerAudio(ctx, channelJobAudio)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		startWorkerCSV(ctx, channelJobCSV)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		startWorkerEmail(ctx, channelJobEmail)
-	}()
-
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
-		startWorkerText(ctx, channelJobText)
-	}()
-
-	err := addWaitingJobs(ctx)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to add waiting background jobs")
-	}
+func NewAudioTranscode(ctx context.Context, txn bob.Executor, audio_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeCSVCommit, audio_id)
 }
-
-func WaitForExit() {
-
-	waitGroup.Wait()
+func NewCSVCommit(ctx context.Context, txn bob.Executor, csv_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeCSVCommit, csv_id)
 }
-
-func addWaitingJobs(ctx context.Context) error {
-	err := addWaitingJobsCommit(ctx)
+func NewCSVImport(ctx context.Context, txn bob.Executor, csv_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeCSVImport, csv_id)
+}
+func NewEmailSend(ctx context.Context, txn bob.Executor, email_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeEmailSend, email_id)
+}
+func NewLabelStudioAudioCreate(ctx context.Context, txn bob.Executor, note_audio_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeLabelStudioAudioCreate, note_audio_id)
+}
+func NewTextSend(ctx context.Context, txn bob.Executor, text_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeTextSend, text_id)
+}
+func newJob(ctx context.Context, txn bob.Executor, t enums.Jobtype, id int32) error {
+	_, err := models.Jobs.Insert(&models.JobSetter{
+		// ID
+		Type:  omit.From(t),
+		RowID: omit.From(id),
+	}).One(ctx, txn)
 	if err != nil {
-		return fmt.Errorf("commit: %w", err)
-	}
-	err = addWaitingJobsImport(ctx)
-	if err != nil {
-		return fmt.Errorf("commit: %w", err)
+		return fmt.Errorf("insert job: %w", err)
 	}
 	return nil
 }

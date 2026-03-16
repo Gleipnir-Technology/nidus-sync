@@ -257,7 +257,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 					continue
 				}
 				text.EnsureInDB(ctx, txn, *phone)
-				setter.PropertyOwnerPhoneE164 = omitnull.From(text.PhoneString(*phone))
+				setter.PropertyOwnerPhoneE164 = omitnull.From(phone.PhoneString())
 			case headerPoolResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {
@@ -272,7 +272,7 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 					continue
 				}
 				text.EnsureInDB(ctx, txn, *phone)
-				setter.ResidentPhoneE164 = omitnull.From(text.PhoneString(*phone))
+				setter.ResidentPhoneE164 = omitnull.From(phone.PhoneString())
 			case headerPoolTag:
 				tags[header_names[i]] = col
 			}

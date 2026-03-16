@@ -18,10 +18,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/getsentry/sentry-go"
@@ -96,25 +92,15 @@ func main() {
 		log.Error().Err(err).Msg("Failed to load html templates")
 		os.Exit(4)
 	}
-	err = email.LoadTemplates()
+	// Start up background processes
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = platform.StartAll(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to load email templates")
+		log.Error().Err(err).Msg("Failed at platform.StartAll")
 		os.Exit(5)
 	}
-
-	err = text.StoreSources()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to store text source phone numbers")
-		os.Exit(6)
-	}
-
-	err = file.CreateDirectories()
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create file directories")
-		os.Exit(7)
-	}
-
-	geocode.InitializeStadia(config.StadiaMapsAPIKey)
 	router_logger := log.With().Logger()
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
@@ -140,11 +126,6 @@ func main() {
 	r.Mount("/", hr)
 
 	log.Debug().Str("report url", config.DomainRMO).Str("sync url", config.DomainNidus).Msg("Serving at URLs")
-
-	// Start up background processes
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	platform.BackgroundStart(ctx)
 
 	openai_logger := log.With().Logger()
 	err = llm.CreateOpenAIClient(ctx, &openai_logger)
@@ -182,7 +163,7 @@ func main() {
 
 	cancel()
 	close(chan_envelope)
-	platform.BackgroundWaitForExit()
+	platform.WaitForExit()
 
 	log.Info().Msg("Shutdown complete")
 }

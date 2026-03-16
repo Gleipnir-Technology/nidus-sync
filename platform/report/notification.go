@@ -10,17 +10,14 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	//"github.com/Gleipnir-Technology/bob/dialect/psql"
-	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	//"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 	//"github.com/stephenafamo/scan"
 )
@@ -66,7 +63,7 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func RegisterNotificationEmail(ctx context.Context, txn bob.Tx, report_id string, destination string) *ErrorWithCode {
+func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id string, destination string) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
@@ -79,11 +76,11 @@ func RegisterNotificationEmail(ctx context.Context, txn bob.Tx, report_id string
 	if err != nil {
 		return err
 	}
-	background.ReportSubscriptionConfirmationEmail(destination, report_id)
+	email.SendReportConfirmation(ctx, destination, report_id)
 	return nil
 }
 
-func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string, phone text.E164) *ErrorWithCode {
+func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id string, phone types.E164) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err
@@ -96,11 +93,11 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Tx, report_id string
 	if err != nil {
 		return err
 	}
-	background.ReportSubscriptionConfirmationText(phone, report_id)
+	text.ReportSubscriptionConfirmationText(ctx, phone, report_id)
 	return nil
 }
 
-func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, destination string) *ErrorWithCode {
+func RegisterSubscriptionEmail(ctx context.Context, txn bob.Executor, destination string) *ErrorWithCode {
 	e := email.EnsureInDB(ctx, destination)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure email is in DB")
@@ -119,7 +116,7 @@ func RegisterSubscriptionEmail(ctx context.Context, txn bob.Tx, destination stri
 
 	return nil
 }
-func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
+func RegisterSubscriptionPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
 	e := text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure phone is in DB")
@@ -128,7 +125,7 @@ func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164)
 		Created: omit.From(time.Now()),
 		Deleted: omitnull.FromPtr[time.Time](nil),
 		//DistrictID:   omitnull.FromPtr[int32](nil),
-		PhoneE164: omit.From(text.PhoneString(phone)),
+		PhoneE164: omit.From(phone.PhoneString()),
 	}
 	_, err := models.PublicreportSubscribePhones.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
@@ -138,7 +135,7 @@ func RegisterSubscriptionPhone(ctx context.Context, txn bob.Tx, phone text.E164)
 	return nil
 }
 
-func SaveReporter(ctx context.Context, txn bob.Tx, report_id string, name string, email string, phone *text.E164, has_consent bool) *ErrorWithCode {
+func SaveReporter(ctx context.Context, txn bob.Executor, report_id string, name string, email string, phone *types.E164, has_consent bool) *ErrorWithCode {
 	some_report, err := findSomeReport(ctx, report_id)
 	if err != nil {
 		return err

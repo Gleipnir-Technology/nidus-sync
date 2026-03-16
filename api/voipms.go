@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -94,6 +95,11 @@ func voipmsTextPost(w http.ResponseWriter, r *http.Request) {
 	log.Info().Int("ID", b.Data.ID).Str("event_type", b.Data.EventType).Str("record_type", b.Data.RecordType).Str("from", b.Data.Payload.From.PhoneNumber).Str("to", to).Str("content", b.Data.Payload.Text).Msg("Text status")
 
 	// Convert phone numbers from Voip.ms into E164 format for consistency
-	go text.HandleTextMessage(b.Data.Payload.From.PhoneNumber, to, b.Data.Payload.Text)
+	go func() {
+		err := text.HandleTextMessage(context.Background(), b.Data.Payload.From.PhoneNumber, to, b.Data.Payload.Text)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to handle VoIP.ms incoming text")
+		}
+	}()
 	fmt.Fprintf(w, "ok")
 }

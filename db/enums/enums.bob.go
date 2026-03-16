@@ -1292,6 +1292,91 @@ func (e *Imagedatatype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Jobtype
+const (
+	JobtypeAudioTranscode         Jobtype = "audio-transcode"
+	JobtypeCSVCommit              Jobtype = "csv-commit"
+	JobtypeCSVImport              Jobtype = "csv-import"
+	JobtypeLabelStudioAudioCreate Jobtype = "label-studio-audio-create"
+	JobtypeEmailSend              Jobtype = "email-send"
+	JobtypeTextSend               Jobtype = "text-send"
+)
+
+func AllJobtype() []Jobtype {
+	return []Jobtype{
+		JobtypeAudioTranscode,
+		JobtypeCSVCommit,
+		JobtypeCSVImport,
+		JobtypeLabelStudioAudioCreate,
+		JobtypeEmailSend,
+		JobtypeTextSend,
+	}
+}
+
+type Jobtype string
+
+func (e Jobtype) String() string {
+	return string(e)
+}
+
+func (e Jobtype) Valid() bool {
+	switch e {
+	case JobtypeAudioTranscode,
+		JobtypeCSVCommit,
+		JobtypeCSVImport,
+		JobtypeLabelStudioAudioCreate,
+		JobtypeEmailSend,
+		JobtypeTextSend:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Jobtype) All() []Jobtype {
+	return AllJobtype()
+}
+
+func (e Jobtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Jobtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Jobtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Jobtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Jobtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Jobtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Jobtype(x)
+	case []byte:
+		*e = Jobtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Jobtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Jobtype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Leadtype
 const (
 	LeadtypeUnknown              Leadtype = "unknown"

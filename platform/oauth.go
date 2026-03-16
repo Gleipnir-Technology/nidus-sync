@@ -10,7 +10,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -72,6 +71,6 @@ func HandleOauthAccessCode(ctx context.Context, user User, code string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %w", err)
 	}
-	go background.UpdateArcgisUserData(context.Background(), user.model, oauth)
+	go updateArcgisUserData(context.Background(), user.model, oauth)
 	return nil
 }

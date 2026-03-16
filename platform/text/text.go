@@ -17,104 +17,102 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/rs/zerolog/log"
 )
 
-type E164 struct {
-	number *phonenumbers.PhoneNumber
+func EnsureInDB(ctx context.Context, ex bob.Executor, destination types.E164) (err error) {
+	_, err = psql.Insert(
+		im.Into("comms.phone", "e164", "is_subscribed", "status"),
+		im.Values(
+			psql.Arg(destination.PhoneString()),
+			psql.Arg(false),
+			psql.Arg("unconfirmed"),
+		),
+		im.OnConflict("e164").DoNothing(),
+	).Exec(ctx, ex)
+	return err
 }
-
-func NewE164(n *phonenumbers.PhoneNumber) *E164 {
-	return &E164{
-		number: n,
-	}
-}
-
-func EnsureInDB(ctx context.Context, ex bob.Executor, destination E164) (err error) {
-	return ensureInDB(ctx, ex, PhoneString(destination))
-}
-func HandleTextMessage(src string, dst string, body string) {
-	ctx := context.Background()
-
-	_, err := insertTextLog(ctx, body, dst, src, enums.CommsTextoriginCustomer, false, true)
+func HandleTextMessage(ctx context.Context, source string, destination string, body string) error {
+	src, err := ParsePhoneNumber(source)
 	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Msg("Failed to add text message log")
-		return
+		return fmt.Errorf("parse source '%s': %w", source, err)
 	}
-	status, err := phoneStatus(ctx, src)
+	dst, err := ParsePhoneNumber(destination)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get phone status")
-		return
+		return fmt.Errorf("parse destination '%s': %w", destination, err)
+	}
+	_, err = insertTextLog(ctx, *dst, *src, enums.CommsTextoriginCustomer, body, false, true)
+	if err != nil {
+		return fmt.Errorf("insert text log: %w", err)
+	}
+	status, err := phoneStatus(ctx, *src)
+	if err != nil {
+		return fmt.Errorf("Failed to get phone status")
 	}
 	body_l := strings.TrimSpace(strings.ToLower(body))
 	// We don't know if they're subscribed or not.
 	if status == enums.CommsPhonestatustypeUnconfirmed {
 		switch body_l {
 		case "yes":
-			setPhoneStatus(ctx, src, enums.CommsPhonestatustypeOkToSend)
+			setPhoneStatus(ctx, *src, enums.CommsPhonestatustypeOkToSend)
 			content := "Thanks, we've confirmed your phone number. You can text STOP at any time if you change your mind"
-			err := sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+			err := sendTextBegin(ctx, *dst, *src, content, enums.CommsTextoriginCommandResponse, false, false)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to send confirmation response")
 			}
-			handleWaitingTextJobs(ctx, src)
+			handleWaitingTextJobs(ctx, *src)
 		default:
 			content := "I have to start with either 'YES' or 'STOP' first, Which do you want?"
-			err = sendText(ctx, dst, src, content, enums.CommsTextoriginReiteration, false, false)
+			err = sendTextBegin(ctx, *dst, *src, content, enums.CommsTextoriginReiteration, false, false)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to resend initial prompt.")
 			}
 		}
-		return
+		return nil
 	}
 	switch body_l {
 	case "stop":
 		content := "You have successfully been unsubscribed. You will not receive any more messages from this number. Reply START to resubscribe."
-		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+		err = sendTextBegin(ctx, *dst, *src, content, enums.CommsTextoriginCommandResponse, false, false)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to send unsubscribe acknowledgement.")
 		}
-		setPhoneStatus(ctx, src, enums.CommsPhonestatustypeStopped)
-		return
+		setPhoneStatus(ctx, *src, enums.CommsPhonestatustypeStopped)
+		return nil
 	case "reset conversation":
-		handleResetConversation(ctx, src, dst)
-		return
+		handleResetConversation(ctx, *src, *dst)
+		return nil
 	default:
 	}
-	previous_messages, err := loadPreviousMessagesForLLM(ctx, dst, src)
+	previous_messages, err := loadPreviousMessagesForLLM(ctx, *dst, *src)
 	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", src).Msg("Failed to get previous messages")
-		return
+		return fmt.Errorf("Failed to get previous messages: %w", err)
 	}
 	log.Info().Int("len", len(previous_messages)).Msg("passing")
-	next_message, err := generateNextMessage(ctx, previous_messages, src)
+	sublog := log.With().Str("dst", destination).Str("src", source).Logger()
+	next_message, err := generateNextMessage(ctx, previous_messages, *src)
 	if err != nil {
-		log.Error().Err(err).Str("dst", dst).Str("src", src).Msg("Failed to generate next message")
-		return
+		return fmt.Errorf("Failed to generate next message: %w", err)
 	}
-	err = sendText(ctx, dst, src, next_message.Content, enums.CommsTextoriginLLM, false, true)
+	err = sendTextBegin(ctx, *dst, *src, next_message.Content, enums.CommsTextoriginLLM, false, true)
 	if err != nil {
-		log.Error().Err(err).Str("src", src).Str("dst", dst).Str("content", next_message.Content).Msg("Failed to send response text")
-		return
+		return fmt.Errorf("Failed to send response text: %w", err)
 	}
-	log.Info().Str("src", src).Str("dst", dst).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
+	sublog.Info().Str("content", next_message.Content).Str("body", body).Str("reply", next_message.Content).Msg("Handled text message")
+	return nil
 }
 
-func ParsePhoneNumber(input string) (*E164, error) {
+func ParsePhoneNumber(input string) (*types.E164, error) {
 	n, err := phonenumbers.Parse(input, "US")
 	if err != nil {
 		return nil, err
 	}
-	return &E164{
-		number: n,
-	}, nil
-}
-
-func PhoneString(p E164) string {
-	return phonenumbers.Format(p.number, phonenumbers.E164)
+	return types.NewE164(n), nil
 }
 
 func StoreSources() error {
@@ -159,11 +157,11 @@ func UpdateMessageStatus(twilio_sid string, status string) {
 		return
 	}
 }
-func delayMessage(ctx context.Context, source enums.CommsTextjobsource, destination string, content string, type_ enums.CommsTextjobtype) error {
+func delayMessage(ctx context.Context, source enums.CommsTextjobsource, destination types.E164, content string, type_ enums.CommsTextjobtype) error {
 	job, err := models.CommsTextJobs.Insert(&models.CommsTextJobSetter{
 		Content:     omit.From(content),
 		Created:     omit.From(time.Now()),
-		Destination: omit.From(destination),
+		Destination: omit.From(destination.PhoneString()),
 		//ID:
 		Source: omit.From(source),
 		Type:   omit.From(type_),
@@ -175,8 +173,8 @@ func delayMessage(ctx context.Context, source enums.CommsTextjobsource, destinat
 	return nil
 }
 
-func resendInitialText(ctx context.Context, src string, dst string) error {
-	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, dst)
+func resendInitialText(ctx context.Context, src, dst types.E164) error {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, dst.PhoneString())
 	if err != nil {
 		return fmt.Errorf("Failed to find phone %s: %w", dst, err)
 	}
@@ -189,33 +187,20 @@ func resendInitialText(ctx context.Context, src string, dst string) error {
 	return nil
 }
 
-func sendInitialText(ctx context.Context, src string, dst string) error {
+func sendInitialText(ctx context.Context, src, dst types.E164) error {
 	content := "Welcome to Report Mosquitoes Online. We received your request and want to confirm text updates. Reply YES to continue. Reply STOP at any time to unsubscribe"
 	origin := enums.CommsTextoriginWebsiteAction
-	err := sendText(ctx, src, dst, content, origin, true, true)
+	err := sendTextBegin(ctx, src, dst, content, origin, true, true)
 	if err != nil {
 		return fmt.Errorf("Failed to send initial confirmation: %w", err)
 	}
 	return nil
 }
 
-func ensureInDB(ctx context.Context, ex bob.Executor, destination string) (err error) {
-	_, err = psql.Insert(
-		im.Into("comms.phone", "e164", "is_subscribed", "status"),
-		im.Values(
-			psql.Arg(destination),
-			psql.Arg(false),
-			psql.Arg("unconfirmed"),
-		),
-		im.OnConflict("e164").DoNothing(),
-	).Exec(ctx, ex)
-	return err
-}
-
-func ensureInitialText(ctx context.Context, src string, dst string) error {
+func ensureInitialText(ctx context.Context, src, dst types.E164) error {
 	//
 	rows, err := models.CommsTextLogs.Query(
-		models.SelectWhere.CommsTextLogs.Destination.EQ(dst),
+		models.SelectWhere.CommsTextLogs.Destination.EQ(dst.PhoneString()),
 		models.SelectWhere.CommsTextLogs.IsWelcome.EQ(true),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -227,7 +212,7 @@ func ensureInitialText(ctx context.Context, src string, dst string) error {
 	return sendInitialText(ctx, src, dst)
 }
 
-func generateNextMessage(ctx context.Context, history []llm.Message, customer_phone string) (llm.Message, error) {
+func generateNextMessage(ctx context.Context, history []llm.Message, customer_phone types.E164) (llm.Message, error) {
 	_handle_report_status := func() (string, error) {
 		return "Report: ABCD-1234-5678, District: Delta MVCD, Status: scheduled, Appointment: Wednesday 3:30pm", nil
 	}
@@ -240,9 +225,9 @@ func generateNextMessage(ctx context.Context, history []llm.Message, customer_ph
 	return llm.GenerateNextMessage(ctx, history, _handle_report_status, _handle_contact_district, _handle_contact_supervisor)
 }
 
-func handleWaitingTextJobs(ctx context.Context, src string) {
+func handleWaitingTextJobs(ctx context.Context, src types.E164) {
 	jobs, err := models.CommsTextJobs.Query(
-		models.SelectWhere.CommsTextJobs.Destination.EQ(src),
+		models.SelectWhere.CommsTextJobs.Destination.EQ(src.PhoneString()),
 		models.SelectWhere.CommsTextJobs.Completed.IsNull(),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -250,21 +235,34 @@ func handleWaitingTextJobs(ctx context.Context, src string) {
 		return
 	}
 	for _, job := range jobs {
-		var src string
+		var source string
 		switch job.Source {
 		case enums.CommsTextjobsourceRmo:
-			src = config.PhoneNumberReportStr
+			source = config.PhoneNumberReportStr
 		//case enums.CommsTextJobsourcenidus:
 		//src := config.PhoneNumebrNidusStr
 		default:
 			log.Error().Str("source", job.Source.String()).Msg("Can't support background text job.")
+			continue
 		}
-		err = sendText(ctx, src, job.Destination, job.Content, enums.CommsTextoriginWebsiteAction, false, true)
+		p, err := phonenumbers.Parse(job.Destination, "US")
+		if err != nil {
+			log.Error().Err(err).Str("dest", job.Destination).Int32("id", job.ID).Msg("Invalid destination in job")
+			continue
+		}
+		dst := types.NewE164(p)
+		p, err = phonenumbers.Parse(source, "US")
+		if err != nil {
+			log.Error().Err(err).Str("source", source).Int32("id", job.ID).Msg("Invalid source in job")
+			continue
+		}
+		src := types.NewE164(p)
+		err = sendTextBegin(ctx, *src, *dst, job.Content, enums.CommsTextoriginWebsiteAction, false, true)
 		if err != nil {
 			log.Error().Err(err).Int32("id", job.ID).Msg("Failed to send delayed text job.")
 			continue
 		}
-		err := job.Update(ctx, db.PGInstance.BobDB, &models.CommsTextJobSetter{
+		err = job.Update(ctx, db.PGInstance.BobDB, &models.CommsTextJobSetter{
 			Completed: omitnull.From(time.Now()),
 		})
 		if err != nil {
@@ -274,60 +272,64 @@ func handleWaitingTextJobs(ctx context.Context, src string) {
 	}
 }
 
-func handleResetConversation(ctx context.Context, src string, dst string) {
+func handleResetConversation(ctx context.Context, src types.E164, dst types.E164) {
 	err := wipeLLMMemory(ctx, src, dst)
+	sublog := log.With().Str("src", src.PhoneString()).Str("dst", dst.PhoneString()).Logger()
 	if err != nil {
-		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to wipe memory")
+		sublog.Error().Err(err).Msg("Failed to wipe memory")
 		content := "Failed to wip memory"
-		err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+		err = sendTextBegin(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
 		if err != nil {
-			log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wipe failure.")
+			sublog.Error().Err(err).Msg("Failed to indicated memory wipe failure.")
 		}
 		return
 	}
 	content := "LLM memory wiped"
-	err = sendText(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
+	err = sendTextBegin(ctx, dst, src, content, enums.CommsTextoriginCommandResponse, false, false)
 	if err != nil {
-		log.Error().Err(err).Str("src", src).Str("dst", dst).Msg("Failed to indicated memory wiped.")
+		sublog.Error().Err(err).Msg("Failed to indicated memory wiped.")
 		return
 	}
-	log.Info().Err(err).Str("src", src).Str("dst", dst).Msg("Wiped LLM memory")
+	sublog.Info().Err(err).Msg("Wiped LLM memory")
 }
 
-func insertTextLog(ctx context.Context, content string, destination string, source string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) (log *models.CommsTextLog, err error) {
-	log, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
+func insertTextLog(ctx context.Context, destination types.E164, source types.E164, origin enums.CommsTextorigin, content string, is_welcome bool, is_visible_to_llm bool) (l *models.CommsTextLog, err error) {
+	l, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
 		//ID:
 		Content:        omit.From(content),
 		Created:        omit.From(time.Now()),
-		Destination:    omit.From(destination),
+		Destination:    omit.From(destination.PhoneString()),
 		IsVisibleToLLM: omit.From(is_visible_to_llm),
 		IsWelcome:      omit.From(is_welcome),
 		Origin:         omit.From(origin),
-		Source:         omit.From(source),
+		Source:         omit.From(source.PhoneString()),
 		TwilioSid:      omitnull.FromPtr[string](nil),
 		TwilioStatus:   omit.From(""),
 	}).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Debug().Int32("id", l.ID).Bool("is_visible_to_llm", is_visible_to_llm).Str("message", content).Msg("inserted text log")
+	}
 
-	return log, err
+	return l, err
 }
 
-func phoneStatus(ctx context.Context, src string) (enums.CommsPhonestatustype, error) {
-	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
+func phoneStatus(ctx context.Context, src types.E164) (enums.CommsPhonestatustype, error) {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src.PhoneString())
 	if err != nil {
-		return enums.CommsPhonestatustypeUnconfirmed, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
+		return enums.CommsPhonestatustypeUnconfirmed, fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src.PhoneString(), err)
 	}
 	return phone.Status, nil
 }
 
-func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Message, error) {
-	messages, err := sql.TextsBySenders(dst, src).All(ctx, db.PGInstance.BobDB)
+func loadPreviousMessagesForLLM(ctx context.Context, dst, src types.E164) ([]llm.Message, error) {
+	messages, err := sql.TextsBySenders(dst.PhoneString(), src.PhoneString()).All(ctx, db.PGInstance.BobDB)
 	results := make([]llm.Message, 0)
 	if err != nil {
 		return results, fmt.Errorf("Failed to get message history for %s and %s: %w", dst, src, err)
 	}
 	for _, m := range messages {
 		if m.IsVisibleToLLM {
-			is_from_customer := (m.Source == src)
+			is_from_customer := (m.Source == src.PhoneString())
 			results = append(results, llm.Message{
 				IsFromCustomer: is_from_customer,
 				Content:        m.Content,
@@ -337,45 +339,51 @@ func loadPreviousMessagesForLLM(ctx context.Context, dst, src string) ([]llm.Mes
 	return results, nil
 }
 
-func sendText(ctx context.Context, source string, destination string, message string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) error {
-	err := ensureInDB(ctx, db.PGInstance.BobDB, destination)
+func sendTextBegin(ctx context.Context, source types.E164, destination types.E164, message string, origin enums.CommsTextorigin, is_welcome bool, is_visible_to_llm bool) error {
+	err := EnsureInDB(ctx, db.PGInstance.BobDB, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to ensure text message destination is in the DB: %w", err)
 	}
-	l, err := insertTextLog(ctx, message, destination, source, origin, is_welcome, is_visible_to_llm)
+	l, err := insertTextLog(ctx, destination, source, origin, message, is_welcome, is_visible_to_llm)
 	if err != nil {
 		return fmt.Errorf("Failed to insert text message in the DB: %w", err)
 	}
-	sid, err := text.SendText(ctx, source, destination, message)
+	return background.NewTextSend(ctx, db.PGInstance.BobDB, l.ID)
+}
+func sendTextComplete(ctx context.Context, txn bob.Executor, text_id int32) error {
+	text_log, err := models.FindCommsTextLog(ctx, txn, text_id)
+	if err != nil {
+		return fmt.Errorf("find text: %w", err)
+	}
+	sid, err := text.SendText(ctx, text_log.Source, text_log.Destination, text_log.Content)
 	if err != nil {
 		return fmt.Errorf("Failed to send text message: %w", err)
 	}
-	err = l.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
+	err = text_log.Update(ctx, db.PGInstance.BobDB, &models.CommsTextLogSetter{
 		TwilioSid:    omitnull.From(sid),
 		TwilioStatus: omit.From("created"),
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to update text Twilio status: %w", err)
 	}
-	log.Info().Int32("id", l.ID).Bool("is_visible_to_llm", is_visible_to_llm).Str("message", message).Msg("inserted text log")
 
 	return nil
 }
 
-func setPhoneStatus(ctx context.Context, src string, status enums.CommsPhonestatustype) error {
-	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src)
+func setPhoneStatus(ctx context.Context, src types.E164, status enums.CommsPhonestatustype) error {
+	phone, err := models.FindCommsPhone(ctx, db.PGInstance.BobDB, src.PhoneString())
 	if err != nil {
 		return fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
 	phone.Update(ctx, db.PGInstance.BobDB, &models.CommsPhoneSetter{
 		Status: omit.From(status),
 	})
-	log.Info().Str("src", src).Str("status", string(status)).Msg("Set number subscribed")
+	log.Info().Str("src", src.PhoneString()).Str("status", string(status)).Msg("Set number subscribed")
 	return nil
 }
 
-func wipeLLMMemory(ctx context.Context, src string, dst string) error {
-	rows, err := sql.TextsBySenders(dst, src).All(ctx, db.PGInstance.BobDB)
+func wipeLLMMemory(ctx context.Context, src types.E164, dst types.E164) error {
+	rows, err := sql.TextsBySenders(dst.PhoneString(), src.PhoneString()).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fmt.Errorf("Failed to query for texts: %w", err)
 	}

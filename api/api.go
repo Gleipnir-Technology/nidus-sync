@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -32,7 +31,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	}
 
 	var payload NoteAudioPayload
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read the payload", http.StatusBadRequest)
 		return
@@ -49,6 +48,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 		Deleted:                 omitnull.FromPtr(payload.Deleted),
 		DeletorID:               omitnull.FromPtr(payload.DeletorID),
 		Duration:                omit.From(payload.Duration),
+		OrganizationID:          omit.From(u.Organization.ID()),
 		Transcription:           omitnull.FromPtr(payload.Transcription),
 		TranscriptionUserEdited: omit.From(payload.TranscriptionUserEdited),
 		Version:                 omit.From(payload.Version),
@@ -61,20 +61,24 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func apiAudioContentPost(w http.ResponseWriter, r *http.Request, u platform.User) {
+func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.User) {
 	u_str := chi.URLParam(r, "uuid")
-	audioUUID, err := uuid.Parse(u_str)
+	u, err := uuid.Parse(u_str)
 	if err != nil {
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 		return
 	}
-	err = file.FileContentWrite(r.Body, file.CollectionAudioRaw, audioUUID)
+	err = file.FileContentWrite(r.Body, file.CollectionAudioRaw, u)
 	if err != nil {
 		log.Printf("Failed to write content file: %v", err)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
 	}
-
-	background.AudioTranscode(audioUUID)
+	ctx := r.Context()
+	a, err := models.NoteAudios.Query(
+		models.SelectWhere.NoteAudios.UUID.EQ(u),
+		models.SelectWhere.NoteAudios.OrganizationID.EQ(user.Organization.ID()),
+	).One(ctx, db.PGInstance.BobDB)
+	background.NewAudioTranscode(ctx, db.PGInstance.BobDB, a.ID)
 	w.WriteHeader(http.StatusOK)
 }
 

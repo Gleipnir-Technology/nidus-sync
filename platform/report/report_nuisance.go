@@ -19,7 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	//"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
@@ -33,7 +33,7 @@ type Nuisance struct {
 func (sr Nuisance) PublicReportID() string {
 	return sr.publicReportID
 }
-func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
+func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Executor, email string) *ErrorWithCode {
 	setter := models.PublicreportNotifyEmailNuisanceSetter{
 		Created:      omit.From(time.Now()),
 		Deleted:      omitnull.FromPtr[time.Time](nil),
@@ -46,13 +46,13 @@ func (sr Nuisance) addNotificationEmail(ctx context.Context, txn bob.Tx, email s
 	}
 	return nil
 }
-func (sr Nuisance) addNotificationPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
+func (sr Nuisance) addNotificationPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
 	var err error
 	setter := models.PublicreportNotifyPhoneNuisanceSetter{
 		Created:    omit.From(time.Now()),
 		Deleted:    omitnull.FromPtr[time.Time](nil),
 		NuisanceID: omit.From(sr.id),
-		PhoneE164:  omit.From(text.PhoneString(phone)),
+		PhoneE164:  omit.From(phone.PhoneString()),
 	}
 	_, err = models.PublicreportNotifyPhoneNuisances.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
@@ -78,12 +78,12 @@ func (sr Nuisance) districtID(ctx context.Context) *int32 {
 func (sr Nuisance) reportID() int32 {
 	return sr.id
 }
-func (sr Nuisance) updateReporterConsent(ctx context.Context, txn bob.Tx, has_consent bool) *ErrorWithCode {
+func (sr Nuisance) updateReporterConsent(ctx context.Context, txn bob.Executor, has_consent bool) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
 		ReporterContactConsent: omitnull.From(has_consent),
 	})
 }
-func (sr Nuisance) updateReportCol(ctx context.Context, txn bob.Tx, setter *models.PublicreportNuisanceSetter) *ErrorWithCode {
+func (sr Nuisance) updateReportCol(ctx context.Context, txn bob.Executor, setter *models.PublicreportNuisanceSetter) *ErrorWithCode {
 	err := sr.row.Update(ctx, txn, setter)
 	if err != nil {
 		log.Error().Err(err).Str("public_id", sr.publicReportID).Int32("report_id", sr.id).Msg("Failed to update report")
@@ -91,20 +91,20 @@ func (sr Nuisance) updateReportCol(ctx context.Context, txn bob.Tx, setter *mode
 	}
 	return nil
 }
-func (sr Nuisance) updateReporterEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
+func (sr Nuisance) updateReporterEmail(ctx context.Context, txn bob.Executor, email string) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
 		ReporterEmail: omitnull.From(email),
 	})
 }
-func (sr Nuisance) updateReporterName(ctx context.Context, txn bob.Tx, name string) *ErrorWithCode {
+func (sr Nuisance) updateReporterName(ctx context.Context, txn bob.Executor, name string) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportNuisanceSetter{
 		ReporterName: omitnull.From(name),
 	})
 }
-func (sr Nuisance) updateReporterPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
+func (sr Nuisance) updateReporterPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
 	result, err := psql.Update(
 		um.Table("publicreport.nuisance"),
-		um.SetCol("reporter_phone").ToArg(text.PhoneString(phone)),
+		um.SetCol("reporter_phone").ToArg(phone.PhoneString()),
 		um.Where(psql.Quote("public_id").EQ(psql.Arg(sr.publicReportID))),
 	).Exec(ctx, txn)
 	if err != nil {

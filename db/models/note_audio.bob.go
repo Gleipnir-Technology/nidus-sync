@@ -36,6 +36,7 @@ type NoteAudio struct {
 	TranscriptionUserEdited bool                `db:"transcription_user_edited" `
 	Version                 int32               `db:"version,pk" `
 	UUID                    uuid.UUID           `db:"uuid,pk" `
+	ID                      int32               `db:"id,generated" `
 
 	R noteAudioR `db:"-" `
 }
@@ -62,7 +63,7 @@ type noteAudioR struct {
 func buildNoteAudioColumns(alias string) noteAudioColumns {
 	return noteAudioColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "deleted", "deletor_id", "duration", "organization_id", "transcription", "transcription_user_edited", "version", "uuid",
+			"created", "creator_id", "deleted", "deletor_id", "duration", "organization_id", "transcription", "transcription_user_edited", "version", "uuid", "id",
 		).WithParent("note_audio"),
 		tableAlias:              alias,
 		Created:                 psql.Quote(alias, "created"),
@@ -75,6 +76,7 @@ func buildNoteAudioColumns(alias string) noteAudioColumns {
 		TranscriptionUserEdited: psql.Quote(alias, "transcription_user_edited"),
 		Version:                 psql.Quote(alias, "version"),
 		UUID:                    psql.Quote(alias, "uuid"),
+		ID:                      psql.Quote(alias, "id"),
 	}
 }
 
@@ -91,6 +93,7 @@ type noteAudioColumns struct {
 	TranscriptionUserEdited psql.Expression
 	Version                 psql.Expression
 	UUID                    psql.Expression
+	ID                      psql.Expression
 }
 
 func (c noteAudioColumns) Alias() string {
@@ -992,6 +995,7 @@ type noteAudioWhere[Q psql.Filterable] struct {
 	TranscriptionUserEdited psql.WhereMod[Q, bool]
 	Version                 psql.WhereMod[Q, int32]
 	UUID                    psql.WhereMod[Q, uuid.UUID]
+	ID                      psql.WhereMod[Q, int32]
 }
 
 func (noteAudioWhere[Q]) AliasedAs(alias string) noteAudioWhere[Q] {
@@ -1010,6 +1014,7 @@ func buildNoteAudioWhere[Q psql.Filterable](cols noteAudioColumns) noteAudioWher
 		TranscriptionUserEdited: psql.Where[Q, bool](cols.TranscriptionUserEdited),
 		Version:                 psql.Where[Q, int32](cols.Version),
 		UUID:                    psql.Where[Q, uuid.UUID](cols.UUID),
+		ID:                      psql.Where[Q, int32](cols.ID),
 	}
 }
 

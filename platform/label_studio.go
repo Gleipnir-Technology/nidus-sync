@@ -1,4 +1,4 @@
-package background
+package platform
 
 import (
 	"context"
@@ -8,66 +8,38 @@ import (
 	"log"
 	"os"
 
+	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/label-studio"
 	"github.com/Gleipnir-Technology/nidus-sync/minio"
-	"github.com/google/uuid"
+	//"github.com/google/uuid"
 )
 
-type jobLabelStudio struct {
-	UUID uuid.UUID
-}
+var labelStudioClient *labelstudio.Client
+var labelStudioProject *labelstudio.Project
+var minioClient *minio.Client
 
-var channelJobLabelStudio chan jobLabelStudio
-
-func enqueueLabelStudioJob(job jobLabelStudio) {
-	select {
-	case channelJobLabelStudio <- job:
-		log.Printf("Enqueued label job for UUID: %s", job.UUID)
-	default:
-		log.Printf("Label job channel is full, dropping job for UUID: %s", job.UUID)
-	}
-}
-
-func StartLabelStudioWorker(ctx context.Context) error {
+func initializeLabelStudio() error {
 	// Initialize the minio client
-	minioBucket := os.Getenv("S3_BUCKET")
+	//minioBucket := os.Getenv("S3_BUCKET")
 
-	labelStudioClient, err := createLabelStudioClient()
+	var err error
+	labelStudioClient, err = createLabelStudioClient()
 	if err != nil {
-		return fmt.Errorf("Failed to create label studio client: %v", err)
+		return fmt.Errorf("Failed to create label studio client: %w", err)
 	}
 	// Get the project we are going to upload to
-	project, err := findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
+	labelStudioProject, err = findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to find the label studio project"))
+		return fmt.Errorf("Failed to find the label studio project: %w", err)
 	}
-	minioClient, err := createMinioClient()
+	minioClient, err = createMinioClient()
 	if err != nil {
-		return fmt.Errorf("Failed to create minio client: %v", err)
+		return fmt.Errorf("Failed to create minio client: %w", err)
 	}
-	buffer := 100
-	channelJobLabelStudio = make(chan jobLabelStudio, buffer) // Buffered channel to prevent blocking
-	log.Printf("Started label studio worker with buffer depth %d", buffer)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Println("Audio worker shutting down.")
-				return
-			case job := <-channelJobLabelStudio:
-				log.Printf("Processing label job for UUID: %s", job.UUID)
-				err := processLabelTask(ctx, minioClient, minioBucket, labelStudioClient, project, job)
-				if err != nil {
-					log.Printf("Error processing label job for audio file %s: %v", job.UUID, err)
-				}
-			}
-		}
-	}()
 	return nil
 }
-
 func createMinioClient() (*minio.Client, error) {
 	baseUrl := os.Getenv("S3_BASE_URL")
 	accessKeyID := os.Getenv("S3_ACCESS_KEY_ID")
@@ -80,7 +52,6 @@ func createMinioClient() (*minio.Client, error) {
 	log.Println("Created minio client")
 	return client, err
 }
-
 func createLabelStudioClient() (*labelstudio.Client, error) {
 	// Initialize the client with your Label Studio base URL and API key
 	labelStudioApiKey := os.Getenv("LABEL_STUDIO_API_KEY")
@@ -100,33 +71,36 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 func noteAudioGetLatest(ctx context.Context, uuid string) (*models.NoteAudio, error) {
 	return nil, nil
 }
-func processLabelTask(ctx context.Context, minioClient *minio.Client, minioBucket string, labelStudioClient *labelstudio.Client, project *labelstudio.Project, job jobLabelStudio) error {
-	customer := os.Getenv("CUSTOMER")
-	if customer == "" {
-		return errors.New("You must specify a CUSTOMER env var")
-	}
-	note, err := noteAudioGetLatest(ctx, job.UUID.String())
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to get note %s", note.UUID))
-	}
+func jobLabelStudioAudioCreate(ctx context.Context, txn bob.Executor, row_id int32) error {
+	return fmt.Errorf("label studio integration has been disabled")
+	/*
+		customer := os.Getenv("CUSTOMER")
+		if customer == "" {
+			return errors.New("You must specify a CUSTOMER env var")
+		}
+		note, err := noteAudioGetLatest(ctx, job.UUID.String())
+		if err != nil {
+			return errors.New(fmt.Sprintf("Failed to get note %s", note.UUID))
+		}
 
-	if note.Version != 1 {
-		return errors.New(fmt.Sprintf("Got version %d of %s", note.Version, note.UUID))
-	}
-	task, err := findMatchingTask(labelStudioClient, project, customer, note)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to search for a task: %v", err))
-	}
-	// We already have a task, nothing to do.
-	if task != nil {
+		if note.Version != 1 {
+			return errors.New(fmt.Sprintf("Got version %d of %s", note.Version, note.UUID))
+		}
+		task, err := findMatchingTask(labelStudioClient, project, customer, note)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Failed to search for a task: %v", err))
+		}
+		// We already have a task, nothing to do.
+		if task != nil {
+			return nil
+		}
+
+		err = createTask(labelStudioClient, project, minioClient, minioBucket, customer, note)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Failed to create a task: %v", err))
+		}
 		return nil
-	}
-
-	err = createTask(labelStudioClient, project, minioClient, minioBucket, customer, note)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to create a task: %v", err))
-	}
-	return nil
+	*/
 }
 
 func createTask(client *labelstudio.Client, project *labelstudio.Project, minioClient *minio.Client, bucket string, customer string, note *models.NoteAudio) error {

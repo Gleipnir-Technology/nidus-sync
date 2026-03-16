@@ -7,7 +7,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	//"github.com/google/uuid"
 )
 
@@ -54,7 +53,7 @@ func (o Organization) ID() int32 {
 	return o.model.ID
 }
 func (o Organization) IsSyncOngoing() bool {
-	return background.IsSyncOngoing(o.ID())
+	return IsSyncOngoing(o.ID())
 }
 func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.FieldseekerSync, error) {
 	sync, err := o.model.FieldseekerSyncs(sm.OrderBy("created").Desc()).One(ctx, db.PGInstance.BobDB)

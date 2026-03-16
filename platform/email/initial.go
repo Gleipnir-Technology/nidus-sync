@@ -4,26 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type contentEmailInitial struct {
 	Base         contentEmailBase
 	Destination  string
 	URLSubscribe string
-}
-
-type jobInitial struct {
-	base jobEmailBase
-}
-
-func (job jobInitial) Destination() string {
-	return job.base.destination
 }
 
 func maybeSendInitialEmail(ctx context.Context, destination string) error {
@@ -59,30 +49,10 @@ func sendEmailInitialContact(ctx context.Context, destination string) error {
 	data["URLSubscribe"] = config.MakeURLReport("/email/confirm?email=%s", destination)
 	data["URLUnsubscribe"] = urlUnsubscribe(destination)
 
-	public_id := generatePublicId(enums.CommsMessagetypeemailInitialContact, data)
-	data["URLBrowser"] = urlEmailInBrowser(public_id)
-
-	text, html, err := renderEmailTemplates(templateInitialID, data)
-	if err != nil {
-		return fmt.Errorf("Failed to render email temlates: %w", err)
-	}
-
 	subject := "Welcome"
-	err = insertEmailLog(ctx, data, destination, public_id, source, subject, templateInitialID)
+	err := sendEmailBegin(ctx, source, destination, templateInitialID, subject, data)
 	if err != nil {
-		return fmt.Errorf("Failed to store email log: %w", err)
+		return fmt.Errorf("Failed to send initial email to %s: %w", err)
 	}
-	resp, err := email.Send(ctx, email.Request{
-		From:    source,
-		HTML:    html,
-		Subject: subject,
-		Text:    text,
-		To:      destination,
-	})
-
-	if err != nil {
-		return fmt.Errorf("Failed to send email to %s: %w", err)
-	}
-	log.Info().Str("id", resp.ID).Str("to", destination).Msg("Sent initial contact email")
 	return nil
 }

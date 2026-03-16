@@ -78,6 +78,7 @@ func Where[Q psql.Filterable]() struct {
 	GeometryColumns                      geometryColumnWhere[Q]
 	GooseDBVersions                      gooseDBVersionWhere[Q]
 	H3Aggregations                       h3AggregationWhere[Q]
+	Jobs                                 jobWhere[Q]
 	Leads                                leadWhere[Q]
 	NoteAudios                           noteAudioWhere[Q]
 	NoteAudioBreadcrumbs                 noteAudioBreadcrumbWhere[Q]
@@ -176,6 +177,7 @@ func Where[Q psql.Filterable]() struct {
 		GeometryColumns                      geometryColumnWhere[Q]
 		GooseDBVersions                      gooseDBVersionWhere[Q]
 		H3Aggregations                       h3AggregationWhere[Q]
+		Jobs                                 jobWhere[Q]
 		Leads                                leadWhere[Q]
 		NoteAudios                           noteAudioWhere[Q]
 		NoteAudioBreadcrumbs                 noteAudioBreadcrumbWhere[Q]
@@ -273,6 +275,7 @@ func Where[Q psql.Filterable]() struct {
 		GeometryColumns:                      buildGeometryColumnWhere[Q](GeometryColumns.Columns),
 		GooseDBVersions:                      buildGooseDBVersionWhere[Q](GooseDBVersions.Columns),
 		H3Aggregations:                       buildH3AggregationWhere[Q](H3Aggregations.Columns),
+		Jobs:                                 buildJobWhere[Q](Jobs.Columns),
 		Leads:                                buildLeadWhere[Q](Leads.Columns),
 		NoteAudios:                           buildNoteAudioWhere[Q](NoteAudios.Columns),
 		NoteAudioBreadcrumbs:                 buildNoteAudioBreadcrumbWhere[Q](NoteAudioBreadcrumbs.Columns),

@@ -10,8 +10,17 @@ var NoteAudioErrors = &noteAudioErrors{
 		columns: []string{"version", "uuid"},
 		s:       "note_audio_pkey",
 	},
+
+	ErrUniqueNoteAudioIdUnique: &UniqueConstraintError{
+		schema:  "",
+		table:   "note_audio",
+		columns: []string{"id"},
+		s:       "note_audio_id_unique",
+	},
 }
 
 type noteAudioErrors struct {
 	ErrUniqueNoteAudioPkey *UniqueConstraintError
+
+	ErrUniqueNoteAudioIdUnique *UniqueConstraintError
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -30,7 +30,7 @@ type Water struct {
 func (sr Water) PublicReportID() string {
 	return sr.publicReportID
 }
-func (sr Water) addNotificationEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
+func (sr Water) addNotificationEmail(ctx context.Context, txn bob.Executor, email string) *ErrorWithCode {
 	setter := models.PublicreportNotifyEmailWaterSetter{
 		Created:      omit.From(time.Now()),
 		Deleted:      omitnull.FromPtr[time.Time](nil),
@@ -44,11 +44,11 @@ func (sr Water) addNotificationEmail(ctx context.Context, txn bob.Tx, email stri
 	}
 	return nil
 }
-func (sr Water) addNotificationPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
+func (sr Water) addNotificationPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
 	setter := models.PublicreportNotifyPhoneWaterSetter{
 		Created:   omit.From(time.Now()),
 		Deleted:   omitnull.FromPtr[time.Time](nil),
-		PhoneE164: omit.From(text.PhoneString(phone)),
+		PhoneE164: omit.From(phone.PhoneString()),
 		WaterID:   omit.From(sr.id),
 	}
 	_, err := models.PublicreportNotifyPhoneWaters.Insert(&setter).Exec(ctx, txn)
@@ -77,22 +77,22 @@ func (sr Water) districtID(ctx context.Context) *int32 {
 func (sr Water) reportID() int32 {
 	return sr.id
 }
-func (sr Water) updateReporterConsent(ctx context.Context, txn bob.Tx, has_consent bool) *ErrorWithCode {
+func (sr Water) updateReporterConsent(ctx context.Context, txn bob.Executor, has_consent bool) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportWaterSetter{
 		ReporterContactConsent: omitnull.From(has_consent),
 	})
 }
-func (sr Water) updateReporterEmail(ctx context.Context, txn bob.Tx, email string) *ErrorWithCode {
+func (sr Water) updateReporterEmail(ctx context.Context, txn bob.Executor, email string) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportWaterSetter{
 		ReporterEmail: omit.From(email),
 	})
 }
-func (sr Water) updateReporterName(ctx context.Context, txn bob.Tx, name string) *ErrorWithCode {
+func (sr Water) updateReporterName(ctx context.Context, txn bob.Executor, name string) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportWaterSetter{
 		ReporterName: omit.From(name),
 	})
 }
-func (sr Water) updateReportCol(ctx context.Context, txn bob.Tx, setter *models.PublicreportWaterSetter) *ErrorWithCode {
+func (sr Water) updateReportCol(ctx context.Context, txn bob.Executor, setter *models.PublicreportWaterSetter) *ErrorWithCode {
 	err := sr.row.Update(ctx, txn, setter)
 	if err != nil {
 		log.Error().Err(err).Str("public_id", sr.publicReportID).Int32("report_id", sr.id).Msg("Failed to update report")
@@ -100,9 +100,9 @@ func (sr Water) updateReportCol(ctx context.Context, txn bob.Tx, setter *models.
 	}
 	return nil
 }
-func (sr Water) updateReporterPhone(ctx context.Context, txn bob.Tx, phone text.E164) *ErrorWithCode {
+func (sr Water) updateReporterPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
 	return sr.updateReportCol(ctx, txn, &models.PublicreportWaterSetter{
-		ReporterPhone: omit.From(text.PhoneString(phone)),
+		ReporterPhone: omit.From(phone.PhoneString()),
 	})
 }
 func newWater(ctx context.Context, public_id string, report_id int32) (Water, *ErrorWithCode) {

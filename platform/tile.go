@@ -18,7 +18,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
 	"github.com/rs/zerolog/log"
 )
@@ -152,7 +151,7 @@ func ImageAtTile(ctx context.Context, org *models.Organization, level, y, x uint
 	if err != nil {
 		return nil, fmt.Errorf("get oauth for org: %w", err)
 	}
-	fssync, err := background.NewFieldSeeker(
+	fssync, err := newFieldSeeker(
 		ctx,
 		oauth,
 	)
@@ -210,7 +209,7 @@ func getFieldseeker(ctx context.Context, org *models.Organization) (*fieldseeker
 	if err != nil {
 		return nil, fmt.Errorf("get oauth for org: %w", err)
 	}
-	fssync, err = background.NewFieldSeeker(
+	fssync, err = newFieldSeeker(
 		ctx,
 		oauth,
 	)

@@ -41,10 +41,10 @@ type UploadSummary struct {
 	Type        string    `db:"type"`
 }
 
-func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.FileuploadCsvtype) (Upload, error) {
+func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.FileuploadCsvtype) (*Upload, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
-		return Upload{}, fmt.Errorf("Failed to begin transaction: %w", err)
+		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
@@ -60,7 +60,7 @@ func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.File
 		FileUUID:       omit.From(upload.UUID),
 	}).One(ctx, txn)
 	if err != nil {
-		return Upload{}, fmt.Errorf("Failed to create file upload: %w", err)
+		return nil, fmt.Errorf("Failed to create file upload: %w", err)
 	}
 	_, err = models.FileuploadCSVS.Insert(&models.FileuploadCSVSetter{
 		Committed: omitnull.FromPtr[time.Time](nil),
@@ -69,27 +69,38 @@ func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.File
 		Type:      omit.From(t),
 	}).One(ctx, txn)
 	if err != nil {
-		return Upload{}, fmt.Errorf("Failed to create csv: %w", err)
+		return nil, fmt.Errorf("Failed to create csv: %w", err)
 	}
 	log.Info().Int32("id", file.ID).Msg("Created new pool CSV upload")
+	err = background.NewCSVImport(ctx, txn, file.ID)
+	if err != nil {
+		return nil, fmt.Errorf("background job create: %w", err)
+	}
 	txn.Commit(ctx)
-	background.ProcessUpload(file.ID, t)
-	return Upload{
+	return &Upload{
 		ID: file.ID,
 	}, nil
 }
 func UploadCommit(ctx context.Context, org Organization, file_id int32, committer User) error {
-	// Create addresses for each row
-	// Create sites for each row
-	// Create pools for each row
-	_, err := psql.Update(
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("Failed to begin transaction: %w", err)
+	}
+	defer txn.Rollback(ctx)
+
+	_, err = psql.Update(
 		um.Table(models.FileuploadFiles.Alias()),
 		um.SetCol("status").ToArg("committing"),
 		um.SetCol("committer").ToArg(committer.ID),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
-	).Exec(ctx, db.PGInstance.BobDB)
-	background.CommitUpload(file_id)
+	).Exec(ctx, txn)
+	err = background.NewCSVCommit(ctx, txn, file_id)
+	if err != nil {
+		return fmt.Errorf("update upload: %w", err)
+	}
+	err = txn.Commit(ctx)
+
 	return err
 }
 func UploadDiscard(ctx context.Context, org Organization, file_id int32) error {

@@ -32,12 +32,7 @@ import (
 type csvParserFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV) ([]T, error)
 type csvProcessorFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV, []T) error
 
-func JobCommit(ctx context.Context, file_id int32) error {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to start transaction: %w", err)
-	}
-
+func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 	file, err := models.FindFileuploadFile(ctx, txn, file_id)
 	if err != nil {
 		return fmt.Errorf("Failed to get csv file %d from DB: %w", file_id, err)
@@ -165,12 +160,17 @@ func JobCommit(ctx context.Context, file_id int32) error {
 			}).One(ctx, txn)
 		*/
 	}
-	txn.Commit(ctx)
 	return nil
 }
-func JobImport(ctx context.Context, file_id int32, type_ enums.FileuploadCsvtype) error {
-	var err error
-	switch type_ {
+func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
+	csv, err := models.FileuploadCSVS.Query(
+		models.SelectWhere.FileuploadCSVS.FileID.EQ(file_id),
+	).One(ctx, txn)
+	if err != nil {
+		return fmt.Errorf("find csv: %w", err)
+	}
+
+	switch csv.Type {
 	case enums.FileuploadCsvtypePoollist:
 		err = importCSV(ctx, file_id, parseCSVPoollist, processCSVPoollist)
 	case enums.FileuploadCsvtypeFlyover:

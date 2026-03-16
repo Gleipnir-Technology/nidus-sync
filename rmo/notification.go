@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,7 +27,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 	phone_str := r.PostFormValue("phone")
 	report_id := r.PostFormValue("report_id")
 
-	var phone *text.E164
+	var phone *types.E164
 	if phone_str != "" {
 		phone, err = text.ParsePhoneNumber(phone_str)
 		if err != nil {

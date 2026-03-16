@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -10,16 +11,14 @@ import (
 )
 
 func NoteAudioCreate(ctx context.Context, user User, setter models.NoteAudioSetter) error {
-	err := user.Organization.model.InsertNoteAudios(ctx, db.PGInstance.BobDB, &setter)
-	if err == nil {
-		return nil
+	_, err := models.Organizations.Insert(&setter).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		// Just ignore this failure, it means we already have this content
+		if err.Error() != "insertOrganizationNoteAudios0: ERROR: duplicate key value violates unique constraint \"note_audio_pkey\" (SQLSTATE 23505)" {
+			return fmt.Errorf("create note_audio: %w", err)
+		}
 	}
-	// Just ignore this failure, it means we already have this content
-	if err.Error() == "insertOrganizationNoteAudios0: ERROR: duplicate key value violates unique constraint \"note_audio_pkey\" (SQLSTATE 23505)" {
-		return nil
-	}
-	log.Warn().Err(err).Msg("Unrecognized error creating note audio")
-	return err
+	return nil
 }
 
 func NoteAudioNormalized(uuid string) error {

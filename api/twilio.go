@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -139,7 +140,12 @@ func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go text.HandleTextMessage(src, dst, body)
+	go func() {
+		err := text.HandleTextMessage(context.Background(), src, dst, body)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to handle Twilio incoming text")
+		}
+	}()
 	w.Header().Set("Content-Type", "text/xml")
 	fmt.Fprintf(w, "%s", twiml)
 }
