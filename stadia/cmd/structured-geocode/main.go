@@ -65,7 +65,7 @@ func main() {
 
 	client := stadia.NewStadiaMaps(key)
 	ctx := context.Background()
-	req := stadia.StructuredGeocodeRequest{
+	req := stadia.RequestGeocodeStructured{
 		Address:    address,
 		PostalCode: postalCode,
 	}

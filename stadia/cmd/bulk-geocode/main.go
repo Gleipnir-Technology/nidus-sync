@@ -15,11 +15,11 @@ func main() {
 	}
 	client := stadia.NewStadiaMaps(key)
 	requests := make([]stadia.BulkGeocodeQuery, 0)
-	requests = append(requests, stadia.StructuredGeocodeRequest{
+	requests = append(requests, stadia.RequestGeocodeStructured{
 		Address:    strPtr("12932 Ave 404"),
 		PostalCode: strPtr("93615"),
 	})
-	requests = append(requests, stadia.StructuredGeocodeRequest{
+	requests = append(requests, stadia.RequestGeocodeStructured{
 		Address:    strPtr("1187 N Arno Rd"),
 		PostalCode: strPtr("93618"),
 	})
