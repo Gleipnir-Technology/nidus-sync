@@ -129,12 +129,25 @@ func respondText(ctx context.Context, txn bob.Executor, log_id int32) error {
 		return nil
 	}
 	// If we've got an open public report from this phone number then we'll let the district respond
-	report, err := reportForTextRecipient(ctx, txn, *src)
+	reports, err := reportsForTextRecipient(ctx, txn, *src)
 	if err != nil {
 		return fmt.Errorf("has open report: %w", err)
 	}
-	if report != nil {
+	for _, report := range reports {
+		models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
+			Created:    omit.From(time.Now()),
+			EmailLogID: omitnull.FromPtr[int32](nil),
+			// ID
+			ReportID:  omit.From(report.ID),
+			TextLogID: omitnull.From(log_id),
+			Type:      omit.From(enums.PublicreportReportlogtypeMessageText),
+			UserID:    omitnull.FromPtr[int32](nil),
+		}).One(ctx, txn)
 		event.Updated(event.TypeRMOReport, report.OrganizationID, report.PublicID)
+	}
+	// If humans are involved, wait for them.
+	if len(reports) > 0 {
+		return nil
 	}
 	// Otherwise let the LLM handle the response
 	return respondTextLLM(ctx, txn, *src)

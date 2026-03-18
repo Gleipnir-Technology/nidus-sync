@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
 )
@@ -125,14 +126,11 @@ func sendTextComplete(ctx context.Context, txn bob.Executor, job *models.CommsTe
 			return fmt.Errorf("Failed to ensure initial text has been sent: %w", err)
 		}
 		return nil
-	case enums.CommsPhonestatustypeOkToSend:
-		_, err = sendTextDirect(ctx, txn, origin, dst.PhoneString(), job.Content, true, false)
-		if err != nil {
-			return fmt.Errorf("Failed to send report subscription confirmation: %w", err)
-		}
-		return nil
+	//case enums.CommsPhonestatustypeOkToSend:
+	// allow to drop through
 	case enums.CommsPhonestatustypeStopped:
 		resendInitialText(ctx, txn, *dst)
+		return nil
 	}
 	text_log, err := sendTextDirect(ctx, txn, origin, job.Destination, job.Content, true, false)
 	if err != nil {
@@ -145,14 +143,33 @@ func sendTextComplete(ctx context.Context, txn bob.Executor, job *models.CommsTe
 		return fmt.Errorf("update job: %w", err)
 	}
 	if job.ReportID.IsValue() {
+		creator_id := job.CreatorID.MustGet()
+		report_id := job.ReportID.MustGet()
+		log.Debug().Int32("creator", creator_id).Int32("report_id", report_id).Msg("Creating report entries for text message")
 		_, err := models.ReportTexts.Insert(&models.ReportTextSetter{
-			CreatorID: omit.From(job.CreatorID.MustGet()),
-			ReportID:  omit.From(job.ReportID.MustGet()),
+			CreatorID: omit.From(creator_id),
+			ReportID:  omit.From(report_id),
 			TextLogID: omit.From(text_log.ID),
 		}).One(ctx, txn)
 		if err != nil {
 			return fmt.Errorf("insert report_text: %w", err)
 		}
+		models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
+			Created:    omit.From(time.Now()),
+			EmailLogID: omitnull.FromPtr[int32](nil),
+			// ID
+			ReportID:  omit.From(report_id),
+			TextLogID: omitnull.From(text_log.ID),
+			Type:      omit.From(enums.PublicreportReportlogtypeMessageText),
+			UserID:    omitnull.From(creator_id),
+		}).One(ctx, txn)
+		report, err := models.FindPublicreportReport(ctx, txn, report_id)
+		if err != nil {
+			return fmt.Errorf("find public report: %w", err)
+		}
+		event.Updated(event.TypeRMOReport, report.OrganizationID, report.PublicID)
+	} else {
+		log.Debug().Msg("no report info on text")
 	}
 	return nil
 }

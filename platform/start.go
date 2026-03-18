@@ -169,7 +169,7 @@ func listenAndDoOneJob(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to parse int from payload '%s': %w", notification.Payload, err)
 		}
-		log.Debug().Int("job_id", job_id).Msg("got notification for job")
+		//log.Debug().Int("job_id", job_id).Msg("got notification for job")
 
 		c := bobpgx.NewConn(conn.Conn())
 		job, err := models.FindJob(ctx, c, int32(job_id))
@@ -199,6 +199,6 @@ func listenAndDoOneJob(ctx context.Context) error {
 			return fmt.Errorf("delete job: %w", err)
 		}
 		txn.Commit(ctx)
-		sublog.Debug().Msg("job complete")
+		//sublog.Debug().Msg("job complete")
 	}
 }

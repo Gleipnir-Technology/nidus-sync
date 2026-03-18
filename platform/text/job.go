@@ -7,7 +7,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 func JobRespond(ctx context.Context, txn bob.Executor, log_id int32) error {
@@ -18,7 +18,7 @@ func JobSend(ctx context.Context, txn bob.Executor, job_id int32) error {
 	if err != nil {
 		return fmt.Errorf("find text: %w", err)
 	}
-	log.Debug().Int32("job.id", job.ID).Msg("completing text job")
+	//log.Debug().Int32("job.id", job.ID).Msg("completing text job")
 	return sendTextComplete(ctx, txn, job)
 }
 func handleWaitingTextJobs(ctx context.Context, txn bob.Executor, dst types.E164) error {

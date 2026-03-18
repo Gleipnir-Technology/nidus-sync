@@ -32,6 +32,7 @@ func logEntriesByReportID(ctx context.Context, report_ids []int32) (map[int32][]
 		sm.Columns(
 			"l.created",
 			"l.id",
+			"COALESCE(t.content, '') AS message",
 			"l.report_id",
 			"l.type_",
 			"l.user_id",

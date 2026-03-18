@@ -237,15 +237,6 @@
 						throw new Error(`HTTP error! status: ${response.status}`);
 					}
 
-					// Add to activity log
-					if (!this.selectedCommunication.history) {
-						this.selectedCommunication.history = [];
-					}
-					this.selectedCommunication.history.push({
-						action: "Message sent to reporter",
-						timestamp: new Date(),
-					});
-
 					this.showNotification(
 						"Message Sent",
 						`Message successfully sent to ${this.selectedCommunication.public_report.reporter.name}`,
@@ -844,19 +835,38 @@
 									<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
 									<div class="small">
 										<template
-											x-for="activity in selectedCommunication.history || []"
-											:key="activity.timestamp"
+											x-for="entry in selectedCommunication.public_report.log || []"
+											:key="entry.created"
 										>
 											<div class="border-start border-2 ps-2 mb-2">
-												<div class="text-muted" x-text="activity.action"></div>
-												<small
-													class="text-muted"
-													x-text="formatDate(activity.timestamp)"
-												></small>
+												<template x-if="entry.type == 'created'">
+													<div>
+														<div class="text-muted">Initial Report</div>
+														<small
+															class="text-muted"
+															x-text="formatDate(entry.created)"
+														></small>
+													</div>
+												</template>
+												<template x-if="entry.type == 'message-text'">
+													<div>
+														<div class="text-muted">Text Message</div>
+														<div x-text="entry.message"></div>
+														<small
+															class="text-muted"
+															x-text="formatDate(entry.created)"
+														></small>
+													</div>
+												</template>
+												<template
+													x-if="!(entry.type == 'created' || entry.type == 'message-text')"
+												>
+													<div x-text="entry.type"></div>
+												</template>
 											</div>
 										</template>
 										<template
-											x-if="!selectedCommunication.history || selectedCommunication.history.length === 0"
+											x-if="!selectedCommunication.public_report.log || selectedCommunication.public_report.log.length === 0"
 										>
 											<div class="text-muted">No activity yet</div>
 										</template>

@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -50,6 +51,9 @@ type QueryReportStatusInput struct {
 var client *openAIClient
 
 func (c *openAIClient) continueConversation(ctx context.Context, tools genai.OptionsTools, msg genai.Message) (Message, error) {
+	if c.client == nil {
+		return Message{}, errors.New("Client not initialized")
+	}
 	res, _, err := adapters.GenSyncWithToolCallLoop(ctx, c.client, genai.Messages{msg}, &tools)
 	if err != nil {
 		return Message{}, fmt.Errorf("Failed to continue conversation: %v", err)

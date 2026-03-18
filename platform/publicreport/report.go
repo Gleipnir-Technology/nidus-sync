@@ -18,6 +18,7 @@ import (
 )
 
 type Report struct {
+	Log        []LogEntry     `db:"-" json:"log"`
 	Address    types.Address  `db:"address" json:"address"`
 	AddressRaw string         `db:"address_raw" json:"address_raw"`
 	Created    time.Time      `db:"created" json:"created"`
@@ -31,7 +32,7 @@ type Report struct {
 	Water      *Water         `db:"water" json:"water"`
 }
 
-func ReportsForOrganization(ctx context.Context, org_id int32) ([]Report, error) {
+func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"address_country AS \"address.country\"",
@@ -67,6 +68,10 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]Report, error)
 	if err != nil {
 		return nil, fmt.Errorf("images for report: %w", err)
 	}
+	logs_by_report_id, err := logEntriesByReportID(ctx, report_ids)
+	if err != nil {
+		return nil, fmt.Errorf("log entries for reports: %w", err)
+	}
 	nuisances_by_report_id, err := nuisancesByReportID(ctx, report_ids)
 	if err != nil {
 		return nil, fmt.Errorf("nuisances: %w", err)
@@ -76,17 +81,20 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]Report, error)
 		return nil, fmt.Errorf("waters: %w", err)
 	}
 
-	for _, row := range rows {
+	results := make([]*Report, len(rows))
+	for i, row := range rows {
 		images, ok := images_by_id[row.ID]
 		if ok {
 			row.Images = images
 		} else {
 			row.Images = []types.Image{}
 		}
+		row.Log = logs_by_report_id[row.ID]
 		row.Nuisance = nuisances_by_report_id[row.ID]
 		row.Water = waters_by_report_id[row.ID]
+		results[i] = &row
 	}
-	return rows, nil
+	return results, nil
 }
 func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error) {
 	type _Row struct {
