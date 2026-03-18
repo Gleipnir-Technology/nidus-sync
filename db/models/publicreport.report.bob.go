@@ -48,7 +48,7 @@ type PublicreportReport struct {
 	ReporterEmail          string                             `db:"reporter_email" `
 	ReporterPhone          string                             `db:"reporter_phone" `
 	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
-	ReportType             string                             `db:"report_type" `
+	ReportType             enums.PublicreportReporttype       `db:"report_type" `
 	Reviewed               null.Val[time.Time]                `db:"reviewed" `
 	ReviewerID             null.Val[int32]                    `db:"reviewer_id" `
 	Status                 enums.PublicreportReportstatustype `db:"status" `
@@ -178,7 +178,7 @@ type PublicreportReportSetter struct {
 	ReporterEmail          omit.Val[string]                             `db:"reporter_email" `
 	ReporterPhone          omit.Val[string]                             `db:"reporter_phone" `
 	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
-	ReportType             omit.Val[string]                             `db:"report_type" `
+	ReportType             omit.Val[enums.PublicreportReporttype]       `db:"report_type" `
 	Reviewed               omitnull.Val[time.Time]                      `db:"reviewed" `
 	ReviewerID             omitnull.Val[int32]                          `db:"reviewer_id" `
 	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
@@ -1859,7 +1859,7 @@ type publicreportReportWhere[Q psql.Filterable] struct {
 	ReporterEmail          psql.WhereMod[Q, string]
 	ReporterPhone          psql.WhereMod[Q, string]
 	ReporterContactConsent psql.WhereNullMod[Q, bool]
-	ReportType             psql.WhereMod[Q, string]
+	ReportType             psql.WhereMod[Q, enums.PublicreportReporttype]
 	Reviewed               psql.WhereNullMod[Q, time.Time]
 	ReviewerID             psql.WhereNullMod[Q, int32]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
@@ -1892,7 +1892,7 @@ func buildPublicreportReportWhere[Q psql.Filterable](cols publicreportReportColu
 		ReporterEmail:          psql.Where[Q, string](cols.ReporterEmail),
 		ReporterPhone:          psql.Where[Q, string](cols.ReporterPhone),
 		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
-		ReportType:             psql.Where[Q, string](cols.ReportType),
+		ReportType:             psql.Where[Q, enums.PublicreportReporttype](cols.ReportType),
 		Reviewed:               psql.WhereNull[Q, time.Time](cols.Reviewed),
 		ReviewerID:             psql.WhereNull[Q, int32](cols.ReviewerID),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),

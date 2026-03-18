@@ -163,6 +163,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		ReporterEmail: omit.From(""),
 		ReporterName:  omit.From(""),
 		ReporterPhone: omit.From(""),
+		ReportType:    omit.From(enums.PublicreportReporttypeNuisance),
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	setter_nuisance := models.PublicreportNuisanceSetter{
@@ -183,6 +184,6 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		TodEvening:        omit.From(tod_evening),
 		TodNight:          omit.From(tod_night),
 	}
-	public_id, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, latlng, address, uploads)
-	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
+	report, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, latlng, address, uploads)
+	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", report.PublicID), http.StatusFound)
 }

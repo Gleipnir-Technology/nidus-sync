@@ -107,6 +107,8 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		AddressRegion:     omit.From(address_region),
 		Created:           omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
+		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
+		LatlngAccuracyValue: omit.From(float32(latlng.AccuracyValue)),
 		//Location: add later
 		MapZoom: omit.From(latlng.MapZoom),
 		//OrganizationID: omitnull.FromPtr(organization_id),
@@ -114,6 +116,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		ReporterEmail: omit.From(""),
 		ReporterName:  omit.From(""),
 		ReporterPhone: omit.From(""),
+		ReportType:    omit.From(enums.PublicreportReporttypeWater),
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	setter_water := models.PublicreportWaterSetter{
@@ -135,12 +138,12 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		OwnerPhone:             omit.From(owner_phone),
 		//ReportID               omit.Val[int32]
 	}
-	public_id, err := platform.ReportWaterCreate(ctx, setter_report, setter_water, latlng, address, uploads)
+	report, err := platform.ReportWaterCreate(ctx, setter_report, setter_water, latlng, address, uploads)
 	if err != nil {
 		respondError(w, "Failed to save new report", err, http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", report.PublicID), http.StatusFound)
 }
 func postWaterDistrict(w http.ResponseWriter, r *http.Request) {
 }

@@ -206,7 +206,7 @@ var PublicreportReports = Table[
 		},
 		ReportType: column{
 			Name:      "report_type",
-			DBType:    "text",
+			DBType:    "publicreport.reporttype",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -318,16 +318,7 @@ var PublicreportReports = Table[
 			Comment: "",
 		},
 	},
-	Checks: publicreportReportChecks{
-		ReportReportTypeCheck: check{
-			constraint: constraint{
-				Name:    "report_report_type_check",
-				Columns: []string{"report_type"},
-				Comment: "",
-			},
-			Expression: "(report_type = ANY (ARRAY['nuisance'::text, 'water'::text]))",
-		},
-	},
+
 	Comment: "",
 }
 
@@ -398,12 +389,8 @@ func (u publicreportReportUniques) AsSlice() []constraint {
 	}
 }
 
-type publicreportReportChecks struct {
-	ReportReportTypeCheck check
-}
+type publicreportReportChecks struct{}
 
 func (c publicreportReportChecks) AsSlice() []check {
-	return []check{
-		c.ReportReportTypeCheck,
-	}
+	return []check{}
 }

@@ -2136,6 +2136,79 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 	return nil
 }
 
+// Enum values for PublicreportReporttype
+const (
+	PublicreportReporttypeNuisance PublicreportReporttype = "nuisance"
+	PublicreportReporttypeWater    PublicreportReporttype = "water"
+)
+
+func AllPublicreportReporttype() []PublicreportReporttype {
+	return []PublicreportReporttype{
+		PublicreportReporttypeNuisance,
+		PublicreportReporttypeWater,
+	}
+}
+
+type PublicreportReporttype string
+
+func (e PublicreportReporttype) String() string {
+	return string(e)
+}
+
+func (e PublicreportReporttype) Valid() bool {
+	switch e {
+	case PublicreportReporttypeNuisance,
+		PublicreportReporttypeWater:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportReporttype) All() []PublicreportReporttype {
+	return AllPublicreportReporttype()
+}
+
+func (e PublicreportReporttype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReporttype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportReporttype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReporttype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportReporttype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportReporttype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportReporttype(x)
+	case []byte:
+		*e = PublicreportReporttype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportReporttype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportReporttype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for Reviewtaskresolutiontype
 const (
 	ReviewtaskresolutiontypeCommitted Reviewtaskresolutiontype = "committed"
