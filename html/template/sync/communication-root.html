@@ -358,18 +358,18 @@
 									class="d-flex justify-content-between align-items-center mb-2"
 								>
 									<div class="d-flex align-items-center">
-										<template x-if="comm.type === 'nuisance'">
+										<template x-if="comm.type === 'publicreport.nuisance'">
 											<i class="bi fs-4 me-2">{{ template "mosquito.svg" }}</i>
 										</template>
-										<template x-if="comm.type === 'standing_water'">
+										<template x-if="comm.type === 'publicreport.water'">
 											<i
 												class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
 											></i>
 										</template>
 										<span
 											class="badge"
-											:class="comm.type === 'nuisance' ? 'bg-danger' : 'bg-info'"
-											x-text="comm.type === 'nuisance' ? 'Nuisance' : 'Standing Water'"
+											:class="comm.type === 'publicreport.nuisance' ? 'bg-danger' : 'bg-info'"
+											x-text="comm.type === 'publicreport.nuisance' ? 'Nuisance' : 'Standing Water'"
 										></span>
 									</div>
 									<small
@@ -447,7 +447,7 @@
 									<div>
 										<h5 class="mb-1">
 											<template
-												x-if="selectedCommunication.type === 'nuisance'"
+												x-if="selectedCommunication.type === 'publicreport.nuisance'"
 											>
 												<span
 													><i class="bi icon-nuisance"
@@ -457,7 +457,7 @@
 												>
 											</template>
 											<template
-												x-if="selectedCommunication.type === 'standing_water'"
+												x-if="selectedCommunication.type === 'publicreport.water'"
 											>
 												<span
 													><i
@@ -523,7 +523,9 @@
 								</div>
 
 								<!-- Nuisance-specific Fields -->
-								<template x-if="selectedCommunication.type === 'nuisance'">
+								<template
+									x-if="selectedCommunication.type === 'publicreport.nuisance'"
+								>
 									<div class="card mb-3">
 										<div class="card-header bg-danger bg-opacity-10">
 											<i class="bi bi-exclamation-triangle"></i> Nuisance
@@ -634,7 +636,7 @@
 
 								<!-- Standing Water-specific Fields -->
 								<template
-									x-if="selectedCommunication.type === 'standing_water'"
+									x-if="selectedCommunication.type === 'publicreport.water'"
 								>
 									<div class="card mb-3">
 										<div class="card-header bg-info bg-opacity-10">
