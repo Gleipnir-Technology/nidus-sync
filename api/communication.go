@@ -36,7 +36,7 @@ func listCommunication(ctx context.Context, r *http.Request, user platform.User,
 			Created:      report.Created,
 			ID:           report.PublicID,
 			PublicReport: report,
-			Type:         "nuisance",
+			Type:         "publicreport." + string(report.Type),
 		}
 	}
 	_by_created := func(a, b communication) int {

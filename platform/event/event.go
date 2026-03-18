@@ -106,6 +106,8 @@ func resourceString(t ResourceType) string {
 	switch t {
 	case TypeRMONuisance:
 		return "rmo:nuisance"
+	case TypeRMOReport:
+		return "rmo:report"
 	case TypeRMOWater:
 		return "rmo:water"
 	default:

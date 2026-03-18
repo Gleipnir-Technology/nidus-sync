@@ -29,6 +29,7 @@ type Report struct {
 	PublicID   string         `db:"public_id" json:"public_id"`
 	Reporter   types.Contact  `db:"reporter" json:"reporter"`
 	Status     string         `db:"status" json:"status"`
+	Type       string         `db:"report_type" json:"type"`
 	Water      *Water         `db:"water" json:"water"`
 }
 
@@ -47,6 +48,7 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error
 			"ST_Y(location::geometry::geometry(point, 4326)) AS \"location.latitude\"",
 			"ST_X(location::geometry::geometry(point, 4326)) AS \"location.longitude\"",
 			"public_id",
+			"report_type",
 			"reporter_email AS \"reporter.email\"",
 			"reporter_name AS \"reporter.name\"",
 			"reporter_phone AS \"reporter.phone\"",
