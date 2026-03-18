@@ -43,7 +43,7 @@ CREATE TABLE publicreport.report (
 
 -- Insert nuisance reports into the report table
 INSERT INTO publicreport.report (
-	id,
+	--id,
 	public_id,
 	created,
 	status,
@@ -70,7 +70,7 @@ INSERT INTO publicreport.report (
 	report_type
 )
 SELECT 
-	id,
+	--id,
 	public_id,
 	created,
 	status,
@@ -99,7 +99,7 @@ FROM publicreport.nuisance;
 
 -- Insert water reports into the report table
 INSERT INTO publicreport.report (
-	id,
+	--id,
 	public_id,
 	created,
 	status,
@@ -126,7 +126,7 @@ INSERT INTO publicreport.report (
 	report_type
 )
 SELECT 
-	id,
+	--id,
 	public_id,
 	created,
 	status,
@@ -221,23 +221,24 @@ INSERT INTO publicreport.nuisance (
 	tod_night
 )
 SELECT 
-	id,
-	additional_info,
-	duration,
-	source_container,
-	source_description,
-	source_stagnant,
-	source_gutter,
-	is_location_backyard,
-	is_location_frontyard,
-	is_location_garden,
-	is_location_other,
-	is_location_pool,
-	tod_early,
-	tod_day,
-	tod_evening,
-	tod_night
-FROM publicreport.nuisance_old;
+	r.id,
+	n.additional_info,
+	n.duration,
+	n.source_container,
+	n.source_description,
+	n.source_stagnant,
+	n.source_gutter,
+	n.is_location_backyard,
+	n.is_location_frontyard,
+	n.is_location_garden,
+	n.is_location_other,
+	n.is_location_pool,
+	n.tod_early,
+	n.tod_day,
+	n.tod_evening,
+	n.tod_night
+FROM publicreport.nuisance_old n
+JOIN publicreport.report r ON r.public_id = n.public_id AND r.report_type = 'nuisance';
 
 -- Migrate water-specific data
 INSERT INTO publicreport.water (
@@ -260,24 +261,25 @@ INSERT INTO publicreport.water (
 	is_reporter_owner
 )
 SELECT 
-	id,
-	access_comments,
-	access_gate,
-	access_fence,
-	access_locked,
-	access_dog,
-	access_other,
-	comments,
-	has_adult,
-	has_larvae,
-	has_pupae,
-	owner_email,
-	owner_name,
-	owner_phone,
-	has_backyard_permission,
-	is_reporter_confidential,
-	is_reporter_owner
-FROM publicreport.water_old;
+	r.id,
+	w.access_comments,
+	w.access_gate,
+	w.access_fence,
+	w.access_locked,
+	w.access_dog,
+	w.access_other,
+	w.comments,
+	w.has_adult,
+	w.has_larvae,
+	w.has_pupae,
+	w.owner_email,
+	w.owner_name,
+	w.owner_phone,
+	w.has_backyard_permission,
+	w.is_reporter_confidential,
+	w.is_reporter_owner
+FROM publicreport.water_old w
+JOIN publicreport.report r ON r.public_id = w.public_id AND r.report_type = 'water';
 
 -- Create new unified report_image junction table
 CREATE TABLE publicreport.report_image (
