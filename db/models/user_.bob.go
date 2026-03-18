@@ -57,6 +57,7 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 type userR struct {
 	UserOauthTokens                 ArcgisOauthTokenSlice        // arcgis.oauth_token.oauth_token_user_id_fkey
 	PublicUserUser                  ArcgisUserSlice              // arcgis.user_.user__public_user_id_fkey
+	CreatorTextJobs                 CommsTextJobSlice            // comms.text_job.text_job_creator_id_fkey
 	CreatorComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
 	CreatorFeatures                 FeatureSlice                 // feature.feature_creator_id_fkey
 	CommitterFiles                  FileuploadFileSlice          // fileupload.file.file_committer_fkey
@@ -68,8 +69,10 @@ type userR struct {
 	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
 	DeletorNoteImages               NoteImageSlice               // note_image.note_image_deletor_id_fkey
 	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
-	ReviewerNuisances               PublicreportNuisanceSlice    // publicreport.nuisance.nuisance_reviewer_id_fkey
-	ReviewerWaters                  PublicreportWaterSlice       // publicreport.water.water_reviewer_id_fkey
+	ReviewerNuisanceOlds            PublicreportNuisanceOldSlice // publicreport.nuisance_old.nuisance_reviewer_id_fkey
+	ReviewerReports                 PublicreportReportSlice      // publicreport.report.report_reviewer_id_fkey
+	ReviewerWaterOlds               PublicreportWaterOldSlice    // publicreport.water_old.water_reviewer_id_fkey
+	CreatorReportTexts              ReportTextSlice              // report_text.report_text_creator_id_fkey
 	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
 	CreatorReviewTasks              ReviewTaskSlice              // review_task.review_task_creator_id_fkey
 	ReviewerReviewTasks             ReviewTaskSlice              // review_task.review_task_reviewer_id_fkey
@@ -693,6 +696,30 @@ func (os UserSlice) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) Arcgis
 	)...)
 }
 
+// CreatorTextJobs starts a query for related objects on comms.text_job
+func (o *User) CreatorTextJobs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextJobsQuery {
+	return CommsTextJobs.Query(append(mods,
+		sm.Where(CommsTextJobs.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorTextJobs(mods ...bob.Mod[*dialect.SelectQuery]) CommsTextJobsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return CommsTextJobs.Query(append(mods,
+		sm.Where(psql.Group(CommsTextJobs.Columns.CreatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // CreatorComplianceReportRequests starts a query for related objects on compliance_report_request
 func (o *User) CreatorComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
 	return ComplianceReportRequests.Query(append(mods,
@@ -957,14 +984,14 @@ func (os UserSlice) UserNotifications(mods ...bob.Mod[*dialect.SelectQuery]) Not
 	)...)
 }
 
-// ReviewerNuisances starts a query for related objects on publicreport.nuisance
-func (o *User) ReviewerNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
-	return PublicreportNuisances.Query(append(mods,
-		sm.Where(PublicreportNuisances.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
+// ReviewerNuisanceOlds starts a query for related objects on publicreport.nuisance_old
+func (o *User) ReviewerNuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
+	return PublicreportNuisanceOlds.Query(append(mods,
+		sm.Where(PublicreportNuisanceOlds.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os UserSlice) ReviewerNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+func (os UserSlice) ReviewerNuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -976,19 +1003,19 @@ func (os UserSlice) ReviewerNuisances(mods ...bob.Mod[*dialect.SelectQuery]) Pub
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportNuisances.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNuisances.Columns.ReviewerID).OP("IN", PKArgExpr)),
+	return PublicreportNuisanceOlds.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNuisanceOlds.Columns.ReviewerID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// ReviewerWaters starts a query for related objects on publicreport.water
-func (o *User) ReviewerWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
-	return PublicreportWaters.Query(append(mods,
-		sm.Where(PublicreportWaters.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
+// ReviewerReports starts a query for related objects on publicreport.report
+func (o *User) ReviewerReports(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.Where(PublicreportReports.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os UserSlice) ReviewerWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
+func (os UserSlice) ReviewerReports(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -1000,8 +1027,56 @@ func (os UserSlice) ReviewerWaters(mods ...bob.Mod[*dialect.SelectQuery]) Public
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportWaters.Query(append(mods,
-		sm.Where(psql.Group(PublicreportWaters.Columns.ReviewerID).OP("IN", PKArgExpr)),
+	return PublicreportReports.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReports.Columns.ReviewerID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ReviewerWaterOlds starts a query for related objects on publicreport.water_old
+func (o *User) ReviewerWaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWaterOldsQuery {
+	return PublicreportWaterOlds.Query(append(mods,
+		sm.Where(PublicreportWaterOlds.Columns.ReviewerID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) ReviewerWaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWaterOldsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportWaterOlds.Query(append(mods,
+		sm.Where(psql.Group(PublicreportWaterOlds.Columns.ReviewerID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// CreatorReportTexts starts a query for related objects on report_text
+func (o *User) CreatorReportTexts(mods ...bob.Mod[*dialect.SelectQuery]) ReportTextsQuery {
+	return ReportTexts.Query(append(mods,
+		sm.Where(ReportTexts.Columns.CreatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) CreatorReportTexts(mods ...bob.Mod[*dialect.SelectQuery]) ReportTextsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return ReportTexts.Query(append(mods,
+		sm.Where(psql.Group(ReportTexts.Columns.CreatorID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1304,6 +1379,74 @@ func (user0 *User) AttachPublicUserUser(ctx context.Context, exec bob.Executor, 
 
 	for _, rel := range related {
 		rel.R.PublicUserUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, user0 *User) (CommsTextJobSlice, error) {
+	for i := range commsTextJobs1 {
+		commsTextJobs1[i].CreatorID = omitnull.From(user0.ID)
+	}
+
+	ret, err := CommsTextJobs.Insert(bob.ToMods(commsTextJobs1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorTextJobs0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorTextJobs0(ctx context.Context, exec bob.Executor, count int, commsTextJobs1 CommsTextJobSlice, user0 *User) (CommsTextJobSlice, error) {
+	setter := &CommsTextJobSetter{
+		CreatorID: omitnull.From(user0.ID),
+	}
+
+	err := commsTextJobs1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorTextJobs0: %w", err)
+	}
+
+	return commsTextJobs1, nil
+}
+
+func (user0 *User) InsertCreatorTextJobs(ctx context.Context, exec bob.Executor, related ...*CommsTextJobSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	commsTextJobs1, err := insertUserCreatorTextJobs0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorTextJobs = append(user0.R.CreatorTextJobs, commsTextJobs1...)
+
+	for _, rel := range commsTextJobs1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorTextJobs(ctx context.Context, exec bob.Executor, related ...*CommsTextJob) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	commsTextJobs1 := CommsTextJobSlice(related)
+
+	_, err = attachUserCreatorTextJobs0(ctx, exec, len(related), commsTextJobs1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorTextJobs = append(user0.R.CreatorTextJobs, commsTextJobs1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
 	}
 
 	return nil
@@ -2057,66 +2200,66 @@ func (user0 *User) AttachUserNotifications(ctx context.Context, exec bob.Executo
 	return nil
 }
 
-func insertUserReviewerNuisances0(ctx context.Context, exec bob.Executor, publicreportNuisances1 []*PublicreportNuisanceSetter, user0 *User) (PublicreportNuisanceSlice, error) {
-	for i := range publicreportNuisances1 {
-		publicreportNuisances1[i].ReviewerID = omitnull.From(user0.ID)
+func insertUserReviewerNuisanceOlds0(ctx context.Context, exec bob.Executor, publicreportNuisanceOlds1 []*PublicreportNuisanceOldSetter, user0 *User) (PublicreportNuisanceOldSlice, error) {
+	for i := range publicreportNuisanceOlds1 {
+		publicreportNuisanceOlds1[i].ReviewerID = omitnull.From(user0.ID)
 	}
 
-	ret, err := PublicreportNuisances.Insert(bob.ToMods(publicreportNuisances1...)).All(ctx, exec)
+	ret, err := PublicreportNuisanceOlds.Insert(bob.ToMods(publicreportNuisanceOlds1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertUserReviewerNuisances0: %w", err)
+		return ret, fmt.Errorf("insertUserReviewerNuisanceOlds0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachUserReviewerNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNuisances1 PublicreportNuisanceSlice, user0 *User) (PublicreportNuisanceSlice, error) {
-	setter := &PublicreportNuisanceSetter{
+func attachUserReviewerNuisanceOlds0(ctx context.Context, exec bob.Executor, count int, publicreportNuisanceOlds1 PublicreportNuisanceOldSlice, user0 *User) (PublicreportNuisanceOldSlice, error) {
+	setter := &PublicreportNuisanceOldSetter{
 		ReviewerID: omitnull.From(user0.ID),
 	}
 
-	err := publicreportNuisances1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNuisanceOlds1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachUserReviewerNuisances0: %w", err)
+		return nil, fmt.Errorf("attachUserReviewerNuisanceOlds0: %w", err)
 	}
 
-	return publicreportNuisances1, nil
+	return publicreportNuisanceOlds1, nil
 }
 
-func (user0 *User) InsertReviewerNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceSetter) error {
+func (user0 *User) InsertReviewerNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceOldSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNuisances1, err := insertUserReviewerNuisances0(ctx, exec, related, user0)
+	publicreportNuisanceOlds1, err := insertUserReviewerNuisanceOlds0(ctx, exec, related, user0)
 	if err != nil {
 		return err
 	}
 
-	user0.R.ReviewerNuisances = append(user0.R.ReviewerNuisances, publicreportNuisances1...)
+	user0.R.ReviewerNuisanceOlds = append(user0.R.ReviewerNuisanceOlds, publicreportNuisanceOlds1...)
 
-	for _, rel := range publicreportNuisances1 {
+	for _, rel := range publicreportNuisanceOlds1 {
 		rel.R.ReviewerUser = user0
 	}
 	return nil
 }
 
-func (user0 *User) AttachReviewerNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisance) error {
+func (user0 *User) AttachReviewerNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceOld) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNuisances1 := PublicreportNuisanceSlice(related)
+	publicreportNuisanceOlds1 := PublicreportNuisanceOldSlice(related)
 
-	_, err = attachUserReviewerNuisances0(ctx, exec, len(related), publicreportNuisances1, user0)
+	_, err = attachUserReviewerNuisanceOlds0(ctx, exec, len(related), publicreportNuisanceOlds1, user0)
 	if err != nil {
 		return err
 	}
 
-	user0.R.ReviewerNuisances = append(user0.R.ReviewerNuisances, publicreportNuisances1...)
+	user0.R.ReviewerNuisanceOlds = append(user0.R.ReviewerNuisanceOlds, publicreportNuisanceOlds1...)
 
 	for _, rel := range related {
 		rel.R.ReviewerUser = user0
@@ -2125,69 +2268,205 @@ func (user0 *User) AttachReviewerNuisances(ctx context.Context, exec bob.Executo
 	return nil
 }
 
-func insertUserReviewerWaters0(ctx context.Context, exec bob.Executor, publicreportWaters1 []*PublicreportWaterSetter, user0 *User) (PublicreportWaterSlice, error) {
-	for i := range publicreportWaters1 {
-		publicreportWaters1[i].ReviewerID = omitnull.From(user0.ID)
+func insertUserReviewerReports0(ctx context.Context, exec bob.Executor, publicreportReports1 []*PublicreportReportSetter, user0 *User) (PublicreportReportSlice, error) {
+	for i := range publicreportReports1 {
+		publicreportReports1[i].ReviewerID = omitnull.From(user0.ID)
 	}
 
-	ret, err := PublicreportWaters.Insert(bob.ToMods(publicreportWaters1...)).All(ctx, exec)
+	ret, err := PublicreportReports.Insert(bob.ToMods(publicreportReports1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertUserReviewerWaters0: %w", err)
+		return ret, fmt.Errorf("insertUserReviewerReports0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachUserReviewerWaters0(ctx context.Context, exec bob.Executor, count int, publicreportWaters1 PublicreportWaterSlice, user0 *User) (PublicreportWaterSlice, error) {
-	setter := &PublicreportWaterSetter{
+func attachUserReviewerReports0(ctx context.Context, exec bob.Executor, count int, publicreportReports1 PublicreportReportSlice, user0 *User) (PublicreportReportSlice, error) {
+	setter := &PublicreportReportSetter{
 		ReviewerID: omitnull.From(user0.ID),
 	}
 
-	err := publicreportWaters1.UpdateAll(ctx, exec, *setter)
+	err := publicreportReports1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachUserReviewerWaters0: %w", err)
+		return nil, fmt.Errorf("attachUserReviewerReports0: %w", err)
 	}
 
-	return publicreportWaters1, nil
+	return publicreportReports1, nil
 }
 
-func (user0 *User) InsertReviewerWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterSetter) error {
+func (user0 *User) InsertReviewerReports(ctx context.Context, exec bob.Executor, related ...*PublicreportReportSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportWaters1, err := insertUserReviewerWaters0(ctx, exec, related, user0)
+	publicreportReports1, err := insertUserReviewerReports0(ctx, exec, related, user0)
 	if err != nil {
 		return err
 	}
 
-	user0.R.ReviewerWaters = append(user0.R.ReviewerWaters, publicreportWaters1...)
+	user0.R.ReviewerReports = append(user0.R.ReviewerReports, publicreportReports1...)
 
-	for _, rel := range publicreportWaters1 {
+	for _, rel := range publicreportReports1 {
 		rel.R.ReviewerUser = user0
 	}
 	return nil
 }
 
-func (user0 *User) AttachReviewerWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWater) error {
+func (user0 *User) AttachReviewerReports(ctx context.Context, exec bob.Executor, related ...*PublicreportReport) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportWaters1 := PublicreportWaterSlice(related)
+	publicreportReports1 := PublicreportReportSlice(related)
 
-	_, err = attachUserReviewerWaters0(ctx, exec, len(related), publicreportWaters1, user0)
+	_, err = attachUserReviewerReports0(ctx, exec, len(related), publicreportReports1, user0)
 	if err != nil {
 		return err
 	}
 
-	user0.R.ReviewerWaters = append(user0.R.ReviewerWaters, publicreportWaters1...)
+	user0.R.ReviewerReports = append(user0.R.ReviewerReports, publicreportReports1...)
 
 	for _, rel := range related {
 		rel.R.ReviewerUser = user0
+	}
+
+	return nil
+}
+
+func insertUserReviewerWaterOlds0(ctx context.Context, exec bob.Executor, publicreportWaterOlds1 []*PublicreportWaterOldSetter, user0 *User) (PublicreportWaterOldSlice, error) {
+	for i := range publicreportWaterOlds1 {
+		publicreportWaterOlds1[i].ReviewerID = omitnull.From(user0.ID)
+	}
+
+	ret, err := PublicreportWaterOlds.Insert(bob.ToMods(publicreportWaterOlds1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserReviewerWaterOlds0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserReviewerWaterOlds0(ctx context.Context, exec bob.Executor, count int, publicreportWaterOlds1 PublicreportWaterOldSlice, user0 *User) (PublicreportWaterOldSlice, error) {
+	setter := &PublicreportWaterOldSetter{
+		ReviewerID: omitnull.From(user0.ID),
+	}
+
+	err := publicreportWaterOlds1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserReviewerWaterOlds0: %w", err)
+	}
+
+	return publicreportWaterOlds1, nil
+}
+
+func (user0 *User) InsertReviewerWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterOldSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportWaterOlds1, err := insertUserReviewerWaterOlds0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ReviewerWaterOlds = append(user0.R.ReviewerWaterOlds, publicreportWaterOlds1...)
+
+	for _, rel := range publicreportWaterOlds1 {
+		rel.R.ReviewerUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachReviewerWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterOld) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportWaterOlds1 := PublicreportWaterOldSlice(related)
+
+	_, err = attachUserReviewerWaterOlds0(ctx, exec, len(related), publicreportWaterOlds1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ReviewerWaterOlds = append(user0.R.ReviewerWaterOlds, publicreportWaterOlds1...)
+
+	for _, rel := range related {
+		rel.R.ReviewerUser = user0
+	}
+
+	return nil
+}
+
+func insertUserCreatorReportTexts0(ctx context.Context, exec bob.Executor, reportTexts1 []*ReportTextSetter, user0 *User) (ReportTextSlice, error) {
+	for i := range reportTexts1 {
+		reportTexts1[i].CreatorID = omit.From(user0.ID)
+	}
+
+	ret, err := ReportTexts.Insert(bob.ToMods(reportTexts1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserCreatorReportTexts0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserCreatorReportTexts0(ctx context.Context, exec bob.Executor, count int, reportTexts1 ReportTextSlice, user0 *User) (ReportTextSlice, error) {
+	setter := &ReportTextSetter{
+		CreatorID: omit.From(user0.ID),
+	}
+
+	err := reportTexts1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserCreatorReportTexts0: %w", err)
+	}
+
+	return reportTexts1, nil
+}
+
+func (user0 *User) InsertCreatorReportTexts(ctx context.Context, exec bob.Executor, related ...*ReportTextSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	reportTexts1, err := insertUserCreatorReportTexts0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorReportTexts = append(user0.R.CreatorReportTexts, reportTexts1...)
+
+	for _, rel := range reportTexts1 {
+		rel.R.CreatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachCreatorReportTexts(ctx context.Context, exec bob.Executor, related ...*ReportText) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	reportTexts1 := ReportTextSlice(related)
+
+	_, err = attachUserCreatorReportTexts0(ctx, exec, len(related), reportTexts1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.CreatorReportTexts = append(user0.R.CreatorReportTexts, reportTexts1...)
+
+	for _, rel := range related {
+		rel.R.CreatorUser = user0
 	}
 
 	return nil
@@ -2721,6 +3000,20 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "CreatorTextJobs":
+		rels, ok := retrieved.(CommsTextJobSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorTextJobs = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
+			}
+		}
+		return nil
 	case "CreatorComplianceReportRequests":
 		rels, ok := retrieved.(ComplianceReportRequestSlice)
 		if !ok {
@@ -2875,13 +3168,13 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "ReviewerNuisances":
-		rels, ok := retrieved.(PublicreportNuisanceSlice)
+	case "ReviewerNuisanceOlds":
+		rels, ok := retrieved.(PublicreportNuisanceOldSlice)
 		if !ok {
 			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.ReviewerNuisances = rels
+		o.R.ReviewerNuisanceOlds = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -2889,17 +3182,45 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "ReviewerWaters":
-		rels, ok := retrieved.(PublicreportWaterSlice)
+	case "ReviewerReports":
+		rels, ok := retrieved.(PublicreportReportSlice)
 		if !ok {
 			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.ReviewerWaters = rels
+		o.R.ReviewerReports = rels
 
 		for _, rel := range rels {
 			if rel != nil {
 				rel.R.ReviewerUser = o
+			}
+		}
+		return nil
+	case "ReviewerWaterOlds":
+		rels, ok := retrieved.(PublicreportWaterOldSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReviewerWaterOlds = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ReviewerUser = o
+			}
+		}
+		return nil
+	case "CreatorReportTexts":
+		rels, ok := retrieved.(ReportTextSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorReportTexts = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.CreatorUser = o
 			}
 		}
 		return nil
@@ -3029,6 +3350,7 @@ func buildUserPreloader() userPreloader {
 type userThenLoader[Q orm.Loadable] struct {
 	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorTextJobs                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorFeatures                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CommitterFiles                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -3040,8 +3362,10 @@ type userThenLoader[Q orm.Loadable] struct {
 	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerNuisances               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerWaters                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerNuisanceOlds            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerReports                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerWaterOlds               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorReportTexts              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorReviewTasks              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReviewerReviewTasks             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -3057,6 +3381,9 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type PublicUserUserLoadInterface interface {
 		LoadPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorTextJobsLoadInterface interface {
+		LoadCreatorTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorComplianceReportRequestsLoadInterface interface {
 		LoadCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3091,11 +3418,17 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	type UserNotificationsLoadInterface interface {
 		LoadUserNotifications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type ReviewerNuisancesLoadInterface interface {
-		LoadReviewerNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ReviewerNuisanceOldsLoadInterface interface {
+		LoadReviewerNuisanceOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type ReviewerWatersLoadInterface interface {
-		LoadReviewerWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ReviewerReportsLoadInterface interface {
+		LoadReviewerReports(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReviewerWaterOldsLoadInterface interface {
+		LoadReviewerWaterOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type CreatorReportTextsLoadInterface interface {
+		LoadCreatorReportTexts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorResidentsLoadInterface interface {
 		LoadCreatorResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3130,6 +3463,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"PublicUserUser",
 			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadPublicUserUser(ctx, exec, mods...)
+			},
+		),
+		CreatorTextJobs: thenLoadBuilder[Q](
+			"CreatorTextJobs",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorTextJobsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorTextJobs(ctx, exec, mods...)
 			},
 		),
 		CreatorComplianceReportRequests: thenLoadBuilder[Q](
@@ -3198,16 +3537,28 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 				return retrieved.LoadUserNotifications(ctx, exec, mods...)
 			},
 		),
-		ReviewerNuisances: thenLoadBuilder[Q](
-			"ReviewerNuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved ReviewerNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadReviewerNuisances(ctx, exec, mods...)
+		ReviewerNuisanceOlds: thenLoadBuilder[Q](
+			"ReviewerNuisanceOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewerNuisanceOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewerNuisanceOlds(ctx, exec, mods...)
 			},
 		),
-		ReviewerWaters: thenLoadBuilder[Q](
-			"ReviewerWaters",
-			func(ctx context.Context, exec bob.Executor, retrieved ReviewerWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadReviewerWaters(ctx, exec, mods...)
+		ReviewerReports: thenLoadBuilder[Q](
+			"ReviewerReports",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewerReportsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewerReports(ctx, exec, mods...)
+			},
+		),
+		ReviewerWaterOlds: thenLoadBuilder[Q](
+			"ReviewerWaterOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved ReviewerWaterOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReviewerWaterOlds(ctx, exec, mods...)
+			},
+		),
+		CreatorReportTexts: thenLoadBuilder[Q](
+			"CreatorReportTexts",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorReportTextsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorReportTexts(ctx, exec, mods...)
 			},
 		),
 		CreatorResidents: thenLoadBuilder[Q](
@@ -3371,6 +3722,70 @@ func (os UserSlice) LoadPublicUserUser(ctx context.Context, exec bob.Executor, m
 			rel.R.PublicUserUser = o
 
 			o.R.PublicUserUser = append(o.R.PublicUserUser, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorTextJobs loads the user's CreatorTextJobs into the .R struct
+func (o *User) LoadCreatorTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorTextJobs = nil
+
+	related, err := o.CreatorTextJobs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorTextJobs = related
+	return nil
+}
+
+// LoadCreatorTextJobs loads the user's CreatorTextJobs into the .R struct
+func (os UserSlice) LoadCreatorTextJobs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	commsTextJobs, err := os.CreatorTextJobs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorTextJobs = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range commsTextJobs {
+
+			if !rel.CreatorID.IsValue() {
+				continue
+			}
+			if !(rel.CreatorID.IsValue() && o.ID == rel.CreatorID.MustGet()) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorTextJobs = append(o.R.CreatorTextJobs, rel)
 		}
 	}
 
@@ -4057,16 +4472,16 @@ func (os UserSlice) LoadUserNotifications(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// LoadReviewerNuisances loads the user's ReviewerNuisances into the .R struct
-func (o *User) LoadReviewerNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReviewerNuisanceOlds loads the user's ReviewerNuisanceOlds into the .R struct
+func (o *User) LoadReviewerNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.ReviewerNuisances = nil
+	o.R.ReviewerNuisanceOlds = nil
 
-	related, err := o.ReviewerNuisances(mods...).All(ctx, exec)
+	related, err := o.ReviewerNuisanceOlds(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -4075,17 +4490,17 @@ func (o *User) LoadReviewerNuisances(ctx context.Context, exec bob.Executor, mod
 		rel.R.ReviewerUser = o
 	}
 
-	o.R.ReviewerNuisances = related
+	o.R.ReviewerNuisanceOlds = related
 	return nil
 }
 
-// LoadReviewerNuisances loads the user's ReviewerNuisances into the .R struct
-func (os UserSlice) LoadReviewerNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReviewerNuisanceOlds loads the user's ReviewerNuisanceOlds into the .R struct
+func (os UserSlice) LoadReviewerNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNuisances, err := os.ReviewerNuisances(mods...).All(ctx, exec)
+	publicreportNuisanceOlds, err := os.ReviewerNuisanceOlds(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -4095,7 +4510,7 @@ func (os UserSlice) LoadReviewerNuisances(ctx context.Context, exec bob.Executor
 			continue
 		}
 
-		o.R.ReviewerNuisances = nil
+		o.R.ReviewerNuisanceOlds = nil
 	}
 
 	for _, o := range os {
@@ -4103,7 +4518,7 @@ func (os UserSlice) LoadReviewerNuisances(ctx context.Context, exec bob.Executor
 			continue
 		}
 
-		for _, rel := range publicreportNuisances {
+		for _, rel := range publicreportNuisanceOlds {
 
 			if !rel.ReviewerID.IsValue() {
 				continue
@@ -4114,23 +4529,23 @@ func (os UserSlice) LoadReviewerNuisances(ctx context.Context, exec bob.Executor
 
 			rel.R.ReviewerUser = o
 
-			o.R.ReviewerNuisances = append(o.R.ReviewerNuisances, rel)
+			o.R.ReviewerNuisanceOlds = append(o.R.ReviewerNuisanceOlds, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadReviewerWaters loads the user's ReviewerWaters into the .R struct
-func (o *User) LoadReviewerWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReviewerReports loads the user's ReviewerReports into the .R struct
+func (o *User) LoadReviewerReports(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.ReviewerWaters = nil
+	o.R.ReviewerReports = nil
 
-	related, err := o.ReviewerWaters(mods...).All(ctx, exec)
+	related, err := o.ReviewerReports(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -4139,17 +4554,17 @@ func (o *User) LoadReviewerWaters(ctx context.Context, exec bob.Executor, mods .
 		rel.R.ReviewerUser = o
 	}
 
-	o.R.ReviewerWaters = related
+	o.R.ReviewerReports = related
 	return nil
 }
 
-// LoadReviewerWaters loads the user's ReviewerWaters into the .R struct
-func (os UserSlice) LoadReviewerWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReviewerReports loads the user's ReviewerReports into the .R struct
+func (os UserSlice) LoadReviewerReports(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportWaters, err := os.ReviewerWaters(mods...).All(ctx, exec)
+	publicreportReports, err := os.ReviewerReports(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -4159,7 +4574,7 @@ func (os UserSlice) LoadReviewerWaters(ctx context.Context, exec bob.Executor, m
 			continue
 		}
 
-		o.R.ReviewerWaters = nil
+		o.R.ReviewerReports = nil
 	}
 
 	for _, o := range os {
@@ -4167,7 +4582,7 @@ func (os UserSlice) LoadReviewerWaters(ctx context.Context, exec bob.Executor, m
 			continue
 		}
 
-		for _, rel := range publicreportWaters {
+		for _, rel := range publicreportReports {
 
 			if !rel.ReviewerID.IsValue() {
 				continue
@@ -4178,7 +4593,132 @@ func (os UserSlice) LoadReviewerWaters(ctx context.Context, exec bob.Executor, m
 
 			rel.R.ReviewerUser = o
 
-			o.R.ReviewerWaters = append(o.R.ReviewerWaters, rel)
+			o.R.ReviewerReports = append(o.R.ReviewerReports, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadReviewerWaterOlds loads the user's ReviewerWaterOlds into the .R struct
+func (o *User) LoadReviewerWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReviewerWaterOlds = nil
+
+	related, err := o.ReviewerWaterOlds(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ReviewerUser = o
+	}
+
+	o.R.ReviewerWaterOlds = related
+	return nil
+}
+
+// LoadReviewerWaterOlds loads the user's ReviewerWaterOlds into the .R struct
+func (os UserSlice) LoadReviewerWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportWaterOlds, err := os.ReviewerWaterOlds(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ReviewerWaterOlds = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportWaterOlds {
+
+			if !rel.ReviewerID.IsValue() {
+				continue
+			}
+			if !(rel.ReviewerID.IsValue() && o.ID == rel.ReviewerID.MustGet()) {
+				continue
+			}
+
+			rel.R.ReviewerUser = o
+
+			o.R.ReviewerWaterOlds = append(o.R.ReviewerWaterOlds, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCreatorReportTexts loads the user's CreatorReportTexts into the .R struct
+func (o *User) LoadCreatorReportTexts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorReportTexts = nil
+
+	related, err := o.CreatorReportTexts(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.CreatorUser = o
+	}
+
+	o.R.CreatorReportTexts = related
+	return nil
+}
+
+// LoadCreatorReportTexts loads the user's CreatorReportTexts into the .R struct
+func (os UserSlice) LoadCreatorReportTexts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	reportTexts, err := os.CreatorReportTexts(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.CreatorReportTexts = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range reportTexts {
+
+			if !(o.ID == rel.CreatorID) {
+				continue
+			}
+
+			rel.R.CreatorUser = o
+
+			o.R.CreatorReportTexts = append(o.R.CreatorReportTexts, rel)
 		}
 	}
 

@@ -97,13 +97,7 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		Street:     address_street,
 		Unit:       "",
 	}
-	setter := models.PublicreportWaterSetter{
-		AccessComments:    omit.From(access_comments),
-		AccessDog:         omit.From(access_dog),
-		AccessFence:       omit.From(access_fence),
-		AccessGate:        omit.From(access_gate),
-		AccessLocked:      omit.From(access_locked),
-		AccessOther:       omit.From(access_other),
+	setter_report := models.PublicreportReportSetter{
 		AddressRaw:        omit.From(address_raw),
 		AddressCountry:    omit.From(address_country),
 		AddressLocality:   omit.From(address_locality),
@@ -111,28 +105,37 @@ func postWater(w http.ResponseWriter, r *http.Request) {
 		AddressPostalCode: omit.From(address_postal_code),
 		AddressStreet:     omit.From(address_street),
 		AddressRegion:     omit.From(address_region),
-		Comments:          omit.From(comments),
 		Created:           omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
-		HasAdult:               omit.From(has_adult),
-		HasBackyardPermission:  omit.From(has_backyard_permission),
-		HasLarvae:              omit.From(has_larvae),
-		HasPupae:               omit.From(has_pupae),
-		IsReporterConfidential: omit.From(is_reporter_confidential),
-		IsReporterOwner:        omit.From(is_reporter_owner),
 		//Location: add later
 		MapZoom: omit.From(latlng.MapZoom),
 		//OrganizationID: omitnull.FromPtr(organization_id),
-		OwnerEmail: omit.From(owner_email),
-		OwnerName:  omit.From(owner_name),
-		OwnerPhone: omit.From(owner_phone),
 		//PublicID:       omit.From(public_id),
 		ReporterEmail: omit.From(""),
 		ReporterName:  omit.From(""),
 		ReporterPhone: omit.From(""),
 		Status:        omit.From(enums.PublicreportReportstatustypeReported),
 	}
-	public_id, err := platform.WaterCreate(ctx, setter, latlng, address, uploads)
+	setter_water := models.PublicreportWaterSetter{
+		AccessComments:         omit.From(access_comments),
+		AccessDog:              omit.From(access_dog),
+		AccessFence:            omit.From(access_fence),
+		AccessGate:             omit.From(access_gate),
+		AccessLocked:           omit.From(access_locked),
+		AccessOther:            omit.From(access_other),
+		Comments:               omit.From(comments),
+		HasAdult:               omit.From(has_adult),
+		HasBackyardPermission:  omit.From(has_backyard_permission),
+		HasLarvae:              omit.From(has_larvae),
+		HasPupae:               omit.From(has_pupae),
+		IsReporterConfidential: omit.From(is_reporter_confidential),
+		IsReporterOwner:        omit.From(is_reporter_owner),
+		OwnerEmail:             omit.From(owner_email),
+		OwnerName:              omit.From(owner_name),
+		OwnerPhone:             omit.From(owner_phone),
+		//ReportID               omit.Val[int32]
+	}
+	public_id, err := platform.ReportWaterCreate(ctx, setter_report, setter_water, latlng, address, uploads)
 	if err != nil {
 		respondError(w, "Failed to save new report", err, http.StatusInternalServerError)
 		return

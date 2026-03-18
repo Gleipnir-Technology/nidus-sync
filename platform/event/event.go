@@ -73,6 +73,7 @@ type ResourceType int
 const (
 	TypeUnknown = iota
 	TypeRMONuisance
+	TypeRMOReport
 	TypeRMOWater
 )
 

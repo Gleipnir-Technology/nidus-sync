@@ -5,35 +5,28 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
-	//"github.com/stephenafamo/scan"
 )
 
 func DistrictForReport(ctx context.Context, report_id string) (*models.Organization, error) {
-	some_report, err := findSomeReport(ctx, report_id)
+	report, err := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find report %s: %w", report_id, err)
 	}
-	org_id := some_report.districtID(ctx)
-	if org_id == nil {
-		return nil, nil
-	}
-	result, e := models.FindOrganization(ctx, db.PGInstance.BobDB, *org_id)
+	result, e := models.FindOrganization(ctx, db.PGInstance.BobDB, report.OrganizationID)
 	if e != nil {
-		return nil, fmt.Errorf("Failed to load organization %d: %w", org_id, e)
+		return nil, fmt.Errorf("Failed to load organization %d: %w", report.OrganizationID, e)
 	}
 	return result, nil
 }
@@ -64,15 +57,15 @@ func GenerateReportID() (string, error) {
 }
 
 func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id string, destination string) *ErrorWithCode {
-	some_report, err := findSomeReport(ctx, report_id)
-	if err != nil {
-		return err
+	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
+	if e != nil {
+		return newInternalError(e, "Failed to find report")
 	}
-	e := email.EnsureInDB(ctx, destination)
+	e = email.EnsureInDB(ctx, destination)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure phone is in DB")
 	}
-	err = some_report.addNotificationEmail(ctx, txn, destination)
+	err := addNotificationEmail(ctx, txn, report, destination)
 	if err != nil {
 		return err
 	}
@@ -81,19 +74,19 @@ func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id 
 }
 
 func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id string, phone types.E164) *ErrorWithCode {
-	some_report, err := findSomeReport(ctx, report_id)
-	if err != nil {
-		return err
+	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
+	if e != nil {
+		return newInternalError(e, "Failed to find report")
 	}
-	e := text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
+	e = text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
 		return newInternalError(e, "Failed to ensure phone is in DB")
 	}
-	err = some_report.addNotificationPhone(ctx, txn, phone)
+	err := addNotificationPhone(ctx, txn, report, phone)
 	if err != nil {
 		return err
 	}
-	text.ReportSubscriptionConfirmationText(ctx, phone, report_id)
+	text.ReportSubscriptionConfirmationText(ctx, db.PGInstance.BobDB, phone, report.PublicID)
 	return nil
 }
 
@@ -136,64 +129,95 @@ func RegisterSubscriptionPhone(ctx context.Context, txn bob.Executor, phone type
 }
 
 func SaveReporter(ctx context.Context, txn bob.Executor, report_id string, name string, email string, phone *types.E164, has_consent bool) *ErrorWithCode {
-	some_report, err := findSomeReport(ctx, report_id)
-	if err != nil {
-		return err
+	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
+	if e != nil {
+		return newInternalError(e, "Failed to find report")
 	}
 	if name != "" {
-		err = some_report.updateReporterName(ctx, txn, name)
+		err := updateReporterName(ctx, txn, report, name)
 		if err != nil {
 			return err
 		}
 	}
 	if phone != nil {
-		err = some_report.updateReporterPhone(ctx, txn, *phone)
+		err := updateReporterPhone(ctx, txn, report, *phone)
 		if err != nil {
 			return err
 		}
 	}
 	if email != "" {
-		err = some_report.updateReporterEmail(ctx, txn, email)
+		err := updateReporterEmail(ctx, txn, report, email)
 		if err != nil {
 			return err
 		}
 	}
-	err = some_report.updateReporterConsent(ctx, txn, has_consent)
+	err := updateReporterConsent(ctx, txn, report, has_consent)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func findSomeReport(ctx context.Context, report_id string) (result SomeReport, err *ErrorWithCode) {
-	rows, e := sql.PublicreportIDTable(report_id).All(ctx, db.PGInstance.BobDB)
-	if e != nil {
-		log.Error().Err(e).Str("report_id", report_id).Msg("failed to query report ID table")
-		return result, newErrorWithCode("internal-error", "Failed to query report ID table: %w", e)
+func reportByPublicID(ctx context.Context, txn bob.Executor, public_id string) (*models.PublicreportReport, error) {
+	return models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
+	).One(ctx, txn)
+}
+func addNotificationEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) *ErrorWithCode {
+	setter := models.PublicreportNotifyEmailSetter{
+		Created:      omit.From(time.Now()),
+		Deleted:      omitnull.FromPtr[time.Time](nil),
+		EmailAddress: omit.From(email),
+		ReportID:     omit.From(report.ID),
 	}
-	switch len(rows) {
-	case 0:
-		return result, newErrorWithCode("invalid-report-id", "No reports match the provided ID")
-	case 1:
-		break
-	default:
-		log.Error().Err(e).Str("report_id", report_id).Msg("More than one report with the provided ID, which shouldn't happen")
-		return result, newErrorWithCode("internal-error", "More than one report with the provided ID, which shouldn't happen")
+	_, err := models.PublicreportNotifyEmails.Insert(&setter).Exec(ctx, txn)
+	if err != nil {
+		return newInternalError(err, "Failed to save new notification email row")
 	}
-	row := rows[0]
-	report_id_str := row.ReportIds[0]
-	t, e := strconv.ParseInt(report_id_str, 10, 32)
-	if e != nil {
-		log.Error().Err(e).Str("report_id_str", report_id_str).Msg("Unable to parse integer reponse from database")
-		return result, newErrorWithCode("internal-error", "Unable to parse integer response from database")
+	return nil
+}
+func addNotificationPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) *ErrorWithCode {
+	var err error
+	setter := models.PublicreportNotifyPhoneSetter{
+		Created:   omit.From(time.Now()),
+		Deleted:   omitnull.FromPtr[time.Time](nil),
+		PhoneE164: omit.From(phone.PhoneString()),
+		ReportID:  omit.From(report.ID),
 	}
-
-	switch row.FoundInTables[0] {
-	case "nuisance":
-		return newNuisance(ctx, report_id, int32(t))
-	case "water":
-		return newWater(ctx, report_id, int32(t))
-	default:
-		log.Error().Err(e).Str("table_name", row.FoundInTables[0]).Msg("Unrecognized table")
-		return Nuisance{}, newErrorWithCode("internal-error", fmt.Sprintf("Unrecognized table '%s'", row.FoundInTables[0]))
+	_, err = models.PublicreportNotifyPhones.Insert(&setter).Exec(ctx, txn)
+	if err != nil {
+		return newInternalError(err, "Failed to save new notification phone row")
 	}
+	return nil
+}
+func updateReporterConsent(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, has_consent bool) *ErrorWithCode {
+	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
+		ReporterContactConsent: omitnull.From(has_consent),
+	})
+}
+func updateReporterEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) *ErrorWithCode {
+	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
+		ReporterEmail: omit.From(email),
+	})
+}
+func updateReporterName(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, name string) *ErrorWithCode {
+	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
+		ReporterName: omit.From(name),
+	})
+}
+func updateReportCol(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, setter *models.PublicreportReportSetter) *ErrorWithCode {
+	err := report.Update(ctx, txn, setter)
+	if err != nil {
+		log.Error().Err(err).Str("public_id", report.PublicID).Int32("report_id", report.ID).Msg("Failed to update report")
+		return newInternalError(err, "Failed to update nuisance report in the database")
+	}
+	return nil
+}
+func updateReporterPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) *ErrorWithCode {
+	err := report.Update(ctx, txn, &models.PublicreportReportSetter{
+		ReporterPhone: omit.From(phone.PhoneString()),
+	})
+	if err != nil {
+		return newInternalError(err, "Failed to update report: %w", err)
+	}
+	return nil
 }

@@ -15,15 +15,6 @@ var PublicreportNuisances = Table[
 	Schema: "publicreport",
 	Name:   "nuisance",
 	Columns: publicreportNuisanceColumns{
-		ID: column{
-			Name:      "id",
-			DBType:    "integer",
-			Default:   "nextval('publicreport.nuisance_id_seq'::regclass)",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		AdditionalInfo: column{
 			Name:      "additional_info",
 			DBType:    "text",
@@ -33,171 +24,9 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Created: column{
-			Name:      "created",
-			DBType:    "timestamp without time zone",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Duration: column{
 			Name:      "duration",
 			DBType:    "publicreport.nuisancedurationtype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SourceContainer: column{
-			Name:      "source_container",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SourceDescription: column{
-			Name:      "source_description",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SourceStagnant: column{
-			Name:      "source_stagnant",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		PublicID: column{
-			Name:      "public_id",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterEmail: column{
-			Name:      "reporter_email",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterName: column{
-			Name:      "reporter_name",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterPhone: column{
-			Name:      "reporter_phone",
-			DBType:    "text",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressRaw: column{
-			Name:      "address_raw",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Status: column{
-			Name:      "status",
-			DBType:    "publicreport.reportstatustype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		OrganizationID: column{
-			Name:      "organization_id",
-			DBType:    "integer",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SourceGutter: column{
-			Name:      "source_gutter",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		H3cell: column{
-			Name:      "h3cell",
-			DBType:    "h3index",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressCountry: column{
-			Name:      "address_country",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressLocality: column{
-			Name:      "address_locality",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressPostalCode: column{
-			Name:      "address_postal_code",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressRegion: column{
-			Name:      "address_region",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressStreet: column{
-			Name:      "address_street",
-			DBType:    "text",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -249,9 +78,45 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		MapZoom: column{
-			Name:      "map_zoom",
-			DBType:    "real",
+		ReportID: column{
+			Name:      "report_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SourceContainer: column{
+			Name:      "source_container",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SourceDescription: column{
+			Name:      "source_description",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SourceStagnant: column{
+			Name:      "source_stagnant",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SourceGutter: column{
+			Name:      "source_gutter",
+			DBType:    "boolean",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -294,103 +159,14 @@ var PublicreportNuisances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		LatlngAccuracyType: column{
-			Name:      "latlng_accuracy_type",
-			DBType:    "publicreport.accuracytype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		LatlngAccuracyValue: column{
-			Name:      "latlng_accuracy_value",
-			DBType:    "real",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterContactConsent: column{
-			Name:      "reporter_contact_consent",
-			DBType:    "boolean",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Location: column{
-			Name:      "location",
-			DBType:    "geometry",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressNumber: column{
-			Name:      "address_number",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressID: column{
-			Name:      "address_id",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Reviewed: column{
-			Name:      "reviewed",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReviewerID: column{
-			Name:      "reviewer_id",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 	},
 	Indexes: publicreportNuisanceIndexes{
-		NuisancePkey: index{
+		NuisancePkey1: index{
 			Type: "btree",
-			Name: "nuisance_pkey",
+			Name: "nuisance_pkey1",
 			Columns: []indexColumn{
 				{
-					Name:         "id",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        true,
-			Comment:       "",
-			NullsFirst:    []bool{false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
-		NuisancePublicIDKey: index{
-			Type: "btree",
-			Name: "nuisance_public_id_key",
-			Columns: []indexColumn{
-				{
-					Name:         "public_id",
+					Name:         "report_id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -404,44 +180,19 @@ var PublicreportNuisances = Table[
 		},
 	},
 	PrimaryKey: &constraint{
-		Name:    "nuisance_pkey",
-		Columns: []string{"id"},
+		Name:    "nuisance_pkey1",
+		Columns: []string{"report_id"},
 		Comment: "",
 	},
 	ForeignKeys: publicreportNuisanceForeignKeys{
-		PublicreportNuisanceNuisanceAddressIDFkey: foreignKey{
+		PublicreportNuisanceNuisanceReportIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.nuisance.nuisance_address_id_fkey",
-				Columns: []string{"address_id"},
+				Name:    "publicreport.nuisance.nuisance_report_id_fkey",
+				Columns: []string{"report_id"},
 				Comment: "",
 			},
-			ForeignTable:   "address",
+			ForeignTable:   "publicreport.report",
 			ForeignColumns: []string{"id"},
-		},
-		PublicreportNuisanceNuisanceOrganizationIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "publicreport.nuisance.nuisance_organization_id_fkey",
-				Columns: []string{"organization_id"},
-				Comment: "",
-			},
-			ForeignTable:   "organization",
-			ForeignColumns: []string{"id"},
-		},
-		PublicreportNuisanceNuisanceReviewerIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "publicreport.nuisance.nuisance_reviewer_id_fkey",
-				Columns: []string{"reviewer_id"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-	},
-	Uniques: publicreportNuisanceUniques{
-		NuisancePublicIDKey: constraint{
-			Name:    "nuisance_public_id_key",
-			Columns: []string{"public_id"},
-			Comment: "",
 		},
 	},
 
@@ -449,84 +200,54 @@ var PublicreportNuisances = Table[
 }
 
 type publicreportNuisanceColumns struct {
-	ID                     column
-	AdditionalInfo         column
-	Created                column
-	Duration               column
-	SourceContainer        column
-	SourceDescription      column
-	SourceStagnant         column
-	PublicID               column
-	ReporterEmail          column
-	ReporterName           column
-	ReporterPhone          column
-	AddressRaw             column
-	Status                 column
-	OrganizationID         column
-	SourceGutter           column
-	H3cell                 column
-	AddressCountry         column
-	AddressLocality        column
-	AddressPostalCode      column
-	AddressRegion          column
-	AddressStreet          column
-	IsLocationBackyard     column
-	IsLocationFrontyard    column
-	IsLocationGarden       column
-	IsLocationOther        column
-	IsLocationPool         column
-	MapZoom                column
-	TodEarly               column
-	TodDay                 column
-	TodEvening             column
-	TodNight               column
-	LatlngAccuracyType     column
-	LatlngAccuracyValue    column
-	ReporterContactConsent column
-	Location               column
-	AddressNumber          column
-	AddressID              column
-	Reviewed               column
-	ReviewerID             column
+	AdditionalInfo      column
+	Duration            column
+	IsLocationBackyard  column
+	IsLocationFrontyard column
+	IsLocationGarden    column
+	IsLocationOther     column
+	IsLocationPool      column
+	ReportID            column
+	SourceContainer     column
+	SourceDescription   column
+	SourceStagnant      column
+	SourceGutter        column
+	TodEarly            column
+	TodDay              column
+	TodEvening          column
+	TodNight            column
 }
 
 func (c publicreportNuisanceColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AdditionalInfo, c.Created, c.Duration, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.AddressRaw, c.Status, c.OrganizationID, c.SourceGutter, c.H3cell, c.AddressCountry, c.AddressLocality, c.AddressPostalCode, c.AddressRegion, c.AddressStreet, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.MapZoom, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID, c.Reviewed, c.ReviewerID,
+		c.AdditionalInfo, c.Duration, c.IsLocationBackyard, c.IsLocationFrontyard, c.IsLocationGarden, c.IsLocationOther, c.IsLocationPool, c.ReportID, c.SourceContainer, c.SourceDescription, c.SourceStagnant, c.SourceGutter, c.TodEarly, c.TodDay, c.TodEvening, c.TodNight,
 	}
 }
 
 type publicreportNuisanceIndexes struct {
-	NuisancePkey        index
-	NuisancePublicIDKey index
+	NuisancePkey1 index
 }
 
 func (i publicreportNuisanceIndexes) AsSlice() []index {
 	return []index{
-		i.NuisancePkey, i.NuisancePublicIDKey,
+		i.NuisancePkey1,
 	}
 }
 
 type publicreportNuisanceForeignKeys struct {
-	PublicreportNuisanceNuisanceAddressIDFkey      foreignKey
-	PublicreportNuisanceNuisanceOrganizationIDFkey foreignKey
-	PublicreportNuisanceNuisanceReviewerIDFkey     foreignKey
+	PublicreportNuisanceNuisanceReportIDFkey foreignKey
 }
 
 func (f publicreportNuisanceForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportNuisanceNuisanceAddressIDFkey, f.PublicreportNuisanceNuisanceOrganizationIDFkey, f.PublicreportNuisanceNuisanceReviewerIDFkey,
+		f.PublicreportNuisanceNuisanceReportIDFkey,
 	}
 }
 
-type publicreportNuisanceUniques struct {
-	NuisancePublicIDKey constraint
-}
+type publicreportNuisanceUniques struct{}
 
 func (u publicreportNuisanceUniques) AsSlice() []constraint {
-	return []constraint{
-		u.NuisancePublicIDKey,
-	}
+	return []constraint{}
 }
 
 type publicreportNuisanceChecks struct{}

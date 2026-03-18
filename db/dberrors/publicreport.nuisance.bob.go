@@ -4,23 +4,14 @@
 package dberrors
 
 var PublicreportNuisanceErrors = &publicreportNuisanceErrors{
-	ErrUniqueNuisancePkey: &UniqueConstraintError{
+	ErrUniqueNuisancePkey1: &UniqueConstraintError{
 		schema:  "publicreport",
 		table:   "nuisance",
-		columns: []string{"id"},
-		s:       "nuisance_pkey",
-	},
-
-	ErrUniqueNuisancePublicIdKey: &UniqueConstraintError{
-		schema:  "publicreport",
-		table:   "nuisance",
-		columns: []string{"public_id"},
-		s:       "nuisance_public_id_key",
+		columns: []string{"report_id"},
+		s:       "nuisance_pkey1",
 	},
 }
 
 type publicreportNuisanceErrors struct {
-	ErrUniqueNuisancePkey *UniqueConstraintError
-
-	ErrUniqueNuisancePublicIdKey *UniqueConstraintError
+	ErrUniqueNuisancePkey1 *UniqueConstraintError
 }

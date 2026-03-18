@@ -31,16 +31,12 @@ type contentListCommunication struct {
 }
 
 func listCommunication(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
-	nreports, err := publicreport.NuisanceReportForOrganization(ctx, user.Organization.ID())
+	reports, err := publicreport.ReportsForOrganization(ctx, user.Organization.ID())
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}
-	wreports, err := publicreport.WaterReportForOrganization(ctx, user.Organization.ID())
-	if err != nil {
-		return nil, nhttp.NewError("water report query: %w", err)
-	}
-	comms := make([]communication, len(nreports)+len(wreports))
-	for i, report := range nreports {
+	comms := make([]communication, len(reports))
+	for i, report := range reports {
 		comms[i] = communication{
 			Created: report.Created,
 			History: []historyEntry{
@@ -52,20 +48,6 @@ func listCommunication(ctx context.Context, r *http.Request, user platform.User,
 			ID:           report.PublicID,
 			PublicReport: report,
 			Type:         "nuisance",
-		}
-	}
-	for i, report := range wreports {
-		comms[i+len(nreports)] = communication{
-			Created: report.Created,
-			History: []historyEntry{
-				historyEntry{
-					Action:    "created",
-					Timestamp: report.Created,
-				},
-			},
-			ID:           report.PublicID,
-			PublicReport: report,
-			Type:         "water",
 		}
 	}
 	_by_created := func(a, b communication) int {

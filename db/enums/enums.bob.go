@@ -691,11 +691,13 @@ func (e *CommsTextjobsource) Scan(value any) error {
 // Enum values for CommsTextjobtype
 const (
 	CommsTextjobtypeReportConfirmation CommsTextjobtype = "report-confirmation"
+	CommsTextjobtypeReportMessage      CommsTextjobtype = "report-message"
 )
 
 func AllCommsTextjobtype() []CommsTextjobtype {
 	return []CommsTextjobtype{
 		CommsTextjobtypeReportConfirmation,
+		CommsTextjobtypeReportMessage,
 	}
 }
 
@@ -707,7 +709,8 @@ func (e CommsTextjobtype) String() string {
 
 func (e CommsTextjobtype) Valid() bool {
 	switch e {
-	case CommsTextjobtypeReportConfirmation:
+	case CommsTextjobtypeReportConfirmation,
+		CommsTextjobtypeReportMessage:
 		return true
 	default:
 		return false
@@ -1299,6 +1302,7 @@ const (
 	JobtypeCSVImport              Jobtype = "csv-import"
 	JobtypeLabelStudioAudioCreate Jobtype = "label-studio-audio-create"
 	JobtypeEmailSend              Jobtype = "email-send"
+	JobtypeTextRespond            Jobtype = "text-respond"
 	JobtypeTextSend               Jobtype = "text-send"
 )
 
@@ -1309,6 +1313,7 @@ func AllJobtype() []Jobtype {
 		JobtypeCSVImport,
 		JobtypeLabelStudioAudioCreate,
 		JobtypeEmailSend,
+		JobtypeTextRespond,
 		JobtypeTextSend,
 	}
 }
@@ -1326,6 +1331,7 @@ func (e Jobtype) Valid() bool {
 		JobtypeCSVImport,
 		JobtypeLabelStudioAudioCreate,
 		JobtypeEmailSend,
+		JobtypeTextRespond,
 		JobtypeTextSend:
 		return true
 	default:

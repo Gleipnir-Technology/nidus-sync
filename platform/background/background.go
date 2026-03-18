@@ -3,6 +3,7 @@ package background
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -26,11 +27,15 @@ func NewEmailSend(ctx context.Context, txn bob.Executor, email_id int32) error {
 func NewLabelStudioAudioCreate(ctx context.Context, txn bob.Executor, note_audio_id int32) error {
 	return newJob(ctx, txn, enums.JobtypeLabelStudioAudioCreate, note_audio_id)
 }
-func NewTextSend(ctx context.Context, txn bob.Executor, text_id int32) error {
-	return newJob(ctx, txn, enums.JobtypeTextSend, text_id)
+func NewTextRespond(ctx context.Context, txn bob.Executor, text_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeTextRespond, text_id)
+}
+func NewTextSend(ctx context.Context, txn bob.Executor, job_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeTextSend, job_id)
 }
 func newJob(ctx context.Context, txn bob.Executor, t enums.Jobtype, id int32) error {
 	_, err := models.Jobs.Insert(&models.JobSetter{
+		Created: omit.From(time.Now()),
 		// ID
 		Type:  omit.From(t),
 		RowID: omit.From(id),

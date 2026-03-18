@@ -111,21 +111,15 @@ func NotificationCountsForUser(ctx context.Context, u User) (*UserNotificationCo
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get home notification count: %w", err)
 	}
-	count_nuisance, err := u.Organization.model.Nuisances(
-		models.SelectWhere.PublicreportNuisances.Reviewed.IsNull(),
+	count_reports, err := u.Organization.model.Reports(
+		models.SelectWhere.PublicreportReports.Reviewed.IsNull(),
 	).Count(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get nuisance notification count: %w", err)
 	}
-	count_water, err := u.Organization.model.Waters(
-		models.SelectWhere.PublicreportWaters.Reviewed.IsNull(),
-	).Count(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get water notification count: %w", err)
-	}
-	log.Debug().Int64("nuisance", count_nuisance).Int64("water", count_water).Int64("home", count_home).Int("user", u.ID).Msg("calculated notification counts")
+	log.Debug().Int64("reports", count_reports).Int64("home", count_home).Int("user", u.ID).Msg("calculated notification counts")
 	return &UserNotificationCounts{
-		Communications: uint(count_nuisance + count_water),
+		Communications: uint(count_reports),
 		Home:           uint(count_home),
 	}, nil
 }

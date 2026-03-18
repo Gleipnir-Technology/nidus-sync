@@ -54,6 +54,9 @@ func postPublicreportMessage(ctx context.Context, r *http.Request, user platform
 	if err != nil {
 		return nil, nhttp.NewError("failed to create message: %s", err)
 	}
+	if msg_id == nil {
+		return nil, nhttp.NewError("nil message id")
+	}
 	return &createdMessage{
 		URI: config.MakeURLNidus("/message/%s", strconv.Itoa(int(*msg_id))),
 	}, nil

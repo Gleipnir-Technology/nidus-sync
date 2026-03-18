@@ -142,8 +142,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		Street:     address_street,
 		Unit:       "",
 	}
-	setter := models.PublicreportNuisanceSetter{
-		AdditionalInfo: omit.From(additional_info),
+	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
 		AddressRaw:        omit.From(address.Raw),
 		AddressCountry:    omit.From(address.Country),
@@ -153,13 +152,7 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		AddressRegion:     omit.From(address.Region),
 		AddressStreet:     omit.From(address.Street),
 		Created:           omit.From(time.Now()),
-		Duration:          omit.From(duration),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
-		IsLocationBackyard:  omit.From(is_location_backyard),
-		IsLocationFrontyard: omit.From(is_location_frontyard),
-		IsLocationGarden:    omit.From(is_location_garden),
-		IsLocationOther:     omit.From(is_location_other),
-		IsLocationPool:      omit.From(is_location_pool),
 		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
 		LatlngAccuracyValue: omit.From(float32(latlng.AccuracyValue)),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
@@ -167,19 +160,29 @@ func postNuisance(w http.ResponseWriter, r *http.Request) {
 		MapZoom:  omit.From(latlng.MapZoom),
 		//OrganizationID:    omitnull.FromPtr(organization_id),
 		//PublicID:          omit.From(public_id),
-		ReporterEmail:     omitnull.FromPtr[string](nil),
-		ReporterName:      omitnull.FromPtr[string](nil),
-		ReporterPhone:     omitnull.FromPtr[string](nil),
+		ReporterEmail: omit.From(""),
+		ReporterName:  omit.From(""),
+		ReporterPhone: omit.From(""),
+		Status:        omit.From(enums.PublicreportReportstatustypeReported),
+	}
+	setter_nuisance := models.PublicreportNuisanceSetter{
+		AdditionalInfo:      omit.From(additional_info),
+		Duration:            omit.From(duration),
+		IsLocationBackyard:  omit.From(is_location_backyard),
+		IsLocationFrontyard: omit.From(is_location_frontyard),
+		IsLocationGarden:    omit.From(is_location_garden),
+		IsLocationOther:     omit.From(is_location_other),
+		IsLocationPool:      omit.From(is_location_pool),
+		//ReportID            omit.Val[int32]
 		SourceContainer:   omit.From(source_container),
 		SourceDescription: omit.From(source_description),
 		SourceGutter:      omit.From(source_gutters),
 		SourceStagnant:    omit.From(source_stagnant),
-		Status:            omit.From(enums.PublicreportReportstatustypeReported),
-		TodEarly:          omit.From(tod_early),
 		TodDay:            omit.From(tod_day),
+		TodEarly:          omit.From(tod_early),
 		TodEvening:        omit.From(tod_evening),
 		TodNight:          omit.From(tod_night),
 	}
-	public_id, err := platform.NuisanceCreate(ctx, setter, latlng, address, uploads)
+	public_id, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, latlng, address, uploads)
 	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", public_id), http.StatusFound)
 }

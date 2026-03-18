@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -18,53 +17,28 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
-	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	"github.com/stephenafamo/scan"
 )
 
 // PublicreportWater is an object representing the database table.
 type PublicreportWater struct {
-	ID                     int32                              `db:"id,pk" `
-	AccessComments         string                             `db:"access_comments" `
-	AccessGate             bool                               `db:"access_gate" `
-	AccessFence            bool                               `db:"access_fence" `
-	AccessLocked           bool                               `db:"access_locked" `
-	AccessDog              bool                               `db:"access_dog" `
-	AccessOther            bool                               `db:"access_other" `
-	AddressRaw             string                             `db:"address_raw" `
-	AddressCountry         string                             `db:"address_country" `
-	AddressPostalCode      string                             `db:"address_postal_code" `
-	AddressLocality        string                             `db:"address_locality" `
-	AddressStreet          string                             `db:"address_street" `
-	AddressRegion          string                             `db:"address_region" `
-	Comments               string                             `db:"comments" `
-	Created                time.Time                          `db:"created" `
-	H3cell                 null.Val[string]                   `db:"h3cell" `
-	HasAdult               bool                               `db:"has_adult" `
-	HasLarvae              bool                               `db:"has_larvae" `
-	HasPupae               bool                               `db:"has_pupae" `
-	MapZoom                float32                            `db:"map_zoom" `
-	OwnerEmail             string                             `db:"owner_email" `
-	OwnerName              string                             `db:"owner_name" `
-	OwnerPhone             string                             `db:"owner_phone" `
-	PublicID               string                             `db:"public_id" `
-	ReporterEmail          string                             `db:"reporter_email" `
-	ReporterName           string                             `db:"reporter_name" `
-	ReporterPhone          string                             `db:"reporter_phone" `
-	Status                 enums.PublicreportReportstatustype `db:"status" `
-	OrganizationID         int32                              `db:"organization_id" `
-	HasBackyardPermission  bool                               `db:"has_backyard_permission" `
-	IsReporterConfidential bool                               `db:"is_reporter_confidential" `
-	IsReporterOwner        bool                               `db:"is_reporter_owner" `
-	ReporterContactConsent null.Val[bool]                     `db:"reporter_contact_consent" `
-	Location               null.Val[string]                   `db:"location" `
-	AddressNumber          string                             `db:"address_number" `
-	AddressID              null.Val[int32]                    `db:"address_id" `
-	Reviewed               null.Val[time.Time]                `db:"reviewed" `
-	ReviewerID             null.Val[int32]                    `db:"reviewer_id" `
+	AccessComments         string `db:"access_comments" `
+	AccessGate             bool   `db:"access_gate" `
+	AccessFence            bool   `db:"access_fence" `
+	AccessLocked           bool   `db:"access_locked" `
+	AccessDog              bool   `db:"access_dog" `
+	AccessOther            bool   `db:"access_other" `
+	Comments               string `db:"comments" `
+	IsReporterConfidential bool   `db:"is_reporter_confidential" `
+	IsReporterOwner        bool   `db:"is_reporter_owner" `
+	HasAdult               bool   `db:"has_adult" `
+	HasBackyardPermission  bool   `db:"has_backyard_permission" `
+	HasLarvae              bool   `db:"has_larvae" `
+	HasPupae               bool   `db:"has_pupae" `
+	OwnerEmail             string `db:"owner_email" `
+	OwnerName              string `db:"owner_name" `
+	OwnerPhone             string `db:"owner_phone" `
+	ReportID               int32  `db:"report_id,pk" `
 
 	R publicreportWaterR `db:"-" `
 }
@@ -81,102 +55,55 @@ type PublicreportWatersQuery = *psql.ViewQuery[*PublicreportWater, PublicreportW
 
 // publicreportWaterR is where relationships are stored.
 type publicreportWaterR struct {
-	NotifyEmailWaters PublicreportNotifyEmailWaterSlice // publicreport.notify_email_water.notify_email_pool_pool_id_fkey
-	NotifyPhoneWaters PublicreportNotifyPhoneWaterSlice // publicreport.notify_phone_water.notify_phone_pool_pool_id_fkey
-	Address           *Address                          // publicreport.water.pool_address_id_fkey
-	Organization      *Organization                     // publicreport.water.pool_organization_id_fkey
-	ReviewerUser      *User                             // publicreport.water.water_reviewer_id_fkey
-	Images            PublicreportImageSlice            // publicreport.water_image.pool_image_image_id_fkeypublicreport.water_image.pool_image_pool_id_fkey
+	Report *PublicreportReport // publicreport.water.water_report_id_fkey
 }
 
 func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
 	return publicreportWaterColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "address_raw", "address_country", "address_postal_code", "address_locality", "address_street", "address_region", "comments", "created", "h3cell", "has_adult", "has_larvae", "has_pupae", "map_zoom", "owner_email", "owner_name", "owner_phone", "public_id", "reporter_email", "reporter_name", "reporter_phone", "status", "organization_id", "has_backyard_permission", "is_reporter_confidential", "is_reporter_owner", "reporter_contact_consent", "location", "address_number", "address_id", "reviewed", "reviewer_id",
+			"access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "comments", "is_reporter_confidential", "is_reporter_owner", "has_adult", "has_backyard_permission", "has_larvae", "has_pupae", "owner_email", "owner_name", "owner_phone", "report_id",
 		).WithParent("publicreport.water"),
 		tableAlias:             alias,
-		ID:                     psql.Quote(alias, "id"),
 		AccessComments:         psql.Quote(alias, "access_comments"),
 		AccessGate:             psql.Quote(alias, "access_gate"),
 		AccessFence:            psql.Quote(alias, "access_fence"),
 		AccessLocked:           psql.Quote(alias, "access_locked"),
 		AccessDog:              psql.Quote(alias, "access_dog"),
 		AccessOther:            psql.Quote(alias, "access_other"),
-		AddressRaw:             psql.Quote(alias, "address_raw"),
-		AddressCountry:         psql.Quote(alias, "address_country"),
-		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
-		AddressLocality:        psql.Quote(alias, "address_locality"),
-		AddressStreet:          psql.Quote(alias, "address_street"),
-		AddressRegion:          psql.Quote(alias, "address_region"),
 		Comments:               psql.Quote(alias, "comments"),
-		Created:                psql.Quote(alias, "created"),
-		H3cell:                 psql.Quote(alias, "h3cell"),
+		IsReporterConfidential: psql.Quote(alias, "is_reporter_confidential"),
+		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
 		HasAdult:               psql.Quote(alias, "has_adult"),
+		HasBackyardPermission:  psql.Quote(alias, "has_backyard_permission"),
 		HasLarvae:              psql.Quote(alias, "has_larvae"),
 		HasPupae:               psql.Quote(alias, "has_pupae"),
-		MapZoom:                psql.Quote(alias, "map_zoom"),
 		OwnerEmail:             psql.Quote(alias, "owner_email"),
 		OwnerName:              psql.Quote(alias, "owner_name"),
 		OwnerPhone:             psql.Quote(alias, "owner_phone"),
-		PublicID:               psql.Quote(alias, "public_id"),
-		ReporterEmail:          psql.Quote(alias, "reporter_email"),
-		ReporterName:           psql.Quote(alias, "reporter_name"),
-		ReporterPhone:          psql.Quote(alias, "reporter_phone"),
-		Status:                 psql.Quote(alias, "status"),
-		OrganizationID:         psql.Quote(alias, "organization_id"),
-		HasBackyardPermission:  psql.Quote(alias, "has_backyard_permission"),
-		IsReporterConfidential: psql.Quote(alias, "is_reporter_confidential"),
-		IsReporterOwner:        psql.Quote(alias, "is_reporter_owner"),
-		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
-		Location:               psql.Quote(alias, "location"),
-		AddressNumber:          psql.Quote(alias, "address_number"),
-		AddressID:              psql.Quote(alias, "address_id"),
-		Reviewed:               psql.Quote(alias, "reviewed"),
-		ReviewerID:             psql.Quote(alias, "reviewer_id"),
+		ReportID:               psql.Quote(alias, "report_id"),
 	}
 }
 
 type publicreportWaterColumns struct {
 	expr.ColumnsExpr
 	tableAlias             string
-	ID                     psql.Expression
 	AccessComments         psql.Expression
 	AccessGate             psql.Expression
 	AccessFence            psql.Expression
 	AccessLocked           psql.Expression
 	AccessDog              psql.Expression
 	AccessOther            psql.Expression
-	AddressRaw             psql.Expression
-	AddressCountry         psql.Expression
-	AddressPostalCode      psql.Expression
-	AddressLocality        psql.Expression
-	AddressStreet          psql.Expression
-	AddressRegion          psql.Expression
 	Comments               psql.Expression
-	Created                psql.Expression
-	H3cell                 psql.Expression
+	IsReporterConfidential psql.Expression
+	IsReporterOwner        psql.Expression
 	HasAdult               psql.Expression
+	HasBackyardPermission  psql.Expression
 	HasLarvae              psql.Expression
 	HasPupae               psql.Expression
-	MapZoom                psql.Expression
 	OwnerEmail             psql.Expression
 	OwnerName              psql.Expression
 	OwnerPhone             psql.Expression
-	PublicID               psql.Expression
-	ReporterEmail          psql.Expression
-	ReporterName           psql.Expression
-	ReporterPhone          psql.Expression
-	Status                 psql.Expression
-	OrganizationID         psql.Expression
-	HasBackyardPermission  psql.Expression
-	IsReporterConfidential psql.Expression
-	IsReporterOwner        psql.Expression
-	ReporterContactConsent psql.Expression
-	Location               psql.Expression
-	AddressNumber          psql.Expression
-	AddressID              psql.Expression
-	Reviewed               psql.Expression
-	ReviewerID             psql.Expression
+	ReportID               psql.Expression
 }
 
 func (c publicreportWaterColumns) Alias() string {
@@ -191,51 +118,27 @@ func (publicreportWaterColumns) AliasedAs(alias string) publicreportWaterColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportWaterSetter struct {
-	ID                     omit.Val[int32]                              `db:"id,pk" `
-	AccessComments         omit.Val[string]                             `db:"access_comments" `
-	AccessGate             omit.Val[bool]                               `db:"access_gate" `
-	AccessFence            omit.Val[bool]                               `db:"access_fence" `
-	AccessLocked           omit.Val[bool]                               `db:"access_locked" `
-	AccessDog              omit.Val[bool]                               `db:"access_dog" `
-	AccessOther            omit.Val[bool]                               `db:"access_other" `
-	AddressRaw             omit.Val[string]                             `db:"address_raw" `
-	AddressCountry         omit.Val[string]                             `db:"address_country" `
-	AddressPostalCode      omit.Val[string]                             `db:"address_postal_code" `
-	AddressLocality        omit.Val[string]                             `db:"address_locality" `
-	AddressStreet          omit.Val[string]                             `db:"address_street" `
-	AddressRegion          omit.Val[string]                             `db:"address_region" `
-	Comments               omit.Val[string]                             `db:"comments" `
-	Created                omit.Val[time.Time]                          `db:"created" `
-	H3cell                 omitnull.Val[string]                         `db:"h3cell" `
-	HasAdult               omit.Val[bool]                               `db:"has_adult" `
-	HasLarvae              omit.Val[bool]                               `db:"has_larvae" `
-	HasPupae               omit.Val[bool]                               `db:"has_pupae" `
-	MapZoom                omit.Val[float32]                            `db:"map_zoom" `
-	OwnerEmail             omit.Val[string]                             `db:"owner_email" `
-	OwnerName              omit.Val[string]                             `db:"owner_name" `
-	OwnerPhone             omit.Val[string]                             `db:"owner_phone" `
-	PublicID               omit.Val[string]                             `db:"public_id" `
-	ReporterEmail          omit.Val[string]                             `db:"reporter_email" `
-	ReporterName           omit.Val[string]                             `db:"reporter_name" `
-	ReporterPhone          omit.Val[string]                             `db:"reporter_phone" `
-	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
-	OrganizationID         omit.Val[int32]                              `db:"organization_id" `
-	HasBackyardPermission  omit.Val[bool]                               `db:"has_backyard_permission" `
-	IsReporterConfidential omit.Val[bool]                               `db:"is_reporter_confidential" `
-	IsReporterOwner        omit.Val[bool]                               `db:"is_reporter_owner" `
-	ReporterContactConsent omitnull.Val[bool]                           `db:"reporter_contact_consent" `
-	Location               omitnull.Val[string]                         `db:"location" `
-	AddressNumber          omit.Val[string]                             `db:"address_number" `
-	AddressID              omitnull.Val[int32]                          `db:"address_id" `
-	Reviewed               omitnull.Val[time.Time]                      `db:"reviewed" `
-	ReviewerID             omitnull.Val[int32]                          `db:"reviewer_id" `
+	AccessComments         omit.Val[string] `db:"access_comments" `
+	AccessGate             omit.Val[bool]   `db:"access_gate" `
+	AccessFence            omit.Val[bool]   `db:"access_fence" `
+	AccessLocked           omit.Val[bool]   `db:"access_locked" `
+	AccessDog              omit.Val[bool]   `db:"access_dog" `
+	AccessOther            omit.Val[bool]   `db:"access_other" `
+	Comments               omit.Val[string] `db:"comments" `
+	IsReporterConfidential omit.Val[bool]   `db:"is_reporter_confidential" `
+	IsReporterOwner        omit.Val[bool]   `db:"is_reporter_owner" `
+	HasAdult               omit.Val[bool]   `db:"has_adult" `
+	HasBackyardPermission  omit.Val[bool]   `db:"has_backyard_permission" `
+	HasLarvae              omit.Val[bool]   `db:"has_larvae" `
+	HasPupae               omit.Val[bool]   `db:"has_pupae" `
+	OwnerEmail             omit.Val[string] `db:"owner_email" `
+	OwnerName              omit.Val[string] `db:"owner_name" `
+	OwnerPhone             omit.Val[string] `db:"owner_phone" `
+	ReportID               omit.Val[int32]  `db:"report_id,pk" `
 }
 
 func (s PublicreportWaterSetter) SetColumns() []string {
-	vals := make([]string, 0, 38)
-	if s.ID.IsValue() {
-		vals = append(vals, "id")
-	}
+	vals := make([]string, 0, 17)
 	if s.AccessComments.IsValue() {
 		vals = append(vals, "access_comments")
 	}
@@ -254,44 +157,26 @@ func (s PublicreportWaterSetter) SetColumns() []string {
 	if s.AccessOther.IsValue() {
 		vals = append(vals, "access_other")
 	}
-	if s.AddressRaw.IsValue() {
-		vals = append(vals, "address_raw")
-	}
-	if s.AddressCountry.IsValue() {
-		vals = append(vals, "address_country")
-	}
-	if s.AddressPostalCode.IsValue() {
-		vals = append(vals, "address_postal_code")
-	}
-	if s.AddressLocality.IsValue() {
-		vals = append(vals, "address_locality")
-	}
-	if s.AddressStreet.IsValue() {
-		vals = append(vals, "address_street")
-	}
-	if s.AddressRegion.IsValue() {
-		vals = append(vals, "address_region")
-	}
 	if s.Comments.IsValue() {
 		vals = append(vals, "comments")
 	}
-	if s.Created.IsValue() {
-		vals = append(vals, "created")
+	if s.IsReporterConfidential.IsValue() {
+		vals = append(vals, "is_reporter_confidential")
 	}
-	if !s.H3cell.IsUnset() {
-		vals = append(vals, "h3cell")
+	if s.IsReporterOwner.IsValue() {
+		vals = append(vals, "is_reporter_owner")
 	}
 	if s.HasAdult.IsValue() {
 		vals = append(vals, "has_adult")
+	}
+	if s.HasBackyardPermission.IsValue() {
+		vals = append(vals, "has_backyard_permission")
 	}
 	if s.HasLarvae.IsValue() {
 		vals = append(vals, "has_larvae")
 	}
 	if s.HasPupae.IsValue() {
 		vals = append(vals, "has_pupae")
-	}
-	if s.MapZoom.IsValue() {
-		vals = append(vals, "map_zoom")
 	}
 	if s.OwnerEmail.IsValue() {
 		vals = append(vals, "owner_email")
@@ -302,58 +187,13 @@ func (s PublicreportWaterSetter) SetColumns() []string {
 	if s.OwnerPhone.IsValue() {
 		vals = append(vals, "owner_phone")
 	}
-	if s.PublicID.IsValue() {
-		vals = append(vals, "public_id")
-	}
-	if s.ReporterEmail.IsValue() {
-		vals = append(vals, "reporter_email")
-	}
-	if s.ReporterName.IsValue() {
-		vals = append(vals, "reporter_name")
-	}
-	if s.ReporterPhone.IsValue() {
-		vals = append(vals, "reporter_phone")
-	}
-	if s.Status.IsValue() {
-		vals = append(vals, "status")
-	}
-	if s.OrganizationID.IsValue() {
-		vals = append(vals, "organization_id")
-	}
-	if s.HasBackyardPermission.IsValue() {
-		vals = append(vals, "has_backyard_permission")
-	}
-	if s.IsReporterConfidential.IsValue() {
-		vals = append(vals, "is_reporter_confidential")
-	}
-	if s.IsReporterOwner.IsValue() {
-		vals = append(vals, "is_reporter_owner")
-	}
-	if !s.ReporterContactConsent.IsUnset() {
-		vals = append(vals, "reporter_contact_consent")
-	}
-	if !s.Location.IsUnset() {
-		vals = append(vals, "location")
-	}
-	if s.AddressNumber.IsValue() {
-		vals = append(vals, "address_number")
-	}
-	if !s.AddressID.IsUnset() {
-		vals = append(vals, "address_id")
-	}
-	if !s.Reviewed.IsUnset() {
-		vals = append(vals, "reviewed")
-	}
-	if !s.ReviewerID.IsUnset() {
-		vals = append(vals, "reviewer_id")
+	if s.ReportID.IsValue() {
+		vals = append(vals, "report_id")
 	}
 	return vals
 }
 
 func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
-	if s.ID.IsValue() {
-		t.ID = s.ID.MustGet()
-	}
 	if s.AccessComments.IsValue() {
 		t.AccessComments = s.AccessComments.MustGet()
 	}
@@ -372,44 +212,26 @@ func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if s.AccessOther.IsValue() {
 		t.AccessOther = s.AccessOther.MustGet()
 	}
-	if s.AddressRaw.IsValue() {
-		t.AddressRaw = s.AddressRaw.MustGet()
-	}
-	if s.AddressCountry.IsValue() {
-		t.AddressCountry = s.AddressCountry.MustGet()
-	}
-	if s.AddressPostalCode.IsValue() {
-		t.AddressPostalCode = s.AddressPostalCode.MustGet()
-	}
-	if s.AddressLocality.IsValue() {
-		t.AddressLocality = s.AddressLocality.MustGet()
-	}
-	if s.AddressStreet.IsValue() {
-		t.AddressStreet = s.AddressStreet.MustGet()
-	}
-	if s.AddressRegion.IsValue() {
-		t.AddressRegion = s.AddressRegion.MustGet()
-	}
 	if s.Comments.IsValue() {
 		t.Comments = s.Comments.MustGet()
 	}
-	if s.Created.IsValue() {
-		t.Created = s.Created.MustGet()
+	if s.IsReporterConfidential.IsValue() {
+		t.IsReporterConfidential = s.IsReporterConfidential.MustGet()
 	}
-	if !s.H3cell.IsUnset() {
-		t.H3cell = s.H3cell.MustGetNull()
+	if s.IsReporterOwner.IsValue() {
+		t.IsReporterOwner = s.IsReporterOwner.MustGet()
 	}
 	if s.HasAdult.IsValue() {
 		t.HasAdult = s.HasAdult.MustGet()
+	}
+	if s.HasBackyardPermission.IsValue() {
+		t.HasBackyardPermission = s.HasBackyardPermission.MustGet()
 	}
 	if s.HasLarvae.IsValue() {
 		t.HasLarvae = s.HasLarvae.MustGet()
 	}
 	if s.HasPupae.IsValue() {
 		t.HasPupae = s.HasPupae.MustGet()
-	}
-	if s.MapZoom.IsValue() {
-		t.MapZoom = s.MapZoom.MustGet()
 	}
 	if s.OwnerEmail.IsValue() {
 		t.OwnerEmail = s.OwnerEmail.MustGet()
@@ -420,50 +242,8 @@ func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if s.OwnerPhone.IsValue() {
 		t.OwnerPhone = s.OwnerPhone.MustGet()
 	}
-	if s.PublicID.IsValue() {
-		t.PublicID = s.PublicID.MustGet()
-	}
-	if s.ReporterEmail.IsValue() {
-		t.ReporterEmail = s.ReporterEmail.MustGet()
-	}
-	if s.ReporterName.IsValue() {
-		t.ReporterName = s.ReporterName.MustGet()
-	}
-	if s.ReporterPhone.IsValue() {
-		t.ReporterPhone = s.ReporterPhone.MustGet()
-	}
-	if s.Status.IsValue() {
-		t.Status = s.Status.MustGet()
-	}
-	if s.OrganizationID.IsValue() {
-		t.OrganizationID = s.OrganizationID.MustGet()
-	}
-	if s.HasBackyardPermission.IsValue() {
-		t.HasBackyardPermission = s.HasBackyardPermission.MustGet()
-	}
-	if s.IsReporterConfidential.IsValue() {
-		t.IsReporterConfidential = s.IsReporterConfidential.MustGet()
-	}
-	if s.IsReporterOwner.IsValue() {
-		t.IsReporterOwner = s.IsReporterOwner.MustGet()
-	}
-	if !s.ReporterContactConsent.IsUnset() {
-		t.ReporterContactConsent = s.ReporterContactConsent.MustGetNull()
-	}
-	if !s.Location.IsUnset() {
-		t.Location = s.Location.MustGetNull()
-	}
-	if s.AddressNumber.IsValue() {
-		t.AddressNumber = s.AddressNumber.MustGet()
-	}
-	if !s.AddressID.IsUnset() {
-		t.AddressID = s.AddressID.MustGetNull()
-	}
-	if !s.Reviewed.IsUnset() {
-		t.Reviewed = s.Reviewed.MustGetNull()
-	}
-	if !s.ReviewerID.IsUnset() {
-		t.ReviewerID = s.ReviewerID.MustGetNull()
+	if s.ReportID.IsValue() {
+		t.ReportID = s.ReportID.MustGet()
 	}
 }
 
@@ -473,233 +253,107 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 38)
-		if s.ID.IsValue() {
-			vals[0] = psql.Arg(s.ID.MustGet())
+		vals := make([]bob.Expression, 17)
+		if s.AccessComments.IsValue() {
+			vals[0] = psql.Arg(s.AccessComments.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessComments.IsValue() {
-			vals[1] = psql.Arg(s.AccessComments.MustGet())
+		if s.AccessGate.IsValue() {
+			vals[1] = psql.Arg(s.AccessGate.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessGate.IsValue() {
-			vals[2] = psql.Arg(s.AccessGate.MustGet())
+		if s.AccessFence.IsValue() {
+			vals[2] = psql.Arg(s.AccessFence.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessFence.IsValue() {
-			vals[3] = psql.Arg(s.AccessFence.MustGet())
+		if s.AccessLocked.IsValue() {
+			vals[3] = psql.Arg(s.AccessLocked.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessLocked.IsValue() {
-			vals[4] = psql.Arg(s.AccessLocked.MustGet())
+		if s.AccessDog.IsValue() {
+			vals[4] = psql.Arg(s.AccessDog.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessDog.IsValue() {
-			vals[5] = psql.Arg(s.AccessDog.MustGet())
+		if s.AccessOther.IsValue() {
+			vals[5] = psql.Arg(s.AccessOther.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.AccessOther.IsValue() {
-			vals[6] = psql.Arg(s.AccessOther.MustGet())
+		if s.Comments.IsValue() {
+			vals[6] = psql.Arg(s.Comments.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRaw.IsValue() {
-			vals[7] = psql.Arg(s.AddressRaw.MustGet())
+		if s.IsReporterConfidential.IsValue() {
+			vals[7] = psql.Arg(s.IsReporterConfidential.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressCountry.IsValue() {
-			vals[8] = psql.Arg(s.AddressCountry.MustGet())
+		if s.IsReporterOwner.IsValue() {
+			vals[8] = psql.Arg(s.IsReporterOwner.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPostalCode.IsValue() {
-			vals[9] = psql.Arg(s.AddressPostalCode.MustGet())
+		if s.HasAdult.IsValue() {
+			vals[9] = psql.Arg(s.HasAdult.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressLocality.IsValue() {
-			vals[10] = psql.Arg(s.AddressLocality.MustGet())
+		if s.HasBackyardPermission.IsValue() {
+			vals[10] = psql.Arg(s.HasBackyardPermission.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressStreet.IsValue() {
-			vals[11] = psql.Arg(s.AddressStreet.MustGet())
+		if s.HasLarvae.IsValue() {
+			vals[11] = psql.Arg(s.HasLarvae.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRegion.IsValue() {
-			vals[12] = psql.Arg(s.AddressRegion.MustGet())
+		if s.HasPupae.IsValue() {
+			vals[12] = psql.Arg(s.HasPupae.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.Comments.IsValue() {
-			vals[13] = psql.Arg(s.Comments.MustGet())
+		if s.OwnerEmail.IsValue() {
+			vals[13] = psql.Arg(s.OwnerEmail.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.Created.IsValue() {
-			vals[14] = psql.Arg(s.Created.MustGet())
+		if s.OwnerName.IsValue() {
+			vals[14] = psql.Arg(s.OwnerName.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[15] = psql.Arg(s.H3cell.MustGetNull())
+		if s.OwnerPhone.IsValue() {
+			vals[15] = psql.Arg(s.OwnerPhone.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if s.HasAdult.IsValue() {
-			vals[16] = psql.Arg(s.HasAdult.MustGet())
+		if s.ReportID.IsValue() {
+			vals[16] = psql.Arg(s.ReportID.MustGet())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
-		}
-
-		if s.HasLarvae.IsValue() {
-			vals[17] = psql.Arg(s.HasLarvae.MustGet())
-		} else {
-			vals[17] = psql.Raw("DEFAULT")
-		}
-
-		if s.HasPupae.IsValue() {
-			vals[18] = psql.Arg(s.HasPupae.MustGet())
-		} else {
-			vals[18] = psql.Raw("DEFAULT")
-		}
-
-		if s.MapZoom.IsValue() {
-			vals[19] = psql.Arg(s.MapZoom.MustGet())
-		} else {
-			vals[19] = psql.Raw("DEFAULT")
-		}
-
-		if s.OwnerEmail.IsValue() {
-			vals[20] = psql.Arg(s.OwnerEmail.MustGet())
-		} else {
-			vals[20] = psql.Raw("DEFAULT")
-		}
-
-		if s.OwnerName.IsValue() {
-			vals[21] = psql.Arg(s.OwnerName.MustGet())
-		} else {
-			vals[21] = psql.Raw("DEFAULT")
-		}
-
-		if s.OwnerPhone.IsValue() {
-			vals[22] = psql.Arg(s.OwnerPhone.MustGet())
-		} else {
-			vals[22] = psql.Raw("DEFAULT")
-		}
-
-		if s.PublicID.IsValue() {
-			vals[23] = psql.Arg(s.PublicID.MustGet())
-		} else {
-			vals[23] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterEmail.IsValue() {
-			vals[24] = psql.Arg(s.ReporterEmail.MustGet())
-		} else {
-			vals[24] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterName.IsValue() {
-			vals[25] = psql.Arg(s.ReporterName.MustGet())
-		} else {
-			vals[25] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReporterPhone.IsValue() {
-			vals[26] = psql.Arg(s.ReporterPhone.MustGet())
-		} else {
-			vals[26] = psql.Raw("DEFAULT")
-		}
-
-		if s.Status.IsValue() {
-			vals[27] = psql.Arg(s.Status.MustGet())
-		} else {
-			vals[27] = psql.Raw("DEFAULT")
-		}
-
-		if s.OrganizationID.IsValue() {
-			vals[28] = psql.Arg(s.OrganizationID.MustGet())
-		} else {
-			vals[28] = psql.Raw("DEFAULT")
-		}
-
-		if s.HasBackyardPermission.IsValue() {
-			vals[29] = psql.Arg(s.HasBackyardPermission.MustGet())
-		} else {
-			vals[29] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsReporterConfidential.IsValue() {
-			vals[30] = psql.Arg(s.IsReporterConfidential.MustGet())
-		} else {
-			vals[30] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsReporterOwner.IsValue() {
-			vals[31] = psql.Arg(s.IsReporterOwner.MustGet())
-		} else {
-			vals[31] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ReporterContactConsent.IsUnset() {
-			vals[32] = psql.Arg(s.ReporterContactConsent.MustGetNull())
-		} else {
-			vals[32] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Location.IsUnset() {
-			vals[33] = psql.Arg(s.Location.MustGetNull())
-		} else {
-			vals[33] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressNumber.IsValue() {
-			vals[34] = psql.Arg(s.AddressNumber.MustGet())
-		} else {
-			vals[34] = psql.Raw("DEFAULT")
-		}
-
-		if !s.AddressID.IsUnset() {
-			vals[35] = psql.Arg(s.AddressID.MustGetNull())
-		} else {
-			vals[35] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Reviewed.IsUnset() {
-			vals[36] = psql.Arg(s.Reviewed.MustGetNull())
-		} else {
-			vals[36] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ReviewerID.IsUnset() {
-			vals[37] = psql.Arg(s.ReviewerID.MustGetNull())
-		} else {
-			vals[37] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -711,14 +365,7 @@ func (s PublicreportWaterSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 38)
-
-	if s.ID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "id")...),
-			psql.Arg(s.ID),
-		}})
-	}
+	exprs := make([]bob.Expression, 0, 17)
 
 	if s.AccessComments.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -762,48 +409,6 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if s.AddressRaw.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_raw")...),
-			psql.Arg(s.AddressRaw),
-		}})
-	}
-
-	if s.AddressCountry.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_country")...),
-			psql.Arg(s.AddressCountry),
-		}})
-	}
-
-	if s.AddressPostalCode.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_postal_code")...),
-			psql.Arg(s.AddressPostalCode),
-		}})
-	}
-
-	if s.AddressLocality.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_locality")...),
-			psql.Arg(s.AddressLocality),
-		}})
-	}
-
-	if s.AddressStreet.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_street")...),
-			psql.Arg(s.AddressStreet),
-		}})
-	}
-
-	if s.AddressRegion.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_region")...),
-			psql.Arg(s.AddressRegion),
-		}})
-	}
-
 	if s.Comments.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "comments")...),
@@ -811,17 +416,17 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if s.Created.IsValue() {
+	if s.IsReporterConfidential.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "created")...),
-			psql.Arg(s.Created),
+			psql.Quote(append(prefix, "is_reporter_confidential")...),
+			psql.Arg(s.IsReporterConfidential),
 		}})
 	}
 
-	if !s.H3cell.IsUnset() {
+	if s.IsReporterOwner.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "h3cell")...),
-			psql.Arg(s.H3cell),
+			psql.Quote(append(prefix, "is_reporter_owner")...),
+			psql.Arg(s.IsReporterOwner),
 		}})
 	}
 
@@ -829,6 +434,13 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "has_adult")...),
 			psql.Arg(s.HasAdult),
+		}})
+	}
+
+	if s.HasBackyardPermission.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "has_backyard_permission")...),
+			psql.Arg(s.HasBackyardPermission),
 		}})
 	}
 
@@ -843,13 +455,6 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "has_pupae")...),
 			psql.Arg(s.HasPupae),
-		}})
-	}
-
-	if s.MapZoom.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "map_zoom")...),
-			psql.Arg(s.MapZoom),
 		}})
 	}
 
@@ -874,108 +479,10 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		}})
 	}
 
-	if s.PublicID.IsValue() {
+	if s.ReportID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "public_id")...),
-			psql.Arg(s.PublicID),
-		}})
-	}
-
-	if s.ReporterEmail.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_email")...),
-			psql.Arg(s.ReporterEmail),
-		}})
-	}
-
-	if s.ReporterName.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_name")...),
-			psql.Arg(s.ReporterName),
-		}})
-	}
-
-	if s.ReporterPhone.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_phone")...),
-			psql.Arg(s.ReporterPhone),
-		}})
-	}
-
-	if s.Status.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "status")...),
-			psql.Arg(s.Status),
-		}})
-	}
-
-	if s.OrganizationID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "organization_id")...),
-			psql.Arg(s.OrganizationID),
-		}})
-	}
-
-	if s.HasBackyardPermission.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "has_backyard_permission")...),
-			psql.Arg(s.HasBackyardPermission),
-		}})
-	}
-
-	if s.IsReporterConfidential.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "is_reporter_confidential")...),
-			psql.Arg(s.IsReporterConfidential),
-		}})
-	}
-
-	if s.IsReporterOwner.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "is_reporter_owner")...),
-			psql.Arg(s.IsReporterOwner),
-		}})
-	}
-
-	if !s.ReporterContactConsent.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_contact_consent")...),
-			psql.Arg(s.ReporterContactConsent),
-		}})
-	}
-
-	if !s.Location.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "location")...),
-			psql.Arg(s.Location),
-		}})
-	}
-
-	if s.AddressNumber.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_number")...),
-			psql.Arg(s.AddressNumber),
-		}})
-	}
-
-	if !s.AddressID.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_id")...),
-			psql.Arg(s.AddressID),
-		}})
-	}
-
-	if !s.Reviewed.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reviewed")...),
-			psql.Arg(s.Reviewed),
-		}})
-	}
-
-	if !s.ReviewerID.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reviewer_id")...),
-			psql.Arg(s.ReviewerID),
+			psql.Quote(append(prefix, "report_id")...),
+			psql.Arg(s.ReportID),
 		}})
 	}
 
@@ -984,23 +491,23 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 
 // FindPublicreportWater retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindPublicreportWater(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*PublicreportWater, error) {
+func FindPublicreportWater(ctx context.Context, exec bob.Executor, ReportIDPK int32, cols ...string) (*PublicreportWater, error) {
 	if len(cols) == 0 {
 		return PublicreportWaters.Query(
-			sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
+			sm.Where(PublicreportWaters.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 		).One(ctx, exec)
 	}
 
 	return PublicreportWaters.Query(
-		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Where(PublicreportWaters.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 		sm.Columns(PublicreportWaters.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // PublicreportWaterExists checks the presence of a single record by primary key
-func PublicreportWaterExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
+func PublicreportWaterExists(ctx context.Context, exec bob.Executor, ReportIDPK int32) (bool, error) {
 	return PublicreportWaters.Query(
-		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Where(PublicreportWaters.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 	).Exists(ctx, exec)
 }
 
@@ -1024,11 +531,11 @@ func (o *PublicreportWater) AfterQueryHook(ctx context.Context, exec bob.Executo
 
 // primaryKeyVals returns the primary key values of the PublicreportWater
 func (o *PublicreportWater) primaryKeyVals() bob.Expression {
-	return psql.Arg(o.ID)
+	return psql.Arg(o.ReportID)
 }
 
 func (o *PublicreportWater) pkEQ() dialect.Expression {
-	return psql.Quote("publicreport.water", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("publicreport.water", "report_id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1055,7 +562,7 @@ func (o *PublicreportWater) Delete(ctx context.Context, exec bob.Executor) error
 // Reload refreshes the PublicreportWater using the executor
 func (o *PublicreportWater) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := PublicreportWaters.Query(
-		sm.Where(PublicreportWaters.Columns.ID.EQ(psql.Arg(o.ID))),
+		sm.Where(PublicreportWaters.Columns.ReportID.EQ(psql.Arg(o.ReportID))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -1089,7 +596,7 @@ func (o PublicreportWaterSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Quote("publicreport.water", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("publicreport.water", "report_id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1104,7 +611,7 @@ func (o PublicreportWaterSlice) pkIN() dialect.Expression {
 func (o PublicreportWaterSlice) copyMatchingRows(from ...*PublicreportWater) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.ID != old.ID {
+			if new.ReportID != old.ReportID {
 				continue
 			}
 			new.R = old.R
@@ -1205,539 +712,96 @@ func (o PublicreportWaterSlice) ReloadAll(ctx context.Context, exec bob.Executor
 	return nil
 }
 
-// NotifyEmailWaters starts a query for related objects on publicreport.notify_email_water
-func (o *PublicreportWater) NotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
-	return PublicreportNotifyEmailWaters.Query(append(mods,
-		sm.Where(PublicreportNotifyEmailWaters.Columns.WaterID.EQ(psql.Arg(o.ID))),
+// Report starts a query for related objects on publicreport.report
+func (o *PublicreportWater) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.Where(PublicreportReports.Columns.ID.EQ(psql.Arg(o.ReportID))),
 	)...)
 }
 
-func (os PublicreportWaterSlice) NotifyEmailWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailWatersQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
+func (os PublicreportWaterSlice) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	pkReportID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
-		pkID = append(pkID, o.ID)
+		pkReportID = append(pkReportID, o.ReportID)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkReportID), "integer[]")),
 	))
 
-	return PublicreportNotifyEmailWaters.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyEmailWaters.Columns.WaterID).OP("IN", PKArgExpr)),
+	return PublicreportReports.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReports.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// NotifyPhoneWaters starts a query for related objects on publicreport.notify_phone_water
-func (o *PublicreportWater) NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
-	return PublicreportNotifyPhoneWaters.Query(append(mods,
-		sm.Where(PublicreportNotifyPhoneWaters.Columns.WaterID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os PublicreportWaterSlice) NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportNotifyPhoneWaters.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyPhoneWaters.Columns.WaterID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Address starts a query for related objects on address
-func (o *PublicreportWater) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
-	return Addresses.Query(append(mods,
-		sm.Where(Addresses.Columns.ID.EQ(psql.Arg(o.AddressID))),
-	)...)
-}
-
-func (os PublicreportWaterSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
-	pkAddressID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkAddressID = append(pkAddressID, o.AddressID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkAddressID), "integer[]")),
-	))
-
-	return Addresses.Query(append(mods,
-		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Organization starts a query for related objects on organization
-func (o *PublicreportWater) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	return Organizations.Query(append(mods,
-		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
-	)...)
-}
-
-func (os PublicreportWaterSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
-	))
-
-	return Organizations.Query(append(mods,
-		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// ReviewerUser starts a query for related objects on user_
-func (o *PublicreportWater) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
-	return Users.Query(append(mods,
-		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.ReviewerID))),
-	)...)
-}
-
-func (os PublicreportWaterSlice) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
-	pkReviewerID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkReviewerID = append(pkReviewerID, o.ReviewerID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkReviewerID), "integer[]")),
-	))
-
-	return Users.Query(append(mods,
-		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Images starts a query for related objects on publicreport.image
-func (o *PublicreportWater) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
-	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportWaterImages.Columns.ImageID)),
-		sm.Where(PublicreportWaterImages.Columns.WaterID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os PublicreportWaterSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportWaterImages.Columns.ImageID),
-		),
-		sm.Where(psql.Group(PublicreportWaterImages.Columns.WaterID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-func insertPublicreportWaterNotifyEmailWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailWaters1 []*PublicreportNotifyEmailWaterSetter, publicreportWater0 *PublicreportWater) (PublicreportNotifyEmailWaterSlice, error) {
-	for i := range publicreportNotifyEmailWaters1 {
-		publicreportNotifyEmailWaters1[i].WaterID = omit.From(publicreportWater0.ID)
-	}
-
-	ret, err := PublicreportNotifyEmailWaters.Insert(bob.ToMods(publicreportNotifyEmailWaters1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportWaterNotifyEmailWaters0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachPublicreportWaterNotifyEmailWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailWaters1 PublicreportNotifyEmailWaterSlice, publicreportWater0 *PublicreportWater) (PublicreportNotifyEmailWaterSlice, error) {
-	setter := &PublicreportNotifyEmailWaterSetter{
-		WaterID: omit.From(publicreportWater0.ID),
-	}
-
-	err := publicreportNotifyEmailWaters1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterNotifyEmailWaters0: %w", err)
-	}
-
-	return publicreportNotifyEmailWaters1, nil
-}
-
-func (publicreportWater0 *PublicreportWater) InsertNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWaterSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	publicreportNotifyEmailWaters1, err := insertPublicreportWaterNotifyEmailWaters0(ctx, exec, related, publicreportWater0)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.NotifyEmailWaters = append(publicreportWater0.R.NotifyEmailWaters, publicreportNotifyEmailWaters1...)
-
-	for _, rel := range publicreportNotifyEmailWaters1 {
-		rel.R.Water = publicreportWater0
-	}
-	return nil
-}
-
-func (publicreportWater0 *PublicreportWater) AttachNotifyEmailWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailWater) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportNotifyEmailWaters1 := PublicreportNotifyEmailWaterSlice(related)
-
-	_, err = attachPublicreportWaterNotifyEmailWaters0(ctx, exec, len(related), publicreportNotifyEmailWaters1, publicreportWater0)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.NotifyEmailWaters = append(publicreportWater0.R.NotifyEmailWaters, publicreportNotifyEmailWaters1...)
-
-	for _, rel := range related {
-		rel.R.Water = publicreportWater0
-	}
-
-	return nil
-}
-
-func insertPublicreportWaterNotifyPhoneWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneWaters1 []*PublicreportNotifyPhoneWaterSetter, publicreportWater0 *PublicreportWater) (PublicreportNotifyPhoneWaterSlice, error) {
-	for i := range publicreportNotifyPhoneWaters1 {
-		publicreportNotifyPhoneWaters1[i].WaterID = omit.From(publicreportWater0.ID)
-	}
-
-	ret, err := PublicreportNotifyPhoneWaters.Insert(bob.ToMods(publicreportNotifyPhoneWaters1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportWaterNotifyPhoneWaters0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachPublicreportWaterNotifyPhoneWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneWaters1 PublicreportNotifyPhoneWaterSlice, publicreportWater0 *PublicreportWater) (PublicreportNotifyPhoneWaterSlice, error) {
-	setter := &PublicreportNotifyPhoneWaterSetter{
-		WaterID: omit.From(publicreportWater0.ID),
-	}
-
-	err := publicreportNotifyPhoneWaters1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterNotifyPhoneWaters0: %w", err)
-	}
-
-	return publicreportNotifyPhoneWaters1, nil
-}
-
-func (publicreportWater0 *PublicreportWater) InsertNotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWaterSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	publicreportNotifyPhoneWaters1, err := insertPublicreportWaterNotifyPhoneWaters0(ctx, exec, related, publicreportWater0)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.NotifyPhoneWaters = append(publicreportWater0.R.NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
-
-	for _, rel := range publicreportNotifyPhoneWaters1 {
-		rel.R.Water = publicreportWater0
-	}
-	return nil
-}
-
-func (publicreportWater0 *PublicreportWater) AttachNotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWater) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportNotifyPhoneWaters1 := PublicreportNotifyPhoneWaterSlice(related)
-
-	_, err = attachPublicreportWaterNotifyPhoneWaters0(ctx, exec, len(related), publicreportNotifyPhoneWaters1, publicreportWater0)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.NotifyPhoneWaters = append(publicreportWater0.R.NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
-
-	for _, rel := range related {
-		rel.R.Water = publicreportWater0
-	}
-
-	return nil
-}
-
-func attachPublicreportWaterAddress0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, address1 *Address) (*PublicreportWater, error) {
+func attachPublicreportWaterReport0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, publicreportReport1 *PublicreportReport) (*PublicreportWater, error) {
 	setter := &PublicreportWaterSetter{
-		AddressID: omitnull.From(address1.ID),
+		ReportID: omit.From(publicreportReport1.ID),
 	}
 
 	err := publicreportWater0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterAddress0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportWaterReport0: %w", err)
 	}
 
 	return publicreportWater0, nil
 }
 
-func (publicreportWater0 *PublicreportWater) InsertAddress(ctx context.Context, exec bob.Executor, related *AddressSetter) error {
+func (publicreportWater0 *PublicreportWater) InsertReport(ctx context.Context, exec bob.Executor, related *PublicreportReportSetter) error {
 	var err error
 
-	address1, err := Addresses.Insert(related).One(ctx, exec)
+	publicreportReport1, err := PublicreportReports.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachPublicreportWaterAddress0(ctx, exec, 1, publicreportWater0, address1)
+	_, err = attachPublicreportWaterReport0(ctx, exec, 1, publicreportWater0, publicreportReport1)
 	if err != nil {
 		return err
 	}
 
-	publicreportWater0.R.Address = address1
+	publicreportWater0.R.Report = publicreportReport1
 
-	address1.R.Waters = append(address1.R.Waters, publicreportWater0)
+	publicreportReport1.R.Water = publicreportWater0
 
 	return nil
 }
 
-func (publicreportWater0 *PublicreportWater) AttachAddress(ctx context.Context, exec bob.Executor, address1 *Address) error {
+func (publicreportWater0 *PublicreportWater) AttachReport(ctx context.Context, exec bob.Executor, publicreportReport1 *PublicreportReport) error {
 	var err error
 
-	_, err = attachPublicreportWaterAddress0(ctx, exec, 1, publicreportWater0, address1)
+	_, err = attachPublicreportWaterReport0(ctx, exec, 1, publicreportWater0, publicreportReport1)
 	if err != nil {
 		return err
 	}
 
-	publicreportWater0.R.Address = address1
+	publicreportWater0.R.Report = publicreportReport1
 
-	address1.R.Waters = append(address1.R.Waters, publicreportWater0)
-
-	return nil
-}
-
-func attachPublicreportWaterOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, organization1 *Organization) (*PublicreportWater, error) {
-	setter := &PublicreportWaterSetter{
-		OrganizationID: omit.From(organization1.ID),
-	}
-
-	err := publicreportWater0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterOrganization0: %w", err)
-	}
-
-	return publicreportWater0, nil
-}
-
-func (publicreportWater0 *PublicreportWater) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
-	var err error
-
-	organization1, err := Organizations.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportWaterOrganization0(ctx, exec, 1, publicreportWater0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.Organization = organization1
-
-	organization1.R.Waters = append(organization1.R.Waters, publicreportWater0)
-
-	return nil
-}
-
-func (publicreportWater0 *PublicreportWater) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
-	var err error
-
-	_, err = attachPublicreportWaterOrganization0(ctx, exec, 1, publicreportWater0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.Organization = organization1
-
-	organization1.R.Waters = append(organization1.R.Waters, publicreportWater0)
-
-	return nil
-}
-
-func attachPublicreportWaterReviewerUser0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, user1 *User) (*PublicreportWater, error) {
-	setter := &PublicreportWaterSetter{
-		ReviewerID: omitnull.From(user1.ID),
-	}
-
-	err := publicreportWater0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterReviewerUser0: %w", err)
-	}
-
-	return publicreportWater0, nil
-}
-
-func (publicreportWater0 *PublicreportWater) InsertReviewerUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
-	var err error
-
-	user1, err := Users.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportWaterReviewerUser0(ctx, exec, 1, publicreportWater0, user1)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.ReviewerUser = user1
-
-	user1.R.ReviewerWaters = append(user1.R.ReviewerWaters, publicreportWater0)
-
-	return nil
-}
-
-func (publicreportWater0 *PublicreportWater) AttachReviewerUser(ctx context.Context, exec bob.Executor, user1 *User) error {
-	var err error
-
-	_, err = attachPublicreportWaterReviewerUser0(ctx, exec, 1, publicreportWater0, user1)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.ReviewerUser = user1
-
-	user1.R.ReviewerWaters = append(user1.R.ReviewerWaters, publicreportWater0)
-
-	return nil
-}
-
-func attachPublicreportWaterImages0(ctx context.Context, exec bob.Executor, count int, publicreportWater0 *PublicreportWater, publicreportImages2 PublicreportImageSlice) (PublicreportWaterImageSlice, error) {
-	setters := make([]*PublicreportWaterImageSetter, count)
-	for i := range count {
-		setters[i] = &PublicreportWaterImageSetter{
-			WaterID: omit.From(publicreportWater0.ID),
-			ImageID: omit.From(publicreportImages2[i].ID),
-		}
-	}
-
-	publicreportWaterImages1, err := PublicreportWaterImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportWaterImages0: %w", err)
-	}
-
-	return publicreportWaterImages1, nil
-}
-
-func (publicreportWater0 *PublicreportWater) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	inserted, err := PublicreportImages.Insert(bob.ToMods(related...)).All(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-	publicreportImages2 := PublicreportImageSlice(inserted)
-
-	_, err = attachPublicreportWaterImages0(ctx, exec, len(related), publicreportWater0, publicreportImages2)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.Images = append(publicreportWater0.R.Images, publicreportImages2...)
-
-	for _, rel := range publicreportImages2 {
-		rel.R.Waters = append(rel.R.Waters, publicreportWater0)
-	}
-	return nil
-}
-
-func (publicreportWater0 *PublicreportWater) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportImages2 := PublicreportImageSlice(related)
-
-	_, err = attachPublicreportWaterImages0(ctx, exec, len(related), publicreportWater0, publicreportImages2)
-	if err != nil {
-		return err
-	}
-
-	publicreportWater0.R.Images = append(publicreportWater0.R.Images, publicreportImages2...)
-
-	for _, rel := range related {
-		rel.R.Waters = append(rel.R.Waters, publicreportWater0)
-	}
+	publicreportReport1.R.Water = publicreportWater0
 
 	return nil
 }
 
 type publicreportWaterWhere[Q psql.Filterable] struct {
-	ID                     psql.WhereMod[Q, int32]
 	AccessComments         psql.WhereMod[Q, string]
 	AccessGate             psql.WhereMod[Q, bool]
 	AccessFence            psql.WhereMod[Q, bool]
 	AccessLocked           psql.WhereMod[Q, bool]
 	AccessDog              psql.WhereMod[Q, bool]
 	AccessOther            psql.WhereMod[Q, bool]
-	AddressRaw             psql.WhereMod[Q, string]
-	AddressCountry         psql.WhereMod[Q, string]
-	AddressPostalCode      psql.WhereMod[Q, string]
-	AddressLocality        psql.WhereMod[Q, string]
-	AddressStreet          psql.WhereMod[Q, string]
-	AddressRegion          psql.WhereMod[Q, string]
 	Comments               psql.WhereMod[Q, string]
-	Created                psql.WhereMod[Q, time.Time]
-	H3cell                 psql.WhereNullMod[Q, string]
+	IsReporterConfidential psql.WhereMod[Q, bool]
+	IsReporterOwner        psql.WhereMod[Q, bool]
 	HasAdult               psql.WhereMod[Q, bool]
+	HasBackyardPermission  psql.WhereMod[Q, bool]
 	HasLarvae              psql.WhereMod[Q, bool]
 	HasPupae               psql.WhereMod[Q, bool]
-	MapZoom                psql.WhereMod[Q, float32]
 	OwnerEmail             psql.WhereMod[Q, string]
 	OwnerName              psql.WhereMod[Q, string]
 	OwnerPhone             psql.WhereMod[Q, string]
-	PublicID               psql.WhereMod[Q, string]
-	ReporterEmail          psql.WhereMod[Q, string]
-	ReporterName           psql.WhereMod[Q, string]
-	ReporterPhone          psql.WhereMod[Q, string]
-	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID         psql.WhereMod[Q, int32]
-	HasBackyardPermission  psql.WhereMod[Q, bool]
-	IsReporterConfidential psql.WhereMod[Q, bool]
-	IsReporterOwner        psql.WhereMod[Q, bool]
-	ReporterContactConsent psql.WhereNullMod[Q, bool]
-	Location               psql.WhereNullMod[Q, string]
-	AddressNumber          psql.WhereMod[Q, string]
-	AddressID              psql.WhereNullMod[Q, int32]
-	Reviewed               psql.WhereNullMod[Q, time.Time]
-	ReviewerID             psql.WhereNullMod[Q, int32]
+	ReportID               psql.WhereMod[Q, int32]
 }
 
 func (publicreportWaterWhere[Q]) AliasedAs(alias string) publicreportWaterWhere[Q] {
@@ -1746,44 +810,23 @@ func (publicreportWaterWhere[Q]) AliasedAs(alias string) publicreportWaterWhere[
 
 func buildPublicreportWaterWhere[Q psql.Filterable](cols publicreportWaterColumns) publicreportWaterWhere[Q] {
 	return publicreportWaterWhere[Q]{
-		ID:                     psql.Where[Q, int32](cols.ID),
 		AccessComments:         psql.Where[Q, string](cols.AccessComments),
 		AccessGate:             psql.Where[Q, bool](cols.AccessGate),
 		AccessFence:            psql.Where[Q, bool](cols.AccessFence),
 		AccessLocked:           psql.Where[Q, bool](cols.AccessLocked),
 		AccessDog:              psql.Where[Q, bool](cols.AccessDog),
 		AccessOther:            psql.Where[Q, bool](cols.AccessOther),
-		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
-		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
-		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
-		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
-		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
-		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
 		Comments:               psql.Where[Q, string](cols.Comments),
-		Created:                psql.Where[Q, time.Time](cols.Created),
-		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
+		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
+		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
 		HasAdult:               psql.Where[Q, bool](cols.HasAdult),
+		HasBackyardPermission:  psql.Where[Q, bool](cols.HasBackyardPermission),
 		HasLarvae:              psql.Where[Q, bool](cols.HasLarvae),
 		HasPupae:               psql.Where[Q, bool](cols.HasPupae),
-		MapZoom:                psql.Where[Q, float32](cols.MapZoom),
 		OwnerEmail:             psql.Where[Q, string](cols.OwnerEmail),
 		OwnerName:              psql.Where[Q, string](cols.OwnerName),
 		OwnerPhone:             psql.Where[Q, string](cols.OwnerPhone),
-		PublicID:               psql.Where[Q, string](cols.PublicID),
-		ReporterEmail:          psql.Where[Q, string](cols.ReporterEmail),
-		ReporterName:           psql.Where[Q, string](cols.ReporterName),
-		ReporterPhone:          psql.Where[Q, string](cols.ReporterPhone),
-		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
-		HasBackyardPermission:  psql.Where[Q, bool](cols.HasBackyardPermission),
-		IsReporterConfidential: psql.Where[Q, bool](cols.IsReporterConfidential),
-		IsReporterOwner:        psql.Where[Q, bool](cols.IsReporterOwner),
-		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
-		Location:               psql.WhereNull[Q, string](cols.Location),
-		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
-		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
-		Reviewed:               psql.WhereNull[Q, time.Time](cols.Reviewed),
-		ReviewerID:             psql.WhereNull[Q, int32](cols.ReviewerID),
+		ReportID:               psql.Where[Q, int32](cols.ReportID),
 	}
 }
 
@@ -1793,82 +836,16 @@ func (o *PublicreportWater) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "NotifyEmailWaters":
-		rels, ok := retrieved.(PublicreportNotifyEmailWaterSlice)
+	case "Report":
+		rel, ok := retrieved.(*PublicreportReport)
 		if !ok {
 			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.NotifyEmailWaters = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Water = o
-			}
-		}
-		return nil
-	case "NotifyPhoneWaters":
-		rels, ok := retrieved.(PublicreportNotifyPhoneWaterSlice)
-		if !ok {
-			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.NotifyPhoneWaters = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Water = o
-			}
-		}
-		return nil
-	case "Address":
-		rel, ok := retrieved.(*Address)
-		if !ok {
-			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Address = rel
+		o.R.Report = rel
 
 		if rel != nil {
-			rel.R.Waters = PublicreportWaterSlice{o}
-		}
-		return nil
-	case "Organization":
-		rel, ok := retrieved.(*Organization)
-		if !ok {
-			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Organization = rel
-
-		if rel != nil {
-			rel.R.Waters = PublicreportWaterSlice{o}
-		}
-		return nil
-	case "ReviewerUser":
-		rel, ok := retrieved.(*User)
-		if !ok {
-			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ReviewerUser = rel
-
-		if rel != nil {
-			rel.R.ReviewerWaters = PublicreportWaterSlice{o}
-		}
-		return nil
-	case "Images":
-		rels, ok := retrieved.(PublicreportImageSlice)
-		if !ok {
-			return fmt.Errorf("publicreportWater cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Images = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Waters = PublicreportWaterSlice{o}
-			}
+			rel.R.Water = o
 		}
 		return nil
 	default:
@@ -1877,153 +854,73 @@ func (o *PublicreportWater) Preload(name string, retrieved any) error {
 }
 
 type publicreportWaterPreloader struct {
-	Address      func(...psql.PreloadOption) psql.Preloader
-	Organization func(...psql.PreloadOption) psql.Preloader
-	ReviewerUser func(...psql.PreloadOption) psql.Preloader
+	Report func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPublicreportWaterPreloader() publicreportWaterPreloader {
 	return publicreportWaterPreloader{
-		Address: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Address, AddressSlice](psql.PreloadRel{
-				Name: "Address",
+		Report: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportReport, PublicreportReportSlice](psql.PreloadRel{
+				Name: "Report",
 				Sides: []psql.PreloadSide{
 					{
 						From:        PublicreportWaters,
-						To:          Addresses,
-						FromColumns: []string{"address_id"},
+						To:          PublicreportReports,
+						FromColumns: []string{"report_id"},
 						ToColumns:   []string{"id"},
 					},
 				},
-			}, Addresses.Columns.Names(), opts...)
-		},
-		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
-				Name: "Organization",
-				Sides: []psql.PreloadSide{
-					{
-						From:        PublicreportWaters,
-						To:          Organizations,
-						FromColumns: []string{"organization_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Organizations.Columns.Names(), opts...)
-		},
-		ReviewerUser: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*User, UserSlice](psql.PreloadRel{
-				Name: "ReviewerUser",
-				Sides: []psql.PreloadSide{
-					{
-						From:        PublicreportWaters,
-						To:          Users,
-						FromColumns: []string{"reviewer_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Users.Columns.Names(), opts...)
+			}, PublicreportReports.Columns.Names(), opts...)
 		},
 	}
 }
 
 type publicreportWaterThenLoader[Q orm.Loadable] struct {
-	NotifyEmailWaters func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NotifyPhoneWaters func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Address           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerUser      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Images            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Report func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportWaterThenLoader[Q orm.Loadable]() publicreportWaterThenLoader[Q] {
-	type NotifyEmailWatersLoadInterface interface {
-		LoadNotifyEmailWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type NotifyPhoneWatersLoadInterface interface {
-		LoadNotifyPhoneWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type AddressLoadInterface interface {
-		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type OrganizationLoadInterface interface {
-		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ReviewerUserLoadInterface interface {
-		LoadReviewerUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ImagesLoadInterface interface {
-		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ReportLoadInterface interface {
+		LoadReport(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportWaterThenLoader[Q]{
-		NotifyEmailWaters: thenLoadBuilder[Q](
-			"NotifyEmailWaters",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyEmailWaters(ctx, exec, mods...)
-			},
-		),
-		NotifyPhoneWaters: thenLoadBuilder[Q](
-			"NotifyPhoneWaters",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhoneWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyPhoneWaters(ctx, exec, mods...)
-			},
-		),
-		Address: thenLoadBuilder[Q](
-			"Address",
-			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadAddress(ctx, exec, mods...)
-			},
-		),
-		Organization: thenLoadBuilder[Q](
-			"Organization",
-			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadOrganization(ctx, exec, mods...)
-			},
-		),
-		ReviewerUser: thenLoadBuilder[Q](
-			"ReviewerUser",
-			func(ctx context.Context, exec bob.Executor, retrieved ReviewerUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadReviewerUser(ctx, exec, mods...)
-			},
-		),
-		Images: thenLoadBuilder[Q](
-			"Images",
-			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadImages(ctx, exec, mods...)
+		Report: thenLoadBuilder[Q](
+			"Report",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReport(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadNotifyEmailWaters loads the publicreportWater's NotifyEmailWaters into the .R struct
-func (o *PublicreportWater) LoadNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReport loads the publicreportWater's Report into the .R struct
+func (o *PublicreportWater) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.NotifyEmailWaters = nil
+	o.R.Report = nil
 
-	related, err := o.NotifyEmailWaters(mods...).All(ctx, exec)
+	related, err := o.Report(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	for _, rel := range related {
-		rel.R.Water = o
-	}
+	related.R.Water = o
 
-	o.R.NotifyEmailWaters = related
+	o.R.Report = related
 	return nil
 }
 
-// LoadNotifyEmailWaters loads the publicreportWater's NotifyEmailWaters into the .R struct
-func (os PublicreportWaterSlice) LoadNotifyEmailWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReport loads the publicreportWater's Report into the .R struct
+func (os PublicreportWaterSlice) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyEmailWaters, err := os.NotifyEmailWaters(mods...).All(ctx, exec)
+	publicreportReports, err := os.Report(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2033,327 +930,16 @@ func (os PublicreportWaterSlice) LoadNotifyEmailWaters(ctx context.Context, exec
 			continue
 		}
 
-		o.R.NotifyEmailWaters = nil
-	}
+		for _, rel := range publicreportReports {
 
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportNotifyEmailWaters {
-
-			if !(o.ID == rel.WaterID) {
+			if !(o.ReportID == rel.ID) {
 				continue
 			}
 
 			rel.R.Water = o
 
-			o.R.NotifyEmailWaters = append(o.R.NotifyEmailWaters, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadNotifyPhoneWaters loads the publicreportWater's NotifyPhoneWaters into the .R struct
-func (o *PublicreportWater) LoadNotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.NotifyPhoneWaters = nil
-
-	related, err := o.NotifyPhoneWaters(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Water = o
-	}
-
-	o.R.NotifyPhoneWaters = related
-	return nil
-}
-
-// LoadNotifyPhoneWaters loads the publicreportWater's NotifyPhoneWaters into the .R struct
-func (os PublicreportWaterSlice) LoadNotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	publicreportNotifyPhoneWaters, err := os.NotifyPhoneWaters(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.NotifyPhoneWaters = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportNotifyPhoneWaters {
-
-			if !(o.ID == rel.WaterID) {
-				continue
-			}
-
-			rel.R.Water = o
-
-			o.R.NotifyPhoneWaters = append(o.R.NotifyPhoneWaters, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadAddress loads the publicreportWater's Address into the .R struct
-func (o *PublicreportWater) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Address = nil
-
-	related, err := o.Address(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.Waters = PublicreportWaterSlice{o}
-
-	o.R.Address = related
-	return nil
-}
-
-// LoadAddress loads the publicreportWater's Address into the .R struct
-func (os PublicreportWaterSlice) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	addresses, err := os.Address(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range addresses {
-			if !o.AddressID.IsValue() {
-				continue
-			}
-
-			if !(o.AddressID.IsValue() && o.AddressID.MustGet() == rel.ID) {
-				continue
-			}
-
-			rel.R.Waters = append(rel.R.Waters, o)
-
-			o.R.Address = rel
+			o.R.Report = rel
 			break
-		}
-	}
-
-	return nil
-}
-
-// LoadOrganization loads the publicreportWater's Organization into the .R struct
-func (o *PublicreportWater) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Organization = nil
-
-	related, err := o.Organization(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.Waters = PublicreportWaterSlice{o}
-
-	o.R.Organization = related
-	return nil
-}
-
-// LoadOrganization loads the publicreportWater's Organization into the .R struct
-func (os PublicreportWaterSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	organizations, err := os.Organization(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range organizations {
-
-			if !(o.OrganizationID == rel.ID) {
-				continue
-			}
-
-			rel.R.Waters = append(rel.R.Waters, o)
-
-			o.R.Organization = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadReviewerUser loads the publicreportWater's ReviewerUser into the .R struct
-func (o *PublicreportWater) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ReviewerUser = nil
-
-	related, err := o.ReviewerUser(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.ReviewerWaters = PublicreportWaterSlice{o}
-
-	o.R.ReviewerUser = related
-	return nil
-}
-
-// LoadReviewerUser loads the publicreportWater's ReviewerUser into the .R struct
-func (os PublicreportWaterSlice) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	users, err := os.ReviewerUser(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range users {
-			if !o.ReviewerID.IsValue() {
-				continue
-			}
-
-			if !(o.ReviewerID.IsValue() && o.ReviewerID.MustGet() == rel.ID) {
-				continue
-			}
-
-			rel.R.ReviewerWaters = append(rel.R.ReviewerWaters, o)
-
-			o.R.ReviewerUser = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadImages loads the publicreportWater's Images into the .R struct
-func (o *PublicreportWater) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Images = nil
-
-	related, err := o.Images(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Waters = PublicreportWaterSlice{o}
-	}
-
-	o.R.Images = related
-	return nil
-}
-
-// LoadImages loads the publicreportWater's Images into the .R struct
-func (os PublicreportWaterSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	// since we are changing the columns, we need to check if the original columns were set or add the defaults
-	sq := dialect.SelectQuery{}
-	for _, mod := range mods {
-		mod.Apply(&sq)
-	}
-
-	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(PublicreportImages.Columns))
-	}
-
-	q := os.Images(append(
-		mods,
-		sm.Columns(PublicreportWaterImages.Columns.WaterID.As("related_publicreport.water.ID")),
-	)...)
-
-	IDSlice := []int32{}
-
-	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
-		return func(row *scan.Row) (any, error) {
-				IDSlice = append(IDSlice, *new(int32))
-				row.ScheduleScanByName("related_publicreport.water.ID", &IDSlice[len(IDSlice)-1])
-
-				return nil, nil
-			},
-			func(any, any) error {
-				return nil
-			}
-	})
-
-	publicreportImages, err := bob.Allx[bob.SliceTransformer[*PublicreportImage, PublicreportImageSlice]](ctx, exec, q, mapper)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		o.R.Images = nil
-	}
-
-	for _, o := range os {
-		for i, rel := range publicreportImages {
-			if !(o.ID == IDSlice[i]) {
-				continue
-			}
-
-			rel.R.Waters = append(rel.R.Waters, o)
-
-			o.R.Images = append(o.R.Images, rel)
 		}
 	}
 

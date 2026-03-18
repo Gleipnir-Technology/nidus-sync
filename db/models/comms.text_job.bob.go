@@ -33,6 +33,8 @@ type CommsTextJob struct {
 	Type        enums.CommsTextjobtype   `db:"type_" `
 	Source      enums.CommsTextjobsource `db:"source" `
 	Completed   null.Val[time.Time]      `db:"completed" `
+	CreatorID   null.Val[int32]          `db:"creator_id" `
+	ReportID    null.Val[int32]          `db:"report_id" `
 
 	R commsTextJobR `db:"-" `
 }
@@ -49,13 +51,15 @@ type CommsTextJobsQuery = *psql.ViewQuery[*CommsTextJob, CommsTextJobSlice]
 
 // commsTextJobR is where relationships are stored.
 type commsTextJobR struct {
-	DestinationPhone *CommsPhone // comms.text_job.text_job_destination_fkey
+	CreatorUser      *User               // comms.text_job.text_job_creator_id_fkey
+	DestinationPhone *CommsPhone         // comms.text_job.text_job_destination_fkey
+	Report           *PublicreportReport // comms.text_job.text_job_report_id_fkey
 }
 
 func buildCommsTextJobColumns(alias string) commsTextJobColumns {
 	return commsTextJobColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"content", "created", "destination", "id", "type_", "source", "completed",
+			"content", "created", "destination", "id", "type_", "source", "completed", "creator_id", "report_id",
 		).WithParent("comms.text_job"),
 		tableAlias:  alias,
 		Content:     psql.Quote(alias, "content"),
@@ -65,6 +69,8 @@ func buildCommsTextJobColumns(alias string) commsTextJobColumns {
 		Type:        psql.Quote(alias, "type_"),
 		Source:      psql.Quote(alias, "source"),
 		Completed:   psql.Quote(alias, "completed"),
+		CreatorID:   psql.Quote(alias, "creator_id"),
+		ReportID:    psql.Quote(alias, "report_id"),
 	}
 }
 
@@ -78,6 +84,8 @@ type commsTextJobColumns struct {
 	Type        psql.Expression
 	Source      psql.Expression
 	Completed   psql.Expression
+	CreatorID   psql.Expression
+	ReportID    psql.Expression
 }
 
 func (c commsTextJobColumns) Alias() string {
@@ -99,10 +107,12 @@ type CommsTextJobSetter struct {
 	Type        omit.Val[enums.CommsTextjobtype]   `db:"type_" `
 	Source      omit.Val[enums.CommsTextjobsource] `db:"source" `
 	Completed   omitnull.Val[time.Time]            `db:"completed" `
+	CreatorID   omitnull.Val[int32]                `db:"creator_id" `
+	ReportID    omitnull.Val[int32]                `db:"report_id" `
 }
 
 func (s CommsTextJobSetter) SetColumns() []string {
-	vals := make([]string, 0, 7)
+	vals := make([]string, 0, 9)
 	if s.Content.IsValue() {
 		vals = append(vals, "content")
 	}
@@ -123,6 +133,12 @@ func (s CommsTextJobSetter) SetColumns() []string {
 	}
 	if !s.Completed.IsUnset() {
 		vals = append(vals, "completed")
+	}
+	if !s.CreatorID.IsUnset() {
+		vals = append(vals, "creator_id")
+	}
+	if !s.ReportID.IsUnset() {
+		vals = append(vals, "report_id")
 	}
 	return vals
 }
@@ -149,6 +165,12 @@ func (s CommsTextJobSetter) Overwrite(t *CommsTextJob) {
 	if !s.Completed.IsUnset() {
 		t.Completed = s.Completed.MustGetNull()
 	}
+	if !s.CreatorID.IsUnset() {
+		t.CreatorID = s.CreatorID.MustGetNull()
+	}
+	if !s.ReportID.IsUnset() {
+		t.ReportID = s.ReportID.MustGetNull()
+	}
 }
 
 func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
@@ -157,7 +179,7 @@ func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 7)
+		vals := make([]bob.Expression, 9)
 		if s.Content.IsValue() {
 			vals[0] = psql.Arg(s.Content.MustGet())
 		} else {
@@ -200,6 +222,18 @@ func (s *CommsTextJobSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
+		if !s.CreatorID.IsUnset() {
+			vals[7] = psql.Arg(s.CreatorID.MustGetNull())
+		} else {
+			vals[7] = psql.Raw("DEFAULT")
+		}
+
+		if !s.ReportID.IsUnset() {
+			vals[8] = psql.Arg(s.ReportID.MustGetNull())
+		} else {
+			vals[8] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -209,7 +243,7 @@ func (s CommsTextJobSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsTextJobSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 7)
+	exprs := make([]bob.Expression, 0, 9)
 
 	if s.Content.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -257,6 +291,20 @@ func (s CommsTextJobSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "completed")...),
 			psql.Arg(s.Completed),
+		}})
+	}
+
+	if !s.CreatorID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "creator_id")...),
+			psql.Arg(s.CreatorID),
+		}})
+	}
+
+	if !s.ReportID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "report_id")...),
+			psql.Arg(s.ReportID),
 		}})
 	}
 
@@ -486,6 +534,30 @@ func (o CommsTextJobSlice) ReloadAll(ctx context.Context, exec bob.Executor) err
 	return nil
 }
 
+// CreatorUser starts a query for related objects on user_
+func (o *CommsTextJob) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	return Users.Query(append(mods,
+		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.CreatorID))),
+	)...)
+}
+
+func (os CommsTextJobSlice) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	pkCreatorID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkCreatorID = append(pkCreatorID, o.CreatorID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkCreatorID), "integer[]")),
+	))
+
+	return Users.Query(append(mods,
+		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // DestinationPhone starts a query for related objects on comms.phone
 func (o *CommsTextJob) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuery]) CommsPhonesQuery {
 	return CommsPhones.Query(append(mods,
@@ -508,6 +580,78 @@ func (os CommsTextJobSlice) DestinationPhone(mods ...bob.Mod[*dialect.SelectQuer
 	return CommsPhones.Query(append(mods,
 		sm.Where(psql.Group(CommsPhones.Columns.E164).OP("IN", PKArgExpr)),
 	)...)
+}
+
+// Report starts a query for related objects on publicreport.report
+func (o *CommsTextJob) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.Where(PublicreportReports.Columns.ID.EQ(psql.Arg(o.ReportID))),
+	)...)
+}
+
+func (os CommsTextJobSlice) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	pkReportID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkReportID = append(pkReportID, o.ReportID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkReportID), "integer[]")),
+	))
+
+	return PublicreportReports.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReports.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+func attachCommsTextJobCreatorUser0(ctx context.Context, exec bob.Executor, count int, commsTextJob0 *CommsTextJob, user1 *User) (*CommsTextJob, error) {
+	setter := &CommsTextJobSetter{
+		CreatorID: omitnull.From(user1.ID),
+	}
+
+	err := commsTextJob0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsTextJobCreatorUser0: %w", err)
+	}
+
+	return commsTextJob0, nil
+}
+
+func (commsTextJob0 *CommsTextJob) InsertCreatorUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
+	var err error
+
+	user1, err := Users.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachCommsTextJobCreatorUser0(ctx, exec, 1, commsTextJob0, user1)
+	if err != nil {
+		return err
+	}
+
+	commsTextJob0.R.CreatorUser = user1
+
+	user1.R.CreatorTextJobs = append(user1.R.CreatorTextJobs, commsTextJob0)
+
+	return nil
+}
+
+func (commsTextJob0 *CommsTextJob) AttachCreatorUser(ctx context.Context, exec bob.Executor, user1 *User) error {
+	var err error
+
+	_, err = attachCommsTextJobCreatorUser0(ctx, exec, 1, commsTextJob0, user1)
+	if err != nil {
+		return err
+	}
+
+	commsTextJob0.R.CreatorUser = user1
+
+	user1.R.CreatorTextJobs = append(user1.R.CreatorTextJobs, commsTextJob0)
+
+	return nil
 }
 
 func attachCommsTextJobDestinationPhone0(ctx context.Context, exec bob.Executor, count int, commsTextJob0 *CommsTextJob, commsPhone1 *CommsPhone) (*CommsTextJob, error) {
@@ -558,6 +702,54 @@ func (commsTextJob0 *CommsTextJob) AttachDestinationPhone(ctx context.Context, e
 	return nil
 }
 
+func attachCommsTextJobReport0(ctx context.Context, exec bob.Executor, count int, commsTextJob0 *CommsTextJob, publicreportReport1 *PublicreportReport) (*CommsTextJob, error) {
+	setter := &CommsTextJobSetter{
+		ReportID: omitnull.From(publicreportReport1.ID),
+	}
+
+	err := commsTextJob0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsTextJobReport0: %w", err)
+	}
+
+	return commsTextJob0, nil
+}
+
+func (commsTextJob0 *CommsTextJob) InsertReport(ctx context.Context, exec bob.Executor, related *PublicreportReportSetter) error {
+	var err error
+
+	publicreportReport1, err := PublicreportReports.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachCommsTextJobReport0(ctx, exec, 1, commsTextJob0, publicreportReport1)
+	if err != nil {
+		return err
+	}
+
+	commsTextJob0.R.Report = publicreportReport1
+
+	publicreportReport1.R.TextJobs = append(publicreportReport1.R.TextJobs, commsTextJob0)
+
+	return nil
+}
+
+func (commsTextJob0 *CommsTextJob) AttachReport(ctx context.Context, exec bob.Executor, publicreportReport1 *PublicreportReport) error {
+	var err error
+
+	_, err = attachCommsTextJobReport0(ctx, exec, 1, commsTextJob0, publicreportReport1)
+	if err != nil {
+		return err
+	}
+
+	commsTextJob0.R.Report = publicreportReport1
+
+	publicreportReport1.R.TextJobs = append(publicreportReport1.R.TextJobs, commsTextJob0)
+
+	return nil
+}
+
 type commsTextJobWhere[Q psql.Filterable] struct {
 	Content     psql.WhereMod[Q, string]
 	Created     psql.WhereMod[Q, time.Time]
@@ -566,6 +758,8 @@ type commsTextJobWhere[Q psql.Filterable] struct {
 	Type        psql.WhereMod[Q, enums.CommsTextjobtype]
 	Source      psql.WhereMod[Q, enums.CommsTextjobsource]
 	Completed   psql.WhereNullMod[Q, time.Time]
+	CreatorID   psql.WhereNullMod[Q, int32]
+	ReportID    psql.WhereNullMod[Q, int32]
 }
 
 func (commsTextJobWhere[Q]) AliasedAs(alias string) commsTextJobWhere[Q] {
@@ -581,6 +775,8 @@ func buildCommsTextJobWhere[Q psql.Filterable](cols commsTextJobColumns) commsTe
 		Type:        psql.Where[Q, enums.CommsTextjobtype](cols.Type),
 		Source:      psql.Where[Q, enums.CommsTextjobsource](cols.Source),
 		Completed:   psql.WhereNull[Q, time.Time](cols.Completed),
+		CreatorID:   psql.WhereNull[Q, int32](cols.CreatorID),
+		ReportID:    psql.WhereNull[Q, int32](cols.ReportID),
 	}
 }
 
@@ -590,6 +786,18 @@ func (o *CommsTextJob) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "CreatorUser":
+		rel, ok := retrieved.(*User)
+		if !ok {
+			return fmt.Errorf("commsTextJob cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.CreatorUser = rel
+
+		if rel != nil {
+			rel.R.CreatorTextJobs = CommsTextJobSlice{o}
+		}
+		return nil
 	case "DestinationPhone":
 		rel, ok := retrieved.(*CommsPhone)
 		if !ok {
@@ -602,17 +810,44 @@ func (o *CommsTextJob) Preload(name string, retrieved any) error {
 			rel.R.DestinationTextJobs = CommsTextJobSlice{o}
 		}
 		return nil
+	case "Report":
+		rel, ok := retrieved.(*PublicreportReport)
+		if !ok {
+			return fmt.Errorf("commsTextJob cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Report = rel
+
+		if rel != nil {
+			rel.R.TextJobs = CommsTextJobSlice{o}
+		}
+		return nil
 	default:
 		return fmt.Errorf("commsTextJob has no relationship %q", name)
 	}
 }
 
 type commsTextJobPreloader struct {
+	CreatorUser      func(...psql.PreloadOption) psql.Preloader
 	DestinationPhone func(...psql.PreloadOption) psql.Preloader
+	Report           func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildCommsTextJobPreloader() commsTextJobPreloader {
 	return commsTextJobPreloader{
+		CreatorUser: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*User, UserSlice](psql.PreloadRel{
+				Name: "CreatorUser",
+				Sides: []psql.PreloadSide{
+					{
+						From:        CommsTextJobs,
+						To:          Users,
+						FromColumns: []string{"creator_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Users.Columns.Names(), opts...)
+		},
 		DestinationPhone: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*CommsPhone, CommsPhoneSlice](psql.PreloadRel{
 				Name: "DestinationPhone",
@@ -626,26 +861,114 @@ func buildCommsTextJobPreloader() commsTextJobPreloader {
 				},
 			}, CommsPhones.Columns.Names(), opts...)
 		},
+		Report: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportReport, PublicreportReportSlice](psql.PreloadRel{
+				Name: "Report",
+				Sides: []psql.PreloadSide{
+					{
+						From:        CommsTextJobs,
+						To:          PublicreportReports,
+						FromColumns: []string{"report_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, PublicreportReports.Columns.Names(), opts...)
+		},
 	}
 }
 
 type commsTextJobThenLoader[Q orm.Loadable] struct {
+	CreatorUser      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DestinationPhone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Report           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsTextJobThenLoader[Q orm.Loadable]() commsTextJobThenLoader[Q] {
+	type CreatorUserLoadInterface interface {
+		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type DestinationPhoneLoadInterface interface {
 		LoadDestinationPhone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type ReportLoadInterface interface {
+		LoadReport(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 
 	return commsTextJobThenLoader[Q]{
+		CreatorUser: thenLoadBuilder[Q](
+			"CreatorUser",
+			func(ctx context.Context, exec bob.Executor, retrieved CreatorUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCreatorUser(ctx, exec, mods...)
+			},
+		),
 		DestinationPhone: thenLoadBuilder[Q](
 			"DestinationPhone",
 			func(ctx context.Context, exec bob.Executor, retrieved DestinationPhoneLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadDestinationPhone(ctx, exec, mods...)
 			},
 		),
+		Report: thenLoadBuilder[Q](
+			"Report",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReport(ctx, exec, mods...)
+			},
+		),
 	}
+}
+
+// LoadCreatorUser loads the commsTextJob's CreatorUser into the .R struct
+func (o *CommsTextJob) LoadCreatorUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.CreatorUser = nil
+
+	related, err := o.CreatorUser(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.CreatorTextJobs = CommsTextJobSlice{o}
+
+	o.R.CreatorUser = related
+	return nil
+}
+
+// LoadCreatorUser loads the commsTextJob's CreatorUser into the .R struct
+func (os CommsTextJobSlice) LoadCreatorUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	users, err := os.CreatorUser(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range users {
+			if !o.CreatorID.IsValue() {
+				continue
+			}
+
+			if !(o.CreatorID.IsValue() && o.CreatorID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.CreatorTextJobs = append(rel.R.CreatorTextJobs, o)
+
+			o.R.CreatorUser = rel
+			break
+		}
+	}
+
+	return nil
 }
 
 // LoadDestinationPhone loads the commsTextJob's DestinationPhone into the .R struct
@@ -693,6 +1016,61 @@ func (os CommsTextJobSlice) LoadDestinationPhone(ctx context.Context, exec bob.E
 			rel.R.DestinationTextJobs = append(rel.R.DestinationTextJobs, o)
 
 			o.R.DestinationPhone = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadReport loads the commsTextJob's Report into the .R struct
+func (o *CommsTextJob) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Report = nil
+
+	related, err := o.Report(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.TextJobs = CommsTextJobSlice{o}
+
+	o.R.Report = related
+	return nil
+}
+
+// LoadReport loads the commsTextJob's Report into the .R struct
+func (os CommsTextJobSlice) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportReports, err := os.Report(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportReports {
+			if !o.ReportID.IsValue() {
+				continue
+			}
+
+			if !(o.ReportID.IsValue() && o.ReportID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.TextJobs = append(rel.R.TextJobs, o)
+
+			o.R.Report = rel
 			break
 		}
 	}

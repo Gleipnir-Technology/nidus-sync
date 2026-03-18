@@ -44,16 +44,17 @@ type CommsPhonesQuery = *psql.ViewQuery[*CommsPhone, CommsPhoneSlice]
 
 // commsPhoneR is where relationships are stored.
 type commsPhoneR struct {
-	DestinationTextJobs           CommsTextJobSlice                    // comms.text_job.text_job_destination_fkey
-	DestinationTextLogs           CommsTextLogSlice                    // comms.text_log.text_log_destination_fkey
-	SourceTextLogs                CommsTextLogSlice                    // comms.text_log.text_log_source_fkey
-	Organizations                 OrganizationSlice                    // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
-	PropertyOwnerPhoneE164Pools   FileuploadPoolSlice                  // fileupload.pool.pool_property_owner_phone_e164_fkey
-	ResidentPhoneE164Pools        FileuploadPoolSlice                  // fileupload.pool.pool_resident_phone_e164_fkey
-	PhoneE164NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_phone_e164_fkey
-	PhoneE164NotifyPhoneWaters    PublicreportNotifyPhoneWaterSlice    // publicreport.notify_phone_water.notify_phone_pool_phone_e164_fkey
-	PhoneE164SubscribePhones      PublicreportSubscribePhoneSlice      // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
-	PhoneMobileResidents          ResidentSlice                        // resident.resident_phone_mobile_fkey
+	DestinationTextJobs              CommsTextJobSlice                       // comms.text_job.text_job_destination_fkey
+	DestinationTextLogs              CommsTextLogSlice                       // comms.text_log.text_log_destination_fkey
+	SourceTextLogs                   CommsTextLogSlice                       // comms.text_log.text_log_source_fkey
+	Organizations                    OrganizationSlice                       // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	PropertyOwnerPhoneE164Pools      FileuploadPoolSlice                     // fileupload.pool.pool_property_owner_phone_e164_fkey
+	ResidentPhoneE164Pools           FileuploadPoolSlice                     // fileupload.pool.pool_resident_phone_e164_fkey
+	PhoneE164NotifyPhones            PublicreportNotifyPhoneSlice            // publicreport.notify_phone.notify_phone_phone_e164_fkey
+	PhoneE164NotifyPhoneNuisanceOlds PublicreportNotifyPhoneNuisanceOldSlice // publicreport.notify_phone_nuisance_old.notify_phone_nuisance_phone_e164_fkey
+	PhoneE164NotifyPhoneWaterOlds    PublicreportNotifyPhoneWaterOldSlice    // publicreport.notify_phone_water_old.notify_phone_pool_phone_e164_fkey
+	PhoneE164SubscribePhones         PublicreportSubscribePhoneSlice         // publicreport.subscribe_phone.subscribe_phone_phone_e164_fkey
+	PhoneMobileResidents             ResidentSlice                           // resident.resident_phone_mobile_fkey
 }
 
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
@@ -551,14 +552,14 @@ func (os CommsPhoneSlice) ResidentPhoneE164Pools(mods ...bob.Mod[*dialect.Select
 	)...)
 }
 
-// PhoneE164NotifyPhoneNuisances starts a query for related objects on publicreport.notify_phone_nuisance
-func (o *CommsPhone) PhoneE164NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
-	return PublicreportNotifyPhoneNuisances.Query(append(mods,
-		sm.Where(PublicreportNotifyPhoneNuisances.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+// PhoneE164NotifyPhones starts a query for related objects on publicreport.notify_phone
+func (o *CommsPhone) PhoneE164NotifyPhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonesQuery {
+	return PublicreportNotifyPhones.Query(append(mods,
+		sm.Where(PublicreportNotifyPhones.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
 	)...)
 }
 
-func (os CommsPhoneSlice) PhoneE164NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
+func (os CommsPhoneSlice) PhoneE164NotifyPhones(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhonesQuery {
 	pkE164 := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -570,19 +571,19 @@ func (os CommsPhoneSlice) PhoneE164NotifyPhoneNuisances(mods ...bob.Mod[*dialect
 		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
 	))
 
-	return PublicreportNotifyPhoneNuisances.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyPhoneNuisances.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	return PublicreportNotifyPhones.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhones.Columns.PhoneE164).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// PhoneE164NotifyPhoneWaters starts a query for related objects on publicreport.notify_phone_water
-func (o *CommsPhone) PhoneE164NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
-	return PublicreportNotifyPhoneWaters.Query(append(mods,
-		sm.Where(PublicreportNotifyPhoneWaters.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+// PhoneE164NotifyPhoneNuisanceOlds starts a query for related objects on publicreport.notify_phone_nuisance_old
+func (o *CommsPhone) PhoneE164NotifyPhoneNuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisanceOldsQuery {
+	return PublicreportNotifyPhoneNuisanceOlds.Query(append(mods,
+		sm.Where(PublicreportNotifyPhoneNuisanceOlds.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
 	)...)
 }
 
-func (os CommsPhoneSlice) PhoneE164NotifyPhoneWaters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWatersQuery {
+func (os CommsPhoneSlice) PhoneE164NotifyPhoneNuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisanceOldsQuery {
 	pkE164 := make(pgtypes.Array[string], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -594,8 +595,32 @@ func (os CommsPhoneSlice) PhoneE164NotifyPhoneWaters(mods ...bob.Mod[*dialect.Se
 		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
 	))
 
-	return PublicreportNotifyPhoneWaters.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyPhoneWaters.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	return PublicreportNotifyPhoneNuisanceOlds.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhoneNuisanceOlds.Columns.PhoneE164).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// PhoneE164NotifyPhoneWaterOlds starts a query for related objects on publicreport.notify_phone_water_old
+func (o *CommsPhone) PhoneE164NotifyPhoneWaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWaterOldsQuery {
+	return PublicreportNotifyPhoneWaterOlds.Query(append(mods,
+		sm.Where(PublicreportNotifyPhoneWaterOlds.Columns.PhoneE164.EQ(psql.Arg(o.E164))),
+	)...)
+}
+
+func (os CommsPhoneSlice) PhoneE164NotifyPhoneWaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneWaterOldsQuery {
+	pkE164 := make(pgtypes.Array[string], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkE164 = append(pkE164, o.E164)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkE164), "text[]")),
+	))
+
+	return PublicreportNotifyPhoneWaterOlds.Query(append(mods,
+		sm.Where(psql.Group(PublicreportNotifyPhoneWaterOlds.Columns.PhoneE164).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1052,66 +1077,66 @@ func (commsPhone0 *CommsPhone) AttachResidentPhoneE164Pools(ctx context.Context,
 	return nil
 }
 
-func insertCommsPhonePhoneE164NotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneNuisances1 []*PublicreportNotifyPhoneNuisanceSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceSlice, error) {
-	for i := range publicreportNotifyPhoneNuisances1 {
-		publicreportNotifyPhoneNuisances1[i].PhoneE164 = omit.From(commsPhone0.E164)
+func insertCommsPhonePhoneE164NotifyPhones0(ctx context.Context, exec bob.Executor, publicreportNotifyPhones1 []*PublicreportNotifyPhoneSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneSlice, error) {
+	for i := range publicreportNotifyPhones1 {
+		publicreportNotifyPhones1[i].PhoneE164 = omit.From(commsPhone0.E164)
 	}
 
-	ret, err := PublicreportNotifyPhoneNuisances.Insert(bob.ToMods(publicreportNotifyPhoneNuisances1...)).All(ctx, exec)
+	ret, err := PublicreportNotifyPhones.Insert(bob.ToMods(publicreportNotifyPhones1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhoneNuisances0: %w", err)
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhones0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachCommsPhonePhoneE164NotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneNuisances1 PublicreportNotifyPhoneNuisanceSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceSlice, error) {
-	setter := &PublicreportNotifyPhoneNuisanceSetter{
+func attachCommsPhonePhoneE164NotifyPhones0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhones1 PublicreportNotifyPhoneSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneSlice, error) {
+	setter := &PublicreportNotifyPhoneSetter{
 		PhoneE164: omit.From(commsPhone0.E164),
 	}
 
-	err := publicreportNotifyPhoneNuisances1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNotifyPhones1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhoneNuisances0: %w", err)
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhones0: %w", err)
 	}
 
-	return publicreportNotifyPhoneNuisances1, nil
+	return publicreportNotifyPhones1, nil
 }
 
-func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisanceSetter) error {
+func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhones(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNotifyPhoneNuisances1, err := insertCommsPhonePhoneE164NotifyPhoneNuisances0(ctx, exec, related, commsPhone0)
+	publicreportNotifyPhones1, err := insertCommsPhonePhoneE164NotifyPhones0(ctx, exec, related, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.PhoneE164NotifyPhoneNuisances = append(commsPhone0.R.PhoneE164NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
+	commsPhone0.R.PhoneE164NotifyPhones = append(commsPhone0.R.PhoneE164NotifyPhones, publicreportNotifyPhones1...)
 
-	for _, rel := range publicreportNotifyPhoneNuisances1 {
+	for _, rel := range publicreportNotifyPhones1 {
 		rel.R.PhoneE164Phone = commsPhone0
 	}
 	return nil
 }
 
-func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisance) error {
+func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhones(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhone) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNotifyPhoneNuisances1 := PublicreportNotifyPhoneNuisanceSlice(related)
+	publicreportNotifyPhones1 := PublicreportNotifyPhoneSlice(related)
 
-	_, err = attachCommsPhonePhoneE164NotifyPhoneNuisances0(ctx, exec, len(related), publicreportNotifyPhoneNuisances1, commsPhone0)
+	_, err = attachCommsPhonePhoneE164NotifyPhones0(ctx, exec, len(related), publicreportNotifyPhones1, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.PhoneE164NotifyPhoneNuisances = append(commsPhone0.R.PhoneE164NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
+	commsPhone0.R.PhoneE164NotifyPhones = append(commsPhone0.R.PhoneE164NotifyPhones, publicreportNotifyPhones1...)
 
 	for _, rel := range related {
 		rel.R.PhoneE164Phone = commsPhone0
@@ -1120,66 +1145,134 @@ func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneNuisances(ctx context.C
 	return nil
 }
 
-func insertCommsPhonePhoneE164NotifyPhoneWaters0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneWaters1 []*PublicreportNotifyPhoneWaterSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneWaterSlice, error) {
-	for i := range publicreportNotifyPhoneWaters1 {
-		publicreportNotifyPhoneWaters1[i].PhoneE164 = omit.From(commsPhone0.E164)
+func insertCommsPhonePhoneE164NotifyPhoneNuisanceOlds0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneNuisanceOlds1 []*PublicreportNotifyPhoneNuisanceOldSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceOldSlice, error) {
+	for i := range publicreportNotifyPhoneNuisanceOlds1 {
+		publicreportNotifyPhoneNuisanceOlds1[i].PhoneE164 = omit.From(commsPhone0.E164)
 	}
 
-	ret, err := PublicreportNotifyPhoneWaters.Insert(bob.ToMods(publicreportNotifyPhoneWaters1...)).All(ctx, exec)
+	ret, err := PublicreportNotifyPhoneNuisanceOlds.Insert(bob.ToMods(publicreportNotifyPhoneNuisanceOlds1...)).All(ctx, exec)
 	if err != nil {
-		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhoneWaters0: %w", err)
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhoneNuisanceOlds0: %w", err)
 	}
 
 	return ret, nil
 }
 
-func attachCommsPhonePhoneE164NotifyPhoneWaters0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneWaters1 PublicreportNotifyPhoneWaterSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneWaterSlice, error) {
-	setter := &PublicreportNotifyPhoneWaterSetter{
+func attachCommsPhonePhoneE164NotifyPhoneNuisanceOlds0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneNuisanceOlds1 PublicreportNotifyPhoneNuisanceOldSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneNuisanceOldSlice, error) {
+	setter := &PublicreportNotifyPhoneNuisanceOldSetter{
 		PhoneE164: omit.From(commsPhone0.E164),
 	}
 
-	err := publicreportNotifyPhoneWaters1.UpdateAll(ctx, exec, *setter)
+	err := publicreportNotifyPhoneNuisanceOlds1.UpdateAll(ctx, exec, *setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhoneWaters0: %w", err)
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhoneNuisanceOlds0: %w", err)
 	}
 
-	return publicreportNotifyPhoneWaters1, nil
+	return publicreportNotifyPhoneNuisanceOlds1, nil
 }
 
-func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWaterSetter) error {
+func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhoneNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisanceOldSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	publicreportNotifyPhoneWaters1, err := insertCommsPhonePhoneE164NotifyPhoneWaters0(ctx, exec, related, commsPhone0)
+	publicreportNotifyPhoneNuisanceOlds1, err := insertCommsPhonePhoneE164NotifyPhoneNuisanceOlds0(ctx, exec, related, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.PhoneE164NotifyPhoneWaters = append(commsPhone0.R.PhoneE164NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
+	commsPhone0.R.PhoneE164NotifyPhoneNuisanceOlds = append(commsPhone0.R.PhoneE164NotifyPhoneNuisanceOlds, publicreportNotifyPhoneNuisanceOlds1...)
 
-	for _, rel := range publicreportNotifyPhoneWaters1 {
+	for _, rel := range publicreportNotifyPhoneNuisanceOlds1 {
 		rel.R.PhoneE164Phone = commsPhone0
 	}
 	return nil
 }
 
-func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWater) error {
+func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisanceOld) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNotifyPhoneWaters1 := PublicreportNotifyPhoneWaterSlice(related)
+	publicreportNotifyPhoneNuisanceOlds1 := PublicreportNotifyPhoneNuisanceOldSlice(related)
 
-	_, err = attachCommsPhonePhoneE164NotifyPhoneWaters0(ctx, exec, len(related), publicreportNotifyPhoneWaters1, commsPhone0)
+	_, err = attachCommsPhonePhoneE164NotifyPhoneNuisanceOlds0(ctx, exec, len(related), publicreportNotifyPhoneNuisanceOlds1, commsPhone0)
 	if err != nil {
 		return err
 	}
 
-	commsPhone0.R.PhoneE164NotifyPhoneWaters = append(commsPhone0.R.PhoneE164NotifyPhoneWaters, publicreportNotifyPhoneWaters1...)
+	commsPhone0.R.PhoneE164NotifyPhoneNuisanceOlds = append(commsPhone0.R.PhoneE164NotifyPhoneNuisanceOlds, publicreportNotifyPhoneNuisanceOlds1...)
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+
+	return nil
+}
+
+func insertCommsPhonePhoneE164NotifyPhoneWaterOlds0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneWaterOlds1 []*PublicreportNotifyPhoneWaterOldSetter, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneWaterOldSlice, error) {
+	for i := range publicreportNotifyPhoneWaterOlds1 {
+		publicreportNotifyPhoneWaterOlds1[i].PhoneE164 = omit.From(commsPhone0.E164)
+	}
+
+	ret, err := PublicreportNotifyPhoneWaterOlds.Insert(bob.ToMods(publicreportNotifyPhoneWaterOlds1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsPhonePhoneE164NotifyPhoneWaterOlds0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsPhonePhoneE164NotifyPhoneWaterOlds0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneWaterOlds1 PublicreportNotifyPhoneWaterOldSlice, commsPhone0 *CommsPhone) (PublicreportNotifyPhoneWaterOldSlice, error) {
+	setter := &PublicreportNotifyPhoneWaterOldSetter{
+		PhoneE164: omit.From(commsPhone0.E164),
+	}
+
+	err := publicreportNotifyPhoneWaterOlds1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsPhonePhoneE164NotifyPhoneWaterOlds0: %w", err)
+	}
+
+	return publicreportNotifyPhoneWaterOlds1, nil
+}
+
+func (commsPhone0 *CommsPhone) InsertPhoneE164NotifyPhoneWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWaterOldSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportNotifyPhoneWaterOlds1, err := insertCommsPhonePhoneE164NotifyPhoneWaterOlds0(ctx, exec, related, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhoneWaterOlds = append(commsPhone0.R.PhoneE164NotifyPhoneWaterOlds, publicreportNotifyPhoneWaterOlds1...)
+
+	for _, rel := range publicreportNotifyPhoneWaterOlds1 {
+		rel.R.PhoneE164Phone = commsPhone0
+	}
+	return nil
+}
+
+func (commsPhone0 *CommsPhone) AttachPhoneE164NotifyPhoneWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneWaterOld) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportNotifyPhoneWaterOlds1 := PublicreportNotifyPhoneWaterOldSlice(related)
+
+	_, err = attachCommsPhonePhoneE164NotifyPhoneWaterOlds0(ctx, exec, len(related), publicreportNotifyPhoneWaterOlds1, commsPhone0)
+	if err != nil {
+		return err
+	}
+
+	commsPhone0.R.PhoneE164NotifyPhoneWaterOlds = append(commsPhone0.R.PhoneE164NotifyPhoneWaterOlds, publicreportNotifyPhoneWaterOlds1...)
 
 	for _, rel := range related {
 		rel.R.PhoneE164Phone = commsPhone0
@@ -1432,13 +1525,13 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "PhoneE164NotifyPhoneNuisances":
-		rels, ok := retrieved.(PublicreportNotifyPhoneNuisanceSlice)
+	case "PhoneE164NotifyPhones":
+		rels, ok := retrieved.(PublicreportNotifyPhoneSlice)
 		if !ok {
 			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.PhoneE164NotifyPhoneNuisances = rels
+		o.R.PhoneE164NotifyPhones = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1446,13 +1539,27 @@ func (o *CommsPhone) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "PhoneE164NotifyPhoneWaters":
-		rels, ok := retrieved.(PublicreportNotifyPhoneWaterSlice)
+	case "PhoneE164NotifyPhoneNuisanceOlds":
+		rels, ok := retrieved.(PublicreportNotifyPhoneNuisanceOldSlice)
 		if !ok {
 			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.PhoneE164NotifyPhoneWaters = rels
+		o.R.PhoneE164NotifyPhoneNuisanceOlds = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.PhoneE164Phone = o
+			}
+		}
+		return nil
+	case "PhoneE164NotifyPhoneWaterOlds":
+		rels, ok := retrieved.(PublicreportNotifyPhoneWaterOldSlice)
+		if !ok {
+			return fmt.Errorf("commsPhone cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.PhoneE164NotifyPhoneWaterOlds = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -1500,16 +1607,17 @@ func buildCommsPhonePreloader() commsPhonePreloader {
 }
 
 type commsPhoneThenLoader[Q orm.Loadable] struct {
-	DestinationTextJobs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DestinationTextLogs           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceTextLogs                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organizations                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PropertyOwnerPhoneE164Pools   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ResidentPhoneE164Pools        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PhoneE164NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PhoneE164NotifyPhoneWaters    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PhoneE164SubscribePhones      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PhoneMobileResidents          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextJobs              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationTextLogs              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogs                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organizations                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PropertyOwnerPhoneE164Pools      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ResidentPhoneE164Pools           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhones            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhoneNuisanceOlds func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164NotifyPhoneWaterOlds    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneE164SubscribePhones         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	PhoneMobileResidents             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
@@ -1531,11 +1639,14 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 	type ResidentPhoneE164PoolsLoadInterface interface {
 		LoadResidentPhoneE164Pools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type PhoneE164NotifyPhoneNuisancesLoadInterface interface {
-		LoadPhoneE164NotifyPhoneNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type PhoneE164NotifyPhonesLoadInterface interface {
+		LoadPhoneE164NotifyPhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type PhoneE164NotifyPhoneWatersLoadInterface interface {
-		LoadPhoneE164NotifyPhoneWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type PhoneE164NotifyPhoneNuisanceOldsLoadInterface interface {
+		LoadPhoneE164NotifyPhoneNuisanceOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PhoneE164NotifyPhoneWaterOldsLoadInterface interface {
+		LoadPhoneE164NotifyPhoneWaterOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type PhoneE164SubscribePhonesLoadInterface interface {
 		LoadPhoneE164SubscribePhones(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1581,16 +1692,22 @@ func buildCommsPhoneThenLoader[Q orm.Loadable]() commsPhoneThenLoader[Q] {
 				return retrieved.LoadResidentPhoneE164Pools(ctx, exec, mods...)
 			},
 		),
-		PhoneE164NotifyPhoneNuisances: thenLoadBuilder[Q](
-			"PhoneE164NotifyPhoneNuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPhoneE164NotifyPhoneNuisances(ctx, exec, mods...)
+		PhoneE164NotifyPhones: thenLoadBuilder[Q](
+			"PhoneE164NotifyPhones",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhonesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164NotifyPhones(ctx, exec, mods...)
 			},
 		),
-		PhoneE164NotifyPhoneWaters: thenLoadBuilder[Q](
-			"PhoneE164NotifyPhoneWaters",
-			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneWatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPhoneE164NotifyPhoneWaters(ctx, exec, mods...)
+		PhoneE164NotifyPhoneNuisanceOlds: thenLoadBuilder[Q](
+			"PhoneE164NotifyPhoneNuisanceOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneNuisanceOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164NotifyPhoneNuisanceOlds(ctx, exec, mods...)
+			},
+		),
+		PhoneE164NotifyPhoneWaterOlds: thenLoadBuilder[Q](
+			"PhoneE164NotifyPhoneWaterOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved PhoneE164NotifyPhoneWaterOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPhoneE164NotifyPhoneWaterOlds(ctx, exec, mods...)
 			},
 		),
 		PhoneE164SubscribePhones: thenLoadBuilder[Q](
@@ -2000,16 +2117,16 @@ func (os CommsPhoneSlice) LoadResidentPhoneE164Pools(ctx context.Context, exec b
 	return nil
 }
 
-// LoadPhoneE164NotifyPhoneNuisances loads the commsPhone's PhoneE164NotifyPhoneNuisances into the .R struct
-func (o *CommsPhone) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadPhoneE164NotifyPhones loads the commsPhone's PhoneE164NotifyPhones into the .R struct
+func (o *CommsPhone) LoadPhoneE164NotifyPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.PhoneE164NotifyPhoneNuisances = nil
+	o.R.PhoneE164NotifyPhones = nil
 
-	related, err := o.PhoneE164NotifyPhoneNuisances(mods...).All(ctx, exec)
+	related, err := o.PhoneE164NotifyPhones(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2018,17 +2135,17 @@ func (o *CommsPhone) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context, exec
 		rel.R.PhoneE164Phone = o
 	}
 
-	o.R.PhoneE164NotifyPhoneNuisances = related
+	o.R.PhoneE164NotifyPhones = related
 	return nil
 }
 
-// LoadPhoneE164NotifyPhoneNuisances loads the commsPhone's PhoneE164NotifyPhoneNuisances into the .R struct
-func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadPhoneE164NotifyPhones loads the commsPhone's PhoneE164NotifyPhones into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164NotifyPhones(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyPhoneNuisances, err := os.PhoneE164NotifyPhoneNuisances(mods...).All(ctx, exec)
+	publicreportNotifyPhones, err := os.PhoneE164NotifyPhones(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2038,7 +2155,7 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context,
 			continue
 		}
 
-		o.R.PhoneE164NotifyPhoneNuisances = nil
+		o.R.PhoneE164NotifyPhones = nil
 	}
 
 	for _, o := range os {
@@ -2046,7 +2163,7 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context,
 			continue
 		}
 
-		for _, rel := range publicreportNotifyPhoneNuisances {
+		for _, rel := range publicreportNotifyPhones {
 
 			if !(o.E164 == rel.PhoneE164) {
 				continue
@@ -2054,23 +2171,23 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisances(ctx context.Context,
 
 			rel.R.PhoneE164Phone = o
 
-			o.R.PhoneE164NotifyPhoneNuisances = append(o.R.PhoneE164NotifyPhoneNuisances, rel)
+			o.R.PhoneE164NotifyPhones = append(o.R.PhoneE164NotifyPhones, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadPhoneE164NotifyPhoneWaters loads the commsPhone's PhoneE164NotifyPhoneWaters into the .R struct
-func (o *CommsPhone) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadPhoneE164NotifyPhoneNuisanceOlds loads the commsPhone's PhoneE164NotifyPhoneNuisanceOlds into the .R struct
+func (o *CommsPhone) LoadPhoneE164NotifyPhoneNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.PhoneE164NotifyPhoneWaters = nil
+	o.R.PhoneE164NotifyPhoneNuisanceOlds = nil
 
-	related, err := o.PhoneE164NotifyPhoneWaters(mods...).All(ctx, exec)
+	related, err := o.PhoneE164NotifyPhoneNuisanceOlds(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2079,17 +2196,17 @@ func (o *CommsPhone) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, exec bo
 		rel.R.PhoneE164Phone = o
 	}
 
-	o.R.PhoneE164NotifyPhoneWaters = related
+	o.R.PhoneE164NotifyPhoneNuisanceOlds = related
 	return nil
 }
 
-// LoadPhoneE164NotifyPhoneWaters loads the commsPhone's PhoneE164NotifyPhoneWaters into the .R struct
-func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadPhoneE164NotifyPhoneNuisanceOlds loads the commsPhone's PhoneE164NotifyPhoneNuisanceOlds into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyPhoneWaters, err := os.PhoneE164NotifyPhoneWaters(mods...).All(ctx, exec)
+	publicreportNotifyPhoneNuisanceOlds, err := os.PhoneE164NotifyPhoneNuisanceOlds(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2099,7 +2216,7 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, ex
 			continue
 		}
 
-		o.R.PhoneE164NotifyPhoneWaters = nil
+		o.R.PhoneE164NotifyPhoneNuisanceOlds = nil
 	}
 
 	for _, o := range os {
@@ -2107,7 +2224,7 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, ex
 			continue
 		}
 
-		for _, rel := range publicreportNotifyPhoneWaters {
+		for _, rel := range publicreportNotifyPhoneNuisanceOlds {
 
 			if !(o.E164 == rel.PhoneE164) {
 				continue
@@ -2115,7 +2232,68 @@ func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneWaters(ctx context.Context, ex
 
 			rel.R.PhoneE164Phone = o
 
-			o.R.PhoneE164NotifyPhoneWaters = append(o.R.PhoneE164NotifyPhoneWaters, rel)
+			o.R.PhoneE164NotifyPhoneNuisanceOlds = append(o.R.PhoneE164NotifyPhoneNuisanceOlds, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPhoneE164NotifyPhoneWaterOlds loads the commsPhone's PhoneE164NotifyPhoneWaterOlds into the .R struct
+func (o *CommsPhone) LoadPhoneE164NotifyPhoneWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.PhoneE164NotifyPhoneWaterOlds = nil
+
+	related, err := o.PhoneE164NotifyPhoneWaterOlds(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.PhoneE164Phone = o
+	}
+
+	o.R.PhoneE164NotifyPhoneWaterOlds = related
+	return nil
+}
+
+// LoadPhoneE164NotifyPhoneWaterOlds loads the commsPhone's PhoneE164NotifyPhoneWaterOlds into the .R struct
+func (os CommsPhoneSlice) LoadPhoneE164NotifyPhoneWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportNotifyPhoneWaterOlds, err := os.PhoneE164NotifyPhoneWaterOlds(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.PhoneE164NotifyPhoneWaterOlds = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportNotifyPhoneWaterOlds {
+
+			if !(o.E164 == rel.PhoneE164) {
+				continue
+			}
+
+			rel.R.PhoneE164Phone = o
+
+			o.R.PhoneE164NotifyPhoneWaterOlds = append(o.R.PhoneE164NotifyPhoneWaterOlds, rel)
 		}
 	}
 

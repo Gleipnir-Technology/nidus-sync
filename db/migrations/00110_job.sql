@@ -5,9 +5,10 @@ CREATE TYPE JobType AS ENUM (
 	'csv-import',
 	'label-studio-audio-create',
 	'email-send',
+	'text-respond',
 	'text-send'
 );
-
+ALTER TYPE comms.TextJobType ADD VALUE 'report-message' AFTER 'report-confirmation';
 CREATE TABLE job (
 	created TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 	id SERIAL NOT NULL,
@@ -35,5 +36,6 @@ CREATE TRIGGER job_insert_trigger
 -- +goose Down
 DROP TRIGGER job_insert_trigger ON job;
 DROP TABLE job;
+-- ALTER TYPE comms.TextJobType DROP VALUE 'report-message';
 DROP TYPE JobType;
 

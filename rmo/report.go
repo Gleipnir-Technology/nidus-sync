@@ -8,17 +8,20 @@ import (
 	"strings"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/stephenafamo/scan"
 	//"github.com/go-chi/chi/v5"
 	//"github.com/rs/zerolog/log"
 )
 
 type ReportSuggestion struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
+	ID string `json:"id"`
+	//Type string `json:"type"`
 	//Location string
 }
 type ReportSuggestionResponse struct {
@@ -33,11 +36,25 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 	}
 	p := partialSearchParam(partial_report_id)
 	ctx := r.Context()
-	rows, err := sql.PublicreportPublicIDSuggestion(p).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		respondError(w, "Failed to query DB: %w", err, http.StatusInternalServerError)
-		return
+	/*
+		rows, err := sql.PublicreportPublicIDSuggestion(p).All(ctx, db.PGInstance.BobDB)
+		if err != nil {
+			respondError(w, "Failed to query DB: %w", err, http.StatusInternalServerError)
+			return
+		}
+	*/
+	type _Row struct {
+		Location string `db:"location"`
+		PublicID string `db:"public_id"`
 	}
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns("public_id", "location"),
+		sm.From("publicreport.report"),
+		sm.Where(
+			psql.Quote("public_id").Like(psql.Arg(p)),
+		),
+	), scan.StructMapper[_Row]())
+
 	var result ReportSuggestionResponse
 	for _, row := range rows {
 		/*
@@ -54,8 +71,8 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 			log.Debug().Str("location", value_str).Msg("Looking at row")
 		*/
 		result.Reports = append(result.Reports, ReportSuggestion{
-			Type: row.TableName,
-			ID:   row.PublicID,
+			//Type: row.TableName,
+			ID: row.PublicID,
 			//Location: "",
 		})
 	}

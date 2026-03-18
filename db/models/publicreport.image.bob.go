@@ -52,9 +52,10 @@ type PublicreportImagesQuery = *psql.ViewQuery[*PublicreportImage, PublicreportI
 
 // publicreportImageR is where relationships are stored.
 type publicreportImageR struct {
-	ImageExifs PublicreportImageExifSlice // publicreport.image_exif.image_exif_image_id_fkey
-	Nuisances  PublicreportNuisanceSlice  // publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey
-	Waters     PublicreportWaterSlice     // publicreport.water_image.pool_image_image_id_fkeypublicreport.water_image.pool_image_pool_id_fkey
+	ImageExifs   PublicreportImageExifSlice   // publicreport.image_exif.image_exif_image_id_fkey
+	NuisanceOlds PublicreportNuisanceOldSlice // publicreport.nuisance_image_old.nuisance_image_image_id_fkeypublicreport.nuisance_image_old.nuisance_image_nuisance_id_fkey
+	Reports      PublicreportReportSlice      // publicreport.report_image.report_image_image_id_fkeypublicreport.report_image.report_image_report_id_fkey
+	WaterOlds    PublicreportWaterOldSlice    // publicreport.water_image_old.pool_image_image_id_fkeypublicreport.water_image_old.pool_image_pool_id_fkey
 }
 
 func buildPublicreportImageColumns(alias string) publicreportImageColumns {
@@ -559,16 +560,16 @@ func (os PublicreportImageSlice) ImageExifs(mods ...bob.Mod[*dialect.SelectQuery
 	)...)
 }
 
-// Nuisances starts a query for related objects on publicreport.nuisance
-func (o *PublicreportImage) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
-	return PublicreportNuisances.Query(append(mods,
-		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
-			PublicreportNuisances.Columns.ID.EQ(PublicreportNuisanceImages.Columns.NuisanceID)),
-		sm.Where(PublicreportNuisanceImages.Columns.ImageID.EQ(psql.Arg(o.ID))),
+// NuisanceOlds starts a query for related objects on publicreport.nuisance_old
+func (o *PublicreportImage) NuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
+	return PublicreportNuisanceOlds.Query(append(mods,
+		sm.InnerJoin(PublicreportNuisanceImageOlds.NameAs()).On(
+			PublicreportNuisanceOlds.Columns.ID.EQ(PublicreportNuisanceImageOlds.Columns.NuisanceID)),
+		sm.Where(PublicreportNuisanceImageOlds.Columns.ImageID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportImageSlice) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisancesQuery {
+func (os PublicreportImageSlice) NuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -580,24 +581,24 @@ func (os PublicreportImageSlice) Nuisances(mods ...bob.Mod[*dialect.SelectQuery]
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportNuisances.Query(append(mods,
-		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
-			PublicreportNuisances.Columns.ID.EQ(PublicreportNuisanceImages.Columns.NuisanceID),
+	return PublicreportNuisanceOlds.Query(append(mods,
+		sm.InnerJoin(PublicreportNuisanceImageOlds.NameAs()).On(
+			PublicreportNuisanceOlds.Columns.ID.EQ(PublicreportNuisanceImageOlds.Columns.NuisanceID),
 		),
-		sm.Where(psql.Group(PublicreportNuisanceImages.Columns.ImageID).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(PublicreportNuisanceImageOlds.Columns.ImageID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// Waters starts a query for related objects on publicreport.water
-func (o *PublicreportImage) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
-	return PublicreportWaters.Query(append(mods,
-		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
-			PublicreportWaters.Columns.ID.EQ(PublicreportWaterImages.Columns.WaterID)),
-		sm.Where(PublicreportWaterImages.Columns.ImageID.EQ(psql.Arg(o.ID))),
+// Reports starts a query for related objects on publicreport.report
+func (o *PublicreportImage) Reports(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.InnerJoin(PublicreportReportImages.NameAs()).On(
+			PublicreportReports.Columns.ID.EQ(PublicreportReportImages.Columns.ReportID)),
+		sm.Where(PublicreportReportImages.Columns.ImageID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os PublicreportImageSlice) Waters(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
+func (os PublicreportImageSlice) Reports(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -609,11 +610,40 @@ func (os PublicreportImageSlice) Waters(mods ...bob.Mod[*dialect.SelectQuery]) P
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return PublicreportWaters.Query(append(mods,
-		sm.InnerJoin(PublicreportWaterImages.NameAs()).On(
-			PublicreportWaters.Columns.ID.EQ(PublicreportWaterImages.Columns.WaterID),
+	return PublicreportReports.Query(append(mods,
+		sm.InnerJoin(PublicreportReportImages.NameAs()).On(
+			PublicreportReports.Columns.ID.EQ(PublicreportReportImages.Columns.ReportID),
 		),
-		sm.Where(psql.Group(PublicreportWaterImages.Columns.ImageID).OP("IN", PKArgExpr)),
+		sm.Where(psql.Group(PublicreportReportImages.Columns.ImageID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// WaterOlds starts a query for related objects on publicreport.water_old
+func (o *PublicreportImage) WaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWaterOldsQuery {
+	return PublicreportWaterOlds.Query(append(mods,
+		sm.InnerJoin(PublicreportWaterImageOlds.NameAs()).On(
+			PublicreportWaterOlds.Columns.ID.EQ(PublicreportWaterImageOlds.Columns.WaterID)),
+		sm.Where(PublicreportWaterImageOlds.Columns.ImageID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportImageSlice) WaterOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWaterOldsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportWaterOlds.Query(append(mods,
+		sm.InnerJoin(PublicreportWaterImageOlds.NameAs()).On(
+			PublicreportWaterOlds.Columns.ID.EQ(PublicreportWaterImageOlds.Columns.WaterID),
+		),
+		sm.Where(psql.Group(PublicreportWaterImageOlds.Columns.ImageID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -685,63 +715,63 @@ func (publicreportImage0 *PublicreportImage) AttachImageExifs(ctx context.Contex
 	return nil
 }
 
-func attachPublicreportImageNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportNuisances2 PublicreportNuisanceSlice) (PublicreportNuisanceImageSlice, error) {
-	setters := make([]*PublicreportNuisanceImageSetter, count)
+func attachPublicreportImageNuisanceOlds0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportNuisanceOlds2 PublicreportNuisanceOldSlice) (PublicreportNuisanceImageOldSlice, error) {
+	setters := make([]*PublicreportNuisanceImageOldSetter, count)
 	for i := range count {
-		setters[i] = &PublicreportNuisanceImageSetter{
+		setters[i] = &PublicreportNuisanceImageOldSetter{
 			ImageID:    omit.From(publicreportImage0.ID),
-			NuisanceID: omit.From(publicreportNuisances2[i].ID),
+			NuisanceID: omit.From(publicreportNuisanceOlds2[i].ID),
 		}
 	}
 
-	publicreportNuisanceImages1, err := PublicreportNuisanceImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	publicreportNuisanceImageOlds1, err := PublicreportNuisanceImageOlds.Insert(bob.ToMods(setters...)).All(ctx, exec)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportImageNuisances0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportImageNuisanceOlds0: %w", err)
 	}
 
-	return publicreportNuisanceImages1, nil
+	return publicreportNuisanceImageOlds1, nil
 }
 
-func (publicreportImage0 *PublicreportImage) InsertNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceSetter) error {
+func (publicreportImage0 *PublicreportImage) InsertNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceOldSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	inserted, err := PublicreportNuisances.Insert(bob.ToMods(related...)).All(ctx, exec)
+	inserted, err := PublicreportNuisanceOlds.Insert(bob.ToMods(related...)).All(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
-	publicreportNuisances2 := PublicreportNuisanceSlice(inserted)
+	publicreportNuisanceOlds2 := PublicreportNuisanceOldSlice(inserted)
 
-	_, err = attachPublicreportImageNuisances0(ctx, exec, len(related), publicreportImage0, publicreportNuisances2)
+	_, err = attachPublicreportImageNuisanceOlds0(ctx, exec, len(related), publicreportImage0, publicreportNuisanceOlds2)
 	if err != nil {
 		return err
 	}
 
-	publicreportImage0.R.Nuisances = append(publicreportImage0.R.Nuisances, publicreportNuisances2...)
+	publicreportImage0.R.NuisanceOlds = append(publicreportImage0.R.NuisanceOlds, publicreportNuisanceOlds2...)
 
-	for _, rel := range publicreportNuisances2 {
+	for _, rel := range publicreportNuisanceOlds2 {
 		rel.R.Images = append(rel.R.Images, publicreportImage0)
 	}
 	return nil
 }
 
-func (publicreportImage0 *PublicreportImage) AttachNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisance) error {
+func (publicreportImage0 *PublicreportImage) AttachNuisanceOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportNuisanceOld) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportNuisances2 := PublicreportNuisanceSlice(related)
+	publicreportNuisanceOlds2 := PublicreportNuisanceOldSlice(related)
 
-	_, err = attachPublicreportImageNuisances0(ctx, exec, len(related), publicreportImage0, publicreportNuisances2)
+	_, err = attachPublicreportImageNuisanceOlds0(ctx, exec, len(related), publicreportImage0, publicreportNuisanceOlds2)
 	if err != nil {
 		return err
 	}
 
-	publicreportImage0.R.Nuisances = append(publicreportImage0.R.Nuisances, publicreportNuisances2...)
+	publicreportImage0.R.NuisanceOlds = append(publicreportImage0.R.NuisanceOlds, publicreportNuisanceOlds2...)
 
 	for _, rel := range related {
 		rel.R.Images = append(rel.R.Images, publicreportImage0)
@@ -750,63 +780,128 @@ func (publicreportImage0 *PublicreportImage) AttachNuisances(ctx context.Context
 	return nil
 }
 
-func attachPublicreportImageWaters0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportWaters2 PublicreportWaterSlice) (PublicreportWaterImageSlice, error) {
-	setters := make([]*PublicreportWaterImageSetter, count)
+func attachPublicreportImageReports0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportReports2 PublicreportReportSlice) (PublicreportReportImageSlice, error) {
+	setters := make([]*PublicreportReportImageSetter, count)
 	for i := range count {
-		setters[i] = &PublicreportWaterImageSetter{
-			ImageID: omit.From(publicreportImage0.ID),
-			WaterID: omit.From(publicreportWaters2[i].ID),
+		setters[i] = &PublicreportReportImageSetter{
+			ImageID:  omit.From(publicreportImage0.ID),
+			ReportID: omit.From(publicreportReports2[i].ID),
 		}
 	}
 
-	publicreportWaterImages1, err := PublicreportWaterImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	publicreportReportImages1, err := PublicreportReportImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportImageWaters0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportImageReports0: %w", err)
 	}
 
-	return publicreportWaterImages1, nil
+	return publicreportReportImages1, nil
 }
 
-func (publicreportImage0 *PublicreportImage) InsertWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterSetter) error {
+func (publicreportImage0 *PublicreportImage) InsertReports(ctx context.Context, exec bob.Executor, related ...*PublicreportReportSetter) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
 
-	inserted, err := PublicreportWaters.Insert(bob.ToMods(related...)).All(ctx, exec)
+	inserted, err := PublicreportReports.Insert(bob.ToMods(related...)).All(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
-	publicreportWaters2 := PublicreportWaterSlice(inserted)
+	publicreportReports2 := PublicreportReportSlice(inserted)
 
-	_, err = attachPublicreportImageWaters0(ctx, exec, len(related), publicreportImage0, publicreportWaters2)
+	_, err = attachPublicreportImageReports0(ctx, exec, len(related), publicreportImage0, publicreportReports2)
 	if err != nil {
 		return err
 	}
 
-	publicreportImage0.R.Waters = append(publicreportImage0.R.Waters, publicreportWaters2...)
+	publicreportImage0.R.Reports = append(publicreportImage0.R.Reports, publicreportReports2...)
 
-	for _, rel := range publicreportWaters2 {
+	for _, rel := range publicreportReports2 {
 		rel.R.Images = append(rel.R.Images, publicreportImage0)
 	}
 	return nil
 }
 
-func (publicreportImage0 *PublicreportImage) AttachWaters(ctx context.Context, exec bob.Executor, related ...*PublicreportWater) error {
+func (publicreportImage0 *PublicreportImage) AttachReports(ctx context.Context, exec bob.Executor, related ...*PublicreportReport) error {
 	if len(related) == 0 {
 		return nil
 	}
 
 	var err error
-	publicreportWaters2 := PublicreportWaterSlice(related)
+	publicreportReports2 := PublicreportReportSlice(related)
 
-	_, err = attachPublicreportImageWaters0(ctx, exec, len(related), publicreportImage0, publicreportWaters2)
+	_, err = attachPublicreportImageReports0(ctx, exec, len(related), publicreportImage0, publicreportReports2)
 	if err != nil {
 		return err
 	}
 
-	publicreportImage0.R.Waters = append(publicreportImage0.R.Waters, publicreportWaters2...)
+	publicreportImage0.R.Reports = append(publicreportImage0.R.Reports, publicreportReports2...)
+
+	for _, rel := range related {
+		rel.R.Images = append(rel.R.Images, publicreportImage0)
+	}
+
+	return nil
+}
+
+func attachPublicreportImageWaterOlds0(ctx context.Context, exec bob.Executor, count int, publicreportImage0 *PublicreportImage, publicreportWaterOlds2 PublicreportWaterOldSlice) (PublicreportWaterImageOldSlice, error) {
+	setters := make([]*PublicreportWaterImageOldSetter, count)
+	for i := range count {
+		setters[i] = &PublicreportWaterImageOldSetter{
+			ImageID: omit.From(publicreportImage0.ID),
+			WaterID: omit.From(publicreportWaterOlds2[i].ID),
+		}
+	}
+
+	publicreportWaterImageOlds1, err := PublicreportWaterImageOlds.Insert(bob.ToMods(setters...)).All(ctx, exec)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportImageWaterOlds0: %w", err)
+	}
+
+	return publicreportWaterImageOlds1, nil
+}
+
+func (publicreportImage0 *PublicreportImage) InsertWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterOldSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	inserted, err := PublicreportWaterOlds.Insert(bob.ToMods(related...)).All(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+	publicreportWaterOlds2 := PublicreportWaterOldSlice(inserted)
+
+	_, err = attachPublicreportImageWaterOlds0(ctx, exec, len(related), publicreportImage0, publicreportWaterOlds2)
+	if err != nil {
+		return err
+	}
+
+	publicreportImage0.R.WaterOlds = append(publicreportImage0.R.WaterOlds, publicreportWaterOlds2...)
+
+	for _, rel := range publicreportWaterOlds2 {
+		rel.R.Images = append(rel.R.Images, publicreportImage0)
+	}
+	return nil
+}
+
+func (publicreportImage0 *PublicreportImage) AttachWaterOlds(ctx context.Context, exec bob.Executor, related ...*PublicreportWaterOld) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportWaterOlds2 := PublicreportWaterOldSlice(related)
+
+	_, err = attachPublicreportImageWaterOlds0(ctx, exec, len(related), publicreportImage0, publicreportWaterOlds2)
+	if err != nil {
+		return err
+	}
+
+	publicreportImage0.R.WaterOlds = append(publicreportImage0.R.WaterOlds, publicreportWaterOlds2...)
 
 	for _, rel := range related {
 		rel.R.Images = append(rel.R.Images, publicreportImage0)
@@ -865,13 +960,13 @@ func (o *PublicreportImage) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Nuisances":
-		rels, ok := retrieved.(PublicreportNuisanceSlice)
+	case "NuisanceOlds":
+		rels, ok := retrieved.(PublicreportNuisanceOldSlice)
 		if !ok {
 			return fmt.Errorf("publicreportImage cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Nuisances = rels
+		o.R.NuisanceOlds = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -879,13 +974,27 @@ func (o *PublicreportImage) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "Waters":
-		rels, ok := retrieved.(PublicreportWaterSlice)
+	case "Reports":
+		rels, ok := retrieved.(PublicreportReportSlice)
 		if !ok {
 			return fmt.Errorf("publicreportImage cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.Waters = rels
+		o.R.Reports = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Images = PublicreportImageSlice{o}
+			}
+		}
+		return nil
+	case "WaterOlds":
+		rels, ok := retrieved.(PublicreportWaterOldSlice)
+		if !ok {
+			return fmt.Errorf("publicreportImage cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.WaterOlds = rels
 
 		for _, rel := range rels {
 			if rel != nil {
@@ -905,20 +1014,24 @@ func buildPublicreportImagePreloader() publicreportImagePreloader {
 }
 
 type publicreportImageThenLoader[Q orm.Loadable] struct {
-	ImageExifs func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Nuisances  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Waters     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ImageExifs   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NuisanceOlds func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Reports      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	WaterOlds    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportImageThenLoader[Q orm.Loadable]() publicreportImageThenLoader[Q] {
 	type ImageExifsLoadInterface interface {
 		LoadImageExifs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type NuisancesLoadInterface interface {
-		LoadNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type NuisanceOldsLoadInterface interface {
+		LoadNuisanceOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type WatersLoadInterface interface {
-		LoadWaters(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ReportsLoadInterface interface {
+		LoadReports(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type WaterOldsLoadInterface interface {
+		LoadWaterOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportImageThenLoader[Q]{
@@ -928,16 +1041,22 @@ func buildPublicreportImageThenLoader[Q orm.Loadable]() publicreportImageThenLoa
 				return retrieved.LoadImageExifs(ctx, exec, mods...)
 			},
 		),
-		Nuisances: thenLoadBuilder[Q](
-			"Nuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved NuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNuisances(ctx, exec, mods...)
+		NuisanceOlds: thenLoadBuilder[Q](
+			"NuisanceOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved NuisanceOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadNuisanceOlds(ctx, exec, mods...)
 			},
 		),
-		Waters: thenLoadBuilder[Q](
-			"Waters",
-			func(ctx context.Context, exec bob.Executor, retrieved WatersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadWaters(ctx, exec, mods...)
+		Reports: thenLoadBuilder[Q](
+			"Reports",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReports(ctx, exec, mods...)
+			},
+		),
+		WaterOlds: thenLoadBuilder[Q](
+			"WaterOlds",
+			func(ctx context.Context, exec bob.Executor, retrieved WaterOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadWaterOlds(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1004,16 +1123,16 @@ func (os PublicreportImageSlice) LoadImageExifs(ctx context.Context, exec bob.Ex
 	return nil
 }
 
-// LoadNuisances loads the publicreportImage's Nuisances into the .R struct
-func (o *PublicreportImage) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNuisanceOlds loads the publicreportImage's NuisanceOlds into the .R struct
+func (o *PublicreportImage) LoadNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.Nuisances = nil
+	o.R.NuisanceOlds = nil
 
-	related, err := o.Nuisances(mods...).All(ctx, exec)
+	related, err := o.NuisanceOlds(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1022,12 +1141,12 @@ func (o *PublicreportImage) LoadNuisances(ctx context.Context, exec bob.Executor
 		rel.R.Images = PublicreportImageSlice{o}
 	}
 
-	o.R.Nuisances = related
+	o.R.NuisanceOlds = related
 	return nil
 }
 
-// LoadNuisances loads the publicreportImage's Nuisances into the .R struct
-func (os PublicreportImageSlice) LoadNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadNuisanceOlds loads the publicreportImage's NuisanceOlds into the .R struct
+func (os PublicreportImageSlice) LoadNuisanceOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -1039,17 +1158,17 @@ func (os PublicreportImageSlice) LoadNuisances(ctx context.Context, exec bob.Exe
 	}
 
 	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(PublicreportNuisances.Columns))
+		mods = append(mods, sm.Columns(PublicreportNuisanceOlds.Columns))
 	}
 
-	q := os.Nuisances(append(
+	q := os.NuisanceOlds(append(
 		mods,
-		sm.Columns(PublicreportNuisanceImages.Columns.ImageID.As("related_publicreport.image.ID")),
+		sm.Columns(PublicreportNuisanceImageOlds.Columns.ImageID.As("related_publicreport.image.ID")),
 	)...)
 
 	IDSlice := []int32{}
 
-	mapper := scan.Mod(scan.StructMapper[*PublicreportNuisance](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+	mapper := scan.Mod(scan.StructMapper[*PublicreportNuisanceOld](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
 		return func(row *scan.Row) (any, error) {
 				IDSlice = append(IDSlice, *new(int32))
 				row.ScheduleScanByName("related_publicreport.image.ID", &IDSlice[len(IDSlice)-1])
@@ -1061,40 +1180,40 @@ func (os PublicreportImageSlice) LoadNuisances(ctx context.Context, exec bob.Exe
 			}
 	})
 
-	publicreportNuisances, err := bob.Allx[bob.SliceTransformer[*PublicreportNuisance, PublicreportNuisanceSlice]](ctx, exec, q, mapper)
+	publicreportNuisanceOlds, err := bob.Allx[bob.SliceTransformer[*PublicreportNuisanceOld, PublicreportNuisanceOldSlice]](ctx, exec, q, mapper)
 	if err != nil {
 		return err
 	}
 
 	for _, o := range os {
-		o.R.Nuisances = nil
+		o.R.NuisanceOlds = nil
 	}
 
 	for _, o := range os {
-		for i, rel := range publicreportNuisances {
+		for i, rel := range publicreportNuisanceOlds {
 			if !(o.ID == IDSlice[i]) {
 				continue
 			}
 
 			rel.R.Images = append(rel.R.Images, o)
 
-			o.R.Nuisances = append(o.R.Nuisances, rel)
+			o.R.NuisanceOlds = append(o.R.NuisanceOlds, rel)
 		}
 	}
 
 	return nil
 }
 
-// LoadWaters loads the publicreportImage's Waters into the .R struct
-func (o *PublicreportImage) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReports loads the publicreportImage's Reports into the .R struct
+func (o *PublicreportImage) LoadReports(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.Waters = nil
+	o.R.Reports = nil
 
-	related, err := o.Waters(mods...).All(ctx, exec)
+	related, err := o.Reports(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -1103,12 +1222,12 @@ func (o *PublicreportImage) LoadWaters(ctx context.Context, exec bob.Executor, m
 		rel.R.Images = PublicreportImageSlice{o}
 	}
 
-	o.R.Waters = related
+	o.R.Reports = related
 	return nil
 }
 
-// LoadWaters loads the publicreportImage's Waters into the .R struct
-func (os PublicreportImageSlice) LoadWaters(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReports loads the publicreportImage's Reports into the .R struct
+func (os PublicreportImageSlice) LoadReports(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
@@ -1120,17 +1239,17 @@ func (os PublicreportImageSlice) LoadWaters(ctx context.Context, exec bob.Execut
 	}
 
 	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(PublicreportWaters.Columns))
+		mods = append(mods, sm.Columns(PublicreportReports.Columns))
 	}
 
-	q := os.Waters(append(
+	q := os.Reports(append(
 		mods,
-		sm.Columns(PublicreportWaterImages.Columns.ImageID.As("related_publicreport.image.ID")),
+		sm.Columns(PublicreportReportImages.Columns.ImageID.As("related_publicreport.image.ID")),
 	)...)
 
 	IDSlice := []int32{}
 
-	mapper := scan.Mod(scan.StructMapper[*PublicreportWater](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+	mapper := scan.Mod(scan.StructMapper[*PublicreportReport](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
 		return func(row *scan.Row) (any, error) {
 				IDSlice = append(IDSlice, *new(int32))
 				row.ScheduleScanByName("related_publicreport.image.ID", &IDSlice[len(IDSlice)-1])
@@ -1142,24 +1261,105 @@ func (os PublicreportImageSlice) LoadWaters(ctx context.Context, exec bob.Execut
 			}
 	})
 
-	publicreportWaters, err := bob.Allx[bob.SliceTransformer[*PublicreportWater, PublicreportWaterSlice]](ctx, exec, q, mapper)
+	publicreportReports, err := bob.Allx[bob.SliceTransformer[*PublicreportReport, PublicreportReportSlice]](ctx, exec, q, mapper)
 	if err != nil {
 		return err
 	}
 
 	for _, o := range os {
-		o.R.Waters = nil
+		o.R.Reports = nil
 	}
 
 	for _, o := range os {
-		for i, rel := range publicreportWaters {
+		for i, rel := range publicreportReports {
 			if !(o.ID == IDSlice[i]) {
 				continue
 			}
 
 			rel.R.Images = append(rel.R.Images, o)
 
-			o.R.Waters = append(o.R.Waters, rel)
+			o.R.Reports = append(o.R.Reports, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadWaterOlds loads the publicreportImage's WaterOlds into the .R struct
+func (o *PublicreportImage) LoadWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.WaterOlds = nil
+
+	related, err := o.WaterOlds(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Images = PublicreportImageSlice{o}
+	}
+
+	o.R.WaterOlds = related
+	return nil
+}
+
+// LoadWaterOlds loads the publicreportImage's WaterOlds into the .R struct
+func (os PublicreportImageSlice) LoadWaterOlds(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	// since we are changing the columns, we need to check if the original columns were set or add the defaults
+	sq := dialect.SelectQuery{}
+	for _, mod := range mods {
+		mod.Apply(&sq)
+	}
+
+	if len(sq.SelectList.Columns) == 0 {
+		mods = append(mods, sm.Columns(PublicreportWaterOlds.Columns))
+	}
+
+	q := os.WaterOlds(append(
+		mods,
+		sm.Columns(PublicreportWaterImageOlds.Columns.ImageID.As("related_publicreport.image.ID")),
+	)...)
+
+	IDSlice := []int32{}
+
+	mapper := scan.Mod(scan.StructMapper[*PublicreportWaterOld](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
+		return func(row *scan.Row) (any, error) {
+				IDSlice = append(IDSlice, *new(int32))
+				row.ScheduleScanByName("related_publicreport.image.ID", &IDSlice[len(IDSlice)-1])
+
+				return nil, nil
+			},
+			func(any, any) error {
+				return nil
+			}
+	})
+
+	publicreportWaterOlds, err := bob.Allx[bob.SliceTransformer[*PublicreportWaterOld, PublicreportWaterOldSlice]](ctx, exec, q, mapper)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		o.R.WaterOlds = nil
+	}
+
+	for _, o := range os {
+		for i, rel := range publicreportWaterOlds {
+			if !(o.ID == IDSlice[i]) {
+				continue
+			}
+
+			rel.R.Images = append(rel.R.Images, o)
+
+			o.R.WaterOlds = append(o.R.WaterOlds, rel)
 		}
 	}
 

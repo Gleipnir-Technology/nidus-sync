@@ -21,24 +21,27 @@ var labelStudioProject *labelstudio.Project
 var minioClient *minio.Client
 
 func initializeLabelStudio() error {
-	// Initialize the minio client
-	//minioBucket := os.Getenv("S3_BUCKET")
-
-	var err error
-	labelStudioClient, err = createLabelStudioClient()
-	if err != nil {
-		return fmt.Errorf("Failed to create label studio client: %w", err)
-	}
-	// Get the project we are going to upload to
-	labelStudioProject, err = findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
-	if err != nil {
-		return fmt.Errorf("Failed to find the label studio project: %w", err)
-	}
-	minioClient, err = createMinioClient()
-	if err != nil {
-		return fmt.Errorf("Failed to create minio client: %w", err)
-	}
 	return nil
+	/*
+		// Initialize the minio client
+		//minioBucket := os.Getenv("S3_BUCKET")
+
+		var err error
+		labelStudioClient, err = createLabelStudioClient()
+		if err != nil {
+			return fmt.Errorf("Failed to create label studio client: %w", err)
+		}
+		// Get the project we are going to upload to
+		labelStudioProject, err = findLabelStudioProject(labelStudioClient, "Nidus Speech-to-Text Transcriptions")
+		if err != nil {
+			return fmt.Errorf("Failed to find the label studio project: %w", err)
+		}
+		minioClient, err = createMinioClient()
+		if err != nil {
+			return fmt.Errorf("Failed to create minio client: %w", err)
+		}
+		return nil
+	*/
 }
 func createMinioClient() (*minio.Client, error) {
 	baseUrl := os.Getenv("S3_BASE_URL")

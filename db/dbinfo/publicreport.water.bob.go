@@ -15,15 +15,6 @@ var PublicreportWaters = Table[
 	Schema: "publicreport",
 	Name:   "water",
 	Columns: publicreportWaterColumns{
-		ID: column{
-			Name:      "id",
-			DBType:    "integer",
-			Default:   "nextval('publicreport.pool_id_seq'::regclass)",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		AccessComments: column{
 			Name:      "access_comments",
 			DBType:    "text",
@@ -78,60 +69,6 @@ var PublicreportWaters = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressRaw: column{
-			Name:      "address_raw",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressCountry: column{
-			Name:      "address_country",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressPostalCode: column{
-			Name:      "address_postal_code",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressLocality: column{
-			Name:      "address_locality",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressStreet: column{
-			Name:      "address_street",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressRegion: column{
-			Name:      "address_region",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Comments: column{
 			Name:      "comments",
 			DBType:    "text",
@@ -141,26 +78,35 @@ var PublicreportWaters = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Created: column{
-			Name:      "created",
-			DBType:    "timestamp without time zone",
+		IsReporterConfidential: column{
+			Name:      "is_reporter_confidential",
+			DBType:    "boolean",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
-		H3cell: column{
-			Name:      "h3cell",
-			DBType:    "h3index",
-			Default:   "NULL",
+		IsReporterOwner: column{
+			Name:      "is_reporter_owner",
+			DBType:    "boolean",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
 		HasAdult: column{
 			Name:      "has_adult",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		HasBackyardPermission: column{
+			Name:      "has_backyard_permission",
 			DBType:    "boolean",
 			Default:   "",
 			Comment:   "",
@@ -180,15 +126,6 @@ var PublicreportWaters = Table[
 		HasPupae: column{
 			Name:      "has_pupae",
 			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		MapZoom: column{
-			Name:      "map_zoom",
-			DBType:    "real",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -222,166 +159,23 @@ var PublicreportWaters = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		PublicID: column{
-			Name:      "public_id",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterEmail: column{
-			Name:      "reporter_email",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterName: column{
-			Name:      "reporter_name",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterPhone: column{
-			Name:      "reporter_phone",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Status: column{
-			Name:      "status",
-			DBType:    "publicreport.reportstatustype",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		OrganizationID: column{
-			Name:      "organization_id",
+		ReportID: column{
+			Name:      "report_id",
 			DBType:    "integer",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		HasBackyardPermission: column{
-			Name:      "has_backyard_permission",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		IsReporterConfidential: column{
-			Name:      "is_reporter_confidential",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		IsReporterOwner: column{
-			Name:      "is_reporter_owner",
-			DBType:    "boolean",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReporterContactConsent: column{
-			Name:      "reporter_contact_consent",
-			DBType:    "boolean",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Location: column{
-			Name:      "location",
-			DBType:    "geometry",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressNumber: column{
-			Name:      "address_number",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressID: column{
-			Name:      "address_id",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Reviewed: column{
-			Name:      "reviewed",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ReviewerID: column{
-			Name:      "reviewer_id",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
 	},
 	Indexes: publicreportWaterIndexes{
-		PoolPkey: index{
+		WaterPkey: index{
 			Type: "btree",
-			Name: "pool_pkey",
+			Name: "water_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "id",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        true,
-			Comment:       "",
-			NullsFirst:    []bool{false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
-		PoolPublicIDKey: index{
-			Type: "btree",
-			Name: "pool_public_id_key",
-			Columns: []indexColumn{
-				{
-					Name:         "public_id",
+					Name:         "report_id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -395,44 +189,19 @@ var PublicreportWaters = Table[
 		},
 	},
 	PrimaryKey: &constraint{
-		Name:    "pool_pkey",
-		Columns: []string{"id"},
+		Name:    "water_pkey",
+		Columns: []string{"report_id"},
 		Comment: "",
 	},
 	ForeignKeys: publicreportWaterForeignKeys{
-		PublicreportWaterPoolAddressIDFkey: foreignKey{
+		PublicreportWaterWaterReportIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "publicreport.water.pool_address_id_fkey",
-				Columns: []string{"address_id"},
+				Name:    "publicreport.water.water_report_id_fkey",
+				Columns: []string{"report_id"},
 				Comment: "",
 			},
-			ForeignTable:   "address",
+			ForeignTable:   "publicreport.report",
 			ForeignColumns: []string{"id"},
-		},
-		PublicreportWaterPoolOrganizationIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "publicreport.water.pool_organization_id_fkey",
-				Columns: []string{"organization_id"},
-				Comment: "",
-			},
-			ForeignTable:   "organization",
-			ForeignColumns: []string{"id"},
-		},
-		PublicreportWaterWaterReviewerIDFkey: foreignKey{
-			constraint: constraint{
-				Name:    "publicreport.water.water_reviewer_id_fkey",
-				Columns: []string{"reviewer_id"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-	},
-	Uniques: publicreportWaterUniques{
-		PoolPublicIDKey: constraint{
-			Name:    "pool_public_id_key",
-			Columns: []string{"public_id"},
-			Comment: "",
 		},
 	},
 
@@ -440,83 +209,55 @@ var PublicreportWaters = Table[
 }
 
 type publicreportWaterColumns struct {
-	ID                     column
 	AccessComments         column
 	AccessGate             column
 	AccessFence            column
 	AccessLocked           column
 	AccessDog              column
 	AccessOther            column
-	AddressRaw             column
-	AddressCountry         column
-	AddressPostalCode      column
-	AddressLocality        column
-	AddressStreet          column
-	AddressRegion          column
 	Comments               column
-	Created                column
-	H3cell                 column
+	IsReporterConfidential column
+	IsReporterOwner        column
 	HasAdult               column
+	HasBackyardPermission  column
 	HasLarvae              column
 	HasPupae               column
-	MapZoom                column
 	OwnerEmail             column
 	OwnerName              column
 	OwnerPhone             column
-	PublicID               column
-	ReporterEmail          column
-	ReporterName           column
-	ReporterPhone          column
-	Status                 column
-	OrganizationID         column
-	HasBackyardPermission  column
-	IsReporterConfidential column
-	IsReporterOwner        column
-	ReporterContactConsent column
-	Location               column
-	AddressNumber          column
-	AddressID              column
-	Reviewed               column
-	ReviewerID             column
+	ReportID               column
 }
 
 func (c publicreportWaterColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.AddressRaw, c.AddressCountry, c.AddressPostalCode, c.AddressLocality, c.AddressStreet, c.AddressRegion, c.Comments, c.Created, c.H3cell, c.HasAdult, c.HasLarvae, c.HasPupae, c.MapZoom, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.PublicID, c.ReporterEmail, c.ReporterName, c.ReporterPhone, c.Status, c.OrganizationID, c.HasBackyardPermission, c.IsReporterConfidential, c.IsReporterOwner, c.ReporterContactConsent, c.Location, c.AddressNumber, c.AddressID, c.Reviewed, c.ReviewerID,
+		c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Comments, c.IsReporterConfidential, c.IsReporterOwner, c.HasAdult, c.HasBackyardPermission, c.HasLarvae, c.HasPupae, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.ReportID,
 	}
 }
 
 type publicreportWaterIndexes struct {
-	PoolPkey        index
-	PoolPublicIDKey index
+	WaterPkey index
 }
 
 func (i publicreportWaterIndexes) AsSlice() []index {
 	return []index{
-		i.PoolPkey, i.PoolPublicIDKey,
+		i.WaterPkey,
 	}
 }
 
 type publicreportWaterForeignKeys struct {
-	PublicreportWaterPoolAddressIDFkey      foreignKey
-	PublicreportWaterPoolOrganizationIDFkey foreignKey
-	PublicreportWaterWaterReviewerIDFkey    foreignKey
+	PublicreportWaterWaterReportIDFkey foreignKey
 }
 
 func (f publicreportWaterForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportWaterPoolAddressIDFkey, f.PublicreportWaterPoolOrganizationIDFkey, f.PublicreportWaterWaterReviewerIDFkey,
+		f.PublicreportWaterWaterReportIDFkey,
 	}
 }
 
-type publicreportWaterUniques struct {
-	PoolPublicIDKey constraint
-}
+type publicreportWaterUniques struct{}
 
 func (u publicreportWaterUniques) AsSlice() []constraint {
-	return []constraint{
-		u.PoolPublicIDKey,
-	}
+	return []constraint{}
 }
 
 type publicreportWaterChecks struct{}

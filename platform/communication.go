@@ -9,16 +9,9 @@ import (
 )
 
 func NotificationCount(ctx context.Context, org *models.Organization, user *models.User) (result uint, err error) {
-	count_nreports, err := publicreport.NuisanceReportForOrganizationCount(ctx, org.ID)
+	count_reports, err := publicreport.ReportsForOrganizationCount(ctx, org.ID)
 	if err != nil {
-		return 0, fmt.Errorf("nuisance report query: %w", err)
+		return 0, fmt.Errorf("report query: %w", err)
 	}
-	result += count_nreports
-
-	count_wreports, err := publicreport.WaterReportForOrganizationCount(ctx, org.ID)
-	if err != nil {
-		return 0, fmt.Errorf("water report query: %w", err)
-	}
-	result += count_wreports
-	return result, nil
+	return uint(count_reports), nil
 }

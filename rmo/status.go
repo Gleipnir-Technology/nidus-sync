@@ -13,17 +13,14 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
-	/*
-		"github.com/Gleipnir-Technology/nidus-sync/db"
-		"github.com/Gleipnir-Technology/nidus-sync/h3utils"
-		"github.com/aarondl/opt/omit"
-		"github.com/aarondl/opt/omitnull"
-	*/)
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
 
 type ContentStatus struct {
 	District *ContentDistrict
@@ -95,30 +92,94 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 	content.Error = "Sorry, we can't find that report"
 	html.RenderOrError(w, "rmo/status.html", content)
 }
-func contentFromNuisance(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
-	nuisance, err := models.PublicreportNuisances.Query(
-		models.SelectWhere.PublicreportNuisances.PublicID.EQ(report_id),
-	).One(ctx, db.PGInstance.BobDB)
+func contentFromReport(ctx context.Context, report *models.PublicreportReport) (result ContentStatusByID, err error) {
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, report.OrganizationID)
 	if err != nil {
-		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
+		return result, fmt.Errorf("Failed to get district information: %w", err)
 	}
 
-	images, err := sql.PublicreportImageWithJSONByNuisanceID(nuisance.ID).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
+	type _Row struct {
+		ID               int32     `db:"id"`
+		ContentType      string    `db:"content_type"`
+		Created          time.Time `db:"created"`
+		Location         string    `db:"location"`
+		LocationJSON     string    `db:"location_json"`
+		ResolutionX      int32     `db:"resolution_x"`
+		ResolutionY      int32     `db:"resolution_y"`
+		StorageUUID      uuid.UUID `db:"storage_uuid"`
+		StorageSize      int32     `db:"storage_size"`
+		UploadedFilename string    `db:"uploaded_filename"`
 	}
-
-	org_id := nuisance.OrganizationID
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
+	images, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"id",
+			"content_type",
+			"created",
+			"location",
+			"COALESCE(ST_AsGeoJSON(location), '{}') AS location_json",
+			"resolution_x",
+			"resolution_y",
+			"storage_uuid",
+			"storage_size",
+			"uploaded_filename",
+		),
+		sm.From("publicreport.image"),
+		sm.InnerJoin("publicreport.report_image").OnEQ(
+			psql.Quote("publicreport", "image", "id"),
+			psql.Quote("publicreport", "report_image", "image_id"),
+		),
+		sm.Where(
+			psql.Quote("publicreport", "report_image", "report_id").EQ(psql.Arg(report.ID)),
+		),
+	), scan.StructMapper[_Row]())
 	if err != nil {
-		return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
+		return result, fmt.Errorf("Failed to get images: %w", err)
 	}
 	result.District = newContentDistrict(org)
-	result.Report.ID = report_id
-	result.Report.Address = nuisance.AddressRaw
-	result.Report.Created = nuisance.Created
+	result.Report.ID = report.PublicID
+	result.Report.Address = report.AddressRaw
+	result.Report.Created = report.Created
 	result.Report.ImageCount = len(images)
-	result.Report.Status = strings.Title(nuisance.Status.String())
+	result.Report.Status = cases.Title(language.AmericanEnglish).String(report.Status.String())
+	result.Timeline = []TimelineEntry{
+		TimelineEntry{
+			At:     report.Created,
+			Detail: "Initial report was submitted",
+			Title:  "Created",
+		},
+	}
+
+	type LocationGeoJSON struct {
+		Location string
+	}
+	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			psql.F("ST_AsGeoJSON", "location"),
+		),
+		sm.From("publicreport.report"),
+		sm.Where(psql.Quote("id").EQ(psql.Arg(report.ID))),
+	), scan.SingleColumnMapper[string])
+	if err != nil {
+		return result, fmt.Errorf("Failed to query location of report %d: %w", report.ID, err)
+	}
+	result.Report.Location = location
+	nuisance, err := models.PublicreportNuisances.Query(
+		models.SelectWhere.PublicreportNuisances.ReportID.EQ(report.ID),
+	).One(ctx, db.PGInstance.BobDB)
+	if err == nil {
+		result.Report.Type = "Mosquito Nuisance"
+		addContentFromNuisance(&result, nuisance)
+	}
+	water, err := models.PublicreportWaters.Query(
+		models.SelectWhere.PublicreportWaters.ReportID.EQ(report.ID),
+	).One(ctx, db.PGInstance.BobDB)
+	if err == nil {
+		result.Report.Type = "Standing Water"
+		addContentFromWater(&result, water)
+	}
+	return result, nil
+}
+func addContentFromNuisance(result *ContentStatusByID, nuisance *models.PublicreportNuisance) {
 	result.Report.Type = "Mosquito Nuisance"
 	result.Report.Details = []DetailEntry{
 		DetailEntry{
@@ -174,56 +235,8 @@ func contentFromNuisance(ctx context.Context, report_id string) (result ContentS
 			Value: strconv.FormatBool(nuisance.SourceGutter),
 		},
 	}
-	result.Timeline = []TimelineEntry{
-		TimelineEntry{
-			At:     nuisance.Created,
-			Detail: "Initial report was submitted",
-			Title:  "Created",
-		},
-	}
-
-	type LocationGeoJSON struct {
-		Location string
-	}
-	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			psql.F("ST_AsGeoJSON", "location"),
-		),
-		sm.From("publicreport.nuisance"),
-		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	), scan.SingleColumnMapper[string])
-	if err != nil {
-		return result, fmt.Errorf("Failed to query nuisance %s: %w", report_id, err)
-	}
-	result.Report.Location = location
-
-	return result, err
 }
-func contentFromWater(ctx context.Context, report_id string) (result ContentStatusByID, err error) {
-	water, err := models.PublicreportWaters.Query(
-		models.SelectWhere.PublicreportWaters.PublicID.EQ(report_id),
-	).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return result, fmt.Errorf("Failed to query water %s: %w", report_id, err)
-	}
-
-	images, err := sql.PublicreportImageWithJSONByWaterID(water.ID).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return result, fmt.Errorf("Failed to get images %s: %w", report_id, err)
-	}
-
-	org_id := water.OrganizationID
-	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, org_id)
-	if err != nil {
-		return result, fmt.Errorf("Failed to get district %d information: %w", org_id, err)
-	}
-	result.District = newContentDistrict(org)
-	result.Report.ID = report_id
-	result.Report.Address = water.AddressRaw
-	result.Report.Created = water.Created
-	result.Report.ImageCount = len(images)
-	result.Report.Status = strings.Title(water.Status.String())
-	result.Report.Type = "Mosquito Nuisance"
+func addContentFromWater(result *ContentStatusByID, water *models.PublicreportWater) {
 	result.Report.Details = []DetailEntry{
 		DetailEntry{
 			Name:  "Has a gate that affects access?",
@@ -254,48 +267,20 @@ func contentFromWater(ctx context.Context, report_id string) (result ContentStat
 			Value: strconv.FormatBool(water.HasAdult),
 		},
 	}
-	result.Timeline = []TimelineEntry{
-		TimelineEntry{
-			At:     water.Created,
-			Detail: "Initial report was submitted",
-			Title:  "Created",
-		},
-	}
-	location, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			psql.F("ST_AsGeoJSON", "location"),
-		),
-		sm.From("publicreport.water"),
-		sm.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	), scan.SingleColumnMapper[string])
-	if err != nil {
-		return result, fmt.Errorf("Failed to query water %s: %w", report_id, err)
-	}
-	result.Report.Location = location
-
-	return result, err
 }
 
 func getStatusByID(w http.ResponseWriter, r *http.Request) {
 	report_id := chi.URLParam(r, "report_id")
 	ctx := r.Context()
 
-	location, err := models.PublicreportReportLocations.Query(
-		models.SelectWhere.PublicreportReportLocations.PublicID.EQ(report_id),
+	report, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		respondError(w, "Failed to find report", err, http.StatusBadRequest)
 		return
 	}
-	var content ContentStatusByID
-	switch location.TableName.MustGet() {
-	case "nuisance":
-		content, err = contentFromNuisance(ctx, report_id)
-	case "water":
-		content, err = contentFromWater(ctx, report_id)
-	default:
-		err = fmt.Errorf("table name %s not in switch", location.TableName.MustGet())
-	}
+	content, err := contentFromReport(ctx, report)
 	if err != nil {
 		respondError(w, "Failed to generate report content", err, http.StatusInternalServerError)
 		return

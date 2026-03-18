@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	//"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -20,71 +20,68 @@ import (
 )
 
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
-	tablename, _, err := reportFromID(ctx, user, report_id)
+	report, err := reportFromID(ctx, user, report_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
 	}
 
-	_, err = psql.Update(
-		um.Table("publicreport."+tablename),
-		um.SetCol("reviewed").ToArg(time.Now()),
-		um.SetCol("reviewer_id").ToArg(user.ID),
-		um.SetCol("status").ToArg(enums.PublicreportReportstatustypeInvalidated),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	).Exec(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return fmt.Errorf("update report %s.%s: %w", tablename, report_id, err)
-	}
+	err = report.Update(ctx, db.PGInstance.BobDB, &models.PublicreportReportSetter{
+		Reviewed:   omitnull.From(time.Now()),
+		ReviewerID: omitnull.From(int32(user.ID)),
+		Status:     omit.From(enums.PublicreportReportstatustypeInvalidated),
+	})
 
-	log.Info().Str("report-id", report_id).Str("tablename", tablename).Msg("Marked as invalid")
-	resource := resourceTypeFromTablename(tablename)
-	event.Updated(resource, user.Organization.ID(), report_id)
+	log.Info().Int32("id", report.ID).Msg("Report marked as invalid")
+	event.Updated(event.TypeRMOReport, user.Organization.ID(), report_id)
 	return nil
 }
 
 func PublicReportMessageCreate(ctx context.Context, user User, report_id, message string) (message_id *int32, err error) {
-	_, report, err := reportFromID(ctx, user, report_id)
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create txn: %w", err)
+	}
+	defer txn.Rollback(ctx)
+
+	report, err := reportFromID(ctx, user, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
-	if report.ReporterPhone.GetOr("") != "" {
-		msg_id, err := text.ReportMessage(ctx, int32(user.ID), report_id, report.ReporterPhone.MustGet(), message)
+	if report.ReporterPhone != "" {
+		log.Debug().Str("report_id", report_id).Msg("contacting via phone")
+		p, err := text.ParsePhoneNumber(report.ReporterPhone)
+		if err != nil {
+			return nil, fmt.Errorf("parse phone: %w", err)
+		}
+		msg_id, err := text.ReportMessage(ctx, txn, int32(user.ID), int32(report.ID), *p, message)
 		if err != nil {
 			return nil, fmt.Errorf("send text: %w", err)
 		}
+		txn.Commit(ctx)
+		log.Debug().Int32("msg_id", *msg_id).Msg("Created text.ReportMessage")
 		return msg_id, nil
-	} else if report.ReporterEmail.GetOr("") != "" {
-		msg_id, err := email.ReportMessage(ctx, int32(user.ID), report_id, report.ReporterEmail.MustGet(), message)
+	} else if report.ReporterEmail != "" {
+		msg_id, err := email.ReportMessage(ctx, int32(user.ID), report_id, report.ReporterEmail, message)
 		if err != nil {
 			return nil, fmt.Errorf("send email: %w", err)
 		}
+		txn.Commit(ctx)
 		return msg_id, nil
 	} else {
+		log.Debug().Str("report_id", report_id).Msg("contacting via email")
 		return nil, errors.New("no contact methods available")
 	}
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string, tablename string) {
-	resource := resourceTypeFromTablename(tablename)
-	event.Updated(resource, org_id, report_id)
+	event.Updated(event.TypeRMOReport, org_id, report_id)
 }
-func resourceTypeFromTablename(tablename string) event.ResourceType {
-	switch tablename {
-	case "nuisance":
-		return event.TypeRMONuisance
-	case "water":
-		return event.TypeRMOWater
-	default:
-		return event.TypeUnknown
-	}
-}
-func reportFromID(ctx context.Context, user User, report_id string) (string, *models.PublicreportReportLocation, error) {
-	report, err := models.PublicreportReportLocations.Query(
-		models.SelectWhere.PublicreportReportLocations.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReportLocations.OrganizationID.EQ(user.Organization.ID()),
+func reportFromID(ctx context.Context, user User, report_id string) (*models.PublicreportReport, error) {
+	report, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
+		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID()),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	tablename := report.TableName.MustGet()
-	return tablename, report, nil
+	return report, nil
 }

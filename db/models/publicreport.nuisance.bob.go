@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -19,53 +18,27 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	"github.com/stephenafamo/scan"
 )
 
 // PublicreportNuisance is an object representing the database table.
 type PublicreportNuisance struct {
-	ID                     int32                                  `db:"id,pk" `
-	AdditionalInfo         string                                 `db:"additional_info" `
-	Created                time.Time                              `db:"created" `
-	Duration               enums.PublicreportNuisancedurationtype `db:"duration" `
-	SourceContainer        bool                                   `db:"source_container" `
-	SourceDescription      string                                 `db:"source_description" `
-	SourceStagnant         bool                                   `db:"source_stagnant" `
-	PublicID               string                                 `db:"public_id" `
-	ReporterEmail          null.Val[string]                       `db:"reporter_email" `
-	ReporterName           null.Val[string]                       `db:"reporter_name" `
-	ReporterPhone          null.Val[string]                       `db:"reporter_phone" `
-	AddressRaw             string                                 `db:"address_raw" `
-	Status                 enums.PublicreportReportstatustype     `db:"status" `
-	OrganizationID         int32                                  `db:"organization_id" `
-	SourceGutter           bool                                   `db:"source_gutter" `
-	H3cell                 null.Val[string]                       `db:"h3cell" `
-	AddressCountry         string                                 `db:"address_country" `
-	AddressLocality        string                                 `db:"address_locality" `
-	AddressPostalCode      string                                 `db:"address_postal_code" `
-	AddressRegion          string                                 `db:"address_region" `
-	AddressStreet          string                                 `db:"address_street" `
-	IsLocationBackyard     bool                                   `db:"is_location_backyard" `
-	IsLocationFrontyard    bool                                   `db:"is_location_frontyard" `
-	IsLocationGarden       bool                                   `db:"is_location_garden" `
-	IsLocationOther        bool                                   `db:"is_location_other" `
-	IsLocationPool         bool                                   `db:"is_location_pool" `
-	MapZoom                float32                                `db:"map_zoom" `
-	TodEarly               bool                                   `db:"tod_early" `
-	TodDay                 bool                                   `db:"tod_day" `
-	TodEvening             bool                                   `db:"tod_evening" `
-	TodNight               bool                                   `db:"tod_night" `
-	LatlngAccuracyType     enums.PublicreportAccuracytype         `db:"latlng_accuracy_type" `
-	LatlngAccuracyValue    float32                                `db:"latlng_accuracy_value" `
-	ReporterContactConsent null.Val[bool]                         `db:"reporter_contact_consent" `
-	Location               null.Val[string]                       `db:"location" `
-	AddressNumber          string                                 `db:"address_number" `
-	AddressID              null.Val[int32]                        `db:"address_id" `
-	Reviewed               null.Val[time.Time]                    `db:"reviewed" `
-	ReviewerID             null.Val[int32]                        `db:"reviewer_id" `
+	AdditionalInfo      string                                 `db:"additional_info" `
+	Duration            enums.PublicreportNuisancedurationtype `db:"duration" `
+	IsLocationBackyard  bool                                   `db:"is_location_backyard" `
+	IsLocationFrontyard bool                                   `db:"is_location_frontyard" `
+	IsLocationGarden    bool                                   `db:"is_location_garden" `
+	IsLocationOther     bool                                   `db:"is_location_other" `
+	IsLocationPool      bool                                   `db:"is_location_pool" `
+	ReportID            int32                                  `db:"report_id,pk" `
+	SourceContainer     bool                                   `db:"source_container" `
+	SourceDescription   string                                 `db:"source_description" `
+	SourceStagnant      bool                                   `db:"source_stagnant" `
+	SourceGutter        bool                                   `db:"source_gutter" `
+	TodEarly            bool                                   `db:"tod_early" `
+	TodDay              bool                                   `db:"tod_day" `
+	TodEvening          bool                                   `db:"tod_evening" `
+	TodNight            bool                                   `db:"tod_night" `
 
 	R publicreportNuisanceR `db:"-" `
 }
@@ -82,104 +55,53 @@ type PublicreportNuisancesQuery = *psql.ViewQuery[*PublicreportNuisance, Publicr
 
 // publicreportNuisanceR is where relationships are stored.
 type publicreportNuisanceR struct {
-	NotifyEmailNuisances PublicreportNotifyEmailNuisanceSlice // publicreport.notify_email_nuisance.notify_email_nuisance_nuisance_id_fkey
-	NotifyPhoneNuisances PublicreportNotifyPhoneNuisanceSlice // publicreport.notify_phone_nuisance.notify_phone_nuisance_nuisance_id_fkey
-	Address              *Address                             // publicreport.nuisance.nuisance_address_id_fkey
-	Organization         *Organization                        // publicreport.nuisance.nuisance_organization_id_fkey
-	ReviewerUser         *User                                // publicreport.nuisance.nuisance_reviewer_id_fkey
-	Images               PublicreportImageSlice               // publicreport.nuisance_image.nuisance_image_image_id_fkeypublicreport.nuisance_image.nuisance_image_nuisance_id_fkey
+	Report *PublicreportReport // publicreport.nuisance.nuisance_report_id_fkey
 }
 
 func buildPublicreportNuisanceColumns(alias string) publicreportNuisanceColumns {
 	return publicreportNuisanceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "additional_info", "created", "duration", "source_container", "source_description", "source_stagnant", "public_id", "reporter_email", "reporter_name", "reporter_phone", "address_raw", "status", "organization_id", "source_gutter", "h3cell", "address_country", "address_locality", "address_postal_code", "address_region", "address_street", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "map_zoom", "tod_early", "tod_day", "tod_evening", "tod_night", "latlng_accuracy_type", "latlng_accuracy_value", "reporter_contact_consent", "location", "address_number", "address_id", "reviewed", "reviewer_id",
+			"additional_info", "duration", "is_location_backyard", "is_location_frontyard", "is_location_garden", "is_location_other", "is_location_pool", "report_id", "source_container", "source_description", "source_stagnant", "source_gutter", "tod_early", "tod_day", "tod_evening", "tod_night",
 		).WithParent("publicreport.nuisance"),
-		tableAlias:             alias,
-		ID:                     psql.Quote(alias, "id"),
-		AdditionalInfo:         psql.Quote(alias, "additional_info"),
-		Created:                psql.Quote(alias, "created"),
-		Duration:               psql.Quote(alias, "duration"),
-		SourceContainer:        psql.Quote(alias, "source_container"),
-		SourceDescription:      psql.Quote(alias, "source_description"),
-		SourceStagnant:         psql.Quote(alias, "source_stagnant"),
-		PublicID:               psql.Quote(alias, "public_id"),
-		ReporterEmail:          psql.Quote(alias, "reporter_email"),
-		ReporterName:           psql.Quote(alias, "reporter_name"),
-		ReporterPhone:          psql.Quote(alias, "reporter_phone"),
-		AddressRaw:             psql.Quote(alias, "address_raw"),
-		Status:                 psql.Quote(alias, "status"),
-		OrganizationID:         psql.Quote(alias, "organization_id"),
-		SourceGutter:           psql.Quote(alias, "source_gutter"),
-		H3cell:                 psql.Quote(alias, "h3cell"),
-		AddressCountry:         psql.Quote(alias, "address_country"),
-		AddressLocality:        psql.Quote(alias, "address_locality"),
-		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
-		AddressRegion:          psql.Quote(alias, "address_region"),
-		AddressStreet:          psql.Quote(alias, "address_street"),
-		IsLocationBackyard:     psql.Quote(alias, "is_location_backyard"),
-		IsLocationFrontyard:    psql.Quote(alias, "is_location_frontyard"),
-		IsLocationGarden:       psql.Quote(alias, "is_location_garden"),
-		IsLocationOther:        psql.Quote(alias, "is_location_other"),
-		IsLocationPool:         psql.Quote(alias, "is_location_pool"),
-		MapZoom:                psql.Quote(alias, "map_zoom"),
-		TodEarly:               psql.Quote(alias, "tod_early"),
-		TodDay:                 psql.Quote(alias, "tod_day"),
-		TodEvening:             psql.Quote(alias, "tod_evening"),
-		TodNight:               psql.Quote(alias, "tod_night"),
-		LatlngAccuracyType:     psql.Quote(alias, "latlng_accuracy_type"),
-		LatlngAccuracyValue:    psql.Quote(alias, "latlng_accuracy_value"),
-		ReporterContactConsent: psql.Quote(alias, "reporter_contact_consent"),
-		Location:               psql.Quote(alias, "location"),
-		AddressNumber:          psql.Quote(alias, "address_number"),
-		AddressID:              psql.Quote(alias, "address_id"),
-		Reviewed:               psql.Quote(alias, "reviewed"),
-		ReviewerID:             psql.Quote(alias, "reviewer_id"),
+		tableAlias:          alias,
+		AdditionalInfo:      psql.Quote(alias, "additional_info"),
+		Duration:            psql.Quote(alias, "duration"),
+		IsLocationBackyard:  psql.Quote(alias, "is_location_backyard"),
+		IsLocationFrontyard: psql.Quote(alias, "is_location_frontyard"),
+		IsLocationGarden:    psql.Quote(alias, "is_location_garden"),
+		IsLocationOther:     psql.Quote(alias, "is_location_other"),
+		IsLocationPool:      psql.Quote(alias, "is_location_pool"),
+		ReportID:            psql.Quote(alias, "report_id"),
+		SourceContainer:     psql.Quote(alias, "source_container"),
+		SourceDescription:   psql.Quote(alias, "source_description"),
+		SourceStagnant:      psql.Quote(alias, "source_stagnant"),
+		SourceGutter:        psql.Quote(alias, "source_gutter"),
+		TodEarly:            psql.Quote(alias, "tod_early"),
+		TodDay:              psql.Quote(alias, "tod_day"),
+		TodEvening:          psql.Quote(alias, "tod_evening"),
+		TodNight:            psql.Quote(alias, "tod_night"),
 	}
 }
 
 type publicreportNuisanceColumns struct {
 	expr.ColumnsExpr
-	tableAlias             string
-	ID                     psql.Expression
-	AdditionalInfo         psql.Expression
-	Created                psql.Expression
-	Duration               psql.Expression
-	SourceContainer        psql.Expression
-	SourceDescription      psql.Expression
-	SourceStagnant         psql.Expression
-	PublicID               psql.Expression
-	ReporterEmail          psql.Expression
-	ReporterName           psql.Expression
-	ReporterPhone          psql.Expression
-	AddressRaw             psql.Expression
-	Status                 psql.Expression
-	OrganizationID         psql.Expression
-	SourceGutter           psql.Expression
-	H3cell                 psql.Expression
-	AddressCountry         psql.Expression
-	AddressLocality        psql.Expression
-	AddressPostalCode      psql.Expression
-	AddressRegion          psql.Expression
-	AddressStreet          psql.Expression
-	IsLocationBackyard     psql.Expression
-	IsLocationFrontyard    psql.Expression
-	IsLocationGarden       psql.Expression
-	IsLocationOther        psql.Expression
-	IsLocationPool         psql.Expression
-	MapZoom                psql.Expression
-	TodEarly               psql.Expression
-	TodDay                 psql.Expression
-	TodEvening             psql.Expression
-	TodNight               psql.Expression
-	LatlngAccuracyType     psql.Expression
-	LatlngAccuracyValue    psql.Expression
-	ReporterContactConsent psql.Expression
-	Location               psql.Expression
-	AddressNumber          psql.Expression
-	AddressID              psql.Expression
-	Reviewed               psql.Expression
-	ReviewerID             psql.Expression
+	tableAlias          string
+	AdditionalInfo      psql.Expression
+	Duration            psql.Expression
+	IsLocationBackyard  psql.Expression
+	IsLocationFrontyard psql.Expression
+	IsLocationGarden    psql.Expression
+	IsLocationOther     psql.Expression
+	IsLocationPool      psql.Expression
+	ReportID            psql.Expression
+	SourceContainer     psql.Expression
+	SourceDescription   psql.Expression
+	SourceStagnant      psql.Expression
+	SourceGutter        psql.Expression
+	TodEarly            psql.Expression
+	TodDay              psql.Expression
+	TodEvening          psql.Expression
+	TodNight            psql.Expression
 }
 
 func (c publicreportNuisanceColumns) Alias() string {
@@ -194,111 +116,31 @@ func (publicreportNuisanceColumns) AliasedAs(alias string) publicreportNuisanceC
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportNuisanceSetter struct {
-	ID                     omit.Val[int32]                                  `db:"id,pk" `
-	AdditionalInfo         omit.Val[string]                                 `db:"additional_info" `
-	Created                omit.Val[time.Time]                              `db:"created" `
-	Duration               omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
-	SourceContainer        omit.Val[bool]                                   `db:"source_container" `
-	SourceDescription      omit.Val[string]                                 `db:"source_description" `
-	SourceStagnant         omit.Val[bool]                                   `db:"source_stagnant" `
-	PublicID               omit.Val[string]                                 `db:"public_id" `
-	ReporterEmail          omitnull.Val[string]                             `db:"reporter_email" `
-	ReporterName           omitnull.Val[string]                             `db:"reporter_name" `
-	ReporterPhone          omitnull.Val[string]                             `db:"reporter_phone" `
-	AddressRaw             omit.Val[string]                                 `db:"address_raw" `
-	Status                 omit.Val[enums.PublicreportReportstatustype]     `db:"status" `
-	OrganizationID         omit.Val[int32]                                  `db:"organization_id" `
-	SourceGutter           omit.Val[bool]                                   `db:"source_gutter" `
-	H3cell                 omitnull.Val[string]                             `db:"h3cell" `
-	AddressCountry         omit.Val[string]                                 `db:"address_country" `
-	AddressLocality        omit.Val[string]                                 `db:"address_locality" `
-	AddressPostalCode      omit.Val[string]                                 `db:"address_postal_code" `
-	AddressRegion          omit.Val[string]                                 `db:"address_region" `
-	AddressStreet          omit.Val[string]                                 `db:"address_street" `
-	IsLocationBackyard     omit.Val[bool]                                   `db:"is_location_backyard" `
-	IsLocationFrontyard    omit.Val[bool]                                   `db:"is_location_frontyard" `
-	IsLocationGarden       omit.Val[bool]                                   `db:"is_location_garden" `
-	IsLocationOther        omit.Val[bool]                                   `db:"is_location_other" `
-	IsLocationPool         omit.Val[bool]                                   `db:"is_location_pool" `
-	MapZoom                omit.Val[float32]                                `db:"map_zoom" `
-	TodEarly               omit.Val[bool]                                   `db:"tod_early" `
-	TodDay                 omit.Val[bool]                                   `db:"tod_day" `
-	TodEvening             omit.Val[bool]                                   `db:"tod_evening" `
-	TodNight               omit.Val[bool]                                   `db:"tod_night" `
-	LatlngAccuracyType     omit.Val[enums.PublicreportAccuracytype]         `db:"latlng_accuracy_type" `
-	LatlngAccuracyValue    omit.Val[float32]                                `db:"latlng_accuracy_value" `
-	ReporterContactConsent omitnull.Val[bool]                               `db:"reporter_contact_consent" `
-	Location               omitnull.Val[string]                             `db:"location" `
-	AddressNumber          omit.Val[string]                                 `db:"address_number" `
-	AddressID              omitnull.Val[int32]                              `db:"address_id" `
-	Reviewed               omitnull.Val[time.Time]                          `db:"reviewed" `
-	ReviewerID             omitnull.Val[int32]                              `db:"reviewer_id" `
+	AdditionalInfo      omit.Val[string]                                 `db:"additional_info" `
+	Duration            omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
+	IsLocationBackyard  omit.Val[bool]                                   `db:"is_location_backyard" `
+	IsLocationFrontyard omit.Val[bool]                                   `db:"is_location_frontyard" `
+	IsLocationGarden    omit.Val[bool]                                   `db:"is_location_garden" `
+	IsLocationOther     omit.Val[bool]                                   `db:"is_location_other" `
+	IsLocationPool      omit.Val[bool]                                   `db:"is_location_pool" `
+	ReportID            omit.Val[int32]                                  `db:"report_id,pk" `
+	SourceContainer     omit.Val[bool]                                   `db:"source_container" `
+	SourceDescription   omit.Val[string]                                 `db:"source_description" `
+	SourceStagnant      omit.Val[bool]                                   `db:"source_stagnant" `
+	SourceGutter        omit.Val[bool]                                   `db:"source_gutter" `
+	TodEarly            omit.Val[bool]                                   `db:"tod_early" `
+	TodDay              omit.Val[bool]                                   `db:"tod_day" `
+	TodEvening          omit.Val[bool]                                   `db:"tod_evening" `
+	TodNight            omit.Val[bool]                                   `db:"tod_night" `
 }
 
 func (s PublicreportNuisanceSetter) SetColumns() []string {
-	vals := make([]string, 0, 39)
-	if s.ID.IsValue() {
-		vals = append(vals, "id")
-	}
+	vals := make([]string, 0, 16)
 	if s.AdditionalInfo.IsValue() {
 		vals = append(vals, "additional_info")
 	}
-	if s.Created.IsValue() {
-		vals = append(vals, "created")
-	}
 	if s.Duration.IsValue() {
 		vals = append(vals, "duration")
-	}
-	if s.SourceContainer.IsValue() {
-		vals = append(vals, "source_container")
-	}
-	if s.SourceDescription.IsValue() {
-		vals = append(vals, "source_description")
-	}
-	if s.SourceStagnant.IsValue() {
-		vals = append(vals, "source_stagnant")
-	}
-	if s.PublicID.IsValue() {
-		vals = append(vals, "public_id")
-	}
-	if !s.ReporterEmail.IsUnset() {
-		vals = append(vals, "reporter_email")
-	}
-	if !s.ReporterName.IsUnset() {
-		vals = append(vals, "reporter_name")
-	}
-	if !s.ReporterPhone.IsUnset() {
-		vals = append(vals, "reporter_phone")
-	}
-	if s.AddressRaw.IsValue() {
-		vals = append(vals, "address_raw")
-	}
-	if s.Status.IsValue() {
-		vals = append(vals, "status")
-	}
-	if s.OrganizationID.IsValue() {
-		vals = append(vals, "organization_id")
-	}
-	if s.SourceGutter.IsValue() {
-		vals = append(vals, "source_gutter")
-	}
-	if !s.H3cell.IsUnset() {
-		vals = append(vals, "h3cell")
-	}
-	if s.AddressCountry.IsValue() {
-		vals = append(vals, "address_country")
-	}
-	if s.AddressLocality.IsValue() {
-		vals = append(vals, "address_locality")
-	}
-	if s.AddressPostalCode.IsValue() {
-		vals = append(vals, "address_postal_code")
-	}
-	if s.AddressRegion.IsValue() {
-		vals = append(vals, "address_region")
-	}
-	if s.AddressStreet.IsValue() {
-		vals = append(vals, "address_street")
 	}
 	if s.IsLocationBackyard.IsValue() {
 		vals = append(vals, "is_location_backyard")
@@ -315,8 +157,20 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.IsLocationPool.IsValue() {
 		vals = append(vals, "is_location_pool")
 	}
-	if s.MapZoom.IsValue() {
-		vals = append(vals, "map_zoom")
+	if s.ReportID.IsValue() {
+		vals = append(vals, "report_id")
+	}
+	if s.SourceContainer.IsValue() {
+		vals = append(vals, "source_container")
+	}
+	if s.SourceDescription.IsValue() {
+		vals = append(vals, "source_description")
+	}
+	if s.SourceStagnant.IsValue() {
+		vals = append(vals, "source_stagnant")
+	}
+	if s.SourceGutter.IsValue() {
+		vals = append(vals, "source_gutter")
 	}
 	if s.TodEarly.IsValue() {
 		vals = append(vals, "tod_early")
@@ -330,96 +184,15 @@ func (s PublicreportNuisanceSetter) SetColumns() []string {
 	if s.TodNight.IsValue() {
 		vals = append(vals, "tod_night")
 	}
-	if s.LatlngAccuracyType.IsValue() {
-		vals = append(vals, "latlng_accuracy_type")
-	}
-	if s.LatlngAccuracyValue.IsValue() {
-		vals = append(vals, "latlng_accuracy_value")
-	}
-	if !s.ReporterContactConsent.IsUnset() {
-		vals = append(vals, "reporter_contact_consent")
-	}
-	if !s.Location.IsUnset() {
-		vals = append(vals, "location")
-	}
-	if s.AddressNumber.IsValue() {
-		vals = append(vals, "address_number")
-	}
-	if !s.AddressID.IsUnset() {
-		vals = append(vals, "address_id")
-	}
-	if !s.Reviewed.IsUnset() {
-		vals = append(vals, "reviewed")
-	}
-	if !s.ReviewerID.IsUnset() {
-		vals = append(vals, "reviewer_id")
-	}
 	return vals
 }
 
 func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
-	if s.ID.IsValue() {
-		t.ID = s.ID.MustGet()
-	}
 	if s.AdditionalInfo.IsValue() {
 		t.AdditionalInfo = s.AdditionalInfo.MustGet()
 	}
-	if s.Created.IsValue() {
-		t.Created = s.Created.MustGet()
-	}
 	if s.Duration.IsValue() {
 		t.Duration = s.Duration.MustGet()
-	}
-	if s.SourceContainer.IsValue() {
-		t.SourceContainer = s.SourceContainer.MustGet()
-	}
-	if s.SourceDescription.IsValue() {
-		t.SourceDescription = s.SourceDescription.MustGet()
-	}
-	if s.SourceStagnant.IsValue() {
-		t.SourceStagnant = s.SourceStagnant.MustGet()
-	}
-	if s.PublicID.IsValue() {
-		t.PublicID = s.PublicID.MustGet()
-	}
-	if !s.ReporterEmail.IsUnset() {
-		t.ReporterEmail = s.ReporterEmail.MustGetNull()
-	}
-	if !s.ReporterName.IsUnset() {
-		t.ReporterName = s.ReporterName.MustGetNull()
-	}
-	if !s.ReporterPhone.IsUnset() {
-		t.ReporterPhone = s.ReporterPhone.MustGetNull()
-	}
-	if s.AddressRaw.IsValue() {
-		t.AddressRaw = s.AddressRaw.MustGet()
-	}
-	if s.Status.IsValue() {
-		t.Status = s.Status.MustGet()
-	}
-	if s.OrganizationID.IsValue() {
-		t.OrganizationID = s.OrganizationID.MustGet()
-	}
-	if s.SourceGutter.IsValue() {
-		t.SourceGutter = s.SourceGutter.MustGet()
-	}
-	if !s.H3cell.IsUnset() {
-		t.H3cell = s.H3cell.MustGetNull()
-	}
-	if s.AddressCountry.IsValue() {
-		t.AddressCountry = s.AddressCountry.MustGet()
-	}
-	if s.AddressLocality.IsValue() {
-		t.AddressLocality = s.AddressLocality.MustGet()
-	}
-	if s.AddressPostalCode.IsValue() {
-		t.AddressPostalCode = s.AddressPostalCode.MustGet()
-	}
-	if s.AddressRegion.IsValue() {
-		t.AddressRegion = s.AddressRegion.MustGet()
-	}
-	if s.AddressStreet.IsValue() {
-		t.AddressStreet = s.AddressStreet.MustGet()
 	}
 	if s.IsLocationBackyard.IsValue() {
 		t.IsLocationBackyard = s.IsLocationBackyard.MustGet()
@@ -436,8 +209,20 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.IsLocationPool.IsValue() {
 		t.IsLocationPool = s.IsLocationPool.MustGet()
 	}
-	if s.MapZoom.IsValue() {
-		t.MapZoom = s.MapZoom.MustGet()
+	if s.ReportID.IsValue() {
+		t.ReportID = s.ReportID.MustGet()
+	}
+	if s.SourceContainer.IsValue() {
+		t.SourceContainer = s.SourceContainer.MustGet()
+	}
+	if s.SourceDescription.IsValue() {
+		t.SourceDescription = s.SourceDescription.MustGet()
+	}
+	if s.SourceStagnant.IsValue() {
+		t.SourceStagnant = s.SourceStagnant.MustGet()
+	}
+	if s.SourceGutter.IsValue() {
+		t.SourceGutter = s.SourceGutter.MustGet()
 	}
 	if s.TodEarly.IsValue() {
 		t.TodEarly = s.TodEarly.MustGet()
@@ -451,30 +236,6 @@ func (s PublicreportNuisanceSetter) Overwrite(t *PublicreportNuisance) {
 	if s.TodNight.IsValue() {
 		t.TodNight = s.TodNight.MustGet()
 	}
-	if s.LatlngAccuracyType.IsValue() {
-		t.LatlngAccuracyType = s.LatlngAccuracyType.MustGet()
-	}
-	if s.LatlngAccuracyValue.IsValue() {
-		t.LatlngAccuracyValue = s.LatlngAccuracyValue.MustGet()
-	}
-	if !s.ReporterContactConsent.IsUnset() {
-		t.ReporterContactConsent = s.ReporterContactConsent.MustGetNull()
-	}
-	if !s.Location.IsUnset() {
-		t.Location = s.Location.MustGetNull()
-	}
-	if s.AddressNumber.IsValue() {
-		t.AddressNumber = s.AddressNumber.MustGet()
-	}
-	if !s.AddressID.IsUnset() {
-		t.AddressID = s.AddressID.MustGetNull()
-	}
-	if !s.Reviewed.IsUnset() {
-		t.Reviewed = s.Reviewed.MustGetNull()
-	}
-	if !s.ReviewerID.IsUnset() {
-		t.ReviewerID = s.ReviewerID.MustGetNull()
-	}
 }
 
 func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
@@ -483,239 +244,101 @@ func (s *PublicreportNuisanceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 39)
-		if s.ID.IsValue() {
-			vals[0] = psql.Arg(s.ID.MustGet())
+		vals := make([]bob.Expression, 16)
+		if s.AdditionalInfo.IsValue() {
+			vals[0] = psql.Arg(s.AdditionalInfo.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.AdditionalInfo.IsValue() {
-			vals[1] = psql.Arg(s.AdditionalInfo.MustGet())
+		if s.Duration.IsValue() {
+			vals[1] = psql.Arg(s.Duration.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Created.IsValue() {
-			vals[2] = psql.Arg(s.Created.MustGet())
+		if s.IsLocationBackyard.IsValue() {
+			vals[2] = psql.Arg(s.IsLocationBackyard.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Duration.IsValue() {
-			vals[3] = psql.Arg(s.Duration.MustGet())
+		if s.IsLocationFrontyard.IsValue() {
+			vals[3] = psql.Arg(s.IsLocationFrontyard.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceContainer.IsValue() {
-			vals[4] = psql.Arg(s.SourceContainer.MustGet())
+		if s.IsLocationGarden.IsValue() {
+			vals[4] = psql.Arg(s.IsLocationGarden.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceDescription.IsValue() {
-			vals[5] = psql.Arg(s.SourceDescription.MustGet())
+		if s.IsLocationOther.IsValue() {
+			vals[5] = psql.Arg(s.IsLocationOther.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceStagnant.IsValue() {
-			vals[6] = psql.Arg(s.SourceStagnant.MustGet())
+		if s.IsLocationPool.IsValue() {
+			vals[6] = psql.Arg(s.IsLocationPool.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.PublicID.IsValue() {
-			vals[7] = psql.Arg(s.PublicID.MustGet())
+		if s.ReportID.IsValue() {
+			vals[7] = psql.Arg(s.ReportID.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterEmail.IsUnset() {
-			vals[8] = psql.Arg(s.ReporterEmail.MustGetNull())
+		if s.SourceContainer.IsValue() {
+			vals[8] = psql.Arg(s.SourceContainer.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterName.IsUnset() {
-			vals[9] = psql.Arg(s.ReporterName.MustGetNull())
+		if s.SourceDescription.IsValue() {
+			vals[9] = psql.Arg(s.SourceDescription.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterPhone.IsUnset() {
-			vals[10] = psql.Arg(s.ReporterPhone.MustGetNull())
+		if s.SourceStagnant.IsValue() {
+			vals[10] = psql.Arg(s.SourceStagnant.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRaw.IsValue() {
-			vals[11] = psql.Arg(s.AddressRaw.MustGet())
+		if s.SourceGutter.IsValue() {
+			vals[11] = psql.Arg(s.SourceGutter.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.Status.IsValue() {
-			vals[12] = psql.Arg(s.Status.MustGet())
+		if s.TodEarly.IsValue() {
+			vals[12] = psql.Arg(s.TodEarly.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.OrganizationID.IsValue() {
-			vals[13] = psql.Arg(s.OrganizationID.MustGet())
+		if s.TodDay.IsValue() {
+			vals[13] = psql.Arg(s.TodDay.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.SourceGutter.IsValue() {
-			vals[14] = psql.Arg(s.SourceGutter.MustGet())
+		if s.TodEvening.IsValue() {
+			vals[14] = psql.Arg(s.TodEvening.MustGet())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[15] = psql.Arg(s.H3cell.MustGetNull())
+		if s.TodNight.IsValue() {
+			vals[15] = psql.Arg(s.TodNight.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressCountry.IsValue() {
-			vals[16] = psql.Arg(s.AddressCountry.MustGet())
-		} else {
-			vals[16] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressLocality.IsValue() {
-			vals[17] = psql.Arg(s.AddressLocality.MustGet())
-		} else {
-			vals[17] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressPostalCode.IsValue() {
-			vals[18] = psql.Arg(s.AddressPostalCode.MustGet())
-		} else {
-			vals[18] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressRegion.IsValue() {
-			vals[19] = psql.Arg(s.AddressRegion.MustGet())
-		} else {
-			vals[19] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressStreet.IsValue() {
-			vals[20] = psql.Arg(s.AddressStreet.MustGet())
-		} else {
-			vals[20] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsLocationBackyard.IsValue() {
-			vals[21] = psql.Arg(s.IsLocationBackyard.MustGet())
-		} else {
-			vals[21] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsLocationFrontyard.IsValue() {
-			vals[22] = psql.Arg(s.IsLocationFrontyard.MustGet())
-		} else {
-			vals[22] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsLocationGarden.IsValue() {
-			vals[23] = psql.Arg(s.IsLocationGarden.MustGet())
-		} else {
-			vals[23] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsLocationOther.IsValue() {
-			vals[24] = psql.Arg(s.IsLocationOther.MustGet())
-		} else {
-			vals[24] = psql.Raw("DEFAULT")
-		}
-
-		if s.IsLocationPool.IsValue() {
-			vals[25] = psql.Arg(s.IsLocationPool.MustGet())
-		} else {
-			vals[25] = psql.Raw("DEFAULT")
-		}
-
-		if s.MapZoom.IsValue() {
-			vals[26] = psql.Arg(s.MapZoom.MustGet())
-		} else {
-			vals[26] = psql.Raw("DEFAULT")
-		}
-
-		if s.TodEarly.IsValue() {
-			vals[27] = psql.Arg(s.TodEarly.MustGet())
-		} else {
-			vals[27] = psql.Raw("DEFAULT")
-		}
-
-		if s.TodDay.IsValue() {
-			vals[28] = psql.Arg(s.TodDay.MustGet())
-		} else {
-			vals[28] = psql.Raw("DEFAULT")
-		}
-
-		if s.TodEvening.IsValue() {
-			vals[29] = psql.Arg(s.TodEvening.MustGet())
-		} else {
-			vals[29] = psql.Raw("DEFAULT")
-		}
-
-		if s.TodNight.IsValue() {
-			vals[30] = psql.Arg(s.TodNight.MustGet())
-		} else {
-			vals[30] = psql.Raw("DEFAULT")
-		}
-
-		if s.LatlngAccuracyType.IsValue() {
-			vals[31] = psql.Arg(s.LatlngAccuracyType.MustGet())
-		} else {
-			vals[31] = psql.Raw("DEFAULT")
-		}
-
-		if s.LatlngAccuracyValue.IsValue() {
-			vals[32] = psql.Arg(s.LatlngAccuracyValue.MustGet())
-		} else {
-			vals[32] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ReporterContactConsent.IsUnset() {
-			vals[33] = psql.Arg(s.ReporterContactConsent.MustGetNull())
-		} else {
-			vals[33] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Location.IsUnset() {
-			vals[34] = psql.Arg(s.Location.MustGetNull())
-		} else {
-			vals[34] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressNumber.IsValue() {
-			vals[35] = psql.Arg(s.AddressNumber.MustGet())
-		} else {
-			vals[35] = psql.Raw("DEFAULT")
-		}
-
-		if !s.AddressID.IsUnset() {
-			vals[36] = psql.Arg(s.AddressID.MustGetNull())
-		} else {
-			vals[36] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Reviewed.IsUnset() {
-			vals[37] = psql.Arg(s.Reviewed.MustGetNull())
-		} else {
-			vals[37] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ReviewerID.IsUnset() {
-			vals[38] = psql.Arg(s.ReviewerID.MustGetNull())
-		} else {
-			vals[38] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -727,14 +350,7 @@ func (s PublicreportNuisanceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 39)
-
-	if s.ID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "id")...),
-			psql.Arg(s.ID),
-		}})
-	}
+	exprs := make([]bob.Expression, 0, 16)
 
 	if s.AdditionalInfo.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -743,136 +359,10 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.Created.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "created")...),
-			psql.Arg(s.Created),
-		}})
-	}
-
 	if s.Duration.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "duration")...),
 			psql.Arg(s.Duration),
-		}})
-	}
-
-	if s.SourceContainer.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_container")...),
-			psql.Arg(s.SourceContainer),
-		}})
-	}
-
-	if s.SourceDescription.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_description")...),
-			psql.Arg(s.SourceDescription),
-		}})
-	}
-
-	if s.SourceStagnant.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_stagnant")...),
-			psql.Arg(s.SourceStagnant),
-		}})
-	}
-
-	if s.PublicID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "public_id")...),
-			psql.Arg(s.PublicID),
-		}})
-	}
-
-	if !s.ReporterEmail.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_email")...),
-			psql.Arg(s.ReporterEmail),
-		}})
-	}
-
-	if !s.ReporterName.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_name")...),
-			psql.Arg(s.ReporterName),
-		}})
-	}
-
-	if !s.ReporterPhone.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_phone")...),
-			psql.Arg(s.ReporterPhone),
-		}})
-	}
-
-	if s.AddressRaw.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_raw")...),
-			psql.Arg(s.AddressRaw),
-		}})
-	}
-
-	if s.Status.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "status")...),
-			psql.Arg(s.Status),
-		}})
-	}
-
-	if s.OrganizationID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "organization_id")...),
-			psql.Arg(s.OrganizationID),
-		}})
-	}
-
-	if s.SourceGutter.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "source_gutter")...),
-			psql.Arg(s.SourceGutter),
-		}})
-	}
-
-	if !s.H3cell.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "h3cell")...),
-			psql.Arg(s.H3cell),
-		}})
-	}
-
-	if s.AddressCountry.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_country")...),
-			psql.Arg(s.AddressCountry),
-		}})
-	}
-
-	if s.AddressLocality.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_locality")...),
-			psql.Arg(s.AddressLocality),
-		}})
-	}
-
-	if s.AddressPostalCode.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_postal_code")...),
-			psql.Arg(s.AddressPostalCode),
-		}})
-	}
-
-	if s.AddressRegion.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_region")...),
-			psql.Arg(s.AddressRegion),
-		}})
-	}
-
-	if s.AddressStreet.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_street")...),
-			psql.Arg(s.AddressStreet),
 		}})
 	}
 
@@ -911,10 +401,38 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.MapZoom.IsValue() {
+	if s.ReportID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "map_zoom")...),
-			psql.Arg(s.MapZoom),
+			psql.Quote(append(prefix, "report_id")...),
+			psql.Arg(s.ReportID),
+		}})
+	}
+
+	if s.SourceContainer.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source_container")...),
+			psql.Arg(s.SourceContainer),
+		}})
+	}
+
+	if s.SourceDescription.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source_description")...),
+			psql.Arg(s.SourceDescription),
+		}})
+	}
+
+	if s.SourceStagnant.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source_stagnant")...),
+			psql.Arg(s.SourceStagnant),
+		}})
+	}
+
+	if s.SourceGutter.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "source_gutter")...),
+			psql.Arg(s.SourceGutter),
 		}})
 	}
 
@@ -946,84 +464,28 @@ func (s PublicreportNuisanceSetter) Expressions(prefix ...string) []bob.Expressi
 		}})
 	}
 
-	if s.LatlngAccuracyType.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "latlng_accuracy_type")...),
-			psql.Arg(s.LatlngAccuracyType),
-		}})
-	}
-
-	if s.LatlngAccuracyValue.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "latlng_accuracy_value")...),
-			psql.Arg(s.LatlngAccuracyValue),
-		}})
-	}
-
-	if !s.ReporterContactConsent.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reporter_contact_consent")...),
-			psql.Arg(s.ReporterContactConsent),
-		}})
-	}
-
-	if !s.Location.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "location")...),
-			psql.Arg(s.Location),
-		}})
-	}
-
-	if s.AddressNumber.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_number")...),
-			psql.Arg(s.AddressNumber),
-		}})
-	}
-
-	if !s.AddressID.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_id")...),
-			psql.Arg(s.AddressID),
-		}})
-	}
-
-	if !s.Reviewed.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reviewed")...),
-			psql.Arg(s.Reviewed),
-		}})
-	}
-
-	if !s.ReviewerID.IsUnset() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "reviewer_id")...),
-			psql.Arg(s.ReviewerID),
-		}})
-	}
-
 	return exprs
 }
 
 // FindPublicreportNuisance retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindPublicreportNuisance(ctx context.Context, exec bob.Executor, IDPK int32, cols ...string) (*PublicreportNuisance, error) {
+func FindPublicreportNuisance(ctx context.Context, exec bob.Executor, ReportIDPK int32, cols ...string) (*PublicreportNuisance, error) {
 	if len(cols) == 0 {
 		return PublicreportNuisances.Query(
-			sm.Where(PublicreportNuisances.Columns.ID.EQ(psql.Arg(IDPK))),
+			sm.Where(PublicreportNuisances.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 		).One(ctx, exec)
 	}
 
 	return PublicreportNuisances.Query(
-		sm.Where(PublicreportNuisances.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Where(PublicreportNuisances.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 		sm.Columns(PublicreportNuisances.Columns.Only(cols...)),
 	).One(ctx, exec)
 }
 
 // PublicreportNuisanceExists checks the presence of a single record by primary key
-func PublicreportNuisanceExists(ctx context.Context, exec bob.Executor, IDPK int32) (bool, error) {
+func PublicreportNuisanceExists(ctx context.Context, exec bob.Executor, ReportIDPK int32) (bool, error) {
 	return PublicreportNuisances.Query(
-		sm.Where(PublicreportNuisances.Columns.ID.EQ(psql.Arg(IDPK))),
+		sm.Where(PublicreportNuisances.Columns.ReportID.EQ(psql.Arg(ReportIDPK))),
 	).Exists(ctx, exec)
 }
 
@@ -1047,11 +509,11 @@ func (o *PublicreportNuisance) AfterQueryHook(ctx context.Context, exec bob.Exec
 
 // primaryKeyVals returns the primary key values of the PublicreportNuisance
 func (o *PublicreportNuisance) primaryKeyVals() bob.Expression {
-	return psql.Arg(o.ID)
+	return psql.Arg(o.ReportID)
 }
 
 func (o *PublicreportNuisance) pkEQ() dialect.Expression {
-	return psql.Quote("publicreport.nuisance", "id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("publicreport.nuisance", "report_id").EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -1078,7 +540,7 @@ func (o *PublicreportNuisance) Delete(ctx context.Context, exec bob.Executor) er
 // Reload refreshes the PublicreportNuisance using the executor
 func (o *PublicreportNuisance) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := PublicreportNuisances.Query(
-		sm.Where(PublicreportNuisances.Columns.ID.EQ(psql.Arg(o.ID))),
+		sm.Where(PublicreportNuisances.Columns.ReportID.EQ(psql.Arg(o.ReportID))),
 	).One(ctx, exec)
 	if err != nil {
 		return err
@@ -1112,7 +574,7 @@ func (o PublicreportNuisanceSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Quote("publicreport.nuisance", "id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Quote("publicreport.nuisance", "report_id").In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -1127,7 +589,7 @@ func (o PublicreportNuisanceSlice) pkIN() dialect.Expression {
 func (o PublicreportNuisanceSlice) copyMatchingRows(from ...*PublicreportNuisance) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.ID != old.ID {
+			if new.ReportID != old.ReportID {
 				continue
 			}
 			new.R = old.R
@@ -1228,540 +690,95 @@ func (o PublicreportNuisanceSlice) ReloadAll(ctx context.Context, exec bob.Execu
 	return nil
 }
 
-// NotifyEmailNuisances starts a query for related objects on publicreport.notify_email_nuisance
-func (o *PublicreportNuisance) NotifyEmailNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailNuisancesQuery {
-	return PublicreportNotifyEmailNuisances.Query(append(mods,
-		sm.Where(PublicreportNotifyEmailNuisances.Columns.NuisanceID.EQ(psql.Arg(o.ID))),
+// Report starts a query for related objects on publicreport.report
+func (o *PublicreportNuisance) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.Where(PublicreportReports.Columns.ID.EQ(psql.Arg(o.ReportID))),
 	)...)
 }
 
-func (os PublicreportNuisanceSlice) NotifyEmailNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailNuisancesQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
+func (os PublicreportNuisanceSlice) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	pkReportID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
-		pkID = append(pkID, o.ID)
+		pkReportID = append(pkReportID, o.ReportID)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkReportID), "integer[]")),
 	))
 
-	return PublicreportNotifyEmailNuisances.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyEmailNuisances.Columns.NuisanceID).OP("IN", PKArgExpr)),
+	return PublicreportReports.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReports.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-// NotifyPhoneNuisances starts a query for related objects on publicreport.notify_phone_nuisance
-func (o *PublicreportNuisance) NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
-	return PublicreportNotifyPhoneNuisances.Query(append(mods,
-		sm.Where(PublicreportNotifyPhoneNuisances.Columns.NuisanceID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os PublicreportNuisanceSlice) NotifyPhoneNuisances(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyPhoneNuisancesQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportNotifyPhoneNuisances.Query(append(mods,
-		sm.Where(psql.Group(PublicreportNotifyPhoneNuisances.Columns.NuisanceID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Address starts a query for related objects on address
-func (o *PublicreportNuisance) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
-	return Addresses.Query(append(mods,
-		sm.Where(Addresses.Columns.ID.EQ(psql.Arg(o.AddressID))),
-	)...)
-}
-
-func (os PublicreportNuisanceSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
-	pkAddressID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkAddressID = append(pkAddressID, o.AddressID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkAddressID), "integer[]")),
-	))
-
-	return Addresses.Query(append(mods,
-		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Organization starts a query for related objects on organization
-func (o *PublicreportNuisance) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	return Organizations.Query(append(mods,
-		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
-	)...)
-}
-
-func (os PublicreportNuisanceSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
-	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
-	))
-
-	return Organizations.Query(append(mods,
-		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// ReviewerUser starts a query for related objects on user_
-func (o *PublicreportNuisance) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
-	return Users.Query(append(mods,
-		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.ReviewerID))),
-	)...)
-}
-
-func (os PublicreportNuisanceSlice) ReviewerUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
-	pkReviewerID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkReviewerID = append(pkReviewerID, o.ReviewerID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkReviewerID), "integer[]")),
-	))
-
-	return Users.Query(append(mods,
-		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// Images starts a query for related objects on publicreport.image
-func (o *PublicreportNuisance) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
-	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportNuisanceImages.Columns.ImageID)),
-		sm.Where(PublicreportNuisanceImages.Columns.NuisanceID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os PublicreportNuisanceSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportImagesQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return PublicreportImages.Query(append(mods,
-		sm.InnerJoin(PublicreportNuisanceImages.NameAs()).On(
-			PublicreportImages.Columns.ID.EQ(PublicreportNuisanceImages.Columns.ImageID),
-		),
-		sm.Where(psql.Group(PublicreportNuisanceImages.Columns.NuisanceID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-func insertPublicreportNuisanceNotifyEmailNuisances0(ctx context.Context, exec bob.Executor, publicreportNotifyEmailNuisances1 []*PublicreportNotifyEmailNuisanceSetter, publicreportNuisance0 *PublicreportNuisance) (PublicreportNotifyEmailNuisanceSlice, error) {
-	for i := range publicreportNotifyEmailNuisances1 {
-		publicreportNotifyEmailNuisances1[i].NuisanceID = omit.From(publicreportNuisance0.ID)
-	}
-
-	ret, err := PublicreportNotifyEmailNuisances.Insert(bob.ToMods(publicreportNotifyEmailNuisances1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportNuisanceNotifyEmailNuisances0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachPublicreportNuisanceNotifyEmailNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyEmailNuisances1 PublicreportNotifyEmailNuisanceSlice, publicreportNuisance0 *PublicreportNuisance) (PublicreportNotifyEmailNuisanceSlice, error) {
-	setter := &PublicreportNotifyEmailNuisanceSetter{
-		NuisanceID: omit.From(publicreportNuisance0.ID),
-	}
-
-	err := publicreportNotifyEmailNuisances1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceNotifyEmailNuisances0: %w", err)
-	}
-
-	return publicreportNotifyEmailNuisances1, nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) InsertNotifyEmailNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailNuisanceSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	publicreportNotifyEmailNuisances1, err := insertPublicreportNuisanceNotifyEmailNuisances0(ctx, exec, related, publicreportNuisance0)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.NotifyEmailNuisances = append(publicreportNuisance0.R.NotifyEmailNuisances, publicreportNotifyEmailNuisances1...)
-
-	for _, rel := range publicreportNotifyEmailNuisances1 {
-		rel.R.Nuisance = publicreportNuisance0
-	}
-	return nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) AttachNotifyEmailNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyEmailNuisance) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportNotifyEmailNuisances1 := PublicreportNotifyEmailNuisanceSlice(related)
-
-	_, err = attachPublicreportNuisanceNotifyEmailNuisances0(ctx, exec, len(related), publicreportNotifyEmailNuisances1, publicreportNuisance0)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.NotifyEmailNuisances = append(publicreportNuisance0.R.NotifyEmailNuisances, publicreportNotifyEmailNuisances1...)
-
-	for _, rel := range related {
-		rel.R.Nuisance = publicreportNuisance0
-	}
-
-	return nil
-}
-
-func insertPublicreportNuisanceNotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, publicreportNotifyPhoneNuisances1 []*PublicreportNotifyPhoneNuisanceSetter, publicreportNuisance0 *PublicreportNuisance) (PublicreportNotifyPhoneNuisanceSlice, error) {
-	for i := range publicreportNotifyPhoneNuisances1 {
-		publicreportNotifyPhoneNuisances1[i].NuisanceID = omit.From(publicreportNuisance0.ID)
-	}
-
-	ret, err := PublicreportNotifyPhoneNuisances.Insert(bob.ToMods(publicreportNotifyPhoneNuisances1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertPublicreportNuisanceNotifyPhoneNuisances0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachPublicreportNuisanceNotifyPhoneNuisances0(ctx context.Context, exec bob.Executor, count int, publicreportNotifyPhoneNuisances1 PublicreportNotifyPhoneNuisanceSlice, publicreportNuisance0 *PublicreportNuisance) (PublicreportNotifyPhoneNuisanceSlice, error) {
-	setter := &PublicreportNotifyPhoneNuisanceSetter{
-		NuisanceID: omit.From(publicreportNuisance0.ID),
-	}
-
-	err := publicreportNotifyPhoneNuisances1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceNotifyPhoneNuisances0: %w", err)
-	}
-
-	return publicreportNotifyPhoneNuisances1, nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) InsertNotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisanceSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	publicreportNotifyPhoneNuisances1, err := insertPublicreportNuisanceNotifyPhoneNuisances0(ctx, exec, related, publicreportNuisance0)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.NotifyPhoneNuisances = append(publicreportNuisance0.R.NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
-
-	for _, rel := range publicreportNotifyPhoneNuisances1 {
-		rel.R.Nuisance = publicreportNuisance0
-	}
-	return nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) AttachNotifyPhoneNuisances(ctx context.Context, exec bob.Executor, related ...*PublicreportNotifyPhoneNuisance) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportNotifyPhoneNuisances1 := PublicreportNotifyPhoneNuisanceSlice(related)
-
-	_, err = attachPublicreportNuisanceNotifyPhoneNuisances0(ctx, exec, len(related), publicreportNotifyPhoneNuisances1, publicreportNuisance0)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.NotifyPhoneNuisances = append(publicreportNuisance0.R.NotifyPhoneNuisances, publicreportNotifyPhoneNuisances1...)
-
-	for _, rel := range related {
-		rel.R.Nuisance = publicreportNuisance0
-	}
-
-	return nil
-}
-
-func attachPublicreportNuisanceAddress0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, address1 *Address) (*PublicreportNuisance, error) {
+func attachPublicreportNuisanceReport0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, publicreportReport1 *PublicreportReport) (*PublicreportNuisance, error) {
 	setter := &PublicreportNuisanceSetter{
-		AddressID: omitnull.From(address1.ID),
+		ReportID: omit.From(publicreportReport1.ID),
 	}
 
 	err := publicreportNuisance0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceAddress0: %w", err)
+		return nil, fmt.Errorf("attachPublicreportNuisanceReport0: %w", err)
 	}
 
 	return publicreportNuisance0, nil
 }
 
-func (publicreportNuisance0 *PublicreportNuisance) InsertAddress(ctx context.Context, exec bob.Executor, related *AddressSetter) error {
+func (publicreportNuisance0 *PublicreportNuisance) InsertReport(ctx context.Context, exec bob.Executor, related *PublicreportReportSetter) error {
 	var err error
 
-	address1, err := Addresses.Insert(related).One(ctx, exec)
+	publicreportReport1, err := PublicreportReports.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachPublicreportNuisanceAddress0(ctx, exec, 1, publicreportNuisance0, address1)
+	_, err = attachPublicreportNuisanceReport0(ctx, exec, 1, publicreportNuisance0, publicreportReport1)
 	if err != nil {
 		return err
 	}
 
-	publicreportNuisance0.R.Address = address1
+	publicreportNuisance0.R.Report = publicreportReport1
 
-	address1.R.Nuisances = append(address1.R.Nuisances, publicreportNuisance0)
+	publicreportReport1.R.Nuisance = publicreportNuisance0
 
 	return nil
 }
 
-func (publicreportNuisance0 *PublicreportNuisance) AttachAddress(ctx context.Context, exec bob.Executor, address1 *Address) error {
+func (publicreportNuisance0 *PublicreportNuisance) AttachReport(ctx context.Context, exec bob.Executor, publicreportReport1 *PublicreportReport) error {
 	var err error
 
-	_, err = attachPublicreportNuisanceAddress0(ctx, exec, 1, publicreportNuisance0, address1)
+	_, err = attachPublicreportNuisanceReport0(ctx, exec, 1, publicreportNuisance0, publicreportReport1)
 	if err != nil {
 		return err
 	}
 
-	publicreportNuisance0.R.Address = address1
+	publicreportNuisance0.R.Report = publicreportReport1
 
-	address1.R.Nuisances = append(address1.R.Nuisances, publicreportNuisance0)
-
-	return nil
-}
-
-func attachPublicreportNuisanceOrganization0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, organization1 *Organization) (*PublicreportNuisance, error) {
-	setter := &PublicreportNuisanceSetter{
-		OrganizationID: omit.From(organization1.ID),
-	}
-
-	err := publicreportNuisance0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceOrganization0: %w", err)
-	}
-
-	return publicreportNuisance0, nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
-	var err error
-
-	organization1, err := Organizations.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportNuisanceOrganization0(ctx, exec, 1, publicreportNuisance0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.Organization = organization1
-
-	organization1.R.Nuisances = append(organization1.R.Nuisances, publicreportNuisance0)
-
-	return nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
-	var err error
-
-	_, err = attachPublicreportNuisanceOrganization0(ctx, exec, 1, publicreportNuisance0, organization1)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.Organization = organization1
-
-	organization1.R.Nuisances = append(organization1.R.Nuisances, publicreportNuisance0)
-
-	return nil
-}
-
-func attachPublicreportNuisanceReviewerUser0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, user1 *User) (*PublicreportNuisance, error) {
-	setter := &PublicreportNuisanceSetter{
-		ReviewerID: omitnull.From(user1.ID),
-	}
-
-	err := publicreportNuisance0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceReviewerUser0: %w", err)
-	}
-
-	return publicreportNuisance0, nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) InsertReviewerUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
-	var err error
-
-	user1, err := Users.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachPublicreportNuisanceReviewerUser0(ctx, exec, 1, publicreportNuisance0, user1)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.ReviewerUser = user1
-
-	user1.R.ReviewerNuisances = append(user1.R.ReviewerNuisances, publicreportNuisance0)
-
-	return nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) AttachReviewerUser(ctx context.Context, exec bob.Executor, user1 *User) error {
-	var err error
-
-	_, err = attachPublicreportNuisanceReviewerUser0(ctx, exec, 1, publicreportNuisance0, user1)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.ReviewerUser = user1
-
-	user1.R.ReviewerNuisances = append(user1.R.ReviewerNuisances, publicreportNuisance0)
-
-	return nil
-}
-
-func attachPublicreportNuisanceImages0(ctx context.Context, exec bob.Executor, count int, publicreportNuisance0 *PublicreportNuisance, publicreportImages2 PublicreportImageSlice) (PublicreportNuisanceImageSlice, error) {
-	setters := make([]*PublicreportNuisanceImageSetter, count)
-	for i := range count {
-		setters[i] = &PublicreportNuisanceImageSetter{
-			NuisanceID: omit.From(publicreportNuisance0.ID),
-			ImageID:    omit.From(publicreportImages2[i].ID),
-		}
-	}
-
-	publicreportNuisanceImages1, err := PublicreportNuisanceImages.Insert(bob.ToMods(setters...)).All(ctx, exec)
-	if err != nil {
-		return nil, fmt.Errorf("attachPublicreportNuisanceImages0: %w", err)
-	}
-
-	return publicreportNuisanceImages1, nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) InsertImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImageSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	inserted, err := PublicreportImages.Insert(bob.ToMods(related...)).All(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-	publicreportImages2 := PublicreportImageSlice(inserted)
-
-	_, err = attachPublicreportNuisanceImages0(ctx, exec, len(related), publicreportNuisance0, publicreportImages2)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.Images = append(publicreportNuisance0.R.Images, publicreportImages2...)
-
-	for _, rel := range publicreportImages2 {
-		rel.R.Nuisances = append(rel.R.Nuisances, publicreportNuisance0)
-	}
-	return nil
-}
-
-func (publicreportNuisance0 *PublicreportNuisance) AttachImages(ctx context.Context, exec bob.Executor, related ...*PublicreportImage) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	publicreportImages2 := PublicreportImageSlice(related)
-
-	_, err = attachPublicreportNuisanceImages0(ctx, exec, len(related), publicreportNuisance0, publicreportImages2)
-	if err != nil {
-		return err
-	}
-
-	publicreportNuisance0.R.Images = append(publicreportNuisance0.R.Images, publicreportImages2...)
-
-	for _, rel := range related {
-		rel.R.Nuisances = append(rel.R.Nuisances, publicreportNuisance0)
-	}
+	publicreportReport1.R.Nuisance = publicreportNuisance0
 
 	return nil
 }
 
 type publicreportNuisanceWhere[Q psql.Filterable] struct {
-	ID                     psql.WhereMod[Q, int32]
-	AdditionalInfo         psql.WhereMod[Q, string]
-	Created                psql.WhereMod[Q, time.Time]
-	Duration               psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
-	SourceContainer        psql.WhereMod[Q, bool]
-	SourceDescription      psql.WhereMod[Q, string]
-	SourceStagnant         psql.WhereMod[Q, bool]
-	PublicID               psql.WhereMod[Q, string]
-	ReporterEmail          psql.WhereNullMod[Q, string]
-	ReporterName           psql.WhereNullMod[Q, string]
-	ReporterPhone          psql.WhereNullMod[Q, string]
-	AddressRaw             psql.WhereMod[Q, string]
-	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	OrganizationID         psql.WhereMod[Q, int32]
-	SourceGutter           psql.WhereMod[Q, bool]
-	H3cell                 psql.WhereNullMod[Q, string]
-	AddressCountry         psql.WhereMod[Q, string]
-	AddressLocality        psql.WhereMod[Q, string]
-	AddressPostalCode      psql.WhereMod[Q, string]
-	AddressRegion          psql.WhereMod[Q, string]
-	AddressStreet          psql.WhereMod[Q, string]
-	IsLocationBackyard     psql.WhereMod[Q, bool]
-	IsLocationFrontyard    psql.WhereMod[Q, bool]
-	IsLocationGarden       psql.WhereMod[Q, bool]
-	IsLocationOther        psql.WhereMod[Q, bool]
-	IsLocationPool         psql.WhereMod[Q, bool]
-	MapZoom                psql.WhereMod[Q, float32]
-	TodEarly               psql.WhereMod[Q, bool]
-	TodDay                 psql.WhereMod[Q, bool]
-	TodEvening             psql.WhereMod[Q, bool]
-	TodNight               psql.WhereMod[Q, bool]
-	LatlngAccuracyType     psql.WhereMod[Q, enums.PublicreportAccuracytype]
-	LatlngAccuracyValue    psql.WhereMod[Q, float32]
-	ReporterContactConsent psql.WhereNullMod[Q, bool]
-	Location               psql.WhereNullMod[Q, string]
-	AddressNumber          psql.WhereMod[Q, string]
-	AddressID              psql.WhereNullMod[Q, int32]
-	Reviewed               psql.WhereNullMod[Q, time.Time]
-	ReviewerID             psql.WhereNullMod[Q, int32]
+	AdditionalInfo      psql.WhereMod[Q, string]
+	Duration            psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
+	IsLocationBackyard  psql.WhereMod[Q, bool]
+	IsLocationFrontyard psql.WhereMod[Q, bool]
+	IsLocationGarden    psql.WhereMod[Q, bool]
+	IsLocationOther     psql.WhereMod[Q, bool]
+	IsLocationPool      psql.WhereMod[Q, bool]
+	ReportID            psql.WhereMod[Q, int32]
+	SourceContainer     psql.WhereMod[Q, bool]
+	SourceDescription   psql.WhereMod[Q, string]
+	SourceStagnant      psql.WhereMod[Q, bool]
+	SourceGutter        psql.WhereMod[Q, bool]
+	TodEarly            psql.WhereMod[Q, bool]
+	TodDay              psql.WhereMod[Q, bool]
+	TodEvening          psql.WhereMod[Q, bool]
+	TodNight            psql.WhereMod[Q, bool]
 }
 
 func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisanceWhere[Q] {
@@ -1770,45 +787,22 @@ func (publicreportNuisanceWhere[Q]) AliasedAs(alias string) publicreportNuisance
 
 func buildPublicreportNuisanceWhere[Q psql.Filterable](cols publicreportNuisanceColumns) publicreportNuisanceWhere[Q] {
 	return publicreportNuisanceWhere[Q]{
-		ID:                     psql.Where[Q, int32](cols.ID),
-		AdditionalInfo:         psql.Where[Q, string](cols.AdditionalInfo),
-		Created:                psql.Where[Q, time.Time](cols.Created),
-		Duration:               psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
-		SourceContainer:        psql.Where[Q, bool](cols.SourceContainer),
-		SourceDescription:      psql.Where[Q, string](cols.SourceDescription),
-		SourceStagnant:         psql.Where[Q, bool](cols.SourceStagnant),
-		PublicID:               psql.Where[Q, string](cols.PublicID),
-		ReporterEmail:          psql.WhereNull[Q, string](cols.ReporterEmail),
-		ReporterName:           psql.WhereNull[Q, string](cols.ReporterName),
-		ReporterPhone:          psql.WhereNull[Q, string](cols.ReporterPhone),
-		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
-		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		OrganizationID:         psql.Where[Q, int32](cols.OrganizationID),
-		SourceGutter:           psql.Where[Q, bool](cols.SourceGutter),
-		H3cell:                 psql.WhereNull[Q, string](cols.H3cell),
-		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
-		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
-		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
-		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
-		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
-		IsLocationBackyard:     psql.Where[Q, bool](cols.IsLocationBackyard),
-		IsLocationFrontyard:    psql.Where[Q, bool](cols.IsLocationFrontyard),
-		IsLocationGarden:       psql.Where[Q, bool](cols.IsLocationGarden),
-		IsLocationOther:        psql.Where[Q, bool](cols.IsLocationOther),
-		IsLocationPool:         psql.Where[Q, bool](cols.IsLocationPool),
-		MapZoom:                psql.Where[Q, float32](cols.MapZoom),
-		TodEarly:               psql.Where[Q, bool](cols.TodEarly),
-		TodDay:                 psql.Where[Q, bool](cols.TodDay),
-		TodEvening:             psql.Where[Q, bool](cols.TodEvening),
-		TodNight:               psql.Where[Q, bool](cols.TodNight),
-		LatlngAccuracyType:     psql.Where[Q, enums.PublicreportAccuracytype](cols.LatlngAccuracyType),
-		LatlngAccuracyValue:    psql.Where[Q, float32](cols.LatlngAccuracyValue),
-		ReporterContactConsent: psql.WhereNull[Q, bool](cols.ReporterContactConsent),
-		Location:               psql.WhereNull[Q, string](cols.Location),
-		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
-		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
-		Reviewed:               psql.WhereNull[Q, time.Time](cols.Reviewed),
-		ReviewerID:             psql.WhereNull[Q, int32](cols.ReviewerID),
+		AdditionalInfo:      psql.Where[Q, string](cols.AdditionalInfo),
+		Duration:            psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
+		IsLocationBackyard:  psql.Where[Q, bool](cols.IsLocationBackyard),
+		IsLocationFrontyard: psql.Where[Q, bool](cols.IsLocationFrontyard),
+		IsLocationGarden:    psql.Where[Q, bool](cols.IsLocationGarden),
+		IsLocationOther:     psql.Where[Q, bool](cols.IsLocationOther),
+		IsLocationPool:      psql.Where[Q, bool](cols.IsLocationPool),
+		ReportID:            psql.Where[Q, int32](cols.ReportID),
+		SourceContainer:     psql.Where[Q, bool](cols.SourceContainer),
+		SourceDescription:   psql.Where[Q, string](cols.SourceDescription),
+		SourceStagnant:      psql.Where[Q, bool](cols.SourceStagnant),
+		SourceGutter:        psql.Where[Q, bool](cols.SourceGutter),
+		TodEarly:            psql.Where[Q, bool](cols.TodEarly),
+		TodDay:              psql.Where[Q, bool](cols.TodDay),
+		TodEvening:          psql.Where[Q, bool](cols.TodEvening),
+		TodNight:            psql.Where[Q, bool](cols.TodNight),
 	}
 }
 
@@ -1818,82 +812,16 @@ func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "NotifyEmailNuisances":
-		rels, ok := retrieved.(PublicreportNotifyEmailNuisanceSlice)
+	case "Report":
+		rel, ok := retrieved.(*PublicreportReport)
 		if !ok {
 			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.NotifyEmailNuisances = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Nuisance = o
-			}
-		}
-		return nil
-	case "NotifyPhoneNuisances":
-		rels, ok := retrieved.(PublicreportNotifyPhoneNuisanceSlice)
-		if !ok {
-			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.NotifyPhoneNuisances = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Nuisance = o
-			}
-		}
-		return nil
-	case "Address":
-		rel, ok := retrieved.(*Address)
-		if !ok {
-			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Address = rel
+		o.R.Report = rel
 
 		if rel != nil {
-			rel.R.Nuisances = PublicreportNuisanceSlice{o}
-		}
-		return nil
-	case "Organization":
-		rel, ok := retrieved.(*Organization)
-		if !ok {
-			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Organization = rel
-
-		if rel != nil {
-			rel.R.Nuisances = PublicreportNuisanceSlice{o}
-		}
-		return nil
-	case "ReviewerUser":
-		rel, ok := retrieved.(*User)
-		if !ok {
-			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ReviewerUser = rel
-
-		if rel != nil {
-			rel.R.ReviewerNuisances = PublicreportNuisanceSlice{o}
-		}
-		return nil
-	case "Images":
-		rels, ok := retrieved.(PublicreportImageSlice)
-		if !ok {
-			return fmt.Errorf("publicreportNuisance cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Images = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Nuisances = PublicreportNuisanceSlice{o}
-			}
+			rel.R.Nuisance = o
 		}
 		return nil
 	default:
@@ -1902,153 +830,73 @@ func (o *PublicreportNuisance) Preload(name string, retrieved any) error {
 }
 
 type publicreportNuisancePreloader struct {
-	Address      func(...psql.PreloadOption) psql.Preloader
-	Organization func(...psql.PreloadOption) psql.Preloader
-	ReviewerUser func(...psql.PreloadOption) psql.Preloader
+	Report func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildPublicreportNuisancePreloader() publicreportNuisancePreloader {
 	return publicreportNuisancePreloader{
-		Address: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Address, AddressSlice](psql.PreloadRel{
-				Name: "Address",
+		Report: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportReport, PublicreportReportSlice](psql.PreloadRel{
+				Name: "Report",
 				Sides: []psql.PreloadSide{
 					{
 						From:        PublicreportNuisances,
-						To:          Addresses,
-						FromColumns: []string{"address_id"},
+						To:          PublicreportReports,
+						FromColumns: []string{"report_id"},
 						ToColumns:   []string{"id"},
 					},
 				},
-			}, Addresses.Columns.Names(), opts...)
-		},
-		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
-				Name: "Organization",
-				Sides: []psql.PreloadSide{
-					{
-						From:        PublicreportNuisances,
-						To:          Organizations,
-						FromColumns: []string{"organization_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Organizations.Columns.Names(), opts...)
-		},
-		ReviewerUser: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*User, UserSlice](psql.PreloadRel{
-				Name: "ReviewerUser",
-				Sides: []psql.PreloadSide{
-					{
-						From:        PublicreportNuisances,
-						To:          Users,
-						FromColumns: []string{"reviewer_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, Users.Columns.Names(), opts...)
+			}, PublicreportReports.Columns.Names(), opts...)
 		},
 	}
 }
 
 type publicreportNuisanceThenLoader[Q orm.Loadable] struct {
-	NotifyEmailNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NotifyPhoneNuisances func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Address              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerUser         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Images               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Report func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportNuisanceThenLoader[Q orm.Loadable]() publicreportNuisanceThenLoader[Q] {
-	type NotifyEmailNuisancesLoadInterface interface {
-		LoadNotifyEmailNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type NotifyPhoneNuisancesLoadInterface interface {
-		LoadNotifyPhoneNuisances(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type AddressLoadInterface interface {
-		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type OrganizationLoadInterface interface {
-		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ReviewerUserLoadInterface interface {
-		LoadReviewerUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ImagesLoadInterface interface {
-		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ReportLoadInterface interface {
+		LoadReport(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportNuisanceThenLoader[Q]{
-		NotifyEmailNuisances: thenLoadBuilder[Q](
-			"NotifyEmailNuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyEmailNuisances(ctx, exec, mods...)
-			},
-		),
-		NotifyPhoneNuisances: thenLoadBuilder[Q](
-			"NotifyPhoneNuisances",
-			func(ctx context.Context, exec bob.Executor, retrieved NotifyPhoneNuisancesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadNotifyPhoneNuisances(ctx, exec, mods...)
-			},
-		),
-		Address: thenLoadBuilder[Q](
-			"Address",
-			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadAddress(ctx, exec, mods...)
-			},
-		),
-		Organization: thenLoadBuilder[Q](
-			"Organization",
-			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadOrganization(ctx, exec, mods...)
-			},
-		),
-		ReviewerUser: thenLoadBuilder[Q](
-			"ReviewerUser",
-			func(ctx context.Context, exec bob.Executor, retrieved ReviewerUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadReviewerUser(ctx, exec, mods...)
-			},
-		),
-		Images: thenLoadBuilder[Q](
-			"Images",
-			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadImages(ctx, exec, mods...)
+		Report: thenLoadBuilder[Q](
+			"Report",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReport(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadNotifyEmailNuisances loads the publicreportNuisance's NotifyEmailNuisances into the .R struct
-func (o *PublicreportNuisance) LoadNotifyEmailNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReport loads the publicreportNuisance's Report into the .R struct
+func (o *PublicreportNuisance) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.NotifyEmailNuisances = nil
+	o.R.Report = nil
 
-	related, err := o.NotifyEmailNuisances(mods...).All(ctx, exec)
+	related, err := o.Report(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	for _, rel := range related {
-		rel.R.Nuisance = o
-	}
+	related.R.Nuisance = o
 
-	o.R.NotifyEmailNuisances = related
+	o.R.Report = related
 	return nil
 }
 
-// LoadNotifyEmailNuisances loads the publicreportNuisance's NotifyEmailNuisances into the .R struct
-func (os PublicreportNuisanceSlice) LoadNotifyEmailNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadReport loads the publicreportNuisance's Report into the .R struct
+func (os PublicreportNuisanceSlice) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	publicreportNotifyEmailNuisances, err := os.NotifyEmailNuisances(mods...).All(ctx, exec)
+	publicreportReports, err := os.Report(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -2058,327 +906,16 @@ func (os PublicreportNuisanceSlice) LoadNotifyEmailNuisances(ctx context.Context
 			continue
 		}
 
-		o.R.NotifyEmailNuisances = nil
-	}
+		for _, rel := range publicreportReports {
 
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportNotifyEmailNuisances {
-
-			if !(o.ID == rel.NuisanceID) {
+			if !(o.ReportID == rel.ID) {
 				continue
 			}
 
 			rel.R.Nuisance = o
 
-			o.R.NotifyEmailNuisances = append(o.R.NotifyEmailNuisances, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadNotifyPhoneNuisances loads the publicreportNuisance's NotifyPhoneNuisances into the .R struct
-func (o *PublicreportNuisance) LoadNotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.NotifyPhoneNuisances = nil
-
-	related, err := o.NotifyPhoneNuisances(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Nuisance = o
-	}
-
-	o.R.NotifyPhoneNuisances = related
-	return nil
-}
-
-// LoadNotifyPhoneNuisances loads the publicreportNuisance's NotifyPhoneNuisances into the .R struct
-func (os PublicreportNuisanceSlice) LoadNotifyPhoneNuisances(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	publicreportNotifyPhoneNuisances, err := os.NotifyPhoneNuisances(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.NotifyPhoneNuisances = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range publicreportNotifyPhoneNuisances {
-
-			if !(o.ID == rel.NuisanceID) {
-				continue
-			}
-
-			rel.R.Nuisance = o
-
-			o.R.NotifyPhoneNuisances = append(o.R.NotifyPhoneNuisances, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadAddress loads the publicreportNuisance's Address into the .R struct
-func (o *PublicreportNuisance) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Address = nil
-
-	related, err := o.Address(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.Nuisances = PublicreportNuisanceSlice{o}
-
-	o.R.Address = related
-	return nil
-}
-
-// LoadAddress loads the publicreportNuisance's Address into the .R struct
-func (os PublicreportNuisanceSlice) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	addresses, err := os.Address(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range addresses {
-			if !o.AddressID.IsValue() {
-				continue
-			}
-
-			if !(o.AddressID.IsValue() && o.AddressID.MustGet() == rel.ID) {
-				continue
-			}
-
-			rel.R.Nuisances = append(rel.R.Nuisances, o)
-
-			o.R.Address = rel
+			o.R.Report = rel
 			break
-		}
-	}
-
-	return nil
-}
-
-// LoadOrganization loads the publicreportNuisance's Organization into the .R struct
-func (o *PublicreportNuisance) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Organization = nil
-
-	related, err := o.Organization(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.Nuisances = PublicreportNuisanceSlice{o}
-
-	o.R.Organization = related
-	return nil
-}
-
-// LoadOrganization loads the publicreportNuisance's Organization into the .R struct
-func (os PublicreportNuisanceSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	organizations, err := os.Organization(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range organizations {
-
-			if !(o.OrganizationID == rel.ID) {
-				continue
-			}
-
-			rel.R.Nuisances = append(rel.R.Nuisances, o)
-
-			o.R.Organization = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadReviewerUser loads the publicreportNuisance's ReviewerUser into the .R struct
-func (o *PublicreportNuisance) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ReviewerUser = nil
-
-	related, err := o.ReviewerUser(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.ReviewerNuisances = PublicreportNuisanceSlice{o}
-
-	o.R.ReviewerUser = related
-	return nil
-}
-
-// LoadReviewerUser loads the publicreportNuisance's ReviewerUser into the .R struct
-func (os PublicreportNuisanceSlice) LoadReviewerUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	users, err := os.ReviewerUser(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range users {
-			if !o.ReviewerID.IsValue() {
-				continue
-			}
-
-			if !(o.ReviewerID.IsValue() && o.ReviewerID.MustGet() == rel.ID) {
-				continue
-			}
-
-			rel.R.ReviewerNuisances = append(rel.R.ReviewerNuisances, o)
-
-			o.R.ReviewerUser = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadImages loads the publicreportNuisance's Images into the .R struct
-func (o *PublicreportNuisance) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Images = nil
-
-	related, err := o.Images(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Nuisances = PublicreportNuisanceSlice{o}
-	}
-
-	o.R.Images = related
-	return nil
-}
-
-// LoadImages loads the publicreportNuisance's Images into the .R struct
-func (os PublicreportNuisanceSlice) LoadImages(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	// since we are changing the columns, we need to check if the original columns were set or add the defaults
-	sq := dialect.SelectQuery{}
-	for _, mod := range mods {
-		mod.Apply(&sq)
-	}
-
-	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(PublicreportImages.Columns))
-	}
-
-	q := os.Images(append(
-		mods,
-		sm.Columns(PublicreportNuisanceImages.Columns.NuisanceID.As("related_publicreport.nuisance.ID")),
-	)...)
-
-	IDSlice := []int32{}
-
-	mapper := scan.Mod(scan.StructMapper[*PublicreportImage](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
-		return func(row *scan.Row) (any, error) {
-				IDSlice = append(IDSlice, *new(int32))
-				row.ScheduleScanByName("related_publicreport.nuisance.ID", &IDSlice[len(IDSlice)-1])
-
-				return nil, nil
-			},
-			func(any, any) error {
-				return nil
-			}
-	})
-
-	publicreportImages, err := bob.Allx[bob.SliceTransformer[*PublicreportImage, PublicreportImageSlice]](ctx, exec, q, mapper)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		o.R.Images = nil
-	}
-
-	for _, o := range os {
-		for i, rel := range publicreportImages {
-			if !(o.ID == IDSlice[i]) {
-				continue
-			}
-
-			rel.R.Nuisances = append(rel.R.Nuisances, o)
-
-			o.R.Images = append(o.R.Images, rel)
 		}
 	}
 

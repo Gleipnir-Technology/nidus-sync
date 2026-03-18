@@ -4,23 +4,14 @@
 package dberrors
 
 var PublicreportWaterErrors = &publicreportWaterErrors{
-	ErrUniquePoolPkey: &UniqueConstraintError{
+	ErrUniqueWaterPkey: &UniqueConstraintError{
 		schema:  "publicreport",
 		table:   "water",
-		columns: []string{"id"},
-		s:       "pool_pkey",
-	},
-
-	ErrUniquePoolPublicIdKey: &UniqueConstraintError{
-		schema:  "publicreport",
-		table:   "water",
-		columns: []string{"public_id"},
-		s:       "pool_public_id_key",
+		columns: []string{"report_id"},
+		s:       "water_pkey",
 	},
 }
 
 type publicreportWaterErrors struct {
-	ErrUniquePoolPkey *UniqueConstraintError
-
-	ErrUniquePoolPublicIdKey *UniqueConstraintError
+	ErrUniqueWaterPkey *UniqueConstraintError
 }

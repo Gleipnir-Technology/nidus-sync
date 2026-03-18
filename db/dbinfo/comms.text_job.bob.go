@@ -78,6 +78,24 @@ var CommsTextJobs = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		CreatorID: column{
+			Name:      "creator_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReportID: column{
+			Name:      "report_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: commsTextJobIndexes{
 		TextJobPkey: index{
@@ -104,6 +122,15 @@ var CommsTextJobs = Table[
 		Comment: "",
 	},
 	ForeignKeys: commsTextJobForeignKeys{
+		CommsTextJobTextJobCreatorIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "comms.text_job.text_job_creator_id_fkey",
+				Columns: []string{"creator_id"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
 		CommsTextJobTextJobDestinationFkey: foreignKey{
 			constraint: constraint{
 				Name:    "comms.text_job.text_job_destination_fkey",
@@ -112,6 +139,15 @@ var CommsTextJobs = Table[
 			},
 			ForeignTable:   "comms.phone",
 			ForeignColumns: []string{"e164"},
+		},
+		CommsTextJobTextJobReportIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "comms.text_job.text_job_report_id_fkey",
+				Columns: []string{"report_id"},
+				Comment: "",
+			},
+			ForeignTable:   "publicreport.report",
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -126,11 +162,13 @@ type commsTextJobColumns struct {
 	Type        column
 	Source      column
 	Completed   column
+	CreatorID   column
+	ReportID    column
 }
 
 func (c commsTextJobColumns) AsSlice() []column {
 	return []column{
-		c.Content, c.Created, c.Destination, c.ID, c.Type, c.Source, c.Completed,
+		c.Content, c.Created, c.Destination, c.ID, c.Type, c.Source, c.Completed, c.CreatorID, c.ReportID,
 	}
 }
 
@@ -145,12 +183,14 @@ func (i commsTextJobIndexes) AsSlice() []index {
 }
 
 type commsTextJobForeignKeys struct {
+	CommsTextJobTextJobCreatorIDFkey   foreignKey
 	CommsTextJobTextJobDestinationFkey foreignKey
+	CommsTextJobTextJobReportIDFkey    foreignKey
 }
 
 func (f commsTextJobForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.CommsTextJobTextJobDestinationFkey,
+		f.CommsTextJobTextJobCreatorIDFkey, f.CommsTextJobTextJobDestinationFkey, f.CommsTextJobTextJobReportIDFkey,
 	}
 }
 
