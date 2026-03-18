@@ -76,6 +76,7 @@ type publicreportReportR struct {
 	Organization *Organization                // publicreport.report.report_organization_id_fkey
 	ReviewerUser *User                        // publicreport.report.report_reviewer_id_fkey
 	Images       PublicreportImageSlice       // publicreport.report_image.report_image_image_id_fkeypublicreport.report_image.report_image_report_id_fkey
+	ReportLogs   PublicreportReportLogSlice   // publicreport.report_log.report_log_report_id_fkey
 	Water        *PublicreportWater           // publicreport.water.water_report_id_fkey
 	ReportTexts  ReportTextSlice              // report_text.report_text_report_id_fkey
 }
@@ -1107,6 +1108,30 @@ func (os PublicreportReportSlice) Images(mods ...bob.Mod[*dialect.SelectQuery]) 
 	)...)
 }
 
+// ReportLogs starts a query for related objects on publicreport.report_log
+func (o *PublicreportReport) ReportLogs(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportLogsQuery {
+	return PublicreportReportLogs.Query(append(mods,
+		sm.Where(PublicreportReportLogs.Columns.ReportID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportReportSlice) ReportLogs(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportLogsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportReportLogs.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReportLogs.Columns.ReportID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Water starts a query for related objects on publicreport.water
 func (o *PublicreportReport) Water(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportWatersQuery {
 	return PublicreportWaters.Query(append(mods,
@@ -1622,6 +1647,74 @@ func (publicreportReport0 *PublicreportReport) AttachImages(ctx context.Context,
 	return nil
 }
 
+func insertPublicreportReportReportLogs0(ctx context.Context, exec bob.Executor, publicreportReportLogs1 []*PublicreportReportLogSetter, publicreportReport0 *PublicreportReport) (PublicreportReportLogSlice, error) {
+	for i := range publicreportReportLogs1 {
+		publicreportReportLogs1[i].ReportID = omit.From(publicreportReport0.ID)
+	}
+
+	ret, err := PublicreportReportLogs.Insert(bob.ToMods(publicreportReportLogs1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportReportReportLogs0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportReportReportLogs0(ctx context.Context, exec bob.Executor, count int, publicreportReportLogs1 PublicreportReportLogSlice, publicreportReport0 *PublicreportReport) (PublicreportReportLogSlice, error) {
+	setter := &PublicreportReportLogSetter{
+		ReportID: omit.From(publicreportReport0.ID),
+	}
+
+	err := publicreportReportLogs1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportReportReportLogs0: %w", err)
+	}
+
+	return publicreportReportLogs1, nil
+}
+
+func (publicreportReport0 *PublicreportReport) InsertReportLogs(ctx context.Context, exec bob.Executor, related ...*PublicreportReportLogSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportReportLogs1, err := insertPublicreportReportReportLogs0(ctx, exec, related, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.ReportLogs = append(publicreportReport0.R.ReportLogs, publicreportReportLogs1...)
+
+	for _, rel := range publicreportReportLogs1 {
+		rel.R.Report = publicreportReport0
+	}
+	return nil
+}
+
+func (publicreportReport0 *PublicreportReport) AttachReportLogs(ctx context.Context, exec bob.Executor, related ...*PublicreportReportLog) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportReportLogs1 := PublicreportReportLogSlice(related)
+
+	_, err = attachPublicreportReportReportLogs0(ctx, exec, len(related), publicreportReportLogs1, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.ReportLogs = append(publicreportReport0.R.ReportLogs, publicreportReportLogs1...)
+
+	for _, rel := range related {
+		rel.R.Report = publicreportReport0
+	}
+
+	return nil
+}
+
 func insertPublicreportReportWater0(ctx context.Context, exec bob.Executor, publicreportWater1 *PublicreportWaterSetter, publicreportReport0 *PublicreportReport) (*PublicreportWater, error) {
 	publicreportWater1.ReportID = omit.From(publicreportReport0.ID)
 
@@ -1916,6 +2009,20 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "ReportLogs":
+		rels, ok := retrieved.(PublicreportReportLogSlice)
+		if !ok {
+			return fmt.Errorf("publicreportReport cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReportLogs = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Report = o
+			}
+		}
+		return nil
 	case "Water":
 		rel, ok := retrieved.(*PublicreportWater)
 		if !ok {
@@ -2034,6 +2141,7 @@ type publicreportReportThenLoader[Q orm.Loadable] struct {
 	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReviewerUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReportLogs   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Water        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReportTexts  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
@@ -2062,6 +2170,9 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 	}
 	type ImagesLoadInterface interface {
 		LoadImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReportLogsLoadInterface interface {
+		LoadReportLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type WaterLoadInterface interface {
 		LoadWater(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2117,6 +2228,12 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 			"Images",
 			func(ctx context.Context, exec bob.Executor, retrieved ImagesLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadImages(ctx, exec, mods...)
+			},
+		),
+		ReportLogs: thenLoadBuilder[Q](
+			"ReportLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReportLogs(ctx, exec, mods...)
 			},
 		),
 		Water: thenLoadBuilder[Q](
@@ -2609,6 +2726,67 @@ func (os PublicreportReportSlice) LoadImages(ctx context.Context, exec bob.Execu
 			rel.R.Reports = append(rel.R.Reports, o)
 
 			o.R.Images = append(o.R.Images, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadReportLogs loads the publicreportReport's ReportLogs into the .R struct
+func (o *PublicreportReport) LoadReportLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReportLogs = nil
+
+	related, err := o.ReportLogs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Report = o
+	}
+
+	o.R.ReportLogs = related
+	return nil
+}
+
+// LoadReportLogs loads the publicreportReport's ReportLogs into the .R struct
+func (os PublicreportReportSlice) LoadReportLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportReportLogs, err := os.ReportLogs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ReportLogs = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportReportLogs {
+
+			if !(o.ID == rel.ReportID) {
+				continue
+			}
+
+			rel.R.Report = o
+
+			o.R.ReportLogs = append(o.R.ReportLogs, rel)
 		}
 	}
 

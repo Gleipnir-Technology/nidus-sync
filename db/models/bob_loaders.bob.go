@@ -98,6 +98,7 @@ type preloaders struct {
 	PublicreportNuisanceOld            publicreportNuisanceOldPreloader
 	PublicreportReport                 publicreportReportPreloader
 	PublicreportReportImage            publicreportReportImagePreloader
+	PublicreportReportLog              publicreportReportLogPreloader
 	PublicreportSubscribeEmail         publicreportSubscribeEmailPreloader
 	PublicreportSubscribePhone         publicreportSubscribePhonePreloader
 	PublicreportWater                  publicreportWaterPreloader
@@ -196,6 +197,7 @@ func getPreloaders() preloaders {
 		PublicreportNuisanceOld:            buildPublicreportNuisanceOldPreloader(),
 		PublicreportReport:                 buildPublicreportReportPreloader(),
 		PublicreportReportImage:            buildPublicreportReportImagePreloader(),
+		PublicreportReportLog:              buildPublicreportReportLogPreloader(),
 		PublicreportSubscribeEmail:         buildPublicreportSubscribeEmailPreloader(),
 		PublicreportSubscribePhone:         buildPublicreportSubscribePhonePreloader(),
 		PublicreportWater:                  buildPublicreportWaterPreloader(),
@@ -300,6 +302,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	PublicreportNuisanceOld            publicreportNuisanceOldThenLoader[Q]
 	PublicreportReport                 publicreportReportThenLoader[Q]
 	PublicreportReportImage            publicreportReportImageThenLoader[Q]
+	PublicreportReportLog              publicreportReportLogThenLoader[Q]
 	PublicreportSubscribeEmail         publicreportSubscribeEmailThenLoader[Q]
 	PublicreportSubscribePhone         publicreportSubscribePhoneThenLoader[Q]
 	PublicreportWater                  publicreportWaterThenLoader[Q]
@@ -398,6 +401,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		PublicreportNuisanceOld:            buildPublicreportNuisanceOldThenLoader[Q](),
 		PublicreportReport:                 buildPublicreportReportThenLoader[Q](),
 		PublicreportReportImage:            buildPublicreportReportImageThenLoader[Q](),
+		PublicreportReportLog:              buildPublicreportReportLogThenLoader[Q](),
 		PublicreportSubscribeEmail:         buildPublicreportSubscribeEmailThenLoader[Q](),
 		PublicreportSubscribePhone:         buildPublicreportSubscribePhoneThenLoader[Q](),
 		PublicreportWater:                  buildPublicreportWaterThenLoader[Q](),

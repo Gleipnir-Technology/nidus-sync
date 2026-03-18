@@ -1966,6 +1966,94 @@ func (e *PublicreportPoolsourceduration) Scan(value any) error {
 	return nil
 }
 
+// Enum values for PublicreportReportlogtype
+const (
+	PublicreportReportlogtypeCreated      PublicreportReportlogtype = "created"
+	PublicreportReportlogtypeInvalidated  PublicreportReportlogtype = "invalidated"
+	PublicreportReportlogtypeMessageEmail PublicreportReportlogtype = "message-email"
+	PublicreportReportlogtypeMessageText  PublicreportReportlogtype = "message-text"
+	PublicreportReportlogtypeReviewed     PublicreportReportlogtype = "reviewed"
+	PublicreportReportlogtypeScheduled    PublicreportReportlogtype = "scheduled"
+	PublicreportReportlogtypeTreated      PublicreportReportlogtype = "treated"
+)
+
+func AllPublicreportReportlogtype() []PublicreportReportlogtype {
+	return []PublicreportReportlogtype{
+		PublicreportReportlogtypeCreated,
+		PublicreportReportlogtypeInvalidated,
+		PublicreportReportlogtypeMessageEmail,
+		PublicreportReportlogtypeMessageText,
+		PublicreportReportlogtypeReviewed,
+		PublicreportReportlogtypeScheduled,
+		PublicreportReportlogtypeTreated,
+	}
+}
+
+type PublicreportReportlogtype string
+
+func (e PublicreportReportlogtype) String() string {
+	return string(e)
+}
+
+func (e PublicreportReportlogtype) Valid() bool {
+	switch e {
+	case PublicreportReportlogtypeCreated,
+		PublicreportReportlogtypeInvalidated,
+		PublicreportReportlogtypeMessageEmail,
+		PublicreportReportlogtypeMessageText,
+		PublicreportReportlogtypeReviewed,
+		PublicreportReportlogtypeScheduled,
+		PublicreportReportlogtypeTreated:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportReportlogtype) All() []PublicreportReportlogtype {
+	return AllPublicreportReportlogtype()
+}
+
+func (e PublicreportReportlogtype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReportlogtype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportReportlogtype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportReportlogtype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportReportlogtype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportReportlogtype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportReportlogtype(x)
+	case []byte:
+		*e = PublicreportReportlogtype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportReportlogtype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportReportlogtype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for PublicreportReportstatustype
 const (
 	PublicreportReportstatustypeReported    PublicreportReportstatustype = "reported"

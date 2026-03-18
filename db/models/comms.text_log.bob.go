@@ -52,9 +52,10 @@ type CommsTextLogsQuery = *psql.ViewQuery[*CommsTextLog, CommsTextLogSlice]
 
 // commsTextLogR is where relationships are stored.
 type commsTextLogR struct {
-	DestinationPhone *CommsPhone     // comms.text_log.text_log_destination_fkey
-	SourcePhone      *CommsPhone     // comms.text_log.text_log_source_fkey
-	ReportTexts      ReportTextSlice // report_text.report_text_text_log_id_fkey
+	DestinationPhone *CommsPhone                // comms.text_log.text_log_destination_fkey
+	SourcePhone      *CommsPhone                // comms.text_log.text_log_source_fkey
+	ReportLogs       PublicreportReportLogSlice // publicreport.report_log.report_log_text_log_id_fkey
+	ReportTexts      ReportTextSlice            // report_text.report_text_text_log_id_fkey
 }
 
 func buildCommsTextLogColumns(alias string) commsTextLogColumns {
@@ -605,6 +606,30 @@ func (os CommsTextLogSlice) SourcePhone(mods ...bob.Mod[*dialect.SelectQuery]) C
 	)...)
 }
 
+// ReportLogs starts a query for related objects on publicreport.report_log
+func (o *CommsTextLog) ReportLogs(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportLogsQuery {
+	return PublicreportReportLogs.Query(append(mods,
+		sm.Where(PublicreportReportLogs.Columns.TextLogID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os CommsTextLogSlice) ReportLogs(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportLogsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportReportLogs.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReportLogs.Columns.TextLogID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // ReportTexts starts a query for related objects on report_text
 func (o *CommsTextLog) ReportTexts(mods ...bob.Mod[*dialect.SelectQuery]) ReportTextsQuery {
 	return ReportTexts.Query(append(mods,
@@ -721,6 +746,74 @@ func (commsTextLog0 *CommsTextLog) AttachSourcePhone(ctx context.Context, exec b
 	commsTextLog0.R.SourcePhone = commsPhone1
 
 	commsPhone1.R.SourceTextLogs = append(commsPhone1.R.SourceTextLogs, commsTextLog0)
+
+	return nil
+}
+
+func insertCommsTextLogReportLogs0(ctx context.Context, exec bob.Executor, publicreportReportLogs1 []*PublicreportReportLogSetter, commsTextLog0 *CommsTextLog) (PublicreportReportLogSlice, error) {
+	for i := range publicreportReportLogs1 {
+		publicreportReportLogs1[i].TextLogID = omitnull.From(commsTextLog0.ID)
+	}
+
+	ret, err := PublicreportReportLogs.Insert(bob.ToMods(publicreportReportLogs1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsTextLogReportLogs0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsTextLogReportLogs0(ctx context.Context, exec bob.Executor, count int, publicreportReportLogs1 PublicreportReportLogSlice, commsTextLog0 *CommsTextLog) (PublicreportReportLogSlice, error) {
+	setter := &PublicreportReportLogSetter{
+		TextLogID: omitnull.From(commsTextLog0.ID),
+	}
+
+	err := publicreportReportLogs1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsTextLogReportLogs0: %w", err)
+	}
+
+	return publicreportReportLogs1, nil
+}
+
+func (commsTextLog0 *CommsTextLog) InsertReportLogs(ctx context.Context, exec bob.Executor, related ...*PublicreportReportLogSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	publicreportReportLogs1, err := insertCommsTextLogReportLogs0(ctx, exec, related, commsTextLog0)
+	if err != nil {
+		return err
+	}
+
+	commsTextLog0.R.ReportLogs = append(commsTextLog0.R.ReportLogs, publicreportReportLogs1...)
+
+	for _, rel := range publicreportReportLogs1 {
+		rel.R.TextLog = commsTextLog0
+	}
+	return nil
+}
+
+func (commsTextLog0 *CommsTextLog) AttachReportLogs(ctx context.Context, exec bob.Executor, related ...*PublicreportReportLog) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	publicreportReportLogs1 := PublicreportReportLogSlice(related)
+
+	_, err = attachCommsTextLogReportLogs0(ctx, exec, len(related), publicreportReportLogs1, commsTextLog0)
+	if err != nil {
+		return err
+	}
+
+	commsTextLog0.R.ReportLogs = append(commsTextLog0.R.ReportLogs, publicreportReportLogs1...)
+
+	for _, rel := range related {
+		rel.R.TextLog = commsTextLog0
+	}
 
 	return nil
 }
@@ -855,6 +948,20 @@ func (o *CommsTextLog) Preload(name string, retrieved any) error {
 			rel.R.SourceTextLogs = CommsTextLogSlice{o}
 		}
 		return nil
+	case "ReportLogs":
+		rels, ok := retrieved.(PublicreportReportLogSlice)
+		if !ok {
+			return fmt.Errorf("commsTextLog cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ReportLogs = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.TextLog = o
+			}
+		}
+		return nil
 	case "ReportTexts":
 		rels, ok := retrieved.(ReportTextSlice)
 		if !ok {
@@ -913,6 +1020,7 @@ func buildCommsTextLogPreloader() commsTextLogPreloader {
 type commsTextLogThenLoader[Q orm.Loadable] struct {
 	DestinationPhone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	SourcePhone      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReportLogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReportTexts      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
@@ -922,6 +1030,9 @@ func buildCommsTextLogThenLoader[Q orm.Loadable]() commsTextLogThenLoader[Q] {
 	}
 	type SourcePhoneLoadInterface interface {
 		LoadSourcePhone(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReportLogsLoadInterface interface {
+		LoadReportLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ReportTextsLoadInterface interface {
 		LoadReportTexts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -938,6 +1049,12 @@ func buildCommsTextLogThenLoader[Q orm.Loadable]() commsTextLogThenLoader[Q] {
 			"SourcePhone",
 			func(ctx context.Context, exec bob.Executor, retrieved SourcePhoneLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadSourcePhone(ctx, exec, mods...)
+			},
+		),
+		ReportLogs: thenLoadBuilder[Q](
+			"ReportLogs",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLogsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReportLogs(ctx, exec, mods...)
 			},
 		),
 		ReportTexts: thenLoadBuilder[Q](
@@ -1047,6 +1164,70 @@ func (os CommsTextLogSlice) LoadSourcePhone(ctx context.Context, exec bob.Execut
 
 			o.R.SourcePhone = rel
 			break
+		}
+	}
+
+	return nil
+}
+
+// LoadReportLogs loads the commsTextLog's ReportLogs into the .R struct
+func (o *CommsTextLog) LoadReportLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ReportLogs = nil
+
+	related, err := o.ReportLogs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.TextLog = o
+	}
+
+	o.R.ReportLogs = related
+	return nil
+}
+
+// LoadReportLogs loads the commsTextLog's ReportLogs into the .R struct
+func (os CommsTextLogSlice) LoadReportLogs(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportReportLogs, err := os.ReportLogs(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ReportLogs = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportReportLogs {
+
+			if !rel.TextLogID.IsValue() {
+				continue
+			}
+			if !(rel.TextLogID.IsValue() && o.ID == rel.TextLogID.MustGet()) {
+				continue
+			}
+
+			rel.R.TextLog = o
+
+			o.R.ReportLogs = append(o.R.ReportLogs, rel)
 		}
 	}
 
