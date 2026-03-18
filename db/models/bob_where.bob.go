@@ -103,7 +103,6 @@ func Where[Q psql.Filterable]() struct {
 	PublicreportOrganizationReportCounts publicreportOrganizationReportCountWhere[Q]
 	PublicreportReports                  publicreportReportWhere[Q]
 	PublicreportReportImages             publicreportReportImageWhere[Q]
-	PublicreportReportLocations          publicreportReportLocationWhere[Q]
 	PublicreportReportLogs               publicreportReportLogWhere[Q]
 	PublicreportSubscribeEmails          publicreportSubscribeEmailWhere[Q]
 	PublicreportSubscribePhones          publicreportSubscribePhoneWhere[Q]
@@ -210,7 +209,6 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportOrganizationReportCounts publicreportOrganizationReportCountWhere[Q]
 		PublicreportReports                  publicreportReportWhere[Q]
 		PublicreportReportImages             publicreportReportImageWhere[Q]
-		PublicreportReportLocations          publicreportReportLocationWhere[Q]
 		PublicreportReportLogs               publicreportReportLogWhere[Q]
 		PublicreportSubscribeEmails          publicreportSubscribeEmailWhere[Q]
 		PublicreportSubscribePhones          publicreportSubscribePhoneWhere[Q]
@@ -316,7 +314,6 @@ func Where[Q psql.Filterable]() struct {
 		PublicreportOrganizationReportCounts: buildPublicreportOrganizationReportCountWhere[Q](PublicreportOrganizationReportCounts.Columns),
 		PublicreportReports:                  buildPublicreportReportWhere[Q](PublicreportReports.Columns),
 		PublicreportReportImages:             buildPublicreportReportImageWhere[Q](PublicreportReportImages.Columns),
-		PublicreportReportLocations:          buildPublicreportReportLocationWhere[Q](PublicreportReportLocations.Columns),
 		PublicreportReportLogs:               buildPublicreportReportLogWhere[Q](PublicreportReportLogs.Columns),
 		PublicreportSubscribeEmails:          buildPublicreportSubscribeEmailWhere[Q](PublicreportSubscribeEmails.Columns),
 		PublicreportSubscribePhones:          buildPublicreportSubscribePhoneWhere[Q](PublicreportSubscribePhones.Columns),

@@ -44,8 +44,8 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer txn.Rollback(ctx)
-	location, err := models.PublicreportReportLocations.Query(
-		models.SelectWhere.PublicreportReportLocations.PublicID.EQ(report_id),
+	location, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get report location")
@@ -53,7 +53,6 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tablename := location.TableName.MustGet()
 	org_id := location.OrganizationID.MustGet()
 	e := report.SaveReporter(ctx, txn, report_id, name, email, phone, has_consent)
 	if e != nil {
@@ -94,7 +93,7 @@ func postRegisterNotifications(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	txn.Commit(ctx)
-	platform.PublicReportReporterUpdated(ctx, org_id, report_id, tablename)
+	platform.PublicReportReporterUpdated(ctx, org_id, report_id)
 
 	http.Redirect(w, r, fmt.Sprintf("/register-notifications-complete?report=%s", report_id), http.StatusFound)
 }

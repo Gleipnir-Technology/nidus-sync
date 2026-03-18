@@ -73,9 +73,9 @@ func LeadCreateFromPublicreport(ctx context.Context, user User, report_id string
 		return nil, fmt.Errorf("start transaction: %w", err)
 	}
 
-	location, err := models.PublicreportReportLocations.Query(
-		models.SelectWhere.PublicreportReportLocations.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReportLocations.OrganizationID.EQ(user.Organization.ID()),
+	report, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
+		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID()),
 	).One(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
@@ -84,26 +84,26 @@ func LeadCreateFromPublicreport(ctx context.Context, user User, report_id string
 	// At this point we have a report. We need to decide where to put it based on either the address or
 	// the location.
 	var site_id int32
-	if location.AddressID.IsValue() {
-		site, err := siteFromAddress(ctx, txn, user, location.AddressID.MustGet())
+	if report.AddressID.IsValue() {
+		site, err := siteFromAddress(ctx, txn, user, report.AddressID.MustGet())
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
-	} else if location.LocationLatitude.IsValue() && location.LocationLongitude.IsValue() {
+	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
 		site, err := siteFromLocation(ctx, txn, user, Location{
-			Latitude:  location.LocationLatitude.MustGet(),
-			Longitude: location.LocationLongitude.MustGet(),
+			Latitude:  report.LocationLatitude.MustGet(),
+			Longitude: report.LocationLongitude.MustGet(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
 
-	} else if location.AddressRaw.GetOr("") != "" {
+	} else if report.AddressRaw != "" {
 		// At this point we don't have an address, and we don't have GPS
 		// We'll try geocoding and creating an address from that.
-		site, err := siteFromAddressRaw(ctx, txn, user, location.AddressRaw.MustGet())
+		site, err := siteFromAddressRaw(ctx, txn, user, report.AddressRaw)
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
@@ -115,11 +115,10 @@ func LeadCreateFromPublicreport(ctx context.Context, user User, report_id string
 	}
 
 	lead_type := enums.LeadtypeUnknown
-	tablename := location.TableName.MustGet()
-	switch tablename {
-	case "nuisance":
+	switch report.ReportType {
+	case enums.PublicreportReporttypeNuisance:
 		lead_type = enums.LeadtypePublicreportNuisance
-	case "water":
+	case enums.PublicreportReporttypeWater:
 		lead_type = enums.LeadtypePublicreportWater
 	}
 	lead, err := models.Leads.Insert(&models.LeadSetter{
@@ -131,7 +130,7 @@ func LeadCreateFromPublicreport(ctx context.Context, user User, report_id string
 		Type:           omit.From(lead_type),
 	}).One(ctx, txn)
 	_, err = psql.Update(
-		um.Table("publicreport."+tablename),
+		um.Table(psql.Quote("publicreport", "report")),
 		um.SetCol("reviewed").ToArg(time.Now()),
 		um.SetCol("reviewer_id").ToArg(user.ID),
 		um.SetCol("status").ToArg(enums.PublicreportReportstatustypeReviewed),
