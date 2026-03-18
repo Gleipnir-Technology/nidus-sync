@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
-	bobpgx "github.com/Gleipnir-Technology/bob/drivers/pgx"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -25,6 +24,7 @@ import (
 	//"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	bobpgx "github.com/stephenafamo/bob/drivers/pgx"
 )
 
 var waitGroup sync.WaitGroup

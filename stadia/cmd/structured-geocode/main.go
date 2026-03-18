@@ -82,7 +82,7 @@ func main() {
 	if *city != "" {
 		req.Locality = city
 	}
-	resp, err := client.StructuredGeocode(ctx, req)
+	resp, err := client.GeocodeStructured(ctx, req)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		os.Exit(2)
