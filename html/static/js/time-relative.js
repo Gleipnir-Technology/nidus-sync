@@ -55,7 +55,7 @@ class TimeRelative extends HTMLElement {
 			return "just now";
 		} else if (diffInSeconds < hour) {
 			const minutes = Math.floor(diffInSeconds / minute);
-			return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+			return `${minutes} ${minutes === 1 ? "min" : "min"} ago`;
 		} else if (diffInSeconds < day) {
 			const hours = Math.floor(diffInSeconds / hour);
 			return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
