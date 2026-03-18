@@ -51,6 +51,7 @@
 			if (response !== undefined && response.features.length > 0) {
 				const addressInput = document.querySelector("address-input");
 				addressInput.SetValue(response.features[0]);
+				setLocationInputs(response.features[0]);
 			}
 		}
 		function setLocationInputs(location) {
@@ -267,11 +268,6 @@
 					<div class="row mb-3">
 						<!-- Hidden fields for location data -->
 						<input type="hidden" id="address-country" name="address-country" />
-						<input
-							type="hidden"
-							id="address-postcode"
-							name="address-postcode"
-						/>
 						<input
 							type="hidden"
 							id="address-locality"
