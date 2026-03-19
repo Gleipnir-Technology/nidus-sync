@@ -160,6 +160,12 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 			}).One(ctx, txn)
 		*/
 	}
+	err = file.Update(ctx, txn, &models.FileuploadFileSetter{
+		Status: omit.From(enums.FileuploadFilestatustypeCommitted),
+	})
+	if err != nil {
+		return fmt.Errorf("update file status to committed: %w", err)
+	}
 	return nil
 }
 func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
