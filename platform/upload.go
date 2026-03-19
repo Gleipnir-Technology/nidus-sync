@@ -95,9 +95,12 @@ func UploadCommit(ctx context.Context, org Organization, file_id int32, committe
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
 	).Exec(ctx, txn)
-	err = background.NewCSVCommit(ctx, txn, file_id)
 	if err != nil {
 		return fmt.Errorf("update upload: %w", err)
+	}
+	err = background.NewCSVCommit(ctx, txn, file_id)
+	if err != nil {
+		return fmt.Errorf("background csv commit: %w", err)
 	}
 	err = txn.Commit(ctx)
 
