@@ -46,6 +46,9 @@ func (o Organization) CountTrap(ctx context.Context) (uint, error) {
 	}
 	return uint(result), nil
 }
+func (o Organization) HasServiceArea() bool {
+	return o.model.ServiceAreaGeometry.IsValue()
+}
 func (o Organization) Name() string {
 	return o.model.Name
 }
