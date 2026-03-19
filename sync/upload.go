@@ -108,7 +108,7 @@ type FormUploadPool struct{}
 
 func postUploadPoolFlyoverCreate(ctx context.Context, r *http.Request, u platform.User, f FormUploadPool) (string, *nhttp.ErrorWithStatus) {
 	// If the organization we're uploading to doesn't have a service area, we can't process the upload correctly
-	if !u.Organization.HasServiceArea() {
+	if !(u.Organization.HasServiceArea() || u.Organization.IsCatchall()) {
 		return "", nhttp.NewErrorStatus(http.StatusConflict, "Your organization does not yet have a service area")
 	}
 	uploads, err := file.SaveFileUpload(r, "csvfile", file.CollectionCSV)
