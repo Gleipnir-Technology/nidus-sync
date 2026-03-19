@@ -89,5 +89,5 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 For iterating on styles
 
 ```
-watchexec -e *.scss sass scss/custom.scss:html/static/css/bootstrap.css
+watchexec -e scss sass scss/custom.scss:html/static/css/bootstrap.css
 ```
