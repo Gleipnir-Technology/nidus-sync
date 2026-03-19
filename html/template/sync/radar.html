@@ -89,15 +89,12 @@
 		</div>
 		<div class="card-body p-2">
 			<map-routing
-				centroid="{{ if .C.Organization.ServiceAreaCentroidGeojson.IsValue }}
-					{{ .C.Organization.ServiceAreaCentroidGeojson.MustGet|json }}
-				{{ end }}"
-				organization-id="{{ .C.Organization.ID }}"
+				organization-id="{{ .Organization.ID }}"
 				tegola="{{ .URL.Tegola }}"
-				xmin="{{ .C.Organization.ServiceAreaXmin.GetOr 0 }}"
-				ymin="{{ .C.Organization.ServiceAreaYmin.GetOr 0 }}"
-				xmax="{{ .C.Organization.ServiceAreaXmax.GetOr 0 }}"
-				ymax="{{ .C.Organization.ServiceAreaYmax.GetOr 0 }}"
+				xmin="{{ .Organization.ServiceArea.Min.X }}"
+				ymin="{{ .Organization.ServiceArea.Min.Y }}"
+				xmax="{{ .Organization.ServiceArea.Max.X }}"
+				ymax="{{ .Organization.ServiceArea.Max.Y }}"
 			/>
 		</div>
 	</div>
