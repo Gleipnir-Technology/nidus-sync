@@ -76,6 +76,7 @@ type preloaders struct {
 	FileuploadPool                     fileuploadPoolPreloader
 	H3Aggregation                      h3AggregationPreloader
 	Lead                               leadPreloader
+	LogImpersonation                   logImpersonationPreloader
 	NoteAudio                          noteAudioPreloader
 	NoteAudioBreadcrumb                noteAudioBreadcrumbPreloader
 	NoteAudioDatum                     noteAudioDatumPreloader
@@ -175,6 +176,7 @@ func getPreloaders() preloaders {
 		FileuploadPool:                     buildFileuploadPoolPreloader(),
 		H3Aggregation:                      buildH3AggregationPreloader(),
 		Lead:                               buildLeadPreloader(),
+		LogImpersonation:                   buildLogImpersonationPreloader(),
 		NoteAudio:                          buildNoteAudioPreloader(),
 		NoteAudioBreadcrumb:                buildNoteAudioBreadcrumbPreloader(),
 		NoteAudioDatum:                     buildNoteAudioDatumPreloader(),
@@ -280,6 +282,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	FileuploadPool                     fileuploadPoolThenLoader[Q]
 	H3Aggregation                      h3AggregationThenLoader[Q]
 	Lead                               leadThenLoader[Q]
+	LogImpersonation                   logImpersonationThenLoader[Q]
 	NoteAudio                          noteAudioThenLoader[Q]
 	NoteAudioBreadcrumb                noteAudioBreadcrumbThenLoader[Q]
 	NoteAudioDatum                     noteAudioDatumThenLoader[Q]
@@ -379,6 +382,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		FileuploadPool:                     buildFileuploadPoolThenLoader[Q](),
 		H3Aggregation:                      buildH3AggregationThenLoader[Q](),
 		Lead:                               buildLeadThenLoader[Q](),
+		LogImpersonation:                   buildLogImpersonationThenLoader[Q](),
 		NoteAudio:                          buildNoteAudioThenLoader[Q](),
 		NoteAudioBreadcrumb:                buildNoteAudioBreadcrumbThenLoader[Q](),
 		NoteAudioDatum:                     buildNoteAudioDatumThenLoader[Q](),

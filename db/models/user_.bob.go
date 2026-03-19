@@ -64,6 +64,8 @@ type userR struct {
 	CreatorFiles                    FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
 	FileuploadPool                  FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
 	CreatorLeads                    LeadSlice                    // lead.lead_creator_fkey
+	ImpersonatorLogImpersonations   LogImpersonationSlice        // log_impersonation.log_impersonation_impersonator_id_fkey
+	TargetLogImpersonations         LogImpersonationSlice        // log_impersonation.log_impersonation_target_id_fkey
 	CreatorNoteAudios               NoteAudioSlice               // note_audio.note_audio_creator_id_fkey
 	DeletorNoteAudios               NoteAudioSlice               // note_audio.note_audio_deletor_id_fkey
 	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
@@ -862,6 +864,54 @@ func (os UserSlice) CreatorLeads(mods ...bob.Mod[*dialect.SelectQuery]) LeadsQue
 
 	return Leads.Query(append(mods,
 		sm.Where(psql.Group(Leads.Columns.Creator).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// ImpersonatorLogImpersonations starts a query for related objects on log_impersonation
+func (o *User) ImpersonatorLogImpersonations(mods ...bob.Mod[*dialect.SelectQuery]) LogImpersonationsQuery {
+	return LogImpersonations.Query(append(mods,
+		sm.Where(LogImpersonations.Columns.ImpersonatorID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) ImpersonatorLogImpersonations(mods ...bob.Mod[*dialect.SelectQuery]) LogImpersonationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return LogImpersonations.Query(append(mods,
+		sm.Where(psql.Group(LogImpersonations.Columns.ImpersonatorID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// TargetLogImpersonations starts a query for related objects on log_impersonation
+func (o *User) TargetLogImpersonations(mods ...bob.Mod[*dialect.SelectQuery]) LogImpersonationsQuery {
+	return LogImpersonations.Query(append(mods,
+		sm.Where(LogImpersonations.Columns.TargetID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) TargetLogImpersonations(mods ...bob.Mod[*dialect.SelectQuery]) LogImpersonationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return LogImpersonations.Query(append(mods,
+		sm.Where(psql.Group(LogImpersonations.Columns.TargetID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1880,6 +1930,142 @@ func (user0 *User) AttachCreatorLeads(ctx context.Context, exec bob.Executor, re
 
 	for _, rel := range related {
 		rel.R.CreatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserImpersonatorLogImpersonations0(ctx context.Context, exec bob.Executor, logImpersonations1 []*LogImpersonationSetter, user0 *User) (LogImpersonationSlice, error) {
+	for i := range logImpersonations1 {
+		logImpersonations1[i].ImpersonatorID = omit.From(user0.ID)
+	}
+
+	ret, err := LogImpersonations.Insert(bob.ToMods(logImpersonations1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserImpersonatorLogImpersonations0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserImpersonatorLogImpersonations0(ctx context.Context, exec bob.Executor, count int, logImpersonations1 LogImpersonationSlice, user0 *User) (LogImpersonationSlice, error) {
+	setter := &LogImpersonationSetter{
+		ImpersonatorID: omit.From(user0.ID),
+	}
+
+	err := logImpersonations1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserImpersonatorLogImpersonations0: %w", err)
+	}
+
+	return logImpersonations1, nil
+}
+
+func (user0 *User) InsertImpersonatorLogImpersonations(ctx context.Context, exec bob.Executor, related ...*LogImpersonationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	logImpersonations1, err := insertUserImpersonatorLogImpersonations0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ImpersonatorLogImpersonations = append(user0.R.ImpersonatorLogImpersonations, logImpersonations1...)
+
+	for _, rel := range logImpersonations1 {
+		rel.R.ImpersonatorUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachImpersonatorLogImpersonations(ctx context.Context, exec bob.Executor, related ...*LogImpersonation) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	logImpersonations1 := LogImpersonationSlice(related)
+
+	_, err = attachUserImpersonatorLogImpersonations0(ctx, exec, len(related), logImpersonations1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.ImpersonatorLogImpersonations = append(user0.R.ImpersonatorLogImpersonations, logImpersonations1...)
+
+	for _, rel := range related {
+		rel.R.ImpersonatorUser = user0
+	}
+
+	return nil
+}
+
+func insertUserTargetLogImpersonations0(ctx context.Context, exec bob.Executor, logImpersonations1 []*LogImpersonationSetter, user0 *User) (LogImpersonationSlice, error) {
+	for i := range logImpersonations1 {
+		logImpersonations1[i].TargetID = omit.From(user0.ID)
+	}
+
+	ret, err := LogImpersonations.Insert(bob.ToMods(logImpersonations1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserTargetLogImpersonations0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserTargetLogImpersonations0(ctx context.Context, exec bob.Executor, count int, logImpersonations1 LogImpersonationSlice, user0 *User) (LogImpersonationSlice, error) {
+	setter := &LogImpersonationSetter{
+		TargetID: omit.From(user0.ID),
+	}
+
+	err := logImpersonations1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserTargetLogImpersonations0: %w", err)
+	}
+
+	return logImpersonations1, nil
+}
+
+func (user0 *User) InsertTargetLogImpersonations(ctx context.Context, exec bob.Executor, related ...*LogImpersonationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	logImpersonations1, err := insertUserTargetLogImpersonations0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.TargetLogImpersonations = append(user0.R.TargetLogImpersonations, logImpersonations1...)
+
+	for _, rel := range logImpersonations1 {
+		rel.R.TargetUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachTargetLogImpersonations(ctx context.Context, exec bob.Executor, related ...*LogImpersonation) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	logImpersonations1 := LogImpersonationSlice(related)
+
+	_, err = attachUserTargetLogImpersonations0(ctx, exec, len(related), logImpersonations1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.TargetLogImpersonations = append(user0.R.TargetLogImpersonations, logImpersonations1...)
+
+	for _, rel := range related {
+		rel.R.TargetUser = user0
 	}
 
 	return nil
@@ -3191,6 +3377,34 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "ImpersonatorLogImpersonations":
+		rels, ok := retrieved.(LogImpersonationSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ImpersonatorLogImpersonations = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ImpersonatorUser = o
+			}
+		}
+		return nil
+	case "TargetLogImpersonations":
+		rels, ok := retrieved.(LogImpersonationSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.TargetLogImpersonations = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.TargetUser = o
+			}
+		}
+		return nil
 	case "CreatorNoteAudios":
 		rels, ok := retrieved.(NoteAudioSlice)
 		if !ok {
@@ -3464,6 +3678,8 @@ type userThenLoader[Q orm.Loadable] struct {
 	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorLeads                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ImpersonatorLogImpersonations   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	TargetLogImpersonations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -3510,6 +3726,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type CreatorLeadsLoadInterface interface {
 		LoadCreatorLeads(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ImpersonatorLogImpersonationsLoadInterface interface {
+		LoadImpersonatorLogImpersonations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type TargetLogImpersonationsLoadInterface interface {
+		LoadTargetLogImpersonations(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorNoteAudiosLoadInterface interface {
 		LoadCreatorNoteAudios(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -3616,6 +3838,18 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"CreatorLeads",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorLeadsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadCreatorLeads(ctx, exec, mods...)
+			},
+		),
+		ImpersonatorLogImpersonations: thenLoadBuilder[Q](
+			"ImpersonatorLogImpersonations",
+			func(ctx context.Context, exec bob.Executor, retrieved ImpersonatorLogImpersonationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadImpersonatorLogImpersonations(ctx, exec, mods...)
+			},
+		),
+		TargetLogImpersonations: thenLoadBuilder[Q](
+			"TargetLogImpersonations",
+			func(ctx context.Context, exec bob.Executor, retrieved TargetLogImpersonationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadTargetLogImpersonations(ctx, exec, mods...)
 			},
 		),
 		CreatorNoteAudios: thenLoadBuilder[Q](
@@ -4272,6 +4506,128 @@ func (os UserSlice) LoadCreatorLeads(ctx context.Context, exec bob.Executor, mod
 			rel.R.CreatorUser = o
 
 			o.R.CreatorLeads = append(o.R.CreatorLeads, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadImpersonatorLogImpersonations loads the user's ImpersonatorLogImpersonations into the .R struct
+func (o *User) LoadImpersonatorLogImpersonations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ImpersonatorLogImpersonations = nil
+
+	related, err := o.ImpersonatorLogImpersonations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ImpersonatorUser = o
+	}
+
+	o.R.ImpersonatorLogImpersonations = related
+	return nil
+}
+
+// LoadImpersonatorLogImpersonations loads the user's ImpersonatorLogImpersonations into the .R struct
+func (os UserSlice) LoadImpersonatorLogImpersonations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	logImpersonations, err := os.ImpersonatorLogImpersonations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ImpersonatorLogImpersonations = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range logImpersonations {
+
+			if !(o.ID == rel.ImpersonatorID) {
+				continue
+			}
+
+			rel.R.ImpersonatorUser = o
+
+			o.R.ImpersonatorLogImpersonations = append(o.R.ImpersonatorLogImpersonations, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadTargetLogImpersonations loads the user's TargetLogImpersonations into the .R struct
+func (o *User) LoadTargetLogImpersonations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.TargetLogImpersonations = nil
+
+	related, err := o.TargetLogImpersonations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.TargetUser = o
+	}
+
+	o.R.TargetLogImpersonations = related
+	return nil
+}
+
+// LoadTargetLogImpersonations loads the user's TargetLogImpersonations into the .R struct
+func (os UserSlice) LoadTargetLogImpersonations(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	logImpersonations, err := os.TargetLogImpersonations(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.TargetLogImpersonations = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range logImpersonations {
+
+			if !(o.ID == rel.TargetID) {
+				continue
+			}
+
+			rel.R.TargetUser = o
+
+			o.R.TargetLogImpersonations = append(o.R.TargetLogImpersonations, rel)
 		}
 	}
 
