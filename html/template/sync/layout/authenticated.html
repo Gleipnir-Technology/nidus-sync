@@ -16,7 +16,7 @@
 		<script>
 			const USER = {{ .User.AsJSON|json }};
 			SSEManager.subscribe("*", function (e) {
-				if (e.type == "created" && e.resource.startsWith("rmo:")) {
+				if (e.type != "heartbeat") {
 					updateUserState();
 				}
 			});

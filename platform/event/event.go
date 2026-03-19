@@ -1,6 +1,7 @@
 package event
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -14,6 +15,16 @@ type Event struct {
 	Type     EventType `json:"type"`
 	URI      string    `json:"uri"`
 }
+
+func (e Event) MarshalJSON() ([]byte, error) {
+	to_marshal := make(map[string]any, 0)
+	to_marshal["resource"] = e.Resource
+	to_marshal["time"] = e.Time
+	to_marshal["type"] = e.Type.String()
+	to_marshal["uri"] = e.URI
+	return json.Marshal(to_marshal)
+}
+
 type Envelope struct {
 	OrganizationID int32
 	Event          Event
@@ -73,6 +84,7 @@ type ResourceType int
 const (
 	TypeUnknown = iota
 	TypeFileCSV
+	TypeReviewTask
 	TypeRMONuisance
 	TypeRMOReport
 	TypeRMOWater
@@ -107,6 +119,8 @@ func resourceString(t ResourceType) string {
 	switch t {
 	case TypeFileCSV:
 		return "sync:filecsv"
+	case TypeReviewTask:
+		return "sync:review_task"
 	case TypeRMONuisance:
 		return "rmo:nuisance"
 	case TypeRMOReport:
@@ -121,6 +135,8 @@ func makeURI(t ResourceType, id string) string {
 	switch t {
 	case TypeFileCSV:
 		return config.MakeURLNidus("/upload/%s", id)
+	case TypeReviewTask:
+		return config.MakeURLNidus("/review/%s", id)
 	case TypeRMONuisance:
 		return config.MakeURLReport("/report/%s", id)
 	case TypeRMOWater:
