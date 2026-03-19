@@ -4,11 +4,14 @@
 .badge.empty {
 	background-color: #9C9BC0;
 }
+.badge.false.pool {
+	background-color: #6B2737;
+}
 .badge.green {
-	background-color: #7AAB5F;
+	background-color: #4B6827;
 }
 .badge.murky {
-	background-color: #D2E3CA;
+	background-color: #88BC4E;
 }
 .badge.unknown {
 	background-color: gray;
@@ -26,7 +29,7 @@
 	background-color: $secondary;
 }
 .badge.status.new {
-	background-color: $success;
+	background-color: $primary;
 }
 .badge.status.outside {
 	background-color: $warning;
