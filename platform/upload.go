@@ -93,7 +93,7 @@ func UploadCommit(ctx context.Context, org Organization, file_id int32, committe
 		um.SetCol("status").ToArg("committing"),
 		um.SetCol("committer").ToArg(committer.ID),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
-		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
+		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID()))),
 	).Exec(ctx, txn)
 	if err != nil {
 		return fmt.Errorf("update upload: %w", err)
@@ -111,7 +111,7 @@ func UploadDiscard(ctx context.Context, org Organization, file_id int32) error {
 		um.Table(models.FileuploadFiles.Alias()),
 		um.SetCol("status").ToArg("discarded"),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
-		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
+		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID()))),
 	).Exec(ctx, db.PGInstance.BobDB)
 	return err
 }

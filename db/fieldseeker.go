@@ -58,7 +58,7 @@ func SaveOrUpdateContainerRelate(ctx context.Context, org *models.Organization, 
 		}
 		return []SqlParam{
 			Uint("p_objectid", row.ObjectID),
-			Int32("p_organization_id", org.ID),
+			Int32("p_organization_id", org.ID()),
 			UUID("p_globalid", row.GlobalID),
 			String("p_created_user", row.CreatedUser),
 			Timestamp("p_created_date", row.CreatedDate),

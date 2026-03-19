@@ -94,7 +94,7 @@ func listSignal(ctx context.Context, r *http.Request, user platform.User, query 
 
 	/*
 		rows, err := models.Signals.Query(
-			models.SelectWhere.Signals.OrganizationID.EQ(org.ID),
+			models.SelectWhere.Signals.OrganizationID.EQ(org.ID()),
 			sm.OrderBy("created").Desc(),
 		).All(ctx, db.PGInstance.BobDB)
 	*/
