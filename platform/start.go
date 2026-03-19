@@ -156,7 +156,7 @@ func listenAndDoOneJob(ctx context.Context) error {
 	_, err = conn.Exec(ctx, "LISTEN new_job")
 	if err != nil {
 		//if !pgconn.Timeout(err) {
-		return fmt.Errorf("failed to listen to outbound_email_queued: %w", err)
+		return fmt.Errorf("failed to execute 'LISTEN new_job': %w", err)
 	}
 
 	for {
@@ -164,7 +164,7 @@ func listenAndDoOneJob(ctx context.Context) error {
 		notification, err := conn.Conn().WaitForNotification(ctx)
 		if err != nil {
 			//if !pgconn.Timeout(err) {
-			return fmt.Errorf("failed while waiting for notification of outbound_email_queued")
+			return fmt.Errorf("failed while waiting for notification of new job: %w", err)
 		}
 
 		job_id, err := strconv.Atoi(notification.Payload)
