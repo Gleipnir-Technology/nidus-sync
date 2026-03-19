@@ -6,13 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/stephenafamo/scan"
 )
 
 type UploadPoolDetail struct {
@@ -120,37 +116,6 @@ func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (
 		Pools:         pools,
 		Status:        file.Status.String(),
 	}, nil
-}
-func PoolUploadList(ctx context.Context, organization_id int32) ([]Upload, error) {
-	results := make([]Upload, 0)
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			// fileupload.csv columns
-			//"csv.file_id",
-			//"csv.committed",
-			//"csv.rowcount",
-			//"csv.type_",
-
-			// fileupload.file columns
-			//"file.content_type",
-			"file.created AS created",
-			//"file.creator_id",
-			//"file.deleted",
-			"file.id AS id",
-			//"file.name",
-			//"file.organization_id",
-			"file.status AS status",
-			//"file.size_bytes",
-			//"file.file_uuid",
-		),
-		sm.From("fileupload.csv").As("csv"),
-		sm.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
-		sm.Where(psql.Raw("file.organization_id").EQ(psql.Arg(organization_id))),
-	), scan.StructMapper[Upload]())
-	if err != nil {
-		return results, fmt.Errorf("Failed to query pool upload rows: %w", err)
-	}
-	return rows, nil
 }
 func errorsByLine(ctx context.Context, file *models.FileuploadFile) ([]UploadPoolError, map[int32][]UploadPoolError, error) {
 	file_errors := make([]UploadPoolError, 0)

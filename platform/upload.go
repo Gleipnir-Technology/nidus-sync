@@ -137,7 +137,7 @@ func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, 
 		),
 		sm.From("fileupload.csv").As("csv"),
 		sm.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
-		sm.Where(psql.Raw("file.organization_id").EQ(psql.Arg(org.ID))),
+		sm.Where(psql.Quote("file", "organization_id").EQ(psql.Arg(org.ID()))),
 		sm.OrderBy("created").Desc(),
 	), scan.StructMapper[UploadSummary]())
 	if err != nil {
