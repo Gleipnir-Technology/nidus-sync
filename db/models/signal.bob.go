@@ -36,6 +36,8 @@ type Signal struct {
 	Title          string                          `db:"title" `
 	Type           enums.Signaltype                `db:"type_" `
 	SiteID         null.Val[int32]                 `db:"site_id" `
+	Location       string                          `db:"location" `
+	LocationType   null.Val[string]                `db:"location_type,generated" `
 
 	R signalR `db:"-" `
 }
@@ -61,7 +63,7 @@ type signalR struct {
 func buildSignalColumns(alias string) signalColumns {
 	return signalColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "title", "type_", "site_id",
+			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "title", "type_", "site_id", "location", "location_type",
 		).WithParent("signal"),
 		tableAlias:     alias,
 		Addressed:      psql.Quote(alias, "addressed"),
@@ -74,6 +76,8 @@ func buildSignalColumns(alias string) signalColumns {
 		Title:          psql.Quote(alias, "title"),
 		Type:           psql.Quote(alias, "type_"),
 		SiteID:         psql.Quote(alias, "site_id"),
+		Location:       psql.Quote(alias, "location"),
+		LocationType:   psql.Quote(alias, "location_type"),
 	}
 }
 
@@ -90,6 +94,8 @@ type signalColumns struct {
 	Title          psql.Expression
 	Type           psql.Expression
 	SiteID         psql.Expression
+	Location       psql.Expression
+	LocationType   psql.Expression
 }
 
 func (c signalColumns) Alias() string {
@@ -114,10 +120,11 @@ type SignalSetter struct {
 	Title          omit.Val[string]                    `db:"title" `
 	Type           omit.Val[enums.Signaltype]          `db:"type_" `
 	SiteID         omitnull.Val[int32]                 `db:"site_id" `
+	Location       omit.Val[string]                    `db:"location" `
 }
 
 func (s SignalSetter) SetColumns() []string {
-	vals := make([]string, 0, 10)
+	vals := make([]string, 0, 11)
 	if !s.Addressed.IsUnset() {
 		vals = append(vals, "addressed")
 	}
@@ -147,6 +154,9 @@ func (s SignalSetter) SetColumns() []string {
 	}
 	if !s.SiteID.IsUnset() {
 		vals = append(vals, "site_id")
+	}
+	if s.Location.IsValue() {
+		vals = append(vals, "location")
 	}
 	return vals
 }
@@ -182,6 +192,9 @@ func (s SignalSetter) Overwrite(t *Signal) {
 	if !s.SiteID.IsUnset() {
 		t.SiteID = s.SiteID.MustGetNull()
 	}
+	if s.Location.IsValue() {
+		t.Location = s.Location.MustGet()
+	}
 }
 
 func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
@@ -190,7 +203,7 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 10)
+		vals := make([]bob.Expression, 11)
 		if !s.Addressed.IsUnset() {
 			vals[0] = psql.Arg(s.Addressed.MustGetNull())
 		} else {
@@ -251,6 +264,12 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
+		if s.Location.IsValue() {
+			vals[10] = psql.Arg(s.Location.MustGet())
+		} else {
+			vals[10] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -260,7 +279,7 @@ func (s SignalSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 10)
+	exprs := make([]bob.Expression, 0, 11)
 
 	if !s.Addressed.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -329,6 +348,13 @@ func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "site_id")...),
 			psql.Arg(s.SiteID),
+		}})
+	}
+
+	if s.Location.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "location")...),
+			psql.Arg(s.Location),
 		}})
 	}
 
@@ -857,6 +883,8 @@ type signalWhere[Q psql.Filterable] struct {
 	Title          psql.WhereMod[Q, string]
 	Type           psql.WhereMod[Q, enums.Signaltype]
 	SiteID         psql.WhereNullMod[Q, int32]
+	Location       psql.WhereMod[Q, string]
+	LocationType   psql.WhereNullMod[Q, string]
 }
 
 func (signalWhere[Q]) AliasedAs(alias string) signalWhere[Q] {
@@ -875,6 +903,8 @@ func buildSignalWhere[Q psql.Filterable](cols signalColumns) signalWhere[Q] {
 		Title:          psql.Where[Q, string](cols.Title),
 		Type:           psql.Where[Q, enums.Signaltype](cols.Type),
 		SiteID:         psql.WhereNull[Q, int32](cols.SiteID),
+		Location:       psql.Where[Q, string](cols.Location),
+		LocationType:   psql.WhereNull[Q, string](cols.LocationType),
 	}
 }
 
