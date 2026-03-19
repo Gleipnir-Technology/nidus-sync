@@ -155,6 +155,10 @@
 				},
 
 				async createSignal() {
+					console.log(
+						"Marking report as signal:",
+						this.selectedCommunication.id,
+					);
 					try {
 						const payload = {
 							reportID: this.selectedCommunication.id,
@@ -169,6 +173,10 @@
 						if (!response.ok) {
 							throw new Error("Failed to submit signal");
 						}
+						this.showNotification(
+							"Report Marked Signal",
+							`Report #${this.selectedCommunication.id} has been marked as useful signal`,
+						);
 						// Remove from list after creating lead
 						this.removeCurrentFromList();
 						this.fetchCommunications();
