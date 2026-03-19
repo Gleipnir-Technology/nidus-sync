@@ -158,7 +158,7 @@ func listenAndDoOneJob(ctx context.Context) error {
 	}
 
 	for {
-		log.Debug().Msg("wait for notification")
+		//log.Debug().Msg("wait for notification")
 		notification, err := conn.Conn().WaitForNotification(ctx)
 		if err != nil {
 			//if !pgconn.Timeout(err) {
