@@ -135,3 +135,13 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User
 		Total: row_total.Total,
 	}, nil
 }
+func userOrNil(usersByID map[int32]*platform.User, id *int32) *platform.User {
+	if id == nil {
+		return nil
+	}
+	u, ok := usersByID[*id]
+	if !ok {
+		return nil
+	}
+	return u
+}

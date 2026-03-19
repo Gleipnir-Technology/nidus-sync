@@ -6,18 +6,34 @@ import (
 	"fmt"
 	"time"
 
-	//"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
 )
+
+type Signal struct {
+	Address   *types.Address `db:"address" json:"address"`
+	Addressed *time.Time     `db:"addressed" json:"addressed"`
+	Addressor *int32         `db:"addressor" json:"addressor"`
+	Created   time.Time      `db:"created" json:"created"`
+	Creator   int32          `db:"creator" json:"creator"`
+	ID        int32          `db:"id" json:"id"`
+	Location  types.Location `db:"location" json:"location"`
+	Species   *string        `db:"species" json:"species"`
+	Title     string         `db:"title" json:"title"`
+	Type      string         `db:"type" json:"type"`
+}
 
 // Create a lead from the given signal and site
 func SignalCreateFromPublicreport(ctx context.Context, user User, report_id string) (*int32, error) {
@@ -105,4 +121,51 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	txn.Commit(ctx)
 
 	return &signal.ID, nil
+}
+
+func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"signal.addressed AS addressed",
+			"signal.addressor AS addressor",
+			"signal.created AS created",
+			"signal.creator AS creator",
+			"signal.id AS id",
+			"signal.species AS species",
+			"signal.title AS title",
+			"signal.type_ AS type",
+			"address.country AS \"address.country\"",
+			"address.locality AS \"address.locality\"",
+			"address.number_ AS \"address.number\"",
+			"address.postal_code AS \"address.postal_code\"",
+			"address.region AS \"address.region\"",
+			"address.street AS \"address.street\"",
+			"address.unit AS \"address.unit\"",
+			"ST_Y(address.location) AS \"location.latitude\"",
+			"ST_X(address.location) AS \"location.longitude\"",
+		),
+		sm.From("signal"),
+		sm.LeftJoin("site").OnEQ(
+			psql.Quote("signal", "site_id"),
+			psql.Quote("site", "id"),
+		),
+		sm.LeftJoin("address").OnEQ(
+			psql.Quote("site", "address_id"),
+			psql.Quote("address", "id"),
+		),
+		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
+		sm.Where(psql.Quote("signal", "addressed").IsNull()),
+		sm.Limit(limit),
+	), scan.StructMapper[Signal]())
+
+	/*
+		rows, err := models.Signals.Query(
+			models.SelectWhere.Signals.OrganizationID.EQ(org.ID()),
+			sm.OrderBy("created").Desc(),
+		).All(ctx, db.PGInstance.BobDB)
+	*/
+	if err != nil {
+		return nil, fmt.Errorf("failed to get signals: %w", err)
+	}
+	return rows, nil
 }
