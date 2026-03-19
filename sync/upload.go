@@ -12,7 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/go-chi/chi/v5"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type contentUploadList struct {
@@ -86,6 +86,7 @@ func postUploadCommit(ctx context.Context, r *http.Request, u platform.User, f F
 	if err != nil {
 		return "", nhttp.NewError("Failed to mark committed: %w", err)
 	}
+	log.Debug().Int64("file_id", file_id_).Int("user_id", u.ID).Msg("Committed file")
 	return "/configuration/upload", nil
 }
 
