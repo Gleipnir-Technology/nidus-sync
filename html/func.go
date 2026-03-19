@@ -62,7 +62,9 @@ func bigNumber(n int) string {
 func displayUploadStatus(s string) string {
 	switch s {
 	case "committed":
-		return "committed"
+		return "Complete"
+	case "committing":
+		return "Committing"
 	case "discarded":
 		return "Discarded"
 	case "error":
