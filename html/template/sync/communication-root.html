@@ -154,12 +154,12 @@
 					}
 				},
 
-				async createLead() {
+				async createSignal() {
 					try {
 						const payload = {
 							reportID: this.selectedCommunication.id,
 						};
-						const response = await fetch(`api/publicreport/lead`, {
+						const response = await fetch(`api/publicreport/signal`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
@@ -167,7 +167,7 @@
 							body: JSON.stringify(payload),
 						});
 						if (!response.ok) {
-							throw new Error("Failed to submit lead");
+							throw new Error("Failed to submit signal");
 						}
 						// Remove from list after creating lead
 						this.removeCurrentFromList();
@@ -759,13 +759,16 @@
 							</div>
 
 							<div class="p-3 flex-grow-1">
-								<!-- Create Lead -->
+								<!-- Create Signal -->
 								<div class="d-grid mb-3">
-									<button class="btn btn-success btn-lg" @click="createLead()">
-										<i class="bi bi-plus-circle me-2"></i>Create Lead
+									<button
+										class="btn btn-success btn-lg"
+										@click="createSignal()"
+									>
+										<i class="bi bi-plus-circle me-2"></i>Mark Signal
 									</button>
 									<small class="text-muted mt-1">
-										Creates a new service lead from this report
+										This report is useful signal
 									</small>
 								</div>
 
@@ -775,7 +778,7 @@
 										<i class="bi bi-x-circle me-2"></i>Mark Invalid
 									</button>
 									<small class="text-muted mt-1">
-										Mark as spam, duplicate, or out of district
+										This report isn't useful
 									</small>
 								</div>
 

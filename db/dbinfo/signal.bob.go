@@ -96,6 +96,15 @@ var Signals = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		SiteID: column{
+			Name:      "site_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: signalIndexes{
 		SignalPkey: index{
@@ -149,6 +158,15 @@ var Signals = Table[
 			ForeignTable:   "organization",
 			ForeignColumns: []string{"id"},
 		},
+		SignalSignalSiteIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "signal.signal_site_id_fkey",
+				Columns: []string{"site_id"},
+				Comment: "",
+			},
+			ForeignTable:   "site",
+			ForeignColumns: []string{"id"},
+		},
 	},
 
 	Comment: "",
@@ -164,11 +182,12 @@ type signalColumns struct {
 	Species        column
 	Title          column
 	Type           column
+	SiteID         column
 }
 
 func (c signalColumns) AsSlice() []column {
 	return []column{
-		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Title, c.Type,
+		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Title, c.Type, c.SiteID,
 	}
 }
 
@@ -186,11 +205,12 @@ type signalForeignKeys struct {
 	SignalSignalAddressorFkey      foreignKey
 	SignalSignalCreatorFkey        foreignKey
 	SignalSignalOrganizationIDFkey foreignKey
+	SignalSignalSiteIDFkey         foreignKey
 }
 
 func (f signalForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.SignalSignalAddressorFkey, f.SignalSignalCreatorFkey, f.SignalSignalOrganizationIDFkey,
+		f.SignalSignalAddressorFkey, f.SignalSignalCreatorFkey, f.SignalSignalOrganizationIDFkey, f.SignalSignalSiteIDFkey,
 	}
 }
 

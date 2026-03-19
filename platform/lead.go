@@ -2,7 +2,6 @@ package platform
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -65,84 +64,6 @@ func LeadCreate(ctx context.Context, user User, signal_id int32, site_id int32, 
 	return &lead.ID, nil
 }
 
-// Create a lead from the given signal and site
-func LeadCreateFromPublicreport(ctx context.Context, user User, report_id string) (*int32, error) {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
-	defer txn.Rollback(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("start transaction: %w", err)
-	}
-
-	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID()),
-	).One(ctx, txn)
-	if err != nil {
-		return nil, fmt.Errorf("query report existence: %w", err)
-	}
-
-	// At this point we have a report. We need to decide where to put it based on either the address or
-	// the location.
-	var site_id int32
-	if report.AddressID.IsValue() {
-		site, err := siteFromAddress(ctx, txn, user, report.AddressID.MustGet())
-		if err != nil {
-			return nil, fmt.Errorf("site from address: %w", err)
-		}
-		site_id = site.ID
-	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
-		site, err := siteFromLocation(ctx, txn, user, Location{
-			Latitude:  report.LocationLatitude.MustGet(),
-			Longitude: report.LocationLongitude.MustGet(),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("site from address: %w", err)
-		}
-		site_id = site.ID
-
-	} else if report.AddressRaw != "" {
-		// At this point we don't have an address, and we don't have GPS
-		// We'll try geocoding and creating an address from that.
-		site, err := siteFromAddressRaw(ctx, txn, user, report.AddressRaw)
-		if err != nil {
-			return nil, fmt.Errorf("site from address: %w", err)
-		}
-		site_id = site.ID
-	} else {
-		// We have no structured address, no GPS, no unstructued address.
-		// There's really nothing we can make this lead from and have it be meaningful
-		return nil, errors.New("Refusing to create a lead with no location data.")
-	}
-
-	lead_type := enums.LeadtypeUnknown
-	switch report.ReportType {
-	case enums.PublicreportReporttypeNuisance:
-		lead_type = enums.LeadtypePublicreportNuisance
-	case enums.PublicreportReporttypeWater:
-		lead_type = enums.LeadtypePublicreportWater
-	}
-	lead, err := models.Leads.Insert(&models.LeadSetter{
-		Created: omit.From(time.Now()),
-		Creator: omit.From(int32(user.ID)),
-		// ID
-		OrganizationID: omit.From(int32(user.Organization.ID())),
-		SiteID:         omitnull.From(site_id),
-		Type:           omit.From(lead_type),
-	}).One(ctx, txn)
-	_, err = psql.Update(
-		um.Table(psql.Quote("publicreport", "report")),
-		um.SetCol("reviewed").ToArg(time.Now()),
-		um.SetCol("reviewer_id").ToArg(user.ID),
-		um.SetCol("status").ToArg(enums.PublicreportReportstatustypeReviewed),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	).Exec(ctx, txn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update report %d: %w", report_id, err)
-	}
-	txn.Commit(ctx)
-
-	return &lead.ID, nil
-}
 func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
 	site, err := models.Sites.Query(
 		models.SelectWhere.Sites.AddressID.EQ(address_id),

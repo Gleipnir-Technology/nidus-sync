@@ -22,7 +22,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/leads", authenticatedHandlerJSONPost(postLeads))
 	r.Method("GET", "/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource))
 	r.Method("POST", "/publicreport/invalid", authenticatedHandlerJSONPost(postPublicreportInvalid))
-	r.Method("POST", "/publicreport/lead", authenticatedHandlerJSONPost(postPublicreportLead))
+	r.Method("POST", "/publicreport/signal", authenticatedHandlerJSONPost(postPublicreportSignal))
 	r.Method("POST", "/publicreport/message", authenticatedHandlerJSONPost(postPublicreportMessage))
 	r.Method("POST", "/review/pool", authenticatedHandlerJSONPost(postReviewPool))
 	r.Method("GET", "/review-task/pool", authenticatedHandlerJSON(listReviewTaskPool))

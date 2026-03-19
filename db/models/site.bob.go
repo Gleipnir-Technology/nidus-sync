@@ -57,6 +57,7 @@ type siteR struct {
 	Features    FeatureSlice    // feature.feature_site_id_fkey
 	Leads       LeadSlice       // lead.lead_site_id_fkey
 	Residents   ResidentSlice   // resident.resident_site_id_fkey
+	Signals     SignalSlice     // signal.signal_site_id_fkey
 	Address     *Address        // site.site_address_id_fkey
 	CreatorUser *User           // site.site_creator_id_fkey
 	File        *FileuploadFile // site.site_file_id_fkey
@@ -701,6 +702,30 @@ func (os SiteSlice) Residents(mods ...bob.Mod[*dialect.SelectQuery]) ResidentsQu
 	)...)
 }
 
+// Signals starts a query for related objects on signal
+func (o *Site) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.SiteID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os SiteSlice) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.SiteID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Address starts a query for related objects on address
 func (o *Site) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
 	return Addresses.Query(append(mods,
@@ -1001,6 +1026,74 @@ func (site0 *Site) AttachResidents(ctx context.Context, exec bob.Executor, relat
 	return nil
 }
 
+func insertSiteSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, site0 *Site) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].SiteID = omitnull.From(site0.ID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertSiteSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachSiteSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, site0 *Site) (SignalSlice, error) {
+	setter := &SignalSetter{
+		SiteID: omitnull.From(site0.ID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSiteSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (site0 *Site) InsertSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertSiteSignals0(ctx, exec, related, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Signals = append(site0.R.Signals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.Site = site0
+	}
+	return nil
+}
+
+func (site0 *Site) AttachSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachSiteSignals0(ctx, exec, len(related), signals1, site0)
+	if err != nil {
+		return err
+	}
+
+	site0.R.Signals = append(site0.R.Signals, signals1...)
+
+	for _, rel := range related {
+		rel.R.Site = site0
+	}
+
+	return nil
+}
+
 func attachSiteAddress0(ctx context.Context, exec bob.Executor, count int, site0 *Site, address1 *Address) (*Site, error) {
 	setter := &SiteSetter{
 		AddressID: omit.From(address1.ID),
@@ -1279,6 +1372,20 @@ func (o *Site) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Signals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("site cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Signals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Site = o
+			}
+		}
+		return nil
 	case "Address":
 		rel, ok := retrieved.(*Address)
 		if !ok {
@@ -1400,6 +1507,7 @@ type siteThenLoader[Q orm.Loadable] struct {
 	Features    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Leads       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Residents   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Address     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	File        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -1415,6 +1523,9 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 	}
 	type ResidentsLoadInterface interface {
 		LoadResidents(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SignalsLoadInterface interface {
+		LoadSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type AddressLoadInterface interface {
 		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1446,6 +1557,12 @@ func buildSiteThenLoader[Q orm.Loadable]() siteThenLoader[Q] {
 			"Residents",
 			func(ctx context.Context, exec bob.Executor, retrieved ResidentsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadResidents(ctx, exec, mods...)
+			},
+		),
+		Signals: thenLoadBuilder[Q](
+			"Signals",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSignals(ctx, exec, mods...)
 			},
 		),
 		Address: thenLoadBuilder[Q](
@@ -1655,6 +1772,70 @@ func (os SiteSlice) LoadResidents(ctx context.Context, exec bob.Executor, mods .
 			rel.R.Site = o
 
 			o.R.Residents = append(o.R.Residents, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSignals loads the site's Signals into the .R struct
+func (o *Site) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Signals = nil
+
+	related, err := o.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Site = o
+	}
+
+	o.R.Signals = related
+	return nil
+}
+
+// LoadSignals loads the site's Signals into the .R struct
+func (os SiteSlice) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Signals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !rel.SiteID.IsValue() {
+				continue
+			}
+			if !(rel.SiteID.IsValue() && o.ID == rel.SiteID.MustGet()) {
+				continue
+			}
+
+			rel.R.Site = o
+
+			o.R.Signals = append(o.R.Signals, rel)
 		}
 	}
 

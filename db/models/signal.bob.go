@@ -35,6 +35,7 @@ type Signal struct {
 	Species        null.Val[enums.Mosquitospecies] `db:"species" `
 	Title          string                          `db:"title" `
 	Type           enums.Signaltype                `db:"type_" `
+	SiteID         null.Val[int32]                 `db:"site_id" `
 
 	R signalR `db:"-" `
 }
@@ -54,12 +55,13 @@ type signalR struct {
 	AddressorUser *User         // signal.signal_addressor_fkey
 	CreatorUser   *User         // signal.signal_creator_fkey
 	Organization  *Organization // signal.signal_organization_id_fkey
+	Site          *Site         // signal.signal_site_id_fkey
 }
 
 func buildSignalColumns(alias string) signalColumns {
 	return signalColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "title", "type_",
+			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "title", "type_", "site_id",
 		).WithParent("signal"),
 		tableAlias:     alias,
 		Addressed:      psql.Quote(alias, "addressed"),
@@ -71,6 +73,7 @@ func buildSignalColumns(alias string) signalColumns {
 		Species:        psql.Quote(alias, "species"),
 		Title:          psql.Quote(alias, "title"),
 		Type:           psql.Quote(alias, "type_"),
+		SiteID:         psql.Quote(alias, "site_id"),
 	}
 }
 
@@ -86,6 +89,7 @@ type signalColumns struct {
 	Species        psql.Expression
 	Title          psql.Expression
 	Type           psql.Expression
+	SiteID         psql.Expression
 }
 
 func (c signalColumns) Alias() string {
@@ -109,10 +113,11 @@ type SignalSetter struct {
 	Species        omitnull.Val[enums.Mosquitospecies] `db:"species" `
 	Title          omit.Val[string]                    `db:"title" `
 	Type           omit.Val[enums.Signaltype]          `db:"type_" `
+	SiteID         omitnull.Val[int32]                 `db:"site_id" `
 }
 
 func (s SignalSetter) SetColumns() []string {
-	vals := make([]string, 0, 9)
+	vals := make([]string, 0, 10)
 	if !s.Addressed.IsUnset() {
 		vals = append(vals, "addressed")
 	}
@@ -139,6 +144,9 @@ func (s SignalSetter) SetColumns() []string {
 	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type_")
+	}
+	if !s.SiteID.IsUnset() {
+		vals = append(vals, "site_id")
 	}
 	return vals
 }
@@ -171,6 +179,9 @@ func (s SignalSetter) Overwrite(t *Signal) {
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
 	}
+	if !s.SiteID.IsUnset() {
+		t.SiteID = s.SiteID.MustGetNull()
+	}
 }
 
 func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
@@ -179,7 +190,7 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 9)
+		vals := make([]bob.Expression, 10)
 		if !s.Addressed.IsUnset() {
 			vals[0] = psql.Arg(s.Addressed.MustGetNull())
 		} else {
@@ -234,6 +245,12 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
+		if !s.SiteID.IsUnset() {
+			vals[9] = psql.Arg(s.SiteID.MustGetNull())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -243,7 +260,7 @@ func (s SignalSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 9)
+	exprs := make([]bob.Expression, 0, 10)
 
 	if !s.Addressed.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -305,6 +322,13 @@ func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "type_")...),
 			psql.Arg(s.Type),
+		}})
+	}
+
+	if !s.SiteID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "site_id")...),
+			psql.Arg(s.SiteID),
 		}})
 	}
 
@@ -606,6 +630,30 @@ func (os SignalSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 	)...)
 }
 
+// Site starts a query for related objects on site
+func (o *Signal) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	return Sites.Query(append(mods,
+		sm.Where(Sites.Columns.ID.EQ(psql.Arg(o.SiteID))),
+	)...)
+}
+
+func (os SignalSlice) Site(mods ...bob.Mod[*dialect.SelectQuery]) SitesQuery {
+	pkSiteID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkSiteID = append(pkSiteID, o.SiteID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkSiteID), "integer[]")),
+	))
+
+	return Sites.Query(append(mods,
+		sm.Where(psql.Group(Sites.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachSignalAddressorUser0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, user1 *User) (*Signal, error) {
 	setter := &SignalSetter{
 		Addressor: omitnull.From(user1.ID),
@@ -750,6 +798,54 @@ func (signal0 *Signal) AttachOrganization(ctx context.Context, exec bob.Executor
 	return nil
 }
 
+func attachSignalSite0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, site1 *Site) (*Signal, error) {
+	setter := &SignalSetter{
+		SiteID: omitnull.From(site1.ID),
+	}
+
+	err := signal0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSignalSite0: %w", err)
+	}
+
+	return signal0, nil
+}
+
+func (signal0 *Signal) InsertSite(ctx context.Context, exec bob.Executor, related *SiteSetter) error {
+	var err error
+
+	site1, err := Sites.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachSignalSite0(ctx, exec, 1, signal0, site1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.Site = site1
+
+	site1.R.Signals = append(site1.R.Signals, signal0)
+
+	return nil
+}
+
+func (signal0 *Signal) AttachSite(ctx context.Context, exec bob.Executor, site1 *Site) error {
+	var err error
+
+	_, err = attachSignalSite0(ctx, exec, 1, signal0, site1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.Site = site1
+
+	site1.R.Signals = append(site1.R.Signals, signal0)
+
+	return nil
+}
+
 type signalWhere[Q psql.Filterable] struct {
 	Addressed      psql.WhereNullMod[Q, time.Time]
 	Addressor      psql.WhereNullMod[Q, int32]
@@ -760,6 +856,7 @@ type signalWhere[Q psql.Filterable] struct {
 	Species        psql.WhereNullMod[Q, enums.Mosquitospecies]
 	Title          psql.WhereMod[Q, string]
 	Type           psql.WhereMod[Q, enums.Signaltype]
+	SiteID         psql.WhereNullMod[Q, int32]
 }
 
 func (signalWhere[Q]) AliasedAs(alias string) signalWhere[Q] {
@@ -777,6 +874,7 @@ func buildSignalWhere[Q psql.Filterable](cols signalColumns) signalWhere[Q] {
 		Species:        psql.WhereNull[Q, enums.Mosquitospecies](cols.Species),
 		Title:          psql.Where[Q, string](cols.Title),
 		Type:           psql.Where[Q, enums.Signaltype](cols.Type),
+		SiteID:         psql.WhereNull[Q, int32](cols.SiteID),
 	}
 }
 
@@ -822,6 +920,18 @@ func (o *Signal) Preload(name string, retrieved any) error {
 			rel.R.Signals = SignalSlice{o}
 		}
 		return nil
+	case "Site":
+		rel, ok := retrieved.(*Site)
+		if !ok {
+			return fmt.Errorf("signal cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Site = rel
+
+		if rel != nil {
+			rel.R.Signals = SignalSlice{o}
+		}
+		return nil
 	default:
 		return fmt.Errorf("signal has no relationship %q", name)
 	}
@@ -831,6 +941,7 @@ type signalPreloader struct {
 	AddressorUser func(...psql.PreloadOption) psql.Preloader
 	CreatorUser   func(...psql.PreloadOption) psql.Preloader
 	Organization  func(...psql.PreloadOption) psql.Preloader
+	Site          func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildSignalPreloader() signalPreloader {
@@ -874,6 +985,19 @@ func buildSignalPreloader() signalPreloader {
 				},
 			}, Organizations.Columns.Names(), opts...)
 		},
+		Site: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Site, SiteSlice](psql.PreloadRel{
+				Name: "Site",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Signals,
+						To:          Sites,
+						FromColumns: []string{"site_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Sites.Columns.Names(), opts...)
+		},
 	}
 }
 
@@ -881,6 +1005,7 @@ type signalThenLoader[Q orm.Loadable] struct {
 	AddressorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Site          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
@@ -892,6 +1017,9 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SiteLoadInterface interface {
+		LoadSite(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return signalThenLoader[Q]{
@@ -911,6 +1039,12 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+		Site: thenLoadBuilder[Q](
+			"Site",
+			func(ctx context.Context, exec bob.Executor, retrieved SiteLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSite(ctx, exec, mods...)
 			},
 		),
 	}
@@ -1068,6 +1202,61 @@ func (os SignalSlice) LoadOrganization(ctx context.Context, exec bob.Executor, m
 			rel.R.Signals = append(rel.R.Signals, o)
 
 			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadSite loads the signal's Site into the .R struct
+func (o *Signal) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Site = nil
+
+	related, err := o.Site(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Signals = SignalSlice{o}
+
+	o.R.Site = related
+	return nil
+}
+
+// LoadSite loads the signal's Site into the .R struct
+func (os SignalSlice) LoadSite(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	sites, err := os.Site(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range sites {
+			if !o.SiteID.IsValue() {
+				continue
+			}
+
+			if !(o.SiteID.IsValue() && o.SiteID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Signals = append(rel.R.Signals, o)
+
+			o.R.Site = rel
 			break
 		}
 	}

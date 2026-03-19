@@ -10,17 +10,20 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 )
 
-type formPublicreportLead struct {
+type formPublicreportSignal struct {
 	ReportID string `json:"reportID"`
 }
+type createdSignal struct {
+	ID int32 `json:"id"`
+}
 
-func postPublicreportLead(ctx context.Context, r *http.Request, user platform.User, req formPublicreportLead) (*createdLead, *nhttp.ErrorWithStatus) {
-	lead_id, err := platform.LeadCreateFromPublicreport(ctx, user, req.ReportID)
+func postPublicreportSignal(ctx context.Context, r *http.Request, user platform.User, req formPublicreportSignal) (*createdSignal, *nhttp.ErrorWithStatus) {
+	signal_id, err := platform.SignalCreateFromPublicreport(ctx, user, req.ReportID)
 	if err != nil {
-		return nil, nhttp.NewError("create lead: %w", err)
+		return nil, nhttp.NewError("create signal: %w", err)
 	}
-	return &createdLead{
-		ID: *lead_id,
+	return &createdSignal{
+		ID: *signal_id,
 	}, nil
 }
 
@@ -31,10 +34,10 @@ type createdReport struct {
 	URI string `json:"uri"`
 }
 
-func postPublicreportInvalid(ctx context.Context, r *http.Request, user platform.User, req formPublicreportLead) (*createdReport, *nhttp.ErrorWithStatus) {
+func postPublicreportInvalid(ctx context.Context, r *http.Request, user platform.User, req formPublicreportSignal) (*createdReport, *nhttp.ErrorWithStatus) {
 	err := platform.PublicreportInvalid(ctx, user, req.ReportID)
 	if err != nil {
-		return nil, nhttp.NewError("create lead: %w", err)
+		return nil, nhttp.NewError("create signal: %w", err)
 	}
 	return &createdReport{
 		URI: config.MakeURLNidus("/publicreport/%s", req.ReportID),
