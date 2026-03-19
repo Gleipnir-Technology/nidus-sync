@@ -88,6 +88,7 @@ const (
 	TypeRMONuisance
 	TypeRMOReport
 	TypeRMOWater
+	TypeSignal
 )
 
 func Created(t ResourceType, organization_id int32, uri_id string) {
@@ -127,6 +128,8 @@ func resourceString(t ResourceType) string {
 		return "rmo:report"
 	case TypeRMOWater:
 		return "rmo:water"
+	case TypeSignal:
+		return "sync:signal"
 	default:
 		return "unknown"
 	}
@@ -141,6 +144,8 @@ func makeURI(t ResourceType, id string) string {
 		return config.MakeURLReport("/report/%s", id)
 	case TypeRMOWater:
 		return config.MakeURLReport("/report/%s", id)
+	case TypeSignal:
+		return config.MakeURLReport("/signal/%s", id)
 	default:
 		return config.MakeURLReport("/unknown")
 	}

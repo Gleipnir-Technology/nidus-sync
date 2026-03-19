@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -13,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
@@ -118,6 +120,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to update report %d: %w", report_id, err)
 	}
+	event.Created(event.TypeSignal, user.Organization.ID(), strconv.Itoa(int(signal.ID)))
 	txn.Commit(ctx)
 
 	return &signal.ID, nil
