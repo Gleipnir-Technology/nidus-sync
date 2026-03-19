@@ -6,7 +6,7 @@
 		type="text/javascript"
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
-	<script src="/static/js/map-libre-test.js"></script>
+	<script src="/static/js/map-multipoint.js"></script>
 	<script>
 const CSV_FILE_ID={{.C.CSVFileID}};
 const ORG_ID={{.Organization.ID}};
@@ -26,7 +26,7 @@ function handleShowIssuesOnly() {
 	}
 }
 function onLoad() {
-	const map = document.querySelector("map-libre-test");
+	const map = document.querySelector("map-multipoint");
 	map.addEventListener("load", (event) => {
 		map.addSource('tegola-nidus', {
 			'type': 'vector',
@@ -108,16 +108,15 @@ document.addEventListener('DOMContentLoaded', onLoad);
 		</div>
 
 		<div class="card mb-4">
-			<map-libre-test
-				centroid="{{ if .Organization.ServiceAreaCentroidGeojson.IsValue }}
-					{{ .Organization.ServiceAreaCentroidGeojson.MustGet|json }}
-				{{ end }}"
+			<map-multipoint
+				id="map"
 				organization-id="{{ .Organization.ID }}"
-				xmin="{{ .Organization.ServiceAreaXmin.GetOr 0 }}"
-				ymin="{{ .Organization.ServiceAreaYmin.GetOr 0 }}"
-				xmax="{{ .Organization.ServiceAreaXmax.GetOr 0 }}"
-				ymax="{{ .Organization.ServiceAreaYmax.GetOr 0 }}"
-			></map-libre-test>
+				tegola="{{ .URL.Tegola }}"
+				xmin="{{ .Organization.ServiceArea.Min.X }}"
+				ymin="{{ .Organization.ServiceArea.Min.Y }}"
+				xmax="{{ .Organization.ServiceArea.Max.X }}"
+				ymax="{{ .Organization.ServiceArea.Max.Y }}"
+			></map-multipoint>
 		</div>
 		<div class="card mb-4">
 			<div
