@@ -106,6 +106,8 @@ func addWaitingJobs(ctx context.Context) error {
 }
 func handleJob(ctx context.Context, txn bob.Executor, job *models.Job) error {
 	switch job.Type {
+	case enums.JobtypeAudioTranscode:
+		return processAudioFile(ctx, txn, job.RowID)
 	case enums.JobtypeCSVCommit:
 		return csv.JobCommit(ctx, txn, job.RowID)
 	case enums.JobtypeCSVImport:

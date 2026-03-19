@@ -7,7 +7,7 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	//"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/subprocess"
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
@@ -33,6 +33,6 @@ func processAudioFile(ctx context.Context, txn bob.Executor, audio_id int32) err
 		return fmt.Errorf("failed to transcode audio %s to OGG: %v", a.UUID, err)
 	}
 
-	background.NewLabelStudioAudioCreate(ctx, db.PGInstance.BobDB, audio_id)
+	//background.NewLabelStudioAudioCreate(ctx, db.PGInstance.BobDB, audio_id)
 	return nil
 }
