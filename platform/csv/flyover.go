@@ -144,6 +144,7 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 	setter := models.FileuploadPoolSetter{
 		// required fields
 		//AddressLocality: omit.From(),
+		//AddressNumber: omit.From(),
 		//AddressPostalCode: omit.From(),
 		//AddressRegion: omit.From(),
 		//AddressStreet: omit.From(),
@@ -156,8 +157,9 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		Geom:      omitnull.FromPtr[string](nil),
 		H3cell:    omitnull.FromPtr[string](nil),
 		// ID - generated
-		IsInDistrict:           omit.From(false),
-		IsNew:                  omit.From(true),
+		IsInDistrict: omit.From(false),
+		// Calculated after we gather the address data
+		//IsNew:                  omit.From(true),
 		LineNumber:             omit.From(line_number),
 		Notes:                  omit.From(""),
 		PropertyOwnerName:      omit.From(""),
@@ -207,6 +209,11 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		}
 	}
 	setter.Tags = omit.From(db.ConvertToPGData(map[string]string{}))
+	is_existing, err := hasExistingPool(ctx, txn, &setter)
+	if err != nil {
+		return nil, fmt.Errorf("has existing pool: %w", err)
+	}
+	setter.IsNew = omit.From(!is_existing)
 	flyover, err := models.FileuploadPools.Insert(&setter).One(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create flyover: %w", err)
@@ -238,6 +245,26 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 		return nil, fmt.Errorf("failed to update flyover geometry: %w", err)
 	}
 	return flyover, nil
+}
+func hasExistingPool(ctx context.Context, txn bob.Executor, setter *models.FileuploadPoolSetter) (bool, error) {
+	exists, err := models.Addresses.Query(
+		models.SelectWhere.Addresses.Locality.EQ(setter.AddressLocality.GetOr("")),
+		models.SelectWhere.Addresses.Number.EQ(setter.AddressNumber.GetOr("")),
+		models.SelectWhere.Addresses.PostalCode.EQ(setter.AddressPostalCode.GetOr("")),
+		//models.SelectWhere.Addresses.Region.EQ(setter.AddressRegion.GetOr("")),
+		models.SelectWhere.Addresses.Street.EQ(setter.AddressStreet.GetOr("")),
+	).Exists(ctx, txn)
+	if err != nil {
+		return false, fmt.Errorf("query address: %w", err)
+	}
+	log.Debug().
+		Str("number", setter.AddressNumber.GetOr("")).
+		Str("postal_code", setter.AddressPostalCode.GetOr("")).
+		Str("region", setter.AddressRegion.GetOr("")).
+		Str("street", setter.AddressStreet.GetOr("")).
+		Str("locality", setter.AddressLocality.GetOr("")).
+		Bool("exists", exists).Msg("checking pool exists")
+	return exists, nil
 }
 func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerFlyoverEnum, header_names []string, row []string) (*models.FileuploadPool, error) {
 	tags := make(map[string]string, 0)

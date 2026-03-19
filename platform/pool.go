@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 )
 
 type UploadPoolDetail struct {
@@ -28,14 +29,11 @@ type UploadPoolError struct {
 	Message string
 }
 type UploadPoolRow struct {
-	Condition  string
-	Errors     []UploadPoolError
-	Locality   string
-	PostalCode string
-	Region     string
-	Status     string
-	Street     string
-	Tags       map[string]string
+	Address   types.Address
+	Condition string
+	Errors    []UploadPoolError
+	Status    string
+	Tags      map[string]string
 }
 type Upload struct {
 	Created time.Time `db:"created"`
@@ -97,14 +95,18 @@ func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (
 			errors = []UploadPoolError{}
 		}
 		pools = append(pools, UploadPoolRow{
-			Condition:  r.Condition.String(),
-			Errors:     errors,
-			Locality:   r.AddressLocality,
-			PostalCode: r.AddressPostalCode,
-			Region:     r.AddressRegion,
-			Status:     status,
-			Street:     r.AddressStreet,
-			Tags:       tags,
+			Address: types.Address{
+				Country:    "usa",
+				Locality:   r.AddressLocality,
+				Number:     r.AddressNumber,
+				PostalCode: r.AddressPostalCode,
+				Region:     r.AddressRegion,
+				Street:     r.AddressStreet,
+			},
+			Condition: r.Condition.String(),
+			Errors:    errors,
+			Status:    status,
+			Tags:      tags,
 		})
 	}
 	return UploadPoolDetail{

@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 						<strong>Error:</strong>{{ .Message }}
 					</div>
 				{{ end }}
-				{{ if eq .C.Upload.Status "uploaded" }}
+				{{ if (or (eq .C.Upload.Status "uploaded") (eq .C.Upload.Status "parsing")) }}
 					<div class="alert alert-info" role="alert">
 						<i class="bi bi-exclamation-triangle me-2"></i>
 						<strong>Working:</strong> File is still processing... refresh this
@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', onLoad);
 								<thead class="table-light">
 									<tr class="header">
 										<th></th>
+										<th>Number</th>
 										<th>Street</th>
 										<th>City</th>
 										<th>Post</th>
@@ -169,9 +170,10 @@ document.addEventListener('DOMContentLoaded', onLoad);
 												{{ end }}
 											</td>
 
-											<td>{{ .Street }}</td>
-											<td>{{ .Locality }}</td>
-											<td>{{ .PostalCode }}</td>
+											<td>{{ .Address.Number }}</td>
+											<td>{{ .Address.Street }}</td>
+											<td>{{ .Address.Locality }}</td>
+											<td>{{ .Address.PostalCode }}</td>
 											<td>
 												<span class="badge status {{ .Status }}"
 													>{{ .Status|title }}</span

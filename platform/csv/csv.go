@@ -17,6 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/Gleipnir-Technology/nidus-sync/h3utils"
@@ -33,6 +34,7 @@ type csvParserFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile
 type csvProcessorFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV, []T) error
 
 func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
+	log.Debug().Int32("file_id", file_id).Msg("begin job commit")
 	file, err := models.FindFileuploadFile(ctx, txn, file_id)
 	if err != nil {
 		return fmt.Errorf("Failed to get csv file %d from DB: %w", file_id, err)
@@ -166,9 +168,16 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 	if err != nil {
 		return fmt.Errorf("update file status to committed: %w", err)
 	}
+	event.Updated(event.TypeFileCSV, file.OrganizationID, strconv.Itoa(int(file.ID)))
 	return nil
 }
 func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
+	file, err := models.FileuploadFiles.Query(
+		models.SelectWhere.FileuploadFiles.ID.EQ(file_id),
+	).One(ctx, txn)
+	if err != nil {
+		return fmt.Errorf("find file: %w", err)
+	}
 	csv, err := models.FileuploadCSVS.Query(
 		models.SelectWhere.FileuploadCSVS.FileID.EQ(file_id),
 	).One(ctx, txn)
@@ -192,6 +201,7 @@ func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
 			log.Error().Err(err).Msg("Failed to set upload to error status")
 		}
 	}
+	event.Updated(event.TypeFileCSV, file.OrganizationID, strconv.Itoa(int(file.ID)))
 	return nil
 }
 

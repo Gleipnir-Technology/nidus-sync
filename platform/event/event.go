@@ -72,6 +72,7 @@ type ResourceType int
 
 const (
 	TypeUnknown = iota
+	TypeFileCSV
 	TypeRMONuisance
 	TypeRMOReport
 	TypeRMOWater
@@ -104,6 +105,8 @@ func Send(env Envelope) {
 }
 func resourceString(t ResourceType) string {
 	switch t {
+	case TypeFileCSV:
+		return "sync:filecsv"
 	case TypeRMONuisance:
 		return "rmo:nuisance"
 	case TypeRMOReport:
@@ -116,6 +119,8 @@ func resourceString(t ResourceType) string {
 }
 func makeURI(t ResourceType, id string) string {
 	switch t {
+	case TypeFileCSV:
+		return config.MakeURLNidus("/upload/%s", id)
 	case TypeRMONuisance:
 		return config.MakeURLReport("/report/%s", id)
 	case TypeRMOWater:
