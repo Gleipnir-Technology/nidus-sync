@@ -276,6 +276,11 @@
 				updateMap() {
 					const map = document.querySelector("map-multipoint");
 					const loc = this.selectedCommunication.public_report.location;
+					if (loc == null) {
+						map.ClearMarkers();
+						map.ResetCamera();
+						return;
+					}
 					let markers = [
 						new maplibregl.Marker({
 							color: "#FF0000",

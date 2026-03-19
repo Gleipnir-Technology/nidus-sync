@@ -18,19 +18,19 @@ import (
 )
 
 type Report struct {
-	Log        []LogEntry     `db:"-" json:"log"`
-	Address    types.Address  `db:"address" json:"address"`
-	AddressRaw string         `db:"address_raw" json:"address_raw"`
-	Created    time.Time      `db:"created" json:"created"`
-	ID         int32          `db:"id" json:"-"`
-	Images     []types.Image  `db:"images" json:"images"`
-	Location   types.Location `db:"location" json:"location"`
-	Nuisance   *Nuisance      `db:"nuisance" json:"nuisance"`
-	PublicID   string         `db:"public_id" json:"public_id"`
-	Reporter   types.Contact  `db:"reporter" json:"reporter"`
-	Status     string         `db:"status" json:"status"`
-	Type       string         `db:"report_type" json:"type"`
-	Water      *Water         `db:"water" json:"water"`
+	Log        []LogEntry      `db:"-" json:"log"`
+	Address    types.Address   `db:"address" json:"address"`
+	AddressRaw string          `db:"address_raw" json:"address_raw"`
+	Created    time.Time       `db:"created" json:"created"`
+	ID         int32           `db:"id" json:"-"`
+	Images     []types.Image   `db:"images" json:"images"`
+	Location   *types.Location `db:"location" json:"location"`
+	Nuisance   *Nuisance       `db:"nuisance" json:"nuisance"`
+	PublicID   string          `db:"public_id" json:"public_id"`
+	Reporter   types.Contact   `db:"reporter" json:"reporter"`
+	Status     string          `db:"status" json:"status"`
+	Type       string          `db:"report_type" json:"type"`
+	Water      *Water          `db:"water" json:"water"`
 }
 
 func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error) {
@@ -45,8 +45,8 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error
 			"address_street AS \"address.street\"",
 			"created",
 			"id",
-			"ST_Y(location::geometry::geometry(point, 4326)) AS \"location.latitude\"",
-			"ST_X(location::geometry::geometry(point, 4326)) AS \"location.longitude\"",
+			"COALESCE(ST_Y(location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
+			"COALESCE(ST_X(location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
 			"public_id",
 			"report_type",
 			"reporter_email AS \"reporter.email\"",
@@ -94,6 +94,9 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error
 		row.Log = logs_by_report_id[row.ID]
 		row.Nuisance = nuisances_by_report_id[row.ID]
 		row.Water = waters_by_report_id[row.ID]
+		if row.Location.Latitude == 0.0 || row.Location.Longitude == 0.0 {
+			row.Location = nil
+		}
 		results[i] = &row
 	}
 	return results, nil

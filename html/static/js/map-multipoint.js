@@ -28,11 +28,7 @@ class MapMultipoint extends HTMLElement {
 			this._map.remove();
 		}
 	}
-
-	_initializeMap() {
-		const centroid = JSON.parse(this.getAttribute("centroid"));
-		const organization_id = Number(this.getAttribute("organization-id") || 0);
-		const tegola = this.getAttribute("tegola");
+	_bounds() {
 		const xmin = parseFloat(this.getAttribute("xmin"));
 		const ymin = parseFloat(this.getAttribute("ymin"));
 		const xmax = parseFloat(this.getAttribute("xmax"));
@@ -47,6 +43,12 @@ class MapMultipoint extends HTMLElement {
 				[-70, 50],
 			];
 		}
+		return bounds;
+	}
+	_initializeMap() {
+		const bounds = this._bounds();
+		const organization_id = Number(this.getAttribute("organization-id") || 0);
+		const tegola = this.getAttribute("tegola");
 
 		const mapElement = this.shadowRoot.querySelector("#map");
 		this._map = new maplibregl.Map({
@@ -129,8 +131,18 @@ class MapMultipoint extends HTMLElement {
 		return this._map.queryRenderedFeatures(a);
 	}
 
+	ClearMarkers() {
+		this._markers.forEach((marker) => marker.remove());
+	}
 	FitBounds(bounds, options) {
 		return this._map.fitBounds(bounds, options);
+	}
+	// Reset the view back to whatever the html properties define
+	ResetCamera() {
+		const bounds = this._bounds();
+		this.FitBounds(bounds, {
+			linear: false,
+		});
 	}
 	SetLayoutProperty(layout, property, value) {
 		return this._map.setLayoutProperty(layout, property, value);
