@@ -33,6 +33,7 @@ type NoteImage struct {
 	OrganizationID int32               `db:"organization_id" `
 	Version        int32               `db:"version,pk" `
 	UUID           uuid.UUID           `db:"uuid,pk" `
+	ID             int32               `db:"id,generated" `
 
 	R noteImageR `db:"-" `
 }
@@ -59,7 +60,7 @@ type noteImageR struct {
 func buildNoteImageColumns(alias string) noteImageColumns {
 	return noteImageColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "deleted", "deletor_id", "organization_id", "version", "uuid",
+			"created", "creator_id", "deleted", "deletor_id", "organization_id", "version", "uuid", "id",
 		).WithParent("note_image"),
 		tableAlias:     alias,
 		Created:        psql.Quote(alias, "created"),
@@ -69,6 +70,7 @@ func buildNoteImageColumns(alias string) noteImageColumns {
 		OrganizationID: psql.Quote(alias, "organization_id"),
 		Version:        psql.Quote(alias, "version"),
 		UUID:           psql.Quote(alias, "uuid"),
+		ID:             psql.Quote(alias, "id"),
 	}
 }
 
@@ -82,6 +84,7 @@ type noteImageColumns struct {
 	OrganizationID psql.Expression
 	Version        psql.Expression
 	UUID           psql.Expression
+	ID             psql.Expression
 }
 
 func (c noteImageColumns) Alias() string {
@@ -920,6 +923,7 @@ type noteImageWhere[Q psql.Filterable] struct {
 	OrganizationID psql.WhereMod[Q, int32]
 	Version        psql.WhereMod[Q, int32]
 	UUID           psql.WhereMod[Q, uuid.UUID]
+	ID             psql.WhereMod[Q, int32]
 }
 
 func (noteImageWhere[Q]) AliasedAs(alias string) noteImageWhere[Q] {
@@ -935,6 +939,7 @@ func buildNoteImageWhere[Q psql.Filterable](cols noteImageColumns) noteImageWher
 		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
 		Version:        psql.Where[Q, int32](cols.Version),
 		UUID:           psql.Where[Q, uuid.UUID](cols.UUID),
+		ID:             psql.Where[Q, int32](cols.ID),
 	}
 }
 

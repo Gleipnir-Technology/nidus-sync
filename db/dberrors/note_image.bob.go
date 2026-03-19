@@ -10,8 +10,17 @@ var NoteImageErrors = &noteImageErrors{
 		columns: []string{"version", "uuid"},
 		s:       "note_image_pkey",
 	},
+
+	ErrUniqueNoteImageIdUnique: &UniqueConstraintError{
+		schema:  "",
+		table:   "note_image",
+		columns: []string{"id"},
+		s:       "note_image_id_unique",
+	},
 }
 
 type noteImageErrors struct {
 	ErrUniqueNoteImagePkey *UniqueConstraintError
+
+	ErrUniqueNoteImageIdUnique *UniqueConstraintError
 }

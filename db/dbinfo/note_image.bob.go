@@ -78,6 +78,15 @@ var NoteImages = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "IDENTITY",
+			Comment:   "",
+			Nullable:  false,
+			Generated: true,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: noteImageIndexes{
 		NoteImagePkey: index{
@@ -98,6 +107,23 @@ var NoteImages = Table[
 			Unique:        true,
 			Comment:       "",
 			NullsFirst:    []bool{false, false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
+		NoteImageIDUnique: index{
+			Type: "btree",
+			Name: "note_image_id_unique",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
 			NullsDistinct: false,
 			Where:         "",
 			Include:       []string{},
@@ -137,6 +163,13 @@ var NoteImages = Table[
 			ForeignColumns: []string{"id"},
 		},
 	},
+	Uniques: noteImageUniques{
+		NoteImageIDUnique: constraint{
+			Name:    "note_image_id_unique",
+			Columns: []string{"id"},
+			Comment: "",
+		},
+	},
 
 	Comment: "",
 }
@@ -149,21 +182,23 @@ type noteImageColumns struct {
 	OrganizationID column
 	Version        column
 	UUID           column
+	ID             column
 }
 
 func (c noteImageColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.Deleted, c.DeletorID, c.OrganizationID, c.Version, c.UUID,
+		c.Created, c.CreatorID, c.Deleted, c.DeletorID, c.OrganizationID, c.Version, c.UUID, c.ID,
 	}
 }
 
 type noteImageIndexes struct {
-	NoteImagePkey index
+	NoteImagePkey     index
+	NoteImageIDUnique index
 }
 
 func (i noteImageIndexes) AsSlice() []index {
 	return []index{
-		i.NoteImagePkey,
+		i.NoteImagePkey, i.NoteImageIDUnique,
 	}
 }
 
@@ -179,10 +214,14 @@ func (f noteImageForeignKeys) AsSlice() []foreignKey {
 	}
 }
 
-type noteImageUniques struct{}
+type noteImageUniques struct {
+	NoteImageIDUnique constraint
+}
 
 func (u noteImageUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.NoteImageIDUnique,
+	}
 }
 
 type noteImageChecks struct{}

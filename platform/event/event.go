@@ -84,6 +84,8 @@ type ResourceType int
 const (
 	TypeUnknown = iota
 	TypeFileCSV
+	TypeNoteAudio
+	TypeNoteImage
 	TypeReviewTask
 	TypeRMONuisance
 	TypeRMOReport
@@ -120,6 +122,10 @@ func resourceString(t ResourceType) string {
 	switch t {
 	case TypeFileCSV:
 		return "sync:filecsv"
+	case TypeNoteAudio:
+		return "sync:note:audio"
+	case TypeNoteImage:
+		return "sync:note:image"
 	case TypeReviewTask:
 		return "sync:review_task"
 	case TypeRMONuisance:
@@ -138,6 +144,10 @@ func makeURI(t ResourceType, id string) string {
 	switch t {
 	case TypeFileCSV:
 		return config.MakeURLNidus("/upload/%s", id)
+	case TypeNoteAudio:
+		return config.MakeURLNidus("/note/%s", id)
+	case TypeNoteImage:
+		return config.MakeURLNidus("/note/%s", id)
 	case TypeReviewTask:
 		return config.MakeURLNidus("/review/%s", id)
 	case TypeRMONuisance:
