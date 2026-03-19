@@ -84,6 +84,16 @@
 				>
 					<div class="menu-icon">{{ template "review.svg" }}</div>
 					<span class="menu-text ms-2">Review</span>
+					<span
+						x-show="notification_counts.review > 0"
+						x-cloak
+						class="position-absolute translate-middle badge rounded-pill bg-primary"
+					>
+						<span
+							x-text="notification_counts.reviwe > 99 ? '99+' : notification_counts.review"
+						></span>
+						<span class="visually-hidden">unread notifications</span>
+					</span>
 				</a>
 			</li>
 			<li>
