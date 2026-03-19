@@ -186,7 +186,7 @@ func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
 			log.Error().Err(err).Msg("Failed to set upload to error status")
 		}
 	}
-	return err
+	return nil
 }
 
 func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T], processor csvProcessorFunc[T]) error {
