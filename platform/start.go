@@ -91,7 +91,7 @@ func addWaitingJobs(ctx context.Context) error {
 			}
 			err = handleJob(ctx, txn, job)
 			if err != nil {
-				log.Error().Err(err).Msg("failed begin txn")
+				log.Error().Err(err).Msg("failed handle job")
 				return
 			}
 			err = job.Delete(ctx, txn)
