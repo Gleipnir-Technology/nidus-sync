@@ -53,7 +53,11 @@
 			async function updateUserState() {
 				const response = await fetch("/api/user");
 				const data = await response.json();
-				Alpine.store("user", data);
+				// Update properties instead of replacing the whole store which leverages Alpine's reactivity
+				const store_user = Alpine.store("user");
+				Object.keys(data).forEach(key => {
+					store_user[key] = data[key];
+				});
 			}
 			document.addEventListener("DOMContentLoaded", function () {
 				var popoverTriggerList = [].slice.call(
