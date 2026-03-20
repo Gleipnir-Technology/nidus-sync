@@ -100,7 +100,7 @@
 						}
 
 						const data = await response.json();
-						this.communications = data.communications || data; // Handle different response formats
+						this.communications = data.communications;
 						// if we already had something selected, reset it using the new data
 						if (this.selectedCommunication) {
 							const matching = this.communications.filter((report) => {
