@@ -88,15 +88,15 @@ function onLoad() {
 		});
 		map.addLayer({
 			'id': 'rmo_water',
-			'source': 'tegola',
-			'source-layer': 'water_location',
-			'type': 'circle',
 			'paint': {
 				'circle-color': "#0D6EfD",
 				'circle-radius': 7,
 				'circle-stroke-width': 2,
-				'circle-stroke-color': "#024AB6"
+				'circle-stroke-color': "#024AB6",
 			}
+			'source': 'tegola',
+			'source-layer': 'water_location',
+			'type': 'circle',
 		});
 		map.on("idle", () => {
 			function _addCheckboxClick(checkbox, layer_id) {

@@ -84,6 +84,58 @@
 								"source-layer": "parcel",
 								type: "line",
 							});
+							map.addLayer({
+								id: "pools",
+								paint: {
+									"circle-color": "#0D6EfD",
+									"circle-radius": 7,
+									"circle-stroke-width": 2,
+									"circle-stroke-color": "#024AB6",
+								},
+								source: "tegola",
+								"source-layer": "feature-pool",
+								type: "circle",
+							});
+							// Create a popup, but don't add it to the map yet.
+							const popup = new maplibregl.Popup({
+								closeButton: false,
+								closeOnClick: false,
+							});
+							// Make sure to detect marker change for overlapping markers
+							// and use mousemove instead of mouseenter event
+							let current_feature_coordinates = undefined;
+							map.on("mousemove", "pools", (e) => {
+								const feature_coordinates =
+									e.features[0].geometry.coordinates.toString();
+								if (current_feature_coordinates !== feature_coordinates) {
+									current_feature_coordinates = feature_coordinates;
+
+									// change the cursor style as a UI indicator
+									map.getCanvas().style.cursor = "pointer";
+
+									const coordinates =
+										e.features[0].geometry.coordinates.slice();
+									const condition = e.features[0].properties.condition;
+
+									// Ensure that if the map is zoomed way out so we have multiple
+									// copies from the globe wrapping that the popup appears over
+									// they copy we are actually hovering over
+									while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+										coordinates[0] +=
+											e.lngLat.lng > coordinates[0] ? 360 : -360;
+									}
+									// Populate the popup, set its coordinates
+									popup
+										.setLngLat(coordinates)
+										.setHTML(condition)
+										.addTo(map._map);
+								}
+							});
+							map.on("mouseleave", "pools", () => {
+								current_feature_coordinates = undefined;
+								map.getCanvas().style.cursor = "";
+								popup.remove();
+							});
 						});
 					});
 					await this.fetchTasks();

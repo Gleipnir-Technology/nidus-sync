@@ -83,7 +83,7 @@ class MapMultipoint extends HTMLElement {
 			});
 		});
 		for (const on of this._preOns) {
-			this._map.on(on.a, on.b);
+			this._map.on(...on);
 		}
 	}
 
@@ -111,14 +111,20 @@ class MapMultipoint extends HTMLElement {
 	flyTo(a, b) {
 		return this._map.flyTo(a, b);
 	}
+	getCanvas(...args) {
+		return this._map.getCanvas(...args);
+	}
+	getContainer(...args) {
+		return this._map.getContainer(...args);
+	}
 	jumpTo(args) {
 		return this._map.jumpTo(args);
 	}
-	on(a, b) {
+	on(...args) {
 		if (this._map != null) {
-			return this._map.on(a, b);
+			return this._map.on(...args);
 		} else {
-			this._preOns.push({ a: a, b: b });
+			this._preOns.push(args);
 		}
 	}
 	once(a, b) {
