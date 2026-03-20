@@ -15,7 +15,6 @@ GRANT SELECT ON address TO "tegola";
 GRANT SELECT ON feature TO "tegola";
 GRANT SELECT ON feature_pool TO "tegola";
 GRANT SELECT ON fileupload.pool TO "tegola";
-GRANT SELECT ON signal_pool TO "tegola";
 GRANT SELECT ON h3_aggregation to "tegola";
 GRANT SELECT ON organization TO "tegola";
 GRANT SELECT ON publicreport.report TO "tegola";
