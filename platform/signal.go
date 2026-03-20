@@ -68,7 +68,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
-		lat := address.LocationX.GetOr(0.0)
+		lat := address.LocationY.GetOr(0.0)
 		lng := address.LocationX.GetOr(0.0)
 		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
 	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
@@ -95,7 +95,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 			return nil, fmt.Errorf("find address from raw: %w", err)
 		}
 		site_id = site.ID
-		lat := address.LocationX.GetOr(0.0)
+		lat := address.LocationY.GetOr(0.0)
 		lng := address.LocationX.GetOr(0.0)
 		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
 	} else {
