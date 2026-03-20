@@ -126,8 +126,8 @@
 					}
 				},
 				// Methods
-				selectCommunication(report) {
-					this.selectedCommunication = report;
+				selectCommunication(comm) {
+					this.selectedCommunication = comm;
 					this.messageText = "";
 					this.updateMap();
 				},
@@ -541,8 +541,8 @@
 
 								<!-- Nuisance-specific Fields -->
 								<template
-									x-if="selectedCommunication.type === 'publicreport.nuisance'"
-									x-data="selectedCommunication.public_report.nuisance"
+									x-if="selectedCommunication.type === 'publicreport.nuisance' && selectedCommunication.public_report?.nuisance != null"
+									x-data="selectedCommunication.public_report.nuisance ?? {}"
 								>
 									<div class="card mb-3">
 										<div class="card-header bg-danger bg-opacity-10">
