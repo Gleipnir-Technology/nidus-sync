@@ -124,7 +124,7 @@ func NotificationCountsForUser(ctx context.Context, u User) (*UserNotificationCo
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get review notification count: %w", err)
 	}
-	log.Debug().Int64("reports", count_reports).Int64("home", count_home).Int64("review", count_review).Int("user", u.ID).Msg("calculated notification counts")
+	//log.Debug().Int64("reports", count_reports).Int64("home", count_home).Int64("review", count_review).Int("user", u.ID).Msg("calculated notification counts")
 	return &UserNotificationCounts{
 		Communications: uint(count_reports),
 		Home:           uint(count_home),

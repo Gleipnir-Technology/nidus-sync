@@ -533,7 +533,7 @@ func periodicallyExportFieldseeker(ctx context.Context, org *models.Organization
 				return fmt.Errorf("Failed to get oauth for org: %w", err)
 			}
 			if oa == nil {
-				log.Debug().Int32("org.id", org.ID).Msg("No oauth for org")
+				//log.Debug().Int32("org.id", org.ID).Msg("No oauth for org")
 				continue
 			}
 			fssync, err := newFieldSeeker(ctx, oa)
