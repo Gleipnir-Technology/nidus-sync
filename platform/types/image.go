@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -41,7 +42,7 @@ type Image struct {
 	ExifMake                 string    `db:"exif_make" json:"-"`
 	ExifModel                string    `db:"exif_model" json:"-"`
 	ExifDateTime             string    `db:"exif_datetime" json:"-"`
-	Location                 Location  `db:"location"`
+	Location                 *Location `db:"location"`
 	ReportID                 int32     `db:"report_id" json:"-"`
 	URLContent               string    `db:"-" json:"url_content"`
 	UUID                     uuid.UUID `db:"uuid"`
@@ -49,13 +50,21 @@ type Image struct {
 
 func (i *Image) MarshalJSON() ([]byte, error) {
 	to_marshal := make(map[string]interface{}, 0)
-	to_marshal["distance_from_reporter_meters"] = i.DistanceToReporterMeters
+	if i.DistanceToReporterMeters != nil && math.IsNaN(*i.DistanceToReporterMeters) {
+		to_marshal["distance_from_reporter_meters"] = nil
+	} else {
+		to_marshal["distance_from_reporter_meters"] = i.DistanceToReporterMeters
+	}
 	to_marshal["exif"] = Exif{
 		Created: i.ExifDateTime,
 		Make:    i.ExifMake,
 		Model:   i.ExifModel,
 	}
-	to_marshal["location"] = i.Location
+	if math.IsNaN(i.Location.Latitude) || math.IsNaN(i.Location.Longitude) {
+		to_marshal["location"] = nil
+	} else {
+		to_marshal["location"] = i.Location
+	}
 	//to_marshal["report_id"] = i.ReportID
 	to_marshal["url_content"] = config.MakeURLNidus("/api/image/%s/content", i.UUID.String())
 	to_marshal["uuid"] = i.UUID
