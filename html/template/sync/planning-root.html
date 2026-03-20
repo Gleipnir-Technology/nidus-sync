@@ -81,6 +81,11 @@
 				init() {
 					this.loadData();
 					document.addEventListener("DOMContentLoaded", () => {
+						SSEManager.subscribe("*", (e) => {
+							if (e.resource == "sync:signal") {
+								this.loadData();
+							}
+						});
 						const map = document.querySelector("map-multipoint");
 						map.on("load", () => {
 							map.addLayer({
