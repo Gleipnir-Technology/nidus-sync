@@ -125,6 +125,10 @@
 						console.error("Error loading data:", err);
 					}
 				},
+				nuisance() {
+					return this.selectedCommunication?.public_report?.nuisance;
+				},
+
 				// Methods
 				selectCommunication(comm) {
 					this.selectedCommunication = comm;
@@ -317,6 +321,9 @@
 					map.FitBounds(bounds, {
 						padding: 50,
 					});
+				},
+				water() {
+					return this.selectedCommunication?.public_report?.water;
 				},
 			};
 		}
@@ -536,17 +543,14 @@
 												</template>
 											</div>
 										</div>
-										<template
-											x-if="selectedCommunication.type === 'publicreport.water' && selectedCommunication.public_report?.water != null"
-											x-data="selectedCommunication.public_report.water ?? {}"
-										>
+										<template x-if="water() != null">
 											<div class="row g-3">
 												<div class="col-12">
 													<ul>
-														<template x-if="is_reporter_owner">
+														<template x-if="water()?.is_reporter_owner">
 															<li>Reporter is the owner of the property</li>
 														</template>
-														<template x-if="is_reporter_confidential">
+														<template x-if="water()?.is_reporter_confidential">
 															<li>
 																Reporter has asked to be kept confidential
 															</li>
@@ -559,10 +563,7 @@
 								</div>
 
 								<!-- Nuisance-specific Fields -->
-								<template
-									x-if="selectedCommunication.type === 'publicreport.nuisance' && selectedCommunication.public_report?.nuisance != null"
-									x-data="selectedCommunication.public_report.nuisance ?? {}"
-								>
+								<template x-if="nuisance() != null">
 									<div class="card mb-3">
 										<div class="card-header bg-danger bg-opacity-10">
 											<i class="bi bi-exclamation-triangle"></i> Nuisance
@@ -575,16 +576,16 @@
 														<i class="bi bi-clock"></i> Time of Day Encountered
 													</label>
 													<ul>
-														<template x-if="time_of_day_early">
+														<template x-if="nuisance()?.time_of_day_early">
 															<li>Early</li>
 														</template>
-														<template x-if="time_of_day_day">
+														<template x-if="nuisance()?.time_of_day_day">
 															<li>Daytime</li>
 														</template>
-														<template x-if="time_of_day_evening">
+														<template x-if="nuisance()?.time_of_day_evening">
 															<li>Evening</li>
 														</template>
-														<template x-if="time_of_day_night">
+														<template x-if="nuisance()?.time_of_day_night">
 															<li>Night</li>
 														</template>
 													</ul>
@@ -595,52 +596,54 @@
 													</label>
 													<div>
 														<ul>
-															<template x-if="is_location_backyard">
+															<template x-if="nuisance()?.is_location_backyard">
 																<li>Backyard</li>
 															</template>
-															<template x-if="is_location_frontyard">
+															<template
+																x-if="nuisance()?.is_location_frontyard"
+															>
 																<li>Frontyard</li>
 															</template>
-															<template x-if="is_location_garden">
+															<template x-if="nuisance()?.is_location_garden">
 																<li>Garden</li>
 															</template>
-															<template x-if="is_location_other">
+															<template x-if="nuisance()?.is_location_other">
 																<li>Other</li>
 															</template>
-															<template x-if="is_location_pool">
+															<template x-if="nuisance()?.is_location_pool">
 																<li>Pool</li>
 															</template>
 														</ul>
 													</div>
 												</div>
 												<template
-													x-if="source_container || source_gutter || source_stagnant"
+													x-if="nuisance()?.source_container || nuisance()?.source_gutter || nuisance()?.source_stagnant"
 												>
 													<div class="col-md-6">
 														<label class="form-label text-muted small mb-0">
 															<i class="bi bi-droplet"></i> Sources
 														</label>
 														<ul>
-															<template x-if="source_container">
+															<template x-if="nuisance()?.source_container">
 																<li>Container</li>
 															</template>
-															<template x-if="source_gutter">
+															<template x-if="nuisance()?.source_gutter">
 																<li>Gutter</li>
 															</template>
-															<template x-if="source_stagnant">
+															<template x-if="nuisance()?.source_stagnant">
 																<li>Sprinklers & Gutters</li>
 															</template>
 														</ul>
 													</div>
 												</template>
-												<template x-if="source_description != ''">
+												<template x-if="nuisance()?.source_description != ''">
 													<div class="col-12">
 														<label class="form-label text-muted small mb-0">
 															<i class="bi bi-chat-text"></i> Source Description
 														</label>
 														<div
 															class="p-2 bg-light rounded"
-															x-text="source_description || 'none'"
+															x-text="nuisance()?.source_description || 'none'"
 														></div>
 													</div>
 												</template>
@@ -650,7 +653,7 @@
 													</label>
 													<div
 														class="p-2 bg-light rounded"
-														x-text="duration"
+														x-text="nuisance()?.duration"
 													></div>
 												</div>
 												<div class="col-12">
@@ -659,7 +662,7 @@
 													</label>
 													<div
 														class="p-2 bg-light rounded"
-														x-text="additional_info || 'No additional notes'"
+														x-text="nuisance()?.additional_info || 'No additional notes'"
 													></div>
 												</div>
 											</div>
