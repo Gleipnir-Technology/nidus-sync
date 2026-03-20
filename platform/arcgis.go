@@ -264,22 +264,9 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
 	}
-	txn.Commit(ctx)
-	// At this point we have the arcgis ID. If the ID matches an existing ID, join it with the users organization
-	orgs, err := models.Organizations.Query(
-		sm.Where(
-			psql.Quote("arcgis_account_id").EQ(psql.Arg(ag_user.OrgID)),
-		),
-	).All(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		log.Error().Err(err).Str("arcgis_id", ag_user.OrgID).Msg("Failed to search for organization with arcgis id")
-		return
-	}
-	var org *models.Organization
-	switch len(orgs) {
-	case 0:
-		org = user.R.Organization
-		err = org.Update(ctx, db.PGInstance.BobDB, &models.OrganizationSetter{
+	org := user.R.Organization
+	if org.ArcgisAccountID.IsNull() {
+		err = org.Update(ctx, txn, &models.OrganizationSetter{
 			ArcgisAccountID: omitnull.From(ag_user.OrgID),
 		})
 		if err != nil {
@@ -287,23 +274,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 			return
 		}
 		log.Info().Int32("org_id", org.ID).Str("arcgis_id", ag_user.OrgID).Msg("Updated org arcgis ID")
-	case 1:
-		org = orgs[0]
-		user.Update(ctx, db.PGInstance.BobDB, &models.UserSetter{
-			OrganizationID: omit.From(org.ID),
-		})
-		log.Info().Int32("org_id", org.ID).Int32("user_id", user.ID).Msg("Moved user into organization")
-	default:
-		log.Warn().Int("orgs", len(orgs)).Msg("Got too many orgs, programmer error.")
-		return
 	}
-
-	txn, err = db.PGInstance.BobDB.BeginTx(ctx, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("Create transaction")
-		return
-	}
-	defer txn.Rollback(ctx)
 
 	fssync, err := fieldseeker.NewFieldSeekerFromAG(ctx, *client)
 	if err != nil {
