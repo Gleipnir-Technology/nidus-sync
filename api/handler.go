@@ -56,6 +56,7 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 		}
 		body, err = json.Marshal(resp)
 		if err != nil {
+			log.Error().Err(err).Msg("failed to marshal json")
 			http.Error(w, "{\"message\": \"failed to marshal json\"}", http.StatusInternalServerError)
 			return
 		}
