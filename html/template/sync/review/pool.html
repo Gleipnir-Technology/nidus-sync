@@ -137,6 +137,31 @@
 								popup.remove();
 							});
 						});
+						const map_tile = document.querySelector("map-proxied-arcgis-tile");
+						map_tile.on("load", () => {
+							map_tile.addLayer({
+								id: "parcel",
+								minzoom: 14,
+								paint: {
+									"line-color": "#0f0",
+								},
+								source: "tegola",
+								"source-layer": "parcel",
+								type: "line",
+							});
+							map_tile.addLayer({
+								id: "pools",
+								paint: {
+									"circle-color": "#0D6EfD",
+									"circle-radius": 7,
+									"circle-stroke-width": 2,
+									"circle-stroke-color": "#024AB6",
+								},
+								source: "tegola",
+								"source-layer": "feature-pool",
+								type: "circle",
+							});
+						});
 					});
 					await this.fetchTasks();
 				},
