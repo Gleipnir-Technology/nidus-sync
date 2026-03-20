@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 )
@@ -36,6 +37,8 @@ type Address struct {
 	Unit       string            `db:"unit" `
 	Region     string            `db:"region" `
 	Number     string            `db:"number_" `
+	LocationX  null.Val[float64] `db:"location_x,generated" `
+	LocationY  null.Val[float64] `db:"location_y,generated" `
 
 	R addressR `db:"-" `
 }
@@ -63,7 +66,7 @@ type addressR struct {
 func buildAddressColumns(alias string) addressColumns {
 	return addressColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_",
+			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_", "location_x", "location_y",
 		).WithParent("address"),
 		tableAlias: alias,
 		Country:    psql.Quote(alias, "country"),
@@ -77,6 +80,8 @@ func buildAddressColumns(alias string) addressColumns {
 		Unit:       psql.Quote(alias, "unit"),
 		Region:     psql.Quote(alias, "region"),
 		Number:     psql.Quote(alias, "number_"),
+		LocationX:  psql.Quote(alias, "location_x"),
+		LocationY:  psql.Quote(alias, "location_y"),
 	}
 }
 
@@ -94,6 +99,8 @@ type addressColumns struct {
 	Unit       psql.Expression
 	Region     psql.Expression
 	Number     psql.Expression
+	LocationX  psql.Expression
+	LocationY  psql.Expression
 }
 
 func (c addressColumns) Alias() string {
@@ -1132,6 +1139,8 @@ type addressWhere[Q psql.Filterable] struct {
 	Unit       psql.WhereMod[Q, string]
 	Region     psql.WhereMod[Q, string]
 	Number     psql.WhereMod[Q, string]
+	LocationX  psql.WhereNullMod[Q, float64]
+	LocationY  psql.WhereNullMod[Q, float64]
 }
 
 func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
@@ -1151,6 +1160,8 @@ func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 		Unit:       psql.Where[Q, string](cols.Unit),
 		Region:     psql.Where[Q, string](cols.Region),
 		Number:     psql.Where[Q, string](cols.Number),
+		LocationX:  psql.WhereNull[Q, float64](cols.LocationX),
+		LocationY:  psql.WhereNull[Q, float64](cols.LocationY),
 	}
 }
 
