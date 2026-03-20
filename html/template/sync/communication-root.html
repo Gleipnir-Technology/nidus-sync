@@ -612,6 +612,32 @@
 													</div>
 												</div>
 												<template
+													x-if="selectedCommunication.public_report.nuisance.source_container || selectedCommunication.public_report.nuisance.source_gutter || selectedCommunication.public_report.nuisance.source_stagnant"
+												>
+													<div class="col-md-6">
+														<label class="form-label text-muted small mb-0">
+															<i class="bi bi-droplet"></i> Sources
+														</label>
+														<ul>
+															<template
+																x-if="selectedCommunication.public_report.nuisance.source_container"
+															>
+																<li>Container</li>
+															</template>
+															<template
+																x-if="selectedCommunication.public_report.nuisance.source_gutter"
+															>
+																<li>Gutter</li>
+															</template>
+															<template
+																x-if="selectedCommunication.public_report.nuisance.source_stagnant"
+															>
+																<li>Sprinklers & Gutters</li>
+															</template>
+														</ul>
+													</div>
+												</template>
+												<template
 													x-if="selectedCommunication.public_report.nuisance.source_description != ''"
 												>
 													<div class="col-12">
