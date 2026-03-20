@@ -526,7 +526,7 @@
 													x-for="signal in selectedSignals"
 													:key="signal.id"
 												>
-													<tr x-if="signal.type == 'flyover pool'">
+													<tr>
 														<td>
 															<button
 																@click="toggleSignal(signal)"
@@ -536,7 +536,16 @@
 																<i class="bi bi-x"></i>
 															</button>
 														</td>
-														<td>Green pool</td>
+														<td>
+															<template
+																x-if="signal.type == 'publicreport nuisance'"
+																><span>Nuisance</span></template
+															>
+															<template
+																x-if="signal.type == 'publicreport water'"
+																><span>Water</span></template
+															>
+														</td>
 														<td>
 															<time-relative
 																:time="signal.created"
