@@ -536,6 +536,25 @@
 												</template>
 											</div>
 										</div>
+										<template
+											x-if="selectedCommunication.type === 'publicreport.water' && selectedCommunication.public_report?.water != null"
+											x-data="selectedCommunication.public_report.water ?? {}"
+										>
+											<div class="row g-3">
+												<div class="col-12">
+													<ul>
+														<template x-if="is_reporter_owner">
+															<li>Reporter is the owner of the property</li>
+														</template>
+														<template x-if="is_reporter_confidential">
+															<li>
+																Reporter has asked to be kept confidential
+															</li>
+														</template>
+													</ul>
+												</div>
+											</div>
+										</template>
 									</div>
 								</div>
 
