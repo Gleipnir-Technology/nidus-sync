@@ -99,6 +99,19 @@
 								"source-layer": "parcel",
 								type: "line",
 							});
+							map.addLayer({
+								id: "signal-point",
+								paint: {
+									"circle-color": "#0D6EfD",
+									"circle-radius": 7,
+									"circle-stroke-width": 2,
+									"circle-stroke-color": "#024AB6",
+								},
+								source: "tegola",
+								"source-layer": "signal-point",
+								type: "circle",
+							});
+							console.log("Added parcel and signal layers");
 						});
 					});
 				},
