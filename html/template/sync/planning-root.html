@@ -7,9 +7,37 @@
 		src="//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js"
 	></script>
 	<script src="/static/js/map-multipoint.js"></script>
+	<script src="/static/js/map-proxied-arcgis-tile.js"></script>
 	<script src="/static/js/time-relative.js"></script>
 
 	<script>
+		function configureMapTile() {
+			const map_tile = document.querySelector("map-proxied-arcgis-tile");
+			map_tile.on("load", () => {
+				map_tile.addLayer({
+					id: "parcel",
+					minzoom: 14,
+					paint: {
+						"line-color": "#0f0",
+					},
+					source: "tegola",
+					"source-layer": "parcel",
+					type: "line",
+				});
+				map_tile.addLayer({
+					id: "signal-point",
+					paint: {
+						"circle-color": "#0D6EfD",
+						"circle-radius": 7,
+						"circle-stroke-width": 2,
+						"circle-stroke-color": "#024AB6",
+					},
+					source: "tegola",
+					"source-layer": "signal-point",
+					type: "circle",
+				});
+			});
+		}
 		// Return two points defining a bounding box for the given points
 		function getBoundingBox(points) {
 			// Handle empty or invalid input
@@ -69,6 +97,7 @@
 				leads: [],
 				loading: false,
 				poolLocations: {}, // A mapping of signal IDs to the pool values
+				showMapTile: false,
 				selectedSignals: [],
 				signals: [],
 
@@ -115,7 +144,6 @@
 						});
 					});
 				},
-
 				// Load all data
 				async loadData() {
 					this.loading = true;
@@ -281,6 +309,18 @@
 						alert(`Failed to mark signals: ${err.message}`);
 					}
 				},
+				selectedSignalLocation() {
+					const first_pool = this.selectedSignals.reduce(
+						(accumulator, current) => {
+							if (accumulator == null && current.type == "flyover pool") {
+								return current;
+							}
+							return accumulator;
+						},
+						null,
+					);
+					return first_pool?.location;
+				},
 				toggleSignal(signal) {
 					const index = this.selectedSignals.findIndex(
 						(s) => s.id === signal.id,
@@ -292,6 +332,12 @@
 						this.selectedSignals.push(signal);
 					}
 					updateMap(this.selectedSignals);
+					this.showMapTile = this.selectedSignals.reduce(
+						(accumulator, current) =>
+							accumulator || current.type == "flyover pool",
+						false,
+					);
+					console.log("show tile", this.showMapTile);
 				},
 				updateSignalLocation(event, signal_id) {
 					console.log("map click", signal_id, event.detail);
@@ -583,6 +629,18 @@
 									</div>
 								</div>
 							</div>
+						</div>
+						<div x-show="showMapTile" class="map-container">
+							<map-proxied-arcgis-tile
+								x-init="configureMapTile()"
+								class="map"
+								organization-id="{{ .Organization.ID }}"
+								tegola="{{ .URL.Tegola }}"
+								{{ .C.URLTiles }}
+								:latitude="selectedSignalLocation()?.latitude ?? 0.0"
+								:longitude="selectedSignalLocation()?.longitude ?? 0.0"
+							>
+							</map-proxied-arcgis-tile>
 						</div>
 					</div>
 				</div>
