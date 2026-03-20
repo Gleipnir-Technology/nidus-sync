@@ -79,8 +79,8 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user User, review_task_po
 	if err != nil {
 		return nhttp.NewError("find feature pool: %w", err)
 	}
+	condition := feature_pool.Condition
 	if update.Condition != nil {
-		var condition enums.Poolconditiontype
 		err := condition.Scan(*update.Condition)
 		if err != nil {
 			return nhttp.NewErrorStatus(http.StatusBadRequest, "unrecognized condition %s", update.Condition)
@@ -132,6 +132,32 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user User, review_task_po
 		if err != nil {
 			return nhttp.NewError("save feature: %w", err)
 		}
+	}
+	log.Debug().Str("condition", string(condition)).Int32("id", review_task_pool.ReviewTaskID).Msg("checking")
+	// if the pool is either murkey or green, immediately create a signal from it
+	if condition == enums.PoolconditiontypeGreen || condition == enums.PoolconditiontypeMurky {
+		feature, err := models.FindFeature(ctx, txn, feature_pool.FeatureID)
+		if err != nil {
+			return nhttp.NewError("find feature %d: %w", feature_pool.FeatureID, err)
+		}
+		signal, err := models.Signals.Insert(&models.SignalSetter{
+			Addressed: omitnull.FromPtr[time.Time](nil),
+			Addressor: omitnull.FromPtr[int32](nil),
+			Created:   omit.From(time.Now()),
+			Creator:   omit.From[int32](int32(user.ID)),
+			//ID: omit.Val[int32],
+			OrganizationID: omit.From(user.Organization.ID()),
+			Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
+			Title:          omit.From[string](""),
+			Type:           omit.From(enums.SignaltypeFlyoverPool),
+			SiteID:         omitnull.From(feature.SiteID),
+			Location:       omit.From[string](feature.Location.GetOr("")),
+		}).One(ctx, txn)
+		if err != nil {
+			return nhttp.NewError("create signal: %w", err)
+		}
+		event.Created(event.TypeSignal, user.Organization.ID(), strconv.Itoa(int(signal.ID)))
+		log.Debug().Int32("id", signal.ID).Msg("created pool signal")
 	}
 	return nil
 }
