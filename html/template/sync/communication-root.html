@@ -751,6 +751,38 @@
 													Adult Mosquitoes
 												</span>
 											</div>
+											<template x-if="water()?.comments != ''">
+												<div class="col-12">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-chat-text"></i> Comments
+													</label>
+													<div
+														class="p-2 bg-light rounded"
+														x-text="water()?.comments"
+													></div>
+												</div>
+											</template>
+											<div class="col-md-6">
+												<label class="form-label text-muted small mb-0">
+													<i class="bi bi-person"></i> Owner Name
+												</label>
+												<div
+													class="fw-medium"
+													x-text="water()?.owner.name || 'not given'"
+												></div>
+											</div>
+											<div class="col-md-6">
+												<template x-if="water()?.owner.has_email">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-envelope"></i>
+													</label>
+												</template>
+												<template x-if="water()?.owner.has_phone">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-phone"></i>
+													</label>
+												</template>
+											</div>
 										</div>
 									</div>
 								</template>
