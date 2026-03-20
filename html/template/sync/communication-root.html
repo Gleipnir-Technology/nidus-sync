@@ -671,60 +671,86 @@
 								</template>
 
 								<!-- Standing Water-specific Fields -->
-								<template
-									x-if="selectedCommunication.type === 'publicreport.water'"
-								>
+								<template x-if="water() != null">
 									<div class="card mb-3">
 										<div class="card-header bg-info bg-opacity-10">
 											<i class="bi bi-droplet"></i> Standing Water Details
 										</div>
 										<div class="card-body">
+											<template
+												x-if="water()?.access_gate || water()?.access_fence || water()?.access_locked || water()?.access_dog || water()?.access_other"
+											>
+												<div class="col-md-6">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-droplet"></i> Access
+													</label>
+													<div>
+														<ul>
+															<template x-if="water()?.access_gate">
+																<li>Gate</li>
+															</template>
+															<template x-if="water()?.access_fence">
+																<li>Fence</li>
+															</template>
+															<template x-if="water()?.access_locked">
+																<li>Locked</li>
+															</template>
+															<template x-if="water()?.access_dog">
+																<li>Dog</li>
+															</template>
+															<template x-if="water()?.access_other">
+																<li>Other access obstacle</li>
+															</template>
+														</ul>
+													</div>
+												</div>
+											</template>
+											<template x-if="water()?.access_comments != ''">
+												<div class="col-12">
+													<label class="form-label text-muted small mb-0">
+														<i class="bi bi-chat-text"></i> Access Comments
+													</label>
+													<div
+														class="p-2 bg-light rounded"
+														x-text="water()?.access_comments"
+													></div>
+												</div>
+											</template>
 											<label class="form-label text-muted small mb-0">
 												<i class="bi bi-eye"></i> Mosquito Life Stages Observed
 											</label>
 											<div class="mt-2">
 												<span
 													class="badge me-2"
-													:class="selectedCommunication.observedLarvae ? 'badge-larvae' : 'bg-light text-muted'"
+													:class="water()?.has_larvae ? 'badge-larvae' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedCommunication.observedLarvae ? 'bi-check-circle' : 'bi-circle'"
+														:class="water()?.has_larvae ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Larvae
 												</span>
 												<span
 													class="badge me-2"
-													:class="selectedCommunication.observedPupae ? 'badge-pupae' : 'bg-light text-muted'"
+													:class="water()?.has_pupae ? 'badge-pupae' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedCommunication.observedPupae ? 'bi-check-circle' : 'bi-circle'"
+														:class="water()?.has_pupae ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Pupae
 												</span>
 												<span
 													class="badge"
-													:class="selectedCommunication.observedAdult ? 'badge-adult' : 'bg-light text-muted'"
+													:class="water()?.has_adult ? 'badge-adult' : 'bg-light text-muted'"
 												>
 													<i
 														class="bi"
-														:class="selectedCommunication.observedAdult ? 'bi-check-circle' : 'bi-circle'"
+														:class="water()?.has_adult ? 'bi-check-circle' : 'bi-circle'"
 													></i>
 													Adult Mosquitoes
 												</span>
 											</div>
-											<template x-if="selectedCommunication.waterSourceType">
-												<div class="mt-3">
-													<label class="form-label text-muted small mb-0">
-														<i class="bi bi-water"></i> Water Source Type
-													</label>
-													<div
-														class="fw-medium"
-														x-text="selectedCommunication.waterSourceType"
-													></div>
-												</div>
-											</template>
 										</div>
 									</div>
 								</template>
