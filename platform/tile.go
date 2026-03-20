@@ -151,6 +151,9 @@ func ImageAtTile(ctx context.Context, org *models.Organization, level, y, x uint
 	if err != nil {
 		return nil, fmt.Errorf("get oauth for org: %w", err)
 	}
+	if oauth == nil {
+		return nil, fmt.Errorf("get oauth for org nil oauth.")
+	}
 	fssync, err := newFieldSeeker(
 		ctx,
 		oauth,
