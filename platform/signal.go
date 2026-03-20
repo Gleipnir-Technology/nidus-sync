@@ -20,8 +20,8 @@ import (
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
-	//"github.com/rs/zerolog/log"
 )
 
 type Signal struct {
@@ -56,22 +56,33 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	// At this point we have a report. We need to decide where to put it based on either the address or
 	// the location.
 	var site_id int32
+	var location string
 	if report.AddressID.IsValue() {
-		site, err := siteFromAddress(ctx, txn, user, report.AddressID.MustGet())
+		address_id := report.AddressID.MustGet()
+		address, err := models.FindAddress(ctx, txn, address_id)
+		if err != nil {
+			return nil, fmt.Errorf("find address: %w", err)
+		}
+		site, err := siteFromAddress(ctx, txn, user, address_id)
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
+		lat := address.LocationX.GetOr(0.0)
+		lng := address.LocationX.GetOr(0.0)
+		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
 	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
+		lat := report.LocationLatitude.MustGet()
+		lng := report.LocationLongitude.MustGet()
 		site, err := siteFromLocation(ctx, txn, user, Location{
-			Latitude:  report.LocationLatitude.MustGet(),
-			Longitude: report.LocationLongitude.MustGet(),
+			Latitude:  lat,
+			Longitude: lng,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
-
+		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
 	} else if report.AddressRaw != "" {
 		// At this point we don't have an address, and we don't have GPS
 		// We'll try geocoding and creating an address from that.
@@ -79,11 +90,18 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
+		address, err := models.FindAddress(ctx, txn, site.AddressID)
+		if err != nil {
+			return nil, fmt.Errorf("find address from raw: %w", err)
+		}
 		site_id = site.ID
+		lat := address.LocationX.GetOr(0.0)
+		lng := address.LocationX.GetOr(0.0)
+		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
 	} else {
 		// We have no structured address, no GPS, no unstructued address.
 		// There's really nothing we can make this lead from and have it be meaningful
-		return nil, errors.New("Refusing to create a lead with no location data.")
+		return nil, errors.New("Refusing to create a signal with no location data.")
 	}
 
 	var signal_type enums.Signaltype
@@ -95,6 +113,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	default:
 		return nil, fmt.Errorf("Unrecognized report type %s", string(report.ReportType))
 	}
+	log.Debug().Str("location", location).Msg("inserting signal")
 	signal, err := models.Signals.Insert(&models.SignalSetter{
 		Addressed: omitnull.FromPtr[time.Time](nil),
 		Addressor: omitnull.FromPtr[int32](nil),
@@ -102,6 +121,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 		Creator:   omit.From(int32(user.ID)),
 		// ID
 		OrganizationID: omit.From(int32(user.Organization.ID())),
+		Location:       omit.From(location),
 		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
 		SiteID:         omitnull.From(site_id),
 		Title:          omit.From[string](""),
@@ -160,13 +180,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
 		sm.Where(psql.Quote("signal", "addressed").IsNull()),
 		sm.Limit(limit),
 	), scan.StructMapper[Signal]())
-
-	/*
-		rows, err := models.Signals.Query(
-			models.SelectWhere.Signals.OrganizationID.EQ(org.ID()),
-			sm.OrderBy("created").Desc(),
-		).All(ctx, db.PGInstance.BobDB)
-	*/
+	log.Debug().Int("len", len(rows)).Msg("got signals")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signals: %w", err)
 	}

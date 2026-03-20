@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/scan"
@@ -61,4 +62,42 @@ func SiteCreate(ctx context.Context, txn bob.Tx, user User, address_id int32) (*
 		Tags:           omit.From(pgtypes.HStore{}),
 		Version:        omit.From(int32(1)),
 	}).One(ctx, txn)
+}
+func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
+	site, err := models.Sites.Query(
+		models.SelectWhere.Sites.AddressID.EQ(address_id),
+		models.SelectWhere.Sites.OrganizationID.EQ(user.Organization.ID()),
+	).One(ctx, txn)
+	if err == nil {
+		return site, nil
+	}
+	if err.Error() != "sql: no rows in result set" {
+		return nil, fmt.Errorf("query site: %w", err)
+	}
+	return SiteCreate(ctx, txn, user, address_id)
+}
+func siteFromAddressRaw(ctx context.Context, txn bob.Tx, user User, address string) (*models.Site, error) {
+	// Geocode
+	geo, err := geocode.GeocodeRaw(ctx, user.Organization.model, address)
+	if err != nil {
+		return nil, fmt.Errorf("geocode: %w", err)
+	}
+	a, err := geocode.EnsureAddress(ctx, txn, geo.Address, geo.Location)
+	if err != nil {
+		return nil, fmt.Errorf("ensure address: %w", err)
+	}
+	return siteFromAddress(ctx, txn, user, a.ID)
+}
+func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location Location) (*models.Site, error) {
+	// Reverse geocode at the location
+	resp, err := geocode.ReverseGeocode(ctx, location)
+	if err != nil {
+		return nil, fmt.Errorf("reverse geocode: %w", err)
+	}
+	// Ensure we have an address at that newly created location
+	a, err := geocode.EnsureAddress(ctx, txn, resp.Address, resp.Location)
+	if err != nil {
+		return nil, fmt.Errorf("ensure address: %w", err)
+	}
+	return siteFromAddress(ctx, txn, user, a.ID)
 }
