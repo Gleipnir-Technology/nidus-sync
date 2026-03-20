@@ -42,17 +42,20 @@
 		}
 		function updateMap(signals) {
 			const map = document.querySelector("map-multipoint");
-			const markers = signals.map((s) =>
+			const locations = signals.map((s) => s.location);
+			const markers = locations.map((l) =>
 				new maplibregl.Marker({
 					color: "#FF0000",
 					draggable: false,
-				}).setLatLng([s.location.longitude, s.location.latitude]),
+				}).setLngLat([l.longitude, l.latitude]),
 			);
 			map.SetMarkers(markers);
-			bounds = getBoundingBox(markers);
-			map.FitBounds(bounds, {
-				padding: 50,
-			});
+			const bounds = getBoundingBox(locations);
+			if (bounds != null) {
+				map.FitBounds(bounds, {
+					padding: 50,
+				});
+			}
 		}
 		function workbench() {
 			return {
