@@ -16,3 +16,30 @@ func getUser(ctx context.Context, r *http.Request, user platform.User, query que
 	user.NotificationCounts = *counts
 	return &user, nil
 }
+
+type responseListUser struct {
+	Users []platform.User `json:"users"`
+}
+
+func listUser(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*responseListUser, *nhttp.ErrorWithStatus) {
+	return &responseListUser{
+		Users: []platform.User{},
+	}, nil
+}
+
+type responseListUserSuggestion struct {
+	Users []platform.User `json:"users"`
+}
+
+func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*responseListUser, *nhttp.ErrorWithStatus) {
+	if query.Query == nil {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "you need to include a query")
+	}
+	users, err := platform.UserSuggestion(ctx, user, *query.Query)
+	if err != nil {
+		return nil, nhttp.NewError("query suggestions: %w", err)
+	}
+	return &responseListUser{
+		Users: users,
+	}, nil
+}

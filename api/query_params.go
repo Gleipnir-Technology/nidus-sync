@@ -2,6 +2,7 @@ package api
 
 type queryParams struct {
 	Limit *int    `schema:"limit"`
+	Query *string `schema:"query"`
 	Sort  *string `schema:"sort"`
 	Type  *string `schema:"type"`
 }

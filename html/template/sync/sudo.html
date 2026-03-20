@@ -2,6 +2,7 @@
 
 {{ define "title" }}Sudo{{ end }}
 {{ define "extraheader" }}
+	<script src="/static/js/user-selector.js"></script>
 {{ end }}
 {{ define "content" }}
 	<div class="container mt-4">
@@ -336,17 +337,7 @@
 				<div class="row mb-3">
 					<div class="col-md-6">
 						<label for="userSearch" class="form-label">Search Users</label>
-						<div class="input-group">
-							<input
-								type="text"
-								class="form-control"
-								id="userSearch"
-								placeholder="Search by name, email, ID..."
-							/>
-							<button class="btn btn-outline-secondary" type="button">
-								<i class="bi bi-search"></i>
-							</button>
-						</div>
+						<user-selector></user-selector>
 					</div>
 					<div class="col-md-6">
 						<label for="userRole" class="form-label">Filter by Role</label>

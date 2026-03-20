@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aarondl/opt/omit"
-	//"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/mods"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
+	"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 )
 
@@ -112,6 +113,74 @@ func UsersByOrg(ctx context.Context, org Organization) (map[int32]*User, error) 
 	}
 	return results, nil
 }
+func UserSuggestion(ctx context.Context, user User, query string) ([]User, error) {
+	query_arg := "%" + query + "%"
+	if user.HasRoot() {
+		return userSuggestionRoot(ctx, user, query_arg)
+	} else {
+		return userSuggestionNonRoot(ctx, user, query_arg)
+	}
+}
+func userSuggestionNonRoot(ctx context.Context, user User, query_arg string) ([]User, error) {
+	users, err := models.Users.Query(
+		sm.Where(
+			psql.Or(
+				psql.Quote("username").ILike(psql.Arg(query_arg)),
+				psql.Quote("display_name").ILike(psql.Arg(query_arg)),
+			),
+		),
+		sm.Where(
+			psql.Quote("organization_id").EQ(psql.Arg(user.Organization.ID())),
+		),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query users: %w", err)
+	}
+	results := make([]User, len(users))
+	for i, user := range users {
+		results[i] = toUser(user)
+	}
+	return results, nil
+}
+func userSuggestionRoot(ctx context.Context, user User, query_arg string) ([]User, error) {
+	users, err := models.Users.Query(
+		sm.Where(
+			psql.Or(
+				psql.Quote("username").ILike(psql.Arg(query_arg)),
+				psql.Quote("display_name").ILike(psql.Arg(query_arg)),
+			),
+		),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query users: %w", err)
+	}
+	organization_ids := make([]int32, 0)
+	for _, user := range users {
+		organization_ids = append(organization_ids, user.OrganizationID)
+	}
+	orgs, err := models.Organizations.Query(
+		sm.Where(
+			psql.Quote("id").EQ(psql.Any(organization_ids)),
+		),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query orgs: %w", err)
+	}
+	org_map := make(map[int32]*models.Organization, len(orgs))
+	for _, org := range orgs {
+		org_map[org.ID] = org
+	}
+	results := make([]User, len(users))
+	for i, user := range users {
+		u := toUser(user)
+		org := org_map[user.OrganizationID]
+		u.Organization = Organization{
+			model: org,
+		}
+		results[i] = u
+	}
+	return results, nil
+}
 func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User, error) {
 	user, err := models.Users.Query(
 		models.Preload.User.Organization(),
@@ -143,4 +212,20 @@ func extractInitials(name string) string {
 	}
 
 	return initials.String()
+}
+func toUser(user *models.User) User {
+	return User{
+		DisplayName:        user.DisplayName,
+		ID:                 int(user.ID),
+		Initials:           extractInitials(user.DisplayName),
+		Notifications:      []Notification{},
+		NotificationCounts: UserNotificationCounts{},
+		Organization:       Organization{},
+		PasswordHash:       user.PasswordHash,
+		PasswordHashType:   string(user.PasswordHashType),
+		Role:               user.Role.String(),
+		Username:           user.Username,
+
+		model: user,
+	}
 }

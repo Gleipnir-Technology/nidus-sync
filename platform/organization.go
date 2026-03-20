@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
@@ -51,6 +52,11 @@ func (o Organization) HasServiceArea() bool {
 }
 func (o Organization) IsCatchall() bool {
 	return o.model.IsCatchall
+}
+func (o Organization) MarshalJSON() ([]byte, error) {
+	to_marshal := map[string]any{}
+	to_marshal["name"] = o.Name()
+	return json.Marshal(to_marshal)
 }
 func (o Organization) Name() string {
 	return o.model.Name
