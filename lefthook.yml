@@ -12,11 +12,7 @@ pre-commit:
       glob: "*.go"
       run: gofmt -w {staged_files}
       stage_fixed: true
-    htmlfmt:
-      glob: "*.html"
-      run: prettier -w {staged_files}
-      stage_fixed: true
-    jsfmt:
-      glob: "*.js"
+    prettier:
+      glob: "*.{html,js,ts,vue,scss}"
       run: prettier -w {staged_files}
       stage_fixed: true
