@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import Sidebar from "./components/layout/Sidebar.vue";
 import MainContent from "./components/layout/MainContent.vue";
+import NavigationLink from "./components/layout/common/NavigationLink.vue";
 </script>
 
 <style scoped>

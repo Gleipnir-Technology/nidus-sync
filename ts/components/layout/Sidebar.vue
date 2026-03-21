@@ -15,120 +15,51 @@
 				<RouterLink to="/about">About</RouterLink>
 			</li>
 			<li>
-				<a
-					href="/root"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Home"
-				>
-					<div class="menu-icon"><i class="bi bi-house"></i></div>
-					<span class="menu-text ms-2">Home</span>
-				</a>
+				<NavigationLink to="/" icon="house" label="Home" />
 			</li>
 			<li>
-				<a
-					href="/intelligence"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Intelligence"
-				>
-					<div class="menu-icon"><i class="bi bi-brain"></i></div>
-					<span class="menu-text ms-2">Intelligence</span>
-				</a>
+				<NavigationLink to="/intelligence" icon="brain" label="Intelligence" />
 			</li>
 			<li>
-				<a
-					href="/communication"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Communication"
-				>
-					<div class="menu-icon"><i class="bi bi-messaging"></i></div>
-					<span class="menu-text ms-2">Communication</span>
-					<span
-						v-show="notificationCounts.communication > 0"
-						class="position-absolute translate-middle badge rounded-pill bg-primary"
-					>
-						<span>{{
-							notificationCounts.communication > 99
-								? "99+"
-								: notificationCounts.communication
-						}}</span>
-						<span class="visually-hidden">unread notifications</span>
-					</span>
-				</a>
+				<NavigationLink
+					to="/communication"
+					icon="messaging"
+					label="Communication"
+					:notificationCount="notificationCounts.communication"
+				/>
 			</li>
 			<li>
-				<a
-					href="/planning"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Planning"
-				>
-					<div class="menu-icon"><i class="bi bi-strategy"></i></div>
-					<span class="menu-text ms-2">Planning</span>
-				</a>
+				<NavigationLink to="/planning" icon="strategy" label="Planning" />
 			</li>
 			<li>
-				<a
-					href="Operations"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Operations"
-				>
-					<div class="menu-icon"><i class="bi bi-assign"></i></div>
-					<span class="menu-text ms-2">Operations</span>
-				</a>
+				<NavigationLink to="/operations" icon="assign" label="Operations" />
 			</li>
 			<li>
-				<a
-					href="/review"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Review"
-				>
-					<div class="menu-icon"><i class="bi bi-review"></i></div>
-					<span class="menu-text ms-2">Review</span>
-					<span
-						v-show="notificationCounts.review > 0"
-						class="position-absolute translate-middle badge rounded-pill bg-primary"
-					>
-						<span>{{
-							notificationCounts.review > 99 ? "99+" : notificationCounts.review
-						}}</span>
-						<span class="visually-hidden">unread notifications</span>
-					</span>
-				</a>
+				<NavigationLink
+					to="/review"
+					icon="review"
+					label="Review"
+					:notificationCount="notificationCounts.review"
+				/>
 			</li>
 			<li>
-				<a
-					href="/configuration"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Configuration"
-				>
-					<div class="menu-icon"><i class="bi bi-settings"></i></div>
-					<span class="menu-text ms-2">Configuration</span>
-				</a>
+				<NavigationLink
+					to="/configuration"
+					icon="assign"
+					label="Configuration"
+				/>
 			</li>
 			<li>
-				<a
-					href="/sudo"
-					data-bs-toggle="tooltip"
-					data-bs-placement="right"
-					title="Sudo"
-				>
-					<div class="menu-icon"><i class="bi bi-god"></i></div>
-					<span class="menu-text ms-2">Sudo</span>
-				</a>
+				<NavigationLink to="/sudo" icon="god" label="Sudo" />
 			</li>
 		</ul>
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Tooltip, Popover } from "bootstrap";
+import NavigationLink from "../common/NavigationLink.vue";
 
 // Reactive state
 const isCollapsed = ref(false);

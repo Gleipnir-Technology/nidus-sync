@@ -1,30 +1,27 @@
 <template>
-	<router-link :to="to" class="nav-link">
-		{{ label }}
-	</router-link>
+	<a
+		:href="to"
+		data-bs-toggle="tooltip"
+		data-bs-placement="right"
+		:title="label"
+	>
+		<div class="menu-icon"><i :class="`bi bi-${icon}`"></i></div>
+		<span class="menu-text ms-2">{{ label }}</span>
+		<span
+			v-if="notificationCount != null && notificationCount > 0"
+			class="position-absolute translate-middle badge rounded-pill bg-primary"
+		>
+			<span>{{ notificationCount > 99 ? "99+" : notificationCount }}</span>
+			<span class="visually-hidden">unread notifications</span>
+		</span>
+	</a>
 </template>
 
 <script setup lang="ts">
 defineProps<{
 	to: string;
+	icon: string;
 	label: string;
+	notificationCount?: number | null;
 }>();
 </script>
-
-<style scoped>
-.nav-link {
-	color: #ecf0f1;
-	text-decoration: none;
-	padding: 10px;
-	border-radius: 4px;
-	transition: background-color 0.2s;
-}
-
-.nav-link:hover {
-	background-color: #34495e;
-}
-
-.nav-link.router-link-active {
-	background-color: #3498db;
-}
-</style>
