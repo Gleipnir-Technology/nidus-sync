@@ -6,10 +6,9 @@
 		<title>{{ template "title" . }} - Nidus Sync</title>
 		<link href="{{ bundlePathCSS }}" rel="stylesheet" />
 		<!-- Fontawesome Icons -->
-		<link rel="stylesheet" href="/static/vendor/css/bootstrap-icons.min.css" />
 		<link rel="icon" href="/static/ico/favicon-sync.ico" type="image/x-icon" />
 		<script src="/static/js/events.js"></script>
-		<script src="{{ bundlePathJS }}" defer></script>
+		<script src="{{ bundlePathJS }}"></script>
 		{{ block "extraheader" . }}{{ end }}
 		<script>
 			const USER = {{ .User.AsJSON|json }};
