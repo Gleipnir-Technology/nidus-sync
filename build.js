@@ -9,7 +9,6 @@ const config = {
 	entryPoints: ["ts/main.ts"],
 	bundle: true,
 	format: "esm",
-	outfile: "static/gen/js/bundle.js",
 	plugins: [vue()],
 	define: {
 		__VUE_OPTIONS_API__: "true",
@@ -17,6 +16,12 @@ const config = {
 		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "false",
 	},
 	minify,
+	loader: {
+		".css": "css",
+	},
+	outdir: "static/gen",
+	outbase: "ts",
+	assetNames: "css/[name]",
 };
 
 if (watch) {
