@@ -1,5 +1,12 @@
 import Alpine from './vendor/alpinejs-3.15.8.js';
 
+// Make Alpine available on window for inline Alpine
+window.Alpine = Alpine;
+
+// Wait for DOM to be ready, then initialize Alpine
+document.addEventListener("DOMContentLoaded", () => {
+	Alpine.start();
+});
 interface GreetingComponent {
     message: string;
     name: string;
@@ -14,6 +21,3 @@ Alpine.data('greeting', (): GreetingComponent => ({
         this.message = 'Message updated at ' + new Date().toLocaleTimeString();
     }
 }));
-
-Alpine.start();
-

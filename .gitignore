@@ -3,12 +3,11 @@ cmd/geocode-test/geocode-test
 cmd/passwordgen/passwordgen
 districts/
 flogo.log
-html/static/css/bootstrap.css
-html/static/css/bootstrap.css.map
 nidus-sync
 nidus-sync.log
 result
 stadia/cmd/bulk-geocode/bulk-geocode
 stadia/cmd/reverse-geocode/reverse-geocode
 stadia/cmd/structured-geocode/structured-geocode
+static/gen/
 tmp/

@@ -93,10 +93,11 @@ esbuild ts/main.ts --bundle --outfile=html/static/bundle.js --format=iife --mini
 ```
 
 The only page that works right now is `https://sync.nidus.cloud/template-test`
+
 ### watchexec
 
 For iterating on styles
 
 ```
-watchexec -e scss sass scss/custom.scss:html/static/css/bootstrap.css
+watchexec -e scss sass scss/custom.scss:static/gen/css/bootstrap.css
 ```

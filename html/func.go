@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/static"
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -22,6 +23,8 @@ import (
 func addFuncMap(t *template.Template) {
 	funcMap := template.FuncMap{
 		"bigNumber":           bigNumber,
+		"bundlePathCSS":       bundlePathCSS,
+		"bundlePathJS":        bundlePathJS,
 		"displayUploadStatus": displayUploadStatus,
 		"displayUploadType":   displayUploadType,
 		"duration":            duration,
@@ -58,6 +61,12 @@ func bigNumber(n int) string {
 	}
 
 	return result.String()
+}
+func bundlePathCSS() string {
+	return static.BundlePathCSS
+}
+func bundlePathJS() string {
+	return static.BundlePathJS
 }
 func displayUploadStatus(s string) string {
 	switch s {

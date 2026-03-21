@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/static"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
@@ -18,6 +19,15 @@ import (
 // fileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
 var startedTime time.Time = time.Now()
+
+var localFS http.Dir
+
+func AddStaticRoute(r chi.Router, path string) {
+	if localFS == "" {
+		localFS = http.Dir("./static")
+	}
+	fileServer(r, "/static", localFS, static.EmbeddedStaticFS, "static")
+}
 
 func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS, embeddedPath string) {
 	if strings.ContainsAny(path, "{}*") {

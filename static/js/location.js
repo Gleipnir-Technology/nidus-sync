@@ -5,19 +5,19 @@ function getGeolocation(options) {
 			reject(new Error("Geolocation is not supported by your browser"));
 			return;
 		}
-		
+
 		// Default options if none provided
 		const geolocationOptions = options || {
 			enableHighAccuracy: true,
 			timeout: 5000,
-			maximumAge: 0
+			maximumAge: 0,
 		};
-		
+
 		// Call the geolocation API
 		navigator.geolocation.getCurrentPosition(
-			position => resolve(position),
-			error => reject(error),
-			geolocationOptions
+			(position) => resolve(position),
+			(error) => reject(error),
+			geolocationOptions,
 		);
 	});
 }

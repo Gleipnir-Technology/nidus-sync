@@ -3,7 +3,7 @@ class AddressDisplay extends HTMLElement {
 		super();
 
 		// Create a shadow DOM
-		this.attachShadow({mode: "open" });
+		this.attachShadow({ mode: "open" });
 
 		// Initial render
 		this.render();
@@ -96,32 +96,36 @@ class AddressDisplay extends HTMLElement {
 		// Extract context data from properties
 		const props = location.properties;
 		const context = props.context || {};
-		
+
 		// Populate structured fields
 		// Street Address - combine address, street, housenumber if available
-		let addressStr = '';
+		let addressStr = "";
 		if (context.address) addressStr += context.address.address_number;
 		if (context.street) {
-			 if (addressStr) addressStr += ' ';
-			 addressStr += context.street.name;
+			if (addressStr) addressStr += " ";
+			addressStr += context.street.name;
 		}
-		if (addressStr === '') {
-			 addressStr = props.name || props.full_address || '-';
+		if (addressStr === "") {
+			addressStr = props.name || props.full_address || "-";
 		}
 		this._streetAddress.textContent = addressStr;
-		
+
 		// Post Code
-		this._postCode.textContent = context.postcode.name || '-';
-		
+		this._postCode.textContent = context.postcode.name || "-";
+
 		// District (could be district, locality, or place)
-		this._district.textContent = context.district.name || context.place.name || context.locality.name || '-';
-		
+		this._district.textContent =
+			context.district.name ||
+			context.place.name ||
+			context.locality.name ||
+			"-";
+
 		// Region (state, province, etc.)
-		this._region.textContent = context.region.name || '-';
-		
+		this._region.textContent = context.region.name || "-";
+
 		// Country
-		this._country.textContent = context.country.name || '-';
+		this._country.textContent = context.country.name || "-";
 	}
 }
 
-customElements.define('address-display', AddressDisplay);
+customElements.define("address-display", AddressDisplay);
