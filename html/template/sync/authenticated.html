@@ -15,6 +15,6 @@
 		{{ if not .Config.IsProductionEnvironment }}
 			<div id="flogo"></div>
 		{{ end }}
-		<script src="{{ bundlePathJS }}"></script>
+		<script src="{{ bundlePathJS }}" type="module"></script>
 	</body>
 </html>
