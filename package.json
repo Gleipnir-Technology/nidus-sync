@@ -7,12 +7,14 @@
     "vue": "^3.5.30"
   },
   "devDependencies": {
-    "typescript": "^5.3.0"
+    "typescript": "^5.9.3",
+    "esbuild": "^0.25.5",
+    "esbuild-plugin-vue3": "^0.5.1"
   },
   "scripts": {
-    "build": "esbuild ts/main.ts --bundle --format=esm --outfile=static/gen/js/bundle.js --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=false --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false --alias:vue=vue/dist/vue.esm-bundler.js",
-    "build:prod": "esbuild ts/main.ts --bundle --minify --format=esm --outfile=static/gen/js/bundle.js --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=false --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false --alias:vue=vue/dist/vue.esm-bundler.js",
-    "watch": "esbuild ts/main.ts --bundle --format=esm --outfile=static/gen/js/bundle.js --define:__VUE_OPTIONS_API__=true --define:__VUE_PROD_DEVTOOLS__=false --define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false --alias:vue=vue/dist/vue.esm-bundler.js --watch"
+    "build": "node build.js",
+    "build:prod": "node build.js --minify",
+    "watch": "node build.js --watch"
   }
 }
 
