@@ -13,7 +13,7 @@ const config = {
 	plugins: [
 		sassPlugin({
 			quietDeps: true,
-			silenceDeprecations: ["import"], // silence known issue with Bootstrap #40962
+			silenceDeprecations: ["import"],
 			type: "css",
 		}),
 		vue(),
@@ -26,10 +26,14 @@ const config = {
 	minify,
 	loader: {
 		".css": "css",
+		".woff": "file",
+		".woff2": "file",
+		".ttf": "file",
+		".eot": "file",
 	},
 	outdir: "static/gen",
 	outbase: "ts",
-	assetNames: "css/[name]",
+	assetNames: "fonts/[name]",
 };
 
 if (watch) {

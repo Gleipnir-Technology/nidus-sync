@@ -5,6 +5,8 @@ import { SSEManager } from './sse-manager';
 import { SetupSidebar } from "./sidebar";
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+// Import Bootstrap Icons CSS
+import 'bootstrap-icons/font/bootstrap-icons.css';
 // Import Bootstrap SCSS
 import './style/style.scss';
 
@@ -37,6 +39,24 @@ document.addEventListener("DOMContentLoaded", () => {
 	SSEManager.connect("/api/events");
 	SetupSidebar();
 });
+	document.addEventListener("alpine:init", () => {
+		 const user = {
+			"display_name":"",
+			"initials":"",
+			"notifications":[],
+			"notification_counts":{
+				"communication":0,
+				"home":0,
+				"review":0
+			},
+			"organization":{
+				"name":""
+			},
+			"role":"",
+			"username":""
+		};
+		 Alpine.store("user",user);
+	})
 interface GreetingComponent {
     message: string;
     name: string;

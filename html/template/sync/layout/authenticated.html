@@ -10,9 +10,7 @@
 		<script src="/static/js/events.js"></script>
 		<script src="{{ bundlePathJS }}"></script>
 		{{ block "extraheader" . }}{{ end }}
-		<script>
-			const USER = {{ .User.AsJSON|json }};
-		</script> {{ if not .Config.IsProductionEnvironment }}
+		{{ if not .Config.IsProductionEnvironment }}
 			<script src="/.flogo/injector.js"></script>
 		{{ end }}
 	</head>

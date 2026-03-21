@@ -1,5 +1,4 @@
 export function SetupSidebar() {
-	console.log("setting up sidebar");
 	var popoverTriggerList = [].slice.call(
 		document.querySelectorAll('[data-bs-toggle="popover"]'),
 	);
@@ -23,9 +22,6 @@ export function SetupSidebar() {
 			updateUserState();
 		}
 	});
-	document.addEventListener("alpine:init", () => {
-		Alpine.store("user", USER);
-	})
 	document.getElementById("sidebarToggle").addEventListener("click", () => {
 		const sidebar = document.getElementById("sidebar");
 		sidebar.classList.toggle("collapsed");
@@ -36,6 +32,7 @@ export function SetupSidebar() {
 			(!sidebar.classList.contains("collapsed")).toString(),
 		);
 	});
+	updateUserState();
 }
 function restoreLocalStorage() {
 	const expanded = localStorage.getItem("sidebar.expanded");
