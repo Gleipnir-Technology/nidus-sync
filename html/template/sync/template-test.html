@@ -1,8 +1,18 @@
-<html>
+<!doctype html>
+<html lang="en">
 	<head>
-		<script src="/static/bundle.js"></script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Alpine + TypeScript Demo</title>
 	</head>
 	<body>
-		<h1>Hi Eli 2</h1>
+		<div x-data="greeting">
+			<h1 x-text="message"></h1>
+			<input type="text" x-model="name" placeholder="Enter your name" />
+			<p>Hello, <span x-text="name"></span>!</p>
+			<button @click="updateMessage">Change Message</button>
+		</div>
+
+		<script src="/static/bundle.js"></script>
 	</body>
 </html>

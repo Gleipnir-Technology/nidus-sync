@@ -11,15 +11,15 @@
                 flake-utils.lib.eachDefaultSystem (system:
                         let
                                 pkgs = nixpkgs.legacyPackages.${system};
-				projPkg = proj.packages.${system}.default;
+                                projPkg = proj.packages.${system}.default;
 
                                 # Override pkgs.proj with your custom proj
                                 customPkgs = pkgs // {
                                         proj = proj.packages.${system}.default;
                                 };
                                 package = pkgs.callPackage ./default.nix {
-					proj = projPkg;
-				};
+                                proj = projPkg;
+                        };
                         in
                         {
                                 packages.default = package;
@@ -31,7 +31,7 @@
                                                 pkgs.air
                                                 pkgs.autoprefixer
                                                 pkgs.dart-sass
-						pkgs.esbuild
+                                                pkgs.esbuild
                                                 pkgs.go
                                                 pkgs.goose
                                                 pkgs.gotools
@@ -40,6 +40,7 @@
                                                 pkgs.prettier
                                                 pkgs.prettier-plugin-go-template
                                                 proj.packages.${system}.default
+                                                pkgs.typescript
                                                 pkgs.watchexec
                                         ];
                                 };

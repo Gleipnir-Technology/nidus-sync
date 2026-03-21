@@ -84,6 +84,15 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 > GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose up
 ```
 
+### typescript
+
+You can generate the TypeScript with:
+
+```
+esbuild ts/main.ts --bundle --outfile=html/static/bundle.js --format=iife --minify
+```
+
+The only page that works right now is `https://sync.nidus.cloud/template-test`
 ### watchexec
 
 For iterating on styles
