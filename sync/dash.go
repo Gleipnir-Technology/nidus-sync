@@ -2,12 +2,10 @@ package sync
 
 import (
 	"context"
-	"errors"
 	"html/template"
 	"net/http"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -56,27 +54,50 @@ func getLayoutTest(ctx context.Context, r *http.Request, user platform.User) (*h
 	return html.NewResponse("sync/layout-test.html", contentLayoutTest{}), nil
 }
 
-func getRoot(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	user, err := auth.GetAuthenticatedUser(r)
+func getRoot(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentDashboard], *nhttp.ErrorWithStatus) {
+	var lastSync *time.Time
+	sync, err := user.Organization.FieldseekerSyncLatest(ctx)
 	if err != nil {
-		// No credentials or user not found: go to login
-		if errors.Is(err, &auth.NoCredentialsError{}) || errors.Is(err, &platform.NoUserError{}) {
-			http.Redirect(w, r, "/signin", http.StatusFound)
-			return
-		} else {
-			respondError(w, "Failed to get root", err, http.StatusInternalServerError)
-			return
-		}
+		return nil, nhttp.NewError("Failed to get syncs: %w", err)
+	} else if sync != nil {
+		lastSync = &sync.Created
 	}
-	if user == nil {
-		errorCode := r.URL.Query().Get("error")
-		signin(w, errorCode, "/")
-		return
-	} else {
-		dashboard(ctx, w, *user)
-		return
+	is_syncing := user.Organization.IsSyncOngoing()
+	count_trap, err := user.Organization.CountTrap(ctx)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to get trap count: %w", err)
 	}
+	count_source, err := user.Organization.CountTrap(ctx)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to get source count: %w", err)
+	}
+	count_service, err := user.Organization.CountServiceRequest(ctx)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to get service count: %w", err)
+	}
+	service_request_recent, err := user.Organization.ServiceRequestRecent(ctx)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to get recent service: %w", err)
+	}
+
+	requests := make([]ServiceRequestSummary, 0)
+	for _, r := range service_request_recent {
+		requests = append(requests, ServiceRequestSummary{
+			Date:     r.Creationdate.MustGet(),
+			Location: r.Reqaddr1.MustGet(),
+			Status:   "Completed",
+		})
+	}
+	content := contentDashboard{
+		CountTraps:           int(count_trap),
+		CountMosquitoSources: int(count_source),
+		CountServiceRequests: int(count_service),
+		IsSyncOngoing:        is_syncing,
+		LastSync:             lastSync,
+		MapData:              ComponentMap{},
+		RecentRequests:       requests,
+	}
+	return html.NewResponse("sync/authenticated.html", content), nil
 }
 
 func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSource], *nhttp.ErrorWithStatus) {
@@ -173,62 +194,6 @@ func getTrap(ctx context.Context, r *http.Request, user platform.User) (*html.Re
 		User: user,
 	}
 	return html.NewResponse("sync/trap.html", data), nil
-}
-
-func dashboard(ctx context.Context, w http.ResponseWriter, user platform.User) {
-	var lastSync *time.Time
-	sync, err := user.Organization.FieldseekerSyncLatest(ctx)
-	if err != nil {
-		respondError(w, "Failed to get syncs", err, http.StatusInternalServerError)
-	} else if sync != nil {
-		lastSync = &sync.Created
-	}
-	is_syncing := user.Organization.IsSyncOngoing()
-	count_trap, err := user.Organization.CountTrap(ctx)
-	if err != nil {
-		respondError(w, "Failed to get trap count", err, http.StatusInternalServerError)
-		return
-	}
-	count_source, err := user.Organization.CountTrap(ctx)
-	if err != nil {
-		respondError(w, "Failed to get source count", err, http.StatusInternalServerError)
-		return
-	}
-	count_service, err := user.Organization.CountServiceRequest(ctx)
-	if err != nil {
-		respondError(w, "Failed to get service count", err, http.StatusInternalServerError)
-		return
-	}
-	service_request_recent, err := user.Organization.ServiceRequestRecent(ctx)
-	if err != nil {
-		respondError(w, "Failed to get recent service", err, http.StatusInternalServerError)
-		return
-	}
-
-	requests := make([]ServiceRequestSummary, 0)
-	for _, r := range service_request_recent {
-		requests = append(requests, ServiceRequestSummary{
-			Date:     r.Creationdate.MustGet(),
-			Location: r.Reqaddr1.MustGet(),
-			Status:   "Completed",
-		})
-	}
-	content := contentDashboard{
-		CountTraps:           int(count_trap),
-		CountMosquitoSources: int(count_source),
-		CountServiceRequests: int(count_service),
-		IsSyncOngoing:        is_syncing,
-		LastSync:             lastSync,
-		MapData:              ComponentMap{},
-		RecentRequests:       requests,
-	}
-	html.RenderOrError(w, "sync/dashboard.html", contentAuthenticated[contentDashboard]{
-		C:            content,
-		Config:       html.NewContentConfig(),
-		Organization: user.Organization,
-		URL:          html.NewContentURL(),
-		User:         user,
-	})
 }
 
 func source(w http.ResponseWriter, r *http.Request, user platform.User, id uuid.UUID) {

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Nidus Sync</title>
+		<link rel="icon" href="/static/ico/favicon-sync.ico" type="image/x-icon" />
+		<link href="{{ bundlePathCSS }}" rel="stylesheet" />
+		{{ if not .Config.IsProductionEnvironment }}
+			<script src="/.flogo/injector.js"></script>
+		{{ end }}
+	</head>
+	<body>
+		<div id="app"></div>
+		{{ if not .Config.IsProductionEnvironment }}
+			<div id="flogo"></div>
+		{{ end }}
+		<script src="{{ bundlePathJS }}"></script>
+	</body>
+</html>

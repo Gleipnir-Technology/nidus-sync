@@ -9,8 +9,6 @@ import (
 
 func Router() chi.Router {
 	r := chi.NewRouter()
-	// Root is a special endpoint that is neither authenticated nor unauthenticated
-	r.Get("/", getRoot)
 
 	// Unauthenticated endpoints
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
@@ -42,6 +40,7 @@ func Router() chi.Router {
 	// Authenticated endpoints
 	r.Route("/api", api.AddRoutes)
 
+	r.Method("GET", "/", authenticatedHandler(getRoot))
 	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", authenticatedHandler(getCellDetails))
 	r.Method("GET", "/communication", authenticatedHandler(getCommunicationRoot))

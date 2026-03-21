@@ -2,7 +2,7 @@ import Alpine from "./vendor/alpinejs-3.15.8.js";
 import { createApp } from "vue";
 import App from "./app.vue";
 import { SSEManager } from "./sse-manager";
-import { SetupSidebar } from "./sidebar";
+//import { SetupSidebar } from "./sidebar";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 // Import Bootstrap Icons CSS
@@ -37,7 +37,7 @@ window.createAppPlanning = createAppPlanning;
 document.addEventListener("DOMContentLoaded", () => {
 	Alpine.start();
 	SSEManager.connect("/api/events");
-	SetupSidebar();
+	//SetupSidebar();
 });
 document.addEventListener("alpine:init", () => {
 	const user = {
