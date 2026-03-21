@@ -1,0 +1,63 @@
+@use "sass:map";
+// 1. Include specific theme variables
+$primary: #F76436;
+$secondary: #3C552D;
+$success: #8BAE67;
+$warning: #FFC01B;
+$danger: #6b2737;
+$info: #D7B26D;
+$dark: #3b1002;
+$light: #fde1d8;
+
+$off-white: #F8F9FA;
+$off-black: #495057;
+
+$primary-light-4: #FAA489;
+// 2. Configure color contrast
+$color-contrast-dark: #000;
+$color-contrast-light: #fff;
+$min-contrast-ratio: 2.0;
+
+$custom-colors: (
+  "color1": $primary,
+  "color2": $secondary,
+  "color3": $success,
+  "color4": $danger,
+  "color5": $warning,
+  "color6": $info,
+);
+$theme-colors: map.merge(
+	(
+		"primary": $primary,
+		"secondary": $secondary,
+		"success": $success,
+		"danger": $danger,
+		"warning": $warning,
+		"info": $info,
+		"dark": $dark,
+		"light": $light
+	),
+	$custom-colors
+);
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Make custom SVG icons about the same size as other icons
+i.bi svg {
+	height: 18px;
+	width: 18px;
+}
+@import "bootstrap/scss/functions";
+// Import Bootstrap's variables (this merges with your custom variables)
+@import "bootstrap/scss/variables";
+
+// Import Bootstrap's mixins
+@import "bootstrap/scss/mixins";
+
+// Import all of Bootstrap (or pick specific components)
+@import "bootstrap/scss/bootstrap";
+
+@import "./sidebar.scss";

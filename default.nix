@@ -39,21 +39,21 @@ pnpm config set store-dir $HOME/.pnpm-store
 
 # Compile SCSS
 SASS_SRC_DIR="./scss"
-CSS_OUTPUT_DIR="./static/gen/css"
+GEN_OUTPUT_DIR="./static/gen"
 
-mkdir -p "$CSS_OUTPUT_DIR"
+mkdir -p "$GEN_OUTPUT_DIR"
 
-echo "Compiling $SASS_SRC_DIR/style.scss to $CSS_OUTPUT_DIR/style.css..."
-sass --style=compressed --trace "$SASS_SRC_DIR/style.scss":"$CSS_OUTPUT_DIR/style.css"
+echo "Compiling $SASS_SRC_DIR/style.scss to $GEN_OUTPUT_DIR/main.css..."
+sass --style=compressed --trace "$SASS_SRC_DIR/style.scss":"$GEN_OUTPUT_DIR/main.css"
 
 # Generate hash and rename style
-STYLE_HASH=$(sha256sum "$CSS_OUTPUT_DIR/style.css" | cut -c1-12)
-mv "$CSS_OUTPUT_DIR/style.css" "$CSS_OUTPUT_DIR/style.$STYLE_HASH.css"
+STYLE_HASH=$(sha256sum "$GEN_OUTPUT_DIR/main.css" | cut -c1-12)
+mv "$GEN_OUTPUT_DIR/main.css" "$GEN_OUTPUT_DIR/style.$STYLE_HASH.css"
 echo "Generated CSS style with hash: $STYLE_HASH"
 
 # Bundle TypeScript
-JS_OUTPUT_DIR="./static/gen/js"
-mkdir -p "$JS_OUTPUT_DIR"
+GEN_OUTPUT_DIR="./static/gen"
+mkdir -p "$GEN_OUTPUT_DIR"
 
 echo "Bundling TypeScript with Vue..."
 esbuild ts/main.ts \
@@ -64,11 +64,11 @@ esbuild ts/main.ts \
 	--define:__VUE_PROD_DEVTOOLS__=false \
 	--define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false \
 	--alias:vue=vue/dist/vue.esm-bundler.js \
-	--outfile="$JS_OUTPUT_DIR/bundle.js"
+	--outfile="$GEN_OUTPUT_DIR/main.js"
 
 # Generate hash and rename bundle
-BUNDLE_HASH=$(sha256sum "$JS_OUTPUT_DIR/bundle.js" | cut -c1-12)
-mv "$JS_OUTPUT_DIR/bundle.js" "$JS_OUTPUT_DIR/bundle.$BUNDLE_HASH.js"
+BUNDLE_HASH=$(sha256sum "$GEN_OUTPUT_DIR/main.js" | cut -c1-12)
+mv "$GEN_OUTPUT_DIR/main.js" "$GEN_OUTPUT_DIR/bundle.$BUNDLE_HASH.js"
 echo "Generated JS bundle with hash: $BUNDLE_HASH"
 
 # Generate gen.go with bundle path

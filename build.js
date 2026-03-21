@@ -1,5 +1,6 @@
 import esbuild from "esbuild";
 import vue from "esbuild-plugin-vue3";
+import { sassPlugin } from "esbuild-sass-plugin";
 
 const args = process.argv.slice(2);
 const watch = args.includes("--watch");
@@ -9,7 +10,14 @@ const config = {
 	entryPoints: ["ts/main.ts"],
 	bundle: true,
 	format: "esm",
-	plugins: [vue()],
+	plugins: [
+		sassPlugin({
+			quietDeps: true,
+			silenceDeprecations: ["import"], // silence known issue with Bootstrap #40962
+			type: "css",
+		}),
+		vue(),
+	],
 	define: {
 		__VUE_OPTIONS_API__: "true",
 		__VUE_PROD_DEVTOOLS__: "false",
