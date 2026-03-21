@@ -2,16 +2,16 @@
 	background-color: $info;
 }
 .badge.empty {
-	background-color: #9C9BC0;
+	background-color: #9c9bc0;
 }
 .badge.false.pool {
-	background-color: #6B2737;
+	background-color: #6b2737;
 }
 .badge.green {
-	background-color: #4B6827;
+	background-color: #4b6827;
 }
 .badge.murky {
-	background-color: #88BC4E;
+	background-color: #88bc4e;
 }
 .badge.unknown {
 	background-color: gray;
@@ -22,7 +22,7 @@
 .summary-card:hover {
 	transform: translateY(-5px);
 }
-.badge.status{
+.badge.status {
 	font-size: 0.85rem;
 }
 .badge.status.existing {

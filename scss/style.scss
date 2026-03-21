@@ -1,29 +1,29 @@
 // 1. Include specific theme variables
-$primary: #F76436;
-$secondary: #3C552D;
-$success: #8BAE67;
-$warning: #FFC01B;
+$primary: #f76436;
+$secondary: #3c552d;
+$success: #8bae67;
+$warning: #ffc01b;
 $danger: #6b2737;
-$info: #D7B26D;
+$info: #d7b26d;
 $dark: #3b1002;
 $light: #fde1d8;
 
-$off-white: #F8F9FA;
+$off-white: #f8f9fa;
 $off-black: #495057;
 
-$primary-light-4: #FAA489;
+$primary-light-4: #faa489;
 // 2. Configure color contrast
 $color-contrast-dark: #000;
 $color-contrast-light: #fff;
-$min-contrast-ratio: 2.0;
+$min-contrast-ratio: 2;
 
 $custom-colors: (
-  "color1": $primary,
-  "color2": $secondary,
-  "color3": $success,
-  "color4": $danger,
-  "color5": $warning,
-  "color6": $info,
+	"color1": $primary,
+	"color2": $secondary,
+	"color3": $success,
+	"color4": $danger,
+	"color5": $warning,
+	"color6": $info,
 );
 $theme-colors: map-merge(
 	(
@@ -34,14 +34,18 @@ $theme-colors: map-merge(
 		"warning": $warning,
 		"info": $info,
 		"dark": $dark,
-		"light": $light
+		"light": $light,
 	),
 	$custom-colors
 );
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 // Make custom SVG icons about the same size as other icons

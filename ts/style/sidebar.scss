@@ -1,14 +1,14 @@
 .logo-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	transition: all 0.3s ease;
 }
 
 .logo {
-  max-width: 100%;
-  height: auto;
-  transition: all 0.3s ease;
+	max-width: 100%;
+	height: auto;
+	transition: all 0.3s ease;
 }
 
 #sidebar {
@@ -27,11 +27,11 @@
 }
 /* Logo style when sidebar is collapsed */
 #sidebar.collapsed .logo-container {
-  width: 100%;
+	width: 100%;
 }
 
 #sidebar.collapsed .logo-img {
-  max-width: 40px; /* smaller size for collapsed state */
+	max-width: 40px; /* smaller size for collapsed state */
 }
 #content {
 	transition: all 0.3s;
@@ -51,8 +51,8 @@
 	margin-bottom: 20px;
 	overflow: hidden;
 	white-space: nowrap;
-        display: flex;
-        justify-content: center; /* Center for the logo */
+	display: flex;
+	justify-content: center; /* Center for the logo */
 }
 
 .sidebar-menu {
@@ -127,7 +127,7 @@
 }
 
 #sidebar.collapsed > #sidebarToggle {
-    left: calc(70px - 15px);
+	left: calc(70px - 15px);
 }
 
 #sidebar > #sidebarToggle i {

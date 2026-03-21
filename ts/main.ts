@@ -1,20 +1,20 @@
-import Alpine from './vendor/alpinejs-3.15.8.js';
-import { createApp } from 'vue';
-import App from './app.vue';
-import { SSEManager } from './sse-manager';
+import Alpine from "./vendor/alpinejs-3.15.8.js";
+import { createApp } from "vue";
+import App from "./app.vue";
+import { SSEManager } from "./sse-manager";
 import { SetupSidebar } from "./sidebar";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import "maplibre-gl/dist/maplibre-gl.css";
 
 // Import Bootstrap Icons CSS
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import "bootstrap-icons/font/bootstrap-icons.css";
 // Import Bootstrap SCSS
-import './style/style.scss';
+import "./style/style.scss";
 
 // Import Bootstrap JavaScript and make it available globally
-import * as bootstrap from 'bootstrap';
+import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
 
-import { Planning } from './app/planning';
+import { Planning } from "./app/planning";
 
 // Make Alpine available on window for inline Alpine
 window.Alpine = Alpine;
@@ -26,9 +26,9 @@ function createAppPlanning() {
 	const app = createApp({
 		data() {
 			return {
-				count: 0
-			}
-		}
+				count: 0,
+			};
+		},
 	});
 }
 window.createAppPlanning = createAppPlanning;
@@ -39,37 +39,40 @@ document.addEventListener("DOMContentLoaded", () => {
 	SSEManager.connect("/api/events");
 	SetupSidebar();
 });
-	document.addEventListener("alpine:init", () => {
-		 const user = {
-			"display_name":"",
-			"initials":"",
-			"notifications":[],
-			"notification_counts":{
-				"communication":0,
-				"home":0,
-				"review":0
-			},
-			"organization":{
-				"name":""
-			},
-			"role":"",
-			"username":""
-		};
-		 Alpine.store("user",user);
-	})
+document.addEventListener("alpine:init", () => {
+	const user = {
+		display_name: "",
+		initials: "",
+		notifications: [],
+		notification_counts: {
+			communication: 0,
+			home: 0,
+			review: 0,
+		},
+		organization: {
+			name: "",
+		},
+		role: "",
+		username: "",
+	};
+	Alpine.store("user", user);
+});
 interface GreetingComponent {
-    message: string;
-    name: string;
-    updateMessage(): void;
+	message: string;
+	name: string;
+	updateMessage(): void;
 }
 
-Alpine.data('greeting', (): GreetingComponent => ({
-    message: 'Welcome to Alpine + TypeScript!',
-    name: 'World',
-    
-    updateMessage() {
-        this.message = 'Message updated at ' + new Date().toLocaleTimeString();
-    }
-}));
+Alpine.data(
+	"greeting",
+	(): GreetingComponent => ({
+		message: "Welcome to Alpine + TypeScript!",
+		name: "World",
 
-createApp(App).mount('#app');
+		updateMessage() {
+			this.message = "Message updated at " + new Date().toLocaleTimeString();
+		},
+	}),
+);
+
+createApp(App).mount("#app");

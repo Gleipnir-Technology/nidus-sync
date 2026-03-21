@@ -11,11 +11,11 @@ import (
 
 // Client represents a Label Studio API client
 type Client struct {
-	BaseURL     string
-	APIKey      string
-	AccessToken string
+	BaseURL            string
+	APIKey             string
+	AccessToken        string
 	AccessTokenExpires time.Time
-	HTTPClient  *http.Client
+	HTTPClient         *http.Client
 }
 
 // NewClient creates a new Label Studio client
@@ -123,7 +123,6 @@ func (c *Client) makeRequest(method string, path string, payload []byte) (*http.
 		}
 		return nil, fmt.Errorf("API returned error status %d: %s: ", resp.Status, bodyString)
 	}
-
 
 	return resp, nil
 }

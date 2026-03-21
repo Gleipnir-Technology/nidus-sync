@@ -66,7 +66,7 @@ async function updateUserState() {
 	const data = await response.json();
 	// Update properties instead of replacing the whole store which leverages Alpine's reactivity
 	const store_user = Alpine.store("user");
-	Object.keys(data).forEach(key => {
+	Object.keys(data).forEach((key) => {
 		store_user[key] = data[key];
 	});
 }

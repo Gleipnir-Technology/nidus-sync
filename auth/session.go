@@ -3,9 +3,9 @@ package auth
 import (
 	"time"
 
-	"github.com/alexedwards/scs/v2"
-	"github.com/alexedwards/scs/pgxstore"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/alexedwards/scs/pgxstore"
+	"github.com/alexedwards/scs/v2"
 )
 
 var sessionManager *scs.SessionManager
