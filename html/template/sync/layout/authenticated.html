@@ -12,10 +12,12 @@
 		{{ block "extraheader" . }}{{ end }}
 		<script>
 			const USER = {{ .User.AsJSON|json }};
-			SSEManager.subscribe("*", function (e) {
-				if (e.type != "heartbeat") {
-					updateUserState();
-				}
+			document.addEventListener("DOMContentLoaded", () => {
+				SSEManager.subscribe("*", function (e) {
+					if (e.type != "heartbeat") {
+						updateUserState();
+					}
+				});
 			});
 			document.addEventListener("alpine:init", () => {
 				Alpine.store("user", USER);

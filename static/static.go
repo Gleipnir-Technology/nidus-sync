@@ -97,8 +97,13 @@ func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 				// Cache for 1 week (604800 seconds)
 				crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
 			default:
-				// Other files, 1 hour
-				crw.Header().Set("Cache-Control", "public, max-age=3600")
+				// If it's a generated file, cache it essentially forever (1 year)
+				if strings.HasPrefix(requestedPath, "gen/") {
+					crw.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+				} else {
+					// Other files, 1 hour
+					crw.Header().Set("Cache-Control", "public, max-age=3600")
+				}
 			}
 		}
 		// Serve the file
