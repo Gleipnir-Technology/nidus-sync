@@ -31,6 +31,7 @@
                                                 pkgs.air
                                                 pkgs.autoprefixer
                                                 pkgs.dart-sass
+						pkgs.esbuild
                                                 pkgs.go
                                                 pkgs.goose
                                                 pkgs.gotools
