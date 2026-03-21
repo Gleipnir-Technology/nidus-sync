@@ -5,6 +5,7 @@ districts/
 flogo.log
 nidus-sync
 nidus-sync.log
+node_modules/
 result
 stadia/cmd/bulk-geocode/bulk-geocode
 stadia/cmd/reverse-geocode/reverse-geocode

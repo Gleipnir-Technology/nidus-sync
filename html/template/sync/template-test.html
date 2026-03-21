@@ -3,16 +3,11 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Alpine + TypeScript Demo</title>
+		<title>VueJS + TypeScript Demo</title>
 	</head>
 	<body>
-		<div x-data="greeting">
-			<h1 x-text="message"></h1>
-			<input type="text" x-model="name" placeholder="Enter your name" />
-			<p>Hello, <span x-text="name"></span>!</p>
-			<button @click="updateMessage">Change Message</button>
-		</div>
+		<div id="app"></div>
 
-		<script src="/static/bundle.js"></script>
+		<script src="/static/gen/js/bundle.js" type="module"></script>
 	</body>
 </html>

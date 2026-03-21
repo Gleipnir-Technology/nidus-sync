@@ -1,4 +1,14 @@
 { pkgs ? import <nixpkgs> { }, proj ? pkgs.proj }:
+
+let
+	# Fetch pnpm dependencies
+	pnpmDeps = pkgs.pnpm.fetchDeps {
+		pname = "nidus-sync-frontend";
+		version = "0.0.11";
+		src ./.;
+		hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # nix will tell you the correct hash
+	};
+in
 pkgs.buildGoModule rec {
         meta = {
                 description = "Nidus Sync";
@@ -16,9 +26,17 @@ pkgs.buildGoModule rec {
 		pkgs.pkg-config
 		pkgs.dart-sass
 		pkgs.esbuild
+		pkgs.pnpm.configHook
+		pkgs.nodejs
 	];
 
+	pnpmDeps = pnpmDeps;
+
 	preBuild = ''
+# Setup node_modules from pnpm dependencies
+export HOME=$(mktemp -d)
+pnpm config set store-dir $HOME/.pnpm-store
+
 # Compile SCSS
 SASS_SRC_DIR="./scss"
 CSS_OUTPUT_DIR="./static/gen/css"
@@ -37,8 +55,16 @@ echo "Generated CSS style with hash: $STYLE_HASH"
 JS_OUTPUT_DIR="./static/gen/js"
 mkdir -p "$JS_OUTPUT_DIR"
 
-echo "Bundling TypeScript..."
-esbuild ts/main.ts --bundle --minify --outfile="$JS_OUTPUT_DIR/bundle.js"
+echo "Bundling TypeScript with Vue..."
+esbuild ts/main.ts \
+	--bundle \
+	--minify \
+	--format=esm \
+	--define:__VUE_OPTIONS_API__=true \
+	--define:__VUE_PROD_DEVTOOLS__=false \
+	--define:__VUE_PROD_HYDRATION_MISMATCH_DETAILS__=false \
+	--alias:vue=vue/dist/vue.esm-bundler.js \
+	--outfile="$JS_OUTPUT_DIR/bundle.js"
 
 # Generate hash and rename bundle
 BUNDLE_HASH=$(sha256sum "$JS_OUTPUT_DIR/bundle.js" | cut -c1-12)

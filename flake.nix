@@ -36,7 +36,9 @@
                                                 pkgs.goose
                                                 pkgs.gotools
                                                 pkgs.lefthook
+						pkgs.nodejs
                                                 pkgs.pkg-config
+						pkgs.pnpm
                                                 pkgs.prettier
                                                 pkgs.prettier-plugin-go-template
                                                 proj.packages.${system}.default

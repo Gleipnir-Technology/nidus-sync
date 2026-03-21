@@ -86,10 +86,18 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 
 ### typescript
 
-You can generate the TypeScript with:
+In order to work on the TypeScript code you'll need to install the dependencies locally in your dev environment:
 
 ```
-esbuild ts/main.ts --bundle --outfile=html/static/bundle.js --format=iife --minify
+nix develop
+pnpm install
+```
+
+You can then generate the TypeScript with:
+
+```
+pnpm watch
+
 ```
 
 The only page that works right now is `https://sync.nidus.cloud/template-test`
