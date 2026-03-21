@@ -1,34 +1,4 @@
-{{ template "sync/layout/authenticated.html" . }}
-
-{{ define "title" }}Planning{{ end }}
-{{ define "extraheader" }}
-	<style>
-		.report-card {
-			transition: all 0.3s;
-			border-radius: 10px;
-		}
-		.report-card:hover {
-			transform: translateY(-5px);
-			box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-		}
-		.card-header {
-			border-radius: 10px 10px 0 0 !important;
-		}
-		.report-item {
-			padding: 12px;
-			border-left: 4px solid transparent;
-			transition: all 0.2s;
-		}
-		.report-item:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-			border-left: 4px solid #0d6efd;
-		}
-		body {
-			background-color: #f8f9fa;
-		}
-	</style>
-{{ end }}
-{{ define "content" }}
+<template>
 	<div class="container py-5">
 		<div class="row g-4">
 			<!-- Technician Supervision -->
@@ -171,4 +141,34 @@
 			</div>
 		</div>
 	</div>
-{{ end }}
+</template>
+
+<script setup lang="ts">
+// No special logic needed for this component
+</script>
+
+<style scoped>
+.report-card {
+	transition: all 0.3s;
+	border-radius: 10px;
+}
+.report-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+.card-header {
+	border-radius: 10px 10px 0 0 !important;
+}
+.report-item {
+	padding: 12px;
+	border-left: 4px solid transparent;
+	transition: all 0.2s;
+}
+.report-item:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+	border-left: 4px solid #0d6efd;
+}
+body {
+	background-color: #f8f9fa;
+}
+</style>

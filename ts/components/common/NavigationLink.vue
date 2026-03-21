@@ -1,6 +1,6 @@
 <template>
-	<a
-		:href="to"
+	<RouterLink
+		:to="to"
 		data-bs-toggle="tooltip"
 		data-bs-placement="right"
 		:title="label"
@@ -14,7 +14,7 @@
 			<span>{{ notificationCount > 99 ? "99+" : notificationCount }}</span>
 			<span class="visually-hidden">unread notifications</span>
 		</span>
-	</a>
+	</RouterLink>
 </template>
 
 <script setup lang="ts">
