@@ -1,6 +1,7 @@
 import Alpine from "./vendor/alpinejs-3.15.8.js";
 import { createApp } from "vue";
 import App from "./App.vue";
+import router from "./router";
 import { SSEManager } from "./sse-manager";
 //import { SetupSidebar } from "./sidebar";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -52,4 +53,6 @@ interface GreetingComponent {
 	updateMessage(): void;
 }
 
-createApp(App).mount("#app");
+const app = createApp(App);
+app.use(router);
+app.mount("#app");

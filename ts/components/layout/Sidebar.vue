@@ -12,6 +12,9 @@
 
 		<ul class="sidebar-menu">
 			<li>
+				<RouterLink to="/about">About</RouterLink>
+			</li>
+			<li>
 				<a
 					href="/root"
 					data-bs-toggle="tooltip"
