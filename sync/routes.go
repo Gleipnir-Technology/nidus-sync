@@ -3,7 +3,7 @@ package sync
 import (
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/static"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -92,6 +92,6 @@ func Router() chi.Router {
 	r.Method("GET", "/text/{destination}", authenticatedHandler(getTextMessages))
 	r.Method("GET", "/tile/gps", auth.NewEnsureAuth(getTileGPS))
 
-	html.AddStaticRoute(r, "/static")
+	static.AddStaticRoute(r, "/static")
 	return r
 }
