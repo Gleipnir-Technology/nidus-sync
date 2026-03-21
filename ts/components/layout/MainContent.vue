@@ -1,18 +1,11 @@
 <template>
-	<main class="main-content">
+	<div id="content">
 		<slot />
-	</main>
+	</div>
 </template>
 
 <script setup lang="ts">
 // No imports needed for this simple component
 </script>
 
-<style scoped>
-.main-content {
-	flex: 1;
-	padding: 40px;
-	overflow-y: auto;
-	background-color: #f5f5f5;
-}
-</style>
+<style scoped></style>
