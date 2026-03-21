@@ -93,7 +93,7 @@ func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embe
 		if config.IsProductionEnvironment() {
 			ext := filepath.Ext(requestedPath)
 			switch ext {
-			case ".css", ".js", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
+			case ".css", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
 				// Cache for 1 week (604800 seconds)
 				crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
 			default:
