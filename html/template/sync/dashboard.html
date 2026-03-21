@@ -10,9 +10,11 @@
 	<script>
 		function onLoad() {
 			const map = document.querySelector("map-aggregate");
-			map.addEventListener("cell-click", (event) => {
-				window.location.href = "/cell/" + event.detail.cell;
-			});
+			if (map) {
+				map.addEventListener("cell-click", (event) => {
+					window.location.href = "/cell/" + event.detail.cell;
+				});
+			}
 		}
 		window.addEventListener("load", onLoad);
 	</script>
