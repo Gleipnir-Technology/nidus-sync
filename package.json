@@ -20,6 +20,7 @@
   "scripts": {
     "build": "node build.js",
     "build:prod": "node build.js --minify",
+    "generate-icons": "node generate-icons.js",
     "watch": "node build.js --watch"
   }
 }

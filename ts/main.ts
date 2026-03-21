@@ -9,6 +9,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 // Import Bootstrap SCSS
 import "./style/style.scss";
+// Import custom icons
+import "./gen/custom-icons.scss";
 
 // Import Bootstrap JavaScript and make it available globally
 import * as bootstrap from "bootstrap";

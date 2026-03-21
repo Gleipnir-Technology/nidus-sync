@@ -12,3 +12,4 @@ stadia/cmd/reverse-geocode/reverse-geocode
 stadia/cmd/structured-geocode/structured-geocode
 static/gen/
 temp/
+ts/gen

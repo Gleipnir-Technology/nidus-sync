@@ -84,6 +84,16 @@ This uses [goose](https://github.com/pressly/goose). You can use the goose comma
 > GOOSE_DRIVER=postgres GOOSE_DBSTRING="dbname=nidus-sync sslmode=disable" goose up
 ```
 
+### svg icons
+
+These icons are generated as part of the build system. You can generate them manually with:
+
+```
+pnpm generate-icons
+```
+
+This will produce an scss file at `ts/gen/custom-icons.scss`
+
 ### typescript
 
 In order to work on the TypeScript code you'll need to install the dependencies locally in your dev environment:

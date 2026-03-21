@@ -40,32 +40,6 @@ func addSupportingTemplates(sourceFS fs.FS, t *template.Template) error {
 	}
 	return nil
 }
-func addSVGTemplates(filesystem fs.FS, t *template.Template) error {
-	err := fs.WalkDir(filesystem, "svg", func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-
-		content, err := fs.ReadFile(filesystem, path)
-		if err != nil {
-			return fmt.Errorf("Failed to read svg '%s' from filesystem: %w", path, err)
-		}
-		svg_name := removeLeadingDir(path)
-		svg_template := fmt.Sprintf("{{define \"%s\"}}%s{{end}}", svg_name, string(content))
-		svg_t, err := template.New(svg_name).Parse(svg_template)
-		if err != nil {
-			return fmt.Errorf("Failed to parse svg '%s' from embedded filesystem: %v", path, err)
-		}
-		_, err = t.AddParseTree(svg_t.Name(), svg_t.Tree)
-		if err != nil {
-			return fmt.Errorf("Failed to add svg '%s' to embedded template: %v", path, err)
-		}
-		//log.Debug().Str("name", svg_name).Msg("add svg template")
-		return nil
-	})
-	//log.Debug().Msg("Done adding SVG templates")
-	return err
-}
 func parseTemplate(sourceFS fs.FS, template_name string) (*template.Template, error) {
 	t, err := parseTemplateFile(sourceFS, template_name)
 	if err != nil {
@@ -74,10 +48,6 @@ func parseTemplate(sourceFS fs.FS, template_name string) (*template.Template, er
 	err = addSupportingTemplates(sourceFS, t)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to add supporting templates: %w", err)
-	}
-	err = addSVGTemplates(sourceFS, t)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to add supporting svg templates: %w", err)
 	}
 	return t, nil
 }
