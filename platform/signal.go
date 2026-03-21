@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
@@ -32,8 +33,9 @@ type Signal struct {
 	Creator   int32          `db:"creator" json:"creator"`
 	ID        int32          `db:"id" json:"id"`
 	Location  types.Location `db:"location" json:"location"`
+	Pool      *Pool          `db:"pool" json:"pool"`
+	Report    *types.Report  `db:"report" json:"report"`
 	Species   *string        `db:"species" json:"species"`
-	Title     string         `db:"title" json:"title"`
 	Type      string         `db:"type" json:"type"`
 }
 
@@ -115,16 +117,17 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	}
 	log.Debug().Str("location", location).Msg("inserting signal")
 	signal, err := models.Signals.Insert(&models.SignalSetter{
-		Addressed: omitnull.FromPtr[time.Time](nil),
-		Addressor: omitnull.FromPtr[int32](nil),
-		Created:   omit.From(time.Now()),
-		Creator:   omit.From(int32(user.ID)),
+		Addressed:            omitnull.FromPtr[time.Time](nil),
+		Addressor:            omitnull.FromPtr[int32](nil),
+		Created:              omit.From(time.Now()),
+		Creator:              omit.From(int32(user.ID)),
+		FeaturePoolFeatureID: omitnull.FromPtr[int32](nil),
 		// ID
 		OrganizationID: omit.From(int32(user.Organization.ID())),
 		Location:       omit.From(location),
+		ReportID:       omitnull.From(report.ID),
 		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
 		SiteID:         omitnull.From(site_id),
-		Title:          omit.From[string](""),
 		Type:           omit.From[enums.Signaltype](signal_type),
 	}).One(ctx, txn)
 	if err != nil {
@@ -146,7 +149,8 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	return &signal.ID, nil
 }
 
-func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
+func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
+	org_id := user.Organization.ID()
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"signal.addressed AS addressed",
@@ -154,8 +158,9 @@ func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
 			"signal.created AS created",
 			"signal.creator AS creator",
 			"signal.id AS id",
+			"COALESCE(signal.feature_pool_feature_id, 0) AS \"pool.id\"",
+			"COALESCE(signal.report_id, 0) AS \"report.id\"",
 			"signal.species AS species",
-			"signal.title AS title",
 			"signal.type_ AS type",
 			"address.country AS \"address.country\"",
 			"address.locality AS \"address.locality\"",
@@ -164,8 +169,9 @@ func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
 			"address.region AS \"address.region\"",
 			"address.street AS \"address.street\"",
 			"address.unit AS \"address.unit\"",
-			"ST_Y(address.location) AS \"location.latitude\"",
-			"ST_X(address.location) AS \"location.longitude\"",
+			// This will work great, up until we add polygons to signal
+			"ST_Y(signal.location) AS \"location.latitude\"",
+			"ST_X(signal.location) AS \"location.longitude\"",
 		),
 		sm.From("signal"),
 		sm.LeftJoin("site").OnEQ(
@@ -176,13 +182,55 @@ func SignalList(ctx context.Context, user User, limit int) ([]Signal, error) {
 			psql.Quote("site", "address_id"),
 			psql.Quote("address", "id"),
 		),
-		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
+		sm.Where(psql.Quote("signal", "organization_id").EQ(psql.Arg(org_id))),
 		sm.Where(psql.Quote("signal", "addressed").IsNull()),
 		sm.Limit(limit),
-	), scan.StructMapper[Signal]())
+	), scan.StructMapper[*Signal]())
 	log.Debug().Int("len", len(rows)).Msg("got signals")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signals: %w", err)
+	}
+	report_ids := make([]int32, 0)
+	pool_ids := make([]int32, 0)
+	for _, row := range rows {
+		if row.Report.ID != 0 {
+			report_ids = append(report_ids, row.Report.ID)
+		} else if row.Pool.ID != 0 {
+			pool_ids = append(pool_ids, row.Pool.ID)
+		}
+	}
+	pools, err := poolList(ctx, org_id, pool_ids)
+	if err != nil {
+		return nil, fmt.Errorf("getting pools by ID: %w", err)
+	}
+	reports, err := publicreport.Reports(ctx, org_id, report_ids)
+	if err != nil {
+		return nil, fmt.Errorf("getting reports by ID: %w", err)
+	}
+	pool_map := make(map[int32]*Pool, len(pools))
+	for _, pool := range pools {
+		pool_map[pool.ID] = pool
+		log.Debug().Int32("pool", pool.ID).Msg("Added to map")
+	}
+	report_map := make(map[int32]*types.Report, len(report_ids))
+	for _, report := range reports {
+		report_map[report.ID] = report
+	}
+	for _, row := range rows {
+		if row.Pool.ID != 0 {
+			p, ok := pool_map[row.Pool.ID]
+			if !ok {
+				return nil, fmt.Errorf("failed to get pool %d for %d", row.Pool.ID, row.ID)
+			}
+			if p == nil {
+				return nil, fmt.Errorf("got nil pool from %d for %d", row.Pool.ID, row.ID)
+			}
+			row.Pool = p
+			row.Report = nil
+		} else if row.Report.ID != 0 {
+			row.Pool = nil
+			row.Report = report_map[row.Report.ID]
+		}
 	}
 	return rows, nil
 }

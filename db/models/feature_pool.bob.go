@@ -45,8 +45,9 @@ type FeaturePoolsQuery = *psql.ViewQuery[*FeaturePool, FeaturePoolSlice]
 
 // featurePoolR is where relationships are stored.
 type featurePoolR struct {
-	Feature         *Feature            // feature_pool.feature_pool_feature_id_fkey
-	ReviewTaskPools ReviewTaskPoolSlice // review_task_pool.review_task_pool_feature_pool_fkey
+	Feature                   *Feature            // feature_pool.feature_pool_feature_id_fkey
+	ReviewTaskPools           ReviewTaskPoolSlice // review_task_pool.review_task_pool_feature_pool_fkey
+	FeaturePoolFeatureSignals SignalSlice         // signal.signal_feature_pool_feature_id_fkey
 }
 
 func buildFeaturePoolColumns(alias string) featurePoolColumns {
@@ -465,6 +466,30 @@ func (os FeaturePoolSlice) ReviewTaskPools(mods ...bob.Mod[*dialect.SelectQuery]
 	)...)
 }
 
+// FeaturePoolFeatureSignals starts a query for related objects on signal
+func (o *FeaturePool) FeaturePoolFeatureSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.FeaturePoolFeatureID.EQ(psql.Arg(o.FeatureID))),
+	)...)
+}
+
+func (os FeaturePoolSlice) FeaturePoolFeatureSignals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkFeatureID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkFeatureID = append(pkFeatureID, o.FeatureID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkFeatureID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.FeaturePoolFeatureID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func attachFeaturePoolFeature0(ctx context.Context, exec bob.Executor, count int, featurePool0 *FeaturePool, feature1 *Feature) (*FeaturePool, error) {
 	setter := &FeaturePoolSetter{
 		FeatureID: omit.From(feature1.ID),
@@ -581,6 +606,74 @@ func (featurePool0 *FeaturePool) AttachReviewTaskPools(ctx context.Context, exec
 	return nil
 }
 
+func insertFeaturePoolFeaturePoolFeatureSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, featurePool0 *FeaturePool) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].FeaturePoolFeatureID = omitnull.From(featurePool0.FeatureID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertFeaturePoolFeaturePoolFeatureSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachFeaturePoolFeaturePoolFeatureSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, featurePool0 *FeaturePool) (SignalSlice, error) {
+	setter := &SignalSetter{
+		FeaturePoolFeatureID: omitnull.From(featurePool0.FeatureID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachFeaturePoolFeaturePoolFeatureSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (featurePool0 *FeaturePool) InsertFeaturePoolFeatureSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertFeaturePoolFeaturePoolFeatureSignals0(ctx, exec, related, featurePool0)
+	if err != nil {
+		return err
+	}
+
+	featurePool0.R.FeaturePoolFeatureSignals = append(featurePool0.R.FeaturePoolFeatureSignals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.FeaturePoolFeatureFeaturePool = featurePool0
+	}
+	return nil
+}
+
+func (featurePool0 *FeaturePool) AttachFeaturePoolFeatureSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachFeaturePoolFeaturePoolFeatureSignals0(ctx, exec, len(related), signals1, featurePool0)
+	if err != nil {
+		return err
+	}
+
+	featurePool0.R.FeaturePoolFeatureSignals = append(featurePool0.R.FeaturePoolFeatureSignals, signals1...)
+
+	for _, rel := range related {
+		rel.R.FeaturePoolFeatureFeaturePool = featurePool0
+	}
+
+	return nil
+}
+
 type featurePoolWhere[Q psql.Filterable] struct {
 	FeatureID   psql.WhereMod[Q, int32]
 	Condition   psql.WhereMod[Q, enums.Poolconditiontype]
@@ -633,6 +726,20 @@ func (o *FeaturePool) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "FeaturePoolFeatureSignals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("featurePool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.FeaturePoolFeatureSignals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.FeaturePoolFeatureFeaturePool = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("featurePool has no relationship %q", name)
 	}
@@ -661,8 +768,9 @@ func buildFeaturePoolPreloader() featurePoolPreloader {
 }
 
 type featurePoolThenLoader[Q orm.Loadable] struct {
-	Feature         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewTaskPools func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Feature                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewTaskPools           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FeaturePoolFeatureSignals func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildFeaturePoolThenLoader[Q orm.Loadable]() featurePoolThenLoader[Q] {
@@ -671,6 +779,9 @@ func buildFeaturePoolThenLoader[Q orm.Loadable]() featurePoolThenLoader[Q] {
 	}
 	type ReviewTaskPoolsLoadInterface interface {
 		LoadReviewTaskPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type FeaturePoolFeatureSignalsLoadInterface interface {
+		LoadFeaturePoolFeatureSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return featurePoolThenLoader[Q]{
@@ -684,6 +795,12 @@ func buildFeaturePoolThenLoader[Q orm.Loadable]() featurePoolThenLoader[Q] {
 			"ReviewTaskPools",
 			func(ctx context.Context, exec bob.Executor, retrieved ReviewTaskPoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadReviewTaskPools(ctx, exec, mods...)
+			},
+		),
+		FeaturePoolFeatureSignals: thenLoadBuilder[Q](
+			"FeaturePoolFeatureSignals",
+			func(ctx context.Context, exec bob.Executor, retrieved FeaturePoolFeatureSignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFeaturePoolFeatureSignals(ctx, exec, mods...)
 			},
 		),
 	}
@@ -796,6 +913,70 @@ func (os FeaturePoolSlice) LoadReviewTaskPools(ctx context.Context, exec bob.Exe
 			rel.R.FeaturePool = o
 
 			o.R.ReviewTaskPools = append(o.R.ReviewTaskPools, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadFeaturePoolFeatureSignals loads the featurePool's FeaturePoolFeatureSignals into the .R struct
+func (o *FeaturePool) LoadFeaturePoolFeatureSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.FeaturePoolFeatureSignals = nil
+
+	related, err := o.FeaturePoolFeatureSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.FeaturePoolFeatureFeaturePool = o
+	}
+
+	o.R.FeaturePoolFeatureSignals = related
+	return nil
+}
+
+// LoadFeaturePoolFeatureSignals loads the featurePool's FeaturePoolFeatureSignals into the .R struct
+func (os FeaturePoolSlice) LoadFeaturePoolFeatureSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.FeaturePoolFeatureSignals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.FeaturePoolFeatureSignals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !rel.FeaturePoolFeatureID.IsValue() {
+				continue
+			}
+			if !(rel.FeaturePoolFeatureID.IsValue() && o.FeatureID == rel.FeaturePoolFeatureID.MustGet()) {
+				continue
+			}
+
+			rel.R.FeaturePoolFeatureFeaturePool = o
+
+			o.R.FeaturePoolFeatureSignals = append(o.R.FeaturePoolFeatureSignals, rel)
 		}
 	}
 

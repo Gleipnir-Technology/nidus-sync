@@ -10,7 +10,7 @@ import (
 )
 
 type contentListSignal struct {
-	Signals []platform.Signal `json:"signals"`
+	Signals []*platform.Signal `json:"signals"`
 }
 
 func listSignal(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListSignal, *nhttp.ErrorWithStatus) {

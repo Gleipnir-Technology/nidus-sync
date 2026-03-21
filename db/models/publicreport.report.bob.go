@@ -81,6 +81,7 @@ type publicreportReportR struct {
 	ReportLogs   PublicreportReportLogSlice   // publicreport.report_log.report_log_report_id_fkey
 	Water        *PublicreportWater           // publicreport.water.water_report_id_fkey
 	ReportTexts  ReportTextSlice              // report_text.report_text_report_id_fkey
+	Signals      SignalSlice                  // signal.signal_report_id_fkey
 }
 
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
@@ -1186,6 +1187,30 @@ func (os PublicreportReportSlice) ReportTexts(mods ...bob.Mod[*dialect.SelectQue
 	)...)
 }
 
+// Signals starts a query for related objects on signal
+func (o *PublicreportReport) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	return Signals.Query(append(mods,
+		sm.Where(Signals.Columns.ReportID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportReportSlice) Signals(mods ...bob.Mod[*dialect.SelectQuery]) SignalsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Signals.Query(append(mods,
+		sm.Where(psql.Group(Signals.Columns.ReportID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 func insertPublicreportReportTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, publicreportReport0 *PublicreportReport) (CommsTextJobSlice, error) {
 	for i := range commsTextJobs1 {
 		commsTextJobs1[i].ReportID = omitnull.From(publicreportReport0.ID)
@@ -1843,6 +1868,74 @@ func (publicreportReport0 *PublicreportReport) AttachReportTexts(ctx context.Con
 	return nil
 }
 
+func insertPublicreportReportSignals0(ctx context.Context, exec bob.Executor, signals1 []*SignalSetter, publicreportReport0 *PublicreportReport) (SignalSlice, error) {
+	for i := range signals1 {
+		signals1[i].ReportID = omitnull.From(publicreportReport0.ID)
+	}
+
+	ret, err := Signals.Insert(bob.ToMods(signals1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportReportSignals0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportReportSignals0(ctx context.Context, exec bob.Executor, count int, signals1 SignalSlice, publicreportReport0 *PublicreportReport) (SignalSlice, error) {
+	setter := &SignalSetter{
+		ReportID: omitnull.From(publicreportReport0.ID),
+	}
+
+	err := signals1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportReportSignals0: %w", err)
+	}
+
+	return signals1, nil
+}
+
+func (publicreportReport0 *PublicreportReport) InsertSignals(ctx context.Context, exec bob.Executor, related ...*SignalSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	signals1, err := insertPublicreportReportSignals0(ctx, exec, related, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Signals = append(publicreportReport0.R.Signals, signals1...)
+
+	for _, rel := range signals1 {
+		rel.R.Report = publicreportReport0
+	}
+	return nil
+}
+
+func (publicreportReport0 *PublicreportReport) AttachSignals(ctx context.Context, exec bob.Executor, related ...*Signal) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	signals1 := SignalSlice(related)
+
+	_, err = attachPublicreportReportSignals0(ctx, exec, len(related), signals1, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Signals = append(publicreportReport0.R.Signals, signals1...)
+
+	for _, rel := range related {
+		rel.R.Report = publicreportReport0
+	}
+
+	return nil
+}
+
 type publicreportReportWhere[Q psql.Filterable] struct {
 	AddressRaw             psql.WhereMod[Q, string]
 	AddressNumber          psql.WhereMod[Q, string]
@@ -2059,6 +2152,20 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Signals":
+		rels, ok := retrieved.(SignalSlice)
+		if !ok {
+			return fmt.Errorf("publicreportReport cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Signals = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Report = o
+			}
+		}
+		return nil
 	default:
 		return fmt.Errorf("publicreportReport has no relationship %q", name)
 	}
@@ -2154,6 +2261,7 @@ type publicreportReportThenLoader[Q orm.Loadable] struct {
 	ReportLogs   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Water        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReportTexts  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenLoader[Q] {
@@ -2189,6 +2297,9 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 	}
 	type ReportTextsLoadInterface interface {
 		LoadReportTexts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SignalsLoadInterface interface {
+		LoadSignals(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return publicreportReportThenLoader[Q]{
@@ -2256,6 +2367,12 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 			"ReportTexts",
 			func(ctx context.Context, exec bob.Executor, retrieved ReportTextsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadReportTexts(ctx, exec, mods...)
+			},
+		),
+		Signals: thenLoadBuilder[Q](
+			"Signals",
+			func(ctx context.Context, exec bob.Executor, retrieved SignalsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSignals(ctx, exec, mods...)
 			},
 		),
 	}
@@ -2910,6 +3027,70 @@ func (os PublicreportReportSlice) LoadReportTexts(ctx context.Context, exec bob.
 			rel.R.Report = o
 
 			o.R.ReportTexts = append(o.R.ReportTexts, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSignals loads the publicreportReport's Signals into the .R struct
+func (o *PublicreportReport) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Signals = nil
+
+	related, err := o.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Report = o
+	}
+
+	o.R.Signals = related
+	return nil
+}
+
+// LoadSignals loads the publicreportReport's Signals into the .R struct
+func (os PublicreportReportSlice) LoadSignals(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	signals, err := os.Signals(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Signals = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range signals {
+
+			if !rel.ReportID.IsValue() {
+				continue
+			}
+			if !(rel.ReportID.IsValue() && o.ID == rel.ReportID.MustGet()) {
+				continue
+			}
+
+			rel.R.Report = o
+
+			o.R.Signals = append(o.R.Signals, rel)
 		}
 	}
 

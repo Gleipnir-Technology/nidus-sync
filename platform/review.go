@@ -141,14 +141,15 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user User, review_task_po
 			return nhttp.NewError("find feature %d: %w", feature_pool.FeatureID, err)
 		}
 		signal, err := models.Signals.Insert(&models.SignalSetter{
-			Addressed: omitnull.FromPtr[time.Time](nil),
-			Addressor: omitnull.FromPtr[int32](nil),
-			Created:   omit.From(time.Now()),
-			Creator:   omit.From[int32](int32(user.ID)),
+			Addressed:            omitnull.FromPtr[time.Time](nil),
+			Addressor:            omitnull.FromPtr[int32](nil),
+			Created:              omit.From(time.Now()),
+			Creator:              omit.From[int32](int32(user.ID)),
+			FeaturePoolFeatureID: omitnull.From(feature_pool.FeatureID),
 			//ID: omit.Val[int32],
 			OrganizationID: omit.From(user.Organization.ID()),
+			ReportID:       omitnull.FromPtr[int32](nil),
 			Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
-			Title:          omit.From[string](""),
 			Type:           omit.From(enums.SignaltypeFlyoverPool),
 			SiteID:         omitnull.From(feature.SiteID),
 			Location:       omit.From[string](feature.Location.GetOr("")),

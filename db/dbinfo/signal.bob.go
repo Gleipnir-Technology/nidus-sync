@@ -78,15 +78,6 @@ var Signals = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Title: column{
-			Name:      "title",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Type: column{
 			Name:      "type_",
 			DBType:    "public.signaltype",
@@ -121,6 +112,24 @@ var Signals = Table[
 			Comment:   "",
 			Nullable:  true,
 			Generated: true,
+			AutoIncr:  false,
+		},
+		FeaturePoolFeatureID: column{
+			Name:      "feature_pool_feature_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		ReportID: column{
+			Name:      "report_id",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
 			AutoIncr:  false,
 		},
 	},
@@ -201,6 +210,15 @@ var Signals = Table[
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
+		SignalSignalFeaturePoolFeatureIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "signal.signal_feature_pool_feature_id_fkey",
+				Columns: []string{"feature_pool_feature_id"},
+				Comment: "",
+			},
+			ForeignTable:   "feature_pool",
+			ForeignColumns: []string{"feature_id"},
+		},
 		SignalSignalOrganizationIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "signal.signal_organization_id_fkey",
@@ -208,6 +226,15 @@ var Signals = Table[
 				Comment: "",
 			},
 			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
+		SignalSignalReportIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "signal.signal_report_id_fkey",
+				Columns: []string{"report_id"},
+				Comment: "",
+			},
+			ForeignTable:   "publicreport.report",
 			ForeignColumns: []string{"id"},
 		},
 		SignalSignalSiteIDFkey: foreignKey{
@@ -222,6 +249,14 @@ var Signals = Table[
 	},
 
 	Checks: signalChecks{
+		CheckExclusiveReference: check{
+			constraint: constraint{
+				Name:    "check_exclusive_reference",
+				Columns: []string{"feature_pool_feature_id", "report_id"},
+				Comment: "",
+			},
+			Expression: "((feature_pool_feature_id IS NULL) OR (report_id IS NULL))",
+		},
 		ValidLocationTypes: check{
 			constraint: constraint{
 				Name:    "valid_location_types",
@@ -235,23 +270,24 @@ var Signals = Table[
 }
 
 type signalColumns struct {
-	Addressed      column
-	Addressor      column
-	Created        column
-	Creator        column
-	ID             column
-	OrganizationID column
-	Species        column
-	Title          column
-	Type           column
-	SiteID         column
-	Location       column
-	LocationType   column
+	Addressed            column
+	Addressor            column
+	Created              column
+	Creator              column
+	ID                   column
+	OrganizationID       column
+	Species              column
+	Type                 column
+	SiteID               column
+	Location             column
+	LocationType         column
+	FeaturePoolFeatureID column
+	ReportID             column
 }
 
 func (c signalColumns) AsSlice() []column {
 	return []column{
-		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Title, c.Type, c.SiteID, c.Location, c.LocationType,
+		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Type, c.SiteID, c.Location, c.LocationType, c.FeaturePoolFeatureID, c.ReportID,
 	}
 }
 
@@ -268,15 +304,17 @@ func (i signalIndexes) AsSlice() []index {
 }
 
 type signalForeignKeys struct {
-	SignalSignalAddressorFkey      foreignKey
-	SignalSignalCreatorFkey        foreignKey
-	SignalSignalOrganizationIDFkey foreignKey
-	SignalSignalSiteIDFkey         foreignKey
+	SignalSignalAddressorFkey            foreignKey
+	SignalSignalCreatorFkey              foreignKey
+	SignalSignalFeaturePoolFeatureIDFkey foreignKey
+	SignalSignalOrganizationIDFkey       foreignKey
+	SignalSignalReportIDFkey             foreignKey
+	SignalSignalSiteIDFkey               foreignKey
 }
 
 func (f signalForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.SignalSignalAddressorFkey, f.SignalSignalCreatorFkey, f.SignalSignalOrganizationIDFkey, f.SignalSignalSiteIDFkey,
+		f.SignalSignalAddressorFkey, f.SignalSignalCreatorFkey, f.SignalSignalFeaturePoolFeatureIDFkey, f.SignalSignalOrganizationIDFkey, f.SignalSignalReportIDFkey, f.SignalSignalSiteIDFkey,
 	}
 }
 
@@ -287,11 +325,12 @@ func (u signalUniques) AsSlice() []constraint {
 }
 
 type signalChecks struct {
-	ValidLocationTypes check
+	CheckExclusiveReference check
+	ValidLocationTypes      check
 }
 
 func (c signalChecks) AsSlice() []check {
 	return []check{
-		c.ValidLocationTypes,
+		c.CheckExclusiveReference, c.ValidLocationTypes,
 	}
 }

@@ -16,25 +16,7 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-type Water struct {
-	AccessComments         string        `db:"access_comments" json:"access_comments"`
-	AccessGate             bool          `db:"access_gate" json:"access_gate"`
-	AccessFence            bool          `db:"access_fence" json:"access_fence"`
-	AccessLocked           bool          `db:"access_locked" json:"access_locked"`
-	AccessDog              bool          `db:"access_dog" json:"access_dog"`
-	AccessOther            bool          `db:"access_other" json:"access_other"`
-	Comments               string        `db:"comments" json:"comments"`
-	HasAdult               bool          `db:"has_adult" json:"has_adult"`
-	HasBackyardPermission  bool          `db:"has_backyard_permission" json:"has_backyard_permission"`
-	HasLarvae              bool          `db:"has_larvae" json:"has_larvae"`
-	HasPupae               bool          `db:"has_pupae" json:"has_pupae"`
-	IsReporterConfidential bool          `db:"is_reporter_confidential" json:"is_reporter_confidential"`
-	IsReporterOwner        bool          `db:"is_reporter_owner" json:"is_reporter_owner"`
-	Owner                  types.Contact `db:"owner" json:"owner"`
-	ReportID               int32         `db:"report_id" json:"-"`
-}
-
-func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*Water, error) {
+func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*types.Water, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"access_comments",
@@ -59,13 +41,13 @@ func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*Water
 		sm.Where(psql.Quote("report_id").EQ(
 			psql.Any(report_ids),
 		)),
-	), scan.StructMapper[Water]())
+	), scan.StructMapper[types.Water]())
 	if err != nil {
 		return nil, fmt.Errorf("query water: %w", err)
 	}
-	results := make(map[int32]*Water, len(rows))
+	results := make(map[int32]*types.Water, len(rows))
 	for _, row := range rows {
-		results[row.ReportID] = &Water{
+		results[row.ReportID] = &types.Water{
 			AccessComments:         row.AccessComments,
 			AccessGate:             row.AccessGate,
 			AccessFence:            row.AccessFence,

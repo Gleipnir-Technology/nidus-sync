@@ -6,12 +6,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
+type Pool struct {
+	Condition string `db:"condition" json:"condition"`
+	ID        int32  `db:"id" json:"-"`
+}
 type UploadPoolDetail struct {
 	CountExisting int
 	CountNew      int
@@ -148,4 +157,20 @@ func errorsByLine(ctx context.Context, file *models.FileuploadFile) ([]UploadPoo
 		}
 	}
 	return file_errors, errors_by_line, nil
+}
+func poolList(ctx context.Context, org_id int32, pool_ids []int32) ([]*Pool, error) {
+	pools, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"condition",
+			"feature_id AS id",
+		),
+		sm.From(psql.Quote("feature_pool")),
+		sm.Where(
+			models.FeaturePools.Columns.FeatureID.EQ(psql.Any(pool_ids)),
+		),
+	), scan.StructMapper[*Pool]())
+	if err != nil {
+		return nil, fmt.Errorf("query feature_pool: %w", err)
+	}
+	return pools, nil
 }

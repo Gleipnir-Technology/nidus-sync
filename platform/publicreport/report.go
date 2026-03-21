@@ -3,10 +3,10 @@ package publicreport
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -17,47 +17,15 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-type Report struct {
-	Log        []LogEntry      `db:"-" json:"log"`
-	Address    types.Address   `db:"address" json:"address"`
-	AddressRaw string          `db:"address_raw" json:"address_raw"`
-	Created    time.Time       `db:"created" json:"created"`
-	ID         int32           `db:"id" json:"-"`
-	Images     []types.Image   `db:"images" json:"images"`
-	Location   *types.Location `db:"location" json:"location"`
-	Nuisance   *Nuisance       `db:"nuisance" json:"nuisance"`
-	PublicID   string          `db:"public_id" json:"public_id"`
-	Reporter   types.Contact   `db:"reporter" json:"reporter"`
-	Status     string          `db:"status" json:"status"`
-	Type       string          `db:"report_type" json:"type"`
-	Water      *Water          `db:"water" json:"water"`
-}
-
-func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error) {
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			"address_country AS \"address.country\"",
-			"address_locality AS \"address.locality\"",
-			"address_number AS \"address.number\"",
-			"address_postal_code AS \"address.postal_code\"",
-			"address_raw AS address_raw",
-			"address_region AS \"address.region\"",
-			"address_street AS \"address.street\"",
-			"created",
-			"id",
-			"COALESCE(ST_Y(location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
-			"COALESCE(ST_X(location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
-			"public_id",
-			"report_type",
-			"reporter_email AS \"reporter.email\"",
-			"reporter_name AS \"reporter.name\"",
-			"reporter_phone AS \"reporter.phone\"",
-			"status",
-		),
-		sm.From("publicreport.report"),
-		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
+func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.Report, error) {
+	query := reportQuery(org_id)
+	query.Apply(
 		sm.Where(psql.Quote("publicreport", "report", "reviewed").IsNull()),
-	), scan.StructMapper[Report]())
+	)
+	return reportQueryToRows(ctx, org_id, query)
+}
+func reportQueryToRows(ctx context.Context, org_id int32, query bob.BaseQuery[*dialect.SelectQuery]) ([]*types.Report, error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.Report]())
 
 	if err != nil {
 		return nil, fmt.Errorf("get reports: %w", err)
@@ -83,7 +51,7 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error
 		return nil, fmt.Errorf("waters: %w", err)
 	}
 
-	results := make([]*Report, len(rows))
+	results := make([]*types.Report, len(rows))
 	for i, row := range rows {
 		images, ok := images_by_id[row.ID]
 		if ok {
@@ -101,6 +69,13 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*Report, error
 	}
 	return results, nil
 }
+func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.Report, error) {
+	query := reportQuery(org_id)
+	query.Apply(
+		sm.Where(psql.Quote("publicreport", "report", "reviewed").IsNull()),
+	)
+	return reportQueryToRows(ctx, org_id, query)
+}
 func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error) {
 	type _Row struct {
 		Count uint `db:"count"`
@@ -116,4 +91,29 @@ func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error
 		return 0, fmt.Errorf("query count: %w", err)
 	}
 	return row.Count, nil
+}
+func reportQuery(org_id int32) bob.BaseQuery[*dialect.SelectQuery] {
+	return psql.Select(
+		sm.Columns(
+			"address_country AS \"address.country\"",
+			"address_locality AS \"address.locality\"",
+			"address_number AS \"address.number\"",
+			"address_postal_code AS \"address.postal_code\"",
+			"address_raw AS address_raw",
+			"address_region AS \"address.region\"",
+			"address_street AS \"address.street\"",
+			"created",
+			"id",
+			"COALESCE(ST_Y(location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
+			"COALESCE(ST_X(location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
+			"public_id",
+			"report_type",
+			"reporter_email AS \"reporter.email\"",
+			"reporter_name AS \"reporter.name\"",
+			"reporter_phone AS \"reporter.phone\"",
+			"status",
+		),
+		sm.From("publicreport.report"),
+		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
+	)
 }

@@ -26,18 +26,19 @@ import (
 
 // Signal is an object representing the database table.
 type Signal struct {
-	Addressed      null.Val[time.Time]             `db:"addressed" `
-	Addressor      null.Val[int32]                 `db:"addressor" `
-	Created        time.Time                       `db:"created" `
-	Creator        int32                           `db:"creator" `
-	ID             int32                           `db:"id,pk" `
-	OrganizationID int32                           `db:"organization_id" `
-	Species        null.Val[enums.Mosquitospecies] `db:"species" `
-	Title          string                          `db:"title" `
-	Type           enums.Signaltype                `db:"type_" `
-	SiteID         null.Val[int32]                 `db:"site_id" `
-	Location       string                          `db:"location" `
-	LocationType   null.Val[string]                `db:"location_type,generated" `
+	Addressed            null.Val[time.Time]             `db:"addressed" `
+	Addressor            null.Val[int32]                 `db:"addressor" `
+	Created              time.Time                       `db:"created" `
+	Creator              int32                           `db:"creator" `
+	ID                   int32                           `db:"id,pk" `
+	OrganizationID       int32                           `db:"organization_id" `
+	Species              null.Val[enums.Mosquitospecies] `db:"species" `
+	Type                 enums.Signaltype                `db:"type_" `
+	SiteID               null.Val[int32]                 `db:"site_id" `
+	Location             string                          `db:"location" `
+	LocationType         null.Val[string]                `db:"location_type,generated" `
+	FeaturePoolFeatureID null.Val[int32]                 `db:"feature_pool_feature_id" `
+	ReportID             null.Val[int32]                 `db:"report_id" `
 
 	R signalR `db:"-" `
 }
@@ -54,48 +55,52 @@ type SignalsQuery = *psql.ViewQuery[*Signal, SignalSlice]
 
 // signalR is where relationships are stored.
 type signalR struct {
-	AddressorUser *User         // signal.signal_addressor_fkey
-	CreatorUser   *User         // signal.signal_creator_fkey
-	Organization  *Organization // signal.signal_organization_id_fkey
-	Site          *Site         // signal.signal_site_id_fkey
+	AddressorUser                 *User               // signal.signal_addressor_fkey
+	CreatorUser                   *User               // signal.signal_creator_fkey
+	FeaturePoolFeatureFeaturePool *FeaturePool        // signal.signal_feature_pool_feature_id_fkey
+	Organization                  *Organization       // signal.signal_organization_id_fkey
+	Report                        *PublicreportReport // signal.signal_report_id_fkey
+	Site                          *Site               // signal.signal_site_id_fkey
 }
 
 func buildSignalColumns(alias string) signalColumns {
 	return signalColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "title", "type_", "site_id", "location", "location_type",
+			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "type_", "site_id", "location", "location_type", "feature_pool_feature_id", "report_id",
 		).WithParent("signal"),
-		tableAlias:     alias,
-		Addressed:      psql.Quote(alias, "addressed"),
-		Addressor:      psql.Quote(alias, "addressor"),
-		Created:        psql.Quote(alias, "created"),
-		Creator:        psql.Quote(alias, "creator"),
-		ID:             psql.Quote(alias, "id"),
-		OrganizationID: psql.Quote(alias, "organization_id"),
-		Species:        psql.Quote(alias, "species"),
-		Title:          psql.Quote(alias, "title"),
-		Type:           psql.Quote(alias, "type_"),
-		SiteID:         psql.Quote(alias, "site_id"),
-		Location:       psql.Quote(alias, "location"),
-		LocationType:   psql.Quote(alias, "location_type"),
+		tableAlias:           alias,
+		Addressed:            psql.Quote(alias, "addressed"),
+		Addressor:            psql.Quote(alias, "addressor"),
+		Created:              psql.Quote(alias, "created"),
+		Creator:              psql.Quote(alias, "creator"),
+		ID:                   psql.Quote(alias, "id"),
+		OrganizationID:       psql.Quote(alias, "organization_id"),
+		Species:              psql.Quote(alias, "species"),
+		Type:                 psql.Quote(alias, "type_"),
+		SiteID:               psql.Quote(alias, "site_id"),
+		Location:             psql.Quote(alias, "location"),
+		LocationType:         psql.Quote(alias, "location_type"),
+		FeaturePoolFeatureID: psql.Quote(alias, "feature_pool_feature_id"),
+		ReportID:             psql.Quote(alias, "report_id"),
 	}
 }
 
 type signalColumns struct {
 	expr.ColumnsExpr
-	tableAlias     string
-	Addressed      psql.Expression
-	Addressor      psql.Expression
-	Created        psql.Expression
-	Creator        psql.Expression
-	ID             psql.Expression
-	OrganizationID psql.Expression
-	Species        psql.Expression
-	Title          psql.Expression
-	Type           psql.Expression
-	SiteID         psql.Expression
-	Location       psql.Expression
-	LocationType   psql.Expression
+	tableAlias           string
+	Addressed            psql.Expression
+	Addressor            psql.Expression
+	Created              psql.Expression
+	Creator              psql.Expression
+	ID                   psql.Expression
+	OrganizationID       psql.Expression
+	Species              psql.Expression
+	Type                 psql.Expression
+	SiteID               psql.Expression
+	Location             psql.Expression
+	LocationType         psql.Expression
+	FeaturePoolFeatureID psql.Expression
+	ReportID             psql.Expression
 }
 
 func (c signalColumns) Alias() string {
@@ -110,21 +115,22 @@ func (signalColumns) AliasedAs(alias string) signalColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type SignalSetter struct {
-	Addressed      omitnull.Val[time.Time]             `db:"addressed" `
-	Addressor      omitnull.Val[int32]                 `db:"addressor" `
-	Created        omit.Val[time.Time]                 `db:"created" `
-	Creator        omit.Val[int32]                     `db:"creator" `
-	ID             omit.Val[int32]                     `db:"id,pk" `
-	OrganizationID omit.Val[int32]                     `db:"organization_id" `
-	Species        omitnull.Val[enums.Mosquitospecies] `db:"species" `
-	Title          omit.Val[string]                    `db:"title" `
-	Type           omit.Val[enums.Signaltype]          `db:"type_" `
-	SiteID         omitnull.Val[int32]                 `db:"site_id" `
-	Location       omit.Val[string]                    `db:"location" `
+	Addressed            omitnull.Val[time.Time]             `db:"addressed" `
+	Addressor            omitnull.Val[int32]                 `db:"addressor" `
+	Created              omit.Val[time.Time]                 `db:"created" `
+	Creator              omit.Val[int32]                     `db:"creator" `
+	ID                   omit.Val[int32]                     `db:"id,pk" `
+	OrganizationID       omit.Val[int32]                     `db:"organization_id" `
+	Species              omitnull.Val[enums.Mosquitospecies] `db:"species" `
+	Type                 omit.Val[enums.Signaltype]          `db:"type_" `
+	SiteID               omitnull.Val[int32]                 `db:"site_id" `
+	Location             omit.Val[string]                    `db:"location" `
+	FeaturePoolFeatureID omitnull.Val[int32]                 `db:"feature_pool_feature_id" `
+	ReportID             omitnull.Val[int32]                 `db:"report_id" `
 }
 
 func (s SignalSetter) SetColumns() []string {
-	vals := make([]string, 0, 11)
+	vals := make([]string, 0, 12)
 	if !s.Addressed.IsUnset() {
 		vals = append(vals, "addressed")
 	}
@@ -146,9 +152,6 @@ func (s SignalSetter) SetColumns() []string {
 	if !s.Species.IsUnset() {
 		vals = append(vals, "species")
 	}
-	if s.Title.IsValue() {
-		vals = append(vals, "title")
-	}
 	if s.Type.IsValue() {
 		vals = append(vals, "type_")
 	}
@@ -157,6 +160,12 @@ func (s SignalSetter) SetColumns() []string {
 	}
 	if s.Location.IsValue() {
 		vals = append(vals, "location")
+	}
+	if !s.FeaturePoolFeatureID.IsUnset() {
+		vals = append(vals, "feature_pool_feature_id")
+	}
+	if !s.ReportID.IsUnset() {
+		vals = append(vals, "report_id")
 	}
 	return vals
 }
@@ -183,9 +192,6 @@ func (s SignalSetter) Overwrite(t *Signal) {
 	if !s.Species.IsUnset() {
 		t.Species = s.Species.MustGetNull()
 	}
-	if s.Title.IsValue() {
-		t.Title = s.Title.MustGet()
-	}
 	if s.Type.IsValue() {
 		t.Type = s.Type.MustGet()
 	}
@@ -195,6 +201,12 @@ func (s SignalSetter) Overwrite(t *Signal) {
 	if s.Location.IsValue() {
 		t.Location = s.Location.MustGet()
 	}
+	if !s.FeaturePoolFeatureID.IsUnset() {
+		t.FeaturePoolFeatureID = s.FeaturePoolFeatureID.MustGetNull()
+	}
+	if !s.ReportID.IsUnset() {
+		t.ReportID = s.ReportID.MustGetNull()
+	}
 }
 
 func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
@@ -203,7 +215,7 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 11)
+		vals := make([]bob.Expression, 12)
 		if !s.Addressed.IsUnset() {
 			vals[0] = psql.Arg(s.Addressed.MustGetNull())
 		} else {
@@ -246,28 +258,34 @@ func (s *SignalSetter) Apply(q *dialect.InsertQuery) {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if s.Title.IsValue() {
-			vals[7] = psql.Arg(s.Title.MustGet())
+		if s.Type.IsValue() {
+			vals[7] = psql.Arg(s.Type.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.Type.IsValue() {
-			vals[8] = psql.Arg(s.Type.MustGet())
+		if !s.SiteID.IsUnset() {
+			vals[8] = psql.Arg(s.SiteID.MustGetNull())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SiteID.IsUnset() {
-			vals[9] = psql.Arg(s.SiteID.MustGetNull())
+		if s.Location.IsValue() {
+			vals[9] = psql.Arg(s.Location.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if s.Location.IsValue() {
-			vals[10] = psql.Arg(s.Location.MustGet())
+		if !s.FeaturePoolFeatureID.IsUnset() {
+			vals[10] = psql.Arg(s.FeaturePoolFeatureID.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
+		}
+
+		if !s.ReportID.IsUnset() {
+			vals[11] = psql.Arg(s.ReportID.MustGetNull())
+		} else {
+			vals[11] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -279,7 +297,7 @@ func (s SignalSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 11)
+	exprs := make([]bob.Expression, 0, 12)
 
 	if !s.Addressed.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -330,13 +348,6 @@ func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
-	if s.Title.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "title")...),
-			psql.Arg(s.Title),
-		}})
-	}
-
 	if s.Type.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "type_")...),
@@ -355,6 +366,20 @@ func (s SignalSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "location")...),
 			psql.Arg(s.Location),
+		}})
+	}
+
+	if !s.FeaturePoolFeatureID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "feature_pool_feature_id")...),
+			psql.Arg(s.FeaturePoolFeatureID),
+		}})
+	}
+
+	if !s.ReportID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "report_id")...),
+			psql.Arg(s.ReportID),
 		}})
 	}
 
@@ -632,6 +657,30 @@ func (os SignalSlice) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQu
 	)...)
 }
 
+// FeaturePoolFeatureFeaturePool starts a query for related objects on feature_pool
+func (o *Signal) FeaturePoolFeatureFeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
+	return FeaturePools.Query(append(mods,
+		sm.Where(FeaturePools.Columns.FeatureID.EQ(psql.Arg(o.FeaturePoolFeatureID))),
+	)...)
+}
+
+func (os SignalSlice) FeaturePoolFeatureFeaturePool(mods ...bob.Mod[*dialect.SelectQuery]) FeaturePoolsQuery {
+	pkFeaturePoolFeatureID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkFeaturePoolFeatureID = append(pkFeaturePoolFeatureID, o.FeaturePoolFeatureID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkFeaturePoolFeatureID), "integer[]")),
+	))
+
+	return FeaturePools.Query(append(mods,
+		sm.Where(psql.Group(FeaturePools.Columns.FeatureID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Organization starts a query for related objects on organization
 func (o *Signal) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
 	return Organizations.Query(append(mods,
@@ -653,6 +702,30 @@ func (os SignalSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organi
 
 	return Organizations.Query(append(mods,
 		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Report starts a query for related objects on publicreport.report
+func (o *Signal) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	return PublicreportReports.Query(append(mods,
+		sm.Where(PublicreportReports.Columns.ID.EQ(psql.Arg(o.ReportID))),
+	)...)
+}
+
+func (os SignalSlice) Report(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportsQuery {
+	pkReportID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkReportID = append(pkReportID, o.ReportID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkReportID), "integer[]")),
+	))
+
+	return PublicreportReports.Query(append(mods,
+		sm.Where(psql.Group(PublicreportReports.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -776,6 +849,54 @@ func (signal0 *Signal) AttachCreatorUser(ctx context.Context, exec bob.Executor,
 	return nil
 }
 
+func attachSignalFeaturePoolFeatureFeaturePool0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, featurePool1 *FeaturePool) (*Signal, error) {
+	setter := &SignalSetter{
+		FeaturePoolFeatureID: omitnull.From(featurePool1.FeatureID),
+	}
+
+	err := signal0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSignalFeaturePoolFeatureFeaturePool0: %w", err)
+	}
+
+	return signal0, nil
+}
+
+func (signal0 *Signal) InsertFeaturePoolFeatureFeaturePool(ctx context.Context, exec bob.Executor, related *FeaturePoolSetter) error {
+	var err error
+
+	featurePool1, err := FeaturePools.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachSignalFeaturePoolFeatureFeaturePool0(ctx, exec, 1, signal0, featurePool1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.FeaturePoolFeatureFeaturePool = featurePool1
+
+	featurePool1.R.FeaturePoolFeatureSignals = append(featurePool1.R.FeaturePoolFeatureSignals, signal0)
+
+	return nil
+}
+
+func (signal0 *Signal) AttachFeaturePoolFeatureFeaturePool(ctx context.Context, exec bob.Executor, featurePool1 *FeaturePool) error {
+	var err error
+
+	_, err = attachSignalFeaturePoolFeatureFeaturePool0(ctx, exec, 1, signal0, featurePool1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.FeaturePoolFeatureFeaturePool = featurePool1
+
+	featurePool1.R.FeaturePoolFeatureSignals = append(featurePool1.R.FeaturePoolFeatureSignals, signal0)
+
+	return nil
+}
+
 func attachSignalOrganization0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, organization1 *Organization) (*Signal, error) {
 	setter := &SignalSetter{
 		OrganizationID: omit.From(organization1.ID),
@@ -820,6 +941,54 @@ func (signal0 *Signal) AttachOrganization(ctx context.Context, exec bob.Executor
 	signal0.R.Organization = organization1
 
 	organization1.R.Signals = append(organization1.R.Signals, signal0)
+
+	return nil
+}
+
+func attachSignalReport0(ctx context.Context, exec bob.Executor, count int, signal0 *Signal, publicreportReport1 *PublicreportReport) (*Signal, error) {
+	setter := &SignalSetter{
+		ReportID: omitnull.From(publicreportReport1.ID),
+	}
+
+	err := signal0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachSignalReport0: %w", err)
+	}
+
+	return signal0, nil
+}
+
+func (signal0 *Signal) InsertReport(ctx context.Context, exec bob.Executor, related *PublicreportReportSetter) error {
+	var err error
+
+	publicreportReport1, err := PublicreportReports.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachSignalReport0(ctx, exec, 1, signal0, publicreportReport1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.Report = publicreportReport1
+
+	publicreportReport1.R.Signals = append(publicreportReport1.R.Signals, signal0)
+
+	return nil
+}
+
+func (signal0 *Signal) AttachReport(ctx context.Context, exec bob.Executor, publicreportReport1 *PublicreportReport) error {
+	var err error
+
+	_, err = attachSignalReport0(ctx, exec, 1, signal0, publicreportReport1)
+	if err != nil {
+		return err
+	}
+
+	signal0.R.Report = publicreportReport1
+
+	publicreportReport1.R.Signals = append(publicreportReport1.R.Signals, signal0)
 
 	return nil
 }
@@ -873,18 +1042,19 @@ func (signal0 *Signal) AttachSite(ctx context.Context, exec bob.Executor, site1 
 }
 
 type signalWhere[Q psql.Filterable] struct {
-	Addressed      psql.WhereNullMod[Q, time.Time]
-	Addressor      psql.WhereNullMod[Q, int32]
-	Created        psql.WhereMod[Q, time.Time]
-	Creator        psql.WhereMod[Q, int32]
-	ID             psql.WhereMod[Q, int32]
-	OrganizationID psql.WhereMod[Q, int32]
-	Species        psql.WhereNullMod[Q, enums.Mosquitospecies]
-	Title          psql.WhereMod[Q, string]
-	Type           psql.WhereMod[Q, enums.Signaltype]
-	SiteID         psql.WhereNullMod[Q, int32]
-	Location       psql.WhereMod[Q, string]
-	LocationType   psql.WhereNullMod[Q, string]
+	Addressed            psql.WhereNullMod[Q, time.Time]
+	Addressor            psql.WhereNullMod[Q, int32]
+	Created              psql.WhereMod[Q, time.Time]
+	Creator              psql.WhereMod[Q, int32]
+	ID                   psql.WhereMod[Q, int32]
+	OrganizationID       psql.WhereMod[Q, int32]
+	Species              psql.WhereNullMod[Q, enums.Mosquitospecies]
+	Type                 psql.WhereMod[Q, enums.Signaltype]
+	SiteID               psql.WhereNullMod[Q, int32]
+	Location             psql.WhereMod[Q, string]
+	LocationType         psql.WhereNullMod[Q, string]
+	FeaturePoolFeatureID psql.WhereNullMod[Q, int32]
+	ReportID             psql.WhereNullMod[Q, int32]
 }
 
 func (signalWhere[Q]) AliasedAs(alias string) signalWhere[Q] {
@@ -893,18 +1063,19 @@ func (signalWhere[Q]) AliasedAs(alias string) signalWhere[Q] {
 
 func buildSignalWhere[Q psql.Filterable](cols signalColumns) signalWhere[Q] {
 	return signalWhere[Q]{
-		Addressed:      psql.WhereNull[Q, time.Time](cols.Addressed),
-		Addressor:      psql.WhereNull[Q, int32](cols.Addressor),
-		Created:        psql.Where[Q, time.Time](cols.Created),
-		Creator:        psql.Where[Q, int32](cols.Creator),
-		ID:             psql.Where[Q, int32](cols.ID),
-		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
-		Species:        psql.WhereNull[Q, enums.Mosquitospecies](cols.Species),
-		Title:          psql.Where[Q, string](cols.Title),
-		Type:           psql.Where[Q, enums.Signaltype](cols.Type),
-		SiteID:         psql.WhereNull[Q, int32](cols.SiteID),
-		Location:       psql.Where[Q, string](cols.Location),
-		LocationType:   psql.WhereNull[Q, string](cols.LocationType),
+		Addressed:            psql.WhereNull[Q, time.Time](cols.Addressed),
+		Addressor:            psql.WhereNull[Q, int32](cols.Addressor),
+		Created:              psql.Where[Q, time.Time](cols.Created),
+		Creator:              psql.Where[Q, int32](cols.Creator),
+		ID:                   psql.Where[Q, int32](cols.ID),
+		OrganizationID:       psql.Where[Q, int32](cols.OrganizationID),
+		Species:              psql.WhereNull[Q, enums.Mosquitospecies](cols.Species),
+		Type:                 psql.Where[Q, enums.Signaltype](cols.Type),
+		SiteID:               psql.WhereNull[Q, int32](cols.SiteID),
+		Location:             psql.Where[Q, string](cols.Location),
+		LocationType:         psql.WhereNull[Q, string](cols.LocationType),
+		FeaturePoolFeatureID: psql.WhereNull[Q, int32](cols.FeaturePoolFeatureID),
+		ReportID:             psql.WhereNull[Q, int32](cols.ReportID),
 	}
 }
 
@@ -938,6 +1109,18 @@ func (o *Signal) Preload(name string, retrieved any) error {
 			rel.R.CreatorSignals = SignalSlice{o}
 		}
 		return nil
+	case "FeaturePoolFeatureFeaturePool":
+		rel, ok := retrieved.(*FeaturePool)
+		if !ok {
+			return fmt.Errorf("signal cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.FeaturePoolFeatureFeaturePool = rel
+
+		if rel != nil {
+			rel.R.FeaturePoolFeatureSignals = SignalSlice{o}
+		}
+		return nil
 	case "Organization":
 		rel, ok := retrieved.(*Organization)
 		if !ok {
@@ -945,6 +1128,18 @@ func (o *Signal) Preload(name string, retrieved any) error {
 		}
 
 		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.Signals = SignalSlice{o}
+		}
+		return nil
+	case "Report":
+		rel, ok := retrieved.(*PublicreportReport)
+		if !ok {
+			return fmt.Errorf("signal cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Report = rel
 
 		if rel != nil {
 			rel.R.Signals = SignalSlice{o}
@@ -968,10 +1163,12 @@ func (o *Signal) Preload(name string, retrieved any) error {
 }
 
 type signalPreloader struct {
-	AddressorUser func(...psql.PreloadOption) psql.Preloader
-	CreatorUser   func(...psql.PreloadOption) psql.Preloader
-	Organization  func(...psql.PreloadOption) psql.Preloader
-	Site          func(...psql.PreloadOption) psql.Preloader
+	AddressorUser                 func(...psql.PreloadOption) psql.Preloader
+	CreatorUser                   func(...psql.PreloadOption) psql.Preloader
+	FeaturePoolFeatureFeaturePool func(...psql.PreloadOption) psql.Preloader
+	Organization                  func(...psql.PreloadOption) psql.Preloader
+	Report                        func(...psql.PreloadOption) psql.Preloader
+	Site                          func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildSignalPreloader() signalPreloader {
@@ -1002,6 +1199,19 @@ func buildSignalPreloader() signalPreloader {
 				},
 			}, Users.Columns.Names(), opts...)
 		},
+		FeaturePoolFeatureFeaturePool: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*FeaturePool, FeaturePoolSlice](psql.PreloadRel{
+				Name: "FeaturePoolFeatureFeaturePool",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Signals,
+						To:          FeaturePools,
+						FromColumns: []string{"feature_pool_feature_id"},
+						ToColumns:   []string{"feature_id"},
+					},
+				},
+			}, FeaturePools.Columns.Names(), opts...)
+		},
 		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
 				Name: "Organization",
@@ -1014,6 +1224,19 @@ func buildSignalPreloader() signalPreloader {
 					},
 				},
 			}, Organizations.Columns.Names(), opts...)
+		},
+		Report: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportReport, PublicreportReportSlice](psql.PreloadRel{
+				Name: "Report",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Signals,
+						To:          PublicreportReports,
+						FromColumns: []string{"report_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, PublicreportReports.Columns.Names(), opts...)
 		},
 		Site: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*Site, SiteSlice](psql.PreloadRel{
@@ -1032,10 +1255,12 @@ func buildSignalPreloader() signalPreloader {
 }
 
 type signalThenLoader[Q orm.Loadable] struct {
-	AddressorUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorUser   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Site          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	AddressorUser                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorUser                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FeaturePoolFeatureFeaturePool func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Report                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Site                          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
@@ -1045,8 +1270,14 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 	type CreatorUserLoadInterface interface {
 		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type FeaturePoolFeatureFeaturePoolLoadInterface interface {
+		LoadFeaturePoolFeatureFeaturePool(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ReportLoadInterface interface {
+		LoadReport(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type SiteLoadInterface interface {
 		LoadSite(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1065,10 +1296,22 @@ func buildSignalThenLoader[Q orm.Loadable]() signalThenLoader[Q] {
 				return retrieved.LoadCreatorUser(ctx, exec, mods...)
 			},
 		),
+		FeaturePoolFeatureFeaturePool: thenLoadBuilder[Q](
+			"FeaturePoolFeatureFeaturePool",
+			func(ctx context.Context, exec bob.Executor, retrieved FeaturePoolFeatureFeaturePoolLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadFeaturePoolFeatureFeaturePool(ctx, exec, mods...)
+			},
+		),
 		Organization: thenLoadBuilder[Q](
 			"Organization",
 			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
+		Report: thenLoadBuilder[Q](
+			"Report",
+			func(ctx context.Context, exec bob.Executor, retrieved ReportLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadReport(ctx, exec, mods...)
 			},
 		),
 		Site: thenLoadBuilder[Q](
@@ -1187,6 +1430,61 @@ func (os SignalSlice) LoadCreatorUser(ctx context.Context, exec bob.Executor, mo
 	return nil
 }
 
+// LoadFeaturePoolFeatureFeaturePool loads the signal's FeaturePoolFeatureFeaturePool into the .R struct
+func (o *Signal) LoadFeaturePoolFeatureFeaturePool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.FeaturePoolFeatureFeaturePool = nil
+
+	related, err := o.FeaturePoolFeatureFeaturePool(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.FeaturePoolFeatureSignals = SignalSlice{o}
+
+	o.R.FeaturePoolFeatureFeaturePool = related
+	return nil
+}
+
+// LoadFeaturePoolFeatureFeaturePool loads the signal's FeaturePoolFeatureFeaturePool into the .R struct
+func (os SignalSlice) LoadFeaturePoolFeatureFeaturePool(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	featurePools, err := os.FeaturePoolFeatureFeaturePool(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range featurePools {
+			if !o.FeaturePoolFeatureID.IsValue() {
+				continue
+			}
+
+			if !(o.FeaturePoolFeatureID.IsValue() && o.FeaturePoolFeatureID.MustGet() == rel.FeatureID) {
+				continue
+			}
+
+			rel.R.FeaturePoolFeatureSignals = append(rel.R.FeaturePoolFeatureSignals, o)
+
+			o.R.FeaturePoolFeatureFeaturePool = rel
+			break
+		}
+	}
+
+	return nil
+}
+
 // LoadOrganization loads the signal's Organization into the .R struct
 func (o *Signal) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -1232,6 +1530,61 @@ func (os SignalSlice) LoadOrganization(ctx context.Context, exec bob.Executor, m
 			rel.R.Signals = append(rel.R.Signals, o)
 
 			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadReport loads the signal's Report into the .R struct
+func (o *Signal) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Report = nil
+
+	related, err := o.Report(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Signals = SignalSlice{o}
+
+	o.R.Report = related
+	return nil
+}
+
+// LoadReport loads the signal's Report into the .R struct
+func (os SignalSlice) LoadReport(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportReports, err := os.Report(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportReports {
+			if !o.ReportID.IsValue() {
+				continue
+			}
+
+			if !(o.ReportID.IsValue() && o.ReportID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Signals = append(rel.R.Signals, o)
+
+			o.R.Report = rel
 			break
 		}
 	}
