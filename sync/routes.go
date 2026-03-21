@@ -41,6 +41,8 @@ func Router() chi.Router {
 	r.Route("/api", api.AddRoutes)
 
 	r.Method("GET", "/", authenticatedHandler(getRoot))
+	r.Method("GET", "/intelligence", authenticatedHandler(getRoot))
+
 	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", authenticatedHandler(getCellDetails))
 	r.Method("GET", "/communication", authenticatedHandler(getCommunicationRoot))
@@ -63,7 +65,6 @@ func Router() chi.Router {
 	r.Method("GET", "/configuration/user", authenticatedHandler(getConfigurationUserList))
 	r.Method("GET", "/configuration/user/add", authenticatedHandler(getConfigurationUserAdd))
 	r.Method("GET", "/download", authenticatedHandler(getDownloadList))
-	r.Method("GET", "/intelligence", authenticatedHandler(getIntelligenceRoot))
 	r.Method("GET", "/layout-test", authenticatedHandler(getLayoutTest))
 	r.Method("GET", "/message", authenticatedHandler(getMessageList))
 	r.Method("GET", "/notification", authenticatedHandler(getNotificationList))

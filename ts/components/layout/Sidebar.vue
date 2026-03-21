@@ -12,9 +12,6 @@
 
 		<ul class="sidebar-menu">
 			<li>
-				<RouterLink to="/about">About</RouterLink>
-			</li>
-			<li>
 				<NavigationLink to="/" icon="house" label="Home" />
 			</li>
 			<li>
