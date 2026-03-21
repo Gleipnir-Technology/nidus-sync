@@ -10,4 +10,4 @@ stadia/cmd/bulk-geocode/bulk-geocode
 stadia/cmd/reverse-geocode/reverse-geocode
 stadia/cmd/structured-geocode/structured-geocode
 static/gen/
-tmp/
+temp/
