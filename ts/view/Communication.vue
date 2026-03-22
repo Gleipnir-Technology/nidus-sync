@@ -133,12 +133,12 @@
 							<MapMultipoint
 								id="map"
 								ref="mapRef"
-								:organization-id="organization.id"
-								:tegola="organization.urls.tegola"
-								:xmin="serviceArea.min.x"
-								:ymin="serviceArea.min.y"
-								:xmax="serviceArea.max.x"
-								:ymax="serviceArea.max.y"
+								:organization-id="user.organization.id"
+								:tegola="user.urls.tegola"
+								:xmin="user.organization.service_area?.min.x ?? 0"
+								:ymin="user.organization.service_area?.min.y ?? 0"
+								:xmax="user.organization.service_area?.max.x ?? 0"
+								:ymax="user.organization.service_area?.max.y ?? 0"
 							/>
 						</div>
 					</div>
@@ -781,31 +781,10 @@ import { useUserStore } from "../store/user";
 import MapMultipoint from "../components/MapMultipoint.vue";
 import TimeRelative from "../components/TimeRelative.vue";
 
+const communicationStore = useCommunicationStore();
 const user = useUserStore();
 onMounted(() => {
 	communicationStore.fetchCommunications();
-});
-
-// Props
-const props = defineProps({
-	tegolaUrl: {
-		type: String,
-		required: true,
-	},
-	serviceArea: {
-		type: Object,
-		required: true,
-		validator: (value) => {
-			return (
-				value.min &&
-				value.max &&
-				typeof value.min.x === "number" &&
-				typeof value.min.y === "number" &&
-				typeof value.max.x === "number" &&
-				typeof value.max.y === "number"
-			);
-		},
-	},
 });
 
 // Refs
