@@ -22,7 +22,10 @@
   "scripts": {
     "build": "node build.js",
     "build:prod": "node build.js --minify",
+	"dev": "pnpm typecheck:watch & pnpm watch",
     "generate-icons": "node generate-icons.js",
+	"typecheck": "tsc --noEmit",
+	"typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput",
     "watch": "node build.js --watch"
   }
 }

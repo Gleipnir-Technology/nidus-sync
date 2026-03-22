@@ -1,4 +1,3 @@
-import Alpine from "./vendor/alpinejs-3.15.8.js";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";
@@ -18,19 +17,14 @@ import "./gen/custom-icons.scss";
 import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
 
-// Make Alpine available on window for inline Alpine
-window.Alpine = Alpine;
-
 // Make SSEManager available to all the JavaScript
 window.SSEManager = SSEManager;
 
-// Wait for DOM to be ready, then initialize Alpine
 document.addEventListener("DOMContentLoaded", () => {
-	Alpine.start();
 	SSEManager.connect("/api/events");
 	//SetupSidebar();
 });
-document.addEventListener("alpine:init", () => {
+document.addEventListener("init", () => {
 	const user = {
 		display_name: "",
 		initials: "",
@@ -46,7 +40,6 @@ document.addEventListener("alpine:init", () => {
 		role: "",
 		username: "",
 	};
-	Alpine.store("user", user);
 });
 interface GreetingComponent {
 	message: string;

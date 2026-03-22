@@ -1,1 +1,0 @@
-Couldn't find the requested file /packages/alpinejs/types/index.d.ts in alpinejs.
