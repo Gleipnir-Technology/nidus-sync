@@ -2,6 +2,12 @@
 
 {{ define "title" }}Main{{ end }}
 {{ define "extraheader" }}
+	<style>
+		.bi-large {
+			height: 48px;
+			width: 48px;
+		}
+	</style>
 {{ end }}
 {{ define "content" }}
 	<!-- Main Content -->
@@ -51,7 +57,7 @@
 						<div class="card service-card h-100">
 							<div class="card-body text-center">
 								<div class="mb-3">
-									{{ template "mosquito-color.svg" }}
+									<i class="bi bi-large bi-mosquito-color"></i>
 								</div>
 								<h4 class="card-title">Report Mosquito Nuisance</h4>
 								<p class="card-text">
@@ -68,7 +74,7 @@
 						<div class="card service-card h-100">
 							<div class="card-body text-center">
 								<div class="mb-3">
-									{{ template "pond-color.svg" }}
+									<i class="bi bi-large bi-pond-color"></i>
 								</div>
 								<h4 class="card-title">Report Standing Water</h4>
 								<p class="card-text">
@@ -85,7 +91,7 @@
 						<div class="card service-card h-100">
 							<div class="card-body text-center">
 								<div class="mb-3">
-									{{ template "check-report-color.svg" }}
+									<i class="bi bi-large bi-check-report-color"></i>
 								</div>
 								<h4 class="card-title">Follow-up or Check Status</h4>
 								<p class="card-text">
