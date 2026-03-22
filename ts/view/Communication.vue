@@ -782,7 +782,7 @@ function formatAddress(a) {
 	if (a.number === "" && a.street === "") {
 		return "no address provided";
 	}
-	return `$${a.number} $${a.street}, ${a.locality}`;
+	return `${a.number} ${a.street}, ${a.locality}`;
 }
 
 function formatDistance(meters) {
