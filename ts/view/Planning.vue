@@ -24,7 +24,10 @@
 				:leads="leads"
 				:loading="loading"
 				:planFollowups="planFollowups"
+				@refresh="refresh"
 				:selectedSignals="selectedSignals"
+				@signalDeselect="signalDeselect"
+				@signalSelect="signalSelect"
 				:signals="signal.all"
 			/>
 		</template>
@@ -43,7 +46,7 @@
 	</ThreeColumn>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted, nextTick } from "vue";
 
 import MapMultipoint from "../components/MapMultipoint.vue";
@@ -67,7 +70,7 @@ const leads = ref([]);
 const loading = ref(false);
 const planFollowups = ref([]);
 const poolLocations = ref({});
-const selectedSignals = ref([]);
+const selectedSignals = ref(new Set([]));
 const signal = useSignalStore();
 const user = useUserStore();
 
@@ -148,11 +151,11 @@ const loadPlanFollowups = async () => {
 };
 
 const clearSelection = () => {
-	selectedSignals.value = [];
+	selectedSignals.value.clear();
 };
 
 const createLead = async () => {
-	if (selectedSignals.value.length === 0) return;
+	if (selectedSignals.value.size === 0) return;
 
 	creating.value = true;
 
@@ -188,7 +191,7 @@ const createLead = async () => {
 };
 
 const markAsAddressed = async () => {
-	if (selectedSignals.value.length === 0) return;
+	if (selectedSignals.value.size === 0) return;
 
 	try {
 		const response = await fetch(`${apiBase.value}/signal/mark-addressed`, {
@@ -216,21 +219,15 @@ const markAsAddressed = async () => {
 		alert(`Failed to mark signals: ${err.message}`);
 	}
 };
-
-const toggleSignal = (signal) => {
-	const index = selectedSignals.value.findIndex((s) => s.id === signal.id);
-
-	if (index > -1) {
-		selectedSignals.value.splice(index, 1);
-	} else {
-		selectedSignals.value.push(signal);
-	}
-
-	updateMap(selectedSignals.value);
-
-	console.log("show tile", showMapTile.value);
+const refresh = () => {
+	signal.fetchAll();
 };
-
+const signalDeselect = (id: int) => {
+	selectedSignals.value.delete(id);
+};
+const signalSelect = (id: int) => {
+	selectedSignals.value.add(id);
+};
 // Lifecycle
 onMounted(() => {
 	loadData();

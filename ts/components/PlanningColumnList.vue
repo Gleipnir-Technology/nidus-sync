@@ -118,8 +118,8 @@
 				<div class="mb-3">
 					<div class="fw-semibold mb-2">
 						Signals
-						<span class="badge bg-primary" v-show="selectedSignals.length > 0">
-							{{ selectedSignals.length }}
+						<span class="badge bg-primary" v-show="selectedSignals.size > 0">
+							{{ selectedSignals.size }}
 						</span>
 					</div>
 
@@ -204,15 +204,22 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { shortAddress } from "../format";
 
+interface Emits {
+	(e: "refresh"): void;
+	(e: "signalDeselect", integer): void;
+	(e: "signalSelect", integer): void;
+}
 interface Props {
 	error: string | null;
 	leads: Lead[] | null;
 	loading: boolean;
 	planFollowups: Followup[] | null;
-	selectedSignals: int[];
+	selectedSignals: Set<int>;
 	signals: Signal[] | null;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 const filters = ref({
 	species: "",
@@ -220,10 +227,13 @@ const filters = ref({
 	sort: "newest",
 });
 const isSelected = (id) => {
-	return props.selectedSignals.some((s) => s.id === id);
+	return props.selectedSignals.values().some((s) => s.id === id);
 };
-const shortAddress = (a) => {
-	if (!a) return "";
-	return `${a.number} ${a.street}, ${a.locality}`;
+const toggleSignal = (signal: int) => {
+	if (props.selectedSignals.has(signal)) {
+		emit("signalDeselect", signal);
+	} else {
+		emit("signalSelect", signal);
+	}
 };
 </script>

@@ -105,12 +105,13 @@
 <script setup lang="ts">
 import MapMultipoint from "./MapMultipoint.vue";
 import MapProxiedArcgisTile from "./MapProxiedArcgisTile.vue";
+import { shortAddress } from "../format";
 import TimeRelative from "./TimeRelative.vue";
 import { useUserStore } from "../store/user";
 
 interface Props {
 	markers: Marker[];
-	selectedSignals: int[];
+	selectedSignals: Set<int>;
 }
 const props = defineProps<Props>();
 const user = useUserStore();
@@ -144,19 +145,23 @@ const configureMapTile = () => {
 };
 
 const selectedSignalLocation = () => {
-	const first_pool = props.selectedSignals.reduce((accumulator, current) => {
-		if (accumulator == null && current.type === "flyover pool") {
-			return current;
-		}
-		return accumulator;
-	}, null);
+	const first_pool = props.selectedSignals
+		.values()
+		.reduce((accumulator, current) => {
+			if (accumulator == null && current.type === "flyover pool") {
+				return current;
+			}
+			return accumulator;
+		}, null);
 	return first_pool?.location;
 };
 const showMapTile = () => {
-	return props.selectedSignals.value.reduce(
-		(accumulator, current) => accumulator || current.type === "flyover pool",
-		false,
-	);
+	return props.selectedSignals.value
+		.values()
+		.reduce(
+			(accumulator, current) => accumulator || current.type === "flyover pool",
+			false,
+		);
 };
 const updateSignalLocation = (event) => {
 	const signalId = event.detail.signalId;

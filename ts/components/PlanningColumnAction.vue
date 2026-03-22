@@ -75,7 +75,7 @@
 <script setup lang="ts">
 interface Props {
 	creating: boolean;
-	selectedSignals: int[];
+	selectedSignals: Set<int>;
 }
 const props = defineProps<Props>();
 </script>
