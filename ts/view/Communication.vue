@@ -15,17 +15,23 @@
 				:loading="loading"
 				:selectedCommunication="selectedCommunication"
 				:user="user"
+				@viewImage="openPhotoViewer"
 			/>
 		</template>
 		<template #right>
 			<CommunicationColumnAction
 				:loading="loading"
+				@markInvalid="markInvalid"
+				@markSignal="markSignal"
+				@sendMessage="sendMessage"
 				:selectedCommunication="selectedCommunication"
 				:user="user"
 			/>
 		</template>
 	</ThreeColumn>
 	<PhotoViewerModal
+		@imageNext="imageNext()"
+		@imagePrevious="imagePrevious()"
 		:images="currentImages"
 		:currentPhotoIndex="currentPhotoIndex"
 		:show="showPhotoModal"
@@ -57,7 +63,6 @@ onMounted(() => {
 });
 
 // Refs
-const apiBase = ref("/api");
 const showPhotoModal = ref(false);
 const selectedId = ref<string | null>(null);
 const currentPhotoIndex = ref(0);
@@ -104,22 +109,15 @@ async function fetchCommunications() {
 		}
 	}
 }
-function formatDistance(meters) {
-	if (meters === undefined || meters === null) {
-		return "unknown";
-	}
-	if (meters < 1) {
-		const mm = Math.round(meters * 1000);
-		return `${mm} mm`;
-	} else if (meters >= 1000) {
-		const km = Math.round(meters / 1000);
-		return `${km} km`;
-	} else {
-		const m = Math.round(meters);
-		return `${m} m`;
-	}
+function imageNext() {
+	currentPhotoIndex.value = Math.min(
+		currentImages.value.length - 1,
+		currentPhotoIndex.value + 1,
+	);
 }
-
+function imagePrevious() {
+	currentPhotoIndex.value = Math.max(0, currentPhotoIndex.value - 1);
+}
 async function loadFromAPI() {
 	loading.value = true;
 	error.value = null;
@@ -138,7 +136,28 @@ function openPhotoViewer(index) {
 	showPhotoModal.value = true;
 }
 
-async function createSignal() {
+async function markInvalid() {
+	console.log("Marking report as invalid:", selectedCommunication.value.id);
+	const payload = {
+		reportID: selectedCommunication.value.id,
+	};
+	const response = await fetch("api/publicreport/invalid", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	showNotification(
+		"Report Marked Invalid",
+		`Report #${selectedCommunication.value.id} has been marked as invalid`,
+	);
+	removeCurrentFromList();
+	await fetchCommunications();
+}
+
+async function markSignal() {
 	console.log("Marking report as signal:", selectedCommunication.value.id);
 	try {
 		const report_id = selectedCommunication.value.id;
@@ -167,27 +186,6 @@ async function createSignal() {
 	}
 }
 
-async function markInvalid() {
-	console.log("Marking report as invalid:", selectedCommunication.value.id);
-	const payload = {
-		reportID: selectedCommunication.value.id,
-	};
-	const response = await fetch("api/publicreport/invalid", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
-	});
-
-	showNotification(
-		"Report Marked Invalid",
-		`Report #${selectedCommunication.value.id} has been marked as invalid`,
-	);
-	removeCurrentFromList();
-	await fetchCommunications();
-}
-
 function removeCurrentFromList() {
 	const index = communication.all.findIndex((c) => c.id === selectedId.value);
 	if (index > -1) {
@@ -200,7 +198,33 @@ function removeCurrentFromList() {
 		selectedId.value = null;
 	}
 }
+async function sendMessage(message: string) {
+	if (!message.trim()) return;
 
+	console.log("Sending message reporter:", message.value);
+
+	const payload = {
+		message: message.value,
+		reportID: selectedCommunication.value.id,
+	};
+	const response = await fetch(user.urls.api.publicreport_message, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	showNotification(
+		"Message Sent",
+		`Message successfully sent to ${selectedCommunication.value.public_report.reporter.name}`,
+	);
+	messageText.value = "";
+}
 function showNotification(title, message) {
 	toastTitle.value = title;
 	toastMessage.value = message;

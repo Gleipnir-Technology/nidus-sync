@@ -29,7 +29,7 @@
 				<div class="p-3 flex-grow-1">
 					<!-- Create Signal -->
 					<div class="d-grid mb-3">
-						<button class="btn btn-success btn-lg" @click="createSignal()">
+						<button class="btn btn-success btn-lg" @click="markSignal()">
 							<i class="bi bi-plus-circle me-2"></i>Mark Signal
 						</button>
 						<small class="text-muted mt-1">This report is useful signal</small>
@@ -143,11 +143,17 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+interface Emits {
+	(e: "markSignal"): void;
+	(e: "markInvalid"): void;
+	(e: "sendMessage", message: string): void;
+}
 interface Props {
 	loading: boolean;
 	selectedCommunication: Communication | null;
 	user: User | null;
 }
+const emit = defineEmits<Emits>();
 
 const messageText = ref("");
 const props = withDefaults(defineProps<Props>(), {});
@@ -166,32 +172,13 @@ function applyMessageTemplate(template) {
 function formatDate(date) {
 	return new Date(date).toLocaleString();
 }
-
-async function sendMessage() {
-	if (!messageText.value.trim()) return;
-
-	console.log("Sending message reporter:", messageText.value);
-
-	const payload = {
-		message: messageText.value,
-		reportID: selectedCommunication.value.id,
-	};
-	const response = await fetch(`${apiBase.value}/publicreport/message`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
-	});
-
-	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
-	}
-
-	showNotification(
-		"Message Sent",
-		`Message successfully sent to ${selectedCommunication.value.public_report.reporter.name}`,
-	);
-	messageText.value = "";
+function markInvalid() {
+	emit("markInvalid");
+}
+function markSignal() {
+	emit("markSignal");
+}
+function sendMessage() {
+	emit("sendMessage", messageText.value);
 }
 </script>

@@ -72,19 +72,14 @@
 				<div class="modal-footer justify-content-between">
 					<button
 						class="btn btn-outline-secondary"
-						@click="currentPhotoIndex = Math.max(0, currentPhotoIndex - 1)"
+						@click="emit('imagePrevious')"
 						:disabled="currentPhotoIndex === 0"
 					>
 						<i class="bi bi-chevron-left"></i> Previous
 					</button>
 					<button
 						class="btn btn-outline-secondary"
-						@click="
-							currentPhotoIndex = Math.min(
-								images.length - 1,
-								currentPhotoIndex + 1,
-							)
-						"
+						@click="emit('imageNext')"
 						:disabled="currentPhotoIndex >= (images?.length || 1) - 1"
 					>
 						Next <i class="bi bi-chevron-right"></i>
@@ -101,10 +96,30 @@
 </template>
 
 <script setup lang="ts">
+interface Emits {
+	(e: "imageNext"): void;
+	(e: "imagePrevious"): void;
+}
 interface Props {
 	currentPhotoIndex: int | null;
 	images: Photo[] | null;
 	show: boolean;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
+function formatDistance(meters) {
+	if (meters === undefined || meters === null) {
+		return "unknown";
+	}
+	if (meters < 1) {
+		const mm = Math.round(meters * 1000);
+		return `${mm} mm`;
+	} else if (meters >= 1000) {
+		const km = Math.round(meters / 1000);
+		return `${km} km`;
+	} else {
+		const m = Math.round(meters);
+		return `${m} m`;
+	}
+}
 </script>

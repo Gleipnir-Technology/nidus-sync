@@ -334,7 +334,7 @@
 					</div>
 				</div>
 
-				<!-- Photos Section -->
+				<!-- Images Section -->
 				<div class="card">
 					<div
 						class="card-header d-flex justify-content-between align-items-center"
@@ -384,12 +384,16 @@ import { computed } from "vue";
 import MapMultipoint from "../components/MapMultipoint.vue";
 import TimeRelative from "../components/TimeRelative.vue";
 
+interface Emits {
+	(e: "viewImage", index: int): void;
+}
 interface Props {
 	loading: boolean;
 	selectedCommunication: Communication | null;
 	user: User | null;
 }
 
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 const nuisance = computed(() => {
 	return props.selectedCommunication?.value?.public_report?.nuisance || null;
@@ -403,5 +407,8 @@ function formatAddress(a) {
 		return "no address provided";
 	}
 	return `${a.number} ${a.street}, ${a.locality}`;
+}
+function openPhotoViewer(index) {
+	emit("viewImage", index);
 }
 </script>
