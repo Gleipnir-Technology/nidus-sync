@@ -151,6 +151,7 @@ interface Props {
 	selectedId?: string | null;
 }
 interface Emits {
+	(e: "deselect", id: string): void;
 	(e: "select", id: string): void;
 }
 
@@ -160,7 +161,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 const handleClick = (id: string) => {
-	emit("select", id);
+	if (props.selectedId == null) {
+		emit("select", id);
+	} else {
+		emit("deselect", id);
+	}
 };
 const searchFilter = ref("");
 const typeFilter = ref("all");

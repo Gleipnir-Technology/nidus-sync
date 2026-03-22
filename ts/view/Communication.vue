@@ -15,6 +15,7 @@
 		<template #left>
 			<CommunicationColumnList
 				:all="communication.all"
+				@deselect="handleDeselect"
 				:loading="loading"
 				:selected-id="selectedId"
 				@select="handleSelect"
@@ -105,6 +106,9 @@ const selectedCommunication = computed<Communication | null>(() => {
 	const result = communication.all.find((c) => c.id == selectedId.value);
 	return result;
 });
+const handleDeselect = (id: string) => {
+	selectedId.value = null;
+};
 const handleSelect = (id: string) => {
 	selectedId.value = id;
 };
