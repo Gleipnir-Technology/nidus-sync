@@ -40,7 +40,9 @@
 		</div>
 
 		<div class="list-group list-group-flush">
+			<div v-if="loading" class="loading">Loading...</div>
 			<div
+				v-else-if="all.length > 0"
 				v-for="comm in filteredCommunications"
 				:key="comm.id"
 				class="list-group-item report-card p-3"
@@ -114,18 +116,38 @@
 </template>
 
 <script setup lang="ts">
-interface Props {}
+import { computed, ref } from "vue";
+import TimeRelative from "../components/TimeRelative.vue";
 
-const props = withDefaults(defineProps<Props>(), {
-	onFilterChange,
-});
+interface Props {
+	all: string[] | null;
+	loading: boolean;
+}
+const props = defineProps<Props>();
+
+const searchFilter = ref("");
+const typeFilter = ref("all");
 
 // Computed properties
 const filteredCommunications = computed(() => {
-	return communication.all.value.filter((c) => {
+	if (props.all == null) {
+		return [];
+	}
+	return props.all.filter((c) => {
 		const matchesType =
 			typeFilter.value === "all" || c.type === typeFilter.value;
 		return matchesType && filterMatches(searchFilter.value, c);
 	});
 });
+// Methods
+function filterMatches(filter, comm) {
+	// Implement your filter logic here
+	return true;
+}
+function formatAddress(a) {
+	if (a.number === "" && a.street === "") {
+		return "no address provided";
+	}
+	return `$${a.number} $${a.street}, ${a.locality}`;
+}
 </script>

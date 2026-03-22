@@ -3,7 +3,7 @@
 		<div class="container-fluid h-100">
 			<div class="row h-100">
 				<!-- Left Column - Communications List -->
-				<CommunicationColumnList all="communication.all" />
+				<CommunicationColumnList :all="communication.all" :loading="loading" />
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
@@ -651,7 +651,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
 import maplibregl from "maplibre-gl";
 
@@ -670,14 +670,13 @@ onMounted(() => {
 // Refs
 const apiBase = ref("/api");
 const selectedCommunication = ref(null);
-const typeFilter = ref("all");
 const messageText = ref("");
 const showPhotoModal = ref(false);
 const currentPhotoIndex = ref(0);
 const showToast = ref(false);
 const toastTitle = ref("");
 const toastMessage = ref("");
-const loading = ref(false);
+const loading = ref(true);
 const error = ref(null);
 const mapRef = ref(null);
 
@@ -926,7 +925,9 @@ function updateMap() {
 		padding: 50,
 	});
 }
-
+function onFilterChange(filters) {
+	console.log("Filters changed");
+}
 // Lifecycle hooks
 onMounted(async () => {
 	await loadFromAPI();
