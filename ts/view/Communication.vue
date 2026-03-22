@@ -3,7 +3,7 @@
 		<div class="container-fluid h-100">
 			<div class="row h-100">
 				<!-- Left Column - Communications List -->
-				<CommunicationsColumnList all="communication.all" />
+				<CommunicationColumnList all="communication.all" />
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
@@ -657,13 +657,14 @@ import maplibregl from "maplibre-gl";
 
 import { useCommunicationStore } from "../store/communication";
 import { useUserStore } from "../store/user";
+import CommunicationColumnList from "../components/CommunicationColumnList.vue";
 import MapMultipoint from "../components/MapMultipoint.vue";
 import TimeRelative from "../components/TimeRelative.vue";
 
 const communication = useCommunicationStore();
 const user = useUserStore();
 onMounted(() => {
-	communication.fetch();
+	fetchCommunications();
 });
 
 // Refs

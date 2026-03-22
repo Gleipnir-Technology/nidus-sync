@@ -10,7 +10,7 @@ import (
 )
 
 type contentURLAPI struct {
-	Communication string `json:"api"`
+	Communication string `json:"communication"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`

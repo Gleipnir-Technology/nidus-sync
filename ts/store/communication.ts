@@ -40,6 +40,6 @@ export const useCommunicationStore = defineStore("communication", () => {
 		// State
 		all,
 		// Actions
-		fetch,
+		fetchAll,
 	};
 });
