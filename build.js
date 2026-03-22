@@ -48,6 +48,14 @@ const config = {
 		buildStatusPlugin, // Add this first
 		sassPlugin({
 			quietDeps: true,
+			precompile(source, pathname) {
+				// Only inject variables into Vue component styles
+				// (not the main scss files to avoid circular imports)
+				if (pathname.endsWith(".vue")) {
+					return `@import "./ts/style/variables.scss";\n${source}`;
+				}
+				return source;
+			},
 			silenceDeprecations: ["import"],
 			type: "css",
 		}),

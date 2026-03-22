@@ -5,11 +5,11 @@
 }
 
 .report-card:hover {
-	background-color: #f8f9fa;
+	background-color: $secondary;
 }
 
 .report-card.active {
-	background-color: #0d6efd;
+	background-color: $primary;
 	color: white;
 }
 </style>
@@ -63,7 +63,7 @@
 				:key="comm.id"
 				class="list-group-item report-card p-3"
 				:class="{
-					active: selectedCommunication && selectedCommunication.id === comm.id,
+					active: selectedId && selectedId === comm.id,
 				}"
 				@click="handleClick(comm.id)"
 			>
@@ -161,7 +161,6 @@ function selectCommunication(communication: Communication) {
 	console.log("selected", communication);
 	emit("select-item", communication);
 	emit("update:selectedItem", communication);
-	//selectedCommunication.value = comm;
 	//messageText.value = "";
 	//updateMap();
 }

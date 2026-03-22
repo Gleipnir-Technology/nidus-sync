@@ -1,44 +1,6 @@
 @use "sass:map";
 // 1. Include specific theme variables
-$primary: #f76436;
-$secondary: #3c552d;
-$success: #8bae67;
-$warning: #ffc01b;
-$danger: #6b2737;
-$info: #d7b26d;
-$dark: #3b1002;
-$light: #fde1d8;
-
-$off-white: #f8f9fa;
-$off-black: #495057;
-
-$primary-light-4: #faa489;
-// 2. Configure color contrast
-$color-contrast-dark: #000;
-$color-contrast-light: #fff;
-$min-contrast-ratio: 2;
-
-$custom-colors: (
-	"color1": $primary,
-	"color2": $secondary,
-	"color3": $success,
-	"color4": $danger,
-	"color5": $warning,
-	"color6": $info,
-);
-$theme-colors: map.merge(
-	(
-		"primary": $primary,
-		"secondary": $secondary,
-		"success": $success,
-		"danger": $danger,
-		"warning": $warning,
-		"info": $info,
-		"dark": $dark,
-		"light": $light,
-	),
-	$custom-colors
-);
+@import "variables.scss";
 
 @keyframes spin {
 	0% {
