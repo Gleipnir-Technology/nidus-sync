@@ -26,7 +26,7 @@ func NoteAudioCreate(ctx context.Context, user User, setter models.NoteAudioSett
 			return fmt.Errorf("create note_audio: %w", err)
 		}
 	}
-	event.Created(event.TypeNoteAudio, user.Organization.ID(), strconv.Itoa(int(note_audio.ID)))
+	event.Created(event.TypeNoteAudio, user.Organization.ID, strconv.Itoa(int(note_audio.ID)))
 	txn.Commit(ctx)
 
 	return nil
@@ -45,7 +45,7 @@ func NoteImageCreate(ctx context.Context, user User, setter models.NoteImageSett
 			return fmt.Errorf("create note_image: %w", err)
 		}
 	}
-	event.Created(event.TypeNoteImage, user.Organization.ID(), strconv.Itoa(int(note_image.ID)))
+	event.Created(event.TypeNoteImage, user.Organization.ID, strconv.Itoa(int(note_image.ID)))
 	txn.Commit(ctx)
 
 	return err

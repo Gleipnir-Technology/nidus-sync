@@ -42,7 +42,7 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u platform.User) {
 		CreatorID:      omit.From(int32(u.ID)),
 		Deleted:        omitnull.FromPtr(payload.Deleted),
 		DeletorID:      omitnull.FromPtr(payload.DeletorID),
-		OrganizationID: omit.From(u.Organization.ID()),
+		OrganizationID: omit.From(u.Organization.ID),
 		Version:        omit.From(payload.Version),
 		UUID:           omit.From(noteUUID),
 	}

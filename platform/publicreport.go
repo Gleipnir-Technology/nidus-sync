@@ -37,7 +37,7 @@ func PublicreportInvalid(ctx context.Context, user User, report_id string) error
 	})
 
 	log.Info().Int32("id", report.ID).Msg("Report marked as invalid")
-	event.Updated(event.TypeRMOReport, user.Organization.ID(), report_id)
+	event.Updated(event.TypeRMOReport, user.Organization.ID, report_id)
 	return nil
 }
 
@@ -208,7 +208,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 func reportFromID(ctx context.Context, user User, report_id string) (*models.PublicreportReport, error) {
 	report, err := models.PublicreportReports.Query(
 		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID()),
+		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, err

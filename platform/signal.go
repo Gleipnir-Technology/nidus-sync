@@ -49,7 +49,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 
 	report, err := models.PublicreportReports.Query(
 		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID()),
+		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, txn)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
@@ -123,7 +123,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 		Creator:              omit.From(int32(user.ID)),
 		FeaturePoolFeatureID: omitnull.FromPtr[int32](nil),
 		// ID
-		OrganizationID: omit.From(int32(user.Organization.ID())),
+		OrganizationID: omit.From(int32(user.Organization.ID)),
 		Location:       omit.From(location),
 		ReportID:       omitnull.From(report.ID),
 		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
@@ -143,14 +143,14 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to update report %d: %w", report_id, err)
 	}
-	event.Created(event.TypeSignal, user.Organization.ID(), strconv.Itoa(int(signal.ID)))
+	event.Created(event.TypeSignal, user.Organization.ID, strconv.Itoa(int(signal.ID)))
 	txn.Commit(ctx)
 
 	return &signal.ID, nil
 }
 
 func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
-	org_id := user.Organization.ID()
+	org_id := user.Organization.ID
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"signal.addressed AS addressed",

@@ -44,7 +44,7 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 		Deleted:                 omitnull.FromPtr(payload.Deleted),
 		DeletorID:               omitnull.FromPtr(payload.DeletorID),
 		Duration:                omit.From(payload.Duration),
-		OrganizationID:          omit.From(u.Organization.ID()),
+		OrganizationID:          omit.From(u.Organization.ID),
 		Transcription:           omitnull.FromPtr(payload.Transcription),
 		TranscriptionUserEdited: omit.From(payload.TranscriptionUserEdited),
 		Version:                 omit.From(payload.Version),
@@ -72,7 +72,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.U
 	ctx := r.Context()
 	a, err := models.NoteAudios.Query(
 		models.SelectWhere.NoteAudios.UUID.EQ(u),
-		models.SelectWhere.NoteAudios.OrganizationID.EQ(user.Organization.ID()),
+		models.SelectWhere.NoteAudios.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, db.PGInstance.BobDB)
 	background.NewAudioTranscode(ctx, db.PGInstance.BobDB, a.ID)
 	w.WriteHeader(http.StatusOK)

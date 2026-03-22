@@ -54,7 +54,7 @@ func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.File
 		CreatorID:      omit.From(int32(u.ID)),
 		Deleted:        omitnull.FromPtr[time.Time](nil),
 		Name:           omit.From(upload.Name),
-		OrganizationID: omit.From(u.Organization.ID()),
+		OrganizationID: omit.From(u.Organization.ID),
 		Status:         omit.From(enums.FileuploadFilestatustypeUploaded),
 		SizeBytes:      omit.From(int32(upload.SizeBytes)),
 		FileUUID:       omit.From(upload.UUID),
@@ -93,7 +93,7 @@ func UploadCommit(ctx context.Context, org Organization, file_id int32, committe
 		um.SetCol("status").ToArg("committing"),
 		um.SetCol("committer").ToArg(committer.ID),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
-		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID()))),
+		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
 	).Exec(ctx, txn)
 	if err != nil {
 		return fmt.Errorf("update upload: %w", err)
@@ -111,7 +111,7 @@ func UploadDiscard(ctx context.Context, org Organization, file_id int32) error {
 		um.Table(models.FileuploadFiles.Alias()),
 		um.SetCol("status").ToArg("discarded"),
 		um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
-		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID()))),
+		um.Where(psql.Quote("organization_id").EQ(psql.Arg(org.ID))),
 	).Exec(ctx, db.PGInstance.BobDB)
 	return err
 }
@@ -140,7 +140,7 @@ func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, 
 		),
 		sm.From("fileupload.csv").As("csv"),
 		sm.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
-		sm.Where(psql.Quote("file", "organization_id").EQ(psql.Arg(org.ID()))),
+		sm.Where(psql.Quote("file", "organization_id").EQ(psql.Arg(org.ID))),
 		sm.OrderBy("created").Desc(),
 	), scan.StructMapper[UploadSummary]())
 	if err != nil {

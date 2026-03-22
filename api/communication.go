@@ -26,7 +26,7 @@ type contentListCommunication struct {
 }
 
 func listCommunication(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListCommunication, *nhttp.ErrorWithStatus) {
-	reports, err := publicreport.ReportsForOrganization(ctx, user.Organization.ID())
+	reports, err := publicreport.ReportsForOrganization(ctx, user.Organization.ID)
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}

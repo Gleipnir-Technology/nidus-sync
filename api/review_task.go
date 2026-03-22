@@ -44,7 +44,7 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User
 			"COUNT(*) AS total",
 		),
 		sm.From("review_task"),
-		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
+		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID))),
 		sm.Where(psql.Quote("review_task", "reviewed").IsNull()),
 	), scan.StructMapper[_RowTotal]())
 	if err != nil {
@@ -103,7 +103,7 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User
 			psql.Quote("site", "address_id"),
 			psql.Quote("address", "id"),
 		),
-		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
+		sm.Where(psql.Quote("review_task", "organization_id").EQ(psql.Arg(user.Organization.ID))),
 		sm.Where(psql.Quote("review_task", "reviewed").IsNull()),
 		sm.Limit(limit),
 	), scan.StructMapper[_Row]())

@@ -52,7 +52,7 @@ func SourceByGlobalID(ctx context.Context, org Organization, id uuid.UUID) (*Bre
 }
 
 func TrapsBySource(ctx context.Context, org Organization, sourceID uuid.UUID) ([]TrapNearby, error) {
-	locations, err := sql.TrapLocationBySourceID(org.ID(), sourceID).All(ctx, db.PGInstance.BobDB)
+	locations, err := sql.TrapLocationBySourceID(org.ID, sourceID).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query rows: %w", err)
 	}
@@ -63,12 +63,12 @@ func TrapsBySource(ctx context.Context, org Organization, sourceID uuid.UUID) ([
 		location_ids = append(location_ids, location.TrapLocationGlobalid)
 		args = append(args, psql.Arg(location.TrapLocationGlobalid))
 	}
-	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID(), location_ids).All(ctx, db.PGInstance.BobDB)
+	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, location_ids).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap data: %w", err)
 	}
 
-	counts, err := sql.TrapCountByLocationID(org.ID(), location_ids).All(ctx, db.PGInstance.BobDB)
+	counts, err := sql.TrapCountByLocationID(org.ID, location_ids).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap counts: %w", err)
 	}
@@ -101,12 +101,12 @@ func TrapByGlobalId(ctx context.Context, org Organization, id uuid.UUID) (*Trap,
 		return nil, fmt.Errorf("Failed to get trap location: %w", err)
 	}
 
-	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID(), []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
+	trap_data, err := sql.TrapDataByLocationIDRecent(org.ID, []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap data: %w", err)
 	}
 
-	counts, err := sql.TrapCountByLocationID(org.ID(), []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
+	counts, err := sql.TrapCountByLocationID(org.ID, []uuid.UUID{id}).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query trap counts: %w", err)
 	}

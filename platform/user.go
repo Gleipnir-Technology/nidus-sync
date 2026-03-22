@@ -130,7 +130,7 @@ func userSuggestionNonRoot(ctx context.Context, user User, query_arg string) ([]
 			),
 		),
 		sm.Where(
-			psql.Quote("organization_id").EQ(psql.Arg(user.Organization.ID())),
+			psql.Quote("organization_id").EQ(psql.Arg(user.Organization.ID)),
 		),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {

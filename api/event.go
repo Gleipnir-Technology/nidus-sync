@@ -86,11 +86,11 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 	connection := ConnectionSSE{
 		chanEvent:      make(chan platform.Event),
 		id:             uid,
-		organizationID: u.Organization.ID(),
+		organizationID: u.Organization.ID,
 		userID:         u.ID,
 	}
 	connectionsSSE[&connection] = true
-	log.Debug().Int32("org", u.Organization.ID()).Int("user", u.ID).Str("id", uid.String()).Msg("connected SSE client")
+	log.Debug().Int32("org", u.Organization.ID).Int("user", u.ID).Str("id", uid.String()).Msg("connected SSE client")
 
 	// Send an initial connected event
 	fmt.Fprintf(w, "event: connected\ndata: {\"status\": \"connected\", \"time\": \"%s\"}\n\n", time.Now().Format(time.RFC3339))
@@ -107,7 +107,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 	for {
 		select {
 		case <-done:
-			log.Debug().Int32("org", u.Organization.ID()).Int("user", u.ID).Str("id", uid.String()).Msg("Client closed connection")
+			log.Debug().Int32("org", u.Organization.ID).Int("user", u.ID).Str("id", uid.String()).Msg("Client closed connection")
 			delete(connectionsSSE, &connection)
 			return
 		case t := <-ticker.C:

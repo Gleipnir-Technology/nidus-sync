@@ -36,7 +36,7 @@ func SiteFromSignal(ctx context.Context, user User, signal_id int32) (*int32, er
 			psql.Quote("pool", "site_id").EQ(psql.Quote("site", "id")),
 		),
 		sm.Where(psql.Quote("signal_pool", "signal_id").EQ(psql.Arg(signal_id))),
-		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(user.Organization.ID()))),
+		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(user.Organization.ID))),
 	), scan.StructMapper[_Row]())
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -54,7 +54,7 @@ func SiteCreate(ctx context.Context, txn bob.Tx, user User, address_id int32) (*
 		FileID:    omitnull.FromPtr[int32](nil),
 		//ID:
 		Notes:          omit.From(""),
-		OrganizationID: omit.From(user.Organization.ID()),
+		OrganizationID: omit.From(user.Organization.ID),
 		OwnerName:      omit.From(""),
 		OwnerPhoneE164: omitnull.FromPtr[string](nil),
 		ParcelID:       omitnull.FromPtr[int32](nil),
@@ -66,7 +66,7 @@ func SiteCreate(ctx context.Context, txn bob.Tx, user User, address_id int32) (*
 func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
 	site, err := models.Sites.Query(
 		models.SelectWhere.Sites.AddressID.EQ(address_id),
-		models.SelectWhere.Sites.OrganizationID.EQ(user.Organization.ID()),
+		models.SelectWhere.Sites.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, txn)
 	if err == nil {
 		return site, nil

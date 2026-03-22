@@ -62,7 +62,7 @@ func getUploadByID(ctx context.Context, r *http.Request, u platform.User) (*html
 		return nil, nhttp.NewError("Failed to parse file_id: %w", err)
 	}
 	file_id := int32(file_id_)
-	detail, err := platform.GetUploadDetail(ctx, u.Organization.ID(), file_id)
+	detail, err := platform.GetUploadDetail(ctx, u.Organization.ID, file_id)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get pool: %w", err)
 	}

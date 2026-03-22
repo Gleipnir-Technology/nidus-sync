@@ -4,17 +4,32 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 )
 
-func getUser(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*platform.User, *nhttp.ErrorWithStatus) {
+type contentURLs struct {
+	Tegola string `json:"tegola"`
+}
+type contentUserSelf struct {
+	Self platform.User `json:"self"`
+	URLs contentURLs   `json:"urls"`
+}
+
+func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentUserSelf, *nhttp.ErrorWithStatus) {
 	counts, err := platform.NotificationCountsForUser(ctx, user)
 	if err != nil {
 		return nil, nhttp.NewError("get notifications: %w", err)
 	}
 	user.NotificationCounts = *counts
-	return &user, nil
+	urls := html.NewContentURL()
+	return &contentUserSelf{
+		Self: user,
+		URLs: contentURLs{
+			Tegola: urls.Tegola,
+		},
+	}, nil
 }
 
 type responseListUser struct {

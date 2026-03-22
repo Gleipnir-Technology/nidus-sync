@@ -133,12 +133,12 @@ func postConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u 
 		_, err := psql.Update(
 			um.Table("organization"),
 			um.SetCol("arcgis_map_service_id").ToArg(f.MapService),
-			um.Where(psql.Quote("id").EQ(psql.Arg(u.Organization.ID()))),
+			um.Where(psql.Quote("id").EQ(psql.Arg(u.Organization.ID))),
 		).Exec(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			return "", nhttp.NewError("Failed to update map service config: %w", err)
 		}
-		log.Info().Str("map-service", *f.MapService).Int32("org-id", u.Organization.ID()).Msg("changed map service")
+		log.Info().Str("map-service", *f.MapService).Int32("org-id", u.Organization.ID).Msg("changed map service")
 	} else {
 		log.Info().Msg("no map service")
 	}

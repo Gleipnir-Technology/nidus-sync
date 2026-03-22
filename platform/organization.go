@@ -12,10 +12,8 @@ import (
 )
 
 type Organization struct {
-	ServiceAreaXmax float64
-	ServiceAreaXmin float64
-	ServiceAreaYmax float64
-	ServiceAreaYmin float64
+	ID          int32        `json:"id"`
+	ServiceArea *ServiceArea `json:"service_area"`
 
 	model *models.Organization
 }
@@ -61,11 +59,8 @@ func (o Organization) MarshalJSON() ([]byte, error) {
 func (o Organization) Name() string {
 	return o.model.Name
 }
-func (o Organization) ID() int32 {
-	return o.model.ID
-}
 func (o Organization) IsSyncOngoing() bool {
-	return IsSyncOngoing(o.ID())
+	return IsSyncOngoing(o.ID)
 }
 func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.FieldseekerSync, error) {
 	sync, err := o.model.FieldseekerSyncs(sm.OrderBy("created").Desc()).One(ctx, db.PGInstance.BobDB)
@@ -83,24 +78,6 @@ type ServiceArea struct {
 	Max Point
 }
 
-func (o Organization) ServiceArea() ServiceArea {
-	if o.model.ServiceAreaXmax.IsNull() ||
-		o.model.ServiceAreaXmin.IsNull() ||
-		o.model.ServiceAreaYmax.IsNull() ||
-		o.model.ServiceAreaYmin.IsNull() {
-		return ServiceArea{}
-	}
-	return ServiceArea{
-		Min: Point{
-			X: o.model.ServiceAreaXmin.MustGet(),
-			Y: o.model.ServiceAreaYmin.MustGet(),
-		},
-		Max: Point{
-			X: o.model.ServiceAreaXmax.MustGet(),
-			Y: o.model.ServiceAreaYmax.MustGet(),
-		},
-	}
-}
 func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.FieldseekerServicerequest, error) {
 	results, err := o.model.Servicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -120,7 +97,25 @@ func OrganizationByID(ctx context.Context, id int) (*Organization, error) {
 	return &o, nil
 }
 func newOrganization(org *models.Organization) Organization {
+	var sa *ServiceArea
+	if org.ServiceAreaXmax.IsValue() &&
+		org.ServiceAreaXmin.IsValue() &&
+		org.ServiceAreaYmax.IsValue() &&
+		org.ServiceAreaYmin.IsValue() {
+		sa = &ServiceArea{
+			Min: Point{
+				X: org.ServiceAreaXmin.MustGet(),
+				Y: org.ServiceAreaYmin.MustGet(),
+			},
+			Max: Point{
+				X: org.ServiceAreaXmax.MustGet(),
+				Y: org.ServiceAreaYmax.MustGet(),
+			},
+		}
+	}
 	return Organization{
-		model: org,
+		ID:          org.ID,
+		ServiceArea: sa,
+		model:       org,
 	}
 }

@@ -28,7 +28,7 @@ func LeadCreate(ctx context.Context, user User, signal_id int32, site_id int32, 
 		Created: omit.From(time.Now()),
 		Creator: omit.From(int32(user.ID)),
 		// ID
-		OrganizationID: omit.From(int32(user.Organization.ID())),
+		OrganizationID: omit.From(int32(user.Organization.ID)),
 		SiteID:         omitnull.From(site_id),
 		Type:           omit.From(enums.LeadtypeGreenPool),
 	}).One(ctx, txn)

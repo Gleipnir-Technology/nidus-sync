@@ -34,7 +34,7 @@ func ReviewPoolCreate(ctx context.Context, user User, task_id int32, status stri
 	defer txn.Rollback(ctx)
 	review_task, err := models.ReviewTasks.Query(
 		models.SelectWhere.ReviewTasks.ID.EQ(task_id),
-		models.SelectWhere.ReviewTasks.OrganizationID.EQ(user.Organization.ID()),
+		models.SelectWhere.ReviewTasks.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, txn)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -66,7 +66,7 @@ func ReviewPoolCreate(ctx context.Context, user User, task_id int32, status stri
 	if err != nil {
 		return 0, err
 	}
-	event.Updated(event.TypeReviewTask, user.Organization.ID(), strconv.Itoa(int(review_task.ID)))
+	event.Updated(event.TypeReviewTask, user.Organization.ID, strconv.Itoa(int(review_task.ID)))
 	txn.Commit(ctx)
 	log.Info().Int32("id", review_task.ID).Str("status", status).Msg("review completed")
 	return review_task.ID, err
@@ -147,7 +147,7 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user User, review_task_po
 			Creator:              omit.From[int32](int32(user.ID)),
 			FeaturePoolFeatureID: omitnull.From(feature_pool.FeatureID),
 			//ID: omit.Val[int32],
-			OrganizationID: omit.From(user.Organization.ID()),
+			OrganizationID: omit.From(user.Organization.ID),
 			ReportID:       omitnull.FromPtr[int32](nil),
 			Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
 			Type:           omit.From(enums.SignaltypeFlyoverPool),
@@ -157,7 +157,7 @@ func commitReviewPool(ctx context.Context, txn bob.Tx, user User, review_task_po
 		if err != nil {
 			return nhttp.NewError("create signal: %w", err)
 		}
-		event.Created(event.TypeSignal, user.Organization.ID(), strconv.Itoa(int(signal.ID)))
+		event.Created(event.TypeSignal, user.Organization.ID, strconv.Itoa(int(signal.ID)))
 		log.Debug().Int32("id", signal.ID).Msg("created pool signal")
 	}
 	return nil
