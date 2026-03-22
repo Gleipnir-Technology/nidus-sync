@@ -887,17 +887,15 @@ async function markInvalid() {
 }
 
 function removeCurrentFromList() {
-	const index = communications.value.findIndex(
-		(c) => c.id === selectedCommunication.value.id,
-	);
+	const index = communication.all.findIndex((c) => c.id === selectedId.value);
 	if (index > -1) {
-		communications.value.splice(index, 1);
+		communication.all.splice(index, 1);
 	}
-	if (communications.value.length > 0) {
-		const nextIndex = Math.min(index, communications.value.length - 1);
-		selectedCommunication.value = communications.value[nextIndex];
+	if (communication.all.length > 0) {
+		const nextIndex = Math.min(index, communication.all.length - 1);
+		selectedId.value = communication.all[nextIndex].id;
 	} else {
-		selectedCommunication.value = null;
+		selectedId.value = null;
 	}
 }
 

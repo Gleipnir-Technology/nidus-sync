@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useUserStore } from "./user";
+import { Communication } from "../types";
 
 export const useCommunicationStore = defineStore("communication", () => {
 	// State
-	const all = ref(null);
+	const all = ref<Communication[] | null>(null);
 	const loading = ref(false);
 	const error = ref(null);
 
