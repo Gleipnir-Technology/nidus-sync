@@ -10,7 +10,8 @@ import (
 )
 
 type contentURLAPI struct {
-	Communication string `json:"communication"`
+	Communication       string `json:"communication"`
+	PublicreportMessage string `json:"publicreport_message"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`
@@ -32,7 +33,8 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 		Self: user,
 		URLs: contentURLs{
 			API: contentURLAPI{
-				Communication: urls.API.Communication,
+				Communication:       urls.API.Communication,
+				PublicreportMessage: urls.API.Publicreport.Message,
 			},
 			Tegola: urls.Tegola,
 		},

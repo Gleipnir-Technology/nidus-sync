@@ -34,11 +34,22 @@ func NewContentURL() ContentURL {
 
 type contentURLAPI struct {
 	Communication string
+	Publicreport  contentURLAPIPublicreport
 }
 
 func newContentURLAPI() contentURLAPI {
 	return contentURLAPI{
 		Communication: config.MakeURLNidus("/api/communication"),
+	}
+}
+
+type contentURLAPIPublicreport struct {
+	Message string
+}
+
+func newContentURLAPIPublicreport() contentURLAPIPublicreport {
+	return contentURLAPIPublicreport{
+		Message: config.MakeURLNidus("/api/publicreport/message"),
 	}
 }
 
