@@ -1,0 +1,424 @@
+<template>
+	<div class="container mt-4">
+		<h2 id="comms-testing">
+			<i class="bi bi-broadcast-pin"></i> Communications Testing
+		</h2>
+		<div class="row">
+			<div class="col-lg-6">
+				<!-- SMS Testing -->
+				<div class="card mb-4">
+					<div class="card-header bg-primary text-white">
+						<i class="bi bi-chat-dots"></i> SMS Testing
+					</div>
+					<div class="card-body">
+						<form action="/sudo/sms" method="POST">
+							<div class="mb-3">
+								<label for="smsPhone" class="form-label"
+									>Recipient Phone Number</label
+								>
+								<input
+									type="tel"
+									class="form-control"
+									id="smsPhone"
+									name="smsPhone"
+									placeholder="+1 (555) 123-4567"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="smsMessage" class="form-label">Message</label>
+								<textarea
+									class="form-control"
+									id="smsMessage"
+									name="smsMessage"
+									rows="3"
+									maxlength="130"
+									placeholder="Enter your SMS message here"
+								></textarea>
+							</div>
+							<button type="submit" class="btn btn-primary">
+								Send SMS <i class="bi bi-send"></i>
+							</button>
+						</form>
+					</div>
+				</div>
+
+				<!-- MMS Testing -->
+				<div class="card mb-4">
+					<div class="card-header bg-success text-white">
+						<i class="bi bi-image"></i> MMS Testing
+					</div>
+					<div class="card-body">
+						<form>
+							<div class="mb-3">
+								<label for="mmsPhone" class="form-label"
+									>Recipient Phone Number</label
+								>
+								<input
+									type="tel"
+									class="form-control"
+									id="mmsPhone"
+									placeholder="+1 (555) 123-4567"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="mmsMessage" class="form-label">Message</label>
+								<textarea
+									class="form-control"
+									id="mmsMessage"
+									rows="2"
+									placeholder="Enter your MMS message here"
+								></textarea>
+							</div>
+							<div class="mb-3">
+								<label for="mmsImage" class="form-label">Attach Image</label>
+								<input
+									class="form-control"
+									type="file"
+									id="mmsImage"
+									accept="image/*"
+								/>
+							</div>
+							<button type="submit" class="btn btn-success">
+								Send MMS <i class="bi bi-send"></i>
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-lg-6">
+				<!-- RCS Testing -->
+				<div class="card mb-4">
+					<div class="card-header bg-info text-white">
+						<i class="bi bi-chat-square-text"></i> RCS Testing
+					</div>
+					<div class="card-body">
+						<form>
+							<div class="mb-3">
+								<label for="rcsPhone" class="form-label"
+									>Recipient Phone Number</label
+								>
+								<input
+									type="tel"
+									class="form-control"
+									id="rcsPhone"
+									placeholder="+1 (555) 123-4567"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="rcsMessage" class="form-label">Message</label>
+								<textarea
+									class="form-control"
+									id="rcsMessage"
+									rows="3"
+									placeholder="Enter your RCS message here"
+								></textarea>
+							</div>
+							<div class="mb-3">
+								<label class="form-label">Interactive Options</label>
+								<div class="form-check">
+									<input
+										class="form-check-input"
+										type="checkbox"
+										id="rcsIncludeButtons"
+									/>
+									<label class="form-check-label" for="rcsIncludeButtons"
+										>Include Action Buttons</label
+									>
+								</div>
+							</div>
+							<button type="submit" class="btn btn-info">
+								Send RCS <i class="bi bi-send"></i>
+							</button>
+						</form>
+					</div>
+				</div>
+
+				<!-- Email Testing -->
+				<div class="card mb-4">
+					<div class="card-header bg-warning text-dark">
+						<i class="bi bi-envelope"></i> Email Testing
+					</div>
+					<div class="card-body">
+						<form action="/sudo/email" method="POST">
+							<div class="mb-3">
+								<label for="emailFrom" class="form-label">From Account</label>
+								<select class="form-select" id="emailFrom" name="emailFrom">
+									<option :value="forwardEmailRMOAddress">
+										{{ forwardEmailRMOAddress }}
+									</option>
+									<option :value="forwardEmailNidusAddress">
+										{{ forwardEmailNidusAddress }}
+									</option>
+								</select>
+							</div>
+							<div class="mb-3">
+								<label for="emailTo" class="form-label">Recipient Email</label>
+								<input
+									type="email"
+									class="form-control"
+									id="emailTo"
+									name="emailTo"
+									placeholder="user@example.com"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="emailSubject" class="form-label">Subject</label>
+								<input
+									type="text"
+									class="form-control"
+									id="emailSubject"
+									name="emailSubject"
+									placeholder="Email Subject"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="emailBody" class="form-label">Message</label>
+								<textarea
+									class="form-control"
+									id="emailBody"
+									name="emailBody"
+									placeholder="Enter your email message here"
+									rows="3"
+								></textarea>
+							</div>
+							<button type="submit" class="btn btn-warning text-dark">
+								Send Email <i class="bi bi-send"></i>
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- SSE Testing -->
+		<div class="card mb-5">
+			<div class="card-header bg-danger text-white">
+				<i class="bi bi-bell"></i> Server-sent event testing
+			</div>
+			<div class="card-body">
+				<form action="/sudo/sse" method="POST">
+					<div class="row">
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="organizationID" class="form-label"
+									>Organization ID</label
+								>
+								<input
+									class="form-control"
+									id="organization-id"
+									name="organizationID"
+									placeholder="Organization ID"
+									type="text"
+									:value="organizationID"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="type" class="form-label">Type</label>
+								<select class="form-select" id="type" name="type">
+									<option value="created">Created</option>
+									<option value="deleted">Deleted</option>
+									<option value="heartbeat">Heartbeat</option>
+									<option value="sudo">Sudo</option>
+									<option value="updated">Updated</option>
+								</select>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="resource" class="form-label">Resource</label>
+								<input
+									class="form-control"
+									id="resource"
+									name="resource"
+									type="text"
+									value="rmo:nuisance"
+								/>
+							</div>
+							<div class="mb-3">
+								<label for="uriPath" class="form-label">URI path</label>
+								<input
+									class="form-control"
+									id="uri-path"
+									name="uriPath"
+									type="text"
+									value="/report/abcd-1234"
+								/>
+							</div>
+						</div>
+					</div>
+					<button type="submit" class="btn btn-danger">
+						Send SSE<i class="bi bi-send"></i>
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<hr class="my-5" />
+		<!-- Push Notification Testing -->
+		<div class="card mb-5">
+			<div class="card-header bg-danger text-white">
+				<i class="bi bi-bell"></i> Push Notification Testing
+			</div>
+			<div class="card-body">
+				<form>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="pushUser" class="form-label"
+									>User ID or Device Token</label
+								>
+								<input
+									type="text"
+									class="form-control"
+									id="pushUser"
+									placeholder="User ID or Device Token"
+								/>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="mb-3">
+								<label for="pushTitle" class="form-label"
+									>Notification Title</label
+								>
+								<input
+									type="text"
+									class="form-control"
+									id="pushTitle"
+									placeholder="Notification Title"
+								/>
+							</div>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="pushBody" class="form-label">Notification Body</label>
+						<textarea
+							class="form-control"
+							id="pushBody"
+							rows="2"
+							placeholder="Enter your notification message here"
+						></textarea>
+					</div>
+					<div class="mb-3">
+						<label for="pushData" class="form-label"
+							>Additional Data (JSON)</label
+						>
+						<textarea
+							class="form-control"
+							id="pushData"
+							rows="2"
+							placeholder='{"key": "value"}'
+						></textarea>
+					</div>
+					<button type="submit" class="btn btn-danger">
+						Send Push Notification <i class="bi bi-send"></i>
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<hr class="my-5" />
+
+		<!-- User Impersonation Section -->
+		<h2 id="user-impersonation">
+			<i class="bi bi-person-badge"></i> User Impersonation
+		</h2>
+		<div class="card">
+			<div class="card-header bg-dark text-white">
+				<i class="bi bi-people"></i> Impersonate User
+			</div>
+			<div class="card-body">
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<label for="userSearch" class="form-label">Search Users</label>
+						<user-selector></user-selector>
+					</div>
+					<div class="col-md-6">
+						<label for="userRole" class="form-label">Filter by Role</label>
+						<select class="form-select" id="userRole">
+							<option value="">All Roles</option>
+							<option value="admin">Admin</option>
+							<option value="user">Standard User</option>
+							<option value="support">Support</option>
+							<option value="premium">Premium User</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>User ID</th>
+								<th>Name</th>
+								<th>Email</th>
+								<th>Role</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>1001</td>
+								<td>John Doe</td>
+								<td>john.doe@example.com</td>
+								<td><span class="badge bg-primary">Admin</span></td>
+								<td>
+									<button class="btn btn-sm btn-primary">
+										Impersonate <i class="bi bi-box-arrow-in-right"></i>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>1002</td>
+								<td>Jane Smith</td>
+								<td>jane.smith@example.com</td>
+								<td><span class="badge bg-info">Support</span></td>
+								<td>
+									<button class="btn btn-sm btn-primary">
+										Impersonate <i class="bi bi-box-arrow-in-right"></i>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>1003</td>
+								<td>Robert Johnson</td>
+								<td>robert@example.com</td>
+								<td><span class="badge bg-success">Premium User</span></td>
+								<td>
+									<button class="btn btn-sm btn-primary">
+										Impersonate <i class="bi bi-box-arrow-in-right"></i>
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td>1004</td>
+								<td>Maria Garcia</td>
+								<td>maria@example.com</td>
+								<td><span class="badge bg-secondary">Standard User</span></td>
+								<td>
+									<button class="btn btn-sm btn-primary">
+										Impersonate <i class="bi bi-box-arrow-in-right"></i>
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div
+					class="alert alert-warning mt-3 mb-0"
+					id="impersonationStatus"
+					style="display: none"
+				>
+					<i class="bi bi-exclamation-triangle"></i> You are currently
+					impersonating <strong>John Doe</strong>
+					<button class="btn btn-sm btn-warning float-end">
+						Exit Impersonation <i class="bi bi-box-arrow-left"></i>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script setup lang="ts"></script>

@@ -1,0 +1,165 @@
+<template>
+	<div class="container py-5">
+		<div class="row mb-4">
+			<div class="col">
+				<h1 class="display-5 mb-3">Settings</h1>
+				<p class="text-muted lead">
+					Configure your organization's preferences and integrations
+				</p>
+			</div>
+		</div>
+
+		<div class="row g-4">
+			<!-- User Management Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-users">
+							<i class="bi bi-people-fill"></i>
+						</div>
+						<h2 class="h4 mb-2">User Management</h2>
+						<p class="text-muted mb-4">
+							Manage staff accounts, roles, and permissions for your
+							organization.
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a
+								href="{{ .URL.Configuration.User }}"
+								class="btn btn-outline-primary"
+							>
+								Manage Users
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Pesticide Products Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-pesticides">
+							<i class="bi bi-droplet-fill"></i>
+						</div>
+						<h2 class="h4 mb-2">Pesticide Products</h2>
+						<p class="text-muted mb-4">
+							Configure products, application rates, and field recommendations.
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a
+								href="{{ .URL.Configuration.Pesticide }}"
+								class="btn btn-outline-success"
+							>
+								Manage Products
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Integrations Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-integrations">
+							<i class="bi bi-gear-wide-connected"></i>
+						</div>
+						<h2 class="h4 mb-2">Integrations</h2>
+						<p class="text-muted mb-4">
+							Configure connections with FieldSeeker, VectorSurv, and other
+							services.
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a
+								href="{{ .URL.Configuration.Integration }}"
+								class="btn btn-outline-primary"
+							>
+								Manage Integrations
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Organization Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-equipment">
+							<i class="bi bi-globe-europe-africa"></i>
+						</div>
+						<h2 class="h4 mb-2">Organization</h2>
+						<p class="text-muted mb-4">
+							Manage your organization service area and information.
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a
+								href="{{ .URL.Configuration.Organization }}"
+								class="btn btn-outline-danger"
+							>
+								Manage Organization
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Import Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-notifications">
+							<i class="bi bi-upload"></i>
+						</div>
+						<h2 class="h4 mb-2">Uploads</h2>
+						<p class="text-muted mb-4">
+							Upload files (spreadsheets, scans, notes) to make the data
+							available to Nidus
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a
+								class="btn btn-outline-warning"
+								href="{{ .URL.Configuration.Upload }}"
+							>
+								Manage Uploads
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- General Settings Card -->
+			<div class="col-12 col-md-6 col-lg-4">
+				<div class="card settings-card border-0 shadow-sm">
+					<div class="card-body p-4">
+						<div class="settings-icon icon-general">
+							<i class="bi bi-sliders"></i>
+						</div>
+						<h2 class="h4 mb-2">General Settings</h2>
+						<p class="text-muted mb-4">
+							Configure organization details, branding, and system preferences.
+						</p>
+						<div class="d-flex justify-content-between align-items-center">
+							<a class="btn btn-outline-secondary disabled" disabled>
+								Manage Settings
+								<i class="bi bi-arrow-right ms-1"></i>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="mt-5 text-center text-muted">
+			<p class="small">
+				<i class="bi bi-shield-lock me-1"></i>
+				All changes made in settings are logged for audit purposes
+			</p>
+		</div>
+	</div>
+</template>
