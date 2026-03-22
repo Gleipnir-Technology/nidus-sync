@@ -46,13 +46,12 @@
 							Configure products, application rates, and field recommendations.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a
-								href="{{ .URL.Configuration.Pesticide }}"
-								class="btn btn-outline-success"
-							>
-								Manage Products
-								<i class="bi bi-arrow-right ms-1"></i>
-							</a>
+							<RouterLink to="/configuration/pesticide">
+								<button class="btn btn-outline-success">
+									Manage Products
+									<i class="bi bi-arrow-right ms-1"></i>
+								</button>
+							</RouterLink>
 						</div>
 					</div>
 				</div>
