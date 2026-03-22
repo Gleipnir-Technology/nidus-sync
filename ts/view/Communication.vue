@@ -735,7 +735,6 @@ onMounted(() => {
 
 // Refs
 const apiBase = ref("/api");
-const selectedCommunication = ref(null);
 const messageText = ref("");
 const showPhotoModal = ref(false);
 const selectedId = ref<string | null>(null);
@@ -750,7 +749,16 @@ const mapRef = ref(null);
 const nuisance = computed(() => {
 	return selectedCommunication.value?.public_report?.nuisance || null;
 });
-
+const selectedCommunication = computed<Communication | null>(() => {
+	if (selectedId.value == null) {
+		return null;
+	}
+	if (communication.all == null) {
+		return null;
+	}
+	const result = communication.all.find((c) => c.id == selectedId.value);
+	return result;
+});
 const water = computed(() => {
 	return selectedCommunication.value?.public_report?.water || null;
 });
