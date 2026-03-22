@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { SSEManager } from "../SSEManager";
 
 // Define interfaces matching your Go structs
 interface URLsAPI {
@@ -43,6 +44,13 @@ export const useUserStore = defineStore("user", () => {
 	const role = ref<string | null>(null);
 	const urls = ref<URLs | null>(null);
 	const username = ref<string | null>(null);
+
+	// Subscription
+	SSEManager.subscribe("*", (e) => {
+		if (e.type !== "heartbeat") {
+			fetchUser();
+		}
+	});
 
 	// Actions
 	async function fetchUser() {

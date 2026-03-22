@@ -22,7 +22,7 @@
 					to="/communication"
 					icon="messaging"
 					label="Communication"
-					:notificationCount="notificationCounts.communication"
+					:notificationCount="user?.notification_counts?.communication ?? 0"
 				/>
 			</li>
 			<li>
@@ -36,7 +36,7 @@
 					to="/review"
 					icon="review"
 					label="Review"
-					:notificationCount="notificationCounts.review"
+					:notificationCount="user?.notification_counts?.review ?? 0"
 				/>
 			</li>
 			<li>
@@ -57,15 +57,12 @@
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Tooltip, Popover } from "bootstrap";
 import NavigationLink from "../common/NavigationLink.vue";
+import { useUserStore } from "../../store/user";
 
 // Reactive state
 const isCollapsed = ref(false);
-const notificationCounts = reactive({
-	communication: 0,
-	review: 0,
-});
 
-const userData = reactive({});
+const user = useUserStore();
 
 // Bootstrap tooltip instances
 let tooltipInstances = [];
@@ -128,25 +125,6 @@ const setTooltipsForSidebar = () => {
 	});
 };
 
-// Fetch user state from API
-const updateUserState = async () => {
-	try {
-		const response = await fetch("/api/user/self");
-		const data = await response.json();
-
-		// Update reactive data
-		Object.keys(data).forEach((key) => {
-			if (key === "notification_counts") {
-				Object.assign(notificationCounts, data[key]);
-			} else {
-				userData[key] = data[key];
-			}
-		});
-	} catch (error) {
-		console.error("Failed to update user state:", error);
-	}
-};
-
 // Lifecycle hooks
 onMounted(async () => {
 	restoreLocalStorage();
@@ -155,18 +133,6 @@ onMounted(async () => {
 
 	initializeBootstrap();
 	setTooltipsForSidebar();
-
-	// Subscribe to SSE events (assuming SSEManager is globally available)
-	if (window.SSEManager) {
-		sseUnsubscribe = window.SSEManager.subscribe("*", (e) => {
-			if (e.type !== "heartbeat") {
-				updateUserState();
-			}
-		});
-	}
-
-	// Initial user state fetch
-	updateUserState();
 });
 
 onBeforeUnmount(() => {
