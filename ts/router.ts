@@ -12,6 +12,7 @@ import ConfigurationRoot from "./view/configuration/Root.vue";
 import ConfigurationUser from "./view/configuration/User.vue";
 import ConfigurationUserAdd from "./view/configuration/UserAdd.vue";
 import Intelligence from "./view/Intelligence.vue";
+import OAuthRefreshArcgis from "./view/OAuthRefreshArcgis.vue";
 import Operations from "./view/Operations.vue";
 import Planning from "./view/Planning.vue";
 import Review from "./view/Review.vue";
@@ -72,6 +73,11 @@ const routes: RouteRecordRaw[] = [
 		path: "/intelligence",
 		name: "Intelligence",
 		component: Intelligence,
+	},
+	{
+		path: "/oauth/refresh/arcgis",
+		name: "Arcgis OAuth Refresh",
+		component: OAuthRefreshArcgis,
 	},
 	{
 		path: "/operations",
