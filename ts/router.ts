@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from "vue-router";
 import Home from "./view/Home.vue";
 import About from "./view/About.vue";
 import Communication from "./view/Communication.vue";
+import ConfigurationIntegration from "./view/configuration/Integration.vue";
 import ConfigurationOrganization from "./view/configuration/Organization.vue";
 import ConfigurationPesticide from "./view/configuration/Pesticide.vue";
 import ConfigurationPesticideAdd from "./view/configuration/PesticideAdd.vue";
@@ -30,6 +31,11 @@ const routes: RouteRecordRaw[] = [
 		path: "/configuration",
 		name: "Configuration",
 		component: ConfigurationRoot,
+	},
+	{
+		path: "/configuration/integration",
+		name: "Integration Configuration",
+		component: ConfigurationIntegration,
 	},
 	{
 		path: "/configuration/organization",

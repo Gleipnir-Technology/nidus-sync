@@ -70,13 +70,12 @@
 							services.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a
-								href="{{ .URL.Configuration.Integration }}"
-								class="btn btn-outline-primary"
-							>
-								Manage Integrations
-								<i class="bi bi-arrow-right ms-1"></i>
-							</a>
+							<RouterLink to="/configuration/integration">
+								<button class="btn btn-outline-primary">
+									Manage Integrations
+									<i class="bi bi-arrow-right ms-1"></i>
+								</button>
+							</RouterLink>
 						</div>
 					</div>
 				</div>
