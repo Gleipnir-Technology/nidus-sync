@@ -13,6 +13,7 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "@types/bootstrap": "^5.2.10",
     "esbuild": "^0.25.5",
     "esbuild-plugin-vue3": "^0.5.1",
     "esbuild-sass-plugin": "^3.7.0",
@@ -22,10 +23,10 @@
   "scripts": {
     "build": "node build.js",
     "build:prod": "node build.js --minify",
-	"dev": "pnpm typecheck:watch & pnpm watch",
+    "dev": "pnpm typecheck:watch & pnpm watch",
     "generate-icons": "node generate-icons.js",
-	"typecheck": "tsc --noEmit",
-	"typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput",
     "watch": "node build.js --watch"
   }
 }
