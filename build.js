@@ -59,9 +59,12 @@ const config = {
 			silenceDeprecations: ["import"],
 			type: "css",
 		}),
-		vue(),
+		vue({
+			sourceMap: true,
+		}),
 	],
 	sourcemap: true,
+	sourcesContent: true,
 	define: {
 		__VUE_OPTIONS_API__: "true",
 		__VUE_PROD_DEVTOOLS__: "false",
