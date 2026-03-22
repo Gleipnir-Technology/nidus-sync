@@ -1,0 +1,64 @@
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import path from "path";
+
+export default defineConfig({
+	plugins: [vue()],
+
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./ts"),
+		},
+	},
+
+	css: {
+		preprocessorOptions: {
+			scss: {
+				// Only add this if you have a variables file and need it auto-imported
+				// Comment out or adjust the path if this file doesn't exist or causes issues
+				// additionalData: `@use "@/style/variables.scss" as *;`,
+
+				api: "modern-compiler", // Use the modern Sass API
+				silenceDeprecations: ["import", "global-builtin"],
+			},
+		},
+	},
+
+	build: {
+		manifest: true,
+		outDir: "static/gen",
+		emptyOutDir: true,
+		rollupOptions: {
+			input: {
+				main: path.resolve(__dirname, "ts/main.ts"),
+			},
+			output: {
+				entryFileNames: "js/bundle.[hash].js",
+				chunkFileNames: "js/[name].[hash].js",
+				assetFileNames: (assetInfo) => {
+					if (/\.(woff2?|ttf|eot)$/.test(assetInfo.name || "")) {
+						return "fonts/[name].[hash][extname]";
+					}
+					if (/\.css$/.test(assetInfo.name || "")) {
+						return "css/style.[hash][extname]";
+					}
+					return "assets/[name].[hash][extname]";
+				},
+			},
+		},
+		sourcemap: true,
+	},
+
+	server: {
+		allowedHosts: ["poweredge.local", "dev-sync.nidus.cloud"],
+		host: true, // Listen on all addresses
+		port: 8080,
+		proxy: {
+			"/api": {
+				target: "http://127.0.0.1:9000",
+				changeOrigin: true,
+			},
+		},
+		strictPort: true,
+	},
+});

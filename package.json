@@ -14,19 +14,17 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
-    "esbuild": "^0.25.5",
-    "esbuild-plugin-vue3": "^0.5.1",
-    "esbuild-sass-plugin": "^3.7.0",
+    "@vitejs/plugin-vue": "^6.0.5",
     "sass": "^1.98.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.0.1",
+    "vue-tsc": "^3.2.6"
   },
   "scripts": {
-    "build": "node build.js",
-    "build:prod": "node build.js --minify",
-    "dev": "pnpm typecheck:watch & pnpm watch",
+    "build": "vite build",
+    "dev": "vite --host --port 8080",
     "generate-icons": "node generate-icons.js",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput",
-    "watch": "node build.js --watch"
+    "typecheck": "vue-tsc --noEmit",
+    "typecheck:watch": "vue-tsc --noEmit --watch"
   }
 }

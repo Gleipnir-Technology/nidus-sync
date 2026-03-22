@@ -5,27 +5,24 @@ let
 	pnpmDeps = pkgs.pnpm.fetchDeps {
 		pname = "nidus-sync-frontend";
 		version = "0.0.11";
-		src ./.;
+		src = ./.;
 		hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # nix will tell you the correct hash
 	};
 in
 pkgs.buildGoModule rec {
-        meta = {
-                description = "Nidus Sync";
-                homepage = "https://github.com/Gleipnir-Technology/nidus-sync";
-        };
-        pname = "nidus-sync";
-        src = ./.;
-        subPackages = [];
-        version = "0.0.11";
-        # Needs to be updated after every modification of go.mod/go.sum
-        vendorHash = "sha256-zXjryPAJYpc80cqYtrcp//i6OQi5V5QwhaKQYYfrlL8=";
+	meta = {
+		description = "Nidus Sync";
+		homepage = "https://github.com/Gleipnir-Technology/nidus-sync";
+	};
+	pname = "nidus-sync";
+	src = ./.;
+	subPackages = [];
+	version = "0.0.11";
+	vendorHash = "sha256-zXjryPAJYpc80cqYtrcp//i6OQi5V5QwhaKQYYfrlL8=";
 
 	buildInputs = [ pkgs.proj ];
 	nativeBuildInputs = [
 		pkgs.pkg-config
-		pkgs.dart-sass
-		pkgs.esbuild
 		pkgs.pnpm.configHook
 		pkgs.nodejs
 	];

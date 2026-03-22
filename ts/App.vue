@@ -15,7 +15,7 @@ import { useUserStore } from "@/store/user";
 
 import Sidebar from "./components/layout/Sidebar.vue";
 import MainContent from "./components/layout/MainContent.vue";
-import NavigationLink from "./components/layout/common/NavigationLink.vue";
+import NavigationLink from "@/components/common/NavigationLink.vue";
 
 const userStore = useUserStore();
 onMounted(() => {
