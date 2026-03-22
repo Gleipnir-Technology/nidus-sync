@@ -30,6 +30,7 @@
 		</template>
 	</ThreeColumn>
 	<PhotoViewerModal
+		@close="showPhotoModal = false"
 		@imageNext="imageNext()"
 		@imagePrevious="imagePrevious()"
 		:images="currentImages"

@@ -9,7 +9,7 @@
 		:class="{ 'show d-block': show }"
 		tabindex="-1"
 		v-show="show"
-		@click.self="show = false"
+		@click.self="emit('close')"
 	>
 		<div class="modal-dialog modal-lg modal-dialog-centered">
 			<div class="modal-content">
@@ -21,7 +21,7 @@
 					<button
 						type="button"
 						class="btn-close"
-						@click="show = false"
+						@click="emit('close')"
 					></button>
 				</div>
 				<div class="modal-body text-center">
@@ -91,12 +91,13 @@
 	<div
 		class="modal-backdrop fade show"
 		v-show="show"
-		@click="show = false"
+		@click="emit('close')"
 	></div>
 </template>
 
 <script setup lang="ts">
 interface Emits {
+	(e: "close"): void;
 	(e: "imageNext"): void;
 	(e: "imagePrevious"): void;
 }
