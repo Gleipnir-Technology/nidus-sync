@@ -9,8 +9,12 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 )
 
+type contentURLAPI struct {
+	Communication string `json:"api"`
+}
 type contentURLs struct {
-	Tegola string `json:"tegola"`
+	API    contentURLAPI `json:"api"`
+	Tegola string        `json:"tegola"`
 }
 type contentUserSelf struct {
 	Self platform.User `json:"self"`
@@ -27,6 +31,9 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 	return &contentUserSelf{
 		Self: user,
 		URLs: contentURLs{
+			API: contentURLAPI{
+				Communication: urls.API.Communication,
+			},
 			Tegola: urls.Tegola,
 		},
 	}, nil
