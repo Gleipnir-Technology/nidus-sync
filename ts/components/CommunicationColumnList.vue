@@ -1,3 +1,19 @@
+<style scoped>
+.report-card {
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.report-card:hover {
+	background-color: #f8f9fa;
+}
+
+.report-card.active {
+	background-color: #0d6efd;
+	color: white;
+}
+</style>
+
 <template>
 	<div class="col-md-3 border-end p-0 reports-list">
 		<div class="p-3 bg-light border-bottom">
@@ -49,7 +65,7 @@
 				:class="{
 					active: selectedCommunication && selectedCommunication.id === comm.id,
 				}"
-				@click="selectCommunication(comm)"
+				@click="handleClick(comm.id)"
 			>
 				<!-- First row: icon, type badge, and time -->
 				<div class="d-flex justify-content-between align-items-center mb-2">
@@ -118,15 +134,37 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import TimeRelative from "../components/TimeRelative.vue";
+import { Communication } from "../types";
 
 interface Props {
-	all: string[] | null;
+	all: Communication[] | null;
 	loading: boolean;
+	selectedId?: string | null;
 }
-const props = defineProps<Props>();
+interface Emits {
+	(e: "select", id: string): void;
+}
 
+const props = withDefaults(defineProps<Props>(), {
+	selectedIndex: null,
+});
+
+const emit = defineEmits<Emits>();
+const handleClick = (id: string) => {
+	emit("select", id);
+};
 const searchFilter = ref("");
 const typeFilter = ref("all");
+
+function selectCommunication(communication: Communication) {
+	// Emit both events - one for general use, one for v-model
+	console.log("selected", communication);
+	emit("select-item", communication);
+	emit("update:selectedItem", communication);
+	//selectedCommunication.value = comm;
+	//messageText.value = "";
+	//updateMap();
+}
 
 // Computed properties
 const filteredCommunications = computed(() => {
@@ -148,6 +186,6 @@ function formatAddress(a) {
 	if (a.number === "" && a.street === "") {
 		return "no address provided";
 	}
-	return `$${a.number} $${a.street}, ${a.locality}`;
+	return `${a.number} ${a.street}, ${a.locality}`;
 }
 </script>

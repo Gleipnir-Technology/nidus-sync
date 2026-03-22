@@ -1,9 +1,75 @@
+<style scoped>
+/* Add your component-specific styles here */
+.reports-list {
+	overflow-y: auto;
+	max-height: 100vh;
+}
+
+.map-container {
+	height: 400px;
+	width: 100%;
+}
+
+.photo-thumbnail {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: transform 0.2s;
+}
+
+.photo-thumbnail:hover {
+	transform: scale(1.05);
+}
+
+.details-section {
+	overflow-y: auto;
+}
+
+.actions-panel {
+	height: 100%;
+	overflow-y: auto;
+}
+
+.badge-larvae {
+	background-color: #ffc107;
+	color: #000;
+}
+
+.badge-pupae {
+	background-color: #fd7e14;
+	color: #fff;
+}
+
+.badge-adult {
+	background-color: #dc3545;
+	color: #fff;
+}
+
+.icon-standing-water {
+	color: #0dcaf0;
+}
+
+.icon-nuisance {
+	color: #dc3545;
+}
+
+.modal.show {
+	background-color: rgba(0, 0, 0, 0.5);
+}
+</style>
 <template>
 	<div class="h-100">
 		<div class="container-fluid h-100">
 			<div class="row h-100">
 				<!-- Left Column - Communications List -->
-				<CommunicationColumnList :all="communication.all" :loading="loading" />
+				<CommunicationColumnList
+					:all="communication.all"
+					:loading="loading"
+					:selected-id="selectedId"
+					@select="handleSelect"
+				/>
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
@@ -672,6 +738,7 @@ const apiBase = ref("/api");
 const selectedCommunication = ref(null);
 const messageText = ref("");
 const showPhotoModal = ref(false);
+const selectedId = ref<string | null>(null);
 const currentPhotoIndex = ref(0);
 const showToast = ref(false);
 const toastTitle = ref("");
@@ -688,6 +755,9 @@ const water = computed(() => {
 	return selectedCommunication.value?.public_report?.water || null;
 });
 
+const handleSelect = (id: string) => {
+	selectedId.value = id;
+};
 async function fetchCommunications() {
 	await communication.fetchAll();
 	// if we already had something selected, reset it using the new data
@@ -700,12 +770,6 @@ async function fetchCommunications() {
 		}
 	}
 }
-// Methods
-function filterMatches(filter, comm) {
-	// Implement your filter logic here
-	return true;
-}
-
 function formatAddress(a) {
 	if (a.number === "" && a.street === "") {
 		return "no address provided";
@@ -744,12 +808,6 @@ async function loadFromAPI() {
 	} finally {
 		loading.value = false;
 	}
-}
-
-function selectCommunication(comm) {
-	selectedCommunication.value = comm;
-	messageText.value = "";
-	updateMap();
 }
 
 function openPhotoViewer(index) {
@@ -961,79 +1019,3 @@ onMounted(async () => {
 	}
 });
 </script>
-
-<style scoped>
-/* Add your component-specific styles here */
-.reports-list {
-	overflow-y: auto;
-	max-height: 100vh;
-}
-
-.report-card {
-	cursor: pointer;
-	transition: background-color 0.2s;
-}
-
-.report-card:hover {
-	background-color: #f8f9fa;
-}
-
-.report-card.active {
-	background-color: #0d6efd;
-	color: white;
-}
-
-.map-container {
-	height: 400px;
-	width: 100%;
-}
-
-.photo-thumbnail {
-	width: 100px;
-	height: 100px;
-	object-fit: cover;
-	cursor: pointer;
-	border-radius: 4px;
-	transition: transform 0.2s;
-}
-
-.photo-thumbnail:hover {
-	transform: scale(1.05);
-}
-
-.details-section {
-	overflow-y: auto;
-}
-
-.actions-panel {
-	height: 100%;
-	overflow-y: auto;
-}
-
-.badge-larvae {
-	background-color: #ffc107;
-	color: #000;
-}
-
-.badge-pupae {
-	background-color: #fd7e14;
-	color: #fff;
-}
-
-.badge-adult {
-	background-color: #dc3545;
-	color: #fff;
-}
-
-.icon-standing-water {
-	color: #0dcaf0;
-}
-
-.icon-nuisance {
-	color: #dc3545;
-}
-
-.modal.show {
-	background-color: rgba(0, 0, 0, 0.5);
-}
-</style>
