@@ -173,6 +173,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive } from "vue";
+import MapAggregate from "../components/MapAggregate.vue";
 const dashboard = reactive({
 	counts: {
 		service_requests: 0,

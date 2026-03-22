@@ -133,8 +133,8 @@
 							<MapMultipoint
 								id="map"
 								ref="mapRef"
-								:organization-id="organizationId"
-								:tegola="tegolaUrl"
+								:organization-id="organization.id"
+								:tegola="organization.urls.tegola"
 								:xmin="serviceArea.min.x"
 								:ymin="serviceArea.min.y"
 								:xmax="serviceArea.max.x"
@@ -775,16 +775,19 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import maplibregl from "maplibre-gl";
-// Import your custom components
+
+import { useCommunicationStore } from "../store/communication";
+import { useUserStore } from "../store/user";
 import MapMultipoint from "../components/MapMultipoint.vue";
 import TimeRelative from "../components/TimeRelative.vue";
 
+const user = useUserStore();
+onMounted(() => {
+	communicationStore.fetchCommunications();
+});
+
 // Props
 const props = defineProps({
-	organizationId: {
-		type: String,
-		required: true,
-	},
 	tegolaUrl: {
 		type: String,
 		required: true,
@@ -869,35 +872,6 @@ function formatDistance(meters) {
 
 function formatDate(date) {
 	return new Date(date).toLocaleString();
-}
-
-async function fetchCommunications() {
-	try {
-		const params = new URLSearchParams();
-		params.append("sort", "-created");
-		if (typeFilter.value) params.append("type", typeFilter.value);
-
-		const response = await fetch(`$${apiBase.value}/communication?$${params}`);
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-		const data = await response.json();
-		communications.value = data.communications;
-
-		// if we already had something selected, reset it using the new data
-		if (selectedCommunication.value) {
-			const matching = communications.value.filter((report) => {
-				return report.id === selectedCommunication.value.id;
-			});
-			if (matching.length > 0) {
-				selectedCommunication.value = matching[0];
-			}
-		}
-	} catch (err) {
-		console.error("Error loading communications:", err);
-		throw err;
-	}
 }
 
 async function loadFromAPI() {

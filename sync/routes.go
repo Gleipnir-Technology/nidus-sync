@@ -41,11 +41,11 @@ func Router() chi.Router {
 	r.Route("/api", api.AddRoutes)
 
 	r.Method("GET", "/", authenticatedHandler(getRoot))
+	r.Method("GET", "/communication", authenticatedHandler(getRoot))
 	r.Method("GET", "/intelligence", authenticatedHandler(getRoot))
 
 	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", authenticatedHandler(getCellDetails))
-	r.Method("GET", "/communication", authenticatedHandler(getCommunicationRoot))
 	r.Method("GET", "/configuration", authenticatedHandler(getConfigurationRoot))
 	r.Method("GET", "/configuration/integration", authenticatedHandler(getConfigurationIntegration))
 	r.Method("GET", "/configuration/integration/arcgis", authenticatedHandler(getConfigurationIntegrationArcgis))
