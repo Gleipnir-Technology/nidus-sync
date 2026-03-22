@@ -43,6 +43,7 @@ func Router() chi.Router {
 	r.Method("GET", "/", authenticatedHandler(getRoot))
 	r.Method("GET", "/communication", authenticatedHandler(getRoot))
 	r.Method("GET", "/intelligence", authenticatedHandler(getRoot))
+	r.Method("GET", "/planning", authenticatedHandler(getRoot))
 
 	r.Method("GET", "/admin", authenticatedHandler(getAdminDash))
 	r.Method("GET", "/cell/{cell}", authenticatedHandler(getCellDetails))
@@ -71,7 +72,6 @@ func Router() chi.Router {
 	r.Method("GET", "/oauth/refresh", authenticatedHandler(getOAuthRefresh))
 	r.Method("GET", "/operations", authenticatedHandler(getOperationsRoot))
 	r.Method("GET", "/parcel", authenticatedHandler(getParcel))
-	r.Method("GET", "/planning", authenticatedHandler(getPlanningRoot))
 	r.Method("GET", "/pool", authenticatedHandler(getPoolList))
 	r.Method("GET", "/pool/create", authenticatedHandler(getPoolCreate))
 	r.Method("GET", "/pool/{id}", authenticatedHandler(getPoolByID))

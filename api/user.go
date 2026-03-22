@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -12,10 +13,12 @@ import (
 type contentURLAPI struct {
 	Communication       string `json:"communication"`
 	PublicreportMessage string `json:"publicreport_message"`
+	Signal              string `json:"signal"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`
 	Tegola string        `json:"tegola"`
+	Tile   string        `json:"tile"`
 }
 type contentUserSelf struct {
 	Self platform.User `json:"self"`
@@ -27,6 +30,11 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 	if err != nil {
 		return nil, nhttp.NewError("get notifications: %w", err)
 	}
+	org, err := platform.OrganizationByID(ctx, int(user.Organization.ID))
+	if err != nil {
+		return nil, nhttp.NewError("get org: %w", err)
+	}
+	user.Organization = *org
 	user.NotificationCounts = *counts
 	urls := html.NewContentURL()
 	return &contentUserSelf{
@@ -35,8 +43,10 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 			API: contentURLAPI{
 				Communication:       urls.API.Communication,
 				PublicreportMessage: urls.API.Publicreport.Message,
+				Signal:              config.MakeURLNidus("/api/signal"),
 			},
 			Tegola: urls.Tegola,
+			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),
 		},
 	}, nil
 }

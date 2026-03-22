@@ -40,6 +40,7 @@ type contentURLAPI struct {
 func newContentURLAPI() contentURLAPI {
 	return contentURLAPI{
 		Communication: config.MakeURLNidus("/api/communication"),
+		Publicreport:  newContentURLAPIPublicreport(),
 	}
 }
 

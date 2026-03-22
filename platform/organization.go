@@ -53,7 +53,9 @@ func (o Organization) IsCatchall() bool {
 }
 func (o Organization) MarshalJSON() ([]byte, error) {
 	to_marshal := map[string]any{}
+	to_marshal["id"] = o.ID
 	to_marshal["name"] = o.Name()
+	to_marshal["service_area"] = o.ServiceArea
 	return json.Marshal(to_marshal)
 }
 func (o Organization) Name() string {
