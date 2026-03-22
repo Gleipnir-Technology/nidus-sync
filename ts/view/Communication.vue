@@ -3,128 +3,7 @@
 		<div class="container-fluid h-100">
 			<div class="row h-100">
 				<!-- Left Column - Communications List -->
-				<div class="col-md-3 border-end p-0 reports-list">
-					<div class="p-3 bg-light border-bottom">
-						<div class="input-group input-group-sm">
-							<span class="input-group-text"><i class="bi bi-search"></i></span>
-							<input
-								type="text"
-								class="form-control"
-								placeholder="Filter reports..."
-								v-model="searchFilter"
-							/>
-						</div>
-						<div class="mt-2 d-flex gap-2">
-							<button
-								class="btn btn-sm"
-								:class="
-									typeFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'
-								"
-								@click="typeFilter = 'all'"
-							>
-								All
-							</button>
-							<button
-								class="btn btn-sm"
-								:class="
-									typeFilter === 'nuisance'
-										? 'btn-danger'
-										: 'btn-outline-secondary'
-								"
-								@click="typeFilter = 'nuisance'"
-							>
-								<i class="bi bi-mosquito"></i>Mosquito Nuisance
-							</button>
-							<button
-								class="btn btn-sm"
-								:class="
-									typeFilter === 'water' ? 'btn-info' : 'btn-outline-secondary'
-								"
-								@click="typeFilter = 'water'"
-							>
-								<i class="bi bi-droplet"></i> Water
-							</button>
-						</div>
-					</div>
-
-					<div class="list-group list-group-flush">
-						<div
-							v-for="comm in filteredCommunications"
-							:key="comm.id"
-							class="list-group-item report-card p-3"
-							:class="{
-								active:
-									selectedCommunication && selectedCommunication.id === comm.id,
-							}"
-							@click="selectCommunication(comm)"
-						>
-							<!-- First row: icon, type badge, and time -->
-							<div
-								class="d-flex justify-content-between align-items-center mb-2"
-							>
-								<div class="d-flex align-items-center">
-									<i
-										v-if="comm.type === 'publicreport.nuisance'"
-										class="bi bi-mosquito icon-nuisance fs-4 me-2"
-									>
-									</i>
-									<i
-										v-if="comm.type === 'publicreport.water'"
-										class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
-									></i>
-									<span
-										class="badge"
-										:class="
-											comm.type === 'publicreport.nuisance'
-												? 'bg-danger'
-												: 'bg-info'
-										"
-									>
-										{{
-											comm.type === "publicreport.nuisance"
-												? "Nuisance"
-												: "Standing Water"
-										}}
-									</span>
-								</div>
-								<small>
-									<TimeRelative :time="comm.created" />
-								</small>
-							</div>
-
-							<!-- Details section: full width -->
-							<div>
-								<div>
-									<i class="bi bi-geo-alt text-muted"></i>
-									<span class="fw-medium">{{
-										comm.public_report.address.postal_code
-									}}</span>
-								</div>
-								<small>{{ formatAddress(comm.public_report.address) }}</small>
-								<div
-									v-if="
-										comm.public_report.images &&
-										comm.public_report.images.length > 0
-									"
-									class="mt-1"
-								>
-									<small class="text-muted">
-										<i class="bi bi-camera"></i>
-										{{ comm.public_report.images.length }} photo(s)
-									</small>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div
-						v-if="filteredCommunications.length === 0"
-						class="text-center text-muted p-4"
-					>
-						<i class="bi bi-inbox fs-1"></i>
-						<p class="mt-2">No reports found</p>
-					</div>
-				</div>
+				<CommunicationsColumnList all="communication.all" />
 
 				<!-- Middle Column - Report Details -->
 				<div class="col-md-6 p-0">
@@ -781,16 +660,15 @@ import { useUserStore } from "../store/user";
 import MapMultipoint from "../components/MapMultipoint.vue";
 import TimeRelative from "../components/TimeRelative.vue";
 
-const communicationStore = useCommunicationStore();
+const communication = useCommunicationStore();
 const user = useUserStore();
 onMounted(() => {
-	communicationStore.fetchCommunications();
+	communication.fetch();
 });
 
 // Refs
 const apiBase = ref("/api");
 const selectedCommunication = ref(null);
-const searchFilter = ref("");
 const typeFilter = ref("all");
 const messageText = ref("");
 const showPhotoModal = ref(false);
@@ -798,19 +676,9 @@ const currentPhotoIndex = ref(0);
 const showToast = ref(false);
 const toastTitle = ref("");
 const toastMessage = ref("");
-const communications = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const mapRef = ref(null);
-
-// Computed properties
-const filteredCommunications = computed(() => {
-	return communications.value.filter((report) => {
-		const matchesType =
-			typeFilter.value === "all" || report.type === typeFilter.value;
-		return matchesType && filterMatches(searchFilter.value, report);
-	});
-});
 
 const nuisance = computed(() => {
 	return selectedCommunication.value?.public_report?.nuisance || null;
@@ -820,6 +688,18 @@ const water = computed(() => {
 	return selectedCommunication.value?.public_report?.water || null;
 });
 
+async function fetchCommunications() {
+	await communication.fetchAll();
+	// if we already had something selected, reset it using the new data
+	if (selectedCommunication.value) {
+		const matching = communication.all.filter((c) => {
+			return c.id === selectedCommunication.value.id;
+		});
+		if (matching.length > 0) {
+			selectedCommunication.value = matching[0];
+		}
+	}
+}
 // Methods
 function filterMatches(filter, comm) {
 	// Implement your filter logic here

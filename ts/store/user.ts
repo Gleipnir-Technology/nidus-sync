@@ -1,22 +1,48 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
+// Define interfaces matching your Go structs
+interface URLsAPI {
+	communication: string;
+}
+
+interface URLs {
+	api: URLsAPI;
+	tegola: string;
+}
+
+interface User {
+	display_name: string;
+	initials: string;
+	notification_counts: NotificationCounts;
+	notifications: any[]; // Replace with proper type
+	organization: string; // Replace with proper type
+	role: string;
+	username: string;
+}
+
+interface UserResponse {
+	self: User;
+	urls: URLs;
+}
+
+interface NotificationCounts {
+	// Add the actual structure based on your API
+	[key: string]: number;
+}
+
 export const useUserStore = defineStore("user", () => {
 	// State
-	const display_name = ref(null);
-	const error = ref(null);
-	const initials = ref(null);
+	const display_name = ref<string | null>(null);
+	const error = ref<string | null>(null);
+	const initials = ref<string | null>(null);
 	const loading = ref(false);
-	const notification_counts = ref(null);
-	const notifications = ref(null);
-	const organization = ref(null);
-	const role = ref(null);
-	const urls = ref(null);
-	const username = ref(null);
-
-	// Getters
-	const isAuthenticated = computed(() => user.value !== null);
-	const userName = computed(() => user.value?.name ?? "");
+	const notification_counts = ref<NotificationCounts | null>(null);
+	const notifications = ref<any[] | null>(null);
+	const organization = ref<string | null>(null);
+	const role = ref<string | null>(null);
+	const urls = ref<URLs | null>(null);
+	const username = ref<string | null>(null);
 
 	// Actions
 	async function fetchUser() {
@@ -27,7 +53,7 @@ export const useUserStore = defineStore("user", () => {
 			const response = await fetch("/api/user/self");
 			if (!response.ok) throw new Error("Failed to fetch user");
 
-			const data = await response.json();
+			const data: UserResponse = await response.json();
 			display_name.value = data.self.display_name;
 			initials.value = data.self.initials;
 			notification_counts.value = data.self.notification_counts;
@@ -38,15 +64,11 @@ export const useUserStore = defineStore("user", () => {
 			username.value = data.self.username;
 			console.log("loaded user data", data);
 		} catch (e) {
-			error.value = e.message;
+			error.value = e instanceof Error ? e.message : "an error ocurred";
 			console.error("Error fetching user:", e);
 		} finally {
 			loading.value = false;
 		}
-	}
-
-	function clearUser() {
-		user.value = null;
 	}
 
 	return {
@@ -61,11 +83,7 @@ export const useUserStore = defineStore("user", () => {
 		role,
 		urls,
 		username,
-		// Getters
-		isAuthenticated,
-		userName,
 		// Actions
 		fetchUser,
-		clearUser,
 	};
 });
