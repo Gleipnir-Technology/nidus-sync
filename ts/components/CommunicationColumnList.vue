@@ -19,8 +19,8 @@
 </style>
 
 <template>
-	<div class="border-end p-0 reports-list">
-		<div class="p-3 bg-light border-bottom">
+	<div class="card shadow-sm h-100 reports-list">
+		<div class="card-header bg-light pane-header">
 			<div class="input-group input-group-sm">
 				<span class="input-group-text"><i class="bi bi-search"></i></span>
 				<input
@@ -30,7 +30,9 @@
 					v-model="searchFilter"
 				/>
 			</div>
-			<div class="mt-2 d-flex gap-2">
+		</div>
+		<div class="card-body scroll-pane">
+			<div class="mb-3">
 				<button
 					class="btn btn-sm"
 					:class="
@@ -47,7 +49,7 @@
 					"
 					@click="typeFilter = 'nuisance'"
 				>
-					<i class="bi bi-mosquito"></i>Mosquito Nuisance
+					<i class="bi bi-mosquito"></i>Nuisance
 				</button>
 				<button
 					class="btn btn-sm"
@@ -57,69 +59,72 @@
 					<i class="bi bi-droplet"></i> Water
 				</button>
 			</div>
-		</div>
 
-		<div class="list-group list-group-flush">
-			<div v-if="loading" class="loading">Loading...</div>
-			<div
-				v-else-if="all.length > 0"
-				v-for="comm in filteredCommunications"
-				:key="comm.id"
-				class="list-group-item report-card p-3"
-				:class="{
-					active: selectedId && selectedId === comm.id,
-				}"
-				@click="handleClick(comm.id)"
-			>
-				<!-- First row: icon, type badge, and time -->
-				<div class="d-flex justify-content-between align-items-center mb-2">
-					<div class="d-flex align-items-center">
-						<i
-							v-if="comm.type === 'publicreport.nuisance'"
-							class="bi bi-mosquito icon-nuisance fs-4 me-2"
-						>
-						</i>
-						<i
-							v-if="comm.type === 'publicreport.water'"
-							class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
-						></i>
-						<span
-							class="badge"
-							:class="
-								comm.type === 'publicreport.nuisance' ? 'bg-danger' : 'bg-info'
-							"
-						>
-							{{
-								comm.type === "publicreport.nuisance"
-									? "Nuisance"
-									: "Standing Water"
-							}}
-						</span>
-					</div>
-					<small>
-						<TimeRelative :time="comm.created" />
-					</small>
-				</div>
-
-				<!-- Details section: full width -->
-				<div>
-					<div>
-						<i class="bi bi-geo-alt text-muted"></i>
-						<span class="fw-medium">{{
-							comm.public_report.address.postal_code
-						}}</span>
-					</div>
-					<small>{{ formatAddress(comm.public_report.address) }}</small>
-					<div
-						v-if="
-							comm.public_report.images && comm.public_report.images.length > 0
-						"
-						class="mt-1"
-					>
-						<small class="text-muted">
-							<i class="bi bi-camera"></i>
-							{{ comm.public_report.images.length }} photo(s)
+			<div class="list-group list-group-flush">
+				<div v-if="loading" class="loading">Loading...</div>
+				<div
+					v-else-if="all.length > 0"
+					v-for="comm in filteredCommunications"
+					:key="comm.id"
+					class="border rounded list-group-item report-card p-3"
+					:class="{
+						active: selectedId && selectedId === comm.id,
+					}"
+					@click="handleClick(comm.id)"
+				>
+					<!-- First row: icon, type badge, and time -->
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<div class="d-flex align-items-center">
+							<i
+								v-if="comm.type === 'publicreport.nuisance'"
+								class="bi bi-mosquito icon-nuisance fs-4 me-2"
+							>
+							</i>
+							<i
+								v-if="comm.type === 'publicreport.water'"
+								class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
+							></i>
+							<span
+								class="badge"
+								:class="
+									comm.type === 'publicreport.nuisance'
+										? 'bg-danger'
+										: 'bg-info'
+								"
+							>
+								{{
+									comm.type === "publicreport.nuisance"
+										? "Nuisance"
+										: "Standing Water"
+								}}
+							</span>
+						</div>
+						<small>
+							<TimeRelative :time="comm.created" />
 						</small>
+					</div>
+
+					<!-- Details section: full width -->
+					<div>
+						<div>
+							<i class="bi bi-geo-alt text-muted"></i>
+							<span class="fw-medium">{{
+								comm.public_report.address.postal_code
+							}}</span>
+						</div>
+						<small>{{ formatAddress(comm.public_report.address) }}</small>
+						<div
+							v-if="
+								comm.public_report.images &&
+								comm.public_report.images.length > 0
+							"
+							class="mt-1"
+						>
+							<small class="text-muted">
+								<i class="bi bi-camera"></i>
+								{{ comm.public_report.images.length }} photo(s)
+							</small>
+						</div>
 					</div>
 				</div>
 			</div>

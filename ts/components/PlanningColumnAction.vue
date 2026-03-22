@@ -12,7 +12,7 @@
 </style>
 <template>
 	<div class="card shadow-sm h-100">
-		<div class="card-header bg-white pane-header">Transformation Tools</div>
+		<div class="card-header bg-light pane-header">Transformation Tools</div>
 		<div class="card-body scroll-pane">
 			<div class="mb-3">
 				<div class="text-muted small mb-2">Signal → Lead</div>

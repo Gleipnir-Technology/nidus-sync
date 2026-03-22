@@ -5,133 +5,136 @@
 }
 </style>
 <template>
-	<div class="border-start p-0">
-		<div v-if="loading" class="loading">Loading...</div>
-		<div v-else>
-			<div
-				v-if="!selectedCommunication"
-				class="h-100 d-flex flex-column align-items-center justify-content-center text-muted p-3"
-			>
-				<i class="bi bi-gear fs-1"></i>
-				<p class="mt-2 text-center">
-					Actions will appear here when a report is selected
-				</p>
-			</div>
-
-			<div
-				v-if="selectedCommunication"
-				class="actions-panel d-flex flex-column"
-			>
-				<div class="p-3 bg-light border-bottom">
-					<h6 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h6>
+	<div class="card shadow-sm h-100">
+		<div class="card-header bg-light pane-header">Actions</div>
+		<div class="card-body scroll-pane">
+			<div v-if="loading" class="loading">Loading...</div>
+			<div v-else>
+				<div
+					v-if="!selectedCommunication"
+					class="h-100 d-flex flex-column align-items-center justify-content-center text-muted p-3"
+				>
+					<i class="bi bi-gear fs-1"></i>
+					<p class="mt-2 text-center">
+						Actions will appear here when a report is selected
+					</p>
 				</div>
 
-				<div class="p-3 flex-grow-1">
-					<!-- Create Signal -->
-					<div class="d-grid mb-3">
-						<button class="btn btn-success btn-lg" @click="markSignal()">
-							<i class="bi bi-plus-circle me-2"></i>Mark Signal
-						</button>
-						<small class="text-muted mt-1">This report is useful signal</small>
-					</div>
+				<div
+					v-if="selectedCommunication"
+					class="actions-panel d-flex flex-column"
+				>
+					<div class="p-3 flex-grow-1">
+						<!-- Create Signal -->
+						<div class="d-grid mb-3">
+							<button class="btn btn-success btn-lg" @click="markSignal()">
+								<i class="bi bi-plus-circle me-2"></i>Mark Signal
+							</button>
+							<small class="text-muted mt-1"
+								>This report is useful signal</small
+							>
+						</div>
 
-					<!-- Mark Invalid -->
-					<div class="d-grid mb-3">
-						<button class="btn btn-outline-danger" @click="markInvalid()">
-							<i class="bi bi-x-circle me-2"></i>Mark Invalid
-						</button>
-						<small class="text-muted mt-1">This report isn't useful</small>
-					</div>
+						<!-- Mark Invalid -->
+						<div class="d-grid mb-3">
+							<button class="btn btn-outline-danger" @click="markInvalid()">
+								<i class="bi bi-x-circle me-2"></i>Mark Invalid
+							</button>
+							<small class="text-muted mt-1">This report isn't useful</small>
+						</div>
 
-					<hr />
+						<hr />
 
-					<!-- Message Reporter -->
-					<div
-						v-if="
-							!(
+						<!-- Message Reporter -->
+						<div
+							v-if="
+								!(
+									selectedCommunication?.public_report.reporter.has_email ||
+									selectedCommunication?.public_report.reporter.has_phone
+								)
+							"
+							class="mb-3"
+						>
+							<h6>
+								<i class="bi bi-chat-dots"></i> No Reporter Communications
+								Available
+							</h6>
+						</div>
+						<div
+							v-if="
 								selectedCommunication?.public_report.reporter.has_email ||
 								selectedCommunication?.public_report.reporter.has_phone
-							)
-						"
-						class="mb-3"
-					>
-						<h6>
-							<i class="bi bi-chat-dots"></i> No Reporter Communications
-							Available
-						</h6>
-					</div>
-					<div
-						v-if="
-							selectedCommunication?.public_report.reporter.has_email ||
-							selectedCommunication?.public_report.reporter.has_phone
-						"
-						class="mb-3"
-					>
-						<h6><i class="bi bi-chat-dots"></i> Message Reporter</h6>
-						<div class="mb-2">
-							<label class="form-label small text-muted">Quick Templates</label>
-							<select
-								class="form-select form-select-sm"
-								@change="applyMessageTemplate($event.target.value)"
-							>
-								<option value="">Select a template...</option>
-								<option value="received">Report Received</option>
-								<option value="scheduled">Service Scheduled</option>
-								<option value="completed">Service Completed</option>
-								<option value="need_info">Need More Information</option>
-							</select>
-						</div>
-						<textarea
-							class="form-control mb-2"
-							rows="5"
-							v-model="messageText"
-							placeholder="Type your message to the reporter..."
-						></textarea>
-						<div class="d-grid">
-							<button
-								class="btn btn-primary"
-								@click="sendMessage()"
-								:disabled="!messageText.trim()"
-							>
-								<i class="bi bi-send me-2"></i>Send Message
-							</button>
-						</div>
-					</div>
-
-					<hr />
-
-					<!-- Report History -->
-					<div>
-						<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
-						<div class="small">
-							<div
-								v-for="entry in selectedCommunication.public_report.log || []"
-								:key="entry.created"
-								class="border-start border-2 ps-2 mb-2"
-							>
-								<div v-if="entry.type === 'created'">
-									<div class="text-muted">Initial Report</div>
-									<small class="text-muted">{{
-										formatDate(entry.created)
-									}}</small>
-								</div>
-								<div v-else-if="entry.type === 'message-text'">
-									<div class="text-muted">Text Message</div>
-									<div>{{ entry.message }}</div>
-									<small class="text-muted">{{
-										formatDate(entry.created)
-									}}</small>
-								</div>
-								<div v-else>{{ entry.type }}</div>
+							"
+							class="mb-3"
+						>
+							<h6><i class="bi bi-chat-dots"></i> Message Reporter</h6>
+							<div class="mb-2">
+								<label class="form-label small text-muted"
+									>Quick Templates</label
+								>
+								<select
+									class="form-select form-select-sm"
+									@change="applyMessageTemplate($event.target.value)"
+								>
+									<option value="">Select a template...</option>
+									<option value="received">Report Received</option>
+									<option value="scheduled">Service Scheduled</option>
+									<option value="completed">Service Completed</option>
+									<option value="need_info">Need More Information</option>
+								</select>
 							</div>
-							<div
-								v-if="
-									!selectedCommunication.public_report.log ||
-									selectedCommunication.public_report.log.length === 0
-								"
-								class="text-muted"
-							>
-								No activity yet
+							<textarea
+								class="form-control mb-2"
+								rows="5"
+								v-model="messageText"
+								placeholder="Type your message to the reporter..."
+							></textarea>
+							<div class="d-grid">
+								<button
+									class="btn btn-primary"
+									@click="sendMessage()"
+									:disabled="!messageText.trim()"
+								>
+									<i class="bi bi-send me-2"></i>Send Message
+								</button>
+							</div>
+						</div>
+
+						<hr />
+
+						<!-- Report History -->
+						<div>
+							<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
+							<div class="small">
+								<div
+									v-for="entry in selectedCommunication.public_report.log || []"
+									:key="entry.created"
+									class="border-start border-2 ps-2 mb-2"
+								>
+									<div v-if="entry.type === 'created'">
+										<div class="text-muted">Initial Report</div>
+										<small class="text-muted">{{
+											formatDate(entry.created)
+										}}</small>
+									</div>
+									<div v-else-if="entry.type === 'message-text'">
+										<div class="text-muted">Text Message</div>
+										<div>{{ entry.message }}</div>
+										<small class="text-muted">{{
+											formatDate(entry.created)
+										}}</small>
+									</div>
+									<div v-else>{{ entry.type }}</div>
+								</div>
+								<div
+									v-if="
+										!selectedCommunication.public_report.log ||
+										selectedCommunication.public_report.log.length === 0
+									"
+									class="text-muted"
+								>
+									No activity yet
+								</div>
 							</div>
 						</div>
 					</div>

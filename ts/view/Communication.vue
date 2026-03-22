@@ -2,6 +2,16 @@
 
 <template>
 	<ThreeColumn>
+		<template #header>
+			<div class="col">
+				<h3 class="mb-1">Communication Workbench</h3>
+				<div class="text-muted small">
+					Communications from various sources come in at the left, are
+					investigated in the center, and labeled as valuable signal or invalid
+					on the right.
+				</div>
+			</div>
+		</template>
 		<template #left>
 			<CommunicationColumnList
 				:all="communication.all"
