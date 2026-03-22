@@ -1,3 +1,9 @@
+<style scoped>
+.actions-panel {
+	height: 100%;
+	overflow-y: auto;
+}
+</style>
 <template>
 	<div class="border-start p-0">
 		<div v-if="loading" class="loading">Loading...</div>

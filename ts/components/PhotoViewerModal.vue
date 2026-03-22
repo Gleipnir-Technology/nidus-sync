@@ -1,3 +1,8 @@
+<style scoped>
+.modal.show {
+	background-color: rgba(0, 0, 0, 0.5);
+}
+</style>
 <template>
 	<div
 		class="modal fade"

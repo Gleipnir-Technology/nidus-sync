@@ -12,6 +12,10 @@
 	background-color: $primary;
 	color: white;
 }
+.reports-list {
+	overflow-y: auto;
+	max-height: 100vh;
+}
 </style>
 
 <template>

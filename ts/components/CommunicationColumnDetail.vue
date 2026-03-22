@@ -1,21 +1,62 @@
+<style scoped>
+.badge-larvae {
+	background-color: #ffc107;
+	color: #000;
+}
+
+.badge-pupae {
+	background-color: #fd7e14;
+	color: #fff;
+}
+
+.badge-adult {
+	background-color: #dc3545;
+	color: #fff;
+}
+.details-section {
+	overflow-y: auto;
+}
+.icon-standing-water {
+	color: #0dcaf0;
+}
+
+.icon-nuisance {
+	color: #dc3545;
+}
+.map-container {
+	height: 400px;
+	width: 100%;
+}
+.photo-thumbnail {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: transform 0.2s;
+}
+.photo-thumbnail:hover {
+	transform: scale(1.05);
+}
+</style>
+
 <template>
+	<div class="p-3">
+		<div class="map-container">
+			<MapMultipoint
+				id="map"
+				ref="mapRef"
+				:organization-id="user.organization.id"
+				:tegola="user.urls.tegola"
+				:xmin="user.organization.service_area?.min.x ?? 0"
+				:ymin="user.organization.service_area?.min.y ?? 0"
+				:xmax="user.organization.service_area?.max.x ?? 0"
+				:ymax="user.organization.service_area?.max.y ?? 0"
+			/>
+		</div>
+	</div>
 	<div v-if="loading" class="loading">Loading...</div>
 	<div v-else>
-		<div class="p-3">
-			<div class="map-container">
-				<MapMultipoint
-					id="map"
-					ref="mapRef"
-					:organization-id="user.organization.id"
-					:tegola="user.urls.tegola"
-					:xmin="user.organization.service_area?.min.x ?? 0"
-					:ymin="user.organization.service_area?.min.y ?? 0"
-					:xmax="user.organization.service_area?.max.x ?? 0"
-					:ymax="user.organization.service_area?.max.y ?? 0"
-				/>
-			</div>
-		</div>
-
 		<div
 			v-if="!selectedCommunication"
 			class="d-flex flex-column align-items-center justify-content-center text-muted"
