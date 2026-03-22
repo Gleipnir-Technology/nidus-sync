@@ -15,7 +15,7 @@
 </style>
 
 <template>
-	<div class="col-md-3 border-end p-0 reports-list">
+	<div class="border-end p-0 reports-list">
 		<div class="p-3 bg-light border-bottom">
 			<div class="input-group input-group-sm">
 				<span class="input-group-text"><i class="bi bi-search"></i></span>
