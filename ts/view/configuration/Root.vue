@@ -23,13 +23,12 @@
 							organization.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a
-								href="{{ .URL.Configuration.User }}"
-								class="btn btn-outline-primary"
-							>
-								Manage Users
-								<i class="bi bi-arrow-right ms-1"></i>
-							</a>
+							<RouterLink to="/configuration/user">
+								<button class="btn btn-outline-primary">
+									Manage Users
+									<i class="bi bi-arrow-right ms-1"></i>
+								</button>
+							</RouterLink>
 						</div>
 					</div>
 				</div>
@@ -96,13 +95,12 @@
 							Manage your organization service area and information.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a
-								href="{{ .URL.Configuration.Organization }}"
-								class="btn btn-outline-danger"
-							>
-								Manage Organization
-								<i class="bi bi-arrow-right ms-1"></i>
-							</a>
+							<RouterLink to="/configuration/organization">
+								<button class="btn btn-outline-danger">
+									Manage Organization
+									<i class="bi bi-arrow-right ms-1"></i>
+								</button>
+							</RouterLink>
 						</div>
 					</div>
 				</div>

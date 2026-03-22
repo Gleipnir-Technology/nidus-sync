@@ -1,3 +1,9 @@
+export interface Address {
+	locality: string;
+	number: string;
+	street: string;
+}
+
 export interface PublicReport {
 	created: string;
 	type: string;
