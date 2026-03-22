@@ -5,11 +5,13 @@ import { SSEManager } from "../SSEManager";
 // Define interfaces matching your Go structs
 interface URLsAPI {
 	communication: string;
+	signal: string;
 }
 
 interface URLs {
 	api: URLsAPI;
 	tegola: string;
+	tile: string;
 }
 
 interface User {
