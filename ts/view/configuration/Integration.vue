@@ -79,9 +79,11 @@
 					<a class="btn btn-primary" :href="urls.oauthRefreshArcGIS">
 						<i class="bi bi-arrow-repeat me-2"></i>Refresh OAuth Token
 					</a>
-					<a class="btn btn-outline-danger" :href="urls.configurationArcGIS">
-						<i class="bi bi-gear me-2"></i>Configure
-					</a>
+					<RouterLink to="/configuration/integration/arcgis">
+						<button class="btn btn-outline-danger">
+							<i class="bi bi-gear me-2"></i>Configure
+						</button>
+					</RouterLink>
 				</div>
 			</div>
 		</div>

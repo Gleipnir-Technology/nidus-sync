@@ -4,6 +4,7 @@ import Home from "./view/Home.vue";
 import About from "./view/About.vue";
 import Communication from "./view/Communication.vue";
 import ConfigurationIntegration from "./view/configuration/Integration.vue";
+import ConfigurationIntegrationArcgis from "./view/configuration/IntegrationArcgis.vue";
 import ConfigurationOrganization from "./view/configuration/Organization.vue";
 import ConfigurationPesticide from "./view/configuration/Pesticide.vue";
 import ConfigurationPesticideAdd from "./view/configuration/PesticideAdd.vue";
@@ -36,6 +37,11 @@ const routes: RouteRecordRaw[] = [
 		path: "/configuration/integration",
 		name: "Integration Configuration",
 		component: ConfigurationIntegration,
+	},
+	{
+		path: "/configuration/integration/arcgis",
+		name: "Arcgis Integration Configuration",
+		component: ConfigurationIntegrationArcgis,
 	},
 	{
 		path: "/configuration/organization",
