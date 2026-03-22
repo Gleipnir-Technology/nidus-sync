@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { useUserStore } from "./user";
 import { Communication } from "../types";
+import { SSEManager } from "../SSEManager";
+import { useUserStore } from "./user";
 
 export const useCommunicationStore = defineStore("communication", () => {
 	// State
@@ -9,6 +10,12 @@ export const useCommunicationStore = defineStore("communication", () => {
 	const loading = ref(false);
 	const error = ref(null);
 
+	// Subscription
+	SSEManager.subscribe("*", (e) => {
+		if (e.resource.startsWith("rmo")) {
+			fetchAll();
+		}
+	});
 	// Actions
 	async function fetchAll() {
 		const userStore = useUserStore();
