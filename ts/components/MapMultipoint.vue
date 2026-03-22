@@ -2,91 +2,110 @@
 	<div ref="mapContainer" class="map-multipoint"></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {
-	ref,
-	onMounted,
-	onUnmounted,
 	defineProps,
 	defineEmits,
 	defineExpose,
+	onMounted,
+	onUnmounted,
+	ref,
+	watch,
 } from "vue";
 import maplibregl from "maplibre-gl";
 
-const props = defineProps({
-	xmin: {
-		type: Number,
-		default: 0,
-	},
-	ymin: {
-		type: Number,
-		default: 0,
-	},
-	xmax: {
-		type: Number,
-		default: 0,
-	},
-	ymax: {
-		type: Number,
-		default: 0,
-	},
-	organizationId: {
-		type: Number,
-		default: 0,
-	},
-	tegola: {
-		type: String,
-		default: "",
+interface Point {
+	lat: Number;
+	lng: Number;
+}
+interface Bounds {
+	min: Point;
+	max: Point;
+}
+interface Emits {
+	(e: "load"): void;
+}
+interface Props {
+	bounds?: Bounds;
+	markers: Marker[];
+	"organization-id": int;
+	tegola: string;
+}
+interface Marker {
+	color: string;
+	draggable: boolean;
+	id: string;
+	lng: Number;
+	lat: Number;
+}
+const emit = defineEmits<Emits>();
+const props = withDefaults(defineProps<Props>(), {
+	// default bounds cover a bunch of the continental US
+	bounds: {
+		max: { x: -70, y: 50 },
+		min: { x: -125, y: 25 },
 	},
 });
 
-const emit = defineEmits(["load"]);
-
-const mapContainer = ref(null);
-const _map = ref(null);
-const _markers = ref([]);
-const _preOns = ref([]);
+const mapContainer = ref<HTMLElement | null>();
+const map = ref<maplibregl.Map | null>(null);
+const markerInstances = ref<Map<string, maplibregl.Marker>>(new Map());
+const markers = ref<Map<string, maplibregl.Marker>>(new Map());
+watch(
+	() => props.bounds,
+	(newBounds) => {
+		const bounds = new maplibregl.LngLatBounds(
+			new maplibregl.LngLat(newBounds.min.lng, newBounds.min.lat),
+			new maplibregl.LngLat(newBounds.max.lng, newBounds.max.lat),
+		);
+		if (map.value == null) {
+			return;
+		}
+		map.value.fitBounds(bounds, {
+			padding: 50,
+		});
+	},
+	{ deep: true },
+);
+watch(
+	() => props.markers,
+	(newMarkers) => {
+		updateMarkers(newMarkers);
+	},
+	{ deep: true },
+);
 
 const _bounds = () => {
-	let bounds = [
-		[props.xmin, props.ymin],
-		[props.xmax, props.ymax],
+	return [
+		[props.bounds.min.x, props.bounds.min.y],
+		[props.bounds.max.y, props.bounds.max.y],
 	];
-
-	if (
-		props.xmin === 0 ||
-		props.xmax === 0 ||
-		props.ymin === 0 ||
-		props.ymax === 0
-	) {
-		bounds = [
-			[-125, 25],
-			[-70, 50],
-		];
-	}
-
-	return bounds;
 };
 
-const _initializeMap = () => {
+const _initializeMap = () => {};
+
+// Lifecycle
+onMounted(() => {
+	if (!mapContainer.value) return;
 	const bounds = _bounds();
 
-	_map.value = new maplibregl.Map({
+	map.value = new maplibregl.Map({
 		bounds: bounds,
 		container: mapContainer.value,
 		style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 	});
 
-	_map.value.on("load", () => {
+	// Wait for map to load, then add the markers
+	map.value.on("load", () => {
 		if (props.organizationId !== 0) {
-			_map.value.addSource("tegola", {
+			map.value.addSource("tegola", {
 				type: "vector",
 				tiles: [
 					`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
 				],
 			});
 
-			_map.value.addLayer({
+			map.value.addLayer({
 				id: "service-area",
 				source: "tegola",
 				"source-layer": "service-area-bounds",
@@ -96,117 +115,57 @@ const _initializeMap = () => {
 				},
 			});
 		}
-
-		emit("load", { map: _map.value });
+		updateMarkers(props.markers);
 	});
-
-	for (const on of _preOns.value) {
-		_map.value.on(...on);
-	}
-};
-
-// Map wrapper methods
-const addLayer = (a) => {
-	return _map.value?.addLayer(a);
-};
-
-const addSource = (a, b) => {
-	return _map.value?.addSource(a, b);
-};
-
-const flyTo = (a, b) => {
-	return _map.value?.flyTo(a, b);
-};
-
-const getCanvas = (...args) => {
-	return _map.value?.getCanvas(...args);
-};
-
-const getContainer = (...args) => {
-	return _map.value?.getContainer(...args);
-};
-
-const jumpTo = (args) => {
-	return _map.value?.jumpTo(args);
-};
-
-const on = (...args) => {
-	if (_map.value != null) {
-		return _map.value.on(...args);
-	} else {
-		_preOns.value.push(args);
-	}
-};
-
-const once = (a, b) => {
-	return _map.value?.once(a, b);
-};
-
-const panTo = (a, b) => {
-	return _map.value?.panTo(a, b);
-};
-
-const queryRenderedFeatures = (a) => {
-	return _map.value?.queryRenderedFeatures(a);
-};
-
-const ClearMarkers = () => {
-	_markers.value.forEach((marker) => marker.remove());
-};
-
-const FitBounds = (bounds, options) => {
-	return _map.value?.fitBounds(bounds, options);
-};
-
-const ResetCamera = () => {
-	const bounds = _bounds();
-	FitBounds(bounds, {
-		linear: false,
-	});
-};
-
-const SetLayoutProperty = (layout, property, value) => {
-	return _map.value?.setLayoutProperty(layout, property, value);
-};
-
-const SetMarkers = (markers) => {
-	console.log("Setting map markers", markers);
-	_markers.value.forEach((marker) => marker.remove());
-	_markers.value = markers;
-	for (let m of markers) {
-		m.addTo(_map.value);
-	}
-};
-
-// Lifecycle
-onMounted(() => {
-	setTimeout(() => _initializeMap(), 0);
 });
 
 onUnmounted(() => {
-	if (_map.value) {
-		_map.value.remove();
-	}
+	// Remove all markers
+	markerInstances.value.forEach((marker) => marker.remove());
+	markerInstances.value.clear();
+
+	// Free OpenGL context
+	map.value?.remove();
+	map.value = null;
 });
 
-// Expose methods to parent component
-defineExpose({
-	addLayer,
-	addSource,
-	flyTo,
-	getCanvas,
-	getContainer,
-	jumpTo,
-	on,
-	once,
-	panTo,
-	queryRenderedFeatures,
-	ClearMarkers,
-	FitBounds,
-	ResetCamera,
-	SetLayoutProperty,
-	SetMarkers,
-});
+function updateMarkers(markers: Marker[]) {
+	const newMarkerIds = new Set(markers.map((m) => m.id));
+
+	if (map.value == null) {
+		console.log("refusing to add markers until map is set");
+		return;
+	}
+
+	// Remove markers that no longer exist
+	markerInstances.value.forEach((marker, id) => {
+		if (!newMarkerIds.has(id)) {
+			marker.remove();
+			markerInstances.value.delete(id);
+		}
+	});
+
+	// Add or update markers
+	markers.forEach((markerData) => {
+		if (markerInstances.value.has(markerData.id)) {
+			// Update existing marker position
+			const marker = markerInstances.value.get(markerData.id)!;
+			marker.setLngLat([markerData.lng, markerData.lat]);
+			console.log("updated", markerData);
+		} else {
+			// Create a new marker
+			const marker = new maplibregl.Marker({
+				color: markerData.color,
+				draggable: markerData.draggable,
+			})
+				.setLngLat([markerData.lng, markerData.lat])
+				.addTo(map.value!);
+
+			markerInstances.value.set(markerData.id, marker);
+			console.log("added", markerData);
+		}
+	});
+}
 </script>
 
 <style scoped>

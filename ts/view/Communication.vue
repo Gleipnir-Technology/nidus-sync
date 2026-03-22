@@ -24,6 +24,8 @@
 		<template #center>
 			<CommunicationColumnDetail
 				:loading="loading"
+				:mapBounds="mapBounds || undefined"
+				:mapMarkers="mapMarkers"
 				:selectedCommunication="selectedCommunication"
 				:user="user"
 				@viewImage="openPhotoViewer"
@@ -75,15 +77,16 @@ onMounted(() => {
 });
 
 // Refs
-const showPhotoModal = ref(false);
-const selectedId = ref<string | null>(null);
 const currentPhotoIndex = ref(0);
+const error = ref(null);
+const loading = ref(true);
+const mapBounds = ref<Bounds | null>(null);
+const mapMarkers = ref<Marker[]>([]);
+const selectedId = ref<string | null>(null);
+const showPhotoModal = ref(false);
 const toastMessage = ref("");
 const toastShow = ref(false);
 const toastTitle = ref("");
-const loading = ref(true);
-const error = ref(null);
-const mapRef = ref(null);
 
 const currentPhoto = computed(() => {
 	const comm = selectedCommunication.value;
@@ -108,9 +111,11 @@ const selectedCommunication = computed<Communication | null>(() => {
 });
 const handleDeselect = (id: string) => {
 	selectedId.value = null;
+	updateMap();
 };
 const handleSelect = (id: string) => {
 	selectedId.value = id;
+	updateMap();
 };
 async function fetchCommunications() {
 	await communication.fetchAll();
@@ -251,23 +256,23 @@ function showNotification(title, message) {
 }
 
 function updateMap() {
-	if (!mapRef.value) return;
-
-	const map = mapRef.value.$el || mapRef.value;
-	const loc = selectedCommunication.value.public_report.location;
-
+	const loc = selectedCommunication.value?.public_report?.location;
+	console.log("updating for loc", loc);
 	if (loc == null) {
-		map.ClearMarkers();
-		map.ResetCamera();
+		mapMarkers.value = [];
 		return;
 	}
 
-	let markers = [
-		new maplibregl.Marker({
+	mapMarkers.value = [
+		{
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([loc.longitude, loc.latitude]),
+			id: String(Date.now()),
+			lng: loc.longitude,
+			lat: loc.latitude,
+		},
 	];
+	console.log("markers now", mapMarkers.value);
 
 	let min = { lat: loc.latitude, lng: loc.longitude };
 	let max = { lat: loc.latitude, lng: loc.longitude };
@@ -278,12 +283,12 @@ function updateMap() {
 			i.location.latitude != 0 &&
 			i.location.longitude != 0
 		) {
-			markers.push(
-				new maplibregl.Marker({
-					color: "#00FF00",
-					draggable: false,
-				}).setLngLat([i.location.longitude, i.location.latitude]),
-			);
+			mapMarkers.value.push({
+				color: "#00FF00",
+				draggable: false,
+				lat: i.location.latitude,
+				lng: i.location.longitude,
+			});
 			min.lat = Math.min(min.lat, i.location.latitude);
 			min.lng = Math.min(min.lng, i.location.longitude);
 			max.lat = Math.max(max.lat, i.location.latitude);
@@ -291,16 +296,16 @@ function updateMap() {
 		}
 	}
 
-	map.SetMarkers(markers);
-
-	const bounds = new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(min.lng - 0.01, min.lat - 0.01),
-		new maplibregl.LngLat(max.lng + 0.01, max.lat + 0.01),
-	);
-
-	map.FitBounds(bounds, {
-		padding: 50,
-	});
+	mapBounds.value = {
+		max: {
+			lat: max.lat + 0.01,
+			lng: max.lng + 0.01,
+		},
+		min: {
+			lat: min.lat - 0.01,
+			lng: min.lng - 0.01,
+		},
+	};
 }
 function onFilterChange(filters) {
 	console.log("Filters changed");
@@ -321,6 +326,7 @@ onMounted(async () => {
 	// Setup map layer after next tick to ensure map is mounted
 	await nextTick();
 
+	/*
 	if (mapRef.value) {
 		const mapEl = mapRef.value.$el || mapRef.value;
 		mapEl.addEventListener("load", () => {
@@ -336,5 +342,6 @@ onMounted(async () => {
 			});
 		});
 	}
+	*/
 });
 </script>

@@ -47,7 +47,8 @@
 			<div class="map-container">
 				<MapMultipoint
 					id="map"
-					ref="mapRef"
+					:bounds="mapBounds"
+					:markers="mapMarkers"
 					:organization-id="user.organization.id"
 					:tegola="user.urls.tegola"
 					:xmin="user.organization.service_area?.min.x ?? 0"
@@ -412,6 +413,8 @@ interface Emits {
 }
 interface Props {
 	loading: boolean;
+	mapBounds?: Bounds;
+	mapMarkers: Marker[];
 	selectedCommunication: Communication | null;
 	user: User | null;
 }
