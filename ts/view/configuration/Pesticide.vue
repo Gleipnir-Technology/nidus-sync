@@ -2,9 +2,11 @@
 	<div class="container-fluid p-4">
 		<div class="d-flex justify-content-between align-items-center mb-4">
 			<h1 class="mb-0">Pesticide Products Configuration</h1>
-			<a :href="configurationUrl" class="btn btn-primary" id="addProductBtn">
-				<i class="bi bi-plus-circle me-2"></i>Add New Product
-			</a>
+			<RouterLink to="/configuration/pesticide/add"
+				><button class="btn btn-primary" id="addProductBtn">
+					<i class="bi bi-plus-circle me-2"></i>Add New Product
+				</button>
+			</RouterLink>
 		</div>
 
 		<div class="card">
