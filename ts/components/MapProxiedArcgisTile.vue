@@ -35,7 +35,6 @@ const emit = defineEmits(["load", "map-click"]);
 const mapContainer = ref(null);
 const map = ref(null);
 const markers = ref([]);
-const preOns = ref([]);
 
 // Watch for latitude/longitude changes
 watch(
@@ -53,58 +52,57 @@ watch(
 const initializeMap = () => {
 	if (!mapContainer.value) return;
 
-	map.value = new maplibregl.Map({
-		center: [props.longitude, props.latitude],
-		container: mapContainer.value,
-		style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
-		zoom: 19,
-	});
+	try {
+		map.value = new maplibregl.Map({
+			center: [props.longitude, props.latitude],
+			container: mapContainer.value,
+			//style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
+			zoom: 19,
+		});
 
-	map.value.on("load", () => {
-		if (props.organizationId !== 0) {
-			map.value.addSource("tegola", {
-				type: "vector",
-				tiles: [
-					`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
-				],
+		map.value.on("load", () => {
+			if (props.organizationId !== 0) {
+				map.value.addSource("tegola", {
+					type: "vector",
+					tiles: [
+						`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
+					],
+				});
+				map.value.addLayer({
+					id: "service-area",
+					source: "tegola",
+					"source-layer": "service-area-bounds",
+					type: "line",
+					paint: {
+						"line-color": "#f00",
+					},
+				});
+			}
+
+			map.value.addSource("flyover", {
+				type: "raster",
+				tiles: [props.urlTiles],
 			});
+
 			map.value.addLayer({
-				id: "service-area",
-				source: "tegola",
-				"source-layer": "service-area-bounds",
-				type: "line",
-				paint: {
-					"line-color": "#f00",
-				},
+				id: "flyover-layer",
+				source: "flyover",
+				type: "raster",
 			});
-		}
 
-		map.value.addSource("flyover", {
-			type: "raster",
-			tiles: [props.urlTiles],
-		});
+			emit("load", { map: getCurrentInstance() });
 
-		map.value.addLayer({
-			id: "flyover-layer",
-			source: "flyover",
-			type: "raster",
-		});
-
-		emit("load", { map: getCurrentInstance() });
-
-		map.value.on("click", (e) => {
-			emit("map-click", {
-				lng: e.lngLat.lng,
-				lat: e.lngLat.lat,
-				map: getCurrentInstance(),
-				point: e.point,
+			map.value.on("click", (e) => {
+				emit("map-click", {
+					lng: e.lngLat.lng,
+					lat: e.lngLat.lat,
+					map: getCurrentInstance(),
+					point: e.point,
+				});
 			});
 		});
-	});
-
-	// Apply any pre-registered event listeners
-	for (const on of preOns.value) {
-		map.value.on(...on);
+	} catch(e) {
+		console.error("hey dummy", e);
 	}
 };
 
@@ -118,14 +116,6 @@ const addSource = (a, b) => {
 
 const jumpTo = (args) => {
 	return map.value?.jumpTo(args);
-};
-
-const on = (...args) => {
-	if (map.value) {
-		return map.value.on(...args);
-	} else {
-		preOns.value.push(args);
-	}
 };
 
 const once = (a, b) => {
@@ -173,7 +163,6 @@ defineExpose({
 	addLayer,
 	addSource,
 	jumpTo,
-	on,
 	once,
 	queryRenderedFeatures,
 	fitBounds,
