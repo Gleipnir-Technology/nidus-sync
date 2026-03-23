@@ -162,7 +162,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			"COALESCE(signal.report_id, 0) AS \"report.id\"",
 			"signal.species AS species",
 			"signal.type_ AS type",
-			"COALESCE(address.country, '') AS \"address.country\"",
+			"COALESCE(address.country, 'usa') AS \"address.country\"",
 			"COALESCE(address.locality, '') AS \"address.locality\"",
 			"COALESCE(address.number_, '') AS \"address.number\"",
 			"COALESCE(address.postal_code, '') AS \"address.postal_code\"",
