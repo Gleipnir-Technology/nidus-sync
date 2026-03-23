@@ -57,6 +57,10 @@ export default defineConfig({
 				target: "http://127.0.0.1:9002",
 				changeOrigin: true,
 			},
+			"/signup": {
+				target: "http://localhost:9002",
+				changeOrigin: false,
+			}
 		},
 		strictPort: true,
 	},

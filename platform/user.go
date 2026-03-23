@@ -72,6 +72,7 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 
 func CreateUser(ctx context.Context, username string, name string, password_hash string) (*User, error) {
 	o_setter := models.OrganizationSetter{
+		IsCatchall: omit.From(false),
 		Name: omit.From(fmt.Sprintf("%s's organization", username)),
 	}
 	o, err := models.Organizations.Insert(&o_setter).One(ctx, db.PGInstance.BobDB)
