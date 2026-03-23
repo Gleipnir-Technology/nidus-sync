@@ -81,6 +81,10 @@ export const useUserStore = defineStore("user", () => {
 		}
 	}
 
+	async function isAuthenticated(): boolean {
+		console.log("pretend check user auth");
+		return true;
+	}
 	return {
 		// State
 		display_name,
@@ -95,5 +99,6 @@ export const useUserStore = defineStore("user", () => {
 		username,
 		// Actions
 		fetchUser,
+		isAuthenticated,
 	};
 });

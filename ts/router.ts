@@ -19,6 +19,7 @@ import Planning from "./view/Planning.vue";
 import Review from "./view/Review.vue";
 import Signin from "./view/Signin.vue";
 import Sudo from "./view/Sudo.vue";
+import apiClient from "@/client";
 
 const routes: RouteRecordRaw[] = [
 	{
@@ -135,6 +136,7 @@ const router = createRouter({
 	history: createWebHistory("/"),
 	routes,
 });
+
 // Global navigation guard
 router.beforeEach(async (to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
@@ -142,7 +144,7 @@ router.beforeEach(async (to, from, next) => {
     if (requiresAuth) {
         try {
             // Check if user is authenticated (could be an API call)
-            const isAuthenticated = await checkAuth();
+            const isAuthenticated = await apiClient.isAuthenticated();
             if (!isAuthenticated) {
                 next('/signin');
             } else {
