@@ -220,7 +220,7 @@ const markAsAddressed = async () => {
 	}
 };
 const refresh = () => {
-	signal.fetchAll();
+	loadData();
 };
 const signalDeselect = (id: int) => {
 	selectedSignals.value.delete(id);
