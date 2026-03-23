@@ -48,7 +48,7 @@ There's a table containing district information in the database, `import.distric
 psql
 CREATE SCHEMA import;
 shp2pgsql -s 3857 -c -D -I CA_districts.shp import.district | psql -d nidus-sync
-psql
+psql -d nidus-sync
 ALTER TABLE import.district ADD COLUMN geom_4326 geometry(MultiPolygon,4326) GENERATED ALWAYS AS (ST_Transform(geom, 4326)) STORED;
 ```
 
