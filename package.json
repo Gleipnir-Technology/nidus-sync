@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "vite build",
-    "dev": "vite --host --port 8080",
+    "dev": "vite",
     "generate-icons": "node generate-icons.js",
     "typecheck": "vue-tsc --noEmit",
     "typecheck:watch": "vue-tsc --noEmit --watch"
