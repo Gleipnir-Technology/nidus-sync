@@ -54,7 +54,7 @@
 			<div v-if="error" class="error-message">
 				<strong>Error:</strong> <span>{{ error }}</span>
 				<button
-					@click="loadData()"
+					@click="emit('refresh')"
 					class="btn btn-sm btn-outline-danger mt-2 w-100"
 				>
 					Retry
@@ -138,14 +138,7 @@
 						:class="{ selected: isSelected(signal.id) }"
 						@click="toggleSignal(signal)"
 					>
-						<div class="small fw-semibold">{{ signal.title }}</div>
-						<div class="signal-address">
-							{{ shortAddress(signal.address) }}
-						</div>
-						<div class="text-muted small">{{ signal.description }}</div>
-						<span v-if="signal.badge" class="badge bg-secondary mt-1">
-							{{ signal.badge }}
-						</span>
+						<PlanningColumnListEntry :signal="signal"/>
 					</div>
 				</div>
 			</div>
