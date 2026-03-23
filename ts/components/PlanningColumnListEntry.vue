@@ -1,5 +1,5 @@
 <template>
-	<div class="small fw-semibold">{{ signal.title }}</div>
+	<div class="small fw-semibold">{{ title(signal) }}</div>
 	<div class="signal-address">
 		{{ shortAddress(signal.address) }}
 	</div>
@@ -8,9 +8,18 @@
 		{{ signal.badge }}
 	</span>
 </template>
-<script lang="ts">
+
+<script setup lang="ts">
+import { shortAddress } from "../format";
 interface Props {
 	signal: Signal;
-}
+};
 const props = defineProps<Props>();
+function title(signal: Signal): string {
+	if (signal.type == "flyover pool") {
+		return "Green pool";
+	} else {
+		return "Unknown signal";
+	}
+}
 </script>

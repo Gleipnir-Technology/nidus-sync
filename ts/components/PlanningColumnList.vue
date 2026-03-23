@@ -197,7 +197,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { shortAddress } from "../format";
+import PlanningColumnListEntry from "@/components/PlanningColumnListEntry.vue";
 
 interface Emits {
 	(e: "refresh"): void;
