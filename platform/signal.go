@@ -162,13 +162,13 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			"COALESCE(signal.report_id, 0) AS \"report.id\"",
 			"signal.species AS species",
 			"signal.type_ AS type",
-			"address.country AS \"address.country\"",
-			"address.locality AS \"address.locality\"",
-			"address.number_ AS \"address.number\"",
-			"address.postal_code AS \"address.postal_code\"",
-			"address.region AS \"address.region\"",
-			"address.street AS \"address.street\"",
-			"address.unit AS \"address.unit\"",
+			"COALESCE(address.country, '') AS \"address.country\"",
+			"COALESCE(address.locality, '') AS \"address.locality\"",
+			"COALESCE(address.number_, '') AS \"address.number\"",
+			"COALESCE(address.postal_code, '') AS \"address.postal_code\"",
+			"COALESCE(address.region, '') AS \"address.region\"",
+			"COALESCE(address.street, '') AS \"address.street\"",
+			"COALESCE(address.unit, '') AS \"address.unit\"",
 			// This will work great, up until we add polygons to signal
 			"ST_Y(signal.location) AS \"location.latitude\"",
 			"ST_X(signal.location) AS \"location.longitude\"",
@@ -230,6 +230,9 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 		} else if row.Report.ID != 0 {
 			row.Pool = nil
 			row.Report = report_map[row.Report.ID]
+		}
+		if row.Address.Street == "" {
+			row.Address = nil
 		}
 	}
 	return rows, nil
