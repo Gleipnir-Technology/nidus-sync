@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/maruel/genai"
@@ -13,6 +14,10 @@ import (
 )
 
 func CreateOpenAIClient(ctx context.Context, logger *zerolog.Logger) error {
+	if os.Getenv("OPENAI_API_KEY") == "" {
+		logger.Warn().Msg("Disabling OpenAI integration due to empty OPENAI_API_KEY")
+		return nil
+	}
 	linkLogger(logger)
 
 	opts := genai.ProviderOptions{
