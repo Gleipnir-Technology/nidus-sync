@@ -1,5 +1,19 @@
+<style scoped>
+@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
+
+.map-multipoint {
+	height: 100%;
+	width: 100%;
+}
+</style>
 <template>
-	<div ref="mapContainer" class="map-multipoint"></div>
+	<div v-if="error == null">
+		<div ref="mapContainer" class="map-multipoint"></div>
+	</div>
+	<div v-else>
+		<h1>Map failed to load</h1>
+		<p>{{error}}</p>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -44,7 +58,8 @@ const props = withDefaults(defineProps<Props>(), {
 	},
 });
 
-const mapContainer = ref<HTMLElement | null>();
+const error = ref<string | null>(null);
+const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<maplibregl.Map | null>(null);
 const markerInstances = ref<Map<string, maplibregl.Marker>>(new Map());
 const markers = ref<Map<string, maplibregl.Marker>>(new Map());
@@ -86,34 +101,38 @@ onMounted(() => {
 	if (!mapContainer.value) return;
 	const bounds = _bounds();
 
-	map.value = new maplibregl.Map({
-		bounds: bounds,
-		container: mapContainer.value,
-		style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
-	});
+	try {
+		map.value = new maplibregl.Map({
+			bounds: bounds,
+			container: mapContainer.value,
+			//style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
+		});
 
-	// Wait for map to load, then add the markers
-	map.value.on("load", () => {
-		if (props.organizationId !== 0) {
-			map.value.addSource("tegola", {
-				type: "vector",
-				tiles: [
-					`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
-				],
-			});
+		// Wait for map to load, then add the markers
+		map.value.on("load", () => {
+			if (props.organizationId !== 0) {
+				map.value.addSource("tegola", {
+					type: "vector",
+					tiles: [
+						`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
+					],
+				});
 
-			map.value.addLayer({
-				id: "service-area",
-				source: "tegola",
-				"source-layer": "service-area-bounds",
-				type: "line",
-				paint: {
-					"line-color": "#f00",
-				},
-			});
-		}
-		updateMarkers(props.markers);
-	});
+				map.value.addLayer({
+					id: "service-area",
+					source: "tegola",
+					"source-layer": "service-area-bounds",
+					type: "line",
+					paint: {
+						"line-color": "#f00",
+					},
+				});
+			}
+			updateMarkers(props.markers);
+		});
+	} catch (e) {
+		error.value = e;
+	}
 });
 
 onUnmounted(() => {
@@ -164,12 +183,3 @@ function updateMarkers(markers: Marker[]) {
 	});
 }
 </script>
-
-<style scoped>
-@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
-
-.map-multipoint {
-	height: 100%;
-	width: 100%;
-}
-</style>
