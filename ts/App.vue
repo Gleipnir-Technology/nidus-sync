@@ -1,6 +1,6 @@
 <template>
 	<div class="app-container">
-		<Sidebar />
+		<Sidebar v-if="$route.meta.showSidebar" />
 		<MainContent>
 			<div v-if="userStore.loading">Loading...</div>
 			<div v-else-if="userStore.error">Error: {{ userStore.error }}</div>

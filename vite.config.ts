@@ -51,7 +51,11 @@ export default defineConfig({
         proxy: {
             "/api": {
                 target: "http://127.0.0.1:9002",
-                changeOrigin: true,
+                changeOrigin: false,
+            },
+            "/signin": {
+                target: "http://localhost:9002",
+                changeOrigin: false,
             },
             "/signup": {
                 target: "http://localhost:9002",
