@@ -151,6 +151,7 @@
 
 				applyMessageTemplate(template) {
 					const templates = {
+						conference: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Attendee"},\n\nHey there! Thanks for coming by our booth at AMCA and taking part in our demo of Nidus: Pools. If you'd like the public you serve to be able to reach your district this easily, we'd love to help you.`,
 						received: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
 						scheduled: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
 						completed: `Dear ${this.selectedCommunication?.public_report.reporter.name || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
@@ -907,6 +908,7 @@
 												@change="applyMessageTemplate($event.target.value)"
 											>
 												<option value="">Select a template...</option>
+												<option value="conference">Conference Attendee</option>
 												<option value="received">Report Received</option>
 												<option value="scheduled">Service Scheduled</option>
 												<option value="completed">Service Completed</option>
