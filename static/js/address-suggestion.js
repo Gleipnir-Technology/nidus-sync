@@ -201,7 +201,14 @@ class AddressInput extends HTMLElement {
 	}
 
 	SetValue(suggestion) {
-		this.value = suggestion.properties.formatted_address_line;
+		const props = suggestion.properties;
+		if (props.formatted_address_line) {
+			this.value = props.formatted_address_line;
+		} else if (props.address_components) {
+			this.value = `${props.address_components.number ?? ""} ${props.address_components.street ?? ""}, ${props.coarse_location ?? ""}`;
+		} else {
+			this.value = `${props.name ?? ""}, ${props.coarse_location}`;
+		}
 		this._suggestions.innerHTML = "";
 	}
 }
