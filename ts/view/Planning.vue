@@ -25,7 +25,7 @@
 				:loading="loading"
 				:planFollowups="planFollowups"
 				@refresh="refresh"
-				:selectedSignals="selectedSignals"
+				:selectedSignalIDs="selectedSignalIDs"
 				@signalDeselect="signalDeselect"
 				@signalSelect="signalSelect"
 				:signals="signal.all"
@@ -35,12 +35,13 @@
 			<PlanningColumnDetail
 				:markers="markers"
 				:selectedSignals="selectedSignals"
+				:signals="signal.all"
 			/>
 		</template>
 		<template #right>
 			<PlanningColumnAction
 				:creating="creating"
-				:selectedSignals="selectedSignals"
+				:selectedSignalIDs="selectedSignalIDs"
 			/>
 		</template>
 	</ThreeColumn>
@@ -70,7 +71,7 @@ const leads = ref([]);
 const loading = ref(false);
 const planFollowups = ref([]);
 const poolLocations = ref({});
-const selectedSignals = ref(new Set([]));
+const selectedSignalIDs = ref(new Set<int>([]));
 const signal = useSignalStore();
 const user = useUserStore();
 
@@ -99,6 +100,13 @@ const getBoundingBox = (points) => {
 };
 const markers = computed(() => {
 	return [];
+});
+const selectedSignals = computed(() => {
+	if (selectedSignalIDs.value.size == 0 || signal.all == null) {
+		return [];
+	}
+	const result = signal.all.filter((s) => selectedSignalIDs.value.has(s));
+	return result;
 });
 const updateMap = (signals) => {
 	const locations = signals.map((s) => s.location);
@@ -151,11 +159,11 @@ const loadPlanFollowups = async () => {
 };
 
 const clearSelection = () => {
-	selectedSignals.value.clear();
+	selectedSignalIDs.value.clear();
 };
 
 const createLead = async () => {
-	if (selectedSignals.value.size === 0) return;
+	if (selectedSignalIDs.value.size === 0) return;
 
 	creating.value = true;
 
@@ -167,7 +175,7 @@ const createLead = async () => {
 			},
 			body: JSON.stringify({
 				pool_locations: poolLocations.value,
-				signal_ids: selectedSignals.value.map((s) => s.id),
+				signal_ids: selectedSignalIDs,
 			}),
 		});
 
@@ -191,7 +199,7 @@ const createLead = async () => {
 };
 
 const markAsAddressed = async () => {
-	if (selectedSignals.value.size === 0) return;
+	if (selectedSignalIDs.value.size === 0) return;
 
 	try {
 		const response = await fetch(`${apiBase.value}/signal/mark-addressed`, {
@@ -200,7 +208,7 @@ const markAsAddressed = async () => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				signal_ids: selectedSignals.value.map((s) => s.id),
+				signal_ids: selectedSignalIDs,
 			}),
 		});
 
@@ -209,7 +217,7 @@ const markAsAddressed = async () => {
 		}
 
 		signals.value = signals.value.filter(
-			(signal) => !selectedSignals.value.some((s) => s.id === signal.id),
+			(signal) => !selectedSignalIDs.value.has(s.id),
 		);
 
 		clearSelection();
@@ -223,10 +231,10 @@ const refresh = () => {
 	loadData();
 };
 const signalDeselect = (id: int) => {
-	selectedSignals.value.delete(id);
+	selectedSignalIDs.value.delete(id);
 };
 const signalSelect = (id: int) => {
-	selectedSignals.value.add(id);
+	selectedSignalIDs.value.add(id);
 };
 // Lifecycle
 onMounted(() => {

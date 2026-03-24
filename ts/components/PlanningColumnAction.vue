@@ -18,7 +18,7 @@
 				<div class="text-muted small mb-2">Signal → Lead</div>
 				<button
 					class="btn btn-outline-primary tool-button"
-					:disabled="selectedSignals.length === 0 || creating"
+					:disabled="selectedSignalIDs.size === 0 || creating"
 					@click="createLead()"
 				>
 					<span v-if="!creating">Create New Lead from Selection</span>
@@ -29,13 +29,13 @@
 				</button>
 				<button
 					class="btn btn-outline-secondary tool-button"
-					:disabled="selectedSignals.length === 0"
+					:disabled="selectedSignalIDs.size === 0"
 				>
 					Add Signals to Existing Lead
 				</button>
 				<button
 					class="btn btn-outline-secondary tool-button"
-					:disabled="selectedSignals.length === 0"
+					:disabled="selectedSignalIDs.size === 0"
 					@click="markAsAddressed()"
 				>
 					Mark Signal as Addressed
@@ -75,7 +75,7 @@
 <script setup lang="ts">
 interface Props {
 	creating: boolean;
-	selectedSignals: Set<int>;
+	selectedSignalIDs: Set<int>;
 }
 const props = defineProps<Props>();
 </script>

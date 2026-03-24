@@ -118,13 +118,13 @@
 				<div class="mb-3">
 					<div class="fw-semibold mb-2">
 						Signals
-						<span class="badge bg-primary" v-show="selectedSignals.size > 0">
-							{{ selectedSignals.size }}
+						<span class="badge bg-primary" v-show="selectedSignalIDs.size > 0">
+							{{ selectedSignalIDs.size }}
 						</span>
 					</div>
 
 					<div
-						v-if="signals != null && signals.length === 0"
+						v-if="signals != null && signals.length == 0"
 						class="text-muted small fst-italic"
 					>
 						No signals found
@@ -209,7 +209,7 @@ interface Props {
 	leads: Lead[] | null;
 	loading: boolean;
 	planFollowups: Followup[] | null;
-	selectedSignals: Set<int>;
+	selectedSignalIDs: Set<int>;
 	signals: Signal[] | null;
 }
 const emit = defineEmits<Emits>();
@@ -220,10 +220,10 @@ const filters = ref({
 	sort: "newest",
 });
 const isSelected = (id) => {
-	return props.selectedSignals.values().some((s) => s.id === id);
+	return props.selectedSignalIDs.values().some((s) => s.id === id);
 };
 const toggleSignal = (signal: int) => {
-	if (props.selectedSignals.has(signal)) {
+	if (props.selectedSignalIDs.has(signal)) {
 		emit("signalDeselect", signal);
 	} else {
 		emit("signalSelect", signal);
