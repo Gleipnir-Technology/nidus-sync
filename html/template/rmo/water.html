@@ -78,11 +78,11 @@
 			longitude.value = location.geometry.coordinates[0];
 			latlngAccuracyType.value = props.precision || 0;
 			latlngAccuracyValue.value = props.distance || 0;
-			number.value = props.address_components.number;
-			postalcode.value = props.address_components.postal_code;
-			locality.value = context.whosonfirst.locality.name;
-			region.value = props.context.whosonfirst.region.abbreviation;
-			street.value = props.address_components.street;
+			number.value = props.address_components?.number ?? "";
+			postalcode.value = props.address_components?.postal_code ?? "";
+			locality.value = context.whosonfirst?.locality?.name ?? "";
+			region.value = context.whosonfirst?.region?.abbreviation ?? "";
+			street.value = props.address_components?.street ?? "";
 		}
 		function toggleCollapse(something) {
 			el = document.getElementById(something);
