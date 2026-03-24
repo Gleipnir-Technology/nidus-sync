@@ -1,40 +1,47 @@
+<style scoped>
+#map {
+	height: 100%;
+	width: 100%;
+	margin-bottom: 10px;
+}
+.map-container {
+	height: 100%;
+	width: 100%;
+}
+</style>
 <template>
-	<div ref="mapContainer" class="map-container"></div>
+	<div v-if="error == null">
+		<div ref="mapContainer" class="map-multipoint"></div>
+	</div>
+	<div v-else>
+		<h1>Map failed to load</h1>
+		<p>{{error}}</p>
+	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import "maplibre-gl/dist/maplibre-gl.css";
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 
-const props = defineProps({
-	latitude: {
-		type: Number,
-		required: true,
-	},
-	longitude: {
-		type: Number,
-		required: true,
-	},
-	organizationId: {
-		type: Number,
-		default: 0,
-	},
-	tegola: {
-		type: String,
-		default: "",
-	},
-	urlTiles: {
-		type: String,
-		default: "",
-	},
-});
+interface Emits {
+	(e: "map-click", latitude: Number, longitude: Number): void
+}
+interface Props {
+	latitude: Number;
+	longitude: Number;
+	organizationId: Number;
+	tegola: string;
+	urlTiles: string;
+}
+const emit = defineEmits<Emits>();
+const props = defineProps<Props>();
 
-const emit = defineEmits(["load", "map-click"]);
-
-const mapContainer = ref(null);
-const map = ref(null);
-const markers = ref([]);
+const error = ref<string | null>(null);
+const mapContainer = ref<HTMLElement | null>(null);
+const map = ref<maplibregl.Map | null>(null);
+const markerInstances = ref<Map<string, maplibrgl.Marker>>(new Map())
+const markers = ref<Map<string, maplibrgl.Marker>>(new Map())
 
 // Watch for latitude/longitude changes
 watch(

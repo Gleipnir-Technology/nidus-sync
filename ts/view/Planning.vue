@@ -51,7 +51,6 @@
 import { computed, ref, onMounted, nextTick } from "vue";
 
 import MapMultipoint from "../components/MapMultipoint.vue";
-import MapProxiedArcgisTile from "../components/MapProxiedArcgisTile.vue";
 import PlanningColumnAction from "../components/PlanningColumnAction.vue";
 import PlanningColumnDetail from "../components/PlanningColumnDetail.vue";
 import PlanningColumnList from "../components/PlanningColumnList.vue";

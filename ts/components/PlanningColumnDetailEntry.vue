@@ -1,29 +1,10 @@
 <template>
-<!--
-	<td>
-		<button
-			@click="toggleSignal(signal)"
-			class="btn btn-sm btn-link text-danger p-0 ms-1"
-			style="font-size: 0.7rem"
-		>
-			<i class="bi bi-x"></i>
-		</button>
-	</td>
-	<td>
-		<span v-if="signal.type === 'flyover pool'">Pool</span>
-		<span v-else-if="signal.type === 'publicreport nuisance'"
-			>Nuisance</span
-		>
-		<span v-else-if="signal.type === 'publicreport water'"
-			>Water</span
-		>
-	</td>
-	<td>
-		<TimeRelative :time="signal.created"></TimeRelative>
-	</td>
-	<td>{{ shortAddress(signal.address) }}</td>
--->
-	<div v-if="signal.type == 'publicreport nuisance'">
+	<TimeRelative :time="signal.created"></TimeRelative>
+	<p>{{ shortAddress(signal.address) }}</p>
+	<div v-if="signal.type == 'flyover pool'">
+		<FlyoverPoolCard :pool="signal.pool"/>
+	</div>
+	<div v-else-if="signal.type == 'publicreport nuisance'">
 		<PublicreportCard :report="signal.report"/>
 	</div>
 	<div v-else-if="signal.type == 'publicreport water'">
@@ -32,7 +13,8 @@
 </template>
 
 <script setup lang="ts">
-import { shortAddress } from "../format";
+import { shortAddress } from "@/format";
+import FlyoverPoolCard from "@/components/FlyoverPoolCard.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 interface Props {

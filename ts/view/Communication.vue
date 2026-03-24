@@ -268,8 +268,10 @@ function updateMap() {
 			color: "#FF0000",
 			draggable: false,
 			id: String(Date.now()),
-			lng: loc.longitude,
-			lat: loc.latitude,
+			location: {
+				lng: loc.longitude,
+				lat: loc.latitude,
+			}
 		},
 	];
 	console.log("markers now", mapMarkers.value);
@@ -286,8 +288,10 @@ function updateMap() {
 			mapMarkers.value.push({
 				color: "#00FF00",
 				draggable: false,
-				lat: i.location.latitude,
-				lng: i.location.longitude,
+				location: {
+					lat: i.location.latitude,
+					lng: i.location.longitude,
+				},
 			});
 			min.lat = Math.min(min.lat, i.location.latitude);
 			min.lng = Math.min(min.lng, i.location.longitude);

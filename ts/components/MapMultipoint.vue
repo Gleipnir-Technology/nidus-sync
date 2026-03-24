@@ -1,6 +1,9 @@
 <style scoped>
-@import url("//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
-
+#map {
+	height: 100%;
+	width: 100%;
+	margin-bottom: 10px;
+}
 .map-multipoint {
 	height: 100%;
 	width: 100%;
@@ -17,22 +20,16 @@
 </template>
 
 <script setup lang="ts">
+import "maplibre-gl/dist/maplibre-gl.css";
 import {
 	onMounted,
 	onUnmounted,
 	ref,
 	watch,
 } from "vue";
+import { Bounds, Marker } from "@/types";
 import maplibregl from "maplibre-gl";
 
-interface Point {
-	lat: Number;
-	lng: Number;
-}
-interface Bounds {
-	min: Point;
-	max: Point;
-}
 interface Emits {
 	(e: "load"): void;
 }
@@ -41,13 +38,6 @@ interface Props {
 	markers: Marker[];
 	"organization-id": int;
 	tegola: string;
-}
-interface Marker {
-	color: string;
-	draggable: boolean;
-	id: string;
-	lng: Number;
-	lat: Number;
 }
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
@@ -105,7 +95,7 @@ onMounted(() => {
 		map.value = new maplibregl.Map({
 			bounds: bounds,
 			container: mapContainer.value,
-			//style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
+			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 		});
 
 		// Wait for map to load, then add the markers
@@ -166,7 +156,7 @@ function updateMarkers(markers: Marker[]) {
 		if (markerInstances.value.has(markerData.id)) {
 			// Update existing marker position
 			const marker = markerInstances.value.get(markerData.id)!;
-			marker.setLngLat([markerData.lng, markerData.lat]);
+			marker.setLngLat([markerData.location.lng, markerData.location.lat]);
 			console.log("updated", markerData);
 		} else {
 			// Create a new marker
@@ -174,7 +164,7 @@ function updateMarkers(markers: Marker[]) {
 				color: markerData.color,
 				draggable: markerData.draggable,
 			})
-				.setLngLat([markerData.lng, markerData.lat])
+				.setLngLat([markerData.location.lng, markerData.location.lat])
 				.addTo(map.value!);
 
 			markerInstances.value.set(markerData.id, marker);
