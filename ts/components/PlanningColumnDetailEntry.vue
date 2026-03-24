@@ -1,4 +1,5 @@
 <template>
+<!--
 	<td>
 		<button
 			@click="toggleSignal(signal)"
@@ -21,10 +22,18 @@
 		<TimeRelative :time="signal.created"></TimeRelative>
 	</td>
 	<td>{{ shortAddress(signal.address) }}</td>
+-->
+	<div v-if="signal.type == 'publicreport nuisance'">
+		<PublicreportCard :report="signal.report"/>
+	</div>
+	<div v-else-if="signal.type == 'publicreport water'">
+		<PublicreportCard :report="signal.report"/>
+	</div>
 </template>
 
 <script setup lang="ts">
 import { shortAddress } from "../format";
+import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 interface Props {
 	signal: Signal;

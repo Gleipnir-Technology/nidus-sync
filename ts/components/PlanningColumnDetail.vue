@@ -42,16 +42,14 @@
 								Click signals from the left panel to select them
 							</div>
 
-							<table
-								class="small mt-2 table"
+							<div
+								class="mt-2"
 								v-show="selectedSignals.length > 0"
 							>
-								<tbody>
-									<tr v-for="signal in selectedSignals" :key="signal.id">
+									<div v-for="signal in selectedSignals" :key="signal.id">
 										<PlanningColumnDetailEntry :signal="signal"/>
-									</tr>
-								</tbody>
-							</table>
+									</div>
+							</div>
 
 							<button
 								v-show="selectedSignals.length > 0"

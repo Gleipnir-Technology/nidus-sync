@@ -1,3 +1,16 @@
+<style scoped>
+.photo-thumbnail {
+	width: 100px;
+	height: 100px;
+	object-fit: cover;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: transform 0.2s;
+}
+.photo-thumbnail:hover {
+	transform: scale(1.05);
+}
+</style>
 <template>
 	<div class="details-section p-3 border-top">
 		<div class="d-flex justify-content-between align-items-start mb-3">

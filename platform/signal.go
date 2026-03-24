@@ -229,7 +229,12 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			row.Report = nil
 		} else if row.Report.ID != 0 {
 			row.Pool = nil
-			row.Report = report_map[row.Report.ID]
+			report, ok := report_map[row.Report.ID] 
+			if !ok {
+				log.Debug().Int32("id", row.Report.ID).Msg("failed to got report")			
+				continue
+			}
+			row.Report = report
 		}
 		if row.Address.Street == "" {
 			row.Address = nil
