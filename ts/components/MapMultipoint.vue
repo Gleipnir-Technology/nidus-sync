@@ -30,13 +30,11 @@ import {
 import { Bounds, Marker } from "@/types";
 import maplibregl from "maplibre-gl";
 
-interface Emits {
-	(e: "load"): void;
-}
+interface Emits {}
 interface Props {
 	bounds?: Bounds;
 	markers: Marker[];
-	"organization-id": int;
+	organizationId: int;
 	tegola: string;
 }
 const emit = defineEmits<Emits>();

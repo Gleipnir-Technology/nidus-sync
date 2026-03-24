@@ -22,14 +22,14 @@
 <script setup lang="ts">
 import "maplibre-gl/dist/maplibre-gl.css";
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { Point } from "@/types";
 import maplibregl from "maplibre-gl";
 
 interface Emits {
 	(e: "map-click", latitude: Number, longitude: Number): void
 }
 interface Props {
-	latitude: Number;
-	longitude: Number;
+	location: Point;
 	organizationId: Number;
 	tegola: string;
 	urlTiles: string;
@@ -63,7 +63,7 @@ const initializeMap = () => {
 		map.value = new maplibregl.Map({
 			center: [props.longitude, props.latitude],
 			container: mapContainer.value,
-			//style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
+			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 19,
 		});
 

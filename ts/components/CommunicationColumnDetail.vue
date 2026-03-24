@@ -38,7 +38,7 @@
 					id="map"
 					:bounds="mapBounds"
 					:markers="mapMarkers"
-					:organization-id="user.organization.id"
+					:organizationId="user.organization.id"
 					:tegola="user.urls.tegola"
 					:xmin="user.organization.service_area?.min.x ?? 0"
 					:ymin="user.organization.service_area?.min.y ?? 0"

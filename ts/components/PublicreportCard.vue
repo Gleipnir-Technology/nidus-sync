@@ -32,7 +32,7 @@
 					</span>
 				</h5>
 				<small class="text-muted"
-					>Report ID: #{{ report.id }}</small
+					>Report ID: #{{ report.public_id }}</small
 				>
 			</div>
 			<span class="badge bg-secondary">
