@@ -119,7 +119,7 @@
 						<div class="d-flex justify-content-between align-items-center">
 							<a
 								class="btn btn-outline-warning"
-								href="{{ .URL.Configuration.Upload }}"
+								href="/configuration/upload"
 							>
 								Manage Uploads
 								<i class="bi bi-arrow-right ms-1"></i>
