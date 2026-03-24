@@ -99,7 +99,7 @@ func reportQuery(org_id int32) bob.BaseQuery[*dialect.SelectQuery] {
 			"address_locality AS \"address.locality\"",
 			"address_number AS \"address.number\"",
 			"address_postal_code AS \"address.postal_code\"",
-			"address_raw AS address_raw",
+			"address_raw AS \"address.raw\"",
 			"address_region AS \"address.region\"",
 			"address_street AS \"address.street\"",
 			"created",
