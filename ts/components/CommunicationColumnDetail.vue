@@ -57,7 +57,7 @@
 				</div>
 
 				<div v-if="selectedCommunication" class="h-100 d-flex flex-column">
-					<PublicreportCard :report="selectedCommunication.public_report"/>
+					<PublicreportCard :report="selectedCommunication.public_report" @viewImage="openPhotoViewer" />
 					<!-- Report Details -->
 				</div>
 			</div>
@@ -90,7 +90,6 @@ const nuisance = computed(() => {
 const water = computed(() => {
 	return props.selectedCommunication?.value?.public_report?.water || null;
 });
-
 function openPhotoViewer(index) {
 	emit("viewImage", index);
 }

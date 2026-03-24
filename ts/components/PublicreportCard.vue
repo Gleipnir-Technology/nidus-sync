@@ -361,4 +361,7 @@ function formatAddress(a) {
 	}
 	return `${a.number} ${a.street}, ${a.locality}`;
 }
+function openPhotoViewer(index) {
+	emit("viewImage", index);
+}
 </script>
