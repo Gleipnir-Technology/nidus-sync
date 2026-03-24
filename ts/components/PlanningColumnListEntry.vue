@@ -22,6 +22,10 @@ interface Props {
 const props = defineProps<Props>();
 function icon(signal: Signal): string {
 	if (signal.type == "flyover pool") {
+		return "bi-pond";
+	} else if (signal.type == "publicreport nuisance") {
+		return "bi-mosquito";
+	} else if (signal.type == "publicreport water") {
 		return "bi-water";
 	} else { 
 		return "bi-mosquito";
@@ -37,8 +41,10 @@ function location(signal: Signal): string {
 function title(signal: Signal): string {
 	if (signal.type == "flyover pool") {
 		return "Green pool";
-	} else {
-		return "Unknown signal";
+	} else if (signal.type == "publicreport nuisance") {
+		return "Nuisance";
+	} else if (signal.type == "publicreport water") {
+		return "Standing water";
 	}
 }
 </script>
