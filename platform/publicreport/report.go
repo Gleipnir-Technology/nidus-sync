@@ -72,7 +72,7 @@ func reportQueryToRows(ctx context.Context, org_id int32, query bob.BaseQuery[*d
 func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.Report, error) {
 	query := reportQuery(org_id)
 	query.Apply(
-		sm.Where(psql.Quote("publicreport", "report", "reviewed").IsNull()),
+		sm.Where(psql.Quote("publicreport", "report", "id").EQ(psql.Any(ids))),
 	)
 	return reportQueryToRows(ctx, org_id, query)
 }
