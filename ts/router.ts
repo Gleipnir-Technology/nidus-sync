@@ -10,6 +10,7 @@ import ConfigurationPesticide from "./view/configuration/Pesticide.vue";
 import ConfigurationPesticideAdd from "./view/configuration/PesticideAdd.vue";
 import ConfigurationRoot from "./view/configuration/Root.vue";
 import ConfigurationUpload from "./view/configuration/Upload.vue";
+import ConfigurationUploadPool from "./view/configuration/UploadPool.vue";
 import ConfigurationUser from "./view/configuration/User.vue";
 import ConfigurationUserAdd from "./view/configuration/UserAdd.vue";
 import Intelligence from "./view/Intelligence.vue";
@@ -75,6 +76,12 @@ const routes: RouteRecordRaw[] = [
 		path: "/configuration/upload",
 		name: "Upload Configuration",
 		component: ConfigurationUpload,
+		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
+		path: "/configuration/upload/pool",
+		name: "Pool Upload",
+		component: ConfigurationUploadPool,
 		meta: { requiresAuth: true, showSidebar: true },
 	},
 	{
