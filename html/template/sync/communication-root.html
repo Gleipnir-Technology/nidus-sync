@@ -14,7 +14,11 @@
 		}
 		function formatAddress(a) {
 			if (a.number == "" && a.street == "") {
-				return "no address provided";
+				if (a.raw == "") {
+					return "no address provided";
+				} else {
+					return a.raw;
+				}
 			}
 			return a.number + " " + a.street + ", " + a.locality;
 		}
