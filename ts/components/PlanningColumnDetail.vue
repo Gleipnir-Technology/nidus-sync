@@ -50,14 +50,6 @@
 										<PlanningColumnDetailEntry :signal="signal"/>
 									</div>
 							</div>
-
-							<button
-								v-show="selectedSignals.length > 0"
-								@click="clearSelection()"
-								class="btn btn-sm btn-outline-secondary mt-2 w-100"
-							>
-								Clear Selection
-							</button>
 						</div>
 					</div>
 				</div>
