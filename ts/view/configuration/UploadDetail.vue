@@ -1,0 +1,410 @@
+<style scoped>
+.results-container {
+  max-width: 1400px;
+}
+
+.summary-card {
+  transition: transform 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+}
+
+.has-error {
+  background-color: #fff3cd;
+}
+
+.badge.status,
+.badge.condition {
+  font-size: 0.875rem;
+  padding: 0.35em 0.65em;
+}
+
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+thead tr.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8f9fa;
+}
+
+#map {
+  height: 400px;
+  width: 100%;
+}
+</style>
+<template>
+  <div class="container mt-4 results-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Upload Results: {{ upload?.name }}</h2>
+      <span class="badge rounded-pill" :class="upload?.status">
+        <i class="bi me-1" :class="getUploadStatusIcon(upload?.status)"></i>
+        {{ getUploadStatusDisplay(upload?.status) }}
+      </span>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card summary-card h-100 border-primary">
+          <div class="card-body text-center">
+            <h1 class="display-4 text-primary">
+              {{ upload?.countExisting }}
+            </h1>
+            <h5>Existing Pools</h5>
+            <p class="text-muted">Matches found in previous records</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card summary-card h-100 border-success">
+          <div class="card-body text-center">
+            <h1 class="display-4 text-success">{{ upload?.countNew }}</h1>
+            <h5>New Pools</h5>
+            <p class="text-muted">Not found in existing records</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card summary-card h-100 border-warning">
+          <div class="card-body text-center">
+            <h1 class="display-4 text-warning">{{ upload?.countOutside }}</h1>
+            <h5>Outside District</h5>
+            <p class="text-muted">Potential geocoding errors</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+			<div v-if="user == null">
+				<p>loading</p>
+			</div>
+			<div v-else>
+				<MapMultipoint
+					id="map"
+					:markers="[]"
+					:organization-id="user.organization.id"
+					:tegola="user.urls.tegola"
+					:xmin="user?.organization?.serviceArea?.min.x ?? 0"
+					:ymin="user?.organization?.serviceArea?.min.y ?? 0"
+					:xmax="user?.organization?.serviceArea?.max.x ?? 0"
+					:ymax="user?.organization?.serviceArea?.max.y ?? 0"
+				></MapMultipoint>
+			</div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Data Preview</h5>
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="showIssuesOnly"
+            v-model="showIssuesOnly"
+            @change="handleShowIssuesOnly"
+          />
+          <label class="form-check-label" for="showIssuesOnly">
+            Show issues only
+          </label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div
+          v-for="error in upload?.errors"
+          :key="error.message"
+          class="alert alert-danger"
+          role="alert"
+        >
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Error:</strong> {{ error.message }}
+        </div>
+
+        <div
+          v-if="upload?.status === 'uploaded' || upload?.status === 'parsing'"
+          class="alert alert-info"
+          role="alert"
+        >
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Working:</strong> File is still processing... refresh this
+          page in a bit to see updates.
+        </div>
+
+        <template v-else>
+          <div
+            v-if="!upload?.pools || upload.pools.length === 0"
+            class="alert alert-warning"
+            role="alert"
+          >
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Warning:</strong> No pools could be understood from your file.
+          </div>
+
+          <div v-else class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead class="table-light">
+                <tr class="header">
+                  <th></th>
+                  <th>Number</th>
+                  <th>Street</th>
+                  <th>City</th>
+                  <th>Post</th>
+                  <th>Status</th>
+                  <th>Condition</th>
+                  <th>Tags</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(pool, index) in upload.pools"
+                  :key="index"
+                  :class="{ 'has-error': pool.errors && pool.errors.length > 0 }"
+                  :style="getRowStyle(pool)"
+                >
+                  <td>
+                    <i
+                      v-if="pool.errors && pool.errors.length > 0"
+                      class="bi bi-info-circle-fill text-primary ms-1"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      :title="pool.errors.map(e => e.message).join(', ')"
+                    ></i>
+                  </td>
+                  <td>{{ pool.address.number }}</td>
+                  <td>{{ pool.address.street }}</td>
+                  <td>{{ pool.address.locality }}</td>
+                  <td>{{ pool.address.postalCode }}</td>
+                  <td>
+                    <span class="badge status" :class="pool.status">
+                      {{ titleCase(pool.status) }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge condition" :class="pool.condition">
+                      {{ titleCase(pool.condition) }}
+                    </span>
+                  </td>
+                  <td>{{ pool.tags?.length || 0 }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4 mb-5">
+      <button
+        type="button"
+        class="btn btn-outline-danger"
+        @click="handleDiscard"
+        :disabled="isSubmitting"
+      >
+        Discard
+      </button>
+      <button
+        class="btn btn-primary"
+        id="confirmUploadBtn"
+        @click="handleConfirm"
+        :disabled="isSubmitting"
+      >
+        <i class="bi bi-check2 me-1"></i> Confirm and Submit Data
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import MapMultipoint from "@/components/MapMultipoint.vue";
+import { useUserStore } from "@/store/user";
+
+interface Address {
+  number: string;
+  street: string;
+  locality: string;
+  postalCode: string;
+}
+
+interface ErrorMessage {
+  message: string;
+}
+
+interface Pool {
+  address: Address;
+  status: string;
+  condition: string;
+  tags?: string[];
+  errors?: ErrorMessage[];
+}
+
+interface Upload {
+  name: string;
+  status: string;
+  countExisting: number;
+  countNew: number;
+  countOutside: number;
+  errors?: ErrorMessage[];
+  pools?: Pool[];
+}
+
+interface ServiceArea {
+  min: { x: number; y: number };
+  max: { x: number; y: number };
+}
+
+interface Props {
+  id: int;
+}
+
+const props = defineProps<Props>()
+
+const router = useRouter();
+const showIssuesOnly = ref(false);
+const isSubmitting = ref(false);
+const user = useUserStore();
+
+const getUploadStatusIcon = (status?: string): string => {
+  const icons: Record<string, string> = {
+    uploaded: 'bi-cloud-upload',
+    parsing: 'bi-hourglass-split',
+    parsed: 'bi-check-circle',
+    error: 'bi-x-circle',
+  };
+  return icons[status || ''] || 'bi-question-circle';
+};
+
+const getUploadStatusDisplay = (status?: string): string => {
+  const displays: Record<string, string> = {
+    uploaded: 'Uploaded',
+    parsing: 'Parsing',
+    parsed: 'Parsed',
+    error: 'Error',
+  };
+  return displays[status || ''] || 'Unknown';
+};
+
+const titleCase = (str?: string): string => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+const upload = computed(() => {
+	if (upload.all == null) {
+		return null;
+	}
+	return upload.byID(props.id);
+});
+const getRowStyle = (pool: Pool) => {
+  if (showIssuesOnly.value) {
+    const hasError = pool.errors && pool.errors.length > 0;
+    return { display: hasError ? 'table-row' : 'none' };
+  }
+  return { display: 'table-row' };
+};
+
+const handleShowIssuesOnly = () => {
+  // The reactive display is handled by getRowStyle
+};
+
+const initializeMap = () => {
+  if (!map) return;
+
+  map.addEventListener('load', () => {
+    map.addSource('tegola-nidus', {
+      type: 'vector',
+      tiles: [
+        `${props.tegolaUrl}maps/nidus/{z}/{x}/{y}?csv_file=${props.id}&id=${user.organization.id}`,
+      ],
+    });
+
+    map.addLayer({
+      id: 'pool',
+      source: 'tegola-nidus',
+      'source-layer': 'fileupload-pool',
+      type: 'circle',
+      paint: {
+        'circle-color': '#91b979',
+        'circle-radius': 7,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#7aab5f',
+      },
+    });
+  });
+};
+
+const fetchUploadData = async () => {
+  try {
+    const response = await fetch(`/api/upload/${props.id}`);
+    if (!response.ok) throw new Error('Failed to fetch upload data');
+    upload.value = await response.json();
+  } catch (error) {
+    console.error('Error fetching upload data:', error);
+  }
+};
+
+const handleDiscard = async () => {
+  if (!confirm('Are you sure you want to discard this upload?')) return;
+
+  isSubmitting.value = true;
+  try {
+    const response = await fetch(`/api/upload/${props.id}/discard`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to discard upload');
+
+    // Navigate to uploads list or appropriate page
+    router.push('/uploads');
+  } catch (error) {
+    console.error('Error discarding upload:', error);
+    alert('Failed to discard upload. Please try again.');
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const handleConfirm = async () => {
+  isSubmitting.value = true;
+  try {
+    const response = await fetch(`/api/upload/${props.id}/commit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to confirm upload');
+
+    // Navigate to success page or appropriate page
+    router.push('/uploads/success');
+  } catch (error) {
+    console.error('Error confirming upload:', error);
+    alert('Failed to confirm upload. Please try again.');
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+onMounted(() => {
+  initializeMap();
+  
+  // If upload data wasn't provided via props, fetch it
+  if (!upload.value) {
+    fetchUploadData();
+  }
+
+  // Initialize Bootstrap tooltips
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  // @ts-ignore - Bootstrap types
+  [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+});
+</script>

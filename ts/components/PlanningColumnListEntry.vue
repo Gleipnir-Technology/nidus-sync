@@ -1,5 +1,11 @@
+<style scoped>
+.selected {
+	background-color: $primary;
+}
+</style>
+
 <template>
-	<div class="row">
+	<div class="row" :class="selected ? 'selected' : ''">
 		<div class="col-1">
 			<i class="bi" :class="icon(signal)"></i>
 		</div>
@@ -17,6 +23,7 @@
 <script setup lang="ts">
 import { shortAddress } from "../format";
 interface Props {
+	selected: boolean;
 	signal: Signal;
 };
 const props = defineProps<Props>();

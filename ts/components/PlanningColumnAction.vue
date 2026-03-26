@@ -19,7 +19,7 @@
 				<button
 					class="btn btn-outline-primary tool-button"
 					:disabled="selectedSignalIDs.size === 0 || creating"
-					@click="createLead()"
+					@click="emit('doCreateLead')"
 				>
 					<span v-if="!creating">Create New Lead from Selection</span>
 					<span v-else>
@@ -30,13 +30,14 @@
 				<button
 					class="btn btn-outline-secondary tool-button"
 					:disabled="selectedSignalIDs.size === 0"
+					@click="emit('doAddToLead')"
 				>
 					Add Signals to Existing Lead
 				</button>
 				<button
 					class="btn btn-outline-secondary tool-button"
 					:disabled="selectedSignalIDs.size === 0"
-					@click="markAsAddressed()"
+					@click="emit('doMarkSignalAddressed')"
 				>
 					Mark Signal as Addressed
 				</button>
@@ -46,13 +47,13 @@
 
 			<div class="mb-3">
 				<div class="text-muted small mb-2">Lead → Field Assignment</div>
-				<button class="btn btn-outline-success tool-button">
+				<button class="btn btn-outline-success tool-button" @click="emit('doCreateProposedAssignment')">
 					Create Proposed Assignment
 				</button>
-				<button class="btn btn-outline-secondary tool-button">
+				<button class="btn btn-outline-secondary tool-button" @click="emit('doAddLeadsToAssignment')">
 					Add Leads to Existing Assignment
 				</button>
-				<button class="btn btn-outline-secondary tool-button">
+				<button class="btn btn-outline-secondary tool-button" @click="emit('doSplitLead')">
 					Split Lead
 				</button>
 			</div>
@@ -61,11 +62,11 @@
 
 			<div class="mb-3">
 				<div class="text-muted small mb-2">Assignment Controls</div>
-				<button class="btn btn-outline-dark tool-button">Set Priority</button>
-				<button class="btn btn-outline-dark tool-button">
+				<button class="btn btn-outline-dark tool-button" @click="emit('doSetPriority')">Set Priority</button>
+				<button class="btn btn-outline-dark tool-button" @click="emit('doEstimateEffort')">
 					Estimate Effort
 				</button>
-				<button class="btn btn-outline-dark tool-button">
+				<button class="btn btn-outline-dark tool-button" @click="emit('doSendToOperations')">
 					Send to Operations
 				</button>
 			</div>
@@ -73,9 +74,21 @@
 	</div>
 </template>
 <script setup lang="ts">
+interface Emits {
+	(e: "doAddToLead"): void;
+	(e: "doAddLeadsToAssignment"): void;
+	(e: "doCreateLead"): void;
+	(e: "doCreateProposedAssignment"): void;
+	(e: "doEstimateEffort"): void;
+	(e: "doMarkSignalAddressed"): void;
+	(e: "doSetPriority"): void;
+	(e: "doSendToOperations"): void;
+	(e: "doSplitLead"): void;
+}
 interface Props {
 	creating: boolean;
 	selectedSignalIDs: Set<int>;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 </script>

@@ -45,11 +45,11 @@ const markers = ref<Map<string, maplibrgl.Marker>>(new Map())
 
 // Watch for latitude/longitude changes
 watch(
-	() => [props.latitude, props.longitude],
-	([newLat, newLng]) => {
+	() => [props.location],
+	([newLocation]) => {
 		if (map.value) {
 			map.value.jumpTo({
-				center: [newLng, newLat],
+				center: [newLocation.longitude, newLocation.latitude],
 				zoom: 19,
 			});
 		}
@@ -61,7 +61,7 @@ const initializeMap = () => {
 
 	try {
 		map.value = new maplibregl.Map({
-			center: [props.longitude, props.latitude],
+			center: [props.location.longitude, props.location.latitude],
 			container: mapContainer.value,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 19,

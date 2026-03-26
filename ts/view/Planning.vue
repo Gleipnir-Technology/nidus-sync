@@ -40,6 +40,15 @@
 		</template>
 		<template #right>
 			<PlanningColumnAction
+				@doAddToLead="doAddToLead"
+				@doAddLeadsToAssignment="doAddLeadsToAssignment"
+				@doCreateLead="doCreateLead"
+				@doCreateProposedAssignment="doCreateProposedAssignment"
+				@doEstimateEffort="doEstimateEffort"
+				@doMarkSignalAddressed="doMarkSignalAddressed"
+				@doSetPriority="doSetPriority"
+				@doSendToOperations="doSendToOperations"
+				@doSplitLead="doSplitLead"
 				:creating="creating"
 				:selectedSignalIDs="selectedSignalIDs"
 			/>
@@ -74,6 +83,33 @@ const selectedSignalIDs = ref(new Set<int>([]));
 const signal = useSignalStore();
 const user = useUserStore();
 
+function doAddToLead() {
+	console.log("doAddToLead");
+}
+function doAddLeadsToAssignment() {
+	console.log("doAddLeadsToAssignment");
+}
+function doCreateLead() {
+	console.log("doCreateLead");
+}
+function doCreateProposedAssignment() {
+	console.log("doCreateProposedAssignment");
+}
+function doEstimateEffort() {
+	console.log("doEstimateEffort");
+}
+function doMarkSignalAddressed() {
+	console.log("doMarkSignalAddressed");
+}
+function doSetPriority() {
+	console.log("doSetPriority");
+}
+function doSendToOperations() {
+	console.log("doSendToOperations");
+}
+function doSplitLead() {
+	console.log("doSplitLead");
+}
 // Helper functions (outside component)
 const getBoundingBox = (points) => {
 	if (!points || points.length === 0) {

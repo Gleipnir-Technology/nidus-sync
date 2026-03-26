@@ -70,8 +70,7 @@
 					:organization-id="user.organization.id"
 					:tegola="user.urls.tegola"
 					:url-tiles="user.urls.tile"
-					:latitude="selectedSignalLocation()?.latitude ?? 0.0"
-					:longitude="selectedSignalLocation()?.longitude ?? 0.0"
+					:location="selectedSignalLocation()"
 					@map-click="updateSignalLocation"
 				>
 				</MapProxiedArcgisTile>
@@ -131,10 +130,14 @@ const selectedSignalLocation = () => {
 			}
 			return accumulator;
 		}, null);
-	return first_pool?.location;
+	const loc = first_pool?.location;
+	return loc || {
+		latitude: 0,
+		longitude: 0,
+	}
 };
 const showMapTile = () => {
-	return props.selectedSignals.value
+	return selectedSignalLocation() && props.selectedSignals.value
 		.values()
 		.reduce(
 			(accumulator, current) => accumulator || current.type === "flyover pool",

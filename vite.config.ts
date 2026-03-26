@@ -53,6 +53,10 @@ export default defineConfig({
                 target: "http://127.0.0.1:9002",
                 changeOrigin: false,
             },
+            "/configuration/upload/pool/flyover": {
+                target: "http://127.0.0.1:9002",
+                changeOrigin: false,
+            },
             "/signin": {
                 target: "http://localhost:9002",
                 changeOrigin: false,

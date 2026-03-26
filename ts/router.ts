@@ -10,6 +10,7 @@ import ConfigurationPesticide from "./view/configuration/Pesticide.vue";
 import ConfigurationPesticideAdd from "./view/configuration/PesticideAdd.vue";
 import ConfigurationRoot from "./view/configuration/Root.vue";
 import ConfigurationUpload from "./view/configuration/Upload.vue";
+import ConfigurationUploadDetail from "./view/configuration/UploadDetail.vue";
 import ConfigurationUploadPool from "./view/configuration/UploadPool.vue";
 import ConfigurationUploadPoolFlyover from "./view/configuration/UploadPoolFlyover.vue";
 import ConfigurationUser from "./view/configuration/User.vue";
@@ -78,6 +79,13 @@ const routes: RouteRecordRaw[] = [
 		name: "Upload Configuration",
 		component: ConfigurationUpload,
 		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
+		component: ConfigurationUploadDetail,
+		meta: { requiresAuth: true, showSidebar: true },
+		name: "Upload Detail",
+		path: "/configuration/upload/:id",
+		props: true,
 	},
 	{
 		path: "/configuration/upload/pool",
@@ -159,7 +167,7 @@ const router = createRouter({
 });
 
 // Global navigation guard
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
     
     if (requiresAuth) {
@@ -167,16 +175,14 @@ router.beforeEach(async (to, from, next) => {
             // Check if user is authenticated (could be an API call)
             const isAuthenticated = await apiClient.isAuthenticated();
             if (!isAuthenticated) {
-                next('/signin');
+              return '/signin';
             } else {
-                next();
+							return
             }
         } catch (error) {
 						console.log("check auth failed");
-            next('/signin');
+            return '/signin';
         }
-    } else {
-        next();
     }
 });
 

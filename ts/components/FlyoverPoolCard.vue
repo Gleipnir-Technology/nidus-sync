@@ -13,5 +13,9 @@
 import { useUserStore } from "../store/user";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 
+interface Props {
+	pool: Pool;
+}
+const props = defineProps<Props>();
 const user = useUserStore();
 </script>
