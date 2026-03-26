@@ -30,6 +30,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("GET", "/signal", authenticatedHandlerJSON(listSignal))
 	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))
 	r.Method("GET", "/tile/{z}/{y}/{x}", auth.NewEnsureAuth(getTile))
+	r.Method("GET", "/upload/{id}", authenticatedHandlerJSON(getUploadByID))
 	r.Method("GET", "/user/self", authenticatedHandlerJSON(getUserSelf))
 	r.Method("GET", "/user/suggestion", authenticatedHandlerJSON(listUserSuggestion))
 	r.Method("GET", "/user", authenticatedHandlerJSON(listUser))

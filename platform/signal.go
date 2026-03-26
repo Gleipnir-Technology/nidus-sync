@@ -228,13 +228,19 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			row.Pool = p
 			row.Report = nil
 		} else if row.Report.ID != 0 {
-			row.Pool = nil
 			report, ok := report_map[row.Report.ID] 
 			if !ok {
-				log.Debug().Int32("id", row.Report.ID).Msg("failed to got report")			
-				continue
+				return nil, fmt.Errorf("failed to get report %d for %d", row.Report.ID, row.ID)
 			}
+			if report == nil {
+				return nil, fmt.Errorf("got nil for report %d for %d", row.Report.ID, row.ID)
+			}
+			row.Pool = nil
 			row.Report = report
+		} else {
+			log.Debug().Int32("id", row.ID).Msg("has no publicrreport nor pool")
+			row.Pool = nil
+			row.Report = nil
 		}
 		if row.Address.Street == "" {
 			row.Address = nil

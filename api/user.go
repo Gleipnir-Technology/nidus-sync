@@ -14,6 +14,7 @@ type contentURLAPI struct {
 	Communication       string `json:"communication"`
 	PublicreportMessage string `json:"publicreport_message"`
 	Signal              string `json:"signal"`
+	Upload              string `json:"upload"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`
@@ -44,6 +45,7 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 				Communication:       urls.API.Communication,
 				PublicreportMessage: urls.API.Publicreport.Message,
 				Signal:              config.MakeURLNidus("/api/signal"),
+				Upload:              config.MakeURLNidus("/api/upload"),
 			},
 			Tegola: urls.Tegola,
 			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),

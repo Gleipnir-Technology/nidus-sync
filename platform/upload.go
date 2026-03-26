@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -32,6 +34,12 @@ const (
 	UploadStatusComplete UploadStatus = iota
 )
 
+type Upload struct {
+	Created time.Time `db:"created"`
+	ID      int32     `db:"id"`
+	Status  string    `db:"status"`
+}
+
 type UploadSummary struct {
 	Created     time.Time `db:"created"`
 	Filename    string    `db:"filename"`
@@ -39,6 +47,38 @@ type UploadSummary struct {
 	RecordCount int       `db:"recordcount"`
 	Status      string    `db:"status"`
 	Type        string    `db:"type"`
+}
+type UploadPoolDetailCount struct {
+	Existing int `json:"existing"`
+	New      int `json:"new"`
+	Outside  int `json:"outside"`
+}
+type UploadPoolDetail struct {
+	Count UploadPoolDetailCount `json:"count"`
+	Created       time.Time `json:"created"`       
+	Errors        []UploadPoolError `json:"errors"`        
+	ID            int32 `json:"id"`            
+	Name          string `json:"name"`          
+	Pools         []UploadPoolRow `json:"pools"`         
+	Status        string `json:"status"`        
+}
+
+func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) (*UploadPoolDetail, error) {
+	file, err := models.FindFileuploadFile(ctx, db.PGInstance.BobDB, file_id)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to lookup file %d: %w", file_id, err)
+	}
+	csv, err := models.FindFileuploadCSV(ctx, db.PGInstance.BobDB, file_id)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to lookup csv %d: %w", file_id, err)
+	}
+	switch csv.Type {
+	case enums.FileuploadCsvtypeFlyover:
+		return getUploadPoollistDetail(ctx, file)
+	case enums.FileuploadCsvtypePoollist:
+		return getUploadPoollistDetail(ctx, file)
+	}
+	return nil, errors.New("No idea what to do with upload type")
 }
 
 func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.FileuploadCsvtype) (*Upload, error) {
@@ -147,4 +187,68 @@ func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, 
 		return results, fmt.Errorf("Failed to query pool upload rows: %w", err)
 	}
 	return rows, nil
+}
+func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (*UploadPoolDetail, error) {
+	file_errors, errors_by_line, err := errorsByLine(ctx, file)
+	if err != nil {
+		return nil, fmt.Errorf("get errors by line: %w", err)
+	}
+	pool_rows, err := models.FileuploadPools.Query(
+		models.SelectWhere.FileuploadPools.CSVFile.EQ(file.ID),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to query pools for %d: %w", file.ID, err)
+	}
+
+	pools := make([]UploadPoolRow, 0)
+	count_existing := 0
+	count_new := 0
+	count_outside := 0
+	status := "unknown"
+	for _, r := range pool_rows {
+		if r.IsNew {
+			count_new = count_new + 1
+			status = "new"
+		} else {
+			count_existing = count_existing + 1
+			status = "existing"
+		}
+		if !r.IsInDistrict {
+			count_outside++
+			status = "outside"
+		}
+		tags := db.ConvertFromPGData(r.Tags)
+		// add 2 here because our file lines are 1-indexed and we skip the header line, but we are ranging 0-indexed
+		errors, ok := errors_by_line[r.LineNumber]
+		if !ok {
+			errors = []UploadPoolError{}
+		}
+		pools = append(pools, UploadPoolRow{
+			Address: types.Address{
+				Country:    "usa",
+				Locality:   r.AddressLocality,
+				Number:     r.AddressNumber,
+				PostalCode: r.AddressPostalCode,
+				Region:     r.AddressRegion,
+				Street:     r.AddressStreet,
+			},
+			Condition: r.Condition.String(),
+			Errors:    errors,
+			Status:    status,
+			Tags:      tags,
+		})
+	}
+	log.Debug().Str("status", file.Status.String()).Int32("id", file.ID).Msg("returning")
+	return &UploadPoolDetail{
+		Count: UploadPoolDetailCount{
+			Existing: count_existing,
+			Outside:  count_outside,
+			New:      count_new,
+		},
+		Errors:        file_errors,
+		ID:            file.ID,
+		Name:          file.Name,
+		Pools:         pools,
+		Status:        file.Status.String(),
+	}, nil
 }

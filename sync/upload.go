@@ -55,24 +55,6 @@ func getUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform.
 	data := contentUploadPoolCustomCreate{}
 	return html.NewResponse("sync/upload-csv-pool-custom.html", data), nil
 }
-func getUploadByID(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentUploadDetail], *nhttp.ErrorWithStatus) {
-	file_id_str := chi.URLParam(r, "id")
-	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to parse file_id: %w", err)
-	}
-	file_id := int32(file_id_)
-	detail, err := platform.GetUploadDetail(ctx, u.Organization.ID, file_id)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get pool: %w", err)
-	}
-	data := contentUploadDetail{
-		CSVFileID:    file_id,
-		Organization: u.Organization,
-		Upload:       detail,
-	}
-	return html.NewResponse("sync/upload-by-id.html", data), nil
-}
 
 type FormUploadCommit struct{}
 
