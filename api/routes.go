@@ -5,6 +5,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 )
 
 func AddRoutes(r chi.Router) {
@@ -18,10 +19,6 @@ func AddRoutes(r chi.Router) {
 	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
 	r.Method("GET", "/communication", authenticatedHandlerJSON(listCommunication))
 	r.Method("POST", "/configuration/integration/arcgis", authenticatedHandlerJSONPost(postConfigurationIntegrationArcgis))
-	r.Method("POST", "/configuration/upload/pool/flyover", authenticatedHandlerPostMultipart(postUploadPoolFlyoverCreate))
-	r.Method("POST", "/configuration/upload/pool/custom", authenticatedHandlerPostMultipart(postUploadPoolCustomCreate))
-	r.Method("POST", "/configuration/upload/{id}/commit", authenticatedHandlerJSONPost(postUploadCommit))
-	r.Method("POST", "/configuration/upload/{id}/discard", authenticatedHandlerJSONPost(postUploadDiscard))
 	r.Method("GET", "/events", auth.NewEnsureAuth(streamEvents))
 	r.Method("POST", "/image/{uuid}", auth.NewEnsureAuth(apiImagePost))
 	r.Method("GET", "/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentGet))
@@ -41,7 +38,11 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/sudo/sse", authenticatedHandlerJSONPost(postSudoSSE))
 	r.Method("GET", "/trap-data", auth.NewEnsureAuth(apiTrapData))
 	r.Method("GET", "/tile/{z}/{y}/{x}", auth.NewEnsureAuth(getTile))
+	r.Method("POST", "/upload/pool/flyover", authenticatedHandlerPostMultipart(postUploadPoolFlyoverCreate, file.CollectionCSV))
+	r.Method("POST", "/upload/pool/custom", authenticatedHandlerPostMultipart(postUploadPoolCustomCreate, file.CollectionCSV))
 	r.Method("GET", "/upload/{id}", authenticatedHandlerJSON(getUploadByID))
+	r.Method("POST", "/upload/{id}/commit", authenticatedHandlerJSONPost(postUploadCommit))
+	r.Method("POST", "/upload/{id}/discard", authenticatedHandlerJSONPost(postUploadDiscard))
 	r.Method("GET", "/user/self", authenticatedHandlerJSON(getUserSelf))
 	r.Method("GET", "/user/suggestion", authenticatedHandlerJSON(listUserSuggestion))
 	r.Method("GET", "/user", authenticatedHandlerJSON(listUser))

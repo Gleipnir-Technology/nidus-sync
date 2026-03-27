@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
@@ -124,23 +125,28 @@ func handlerJSONPost[ReqType any](f handlerFunctionPost[ReqType]) http.HandlerFu
 	}
 }
 
-func authenticatedHandlerPostMultipart[RequestType any](f handlerFunctionPostAuthenticated[RequestType]) http.Handler {
+func authenticatedHandlerPostMultipart(f handlerFunctionPostAuthenticated[[]file.Upload], collection file.Collection) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "Failed to parse form: %w ", err)
 			return
 		}
+		uploads, err := file.SaveFileUploads(r, collection)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to save uploads: %w", err)
+			return
+		}
 
-		var content RequestType
-
+		/*
 		err = decoder.Decode(&content, r.PostForm)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "Failed to decode form: %w", err)
 			return
 		}
+		*/
 		ctx := r.Context()
-		path, e := f(ctx, r, u, content)
+		path, e := f(ctx, r, u, uploads)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return

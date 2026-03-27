@@ -85,12 +85,14 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<a
-							class="btn btn-success btn-lg w-100"
-							href="/configuration/upload/pool/custom"
+						<RouterLink
+							to="/configuration/upload/pool/custom"
 						>
-							<i class="bi bi-upload me-2"></i>Pick me
-						</a>
+							<button
+							class="btn btn-success btn-lg w-100">
+								<i class="bi bi-upload me-2"></i>Pick me
+							</button>
+						</RouterLink>
 					</div>
 				</div>
 			</div>

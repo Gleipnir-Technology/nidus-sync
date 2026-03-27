@@ -99,16 +99,10 @@ func postUploadDiscard(ctx context.Context, r *http.Request, u platform.User, f 
 	return "/configuration/upload", nil
 }
 
-type FormUploadPool struct{}
-
-func postUploadPoolFlyoverCreate(ctx context.Context, r *http.Request, u platform.User, f FormUploadPool) (string, *nhttp.ErrorWithStatus) {
+func postUploadPoolFlyoverCreate(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (string, *nhttp.ErrorWithStatus) {
 	// If the organization we're uploading to doesn't have a service area, we can't process the upload correctly
 	if !(u.Organization.HasServiceArea() || u.Organization.IsCatchall()) {
 		return "", nhttp.NewErrorStatus(http.StatusConflict, "Your organization does not yet have a service area")
-	}
-	uploads, err := file.SaveFileUpload(r, "csvfile", file.CollectionCSV)
-	if err != nil {
-		return "", nhttp.NewError("Failed to extract image uploads: %s", err)
 	}
 	if len(uploads) == 0 {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "No upload found")
@@ -123,11 +117,7 @@ func postUploadPoolFlyoverCreate(ctx context.Context, r *http.Request, u platfor
 	}
 	return fmt.Sprintf("/configuration/upload/%d", saved_upload.ID), nil
 }
-func postUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform.User, f FormUploadPool) (string, *nhttp.ErrorWithStatus) {
-	uploads, err := file.SaveFileUpload(r, "csvfile", file.CollectionCSV)
-	if err != nil {
-		return "", nhttp.NewError("Failed to extract image uploads: %s", err)
-	}
+func postUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (string, *nhttp.ErrorWithStatus) {
 	if len(uploads) == 0 {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "No upload found")
 	}

@@ -81,7 +81,7 @@ func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) 
 	return nil, errors.New("No idea what to do with upload type")
 }
 
-func NewUpload(ctx context.Context, u User, upload file.FileUpload, t enums.FileuploadCsvtype) (*Upload, error) {
+func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.FileuploadCsvtype) (*Upload, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to begin transaction: %w", err)

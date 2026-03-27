@@ -11,20 +11,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type FileUpload struct {
+type Upload struct {
 	ContentType string
 	Name        string
 	SizeBytes   int
 	UUID        uuid.UUID
 }
 
-func SaveFileUpload(r *http.Request, name string, collection Collection) ([]FileUpload, error) {
-	results := make([]FileUpload, 0)
+func SaveFileUploads(r *http.Request, collection Collection) ([]Upload, error) {
+	results := make([]Upload, 0)
 	for n, fheaders := range r.MultipartForm.File {
 		log.Debug().Str("n", n).Msg("looking at header")
-		if n != name {
-			continue
-		}
 		for _, headers := range fheaders {
 			f, err := saveFileUpload(headers, collection)
 			if err != nil {
@@ -35,8 +32,8 @@ func SaveFileUpload(r *http.Request, name string, collection Collection) ([]File
 	}
 	return results, nil
 }
-func saveFileUploads(r *http.Request, collection Collection) ([]FileUpload, error) {
-	results := make([]FileUpload, 0)
+func saveFileUploads(r *http.Request, collection Collection) ([]Upload, error) {
+	results := make([]Upload, 0)
 	for name, fheaders := range r.MultipartForm.File {
 		for _, headers := range fheaders {
 			upload, err := saveFileUpload(headers, collection)
@@ -48,7 +45,7 @@ func saveFileUploads(r *http.Request, collection Collection) ([]FileUpload, erro
 	}
 	return results, nil
 }
-func saveFileUpload(headers *multipart.FileHeader, collection Collection) (upload FileUpload, err error) {
+func saveFileUpload(headers *multipart.FileHeader, collection Collection) (upload Upload, err error) {
 	file, err := headers.Open()
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
@@ -67,7 +64,7 @@ func saveFileUpload(headers *multipart.FileHeader, collection Collection) (uploa
 		return upload, fmt.Errorf("Failed to write file to disk: %w", err)
 	}
 	log.Info().Int("size", len(file_bytes)).Str("uploaded_filename", headers.Filename).Str("content-type", content_type).Str("uuid", u.String()).Msg("Saved an uploaded file to disk")
-	return FileUpload{
+	return Upload{
 		ContentType: content_type,
 		Name:        headers.Filename,
 		SizeBytes:   len(file_bytes),
