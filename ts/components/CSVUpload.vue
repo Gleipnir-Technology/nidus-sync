@@ -250,12 +250,12 @@ const uploadFile = async () => {
     });
 
     const response = await fetch(props.uploadUrl, {
-      method: 'POST',
+      body: formData,
       headers: {
         ...props.headers,
         // Don't set Content-Type - let browser set it with boundary
       },
-      body: formData,
+      method: 'POST',
     });
 
     if (!response.ok) {
@@ -266,11 +266,7 @@ const uploadFile = async () => {
     uploadSuccess.value = true;
     emit('doSuccess', data);
     
-    // Reset after successful upload
-    setTimeout(() => {
-      resetUpload();
-    }, 2000);
-
+    resetUpload();
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Upload failed';
     emit('doError', error as Error);

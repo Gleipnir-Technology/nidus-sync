@@ -99,6 +99,7 @@
 </template>
 <script setup lang="ts">
 import CSVUpload from "@/components/CSVUpload.vue";
+import { router } from "@/router";
 
 function onError(err) {
 	console.error("CSV upload error", err);
@@ -106,7 +107,8 @@ function onError(err) {
 function onFileSelected(file) {
 	console.log("file selected", file);
 }
-function onUploadSuccess(resp) {
-	console.log("upload success", resp);
+function onUploadSuccess(data) {
+	console.log("upload success", data);
+	router.push("/_" + data.uri);
 }
 </script>
