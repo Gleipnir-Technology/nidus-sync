@@ -163,8 +163,10 @@ const emit = defineEmits<Emits>();
 const handleClick = (id: string) => {
 	if (props.selectedId == null) {
 		emit("select", id);
-	} else {
+	} else if (props.selectedId == id) {
 		emit("deselect", id);
+	} else {
+		emit("select", id);
 	}
 };
 const searchFilter = ref("");
