@@ -47,9 +47,11 @@
 							Upload spreadsheets with addresses and contact information of
 							unmaintained pools that may breed mosquitoes.
 						</p>
-						<a class="btn btn-primary" href="/configuration/upload/pool">
-							<i class="bi bi-upload me-2"></i>Upload Green Pool Data</a
-						>
+						<RouterLink to="/configuration/upload/pool">
+							<button class="btn btn-primary">
+								<i class="bi bi-upload me-2"></i>Upload Green Pool Data</button
+							>
+						</RouterLink>
 					</div>
 					<div class="card-footer bg-white text-muted">
 						<small><i class="bi bi-clock"></i> Last import: 02/15/2023</small>
