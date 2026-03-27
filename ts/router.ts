@@ -154,11 +154,11 @@ const routes: RouteRecordRaw[] = [
 		meta: { requiresAuth: true, showSidebar: true },
 	},
 	// Catch-all route - must be last
-  { 
-    path: '/:pathMatch(.*)*', 
-    name: 'NotFound',
-    component: NotFound 
-  }
+	{
+		path: "/:pathMatch(.*)*",
+		name: "NotFound",
+		component: NotFound,
+	},
 ];
 
 export const router = createRouter({
@@ -168,23 +168,22 @@ export const router = createRouter({
 
 // Global navigation guard
 router.beforeEach(async (to, from) => {
-    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-    
-    if (requiresAuth) {
-        try {
-            // Check if user is authenticated (could be an API call)
-            const isAuthenticated = await apiClient.isAuthenticated();
-            if (!isAuthenticated) {
-              return '/signin';
-            } else {
-							return
-            }
-        } catch (error) {
-						console.log("check auth failed");
-            return '/signin';
-        }
-    }
-});
+	const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
 
+	if (requiresAuth) {
+		try {
+			// Check if user is authenticated (could be an API call)
+			const isAuthenticated = await apiClient.isAuthenticated();
+			if (!isAuthenticated) {
+				return "/signin";
+			} else {
+				return;
+			}
+		} catch (error) {
+			console.log("check auth failed");
+			return "/signin";
+		}
+	}
+});
 
 export default router;

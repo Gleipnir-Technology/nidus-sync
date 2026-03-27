@@ -49,8 +49,8 @@
 						</p>
 						<RouterLink to="/configuration/upload/pool">
 							<button class="btn btn-primary">
-								<i class="bi bi-upload me-2"></i>Upload Green Pool Data</button
-							>
+								<i class="bi bi-upload me-2"></i>Upload Green Pool Data
+							</button>
 						</RouterLink>
 					</div>
 					<div class="card-footer bg-white text-muted">
@@ -134,24 +134,24 @@
 						</tr>
 					</thead>
 					<tbody>
-							<tr v-for="upload in uploads">
-								<td><TimeRelative :time="upload.created"/></td>
-								<td>{{upload.type}}</td>
-								<td>{{upload.filename}}</td>
-								<td>
-									<span class="badge" :class="upload.status"
-										>{{upload.status}}</span
-									>
-								</td>
-								<td>{{upload.record_count}} entries</td>
-								<td>
-									<a
-										class="btn btn-sm btn-outline-primary"
-										:href="`/configuration/upload/${upload.id}`"
-										>View</a
-									>
-								</td>
-							</tr>
+						<tr v-for="upload in uploads">
+							<td><TimeRelative :time="upload.created" /></td>
+							<td>{{ upload.type }}</td>
+							<td>{{ upload.filename }}</td>
+							<td>
+								<span class="badge" :class="upload.status">{{
+									upload.status
+								}}</span>
+							</td>
+							<td>{{ upload.record_count }} entries</td>
+							<td>
+								<a
+									class="btn btn-sm btn-outline-primary"
+									:href="`/configuration/upload/${upload.id}`"
+									>View</a
+								>
+							</td>
+						</tr>
 					</tbody>
 				</table>
 			</div>

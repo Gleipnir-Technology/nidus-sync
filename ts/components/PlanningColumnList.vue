@@ -138,7 +138,10 @@
 						:class="{ selected: isSelected(signal.id) }"
 						@click="toggleSignal(signal)"
 					>
-						<PlanningColumnListEntry :selected="selectedSignalIDs.has(signal.id)" :signal="signal"/>
+						<PlanningColumnListEntry
+							:selected="selectedSignalIDs.has(signal.id)"
+							:signal="signal"
+						/>
 					</div>
 				</div>
 			</div>

@@ -42,13 +42,10 @@
 								Click signals from the left panel to select them
 							</div>
 
-							<div
-								class="mt-2"
-								v-show="selectedSignals.length > 0"
-							>
-									<div v-for="signal in selectedSignals" :key="signal.id">
-										<PlanningColumnDetailEntry :signal="signal"/>
-									</div>
+							<div class="mt-2" v-show="selectedSignals.length > 0">
+								<div v-for="signal in selectedSignals" :key="signal.id">
+									<PlanningColumnDetailEntry :signal="signal" />
+								</div>
 							</div>
 						</div>
 					</div>
@@ -123,18 +120,24 @@ const selectedSignalLocation = () => {
 			return accumulator;
 		}, null);
 	const loc = first_pool?.location;
-	return loc || {
-		latitude: 0,
-		longitude: 0,
-	}
+	return (
+		loc || {
+			latitude: 0,
+			longitude: 0,
+		}
+	);
 };
 const showMapTile = () => {
-	return selectedSignalLocation() && props.selectedSignals.value
-		.values()
-		.reduce(
-			(accumulator, current) => accumulator || current.type === "flyover pool",
-			false,
-		);
+	return (
+		selectedSignalLocation() &&
+		props.selectedSignals.value
+			.values()
+			.reduce(
+				(accumulator, current) =>
+					accumulator || current.type === "flyover pool",
+				false,
+			)
+	);
 };
 const updateSignalLocation = (event) => {
 	const signalId = event.detail.signalId;

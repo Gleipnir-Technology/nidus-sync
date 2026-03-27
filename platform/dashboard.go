@@ -6,6 +6,7 @@ import (
 
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 )
+
 type ServiceRequestSummary struct {
 	Date     time.Time
 	Location string

@@ -16,24 +16,16 @@
 		<div class="d-flex justify-content-between align-items-start mb-3">
 			<div>
 				<h5 class="mb-1">
-					<span
-						v-if="
-							report.type === 'nuisance'
-						"
-					>
+					<span v-if="report.type === 'nuisance'">
 						<i class="bi bi-mosquito icon-nuisance"></i>
 						Nuisance Report
 					</span>
-					<span
-						v-if="report.type === 'water'"
-					>
+					<span v-if="report.type === 'water'">
 						<i class="bi bi-droplet-fill icon-standing-water"></i>
 						Standing Water Report
 					</span>
 				</h5>
-				<small class="text-muted"
-					>Report ID: #{{ report.public_id }}</small
-				>
+				<small class="text-muted">Report ID: #{{ report.public_id }}</small>
 			</div>
 			<span class="badge bg-secondary">
 				<TimeRelative :time="report.created" />
@@ -49,11 +41,7 @@
 							<i class="bi bi-geo-alt"></i> Address
 						</label>
 						<div class="fw-medium">
-							{{
-								formatAddress(
-									report.address,
-								)
-							}}
+							{{ formatAddress(report.address) }}
 						</div>
 					</div>
 					<div class="col-md-6">
@@ -61,25 +49,18 @@
 							<i class="bi bi-person"></i> Reporter Name
 						</label>
 						<div class="fw-medium">
-							{{
-								report.reporter.name ||
-								"not given"
-							}}
+							{{ report.reporter.name || "not given" }}
 						</div>
 					</div>
 					<div class="col-md-6">
 						<label
-							v-if="
-								report.reporter.has_email
-							"
+							v-if="report.reporter.has_email"
 							class="form-label text-muted small mb-0"
 						>
 							<i class="bi bi-envelope"></i>
 						</label>
 						<label
-							v-if="
-								report.reporter.has_phone
-							"
+							v-if="report.reporter.has_phone"
 							class="form-label text-muted small mb-0"
 						>
 							<i class="bi bi-phone"></i>
@@ -126,9 +107,7 @@
 						<div>
 							<ul>
 								<li v-if="report.nuisance?.is_location_backyard">Backyard</li>
-								<li v-if="report.nuisance?.is_location_frontyard">
-									Frontyard
-								</li>
+								<li v-if="report.nuisance?.is_location_frontyard">Frontyard</li>
 								<li v-if="report.nuisance?.is_location_garden">Garden</li>
 								<li v-if="report.nuisance?.is_location_other">Other</li>
 								<li v-if="report.nuisance?.is_location_pool">Pool</li>
@@ -245,9 +224,7 @@
 					>
 						<i
 							class="bi"
-							:class="
-								report.water?.has_pupae ? 'bi-check-circle' : 'bi-circle'
-							"
+							:class="report.water?.has_pupae ? 'bi-check-circle' : 'bi-circle'"
 						></i>
 						Pupae
 					</span>
@@ -259,9 +236,7 @@
 					>
 						<i
 							class="bi"
-							:class="
-								report.water?.has_adult ? 'bi-check-circle' : 'bi-circle'
-							"
+							:class="report.water?.has_adult ? 'bi-check-circle' : 'bi-circle'"
 						></i>
 						Adult Mosquitoes
 					</span>
@@ -311,10 +286,7 @@
 			</div>
 			<div class="card-body">
 				<div
-					v-if="
-						report.images &&
-						report.images.length > 0
-					"
+					v-if="report.images && report.images.length > 0"
 					class="d-flex flex-wrap gap-2"
 				>
 					<img
@@ -327,10 +299,7 @@
 					/>
 				</div>
 				<div
-					v-if="
-						!report.images ||
-						report.images.length === 0
-					"
+					v-if="!report.images || report.images.length === 0"
 					class="text-muted text-center py-3"
 				>
 					<i class="bi bi-camera-slash fs-4"></i>

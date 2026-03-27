@@ -9,12 +9,14 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/rs/zerolog/log"
 )
+
 type reqSignup struct {
 	Username string `json:"username"`
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	Password string `json:"password"`
-	Terms bool `json:"terms"`
+	Terms    bool   `json:"terms"`
 }
+
 func postSignup(ctx context.Context, r *http.Request, signup reqSignup) (string, *nhttp.ErrorWithStatus) {
 
 	log.Info().Str("username", signup.Username).Str("name", signup.Name).Str("password", strings.Repeat("*", len(signup.Password))).Msg("Signup")
@@ -33,4 +35,3 @@ func postSignup(ctx context.Context, r *http.Request, signup reqSignup) (string,
 
 	return "/", nil
 }
-

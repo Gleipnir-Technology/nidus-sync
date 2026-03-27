@@ -228,7 +228,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			row.Pool = p
 			row.Report = nil
 		} else if row.Report.ID != 0 {
-			report, ok := report_map[row.Report.ID] 
+			report, ok := report_map[row.Report.ID]
 			if !ok {
 				return nil, fmt.Errorf("failed to get report %d for %d", row.Report.ID, row.ID)
 			}

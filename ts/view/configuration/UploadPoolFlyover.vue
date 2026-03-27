@@ -82,10 +82,11 @@
 			</div>
 			<div class="card-body">
 				<CSVUpload
-					upload-url="/api/upload/pool/flyover" 
+					upload-url="/api/upload/pool/flyover"
 					@doError="onError"
 					@doFileSelected="onFileSelected"
-					@doSuccess="onUploadSuccess" />
+					@doSuccess="onUploadSuccess"
+				/>
 			</div>
 		</div>
 

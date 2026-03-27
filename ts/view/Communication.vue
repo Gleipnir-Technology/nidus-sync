@@ -271,7 +271,7 @@ function updateMap() {
 			location: {
 				lng: loc.longitude,
 				lat: loc.latitude,
-			}
+			},
 		},
 	];
 	console.log("markers now", mapMarkers.value);

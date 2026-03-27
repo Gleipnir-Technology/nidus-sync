@@ -15,18 +15,13 @@
 	</div>
 	<div v-else>
 		<h1>Map failed to load</h1>
-		<p>{{error}}</p>
+		<p>{{ error }}</p>
 	</div>
 </template>
 
 <script setup lang="ts">
 import "maplibre-gl/dist/maplibre-gl.css";
-import {
-	onMounted,
-	onUnmounted,
-	ref,
-	watch,
-} from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Bounds, Marker } from "@/types";
 import maplibregl from "maplibre-gl";
 

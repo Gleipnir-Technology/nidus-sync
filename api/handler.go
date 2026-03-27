@@ -119,7 +119,7 @@ func handlerJSONPost[ReqType any](f handlerFunctionPost[ReqType]) http.HandlerFu
 		ctx := r.Context()
 		path, e := f(ctx, r, *req)
 		if e != nil {
-			return 
+			return
 		}
 		http.Redirect(w, r, path, http.StatusFound)
 	}
@@ -128,6 +128,7 @@ func handlerJSONPost[ReqType any](f handlerFunctionPost[ReqType]) http.HandlerFu
 type postMultipartResponse struct {
 	URI string `json:"uri"`
 }
+
 func authenticatedHandlerPostMultipart(f handlerFunctionPostAuthenticated[[]file.Upload], collection file.Collection) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
@@ -142,11 +143,11 @@ func authenticatedHandlerPostMultipart(f handlerFunctionPostAuthenticated[[]file
 		}
 
 		/*
-		err = decoder.Decode(&content, r.PostForm)
-		if err != nil {
-			respondError(w, http.StatusBadRequest, "Failed to decode form: %w", err)
-			return
-		}
+			err = decoder.Decode(&content, r.PostForm)
+			if err != nil {
+				respondError(w, http.StatusBadRequest, "Failed to decode form: %w", err)
+				return
+			}
 		*/
 		ctx := r.Context()
 		path, e := f(ctx, r, u, uploads)

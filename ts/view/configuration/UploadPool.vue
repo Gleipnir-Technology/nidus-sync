@@ -1,20 +1,20 @@
-	<style scoped>
-		.upload-card {
-			transition:
-				transform 0.2s,
-				box-shadow 0.2s;
-			cursor: pointer;
-			height: 100%;
-		}
-		.upload-card:hover {
-			transform: translateY(-5px);
-			box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-		}
-		.card-icon {
-			font-size: 3rem;
-			margin-bottom: 1rem;
-		}
-	</style>
+<style scoped>
+.upload-card {
+	transition:
+		transform 0.2s,
+		box-shadow 0.2s;
+	cursor: pointer;
+	height: 100%;
+}
+.upload-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+.card-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+</style>
 <template>
 	<div class="container py-5">
 		<div class="row mb-4">
@@ -50,12 +50,9 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<RouterLink
-							to="/configuration/upload/pool/flyover"
-						>
-							<button
-							class="btn btn-primary btn-lg w-100">
-							<i class="bi bi-upload me-2"></i>Let's do this
+						<RouterLink to="/configuration/upload/pool/flyover">
+							<button class="btn btn-primary btn-lg w-100">
+								<i class="bi bi-upload me-2"></i>Let's do this
 							</button>
 						</RouterLink>
 					</div>
@@ -85,11 +82,8 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<RouterLink
-							to="/configuration/upload/pool/custom"
-						>
-							<button
-							class="btn btn-success btn-lg w-100">
+						<RouterLink to="/configuration/upload/pool/custom">
+							<button class="btn btn-success btn-lg w-100">
 								<i class="bi bi-upload me-2"></i>Pick me
 							</button>
 						</RouterLink>

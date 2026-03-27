@@ -15,7 +15,7 @@
 	</div>
 	<div v-else>
 		<h1>Map failed to load</h1>
-		<p>{{error}}</p>
+		<p>{{ error }}</p>
 	</div>
 </template>
 
@@ -26,7 +26,7 @@ import { Point } from "@/types";
 import maplibregl from "maplibre-gl";
 
 interface Emits {
-	(e: "map-click", latitude: Number, longitude: Number): void
+	(e: "map-click", latitude: Number, longitude: Number): void;
 }
 interface Props {
 	location: Point;
@@ -40,8 +40,8 @@ const props = defineProps<Props>();
 const error = ref<string | null>(null);
 const mapContainer = ref<HTMLElement | null>(null);
 const map = ref<maplibregl.Map | null>(null);
-const markerInstances = ref<Map<string, maplibrgl.Marker>>(new Map())
-const markers = ref<Map<string, maplibrgl.Marker>>(new Map())
+const markerInstances = ref<Map<string, maplibrgl.Marker>>(new Map());
+const markers = ref<Map<string, maplibrgl.Marker>>(new Map());
 
 // Watch for latitude/longitude changes
 watch(
@@ -108,7 +108,7 @@ const initializeMap = () => {
 				});
 			});
 		});
-	} catch(e) {
+	} catch (e) {
 		console.error("hey dummy", e);
 	}
 };

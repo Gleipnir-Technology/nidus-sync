@@ -1,12 +1,13 @@
 <template>
 	<p>A flyover pool</p>
 	<MapProxiedArcgisTile
-						id="tile-map"
-						:latitude="pool.location.latitude"
-						:longitude="pool.location.longitude"
-						:markers="tileMapMarkers"
-						:organizationId="user.organization.id"
-						:tegola="user.urls.tegola" />
+		id="tile-map"
+		:latitude="pool.location.latitude"
+		:longitude="pool.location.longitude"
+		:markers="tileMapMarkers"
+		:organizationId="user.organization.id"
+		:tegola="user.urls.tegola"
+	/>
 </template>
 
 <script setup lang="ts">

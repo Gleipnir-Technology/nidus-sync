@@ -25,7 +25,7 @@ import { shortAddress } from "../format";
 interface Props {
 	selected: boolean;
 	signal: Signal;
-};
+}
 const props = defineProps<Props>();
 function icon(signal: Signal): string {
 	if (signal.type == "flyover pool") {
@@ -34,7 +34,7 @@ function icon(signal: Signal): string {
 		return "bi-mosquito";
 	} else if (signal.type == "publicreport water") {
 		return "bi-water";
-	} else { 
+	} else {
 		return "bi-mosquito";
 	}
 }

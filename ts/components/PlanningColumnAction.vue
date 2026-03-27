@@ -47,13 +47,22 @@
 
 			<div class="mb-3">
 				<div class="text-muted small mb-2">Lead → Field Assignment</div>
-				<button class="btn btn-outline-success tool-button" @click="emit('doCreateProposedAssignment')">
+				<button
+					class="btn btn-outline-success tool-button"
+					@click="emit('doCreateProposedAssignment')"
+				>
 					Create Proposed Assignment
 				</button>
-				<button class="btn btn-outline-secondary tool-button" @click="emit('doAddLeadsToAssignment')">
+				<button
+					class="btn btn-outline-secondary tool-button"
+					@click="emit('doAddLeadsToAssignment')"
+				>
 					Add Leads to Existing Assignment
 				</button>
-				<button class="btn btn-outline-secondary tool-button" @click="emit('doSplitLead')">
+				<button
+					class="btn btn-outline-secondary tool-button"
+					@click="emit('doSplitLead')"
+				>
 					Split Lead
 				</button>
 			</div>
@@ -62,11 +71,22 @@
 
 			<div class="mb-3">
 				<div class="text-muted small mb-2">Assignment Controls</div>
-				<button class="btn btn-outline-dark tool-button" @click="emit('doSetPriority')">Set Priority</button>
-				<button class="btn btn-outline-dark tool-button" @click="emit('doEstimateEffort')">
+				<button
+					class="btn btn-outline-dark tool-button"
+					@click="emit('doSetPriority')"
+				>
+					Set Priority
+				</button>
+				<button
+					class="btn btn-outline-dark tool-button"
+					@click="emit('doEstimateEffort')"
+				>
 					Estimate Effort
 				</button>
-				<button class="btn btn-outline-dark tool-button" @click="emit('doSendToOperations')">
+				<button
+					class="btn btn-outline-dark tool-button"
+					@click="emit('doSendToOperations')"
+				>
 					Send to Operations
 				</button>
 			</div>

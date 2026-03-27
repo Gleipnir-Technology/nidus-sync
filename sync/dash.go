@@ -21,8 +21,8 @@ type contentSource struct {
 	User            platform.User
 }
 type contentTrap struct {
-	Trap    platform.Trap
-	User    platform.User
+	Trap platform.Trap
+	User platform.User
 }
 type contentLayoutTest struct {
 	User platform.User
@@ -71,7 +71,7 @@ func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.
 	}
 	treatment_models := platform.ModelTreatment(treatments)
 	data := contentSource{
-		Inspections: inspections,
+		Inspections:     inspections,
 		Source:          s,
 		Traps:           traps,
 		Treatments:      treatments,
@@ -99,10 +99,10 @@ func getTrap(ctx context.Context, r *http.Request, user platform.User) (*html.Re
 		return nil, nhttp.NewError("Failed to get trap: %w", err)
 	}
 	/*
-	latlng, err := t.H3Cell.LatLng()
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get latlng: %w", err)
-	}
+		latlng, err := t.H3Cell.LatLng()
+		if err != nil {
+			return nil, nhttp.NewError("Failed to get latlng: %w", err)
+		}
 	*/
 	data := contentTrap{
 		Trap: *t,

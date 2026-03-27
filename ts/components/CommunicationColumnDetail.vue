@@ -57,7 +57,10 @@
 				</div>
 
 				<div v-if="selectedCommunication" class="h-100 d-flex flex-column">
-					<PublicreportCard :report="selectedCommunication.public_report" @viewImage="openPhotoViewer" />
+					<PublicreportCard
+						:report="selectedCommunication.public_report"
+						@viewImage="openPhotoViewer"
+					/>
 					<!-- Report Details -->
 				</div>
 			</div>

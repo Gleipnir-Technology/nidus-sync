@@ -2,13 +2,13 @@
 	<TimeRelative :time="signal.created"></TimeRelative>
 	<p>{{ shortAddress(signal.address) }}</p>
 	<div v-if="signal.type == 'flyover pool' && signal.pool">
-		<FlyoverPoolCard :pool="signal.pool"/>
+		<FlyoverPoolCard :pool="signal.pool" />
 	</div>
 	<div v-else-if="signal.type == 'publicreport nuisance'">
-		<PublicreportCard :report="signal.report"/>
+		<PublicreportCard :report="signal.report" />
 	</div>
 	<div v-else-if="signal.type == 'publicreport water'">
-		<PublicreportCard :report="signal.report"/>
+		<PublicreportCard :report="signal.report" />
 	</div>
 </template>
 

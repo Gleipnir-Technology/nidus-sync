@@ -38,15 +38,15 @@ func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*
 		return nil, nhttp.NewError("Failed to get inspections by cell: %w", err)
 	}
 	/*
-	center, err := h3.Cell(c).LatLng()
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get center: %w", err)
-	}
-	geojson, err := h3utils.H3ToGeoJSON([]h3.Cell{h3.Cell(c)})
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get boundaries: %w", err)
-	}
-	resolution := h3.Cell(c).Resolution()
+		center, err := h3.Cell(c).LatLng()
+		if err != nil {
+			return nil, nhttp.NewError("Failed to get center: %w", err)
+		}
+		geojson, err := h3utils.H3ToGeoJSON([]h3.Cell{h3.Cell(c)})
+		if err != nil {
+			return nil, nhttp.NewError("Failed to get boundaries: %w", err)
+		}
+		resolution := h3.Cell(c).Resolution()
 	*/
 	sources, err := platform.BreedingSourcesByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
@@ -65,7 +65,7 @@ func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*
 		BreedingSources: sources,
 		CellBoundary:    boundary,
 		Inspections:     inspections,
-		Traps:      traps,
-		Treatments: treatments,
+		Traps:           traps,
+		Treatments:      treatments,
 	}), nil
 }

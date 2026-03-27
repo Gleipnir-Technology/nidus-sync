@@ -167,10 +167,7 @@
 							available to Nidus
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a
-								class="btn btn-outline-warning"
-								href="/configuration/upload"
-							>
+							<a class="btn btn-outline-warning" href="/configuration/upload">
 								Manage Uploads
 								<i class="bi bi-arrow-right ms-1"></i>
 							</a>

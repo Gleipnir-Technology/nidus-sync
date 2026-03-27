@@ -1,23 +1,23 @@
 <style scoped>
-		.login-container {
-			max-width: 900px;
-			margin: 0 auto;
-		}
-		.login-box {
-			box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-			border-radius: 10px;
-			overflow: hidden;
-		}
-		.login-form-section {
-			padding: 40px;
-		}
-		.product-info-section {
-			padding: 40px;
-			background-color: #f8f9fa;
-		}
-		.login-header {
-			margin-bottom: 25px;
-		}
+.login-container {
+	max-width: 900px;
+	margin: 0 auto;
+}
+.login-box {
+	box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+	border-radius: 10px;
+	overflow: hidden;
+}
+.login-form-section {
+	padding: 40px;
+}
+.product-info-section {
+	padding: 40px;
+	background-color: #f8f9fa;
+}
+.login-header {
+	margin-bottom: 25px;
+}
 </style>
 
 <template>
@@ -60,7 +60,6 @@
 								The credentials you provided weren't recognized.
 							</div>
 						-->
-
 
 						<div class="d-grid gap-2">
 							<button type="submit" class="btn btn-primary">Login</button>

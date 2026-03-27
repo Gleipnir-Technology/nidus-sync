@@ -14,6 +14,7 @@ type reqSignin struct {
 	Password string `json:"password"`
 	Username string `json:"username"`
 }
+
 func postSignin(ctx context.Context, r *http.Request, req reqSignin) (string, *nhttp.ErrorWithStatus) {
 	if req.Password == "" {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Empty password")
