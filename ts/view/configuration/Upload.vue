@@ -1,3 +1,39 @@
+<style scoped>
+.upload-card {
+	transition: transform 0.2s;
+	margin-bottom: 30px;
+}
+.upload-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+.card-icon {
+	font-size: 2.5rem;
+	margin-bottom: 15px;
+	color: #198754;
+}
+.badge {
+	--bs-bg-opacity: 1;
+}
+.badge.committed {
+	background-color: $success;
+}
+.badge.committing {
+	background-color: $success;
+}
+.badge.discarded {
+	background-color: gray;
+}
+.badge.error {
+	background-color: $danger;
+}
+.badge.parsed {
+	background-color: $secondary;
+}
+.badge.uploaded {
+	background-color: $info;
+}
+</style>
 <template>
 	<div class="container mb-5">
 		<div class="row">
