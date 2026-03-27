@@ -14,6 +14,7 @@ export default defineConfig({
 	css: {
 		preprocessorOptions: {
 			scss: {
+				additionalData: `@use "sass:map";\n@import "@/style/variables.scss";`,
 				api: "modern-compiler",
 				silenceDeprecations: [
 					"import",

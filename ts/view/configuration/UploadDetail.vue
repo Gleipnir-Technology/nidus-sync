@@ -1,4 +1,4 @@
-<style scoped>
+<style scoped lang="scss">
 .results-container {
 	max-width: 1400px;
 }
@@ -36,6 +36,48 @@ thead tr.header {
 #map {
 	height: 400px;
 	width: 100%;
+}
+.badge.dry {
+	background-color: $info;
+}
+.badge.empty {
+	background-color: #9c9bc0;
+}
+.badge.false.pool {
+	background-color: #6b2737;
+}
+.badge.green {
+	background-color: #4b6827;
+}
+.badge.murky {
+	background-color: #88bc4e;
+}
+.badge.unknown {
+	background-color: gray;
+}
+.summary-card {
+	transition: transform 0.2s;
+}
+.summary-card:hover {
+	transform: translateY(-5px);
+}
+.badge.status {
+	font-size: 0.85rem;
+}
+.badge.status.existing {
+	background-color: $secondary;
+}
+.badge.status.new {
+	background-color: $primary;
+}
+.badge.status.outside {
+	background-color: $warning;
+}
+.badge.status.unknown {
+	background-color: gray;
+}
+tr.has-error {
+	background-color: rgba(255, 193, 7, 0.15) !important;
 }
 </style>
 <template>
