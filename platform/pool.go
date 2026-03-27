@@ -9,7 +9,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
@@ -23,13 +22,7 @@ type UploadPoolError struct {
 	Line    uint
 	Message string
 }
-type UploadPoolRow struct {
-	Address   types.Address
-	Condition string
-	Errors    []UploadPoolError
-	Status    string
-	Tags      map[string]string
-}
+
 func errorsByLine(ctx context.Context, file *models.FileuploadFile) ([]UploadPoolError, map[int32][]UploadPoolError, error) {
 	file_errors := make([]UploadPoolError, 0)
 	errors_by_line := make(map[int32][]UploadPoolError, 0)

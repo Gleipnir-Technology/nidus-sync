@@ -40,6 +40,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("GET", "/tile/{z}/{y}/{x}", auth.NewEnsureAuth(getTile))
 	r.Method("POST", "/upload/pool/flyover", authenticatedHandlerPostMultipart(postUploadPoolFlyoverCreate, file.CollectionCSV))
 	r.Method("POST", "/upload/pool/custom", authenticatedHandlerPostMultipart(postUploadPoolCustomCreate, file.CollectionCSV))
+	r.Method("GET", "/upload", authenticatedHandlerJSON(getUploadList))
 	r.Method("GET", "/upload/{id}", authenticatedHandlerJSON(getUploadByID))
 	r.Method("POST", "/upload/{id}/commit", authenticatedHandlerJSONPost(postUploadCommit))
 	r.Method("POST", "/upload/{id}/discard", authenticatedHandlerJSONPost(postUploadDiscard))

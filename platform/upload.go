@@ -35,35 +35,34 @@ const (
 )
 
 type Upload struct {
-	Created time.Time `db:"created"`
-	ID      int32     `db:"id"`
-	Status  string    `db:"status"`
+	Created     time.Time      `db:"created" json:"created"`
+	Filename    string         `db:"filename" json:"filename"`
+	ID          int32          `db:"id" json:"id"`
+	RecordCount int            `db:"recordcount" json:"recordcount"`
+	Status      string         `db:"status" json:"status"`
+	Type        string         `db:"type" json:"type"`
+	CSVPool     *CSVPoolDetail `json:"csv_pool"`
 }
 
-type UploadSummary struct {
-	Created     time.Time `db:"created"`
-	Filename    string    `db:"filename"`
-	ID          int32     `db:"id"`
-	RecordCount int       `db:"recordcount"`
-	Status      string    `db:"status"`
-	Type        string    `db:"type"`
-}
-type UploadPoolDetailCount struct {
+type CSVPoolDetailCount struct {
 	Existing int `json:"existing"`
 	New      int `json:"new"`
 	Outside  int `json:"outside"`
 }
-type UploadPoolDetail struct {
-	Count UploadPoolDetailCount `json:"count"`
-	Created       time.Time `json:"created"`       
-	Errors        []UploadPoolError `json:"errors"`        
-	ID            int32 `json:"id"`            
-	Name          string `json:"name"`          
-	Pools         []UploadPoolRow `json:"pools"`         
-	Status        string `json:"status"`        
+type CSVPoolDetail struct {
+	Count  CSVPoolDetailCount `json:"count"`
+	Errors []UploadPoolError  `json:"errors"`
+	Pools  []UploadPoolRow    `json:"pools"`
+}
+type UploadPoolRow struct {
+	Address   types.Address     `json:"address"`
+	Condition string            `json:"condition"`
+	Errors    []UploadPoolError `json:"errors"`
+	Status    string            `json:"status"`
+	Tags      map[string]string `json:"tags"`
 }
 
-func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) (*UploadPoolDetail, error) {
+func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) (*Upload, error) {
 	file, err := models.FindFileuploadFile(ctx, db.PGInstance.BobDB, file_id)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to lookup file %d: %w", file_id, err)
@@ -74,14 +73,14 @@ func GetUploadDetail(ctx context.Context, organization_id int32, file_id int32) 
 	}
 	switch csv.Type {
 	case enums.FileuploadCsvtypeFlyover:
-		return getUploadPoollistDetail(ctx, file)
+		return getUploadDetailPool(ctx, file)
 	case enums.FileuploadCsvtypePoollist:
-		return getUploadPoollistDetail(ctx, file)
+		return getUploadDetailPool(ctx, file)
 	}
 	return nil, errors.New("No idea what to do with upload type")
 }
 
-func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.FileuploadCsvtype) (*Upload, error) {
+func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.FileuploadCsvtype) (*int32, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
@@ -117,9 +116,7 @@ func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.Fileuplo
 		return nil, fmt.Errorf("background job create: %w", err)
 	}
 	txn.Commit(ctx)
-	return &Upload{
-		ID: file.ID,
-	}, nil
+	return &file.ID, nil
 }
 func UploadCommit(ctx context.Context, org Organization, file_id int32, committer User) error {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
@@ -155,12 +152,12 @@ func UploadDiscard(ctx context.Context, org Organization, file_id int32) error {
 	).Exec(ctx, db.PGInstance.BobDB)
 	return err
 }
-func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, error) {
-	results := make([]UploadSummary, 0)
+func UploadList(ctx context.Context, org Organization) ([]Upload, error) {
+	results := make([]Upload, 0)
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			// fileupload.csv columns
-			//"csv.file_id",
+			//"csv.file_id AS file_id",
 			//"csv.committed",
 			"csv.rowcount AS recordcount",
 			"csv.type_ AS type",
@@ -176,19 +173,19 @@ func UploadSummaryList(ctx context.Context, org Organization) ([]UploadSummary, 
 			"file.status AS status",
 			//"file.size_bytes",
 			//"file.file_uuid",
-
+			// Aggregate data
 		),
 		sm.From("fileupload.csv").As("csv"),
 		sm.InnerJoin("fileupload.file").As("file").OnEQ(psql.Raw("csv.file_id"), psql.Raw("file.id")),
 		sm.Where(psql.Quote("file", "organization_id").EQ(psql.Arg(org.ID))),
 		sm.OrderBy("created").Desc(),
-	), scan.StructMapper[UploadSummary]())
+	), scan.StructMapper[Upload]())
 	if err != nil {
 		return results, fmt.Errorf("Failed to query pool upload rows: %w", err)
 	}
 	return rows, nil
 }
-func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (*UploadPoolDetail, error) {
+func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upload, error) {
 	file_errors, errors_by_line, err := errorsByLine(ctx, file)
 	if err != nil {
 		return nil, fmt.Errorf("get errors by line: %w", err)
@@ -239,16 +236,20 @@ func getUploadPoollistDetail(ctx context.Context, file *models.FileuploadFile) (
 		})
 	}
 	log.Debug().Str("status", file.Status.String()).Int32("id", file.ID).Msg("returning")
-	return &UploadPoolDetail{
-		Count: UploadPoolDetailCount{
-			Existing: count_existing,
-			Outside:  count_outside,
-			New:      count_new,
+	return &Upload{
+		Created:     file.Created,
+		Filename:    file.Name,
+		ID:          file.ID,
+		RecordCount: len(pool_rows),
+		CSVPool: &CSVPoolDetail{
+			Count: CSVPoolDetailCount{
+				Existing: count_existing,
+				Outside:  count_outside,
+				New:      count_new,
+			},
+			Errors: file_errors,
+			Pools:  pools,
 		},
-		Errors:        file_errors,
-		ID:            file.ID,
-		Name:          file.Name,
-		Pools:         pools,
-		Status:        file.Status.String(),
+		Status: file.Status.String(),
 	}, nil
 }

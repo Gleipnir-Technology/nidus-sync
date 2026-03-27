@@ -1,19 +1,21 @@
 package api
+
 import (
 	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 )
-func getUploadByID(ctx context.Context, r *http.Request, u platform.User, query queryParams) (*platform.UploadPoolDetail, *nhttp.ErrorWithStatus) {
+
+func getUploadByID(ctx context.Context, r *http.Request, u platform.User, query queryParams) (*platform.Upload, *nhttp.ErrorWithStatus) {
 	file_id_str := chi.URLParam(r, "id")
 	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
@@ -28,24 +30,27 @@ func getUploadByID(ctx context.Context, r *http.Request, u platform.User, query 
 }
 
 type contentUploadList struct {
-	RecentUploads []platform.UploadSummary
+	RecentUploads []platform.Upload
 }
 type contentUploadPlaceholder struct{}
 
-func getUploadList(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentUploadList], *nhttp.ErrorWithStatus) {
-	rows, err := platform.UploadSummaryList(ctx, user.Organization)
-	return html.NewResponse("sync/upload-list.html", contentUploadList{
-		RecentUploads: rows,
-	}), nhttp.NewErrorMaybe("get upload list: %w", err)
+func getUploadList(ctx context.Context, r *http.Request, user platform.User, req queryParams) (*contentUploadPoolList, *nhttp.ErrorWithStatus) {
+	rows, err := platform.UploadList(ctx, user.Organization)
+	if err != nil {
+		return nil, nhttp.NewError("Get upload list: %w", err)
+	}
+	return &contentUploadPoolList{
+		Uploads: rows,
+	}, nil
 }
 
 type contentUploadDetail struct {
 	CSVFileID    int32
 	Organization platform.Organization
-	Upload       platform.UploadPoolDetail
+	Upload       platform.Upload
 }
 type contentUploadPoolList struct {
-	Uploads []platform.Upload
+	Uploads []platform.Upload `json:"uploads"`
 }
 type contentUploadPool struct{}
 
@@ -115,7 +120,7 @@ func postUploadPoolFlyoverCreate(ctx context.Context, r *http.Request, u platfor
 	if err != nil {
 		return "", nhttp.NewError("Failed to create new pool: %w", err)
 	}
-	return fmt.Sprintf("/configuration/upload/%d", saved_upload.ID), nil
+	return fmt.Sprintf("/configuration/upload/%d", *saved_upload), nil
 }
 func postUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (string, *nhttp.ErrorWithStatus) {
 	if len(uploads) == 0 {
@@ -129,5 +134,5 @@ func postUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform
 	if err != nil {
 		return "", nhttp.NewError("Failed to create new pool: %w", err)
 	}
-	return fmt.Sprintf("/configuration/upload/%d", pool_upload.ID), nil
+	return fmt.Sprintf("/configuration/upload/%d", *pool_upload), nil
 }
