@@ -50,12 +50,14 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<a
-							class="btn btn-primary btn-lg w-100"
-							href="/configuration/upload/pool/flyover"
+						<RouterLink
+							to="/configuration/upload/pool/flyover"
 						>
+							<button
+							class="btn btn-primary btn-lg w-100">
 							<i class="bi bi-upload me-2"></i>Let's do this
-						</a>
+							</button>
+						</RouterLink>
 					</div>
 				</div>
 			</div>
