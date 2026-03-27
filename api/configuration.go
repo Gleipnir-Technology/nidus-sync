@@ -1,4 +1,4 @@
-package sync
+package api
 
 import (
 	"context"

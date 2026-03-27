@@ -3,7 +3,6 @@ package sync
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -16,7 +15,6 @@ type contentSignin struct {
 	InvalidCredentials bool
 	Next               string
 }
-type contentSignup struct{}
 
 func getSignin(w http.ResponseWriter, r *http.Request) {
 	errorCode := r.URL.Query().Get("error")
@@ -27,15 +25,6 @@ func getSignin(w http.ResponseWriter, r *http.Request) {
 func getSignout(w http.ResponseWriter, r *http.Request, user platform.User) {
 	auth.SignoutUser(r, user)
 	http.Redirect(w, r, "/signin", http.StatusFound)
-}
-
-func getSignup(w http.ResponseWriter, r *http.Request) {
-	data := contentSignup{}
-	html.RenderOrError(w, "sync/signup.html", contentUnauthenticated[contentSignup]{
-		C:      data,
-		Config: html.NewContentConfig(),
-		URL:    html.NewContentURL(),
-	})
 }
 
 func postSignin(w http.ResponseWriter, r *http.Request) {
@@ -68,36 +57,6 @@ func postSignin(w http.ResponseWriter, r *http.Request) {
 	}
 	location := config.MakeURLNidus(next)
 	http.Redirect(w, r, location, http.StatusFound)
-}
-
-func postSignup(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		respondError(w, "Could not parse form", err, http.StatusBadRequest)
-		return
-	}
-
-	username := r.FormValue("username")
-	name := r.FormValue("name")
-	password := r.FormValue("password")
-	terms := r.FormValue("terms")
-
-	log.Info().Str("username", username).Str("name", name).Str("password", strings.Repeat("*", len(password))).Msg("Signup")
-
-	if terms != "on" {
-		log.Warn().Msg("Terms not agreed")
-		http.Error(w, "You must agree to the terms to register", http.StatusBadRequest)
-		return
-	}
-
-	user, err := auth.SignupUser(r.Context(), username, name, password)
-	if err != nil {
-		respondError(w, "Failed to signup user", err, http.StatusInternalServerError)
-		return
-	}
-
-	auth.AddUserSession(r, user)
-
-	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 type contentUnauthenticated[T any] struct {

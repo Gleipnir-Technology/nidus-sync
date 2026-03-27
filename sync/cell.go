@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	//"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -16,7 +16,6 @@ type contentCell struct {
 	BreedingSources []platform.BreedingSourceSummary
 	CellBoundary    h3.CellBoundary
 	Inspections     []platform.Inspection
-	MapData         ComponentMap
 	Traps           []platform.TrapSummary
 	Treatments      []platform.Treatment
 }
@@ -30,10 +29,6 @@ func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*
 	if err != nil {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "Cannot convert provided cell to uint64")
 	}
-	center, err := h3.Cell(c).LatLng()
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get center: %w", err)
-	}
 	boundary, err := h3.Cell(c).Boundary()
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get boundary: %w", err)
@@ -42,11 +37,17 @@ func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get inspections by cell: %w", err)
 	}
+	/*
+	center, err := h3.Cell(c).LatLng()
+	if err != nil {
+		return nil, nhttp.NewError("Failed to get center: %w", err)
+	}
 	geojson, err := h3utils.H3ToGeoJSON([]h3.Cell{h3.Cell(c)})
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get boundaries: %w", err)
 	}
 	resolution := h3.Cell(c).Resolution()
+	*/
 	sources, err := platform.BreedingSourcesByCell(ctx, user.Organization, h3.Cell(c))
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get sources: %w", err)
@@ -64,14 +65,6 @@ func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*
 		BreedingSources: sources,
 		CellBoundary:    boundary,
 		Inspections:     inspections,
-		MapData: ComponentMap{
-			Center: h3.LatLng{
-				Lat: center.Lat,
-				Lng: center.Lng,
-			},
-			GeoJSON: geojson,
-			Zoom:    resolution + 5,
-		},
 		Traps:      traps,
 		Treatments: treatments,
 	}), nil

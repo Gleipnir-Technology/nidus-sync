@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
@@ -14,16 +15,15 @@ type createReviewPool struct {
 	TaskID  int32                `json:"task_id"`
 	Updates *platform.PoolUpdate `json:"updates"`
 }
-type createdReviewPool struct{}
 
-func postReviewPool(ctx context.Context, r *http.Request, user platform.User, req createReviewPool) (*createdReviewPool, *nhttp.ErrorWithStatus) {
-	_, err := platform.ReviewPoolCreate(ctx, user, req.TaskID, req.Status, req.Updates)
+func postReviewPool(ctx context.Context, r *http.Request, user platform.User, req createReviewPool) (string, *nhttp.ErrorWithStatus) {
+	id, err := platform.ReviewPoolCreate(ctx, user, req.TaskID, req.Status, req.Updates)
 
 	if err != nil {
 		if errors.As(err, &platform.ErrorNotFound{}) {
-			return nil, nhttp.NewErrorStatus(http.StatusNotFound, "review task %d not found", req.TaskID)
+			return "", nhttp.NewErrorStatus(http.StatusNotFound, "review task %d not found", req.TaskID)
 		}
-		return nil, nhttp.NewError("failed to set review: %w", err)
+		return "", nhttp.NewError("failed to set review: %w", err)
 	}
-	return &createdReviewPool{}, nil
+	return fmt.Sprintf("/review/%d", id), nil
 }

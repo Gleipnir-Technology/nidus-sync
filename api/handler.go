@@ -64,44 +64,90 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 	})
 }
 
-type handlerFunctionPost[ReqType any, ResponseType any] func(context.Context, *http.Request, platform.User, ReqType) (ResponseType, *nhttp.ErrorWithStatus)
+type handlerFunctionPost[ReqType any] func(context.Context, *http.Request, ReqType) (string, *nhttp.ErrorWithStatus)
+type handlerFunctionPostAuthenticated[ReqType any] func(context.Context, *http.Request, platform.User, ReqType) (string, *nhttp.ErrorWithStatus)
 
-func authenticatedHandlerJSONPost[ReqType any, ResponseType any](f handlerFunctionPost[ReqType, ResponseType]) http.Handler {
+func authenticatedHandlerJSONPost[ReqType any](f handlerFunctionPostAuthenticated[ReqType]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		w.Header().Set("Content-Type", "application/json")
-		var req ReqType
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			respondError(w, http.StatusInternalServerError, "Failed to read body: %w", err)
-			return
-		}
-		err = json.Unmarshal(body, &req)
-		if err != nil {
-			respondError(w, http.StatusBadRequest, "Failed to decode request: %w", err)
+		req, e := parseRequest[ReqType](r)
+		if e != nil {
+			serializeError(w, e)
 			return
 		}
 		ctx := r.Context()
-		response, e := f(ctx, r, u, req)
+		path, e := f(ctx, r, u, *req)
 		if e != nil {
-			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
-			body, err = json.Marshal(ErrorAPI{Message: e.Error()})
-			if err != nil {
-				log.Error().Err(err).Msg("failed to marshal error")
-				http.Error(w, "{\"message\": \"boom. I can't even tell you what went wrong\"}", http.StatusInternalServerError)
-				return
-			}
-			http.Error(w, string(body), e.Status)
+			serializeError(w, e)
 			return
 		}
-		resp_body, err := json.Marshal(response)
-		if err != nil {
-			respondError(w, http.StatusInternalServerError, "Failed to marshal json response: %w", err)
-			return
-		}
-		w.Write(resp_body)
+		http.Redirect(w, r, path, http.StatusFound)
 	})
 }
+func parseRequest[ReqType any](r *http.Request) (*ReqType, *nhttp.ErrorWithStatus) {
+	var req ReqType
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to read body: %w", err)
+	}
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "Failed to decode request: %w", err)
+	}
+	return &req, nil
+}
+func serializeError(w http.ResponseWriter, e *nhttp.ErrorWithStatus) {
+	log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
+	body, err := json.Marshal(ErrorAPI{Message: e.Error()})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to marshal error")
+		http.Error(w, "{\"message\": \"boom. I can't even tell you what went wrong\"}", http.StatusInternalServerError)
+		return
+	}
+	http.Error(w, string(body), e.Status)
+	return
+}
+func handlerJSONPost[ReqType any](f handlerFunctionPost[ReqType]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		req, e := parseRequest[ReqType](r)
+		if e != nil {
+			serializeError(w, e)
+			return
+		}
+		ctx := r.Context()
+		path, e := f(ctx, r, *req)
+		if e != nil {
+			return 
+		}
+		http.Redirect(w, r, path, http.StatusFound)
+	}
+}
 
+func authenticatedHandlerPostMultipart[RequestType any](f handlerFunctionPostAuthenticated[RequestType]) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
+		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
+		if err != nil {
+			respondError(w, http.StatusBadRequest, "Failed to parse form: %w ", err)
+			return
+		}
+
+		var content RequestType
+
+		err = decoder.Decode(&content, r.PostForm)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, "Failed to decode form: %w", err)
+			return
+		}
+		ctx := r.Context()
+		path, e := f(ctx, r, u, content)
+		if e != nil {
+			http.Error(w, e.Error(), e.Status)
+			return
+		}
+		http.Redirect(w, r, path, http.StatusFound)
+	})
+}
 func respondError(w http.ResponseWriter, status int, format string, args ...any) {
 	outer_err := fmt.Errorf(format, args...)
 	body, err := json.Marshal(ErrorAPI{

@@ -2,9 +2,7 @@ package sync
 
 import (
 	"context"
-	"html/template"
 	"net/http"
-	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
@@ -15,7 +13,6 @@ import (
 
 type contentSource struct {
 	Inspections []platform.Inspection
-	MapData     ComponentMap
 	Source      *platform.BreedingSourceDetail
 	Traps       []platform.TrapNearby
 	Treatments  []platform.Treatment
@@ -24,21 +21,9 @@ type contentSource struct {
 	User            platform.User
 }
 type contentTrap struct {
-	MapData ComponentMap
 	Trap    platform.Trap
 	User    platform.User
 }
-type contentDashboard struct {
-	CountTraps           int
-	CountMosquitoSources int
-	CountServiceRequests int
-	Geo                  template.JS
-	IsSyncOngoing        bool
-	LastSync             *time.Time
-	MapData              ComponentMap
-	RecentRequests       []ServiceRequestSummary
-}
-
 type contentLayoutTest struct {
 	User platform.User
 }
@@ -54,50 +39,8 @@ func getLayoutTest(ctx context.Context, r *http.Request, user platform.User) (*h
 	return html.NewResponse("sync/layout-test.html", contentLayoutTest{}), nil
 }
 
-func getRoot(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentDashboard], *nhttp.ErrorWithStatus) {
-	var lastSync *time.Time
-	sync, err := user.Organization.FieldseekerSyncLatest(ctx)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get syncs: %w", err)
-	} else if sync != nil {
-		lastSync = &sync.Created
-	}
-	is_syncing := user.Organization.IsSyncOngoing()
-	count_trap, err := user.Organization.CountTrap(ctx)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get trap count: %w", err)
-	}
-	count_source, err := user.Organization.CountTrap(ctx)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get source count: %w", err)
-	}
-	count_service, err := user.Organization.CountServiceRequest(ctx)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get service count: %w", err)
-	}
-	service_request_recent, err := user.Organization.ServiceRequestRecent(ctx)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get recent service: %w", err)
-	}
-
-	requests := make([]ServiceRequestSummary, 0)
-	for _, r := range service_request_recent {
-		requests = append(requests, ServiceRequestSummary{
-			Date:     r.Creationdate.MustGet(),
-			Location: r.Reqaddr1.MustGet(),
-			Status:   "Completed",
-		})
-	}
-	content := contentDashboard{
-		CountTraps:           int(count_trap),
-		CountMosquitoSources: int(count_source),
-		CountServiceRequests: int(count_service),
-		IsSyncOngoing:        is_syncing,
-		LastSync:             lastSync,
-		MapData:              ComponentMap{},
-		RecentRequests:       requests,
-	}
-	return html.NewResponse("sync/authenticated.html", content), nil
+func getRoot(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(w, "static/gen/main.html", struct{}{})
 }
 
 func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSource], *nhttp.ErrorWithStatus) {
@@ -127,22 +70,8 @@ func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.
 		return nil, nhttp.NewError("Failed to get treatments: %w", err)
 	}
 	treatment_models := platform.ModelTreatment(treatments)
-	latlng, err := s.H3Cell.LatLng()
-	if err != nil {
-		return nil, nhttp.NewError("Failed to get latlng: %w", err)
-	}
 	data := contentSource{
 		Inspections: inspections,
-		MapData: ComponentMap{
-			Center: latlng,
-			//GeoJSON:
-			Markers: []MapMarker{
-				MapMarker{
-					LatLng: latlng,
-				},
-			},
-			Zoom: 13,
-		},
 		Source:          s,
 		Traps:           traps,
 		Treatments:      treatments,
@@ -153,12 +82,6 @@ func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.
 	return html.NewResponse("sync/source.html", data), nil
 }
 
-func getStadia(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentDashboard], *nhttp.ErrorWithStatus) {
-	data := contentDashboard{
-		MapData: ComponentMap{},
-	}
-	return html.NewResponse("sync/stadia.html", data), nil
-}
 func getTemplateTest(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/template-test.html", nil)
 }
@@ -175,21 +98,13 @@ func getTrap(ctx context.Context, r *http.Request, user platform.User) (*html.Re
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get trap: %w", err)
 	}
+	/*
 	latlng, err := t.H3Cell.LatLng()
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get latlng: %w", err)
 	}
+	*/
 	data := contentTrap{
-		MapData: ComponentMap{
-			Center: latlng,
-			//GeoJSON:
-			Markers: []MapMarker{
-				MapMarker{
-					LatLng: latlng,
-				},
-			},
-			Zoom: 13,
-		},
 		Trap: *t,
 		User: user,
 	}

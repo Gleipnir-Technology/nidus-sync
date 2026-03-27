@@ -1,46 +1,37 @@
 package api
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
-	"github.com/go-chi/render"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/rs/zerolog/log"
 )
 
-func postSignin(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to parse POST form: %w", err)))
-		return
+type reqSignin struct {
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+func postSignin(ctx context.Context, r *http.Request, req reqSignin) (string, *nhttp.ErrorWithStatus) {
+	if req.Password == "" {
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Empty password")
 	}
-
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-
-	if password == "" || username == "" {
-		w.Header().Set("WWW-Authenticate-Error", "no-credentials")
-		http.Error(w, "invalid-credentials", http.StatusUnauthorized)
-		return
+	if req.Username == "" {
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Empty username")
 	}
-	log.Info().Str("username", username).Msg("API Signin")
-	_, err := auth.SigninUser(r, username, password)
+	log.Info().Str("username", req.Username).Msg("API Signin")
+	_, err := auth.SigninUser(r, req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, auth.InvalidCredentials{}) {
-			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
-			http.Error(w, "invalid-credentials", http.StatusUnauthorized)
-			return
+			return "", nhttp.NewErrorStatus(http.StatusUnauthorized, "invalid credentials")
 		}
 		if errors.Is(err, auth.InvalidUsername{}) {
-			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
-			http.Error(w, "invalid-credentials", http.StatusUnauthorized)
-			return
+			return "", nhttp.NewErrorStatus(http.StatusUnauthorized, "invalid credentials")
 		}
-		log.Error().Err(err).Str("username", username).Msg("Login server error")
-		http.Error(w, "signin-server-error", http.StatusInternalServerError)
-		return
+		log.Error().Err(err).Str("username", req.Username).Msg("Login server error")
+		return "", nhttp.NewError("login server error")
 	}
-
-	http.Error(w, "", http.StatusAccepted)
+	return "/", nil
 }
