@@ -260,10 +260,10 @@ tr.has-error {
 			<button
 				class="btn btn-primary"
 				id="confirmUploadBtn"
-				@click="handleConfirm"
+				@click="handleCommit"
 				:disabled="isSubmitting"
 			>
-				<i class="bi bi-check2 me-1"></i> Confirm and Submit Data
+				<i class="bi bi-check2 me-1"></i> Confirm and Commit Data
 			</button>
 		</div>
 	</div>
@@ -385,8 +385,6 @@ const initializeMap = () => {
 };
 
 const handleDiscard = async () => {
-	if (!confirm("Are you sure you want to discard this upload?")) return;
-
 	isSubmitting.value = true;
 	try {
 		const response = await fetch(`/api/upload/${props.id}/discard`, {
@@ -408,20 +406,21 @@ const handleDiscard = async () => {
 	}
 };
 
-const handleConfirm = async () => {
+const handleCommit = async () => {
 	isSubmitting.value = true;
 	try {
 		const response = await fetch(`/api/upload/${props.id}/commit`, {
-			method: "POST",
+			body: JSON.stringify({}),
 			headers: {
 				"Content-Type": "application/json",
 			},
+			method: "POST",
 		});
 
 		if (!response.ok) throw new Error("Failed to confirm upload");
 
 		// Navigate to success page or appropriate page
-		router.push("/uploads/success");
+		router.push("/_/configuration/upload");
 	} catch (error) {
 		console.error("Error confirming upload:", error);
 		alert("Failed to confirm upload. Please try again.");

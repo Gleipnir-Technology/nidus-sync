@@ -1,4 +1,4 @@
-<style scoped>
+<style scoped lang="scss">
 .upload-card {
 	transition: transform 0.2s;
 	margin-bottom: 30px;
@@ -158,3 +158,16 @@
 		</div>
 	</div>
 </template>
+<script setup lang="ts">
+import { computed, onMounted } from "vue";
+import TimeRelative from "@/components/TimeRelative.vue";
+import { useUploadStore } from "@/store/upload";
+
+const uploadStore = useUploadStore();
+const uploads = computed(() => {
+	return uploadStore.all;
+});
+onMounted(() => {
+	uploadStore.fetchAll();
+});
+</script>
