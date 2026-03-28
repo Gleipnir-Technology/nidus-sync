@@ -95,7 +95,7 @@ tr.has-error {
 				<div class="card summary-card h-100 border-primary">
 					<div class="card-body text-center">
 						<h1 class="display-4 text-primary">
-							{{ upload?.countExisting }}
+							{{ upload?.csv_pool.count.existing }}
 						</h1>
 						<h5>Existing Pools</h5>
 						<p class="text-muted">Matches found in previous records</p>
@@ -105,7 +105,9 @@ tr.has-error {
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-success">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-success">{{ upload?.countNew }}</h1>
+						<h1 class="display-4 text-success">
+							{{ upload?.csv_pool.count.new }}
+						</h1>
 						<h5>New Pools</h5>
 						<p class="text-muted">Not found in existing records</p>
 					</div>
@@ -114,7 +116,9 @@ tr.has-error {
 			<div class="col-md-4">
 				<div class="card summary-card h-100 border-warning">
 					<div class="card-body text-center">
-						<h1 class="display-4 text-warning">{{ upload?.countOutside }}</h1>
+						<h1 class="display-4 text-warning">
+							{{ upload?.csv_pool.count.outside }}
+						</h1>
 						<h5>Outside District</h5>
 						<p class="text-muted">Potential geocoding errors</p>
 					</div>
