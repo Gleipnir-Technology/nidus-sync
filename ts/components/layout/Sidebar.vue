@@ -15,25 +15,29 @@
 				<NavigationLink to="/" icon="house" label="Home" />
 			</li>
 			<li>
-				<NavigationLink to="/intelligence" icon="brain" label="Intelligence" />
+				<NavigationLink
+					to="/_/intelligence"
+					icon="brain"
+					label="Intelligence"
+				/>
 			</li>
 			<li>
 				<NavigationLink
-					to="/communication"
+					to="/_/communication"
 					icon="messaging"
 					label="Communication"
 					:notificationCount="user?.notification_counts?.communication ?? 0"
 				/>
 			</li>
 			<li>
-				<NavigationLink to="/planning" icon="strategy" label="Planning" />
+				<NavigationLink to="/_/planning" icon="strategy" label="Planning" />
 			</li>
 			<li>
-				<NavigationLink to="/operations" icon="assign" label="Operations" />
+				<NavigationLink to="/_/operations" icon="assign" label="Operations" />
 			</li>
 			<li>
 				<NavigationLink
-					to="/review"
+					to="/_/review"
 					icon="review"
 					label="Review"
 					:notificationCount="user?.notification_counts?.review ?? 0"
@@ -41,13 +45,13 @@
 			</li>
 			<li>
 				<NavigationLink
-					to="/configuration"
+					to="/_/configuration"
 					icon="assign"
 					label="Configuration"
 				/>
 			</li>
 			<li>
-				<NavigationLink to="/sudo" icon="god" label="Sudo" />
+				<NavigationLink to="/_/sudo" icon="god" label="Sudo" />
 			</li>
 		</ul>
 	</div>
