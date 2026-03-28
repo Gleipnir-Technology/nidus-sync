@@ -15,6 +15,7 @@ import ConfigurationUploadPool from "./view/configuration/UploadPool.vue";
 import ConfigurationUploadPoolFlyover from "./view/configuration/UploadPoolFlyover.vue";
 import ConfigurationUser from "./view/configuration/User.vue";
 import ConfigurationUserAdd from "./view/configuration/UserAdd.vue";
+import ConfigurationUserEdit from "./view/configuration/UserEdit.vue";
 import Intelligence from "./view/Intelligence.vue";
 import NotFound from "./view/NotFound.vue";
 import OAuthRefreshArcgis from "./view/OAuthRefreshArcgis.vue";
@@ -111,6 +112,13 @@ const routes: RouteRecordRaw[] = [
 		name: "User Add Configuration",
 		component: ConfigurationUserAdd,
 		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
+		component: ConfigurationUserEdit,
+		meta: { requiresAuth: true, showSidebar: true },
+		name: "User Edit",
+		path: "/_/configuration/user/:id",
+		props: true,
 	},
 	{
 		path: "/_/intelligence",

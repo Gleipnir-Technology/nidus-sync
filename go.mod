@@ -48,6 +48,7 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
+	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
@@ -89,6 +90,7 @@ require (
 	go.mongodb.org/mongo-driver v1.11.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
+	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect

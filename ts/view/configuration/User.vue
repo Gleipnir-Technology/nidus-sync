@@ -88,13 +88,11 @@
 									</span>
 								</td>
 								<td>
-									<button
-										class="btn btn-sm btn-warning"
-										title="Deactivate"
-										@click="deactivateUser(user.id)"
-									>
-										<i class="bi bi-person-x"></i>
-									</button>
+									<RouterLink :to="`/_/configuration${user.uri}`">
+										<button class="btn btn-sm btn-primary" title="Edit">
+											<i class="bi bi-person-x"></i>
+										</button>
+									</RouterLink>
 								</td>
 							</tr>
 						</tbody>
