@@ -73,7 +73,7 @@
 							organization.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<RouterLink to="/configuration/user">
+							<RouterLink to="/_/configuration/user">
 								<button class="btn btn-outline-primary">
 									Manage Users
 									<i class="bi bi-arrow-right ms-1"></i>
@@ -96,7 +96,7 @@
 							Configure products, application rates, and field recommendations.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<RouterLink to="/configuration/pesticide">
+							<RouterLink to="/_/configuration/pesticide">
 								<button class="btn btn-outline-success">
 									Manage Products
 									<i class="bi bi-arrow-right ms-1"></i>
@@ -120,7 +120,7 @@
 							services.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<RouterLink to="/configuration/integration">
+							<RouterLink to="/_/configuration/integration">
 								<button class="btn btn-outline-primary">
 									Manage Integrations
 									<i class="bi bi-arrow-right ms-1"></i>
@@ -143,7 +143,7 @@
 							Manage your organization service area and information.
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<RouterLink to="/configuration/organization">
+							<RouterLink to="/_/configuration/organization">
 								<button class="btn btn-outline-danger">
 									Manage Organization
 									<i class="bi bi-arrow-right ms-1"></i>
@@ -167,10 +167,12 @@
 							available to Nidus
 						</p>
 						<div class="d-flex justify-content-between align-items-center">
-							<a class="btn btn-outline-warning" href="/configuration/upload">
-								Manage Uploads
-								<i class="bi bi-arrow-right ms-1"></i>
-							</a>
+							<RouterLink to="/_/configuration/upload">
+								<button class="btn btn-outline-warning">
+									Manage Uploads
+									<i class="bi bi-arrow-right ms-1"></i>
+								</button>
+							</RouterLink>
 						</div>
 					</div>
 				</div>

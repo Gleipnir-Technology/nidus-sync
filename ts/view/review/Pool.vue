@@ -151,7 +151,6 @@ interface MapClickEvent {
 
 // Props (you can pass these from parent component or environment)
 interface Props {
-	organizationId?: string;
 	tegolaUrl?: string;
 	tilesUrl?: string;
 	serviceArea?: {
@@ -163,7 +162,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	organizationId: "",
 	tegolaUrl: "",
 	tilesUrl: "",
 	serviceArea: () => ({
