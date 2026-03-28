@@ -1,4 +1,4 @@
-<style scoped>
+<style scoped lang="scss">
 .tech-photo {
 	width: 48px;
 	height: 48px;
@@ -41,7 +41,7 @@
 
 		<div class="card">
 			<div class="card-body">
-				<div class="table-responsive">
+				<div v-if="users" class="table-responsive">
 					<table class="table table-striped table-hover">
 						<thead class="table-light">
 							<tr>
@@ -100,13 +100,17 @@
 						</tbody>
 					</table>
 				</div>
+				<div v-else>
+					<p>loading...</p>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useUsersStore } from "@/store/users";
 
 interface User {
 	id: number;
@@ -127,33 +131,10 @@ interface URLConfiguration {
 // }>()
 
 // Reactive state
-const users = ref<User[]>([
-	{
-		id: 1,
-		name: "John Davis",
-		avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-		role: "Tech I",
-		status: "Active",
-		tags: [],
-	},
-	{
-		id: 2,
-		name: "Sarah Johnson",
-		avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-		role: "Tech III",
-		status: "Active",
-		tags: ["warrant service", "drone pilot"],
-	},
-	{
-		id: 3,
-		name: "Michael Chen",
-		avatar: "https://randomuser.me/api/portraits/men/44.jpg",
-		role: "Tech I",
-		status: "Active",
-		tags: ["drone pilot"],
-	},
-]);
-
+const usersStore = useUsersStore();
+const users = computed(() => {
+	return usersStore.all;
+});
 const urlConfiguration = ref<URLConfiguration>({
 	userAdd: "/configuration/user/add", // Update with your actual route
 });
@@ -181,7 +162,7 @@ const deactivateUser = (userId: number): void => {
 // Lifecycle hooks
 onMounted(() => {
 	// Fetch users from API if needed
-	// fetchUsers()
+	usersStore.fetchAll();
 });
 
 // Optional: API call example

@@ -16,6 +16,7 @@ type contentURLAPI struct {
 	ReviewTask          string `json:"review_task"`
 	Signal              string `json:"signal"`
 	Upload              string `json:"upload"`
+	Users               string `json:"users"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`
@@ -48,6 +49,7 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
 				Signal:              config.MakeURLNidus("/api/signal"),
 				Upload:              config.MakeURLNidus("/api/upload"),
+				Users:               config.MakeURLNidus("/api/user"),
 			},
 			Tegola: urls.Tegola,
 			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),
@@ -56,20 +58,30 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 }
 
 type responseListUser struct {
-	Users []platform.User `json:"users"`
+	Users []*platform.User `json:"users"`
 }
 
 func listUser(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*responseListUser, *nhttp.ErrorWithStatus) {
+	users, err := platform.UsersByOrg(ctx, user.Organization)
+	if err != nil {
+		return nil, nhttp.NewError("list users: %w", err)
+	}
+	results := make([]*platform.User, len(users))
+	i := 0
+	for _, v := range users {
+		results[i] = v
+		i++
+	}
 	return &responseListUser{
-		Users: []platform.User{},
+		Users: results,
 	}, nil
 }
 
 type responseListUserSuggestion struct {
-	Users []platform.User `json:"users"`
+	Users []*platform.User `json:"users"`
 }
 
-func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*responseListUser, *nhttp.ErrorWithStatus) {
+func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*responseListUserSuggestion, *nhttp.ErrorWithStatus) {
 	if query.Query == nil {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "you need to include a query")
 	}
@@ -77,7 +89,7 @@ func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User
 	if err != nil {
 		return nil, nhttp.NewError("query suggestions: %w", err)
 	}
-	return &responseListUser{
+	return &responseListUserSuggestion{
 		Users: users,
 	}, nil
 }
