@@ -1,7 +1,12 @@
+<style scoped lang="scss">
+a.card-link {
+	text-decoration: none;
+}
+</style>
 <template>
 	<div class="row">
 		<div class="col-md-4">
-			<a class="card-link" href="/review/pool">
+			<RouterLink class="card-link" to="/_/review/pool">
 				<div class="card" style="width: 100%">
 					<img
 						alt="overhead pool"
@@ -16,10 +21,10 @@
 						</p>
 					</div>
 				</div>
-			</a>
+			</RouterLink>
 		</div>
 		<div class="col-md-4">
-			<a class="card-link" href="/review/site">
+			<RouterLink class="card-link" to="/_/review/site">
 				<div class="card" style="width: 100%">
 					<img
 						alt="pool"
@@ -34,7 +39,7 @@
 						</p>
 					</div>
 				</div>
-			</a>
+			</RouterLink>
 		</div>
 	</div>
 </template>
