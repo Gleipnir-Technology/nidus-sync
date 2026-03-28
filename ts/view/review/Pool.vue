@@ -24,23 +24,6 @@ body {
 	border-left: 1px solid #dee2e6;
 	padding: 20px;
 }
-
-.entry-item {
-	padding: 15px;
-	border-bottom: 1px solid #e9ecef;
-	cursor: pointer;
-	transition: background-color 0.2s;
-}
-
-.entry-item:hover {
-	background-color: #f8f9fa;
-}
-
-.entry-item.active {
-	background-color: #e7f3ff;
-	border-left: 4px solid #0d6efd;
-}
-
 .placeholder-box {
 	background-color: #e9ecef;
 	border: 2px dashed #adb5bd;
@@ -80,6 +63,7 @@ body {
 		<template #left>
 			<ReviewPoolColumnList
 				v-if="reviewTask.all"
+				@doSelectTask="selectTask"
 				:error="error"
 				:selectedTaskID="selectedTaskID"
 				:tasks="reviewTask.all"
@@ -90,7 +74,14 @@ body {
 			</div>
 		</template>
 		<template #center>
-			<ReviewPoolColumnDetail :selectedTask="selectedTask" />
+			<ReviewPoolColumnDetail
+				:loading="loading"
+				:mapBounds="mapBounds || undefined"
+				:mapMarkers="mapMarkers"
+				:selectedTaskChanges="selectedTaskChanges"
+				:selectedTask="selectedTask"
+				:user="user"
+			/>
 		</template>
 		<template #right>
 			<ReviewPoolColumnAction :submitting="submitting" />
@@ -184,12 +175,17 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // State
-const totalPending = ref<number>(0);
-const selectedTaskID = ref<int | null>(null);
-const originalValues = ref<Partial<FormData>>({});
-const loading = ref<boolean>(true);
-const submitting = ref<boolean>(false);
+const selectedTaskChanges = ref<ReviewTask>({
+	location: {},
+	pool: {},
+});
 const error = ref<string | null>(null);
+const loading = ref<boolean>(true);
+const mapBounds = ref<Bounds | null>(null);
+const mapMarkers = ref<Marker[]>([]);
+const selectedTaskID = ref<int | null>(null);
+const submitting = ref<boolean>(false);
+const totalPending = ref<number>(0);
 
 const reviewTask = useReviewTaskStore();
 const user = useUserStore();
@@ -215,7 +211,7 @@ const changes = computed<Changes>(() => {
 	];
 
 	fields.forEach((field) => {
-		if (form[field.key] !== originalValues.value[field.key]) {
+		if (selectedTaskChanges[field.key] !== selectedTask.value[field.key]) {
 			updated.push(field.label);
 		} else {
 			unchanged.push(field.label);
@@ -236,22 +232,17 @@ async function fetchTasks() {
 }
 // Helper Functions
 // Task Selection
-function selectTask(task: Task): void {
-	console.log("Selected task", task);
-	selectedTask.value = task;
+function selectTask(id: int): void {
+	console.log("Selected task", id);
+	selectedTaskID.value = id;
 
-	// Populate form with task values
-	form.latitude = task.location.latitude;
-	form.longitude = task.location.longitude;
-	form.condition = task.condition || "";
-	form.ownerContact = task.ownerContact || "";
-	form.residentContact = task.residentContact || "";
-	form.poolShape = task.poolShape || "";
-
-	// Store original values for change tracking
-	originalValues.value = { ...form };
+	selectedTaskChanges.value = {
+		location: {},
+		pool: {},
+	};
 
 	// Update map
+	const task = reviewTask.byID(id);
 	updateMap(task);
 }
 
@@ -299,8 +290,8 @@ function updatePoolLocation(event: MapClickEvent): void {
 		}).setLngLat([event.detail.lng, event.detail.lat]),
 	]);
 
-	form.latitude = event.detail.lat;
-	form.longitude = event.detail.lng;
+	selectedTaskChanges.latitude = event.detail.lat;
+	selectedTaskChanges.longitude = event.detail.lng;
 }
 
 // Submit Review
@@ -314,17 +305,8 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 		const payload: any = {
 			task_id: selectedTask.value.id,
 			status: action,
-			updates: {},
+			updates: selectedTaskChanges,
 		};
-
-		// Include changed fields in the payload
-		if (action === "committed") {
-			(Object.keys(form) as Array<keyof FormData>).forEach((key) => {
-				if (form[key] !== originalValues.value[key]) {
-					payload.updates[key] = form[key];
-				}
-			});
-		}
 
 		const response = await fetch("/api/review/pool", {
 			method: "POST",
@@ -353,12 +335,6 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 			selectTask(reviewTask.all[nextIndex]);
 		} else {
 			selectedTask.value = null;
-			form.condition = "";
-			form.ownerContact = "";
-			form.residentContact = "";
-			form.poolShape = "";
-			form.latitude = 0;
-			form.longitude = 0;
 			originalValues.value = {};
 		}
 

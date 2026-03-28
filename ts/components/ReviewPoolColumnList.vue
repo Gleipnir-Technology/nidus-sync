@@ -1,3 +1,20 @@
+<style scoped lang="scss">
+.entry-item {
+	padding: 15px;
+	border-bottom: 1px solid #e9ecef;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.entry-item:hover {
+	background-color: #f8f9fa;
+}
+
+.entry-item.active {
+	background-color: #e7f3ff;
+	border-left: 4px solid #0d6efd;
+}
+</style>
 <template>
 	<!-- Error Alert -->
 	<div v-if="error" class="mt-3 alert alert-danger alert-dismissible">
@@ -28,7 +45,7 @@
 		:key="task.id"
 		class="entry-item"
 		:class="{ active: selectedTaskID === task.id }"
-		@click="selectTask(task)"
+		@click="emit('doSelectTask', task.id)"
 	>
 		<div class="d-flex justify-content-between align-items-start">
 			<div>
@@ -45,11 +62,15 @@
 <script setup lang="ts">
 import { formatAddress } from "@/format";
 
+interface Emits {
+	(e: "doSelectTask", id: int): void;
+}
 interface Props {
 	error: string | null;
 	selectedTaskID: int | null;
 	tasks: ReviewTask[];
 	total: int;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 </script>

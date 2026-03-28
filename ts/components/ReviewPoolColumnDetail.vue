@@ -34,9 +34,11 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="form.longitude"
+							v-model="selectedTaskChanges.location.longitude"
 							:class="{
-								'border-warning': form.longitude !== originalValues.longitude,
+								'border-warning':
+									selectedTaskChanges.location.longitude !==
+									selectedTask.location.longitude,
 							}"
 						/>
 					</div>
@@ -48,9 +50,11 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="form.latitude"
+							v-model="selectedTaskChanges.location.latitude"
 							:class="{
-								'border-warning': form.latitude !== originalValues.latitude,
+								'border-warning':
+									selectedTaskChanges.location?.latitude !==
+									selectedTask.location?.latitude,
 							}"
 						/>
 					</div>
@@ -61,9 +65,11 @@
 					<div class="col-sm-9">
 						<select
 							class="form-select"
-							v-model="form.condition"
+							v-model="selectedTaskChanges.pool.condition"
 							:class="{
-								'border-warning': form.condition !== originalValues.condition,
+								'border-warning':
+									selectedTaskChanges.pool.condition !==
+									selectedTask.pool.condition,
 							}"
 						>
 							<option value="">-- Select --</option>
@@ -77,22 +83,23 @@
 					</div>
 				</div>
 
-				<div v-if="form.ownerContact" class="row mb-3">
+				<div v-if="selectedTaskChanges.pool.ownerContact" class="row mb-3">
 					<label class="col-sm-3 col-form-label fw-bold">Owner Contact:</label>
 					<div class="col-sm-9">
 						<input
 							type="text"
 							class="form-control"
-							v-model="form.ownerContact"
+							v-model="selectedTaskChanges.pool.owner_contact"
 							:class="{
 								'border-warning':
-									form.ownerContact !== originalValues.ownerContact,
+									selectedTaskChanges.pool.owner_contact !==
+									selectedTask.pool.owner_contact,
 							}"
 						/>
 					</div>
 				</div>
 
-				<div v-if="form.residentContact" class="row mb-4">
+				<div v-if="selectedTaskChanges.pool.resident_contact" class="row mb-4">
 					<label class="col-sm-3 col-form-label fw-bold">
 						Resident Contact:
 					</label>
@@ -100,10 +107,11 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="form.residentContact"
+							v-model="selectedTaskChanges.pool.resident_contact"
 							:class="{
 								'border-warning':
-									form.residentContact !== originalValues.residentContact,
+									selectedTaskChanges.pool.resident_contact !==
+									selectedTask.pool.resident_contact,
 							}"
 						/>
 					</div>
@@ -116,12 +124,14 @@
 			<MapMultipoint
 				ref="mapMultipoint"
 				id="map"
-				:organization-id="organizationId"
-				:tegola="tegolaUrl"
-				:xmin="serviceArea.xmin"
-				:ymin="serviceArea.ymin"
-				:xmax="serviceArea.xmax"
-				:ymax="serviceArea.ymax"
+				:bounds="mapBounds"
+				:markers="mapMarkers"
+				:organizationId="user.organization.id"
+				:tegola="user.urls.tegola"
+				:xmin="user.organization.service_area?.min.x ?? 0"
+				:ymin="user.organization.service_area?.min.y ?? 0"
+				:xmax="user.organization.service_area?.max.x ?? 0"
+				:ymax="user.organization.service_area?.max.y ?? 0"
 			></MapMultipoint>
 		</div>
 
@@ -129,12 +139,11 @@
 			<MapProxiedArcgisTile
 				ref="mapTile"
 				class="map"
-				:organization-id="organizationId"
-				:tegola="tegolaUrl"
-				:tiles-url="tilesUrl"
-				:latitude="selectedTask.location.latitude"
-				:longitude="selectedTask.location.longitude"
-				@map-click="updatePoolLocation"
+				:location="selectedTask.location"
+				:organization-id="user.organization.id"
+				:tegola="user.urls.tegola"
+				:urlTiles="user.urls.tile"
+				@map-click="doPoolLocation"
 			></MapProxiedArcgisTile>
 		</div>
 	</div>
@@ -142,10 +151,19 @@
 <script setup lang="ts">
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
+import { formatAddress } from "@/format";
 import ReviewTask from "@/types";
 
 interface Props {
+	loading: boolean;
+	mapBounds?: Bounds;
+	mapMarkers: Marker[];
+	selectedTaskChanges: ReviewTask;
 	selectedTask?: ReviewTask;
+	user: User | null;
 }
 const props = defineProps<Props>();
+function doPoolLocation(lat, lng) {
+	console.log("pool location", lat, lng);
+}
 </script>

@@ -97,8 +97,7 @@ const initializeMap = () => {
 				type: "raster",
 			});
 
-			emit("load", { map: getCurrentInstance() });
-
+			/*
 			map.value.on("click", (e) => {
 				emit("map-click", {
 					lng: e.lngLat.lng,
@@ -107,6 +106,7 @@ const initializeMap = () => {
 					point: e.point,
 				});
 			});
+			*/
 		});
 	} catch (e) {
 		console.error("hey dummy", e);
@@ -150,21 +150,6 @@ const setMarkers = (newMarkers) => {
 	}
 };
 
-const getCurrentInstance = () => {
-	// Return an object with the public methods
-	return {
-		addLayer,
-		addSource,
-		jumpTo,
-		on,
-		once,
-		queryRenderedFeatures,
-		fitBounds,
-		setLayoutProperty,
-		setMarkers,
-	};
-};
-
 // Expose methods to parent components
 defineExpose({
 	addLayer,
@@ -188,10 +173,3 @@ onBeforeUnmount(() => {
 	}
 });
 </script>
-
-<style scoped>
-.map-container {
-	height: 100%;
-	width: 100%;
-}
-</style>

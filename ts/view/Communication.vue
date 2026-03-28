@@ -77,9 +77,9 @@ onMounted(() => {
 });
 
 // Refs
-const currentPhotoIndex = ref(0);
-const error = ref(null);
-const loading = ref(true);
+const currentPhotoIndex = ref<int>(0);
+const error = ref<string | null>(null);
+const loading = ref<boolean>(true);
 const mapBounds = ref<Bounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
