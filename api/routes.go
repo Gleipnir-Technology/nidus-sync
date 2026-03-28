@@ -30,7 +30,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("POST", "/publicreport/signal", authenticatedHandlerJSONPost(postPublicreportSignal))
 	r.Method("POST", "/publicreport/message", authenticatedHandlerJSONPost(postPublicreportMessage))
 	r.Method("POST", "/review/pool", authenticatedHandlerJSONPost(postReviewPool))
-	r.Method("GET", "/review-task/pool", authenticatedHandlerJSON(listReviewTaskPool))
+	r.Method("GET", "/review-task", authenticatedHandlerJSON(listReviewTask))
 	r.Method("GET", "/service-request", auth.NewEnsureAuth(apiServiceRequest))
 	r.Method("GET", "/signal", authenticatedHandlerJSON(listSignal))
 	r.Method("POST", "/sudo/email", authenticatedHandlerJSONPost(postSudoEmail))

@@ -16,22 +16,25 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-type reviewTaskPool struct {
-	Address   types.Address  `json:"address"`
-	Condition string         `json:"condition"`
-	Created   time.Time      `json:"created"`
-	Creator   platform.User  `json:"creator"`
-	ID        int32          `json:"id"`
-	Location  types.Location `json:"location"`
-	Reviewed  *time.Time     `json:"addressed"`
-	Reviewer  *platform.User `json:"addressor"`
+type reviewTask struct {
+	Address  types.Address  `json:"address"`
+	Created  time.Time      `json:"created"`
+	Creator  platform.User  `json:"creator"`
+	ID       int32          `json:"id"`
+	Location types.Location `json:"location"`
+	Pool     reviewTaskPool `json:"pool"`
+	Reviewed *time.Time     `json:"addressed"`
+	Reviewer *platform.User `json:"addressor"`
 }
-type contentListReviewTaskPool struct {
-	Tasks []reviewTaskPool `json:"tasks"`
-	Total int32            `json:"total"`
+type reviewTaskPool struct {
+	Condition string `json:"condition"`
+}
+type contentListReviewTask struct {
+	Tasks []reviewTask `json:"tasks"`
+	Total int32        `json:"total"`
 }
 
-func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListReviewTaskPool, *nhttp.ErrorWithStatus) {
+func listReviewTask(ctx context.Context, r *http.Request, user platform.User, query queryParams) (*contentListReviewTask, *nhttp.ErrorWithStatus) {
 	limit := 20
 	if query.Limit != nil {
 		limit = *query.Limit
@@ -114,23 +117,25 @@ func listReviewTaskPool(ctx context.Context, r *http.Request, user platform.User
 	if err != nil {
 		return nil, nhttp.NewError("users by id: %w", err)
 	}
-	tasks := make([]reviewTaskPool, len(rows))
+	tasks := make([]reviewTask, len(rows))
 	for i, row := range rows {
-		tasks[i] = reviewTaskPool{
-			Address:   row.Address,
-			Condition: row.Condition,
-			Created:   row.Created,
-			Creator:   *users_by_id[row.CreatorID],
-			ID:        row.ID,
+		tasks[i] = reviewTask{
+			Address: row.Address,
+			Created: row.Created,
+			Creator: *users_by_id[row.CreatorID],
+			ID:      row.ID,
 			Location: types.Location{
 				Latitude:  row.Latitude,
 				Longitude: row.Longitude,
+			},
+			Pool: reviewTaskPool{
+				Condition: row.Condition,
 			},
 			Reviewed: row.Reviewed,
 			Reviewer: userOrNil(users_by_id, row.ReviewerID),
 		}
 	}
-	return &contentListReviewTaskPool{
+	return &contentListReviewTask{
 		Tasks: tasks,
 		Total: row_total.Total,
 	}, nil

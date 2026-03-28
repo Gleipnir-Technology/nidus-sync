@@ -58,17 +58,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
+import { computed, onMounted, ref } from "vue";
 import maplibregl from "maplibre-gl";
 
-import { useCommunicationStore } from "../store/communication";
-import { useUserStore } from "../store/user";
-import CommunicationColumnAction from "../components/CommunicationColumnAction.vue";
-import CommunicationColumnDetail from "../components/CommunicationColumnDetail.vue";
-import CommunicationColumnList from "../components/CommunicationColumnList.vue";
-import PhotoViewerModal from "../components/PhotoViewerModal.vue";
-import ThreeColumn from "../components/layout/ThreeColumn.vue";
-import ToastNotification from "../components/ToastNotification.vue";
+import { useCommunicationStore } from "@/store/communication";
+import { useUserStore } from "@/store/user";
+import CommunicationColumnAction from "@/components/CommunicationColumnAction.vue";
+import CommunicationColumnDetail from "@/components/CommunicationColumnDetail.vue";
+import CommunicationColumnList from "@/components/CommunicationColumnList.vue";
+import PhotoViewerModal from "@/components/PhotoViewerModal.vue";
+import ThreeColumn from "@/components/layout/ThreeColumn.vue";
+import ToastNotification from "@/components/ToastNotification.vue";
 
 const communication = useCommunicationStore();
 const user = useUserStore();
@@ -328,8 +328,6 @@ onMounted(async () => {
 	}
 
 	// Setup map layer after next tick to ensure map is mounted
-	await nextTick();
-
 	/*
 	if (mapRef.value) {
 		const mapEl = mapRef.value.$el || mapRef.value;

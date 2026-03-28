@@ -315,6 +315,7 @@ import { computed } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
+import { formatAddress } from "@/format";
 
 interface Emits {
 	(e: "viewImage", index: int): void;
@@ -324,12 +325,6 @@ interface Props {
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-function formatAddress(a) {
-	if (a.number === "" && a.street === "") {
-		return "no address provided";
-	}
-	return `${a.number} ${a.street}, ${a.locality}`;
-}
 function openPhotoViewer(index) {
 	emit("viewImage", index);
 }

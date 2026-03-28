@@ -20,7 +20,8 @@ import NotFound from "./view/NotFound.vue";
 import OAuthRefreshArcgis from "./view/OAuthRefreshArcgis.vue";
 import Operations from "./view/Operations.vue";
 import Planning from "./view/Planning.vue";
-import Review from "./view/Review.vue";
+import ReviewPool from "./view/review/Pool.vue";
+import ReviewRoot from "./view/review/Root.vue";
 import Signin from "./view/Signin.vue";
 import Sudo from "./view/Sudo.vue";
 import apiClient from "@/client";
@@ -138,7 +139,13 @@ const routes: RouteRecordRaw[] = [
 	{
 		path: "/_/review",
 		name: "Review",
-		component: Review,
+		component: ReviewRoot,
+		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
+		path: "/_/review/pool",
+		name: "Pool Review",
+		component: ReviewPool,
 		meta: { requiresAuth: true, showSidebar: true },
 	},
 	{
