@@ -32,6 +32,7 @@ type User struct {
 	PasswordHash       string                 `json:"-"`
 	PasswordHashType   string                 `json:"-"`
 	Role               string                 `json:"role"`
+	URI                string                 `json:"uri"`
 	Username           string                 `json:"username"`
 
 	model *models.User
@@ -58,6 +59,7 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 		PasswordHash:       user.PasswordHash,
 		PasswordHashType:   string(user.PasswordHashType),
 		Role:               user.Role.String(),
+		URI:                fmt.Sprintf("/user/%d", user.ID),
 		Username:           user.Username,
 
 		model: user,
