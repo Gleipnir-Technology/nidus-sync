@@ -55,6 +55,24 @@ thead tr.header {
 .badge.unknown {
 	background-color: gray;
 }
+.badge.committed {
+	background-color: $success;
+}
+.badge.committing {
+	background-color: $success;
+}
+.badge.discarded {
+	background-color: gray;
+}
+.badge.error {
+	background-color: $danger;
+}
+.badge.parsed {
+	background-color: $secondary;
+}
+.badge.uploaded {
+	background-color: $info;
+}
 .summary-card {
 	transition: transform 0.2s;
 }
@@ -83,7 +101,7 @@ tr.has-error {
 <template>
 	<div class="container mt-4 results-container">
 		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h2>Upload Results: {{ upload?.name }}</h2>
+			<h2>Upload Results: {{ upload?.filename }}</h2>
 			<span class="badge rounded-pill" :class="upload?.status">
 				<i class="bi me-1" :class="getUploadStatusIcon(upload?.status)"></i>
 				{{ getUploadStatusDisplay(upload?.status) }}
@@ -338,10 +356,13 @@ const getUploadStatusIcon = (status?: string): string => {
 
 const getUploadStatusDisplay = (status?: string): string => {
 	const displays: Record<string, string> = {
-		uploaded: "Uploaded",
-		parsing: "Parsing",
-		parsed: "Parsed",
+		committed: "Committed",
+		committing: "Committing",
+		discarded: "Discarded",
 		error: "Error",
+		parsed: "Parsed",
+		parsing: "Parsing",
+		uploaded: "Uploaded",
 	};
 	return displays[status || ""] || "Unknown";
 };
