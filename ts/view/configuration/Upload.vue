@@ -145,11 +145,9 @@
 							</td>
 							<td>{{ upload.record_count }} entries</td>
 							<td>
-								<a
-									class="btn btn-sm btn-outline-primary"
-									:href="`/configuration/upload/${upload.id}`"
-									>View</a
-								>
+								<RouterLink :to="`/_/configuration/upload/${upload.id}`"
+									><button class="btn btn-sm btn-outline-primary">View</button>
+								</RouterLink>
 							</td>
 						</tr>
 					</tbody>
