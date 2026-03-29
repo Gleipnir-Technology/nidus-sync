@@ -40,7 +40,7 @@ pre {
 					<div class="card-header bg-primary text-white">
 						<h4 class="mb-0">User Configuration</h4>
 					</div>
-					<div v-if="user" class="card-body">
+					<div v-if="user_" class="card-body">
 						<!-- Avatar Section -->
 						<div class="row mb-4">
 							<div class="col-md-12">
@@ -48,7 +48,7 @@ pre {
 								<div class="d-flex align-items-center">
 									<div class="position-relative">
 										<img
-											:src="user.avatar || defaultAvatar"
+											:src="avatar || defaultAvatar"
 											alt="User Avatar"
 											class="rounded-circle avatar-preview"
 										/>
@@ -88,7 +88,7 @@ pre {
 								</label>
 								<input
 									id="displayName"
-									v-model="user.display_name"
+									v-model="user_.display_name"
 									type="text"
 									class="form-control"
 									placeholder="Enter display name"
@@ -102,7 +102,7 @@ pre {
 								</label>
 								<input
 									id="username"
-									v-model="user.username"
+									v-model="user_.username"
 									type="text"
 									class="form-control"
 									readonly
@@ -117,7 +117,7 @@ pre {
 								<label for="userRole" class="form-label fw-bold">
 									User Role
 								</label>
-								<select id="userRole" v-model="user.role" class="form-select">
+								<select id="userRole" v-model="user_.role" class="form-select">
 									<option value="">Select a role</option>
 									<option
 										v-for="role in availableRoles"
@@ -137,7 +137,7 @@ pre {
 										type="radio"
 										class="btn-check"
 										id="statusActive"
-										v-model="user.status"
+										v-model="user_.status"
 										value="active"
 									/>
 									<label class="btn btn-outline-success" for="statusActive">
@@ -148,7 +148,7 @@ pre {
 										type="radio"
 										class="btn-check"
 										id="statusInactive"
-										v-model="user.status"
+										v-model="user_.status"
 										value="inactive"
 									/>
 									<label class="btn btn-outline-secondary" for="statusInactive">
@@ -164,7 +164,7 @@ pre {
 								<label class="form-label fw-bold">User Tags</label>
 								<div class="mb-2">
 									<span
-										v-for="tag in user.tags"
+										v-for="tag in user_.tags"
 										:key="tag"
 										class="badge bg-info text-dark me-2 mb-2"
 									>
@@ -177,7 +177,7 @@ pre {
 										></button>
 									</span>
 									<span
-										v-if="user.tags.length === 0"
+										v-if="user_.tags.length === 0"
 										class="text-muted fst-italic"
 									>
 										No tags added
@@ -190,7 +190,7 @@ pre {
 											v-for="tag in availableTags"
 											:key="tag"
 											:value="tag"
-											:disabled="user.tags.includes(tag)"
+											:disabled="user_.tags.includes(tag)"
 										>
 											{{ tag }}
 										</option>
@@ -199,7 +199,7 @@ pre {
 										class="btn btn-outline-primary"
 										type="button"
 										@click="addTag"
-										:disabled="!selectedTag || user.tags.includes(selectedTag)"
+										:disabled="!selectedTag || user_.tags.includes(selectedTag)"
 									>
 										<i class="bi bi-plus-lg"></i> Add Tag
 									</button>
@@ -241,6 +241,7 @@ pre {
 
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, ref, reactive } from "vue";
+import { useUserStore } from "@/store/user";
 import { useUsersStore } from "@/store/users";
 
 interface User {
@@ -260,12 +261,14 @@ interface Role {
 interface Props {
 	id: int;
 }
-
+const avatar = ref<string>("");
 const fileInput = ref<HTMLInputElement | null>(null);
 const props = defineProps<Props>();
+const selectedFile = ref<File | null>(null);
 const selectedTag = ref<string>("");
 const usersStore = useUsersStore();
-const user = ref<User | null>(null);
+const user = useUserStore();
+const user_ = ref<User | null>(null);
 
 const defaultAvatar =
 	"https://via.placeholder.com/150/cccccc/666666?text=No+Avatar";
@@ -295,39 +298,71 @@ const handleAvatarChange = (event: Event) => {
 	const file = target.files?.[0];
 
 	if (file) {
+		selectedFile.value = file;
 		const reader = new FileReader();
 		reader.onload = (e) => {
-			user.avatar = e.target?.result as string;
+			avatar.value = e.target?.result as string;
 		};
 		reader.readAsDataURL(file);
 	}
 };
 
 const removeAvatar = () => {
-	user.avatar = "";
+	avatar = "";
 	if (fileInput.value) {
 		fileInput.value.value = "";
 	}
 };
 
 const addTag = () => {
-	if (selectedTag.value && !user.tags.includes(selectedTag.value)) {
-		user.tags.push(selectedTag.value);
+	if (selectedTag.value && !user_.value.tags.includes(selectedTag.value)) {
+		user_.value.tags.push(selectedTag.value);
 		selectedTag.value = "";
 	}
 };
 
 const removeTag = (tag: string) => {
-	const index = user.tags.indexOf(tag);
+	const index = user_.value.tags.indexOf(tag);
 	if (index > -1) {
-		user.tags.splice(index, 1);
+		user_.value.tags.splice(index, 1);
 	}
 };
 
-const saveChanges = () => {
-	// Implement save logic here
-	console.log("Saving user configuration:", user);
-	alert("User configuration saved successfully!");
+const saveChanges = async () => {
+	console.log("Saving user changes");
+	let userPayload = {};
+	if (selectedFile.value) {
+		try {
+			const formData = new FormData();
+			formData.append("file", selectedFile.value);
+
+			const response = await fetch(user.urls.api.avatar, {
+				body: formData,
+				method: "POST",
+			});
+			if (!response.ok) {
+				throw new Error(`Upload failed: ${response.statusText}`);
+			}
+
+			const data = await response.json();
+			userPayload.avatar = data.uri;
+		} catch (error) {
+			console.error("Failed to upload avatar", error);
+		}
+	}
+	const response = await fetch(user.urls.api.user, {
+		method: "PUT",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(userPayload),
+	});
+	if (!response.ok) {
+		const errorData = await response.json();
+		throw new Error(
+			errorData.message || `HTTP error! status: ${response.status}`,
+		);
+	}
 };
 
 const cancelChanges = () => {
@@ -346,7 +381,7 @@ onMounted(() => {
 	usersStore.fetchAll().then((users) => {
 		for (const u of users) {
 			if (u.id == props.id) {
-				user.value = u;
+				user_.value = u;
 				console.log("User set to", u);
 			}
 		}

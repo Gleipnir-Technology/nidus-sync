@@ -6,6 +6,7 @@ const (
 	CollectionAudioRaw Collection = iota
 	CollectionAudioNormalized
 	CollectionAudioTranscoded
+	CollectionAvatar
 	CollectionCSV
 	CollectionImageRaw
 	CollectionLogo

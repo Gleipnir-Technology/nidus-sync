@@ -16,6 +16,7 @@ func AddRoutes(r chi.Router) {
 	// Authenticated endpoints
 	r.Method("POST", "/audio/{uuid}", auth.NewEnsureAuth(apiAudioPost))
 	r.Method("POST", "/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost))
+	r.Method("POST", "/avatar", authenticatedHandlerPostMultipart(avatarPost, file.CollectionAvatar))
 	r.Method("GET", "/client/ios", auth.NewEnsureAuth(handleClientIos))
 	r.Method("GET", "/communication", authenticatedHandlerJSON(listCommunication))
 	r.Method("POST", "/configuration/integration/arcgis", authenticatedHandlerJSONPost(postConfigurationIntegrationArcgis))

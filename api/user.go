@@ -11,6 +11,7 @@ import (
 )
 
 type contentURLAPI struct {
+	Avatar              string `json:"avatar"`
 	Communication       string `json:"communication"`
 	PublicreportMessage string `json:"publicreport_message"`
 	ReviewTask          string `json:"review_task"`
@@ -44,6 +45,7 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 		Self: user,
 		URLs: contentURLs{
 			API: contentURLAPI{
+				Avatar:              config.MakeURLNidus("/api/avatar"),
 				Communication:       urls.API.Communication,
 				PublicreportMessage: urls.API.Publicreport.Message,
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
