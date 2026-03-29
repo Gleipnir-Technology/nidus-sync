@@ -53,6 +53,13 @@ pre {
 											class="rounded-circle avatar-preview"
 										/>
 										<button
+											class="btn btn-sm btn-danger position-absolute bottom-0 start-0 rounded-circle"
+											@click="removeAvatar"
+											type="button"
+										>
+											<i class="bi bi-trash"></i>
+										</button>
+										<button
 											class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle"
 											@click="triggerFileInput"
 											type="button"
@@ -68,21 +75,6 @@ pre {
 											accept="image/*"
 											@change="handleAvatarChange"
 										/>
-										<button
-											class="btn btn-outline-primary btn-sm me-2"
-											@click="triggerFileInput"
-											type="button"
-										>
-											Upload New
-										</button>
-										<button
-											class="btn btn-outline-danger btn-sm"
-											@click="removeAvatar"
-											type="button"
-											:disabled="!user.avatar"
-										>
-											Remove
-										</button>
 									</div>
 								</div>
 							</div>
