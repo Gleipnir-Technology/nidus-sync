@@ -40,7 +40,7 @@ pre {
 					<div class="card-header bg-primary text-white">
 						<h4 class="mb-0">User Configuration</h4>
 					</div>
-					<div class="card-body">
+					<div v-if="user" class="card-body">
 						<!-- Avatar Section -->
 						<div class="row mb-4">
 							<div class="col-md-12">
@@ -88,7 +88,7 @@ pre {
 								</label>
 								<input
 									id="displayName"
-									v-model="user.displayName"
+									v-model="user.display_name"
 									type="text"
 									class="form-control"
 									placeholder="Enter display name"
@@ -230,15 +230,8 @@ pre {
 							</div>
 						</div>
 					</div>
-				</div>
-
-				<!-- Preview Card -->
-				<div class="card shadow-sm mt-4">
-					<div class="card-header bg-secondary text-white">
-						<h5 class="mb-0">Preview</h5>
-					</div>
-					<div class="card-body">
-						<pre class="mb-0">{{ user }}</pre>
+					<div v-else>
+						<p>loading</p>
 					</div>
 				</div>
 			</div>
@@ -246,8 +239,9 @@ pre {
 	</div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, reactive } from "vue";
+<script setup lang="ts">
+import { computed, defineComponent, onMounted, ref, reactive } from "vue";
+import { useUsersStore } from "@/store/users";
 
 interface User {
 	avatar: string;
@@ -263,112 +257,99 @@ interface Role {
 	label: string;
 }
 
-export default defineComponent({
-	name: "UserConfiguration",
-	setup() {
-		const fileInput = ref<HTMLInputElement | null>(null);
-		const selectedTag = ref<string>("");
+interface Props {
+	id: int;
+}
 
-		const defaultAvatar =
-			"https://via.placeholder.com/150/cccccc/666666?text=No+Avatar";
+const fileInput = ref<HTMLInputElement | null>(null);
+const props = defineProps<Props>();
+const selectedTag = ref<string>("");
+const usersStore = useUsersStore();
+const user = ref<User | null>(null);
 
-		const user = reactive<User>({
-			avatar: "",
-			displayName: "John Doe",
-			username: "johndoe123",
-			role: "tech1",
-			status: "active",
-			tags: ["warrant"],
-		});
+const defaultAvatar =
+	"https://via.placeholder.com/150/cccccc/666666?text=No+Avatar";
 
-		const availableRoles: Role[] = [
-			{ value: "manager", label: "Manager" },
-			{ value: "owner", label: "Owner" },
-			{ value: "tech1", label: "Tech 1" },
-			{ value: "tech2", label: "Tech 2" },
-			{ value: "tech3", label: "Tech 3" },
-		];
+const availableRoles: Role[] = [
+	{ value: "account-owner", label: "Account Owner" },
+	{ value: "manager", label: "Manager" },
+	{ value: "tech1", label: "Tech 1" },
+	{ value: "tech2", label: "Tech 2" },
+	{ value: "tech3", label: "Tech 3" },
+];
 
-		const availableTags: string[] = [
-			"warrant",
-			"drone pilot",
-			"certified",
-			"supervisor",
-			"field ops",
-		];
+const availableTags: string[] = [
+	"warrant",
+	"drone pilot",
+	"certified",
+	"supervisor",
+	"field ops",
+];
 
-		const triggerFileInput = () => {
-			fileInput.value?.click();
+const triggerFileInput = () => {
+	fileInput.value?.click();
+};
+
+const handleAvatarChange = (event: Event) => {
+	const target = event.target as HTMLInputElement;
+	const file = target.files?.[0];
+
+	if (file) {
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			user.avatar = e.target?.result as string;
 		};
+		reader.readAsDataURL(file);
+	}
+};
 
-		const handleAvatarChange = (event: Event) => {
-			const target = event.target as HTMLInputElement;
-			const file = target.files?.[0];
+const removeAvatar = () => {
+	user.avatar = "";
+	if (fileInput.value) {
+		fileInput.value.value = "";
+	}
+};
 
-			if (file) {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					user.avatar = e.target?.result as string;
-				};
-				reader.readAsDataURL(file);
+const addTag = () => {
+	if (selectedTag.value && !user.tags.includes(selectedTag.value)) {
+		user.tags.push(selectedTag.value);
+		selectedTag.value = "";
+	}
+};
+
+const removeTag = (tag: string) => {
+	const index = user.tags.indexOf(tag);
+	if (index > -1) {
+		user.tags.splice(index, 1);
+	}
+};
+
+const saveChanges = () => {
+	// Implement save logic here
+	console.log("Saving user configuration:", user);
+	alert("User configuration saved successfully!");
+};
+
+const cancelChanges = () => {
+	// Implement cancel/reset logic here
+	console.log("Canceling changes");
+	if (
+		confirm(
+			"Are you sure you want to cancel? All unsaved changes will be lost.",
+		)
+	) {
+		// Reset to original values or navigate away
+		window.history.back();
+	}
+};
+onMounted(() => {
+	usersStore.fetchAll().then((users) => {
+		for (const u of users) {
+			if (u.id == props.id) {
+				user.value = u;
+				console.log("User set to", u);
 			}
-		};
-
-		const removeAvatar = () => {
-			user.avatar = "";
-			if (fileInput.value) {
-				fileInput.value.value = "";
-			}
-		};
-
-		const addTag = () => {
-			if (selectedTag.value && !user.tags.includes(selectedTag.value)) {
-				user.tags.push(selectedTag.value);
-				selectedTag.value = "";
-			}
-		};
-
-		const removeTag = (tag: string) => {
-			const index = user.tags.indexOf(tag);
-			if (index > -1) {
-				user.tags.splice(index, 1);
-			}
-		};
-
-		const saveChanges = () => {
-			// Implement save logic here
-			console.log("Saving user configuration:", user);
-			alert("User configuration saved successfully!");
-		};
-
-		const cancelChanges = () => {
-			// Implement cancel/reset logic here
-			console.log("Canceling changes");
-			if (
-				confirm(
-					"Are you sure you want to cancel? All unsaved changes will be lost.",
-				)
-			) {
-				// Reset to original values or navigate away
-				window.history.back();
-			}
-		};
-
-		return {
-			user,
-			fileInput,
-			selectedTag,
-			defaultAvatar,
-			availableRoles,
-			availableTags,
-			triggerFileInput,
-			handleAvatarChange,
-			removeAvatar,
-			addTag,
-			removeTag,
-			saveChanges,
-			cancelChanges,
-		};
-	},
+		}
+	});
 });
 </script>

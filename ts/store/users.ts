@@ -19,9 +19,11 @@ export const useUsersStore = defineStore("users", () => {
 	});
 	// Actions
 	function byID(id: int) {
-		return _byID.value.get(id);
+		const result = _byID.value.get(id);
+		console.log("user", id, result);
+		return result;
 	}
-	async function fetchAll() {
+	async function fetchAll(): Promise<User[]> {
 		const userStore = useUserStore();
 		if (userStore.urls == null) {
 			throw new Error("can't fetch without user URL data");
@@ -44,6 +46,7 @@ export const useUsersStore = defineStore("users", () => {
 			for (const u of data.users) {
 				_byID.value.set(u.id, u);
 			}
+			return data.users;
 		} catch (err) {
 			console.error("Error loading users:", err);
 			throw err;

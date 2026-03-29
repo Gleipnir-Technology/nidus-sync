@@ -23,8 +23,9 @@ type NoUserError struct{}
 func (e NoUserError) Error() string { return "That user does not exist" }
 
 type User struct {
+	Active             bool                   `json:"active"`
 	DisplayName        string                 `json:"display_name"`
-	ID                 int                    `json:"-"`
+	ID                 int                    `json:"id"`
 	Initials           string                 `json:"initials"`
 	Notifications      []Notification         `json:"notifications"`
 	NotificationCounts UserNotificationCounts `json:"notification_counts"`
@@ -32,6 +33,7 @@ type User struct {
 	PasswordHash       string                 `json:"-"`
 	PasswordHashType   string                 `json:"-"`
 	Role               string                 `json:"role"`
+	Tags               []string               `json:"tags"`
 	URI                string                 `json:"uri"`
 	Username           string                 `json:"username"`
 
@@ -50,6 +52,7 @@ func (u User) HasRoot() bool {
 }
 func newUser(ctx context.Context, org Organization, user *models.User) User {
 	u := User{
+		Active:             true,
 		DisplayName:        user.DisplayName,
 		ID:                 int(user.ID),
 		Initials:           extractInitials(user.DisplayName),
@@ -59,6 +62,7 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 		PasswordHash:       user.PasswordHash,
 		PasswordHashType:   string(user.PasswordHashType),
 		Role:               user.Role.String(),
+		Tags:               []string{},
 		URI:                fmt.Sprintf("/user/%d", user.ID),
 		Username:           user.Username,
 
