@@ -24,6 +24,7 @@ func (e NoUserError) Error() string { return "That user does not exist" }
 
 type User struct {
 	Active             bool                   `json:"active"`
+	Avatar             string                 `json:"avatar"`
 	DisplayName        string                 `json:"display_name"`
 	ID                 int                    `json:"id"`
 	Initials           string                 `json:"initials"`
@@ -53,6 +54,7 @@ func (u User) HasRoot() bool {
 func newUser(ctx context.Context, org Organization, user *models.User) User {
 	u := User{
 		Active:             true,
+		Avatar:             user.Avatar,
 		DisplayName:        user.DisplayName,
 		ID:                 int(user.ID),
 		Initials:           extractInitials(user.DisplayName),

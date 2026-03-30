@@ -350,7 +350,7 @@ const saveChanges = async () => {
 			console.error("Failed to upload avatar", error);
 		}
 	}
-	const response = await fetch(user.urls.api.user, {
+	const response = await fetch(user.urls.api.users, {
 		method: "PUT",
 		headers: {
 			"Content-Type": "application/json",

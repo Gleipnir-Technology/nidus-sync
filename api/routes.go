@@ -48,6 +48,7 @@ func AddRoutes(r chi.Router) {
 	r.Method("GET", "/user/self", authenticatedHandlerJSON(getUserSelf))
 	r.Method("GET", "/user/suggestion", authenticatedHandlerJSON(listUserSuggestion))
 	r.Method("GET", "/user", authenticatedHandlerJSON(listUser))
+	r.Method("PUT", "/user/{id}", authenticatedHandlerJSONPut(userPut))
 
 	// Unauthenticated endpoints
 	r.Get("/district", apiGetDistrict)

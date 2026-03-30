@@ -85,6 +85,26 @@ func authenticatedHandlerJSONPost[ReqType any](f handlerFunctionPostAuthenticate
 		http.Redirect(w, r, path, http.StatusFound)
 	})
 }
+
+type handlerFunctionPutAuthenticated[ReqType any] func(context.Context, *http.Request, platform.User, ReqType) (string, *nhttp.ErrorWithStatus)
+
+func authenticatedHandlerJSONPut[ReqType any](f handlerFunctionPutAuthenticated[ReqType]) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
+		w.Header().Set("Content-Type", "application/json")
+		req, e := parseRequest[ReqType](r)
+		if e != nil {
+			serializeError(w, e)
+			return
+		}
+		ctx := r.Context()
+		path, e := f(ctx, r, u, *req)
+		if e != nil {
+			serializeError(w, e)
+			return
+		}
+		http.Redirect(w, r, path, http.StatusFound)
+	})
+}
 func parseRequest[ReqType any](r *http.Request) (*ReqType, *nhttp.ErrorWithStatus) {
 	var req ReqType
 	body, err := io.ReadAll(r.Body)

@@ -95,3 +95,7 @@ func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User
 		Users: users,
 	}, nil
 }
+
+func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.User) {
+	//if updates.Avatar
+}
