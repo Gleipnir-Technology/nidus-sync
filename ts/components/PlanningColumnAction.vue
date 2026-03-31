@@ -107,7 +107,7 @@ interface Emits {
 }
 interface Props {
 	creating: boolean;
-	selectedSignalIDs: Set<int>;
+	selectedSignalIDs: Set<number>;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();

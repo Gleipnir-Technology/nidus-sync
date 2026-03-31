@@ -68,7 +68,6 @@
 					class="form-select form-select-sm mb-2 disabled"
 					disabled
 					v-model="filters.species"
-					@change="loadSignals()"
 				>
 					<option value="">All Species</option>
 					<option value="aedes_aegypti">Aedes aegypti</option>
@@ -82,7 +81,6 @@
 					class="form-select form-select-sm mb-2 disabled"
 					disabled
 					v-model="filters.type"
-					@change="loadSignals()"
 				>
 					<option value="">All Types</option>
 					<option value="public_report">Public Report</option>
@@ -97,7 +95,6 @@
 					class="form-select form-select-sm disabled"
 					disabled
 					v-model="filters.sort"
-					@change="loadSignals()"
 				>
 					<option value="newest">Newest First</option>
 					<option value="priority">Highest Priority</option>
@@ -164,7 +161,7 @@
 					:key="followup.id"
 					class="border rounded p-2 mb-2 signal-item"
 					:class="{ selected: isSelected(followup.id) }"
-					@click="toggleSignal(followup)"
+					@click="toggleFollowup(followup)"
 				>
 					<div class="small fw-semibold">{{ followup.title }}</div>
 					<div class="text-muted small">{{ followup.description }}</div>
@@ -201,18 +198,19 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import PlanningColumnListEntry from "@/components/PlanningColumnListEntry.vue";
+import { Followup, Lead, Signal } from "@/types";
 
 interface Emits {
 	(e: "refresh"): void;
-	(e: "signalDeselect", integer): void;
-	(e: "signalSelect", integer): void;
+	(e: "signalDeselect", id: number): void;
+	(e: "signalSelect", id: number): void;
 }
 interface Props {
 	error: string | null;
-	leads: Lead[] | null;
+	leads: Lead[];
 	loading: boolean;
-	planFollowups: Followup[] | null;
-	selectedSignalIDs: Set<int>;
+	planFollowups: Followup[];
+	selectedSignalIDs: Set<number>;
 	signals: Signal[] | null;
 }
 const emit = defineEmits<Emits>();
@@ -222,14 +220,17 @@ const filters = ref({
 	type: "",
 	sort: "newest",
 });
-const isSelected = (id) => {
-	return props.selectedSignalIDs.values().some((s) => s.id === id);
+const isSelected = (id: number): boolean => {
+	return props.selectedSignalIDs.has(id);
 };
-const toggleSignal = (signal: int) => {
-	if (props.selectedSignalIDs.has(signal)) {
-		emit("signalDeselect", signal);
+const toggleFollowup = (followup: Followup) => {
+	console.log("fake toggleSignal", followup);
+};
+const toggleSignal = (signal: Signal) => {
+	if (props.selectedSignalIDs.has(signal.id)) {
+		emit("signalDeselect", signal.id);
 	} else {
-		emit("signalSelect", signal);
+		emit("signalSelect", signal.id);
 	}
 };
 </script>

@@ -9,6 +9,21 @@ export function formatAddress(address?: Address): string {
 	}
 	return `${address.number} ${address.street}, ${address.locality}`;
 }
+export function formatDistance(meters: number | undefined) {
+	if (meters === undefined || meters === null) {
+		return "unknown";
+	}
+	if (meters < 1) {
+		const mm = Math.round(meters * 1000);
+		return `${mm} mm`;
+	} else if (meters >= 1000) {
+		const km = Math.round(meters / 1000);
+		return `${km} km`;
+	} else {
+		const m = Math.round(meters);
+		return `${m} m`;
+	}
+}
 export function formatRelativeTime(dateString: string): string {
 	if (!dateString) return "";
 
@@ -25,7 +40,7 @@ export function formatRelativeTime(dateString: string): string {
 	return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 }
 
-export function shortAddress(a: Address): string {
-	if (!a) return "";
+export function shortAddress(a: Address | undefined): string {
+	if (!a) return "unknown";
 	return `${a.number} ${a.street}, ${a.locality}`;
 }

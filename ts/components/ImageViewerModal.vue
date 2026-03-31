@@ -15,7 +15,7 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title">
-						Photo {{ currentPhotoIndex + 1 }} of
+						Image {{ currentImageIndex + 1 }} of
 						{{ images.length || 0 }}
 					</h5>
 					<button
@@ -27,28 +27,28 @@
 				<div class="modal-body text-center">
 					<div v-if="images && show">
 						<img
-							:src="images[currentPhotoIndex].url_content"
+							:src="images[currentImageIndex].url_content"
 							class="img-fluid rounded"
 							style="max-height: 60vh"
 						/>
 
 						<!-- EXIF Data Section -->
 						<div class="mt-4 pt-3 border-top text-start">
-							<h6 class="text-muted mb-3">Photo Information</h6>
+							<h6 class="text-muted mb-3">Image Information</h6>
 							<div class="row g-3">
 								<div class="col-md-4">
 									<small class="text-muted d-block">Date Taken</small>
 									<span>
-										{{ images[currentPhotoIndex].exif?.created || "N/A" }}
+										{{ images[currentImageIndex].exif?.created || "N/A" }}
 									</span>
 								</div>
 								<div class="col-md-4">
 									<small class="text-muted d-block">Camera</small>
 									<span>
 										{{
-											(images[currentPhotoIndex].exif?.make || "") +
+											(images[currentImageIndex].exif?.make || "") +
 												" " +
-												(images[currentPhotoIndex].exif?.model || "") || "N/A"
+												(images[currentImageIndex].exif?.model || "") || "N/A"
 										}}
 									</span>
 								</div>
@@ -56,10 +56,10 @@
 									<small class="text-muted d-block"
 										>Distance from Reporter</small
 									>
-									<span v-if="images[currentPhotoIndex].location != null">
+									<span v-if="images[currentImageIndex].location != null">
 										{{
 											formatDistance(
-												images[currentPhotoIndex].distance_from_reporter_meters,
+												images[currentImageIndex].distance_from_reporter_meters,
 											)
 										}}
 									</span>
@@ -73,14 +73,14 @@
 					<button
 						class="btn btn-outline-secondary"
 						@click="emit('imagePrevious')"
-						:disabled="currentPhotoIndex === 0"
+						:disabled="currentImageIndex === 0"
 					>
 						<i class="bi bi-chevron-left"></i> Previous
 					</button>
 					<button
 						class="btn btn-outline-secondary"
 						@click="emit('imageNext')"
-						:disabled="currentPhotoIndex >= (images?.length || 1) - 1"
+						:disabled="currentImageIndex >= (images?.length || 1) - 1"
 					>
 						Next <i class="bi bi-chevron-right"></i>
 					</button>
@@ -96,31 +96,19 @@
 </template>
 
 <script setup lang="ts">
+import { formatDistance } from "@/format";
+import { Image } from "@/types";
+
 interface Emits {
 	(e: "close"): void;
 	(e: "imageNext"): void;
 	(e: "imagePrevious"): void;
 }
 interface Props {
-	currentPhotoIndex: int | null;
-	images: Photo[] | null;
+	currentImageIndex: number;
+	images: Image[];
 	show: boolean;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-function formatDistance(meters) {
-	if (meters === undefined || meters === null) {
-		return "unknown";
-	}
-	if (meters < 1) {
-		const mm = Math.round(meters * 1000);
-		return `${mm} mm`;
-	} else if (meters >= 1000) {
-		const km = Math.round(meters / 1000);
-		return `${km} km`;
-	} else {
-		const m = Math.round(meters);
-		return `${m} m`;
-	}
-}
 </script>

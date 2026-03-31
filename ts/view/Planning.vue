@@ -60,28 +60,28 @@
 import { computed, ref, onMounted, nextTick } from "vue";
 
 import MapMultipoint from "../components/MapMultipoint.vue";
-import PlanningColumnAction from "../components/PlanningColumnAction.vue";
-import PlanningColumnDetail from "../components/PlanningColumnDetail.vue";
-import PlanningColumnList from "../components/PlanningColumnList.vue";
-import ThreeColumn from "../components/layout/ThreeColumn.vue";
-import TimeRelative from "../components/TimeRelative.vue";
-import { useSignalStore } from "../store/signal";
-import { useUserStore } from "../store/user";
+import PlanningColumnAction from "@/components/PlanningColumnAction.vue";
+import PlanningColumnDetail from "@/components/PlanningColumnDetail.vue";
+import PlanningColumnList from "@/components/PlanningColumnList.vue";
+import ThreeColumn from "@/components/layout/ThreeColumn.vue";
+import TimeRelative from "@/components/TimeRelative.vue";
+import { useSignalStore } from "@/store/signal";
+import { useSessionStore } from "@/store/session";
+import { Lead, Location, Point, Signal } from "@/types";
 
 // Refs
 const mapTile = ref(null);
 
 // State
-const apiBase = ref("/api");
 const creating = ref(false);
-const error = ref(null);
-const leads = ref([]);
-const loading = ref(false);
+const error = ref<string | null>(null);
+const leads = ref<Lead[]>([]);
+const loading = ref<boolean>(false);
 const planFollowups = ref([]);
 const poolLocations = ref({});
-const selectedSignalIDs = ref(new Set<int>([]));
+const selectedSignalIDs = ref(new Set<number>([]));
 const signal = useSignalStore();
-const user = useUserStore();
+const session = useSessionStore();
 
 function doAddToLead() {
 	console.log("doAddToLead");
@@ -111,21 +111,21 @@ function doSplitLead() {
 	console.log("doSplitLead");
 }
 // Helper functions (outside component)
-const getBoundingBox = (points) => {
+const getBoundingBox = (points: Location[]) => {
 	if (!points || points.length === 0) {
 		return null;
 	}
 
-	let minLat = points[0].latitude;
-	let maxLat = points[0].latitude;
-	let minLng = points[0].longitude;
-	let maxLng = points[0].longitude;
+	let minLat = points[0].lat;
+	let maxLat = points[0].lat;
+	let minLng = points[0].lng;
+	let maxLng = points[0].lng;
 
 	for (const point of points) {
-		if (point.latitude < minLat) minLat = point.latitude;
-		if (point.latitude > maxLat) maxLat = point.latitude;
-		if (point.longitude < minLng) minLng = point.longitude;
-		if (point.longitude > maxLng) maxLng = point.longitude;
+		if (point.lat < minLat) minLat = point.lat;
+		if (point.lat > maxLat) maxLat = point.lat;
+		if (point.lng < minLng) minLng = point.lng;
+		if (point.lng > maxLng) maxLng = point.lng;
 	}
 
 	return new window.maplibregl.LngLatBounds(
@@ -140,16 +140,18 @@ const selectedSignals = computed(() => {
 	if (selectedSignalIDs.value.size == 0 || signal.all == null) {
 		return [];
 	}
-	const result = signal.all.filter((s) => selectedSignalIDs.value.has(s));
+	const result = signal.all.filter((s: Signal) =>
+		selectedSignalIDs.value.has(s.id),
+	);
 	return result;
 });
-const updateMap = (signals) => {
+const updateMap = (signals: Signal[]) => {
 	const locations = signals.map((s) => s.location);
 	const markers = locations.map((l) =>
 		new window.maplibregl.Marker({
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([l.longitude, l.latitude]),
+		}).setLngLat([l.lng, l.lat]),
 	);
 
 	/*
@@ -170,7 +172,7 @@ const loadData = async () => {
 	try {
 		await signal.fetchAll();
 	} catch (err) {
-		error.value = err.message;
+		error.value = err instanceof Error ? err.message : "fetch error";
 		console.error("Error loading data:", err);
 	} finally {
 		loading.value = false;
@@ -179,7 +181,7 @@ const loadData = async () => {
 
 const loadPlanFollowups = async () => {
 	try {
-		const response = await fetch(`${apiBase.value}/plan-followups`);
+		const response = await fetch("/api/plan-followups");
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
@@ -203,7 +205,7 @@ const createLead = async () => {
 	creating.value = true;
 
 	try {
-		const response = await fetch(`${apiBase.value}/leads`, {
+		const response = await fetch("api/leads", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -227,7 +229,6 @@ const createLead = async () => {
 		await loadData();
 	} catch (err) {
 		console.error("Error creating lead:", err);
-		alert(`Failed to create lead: ${err.message}`);
 	} finally {
 		creating.value = false;
 	}
@@ -237,7 +238,7 @@ const markAsAddressed = async () => {
 	if (selectedSignalIDs.value.size === 0) return;
 
 	try {
-		const response = await fetch(`${apiBase.value}/signal/mark-addressed`, {
+		const response = await fetch("/api/signal/mark-addressed", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -251,24 +252,24 @@ const markAsAddressed = async () => {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
+		/*
 		signals.value = signals.value.filter(
 			(signal) => !selectedSignalIDs.value.has(s.id),
 		);
+		*/
 
 		clearSelection();
-		alert("Signals marked as addressed");
 	} catch (err) {
 		console.error("Error marking signals as addressed:", err);
-		alert(`Failed to mark signals: ${err.message}`);
 	}
 };
 const refresh = () => {
 	loadData();
 };
-const signalDeselect = (id: int) => {
+const signalDeselect = (id: number) => {
 	selectedSignalIDs.value.delete(id);
 };
-const signalSelect = (id: int) => {
+const signalSelect = (id: number) => {
 	selectedSignalIDs.value.add(id);
 };
 // Lifecycle

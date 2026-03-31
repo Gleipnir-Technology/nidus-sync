@@ -52,7 +52,7 @@
 				<i class="bi bi-droplet"></i>
 				<strong>Pool {{ task.id }}</strong>
 			</div>
-			<small class="text-muted">{{ task.condition }}</small>
+			<small class="text-muted">{{ task.pool?.condition }}</small>
 		</div>
 		<small class="text-muted d-block mt-1">
 			{{ formatAddress(task.address) }}
@@ -61,15 +61,16 @@
 </template>
 <script setup lang="ts">
 import { formatAddress } from "@/format";
+import { ReviewTask } from "@/types";
 
 interface Emits {
-	(e: "doSelectTask", id: int): void;
+	(e: "doSelectTask", id: number): void;
 }
 interface Props {
 	error: string | null;
-	selectedTaskID: int | null;
+	selectedTaskID: number | null;
 	tasks: ReviewTask[];
-	total: int;
+	total: number;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();

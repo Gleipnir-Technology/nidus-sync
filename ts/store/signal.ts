@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Signal } from "../types";
 import { SSEManager } from "../SSEManager";
-import { useUserStore } from "./user";
+import { useSessionStore } from "@/store/session";
 
 export const useSignalStore = defineStore("signal", () => {
 	// State
@@ -18,8 +18,8 @@ export const useSignalStore = defineStore("signal", () => {
 	});
 	// Actions
 	async function fetchAll() {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
@@ -30,7 +30,7 @@ export const useSignalStore = defineStore("signal", () => {
 			params.append("sort", "-created");
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
-			const response = await fetch(`${userStore.urls.api.signal}?${params}`);
+			const response = await fetch(`${session.urls.api.signal}?${params}`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);

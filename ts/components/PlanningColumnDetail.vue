@@ -10,17 +10,17 @@
 			Active Investigation Workbench
 		</div>
 		<div class="card-body">
-			<div class="map-container">
+			<div class="map-container" v-if="session.user">
 				<MapMultipoint
 					id="map"
+					:bounds="session.user.organization.service_area"
 					:markers="markers"
-					:organization-id="user.organization.id"
-					:tegola="user.urls.tegola"
-					:xmin="user?.organization.service_area?.xmin ?? 0"
-					:ymin="user?.organization.service_area?.ymin ?? 0"
-					:xmax="user?.organization.service_area?.xmax ?? 0"
-					:ymax="user?.organization.service_area?.ymax ?? 0"
+					:organizationId="session.user.organization.id"
+					:tegola="session.urls?.tegola ?? ''"
 				></MapMultipoint>
+			</div>
+			<div v-else>
+				<p>loading...</p>
 			</div>
 
 			<div class="row g-3">
@@ -54,12 +54,11 @@
 
 			<div v-show="showMapTile" class="map-container">
 				<MapProxiedArcgisTile
-					ref="mapTile"
-					class="map"
-					:organization-id="user.organization.id"
-					:tegola="user.urls.tegola"
-					:url-tiles="user.urls.tile"
 					:location="selectedSignalLocation()"
+					:markers="[]"
+					:organizationId="session.user?.organization.id ?? 0"
+					:tegola="session.urls?.tegola ?? ''"
+					:urlTiles="session.urls?.tile ?? ''"
 					@map-click="updateSignalLocation"
 				>
 				</MapProxiedArcgisTile>
@@ -68,20 +67,22 @@
 	</div>
 </template>
 <script setup lang="ts">
-import MapMultipoint from "./MapMultipoint.vue";
-import MapProxiedArcgisTile from "./MapProxiedArcgisTile.vue";
-import { shortAddress } from "../format";
-import TimeRelative from "./TimeRelative.vue";
-import PlanningColumnDetailEntry from "./PlanningColumnDetailEntry.vue";
-import { useUserStore } from "../store/user";
+import MapMultipoint from "@/components/MapMultipoint.vue";
+import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
+import PlanningColumnDetailEntry from "@/components/PlanningColumnDetailEntry.vue";
+import TimeRelative from "@/components/TimeRelative.vue";
+import { shortAddress } from "@/format";
+import { useSessionStore } from "@/store/session";
+import { Location, MapClickEvent, Marker, Signal } from "@/types";
 
 interface Props {
 	markers: Marker[];
 	selectedSignals: Array<Signal>;
 }
 const props = defineProps<Props>();
-const user = useUserStore();
+const session = useSessionStore();
 const configureMapTile = () => {
+	/*
 	if (!mapTile.value) return;
 
 	mapTile.value.on("load", () => {
@@ -108,48 +109,44 @@ const configureMapTile = () => {
 			type: "circle",
 		});
 	});
+*/
 };
 
-const selectedSignalLocation = () => {
-	const first_pool = props.selectedSignals
-		.values()
-		.reduce((accumulator, current) => {
+const selectedSignalLocation = (): Location => {
+	const first_pool = props.selectedSignals.reduce(
+		(accumulator: Signal | null, current: Signal) => {
 			if (accumulator == null && current.type === "flyover pool") {
 				return current;
 			}
 			return accumulator;
-		}, null);
+		},
+		null as Signal | null,
+	);
 	const loc = first_pool?.location;
 	return (
 		loc || {
-			latitude: 0,
-			longitude: 0,
+			lat: 0,
+			lng: 0,
 		}
 	);
 };
 const showMapTile = () => {
-	return (
-		selectedSignalLocation() &&
-		props.selectedSignals.value
-			.values()
-			.reduce(
-				(accumulator, current) =>
-					accumulator || current.type === "flyover pool",
-				false,
-			)
+	const hasPool = props.selectedSignals.reduce(
+		(accumulator: boolean | null, current: Signal) => {
+			return accumulator || current.type === "flyover pool";
+		},
+		false,
 	);
+	return selectedSignalLocation() && hasPool;
 };
-const updateSignalLocation = (event) => {
-	const signalId = event.detail.signalId;
-	console.log("map click", signalId, event.detail);
+const updateSignalLocation = (event: MapClickEvent) => {
+	console.log("map click", event.location);
+	//const signalId = event.detail.signalId;
 
-	const map = event.detail.map;
-	const loc = {
-		latitude: event.detail.lat,
-		longitude: event.detail.lng,
-	};
+	//const map = event.map;
+	//const loc = event.location;
 
-	map.SetMarkers([loc]);
-	poolLocations.value[signalId] = loc;
+	//map.SetMarkers([loc]);
+	//poolLocations.value[signalId] = loc;
 };
 </script>

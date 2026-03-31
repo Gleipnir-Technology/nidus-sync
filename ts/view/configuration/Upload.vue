@@ -143,7 +143,7 @@
 									upload.status
 								}}</span>
 							</td>
-							<td>{{ upload.record_count }} entries</td>
+							<td>{{ upload.recordcount }} entries</td>
 							<td>
 								<RouterLink :to="`/_/configuration/upload/${upload.id}`"
 									><button class="btn btn-sm btn-outline-primary">View</button>
@@ -160,9 +160,10 @@
 import { computed, onMounted } from "vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { useUploadStore } from "@/store/upload";
+import { Upload } from "@/types";
 
 const uploadStore = useUploadStore();
-const uploads = computed(() => {
+const uploads = computed((): Upload[] | null => {
 	return uploadStore.all;
 });
 onMounted(() => {

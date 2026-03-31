@@ -56,11 +56,18 @@
 <script setup lang="ts">
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
-import ReviewTask from "@/types";
+import { Changes, ReviewTask } from "@/types";
 
 interface Props {
+	changes: Changes;
 	selectedTask?: ReviewTask;
 	submitting: boolean;
 }
 const props = defineProps<Props>();
+function discardEntry() {
+	console.log("Fake discard entry");
+}
+function markReviewed() {
+	console.log("Fake mark reviewed");
+}
 </script>

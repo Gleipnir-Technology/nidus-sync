@@ -34,11 +34,10 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="selectedTaskChanges.location.longitude"
+							v-model="poolLocation.lng"
 							:class="{
 								'border-warning':
-									selectedTaskChanges.location.longitude !==
-									selectedTask.location.longitude,
+									poolLocation.lng !== selectedTask.pool?.location.lng,
 							}"
 						/>
 					</div>
@@ -50,11 +49,10 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="selectedTaskChanges.location.latitude"
+							v-model="poolLocation.lat"
 							:class="{
 								'border-warning':
-									selectedTaskChanges.location?.latitude !==
-									selectedTask.location?.latitude,
+									poolLocation.lat !== selectedTask.pool?.location?.lat,
 							}"
 						/>
 					</div>
@@ -65,11 +63,10 @@
 					<div class="col-sm-9">
 						<select
 							class="form-select"
-							v-model="selectedTaskChanges.pool.condition"
+							v-model="poolCondition"
 							:class="{
 								'border-warning':
-									selectedTaskChanges.pool.condition !==
-									selectedTask.pool.condition,
+									poolCondition !== selectedTask.pool?.condition,
 							}"
 						>
 							<option value="">-- Select --</option>
@@ -83,23 +80,22 @@
 					</div>
 				</div>
 
-				<div v-if="selectedTaskChanges.pool.ownerContact" class="row mb-3">
+				<div class="row mb-3">
 					<label class="col-sm-3 col-form-label fw-bold">Owner Contact:</label>
 					<div class="col-sm-9">
 						<input
 							type="text"
 							class="form-control"
-							v-model="selectedTaskChanges.pool.owner_contact"
+							v-model="siteOwner.name"
 							:class="{
 								'border-warning':
-									selectedTaskChanges.pool.owner_contact !==
-									selectedTask.pool.owner_contact,
+									siteOwner.name !== selectedTask.pool?.site.owner?.name,
 							}"
 						/>
 					</div>
 				</div>
 
-				<div v-if="selectedTaskChanges.pool.resident_contact" class="row mb-4">
+				<div class="row mb-4">
 					<label class="col-sm-3 col-form-label fw-bold">
 						Resident Contact:
 					</label>
@@ -107,11 +103,10 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="selectedTaskChanges.pool.resident_contact"
+							v-model="siteResident.name"
 							:class="{
 								'border-warning':
-									selectedTaskChanges.pool.resident_contact !==
-									selectedTask.pool.resident_contact,
+									siteResident.name !== selectedTask.pool?.site.resident?.name,
 							}"
 						/>
 					</div>
@@ -120,50 +115,75 @@
 		</div>
 
 		<!-- Map Components -->
-		<div class="map-container">
+		<div class="map-container" v-if="session.user">
 			<MapMultipoint
 				ref="mapMultipoint"
 				id="map"
 				:bounds="mapBounds"
 				:markers="mapMarkers"
-				:organizationId="user.organization.id"
-				:tegola="user.urls.tegola"
-				:xmin="user.organization.service_area?.min.x ?? 0"
-				:ymin="user.organization.service_area?.min.y ?? 0"
-				:xmax="user.organization.service_area?.max.x ?? 0"
-				:ymax="user.organization.service_area?.max.y ?? 0"
+				:organizationId="session.user.organization.id"
+				:tegola="session.urls?.tegola ?? ''"
 			></MapMultipoint>
 		</div>
+		<div v-else>
+			<p>loading...</p>
+		</div>
 
-		<div class="map-container">
+		<div class="map-container" v-if="session.user && selectedTask.pool">
 			<MapProxiedArcgisTile
-				ref="mapTile"
-				class="map"
-				:location="selectedTask.location"
-				:organization-id="user.organization.id"
-				:tegola="user.urls.tegola"
-				:urlTiles="user.urls.tile"
+				:location="selectedTask.pool?.location"
+				:markers="[]"
+				:organizationId="session.user?.organization.id"
+				:tegola="session.urls?.tegola ?? ''"
+				:urlTiles="session.urls?.tile ?? ''"
 				@map-click="doPoolLocation"
 			></MapProxiedArcgisTile>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import { formatAddress } from "@/format";
-import ReviewTask from "@/types";
+import { useSessionStore } from "@/store/session";
+import {
+	Bounds,
+	Contact,
+	Location,
+	MapClickEvent,
+	Marker,
+	Pool,
+	ReviewTask,
+	User,
+} from "@/types";
 
 interface Props {
 	loading: boolean;
 	mapBounds?: Bounds;
 	mapMarkers: Marker[];
-	selectedTaskChanges: ReviewTask;
+	newPoolCondition: string;
+	newPoolLocation: Location;
 	selectedTask?: ReviewTask;
-	user: User | null;
 }
 const props = defineProps<Props>();
-function doPoolLocation(lat, lng) {
-	console.log("pool location", lat, lng);
+const poolCondition = ref<string>("unknown");
+const poolLocation = ref<Location>({
+	lat: 0,
+	lng: 0,
+});
+const siteOwner = ref<Contact>({
+	has_email: false,
+	has_phone: false,
+	name: "",
+});
+const siteResident = ref<Contact>({
+	has_email: false,
+	has_phone: false,
+	name: "",
+});
+const session = useSessionStore();
+function doPoolLocation(event: MapClickEvent) {
+	console.log("pool location", event);
 }
 </script>

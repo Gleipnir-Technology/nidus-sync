@@ -49,8 +49,8 @@
 						<div
 							v-if="
 								!(
-									selectedCommunication?.public_report.reporter.has_email ||
-									selectedCommunication?.public_report.reporter.has_phone
+									selectedCommunication?.public_report?.reporter.has_email ||
+									selectedCommunication?.public_report?.reporter.has_phone
 								)
 							"
 							class="mb-3"
@@ -62,8 +62,8 @@
 						</div>
 						<div
 							v-if="
-								selectedCommunication?.public_report.reporter.has_email ||
-								selectedCommunication?.public_report.reporter.has_phone
+								selectedCommunication?.public_report?.reporter.has_email ||
+								selectedCommunication?.public_report?.reporter.has_phone
 							"
 							class="mb-3"
 						>
@@ -74,7 +74,7 @@
 								>
 								<select
 									class="form-select form-select-sm"
-									@change="applyMessageTemplate($event.target.value)"
+									@change="handleTemplateChange"
 								>
 									<option value="">Select a template...</option>
 									<option value="received">Report Received</option>
@@ -107,7 +107,8 @@
 							<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
 							<div class="small">
 								<div
-									v-for="entry in selectedCommunication.public_report.log || []"
+									v-for="entry in selectedCommunication?.public_report?.log ||
+									[]"
 									:key="entry.created"
 									class="border-start border-2 ps-2 mb-2"
 								>
@@ -128,8 +129,8 @@
 								</div>
 								<div
 									v-if="
-										!selectedCommunication.public_report.log ||
-										selectedCommunication.public_report.log.length === 0
+										!selectedCommunication?.public_report?.log ||
+										selectedCommunication?.public_report?.log.length === 0
 									"
 									class="text-muted"
 								>
@@ -146,6 +147,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { Communication, User } from "@/types";
 interface Emits {
 	(e: "markSignal"): void;
 	(e: "markInvalid"): void;
@@ -154,26 +156,29 @@ interface Emits {
 interface Props {
 	loading: boolean;
 	selectedCommunication: Communication | null;
-	user: User | null;
 }
 const emit = defineEmits<Emits>();
 
 const messageText = ref("");
 const props = withDefaults(defineProps<Props>(), {});
-function applyMessageTemplate(template) {
+function applyMessageTemplate(template: string) {
 	const templates = {
-		received: `Dear ${selectedCommunication.value?.public_report.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
-		scheduled: `Dear ${selectedCommunication.value?.public_report.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
-		completed: `Dear ${selectedCommunication.value?.public_report.reporter.name || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
-		need_info: `Dear ${selectedCommunication.value?.public_report.reporter.name || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
+		received: `Dear ${props.selectedCommunication?.public_report?.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
+		scheduled: `Dear ${props.selectedCommunication?.public_report?.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
+		completed: `Dear ${props.selectedCommunication?.public_report?.reporter.name || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
+		need_info: `Dear ${props.selectedCommunication?.public_report?.reporter.name || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
 	};
 
-	if (templates[template]) {
-		messageText.value = templates[template];
+	if (template in templates) {
+		messageText.value = templates[template as keyof typeof templates];
 	}
 }
-function formatDate(date) {
+function formatDate(date: string) {
 	return new Date(date).toLocaleString();
+}
+function handleTemplateChange(event: Event) {
+	const target = event.target as HTMLSelectElement;
+	applyMessageTemplate(target.value);
 }
 function markInvalid() {
 	emit("markInvalid");

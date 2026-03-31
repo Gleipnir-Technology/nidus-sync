@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -54,7 +55,7 @@ func (u User) HasRoot() bool {
 func newUser(ctx context.Context, org Organization, user *models.User) User {
 	u := User{
 		Active:             true,
-		Avatar:             user.Avatar,
+		Avatar:             user.Avatar.GetOr(uuid.UUID{}).String(),
 		DisplayName:        user.DisplayName,
 		ID:                 int(user.ID),
 		Initials:           extractInitials(user.DisplayName),

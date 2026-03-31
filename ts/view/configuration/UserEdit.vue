@@ -40,7 +40,7 @@ pre {
 					<div class="card-header bg-primary text-white">
 						<h4 class="mb-0">User Configuration</h4>
 					</div>
-					<div v-if="user_" class="card-body">
+					<div v-if="user" class="card-body">
 						<!-- Avatar Section -->
 						<div class="row mb-4">
 							<div class="col-md-12">
@@ -88,7 +88,7 @@ pre {
 								</label>
 								<input
 									id="displayName"
-									v-model="user_.display_name"
+									v-model="user.display_name"
 									type="text"
 									class="form-control"
 									placeholder="Enter display name"
@@ -102,7 +102,7 @@ pre {
 								</label>
 								<input
 									id="username"
-									v-model="user_.username"
+									v-model="user.username"
 									type="text"
 									class="form-control"
 									readonly
@@ -117,14 +117,14 @@ pre {
 								<label for="userRole" class="form-label fw-bold">
 									User Role
 								</label>
-								<select id="userRole" v-model="user_.role" class="form-select">
+								<select id="userRole" v-model="user.role" class="form-select">
 									<option value="">Select a role</option>
 									<option
-										v-for="role in availableRoles"
-										:key="role.value"
-										:value="role.value"
+										v-for="option in optionRoles"
+										:key="option.value"
+										:value="option.value"
 									>
-										{{ role.label }}
+										{{ option.label }}
 									</option>
 								</select>
 							</div>
@@ -137,7 +137,7 @@ pre {
 										type="radio"
 										class="btn-check"
 										id="statusActive"
-										v-model="user_.status"
+										v-model="user.active"
 										value="active"
 									/>
 									<label class="btn btn-outline-success" for="statusActive">
@@ -148,7 +148,7 @@ pre {
 										type="radio"
 										class="btn-check"
 										id="statusInactive"
-										v-model="user_.status"
+										v-model="user.active"
 										value="inactive"
 									/>
 									<label class="btn btn-outline-secondary" for="statusInactive">
@@ -164,7 +164,7 @@ pre {
 								<label class="form-label fw-bold">User Tags</label>
 								<div class="mb-2">
 									<span
-										v-for="tag in user_.tags"
+										v-for="tag in user.tags"
 										:key="tag"
 										class="badge bg-info text-dark me-2 mb-2"
 									>
@@ -177,7 +177,7 @@ pre {
 										></button>
 									</span>
 									<span
-										v-if="user_.tags.length === 0"
+										v-if="user.tags.length === 0"
 										class="text-muted fst-italic"
 									>
 										No tags added
@@ -190,7 +190,7 @@ pre {
 											v-for="tag in availableTags"
 											:key="tag"
 											:value="tag"
-											:disabled="user_.tags.includes(tag)"
+											:disabled="user.tags.includes(tag)"
 										>
 											{{ tag }}
 										</option>
@@ -199,7 +199,7 @@ pre {
 										class="btn btn-outline-primary"
 										type="button"
 										@click="addTag"
-										:disabled="!selectedTag || user_.tags.includes(selectedTag)"
+										:disabled="!selectedTag || user.tags.includes(selectedTag)"
 									>
 										<i class="bi bi-plus-lg"></i> Add Tag
 									</button>
@@ -241,25 +241,16 @@ pre {
 
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, ref, reactive } from "vue";
-import { useUserStore } from "@/store/user";
+import { useSessionStore } from "@/store/session";
 import { useUsersStore } from "@/store/users";
-
-interface User {
-	avatar: string;
-	displayName: string;
-	username: string;
-	role: string;
-	status: "active" | "inactive";
-	tags: string[];
-}
-
-interface Role {
-	value: string;
-	label: string;
-}
+import { User } from "@/types";
 
 interface Props {
-	id: int;
+	id: number;
+}
+interface Option {
+	label: string;
+	value: string;
 }
 const avatar = ref<string>("");
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -267,13 +258,13 @@ const props = defineProps<Props>();
 const selectedFile = ref<File | null>(null);
 const selectedTag = ref<string>("");
 const usersStore = useUsersStore();
-const user = useUserStore();
-const user_ = ref<User | null>(null);
+const session = useSessionStore();
+const user = ref<User | null>(null);
 
 const defaultAvatar =
 	"https://via.placeholder.com/150/cccccc/666666?text=No+Avatar";
 
-const availableRoles: Role[] = [
+const optionRoles: Option[] = [
 	{ value: "account-owner", label: "Account Owner" },
 	{ value: "manager", label: "Manager" },
 	{ value: "tech1", label: "Tech 1" },
@@ -308,35 +299,51 @@ const handleAvatarChange = (event: Event) => {
 };
 
 const removeAvatar = () => {
-	avatar = "";
+	avatar.value = "";
 	if (fileInput.value) {
 		fileInput.value.value = "";
 	}
 };
 
 const addTag = () => {
-	if (selectedTag.value && !user_.value.tags.includes(selectedTag.value)) {
-		user_.value.tags.push(selectedTag.value);
+	if (user.value == null) {
+		return;
+	}
+	if (selectedTag.value && !user.value.tags.includes(selectedTag.value)) {
+		user.value.tags.push(selectedTag.value);
 		selectedTag.value = "";
 	}
 };
 
 const removeTag = (tag: string) => {
-	const index = user_.value.tags.indexOf(tag);
+	if (user.value == null) {
+		return;
+	}
+	const index = user.value.tags.indexOf(tag);
 	if (index > -1) {
-		user_.value.tags.splice(index, 1);
+		user.value.tags.splice(index, 1);
 	}
 };
 
+interface UserRequestPut {
+	avatar: string | null;
+}
 const saveChanges = async () => {
 	console.log("Saving user changes");
-	let userPayload = {};
+	let payload: UserRequestPut = {
+		avatar: "",
+	};
 	if (selectedFile.value) {
 		try {
 			const formData = new FormData();
 			formData.append("file", selectedFile.value);
 
-			const response = await fetch(user.urls.api.avatar, {
+			const url = session.urls?.api.avatar;
+			if (!url) {
+				console.log("empty avatar url");
+				return;
+			}
+			const response = await fetch(url, {
 				body: formData,
 				method: "POST",
 			});
@@ -345,17 +352,22 @@ const saveChanges = async () => {
 			}
 
 			const data = await response.json();
-			userPayload.avatar = data.uri;
+			payload.avatar = data.uri;
 		} catch (error) {
 			console.error("Failed to upload avatar", error);
 		}
 	}
-	const response = await fetch(user.urls.api.users, {
+	const url = session.urls?.api.user;
+	if (!url) {
+		console.log("empty avatar url");
+		return;
+	}
+	const response = await fetch(url, {
 		method: "PUT",
 		headers: {
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify(userPayload),
+		body: JSON.stringify(payload),
 	});
 	if (!response.ok) {
 		const errorData = await response.json();
@@ -381,7 +393,7 @@ onMounted(() => {
 	usersStore.fetchAll().then((users) => {
 		for (const u of users) {
 			if (u.id == props.id) {
-				user_.value = u;
+				user.value = u;
 				console.log("User set to", u);
 			}
 		}

@@ -61,7 +61,7 @@
 			</div>
 
 			<div class="list-group list-group-flush">
-				<div v-if="loading" class="loading">Loading...</div>
+				<div v-if="loading || all == null" class="loading">Loading...</div>
 				<div
 					v-else-if="all.length > 0"
 					v-for="comm in filteredCommunications"
@@ -109,14 +109,14 @@
 						<div>
 							<i class="bi bi-geo-alt text-muted"></i>
 							<span class="fw-medium">{{
-								comm.public_report.address.postal_code
+								comm.public_report?.address.postal_code
 							}}</span>
 						</div>
-						<small>{{ formatAddress(comm.public_report.address) }}</small>
+						<small>{{ formatAddress(comm.public_report?.address) }}</small>
 						<div
 							v-if="
-								comm.public_report.images &&
-								comm.public_report.images.length > 0
+								comm.public_report?.images &&
+								comm.public_report?.images.length > 0
 							"
 							class="mt-1"
 						>
@@ -142,8 +142,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import TimeRelative from "../components/TimeRelative.vue";
-import { Communication } from "../types";
+import TimeRelative from "@/components/TimeRelative.vue";
+import { formatAddress } from "@/format";
+import { Communication, LogEntry, PublicReport } from "@/types";
 
 interface Props {
 	all: Communication[] | null;
@@ -156,7 +157,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	selectedIndex: null,
+	selectedId: null,
 });
 
 const emit = defineEmits<Emits>();
@@ -169,14 +170,14 @@ const handleClick = (id: string) => {
 		emit("select", id);
 	}
 };
-const searchFilter = ref("");
-const typeFilter = ref("all");
+const searchFilter = ref<string>("");
+const typeFilter = ref<string>("all");
 
 function selectCommunication(communication: Communication) {
 	// Emit both events - one for general use, one for v-model
 	console.log("selected", communication);
-	emit("select-item", communication);
-	emit("update:selectedItem", communication);
+	emit("select", communication.id);
+	//emit("update:selectedItem", communication);
 	//messageText.value = "";
 	//updateMap();
 }
@@ -193,14 +194,29 @@ const filteredCommunications = computed(() => {
 	});
 });
 // Methods
-function filterMatches(filter, comm) {
-	// Implement your filter logic here
-	return true;
-}
-function formatAddress(a) {
-	if (a.number === "" && a.street === "") {
-		return "no address provided";
+function filterMatches(filter: string, comm: Communication) {
+	const pr = comm.public_report;
+	// When we have non-public-report communications fix this.
+	if (pr == null) {
+		return false;
 	}
-	return `${a.number} ${a.street}, ${a.locality}`;
+	return filterMatchesPublicReport(filter, pr);
+}
+function filterMatchesLogEntry(filter: string, logs: LogEntry[]) {
+	for (const le of logs) {
+		if (le.message.includes(filter)) {
+			return true;
+		}
+	}
+}
+function filterMatchesPublicReport(filter: string, pr: PublicReport) {
+	if (
+		pr.address_raw.includes(filter) ||
+		pr.public_id.includes(filter) ||
+		filterMatchesLogEntry(filter, pr.log)
+	) {
+		return true;
+	}
+	return false;
 }
 </script>

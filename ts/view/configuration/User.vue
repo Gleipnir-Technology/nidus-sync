@@ -47,7 +47,6 @@
 							<tr>
 								<th>User</th>
 								<th>Role</th>
-								<th>Status</th>
 								<th>Tags</th>
 								<th>Actions</th>
 							</tr>
@@ -58,24 +57,16 @@
 									<div class="d-flex align-items-center">
 										<img
 											:src="user.avatar"
-											:alt="user.name"
+											:alt="user.display_name"
 											class="tech-photo me-3"
 										/>
 										<div>
-											<div class="fw-bold">{{ user.name }}</div>
+											<div class="fw-bold">{{ user.display_name }}</div>
 										</div>
 									</div>
 								</td>
 								<td>
 									<span class="badge bg-success">{{ user.role }}</span>
-								</td>
-								<td>
-									<span
-										class="badge status-badge"
-										:class="getStatusClass(user.status)"
-									>
-										{{ user.status }}
-									</span>
 								</td>
 								<td>
 									<span
@@ -137,11 +128,6 @@ const urlConfiguration = ref<URLConfiguration>({
 	userAdd: "/configuration/user/add", // Update with your actual route
 });
 
-// Methods
-const getStatusClass = (status: string): string => {
-	return status === "Active" ? "bg-success" : "bg-secondary";
-};
-
 const getTagClass = (tag: string): string => {
 	if (tag === "warrant service") return "bg-warrant";
 	if (tag === "drone pilot") return "bg-drone";
@@ -149,12 +135,16 @@ const getTagClass = (tag: string): string => {
 };
 
 const deactivateUser = (userId: number): void => {
-	const user = users.value.find((u) => u.id === userId);
-	if (user) {
-		user.status = "Inactive";
-		// Add your deactivation logic here (e.g., API call)
-		console.log(`Deactivating user: ${userId}`);
+	if (users.value == null) {
+		return;
 	}
+	const user = users.value.find((u) => u.id === userId);
+	if (!user) {
+		return;
+	}
+	user.active = false;
+	// Add your deactivation logic here (e.g., API call)
+	console.log(`Deactivating user: ${userId}`);
 };
 
 // Lifecycle hooks

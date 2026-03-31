@@ -21,7 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { shortAddress } from "../format";
+import { shortAddress } from "@/format";
+import { Signal } from "@/types";
+
 interface Props {
 	selected: boolean;
 	signal: Signal;
@@ -42,7 +44,7 @@ function location(signal: Signal): string {
 	if (signal.address != null) {
 		return shortAddress(signal.address);
 	} else {
-		return `${signal.location.latitude}, ${signal.location.longitude}`;
+		return `${signal.location.lat}, ${signal.location.lng}`;
 	}
 }
 function title(signal: Signal): string {
@@ -52,6 +54,8 @@ function title(signal: Signal): string {
 		return "Nuisance";
 	} else if (signal.type == "publicreport water") {
 		return "Standing water";
+	} else {
+		return `Unknown ${signal.type}`;
 	}
 }
 </script>

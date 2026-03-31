@@ -18,9 +18,9 @@ type Pool struct {
 	ID        int32  `db:"id" json:"-"`
 }
 type UploadPoolError struct {
-	Column  uint
-	Line    uint
-	Message string
+	Column  uint   `json:"column"`
+	Line    uint   `json:"line"`
+	Message string `json:"message"`
 }
 
 func errorsByLine(ctx context.Context, file *models.FileuploadFile) ([]UploadPoolError, map[int32][]UploadPoolError, error) {

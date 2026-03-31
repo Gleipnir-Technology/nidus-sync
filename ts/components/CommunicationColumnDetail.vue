@@ -33,21 +33,19 @@
 	<div class="card shadow-sm mb-3">
 		<div class="card-header bg-white pane-header">Communication Workbench</div>
 		<div class="card-body">
-			<div class="map-container">
-				<MapMultipoint
-					id="map"
-					:bounds="mapBounds"
-					:markers="mapMarkers"
-					:organizationId="user.organization.id"
-					:tegola="user.urls.tegola"
-					:xmin="user.organization.service_area?.min.x ?? 0"
-					:ymin="user.organization.service_area?.min.y ?? 0"
-					:xmax="user.organization.service_area?.max.x ?? 0"
-					:ymax="user.organization.service_area?.max.y ?? 0"
-				/>
+			<div v-if="loading || session.user == null" class="loading">
+				Loading...
 			</div>
-			<div v-if="loading" class="loading">Loading...</div>
 			<div v-else>
+				<div class="map-container">
+					<MapMultipoint
+						id="map"
+						:bounds="mapBounds"
+						:markers="mapMarkers"
+						:organizationId="session.user?.organization.id"
+						:tegola="session.urls?.tegola ?? ''"
+					/>
+				</div>
 				<div
 					v-if="!selectedCommunication"
 					class="d-flex flex-column align-items-center justify-content-center text-muted"
@@ -58,10 +56,11 @@
 
 				<div v-if="selectedCommunication" class="h-100 d-flex flex-column">
 					<PublicreportCard
-						:report="selectedCommunication.public_report"
+						v-if="selectedCommunication?.public_report"
+						:report="selectedCommunication?.public_report"
 						@viewImage="openPhotoViewer"
 					/>
-					<!-- Report Details -->
+					<p v-else>No public report</p>
 				</div>
 			</div>
 		</div>
@@ -73,27 +72,29 @@ import { computed } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
+import { Bounds, Communication, Marker, User } from "@/types";
+import { useSessionStore } from "@/store/session";
 
 interface Emits {
-	(e: "viewImage", index: int): void;
+	(e: "viewImage", index: number): void;
 }
 interface Props {
 	loading: boolean;
 	mapBounds?: Bounds;
 	mapMarkers: Marker[];
 	selectedCommunication: Communication | null;
-	user: User | null;
 }
 
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 const nuisance = computed(() => {
-	return props.selectedCommunication?.value?.public_report?.nuisance || null;
+	return props.selectedCommunication?.public_report?.nuisance || null;
 });
+const session = useSessionStore();
 const water = computed(() => {
-	return props.selectedCommunication?.value?.public_report?.water || null;
+	return props.selectedCommunication?.public_report?.water || null;
 });
-function openPhotoViewer(index) {
+function openPhotoViewer(index: number) {
 	emit("viewImage", index);
 }
 </script>

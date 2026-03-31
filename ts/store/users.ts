@@ -2,11 +2,11 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { User } from "../types";
 import { SSEManager } from "../SSEManager";
-import { useUserStore } from "./user";
+import { useSessionStore } from "./session";
 
 export const useUsersStore = defineStore("users", () => {
 	// State
-	const _byID = ref<Map<int, User>>(new Map());
+	const _byID = ref<Map<number, User>>(new Map());
 	const all = ref<User[] | null>(null);
 	const loading = ref(false);
 	const error = ref(null);
@@ -18,14 +18,14 @@ export const useUsersStore = defineStore("users", () => {
 		}
 	});
 	// Actions
-	function byID(id: int) {
+	function byID(id: number) {
 		const result = _byID.value.get(id);
 		console.log("user", id, result);
 		return result;
 	}
 	async function fetchAll(): Promise<User[]> {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
@@ -36,7 +36,7 @@ export const useUsersStore = defineStore("users", () => {
 			params.append("sort", "-created");
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
-			const response = await fetch(`${userStore.urls.api.users}?${params}`);
+			const response = await fetch(`${session.urls.api.user}?${params}`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
@@ -52,16 +52,16 @@ export const useUsersStore = defineStore("users", () => {
 			throw err;
 		}
 	}
-	async function fetchOne(id: int) {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+	async function fetchOne(id: number) {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
 		loading.value = true;
 		error.value = null;
 		try {
-			const response = await fetch(`${userStore.urls.api.user}/${id}`);
+			const response = await fetch(`${session.urls.api.user}/${id}`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);

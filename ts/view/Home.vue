@@ -120,17 +120,15 @@
 	<h3 class="section-title">Mosquito Activity Heatmap</h3>
 	<div class="row">
 		<div class="col-12">
-			<p v-if="dashboard.serviceArea.min.x === 0.0">
+			<p v-if="session.user && dashboard.serviceArea.min.x === 0.0">
 				No service area for this organization yet
 			</p>
-			<map-aggregate
+			<MapAggregate
 				v-else
-				:organization-id="dashboard.organization.id"
-				:tegola="dashboard.tegolaUrl"
-				:xmin="dashboard.serviceArea.min.x"
-				:ymin="dashboard.serviceArea.min.y"
-				:xmax="dashboard.serviceArea.max.x"
-				:ymax="dashboard.serviceArea.max.y"
+				:bounds="session.user?.organization.service_area"
+				:markers="[]"
+				:organizationId="dashboard.organization.id"
+				:tegola="session.urls?.tegola ?? ''"
 			/>
 		</div>
 	</div>
@@ -152,17 +150,6 @@
 									<th>Action</th>
 								</tr>
 							</thead>
-							<tbody>
-								<tr v-for="(sr, i) in dashboard.recentRequests" :key="i">
-									<td>{{ formatTimeRelative(sr.date) }}</td>
-									<td>Service Request</td>
-									<td>{{ sr.location }}</td>
-									<td><span class="badge bg-success">Completed</span></td>
-									<td>
-										<a href="#" class="btn btn-sm btn-outline-primary">View</a>
-									</td>
-								</tr>
-							</tbody>
 						</table>
 					</div>
 				</div>
@@ -173,7 +160,9 @@
 
 <script setup lang="ts">
 import { onMounted, reactive } from "vue";
-import MapAggregate from "../components/MapAggregate.vue";
+import MapAggregate from "@/components/MapAggregate.vue";
+import { useSessionStore } from "@/store/session";
+
 const dashboard = reactive({
 	counts: {
 		service_requests: 0,
@@ -182,7 +171,7 @@ const dashboard = reactive({
 	},
 	organization: {
 		name: "",
-		id: "",
+		id: 0,
 	},
 	isSyncOngoing: false,
 	lastSync: new Date(),
@@ -193,6 +182,7 @@ const dashboard = reactive({
 	},
 	recentRequests: [],
 });
+const session = useSessionStore();
 onMounted(async () => {});
 function formatBigNumber(n: number): string {
 	// Convert the number to a string

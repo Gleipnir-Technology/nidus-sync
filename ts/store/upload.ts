@@ -1,12 +1,12 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { Upload } from "../types";
-import { SSEManager } from "../SSEManager";
-import { useUserStore } from "./user";
+import { Upload } from "@/types";
+import { SSEManager } from "@/SSEManager";
+import { useSessionStore } from "@/store/session";
 
 export const useUploadStore = defineStore("upload", () => {
 	// State
-	const _byID = ref<Map<int, Upload>>(new Map());
+	const _byID = ref<Map<number, Upload>>(new Map());
 	const all = ref<Upload[] | null>(null);
 	const loading = ref(false);
 	const error = ref(null);
@@ -18,12 +18,12 @@ export const useUploadStore = defineStore("upload", () => {
 		}
 	});
 	// Actions
-	function byID(id: int) {
+	function byID(id: number) {
 		return _byID.value.get(id);
 	}
 	async function fetchAll() {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
@@ -34,7 +34,7 @@ export const useUploadStore = defineStore("upload", () => {
 			params.append("sort", "-created");
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
-			const response = await fetch(`${userStore.urls.api.upload}?${params}`);
+			const response = await fetch(`${session.urls.api.upload}?${params}`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
@@ -49,16 +49,16 @@ export const useUploadStore = defineStore("upload", () => {
 			throw err;
 		}
 	}
-	async function fetchOne(id: int) {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+	async function fetchOne(id: number) {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
 		loading.value = true;
 		error.value = null;
 		try {
-			const response = await fetch(`${userStore.urls.api.upload}/${id}`);
+			const response = await fetch(`${session.urls.api.upload}/${id}`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);

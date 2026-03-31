@@ -76,8 +76,8 @@ func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.Fields
 }
 
 type ServiceArea struct {
-	Min Point
-	Max Point
+	Min Point `json:"min"`
+	Max Point `json:"max"`
 }
 
 func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.FieldseekerServicerequest, error) {

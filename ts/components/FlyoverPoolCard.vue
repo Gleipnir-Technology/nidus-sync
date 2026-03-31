@@ -1,22 +1,28 @@
 <template>
 	<p>A flyover pool</p>
-	<MapProxiedArcgisTile
-		id="tile-map"
-		:latitude="pool.location.latitude"
-		:longitude="pool.location.longitude"
-		:markers="tileMapMarkers"
-		:organizationId="user.organization.id"
-		:tegola="user.urls.tegola"
-	/>
+	<div v-if="session.user">
+		<MapProxiedArcgisTile
+			:location="location"
+			:markers="markers"
+			:organizationId="session.user?.organization.id"
+			:tegola="session.urls?.tegola ?? ''"
+			:urlTiles="session.urls?.tile ?? ''"
+		/>
+	</div>
+	<div v-else>
+		<p>Loading...</p>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from "../store/user";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
+import { Location, Marker } from "@/types";
+import { useSessionStore } from "@/store/session";
 
 interface Props {
-	pool: Pool;
+	location: Location;
+	markers: Marker[];
 }
 const props = defineProps<Props>();
-const user = useUserStore();
+const session = useSessionStore();
 </script>

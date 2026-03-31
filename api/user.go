@@ -17,7 +17,7 @@ type contentURLAPI struct {
 	ReviewTask          string `json:"review_task"`
 	Signal              string `json:"signal"`
 	Upload              string `json:"upload"`
-	Users               string `json:"users"`
+	User                string `json:"users"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`
@@ -51,7 +51,7 @@ func getUserSelf(ctx context.Context, r *http.Request, user platform.User, query
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
 				Signal:              config.MakeURLNidus("/api/signal"),
 				Upload:              config.MakeURLNidus("/api/upload"),
-				Users:               config.MakeURLNidus("/api/user"),
+				User:                config.MakeURLNidus("/api/user"),
 			},
 			Tegola: urls.Tegola,
 			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),
@@ -96,6 +96,7 @@ func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User
 	}, nil
 }
 
-func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.User) {
+func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.User) (string, *nhttp.ErrorWithStatus) {
 	//if updates.Avatar
+	return "", nil
 }

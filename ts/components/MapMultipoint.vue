@@ -21,31 +21,42 @@
 
 <script setup lang="ts">
 import "maplibre-gl/dist/maplibre-gl.css";
-import { onMounted, onUnmounted, ref, watch } from "vue";
-import { Bounds, Marker } from "@/types";
+import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import maplibregl from "maplibre-gl";
+import {
+	computed,
+	onMounted,
+	onUnmounted,
+	ref,
+	shallowRef,
+	watch,
+	type Ref,
+} from "vue";
+import { Bounds, Marker } from "@/types";
 
 interface Emits {}
 interface Props {
 	bounds?: Bounds;
 	markers: Marker[];
-	organizationId: int;
+	organizationId: number;
 	tegola: string;
 }
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	// default bounds cover a bunch of the continental US
-	bounds: {
-		max: { x: -70, y: 50 },
-		min: { x: -125, y: 25 },
+	bounds: () => {
+		return {
+			max: { lng: -70, lat: 50 },
+			min: { lng: -125, lat: 25 },
+		};
 	},
 });
 
+const boundsSafe = props.bounds as Bounds;
 const error = ref<string | null>(null);
 const mapContainer = ref<HTMLElement | null>(null);
-const map = ref<maplibregl.Map | null>(null);
-const markerInstances = ref<Map<string, maplibregl.Marker>>(new Map());
-const markers = ref<Map<string, maplibregl.Marker>>(new Map());
+const map: Ref<MapLibreMap | null> = shallowRef(null);
+const markerInstances = shallowRef<Map<string, maplibregl.Marker>>(new Map());
 watch(
 	() => props.bounds,
 	(newBounds) => {
@@ -70,12 +81,12 @@ watch(
 	{ deep: true },
 );
 
-const _bounds = () => {
-	return [
-		[props.bounds.min.x, props.bounds.min.y],
-		[props.bounds.max.y, props.bounds.max.y],
-	];
-};
+function _bounds(): LngLatBoundsLike {
+	return new maplibregl.LngLatBounds(
+		new maplibregl.LngLat(boundsSafe.min.lng, boundsSafe.min.lat),
+		new maplibregl.LngLat(boundsSafe.max.lng, boundsSafe.max.lat),
+	);
+}
 
 const _initializeMap = () => {};
 
@@ -90,18 +101,19 @@ onMounted(() => {
 			container: mapContainer.value,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 		});
+		const mapInstance = map.value;
 
 		// Wait for map to load, then add the markers
-		map.value.on("load", () => {
+		mapInstance.on("load", () => {
 			if (props.organizationId !== 0) {
-				map.value.addSource("tegola", {
+				mapInstance.addSource("tegola", {
 					type: "vector",
 					tiles: [
 						`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
 					],
 				});
 
-				map.value.addLayer({
+				mapInstance.addLayer({
 					id: "service-area",
 					source: "tegola",
 					"source-layer": "service-area-bounds",
@@ -114,7 +126,9 @@ onMounted(() => {
 			updateMarkers(props.markers);
 		});
 	} catch (e) {
-		error.value = e;
+		error.value = e instanceof Error ? e.message : "an error ocurred";
+		console.error("Error on map multipoint init", e);
+		//throw new Error(error.value);
 	}
 });
 

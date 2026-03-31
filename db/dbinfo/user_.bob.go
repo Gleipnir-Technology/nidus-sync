@@ -132,6 +132,42 @@ var Users = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		IsActive: column{
+			Name:      "is_active",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsDronePilot: column{
+			Name:      "is_drone_pilot",
+			DBType:    "boolean",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		IsWarrant: column{
+			Name:      "is_warrant",
+			DBType:    "boolean",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		Avatar: column{
+			Name:      "avatar",
+			DBType:    "uuid",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: userIndexes{
 		UserPkey: index{
@@ -210,11 +246,15 @@ type userColumns struct {
 	PasswordHashType          column
 	PasswordHash              column
 	Role                      column
+	IsActive                  column
+	IsDronePilot              column
+	IsWarrant                 column
+	Avatar                    column
 }
 
 func (c userColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username, c.PasswordHashType, c.PasswordHash, c.Role,
+		c.ID, c.ArcgisAccessToken, c.ArcgisLicense, c.ArcgisRefreshToken, c.ArcgisRefreshTokenExpires, c.ArcgisRole, c.DisplayName, c.Email, c.OrganizationID, c.Username, c.PasswordHashType, c.PasswordHash, c.Role, c.IsActive, c.IsDronePilot, c.IsWarrant, c.Avatar,
 	}
 }
 

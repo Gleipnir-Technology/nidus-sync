@@ -21,15 +21,24 @@
 
 <script setup lang="ts">
 import "maplibre-gl/dist/maplibre-gl.css";
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
-import { Point } from "@/types";
+import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import maplibregl from "maplibre-gl";
+import {
+	ref,
+	watch,
+	onMounted,
+	onBeforeUnmount,
+	shallowRef,
+	type Ref,
+} from "vue";
+import { Location, MapClickEvent, Marker, Point } from "@/types";
 
 interface Emits {
-	(e: "map-click", latitude: Number, longitude: Number): void;
+	(e: "map-click", event: MapClickEvent): void;
 }
 interface Props {
-	location: Point;
+	location: Location;
+	markers: Marker[];
 	organizationId: Number;
 	tegola: string;
 	urlTiles: string;
@@ -39,9 +48,9 @@ const props = defineProps<Props>();
 
 const error = ref<string | null>(null);
 const mapContainer = ref<HTMLElement | null>(null);
-const map = ref<maplibregl.Map | null>(null);
-const markerInstances = ref<Map<string, maplibrgl.Marker>>(new Map());
-const markers = ref<Map<string, maplibrgl.Marker>>(new Map());
+const map: Ref<MapLibreMap | null> = shallowRef(null);
+const markerInstances = ref<Map<string, maplibregl.Marker>>(new Map());
+const markers = ref<Map<string, maplibregl.Marker>>(new Map());
 
 // Watch for latitude/longitude changes
 watch(
@@ -49,7 +58,7 @@ watch(
 	([newLocation]) => {
 		if (map.value) {
 			map.value.jumpTo({
-				center: [newLocation.longitude, newLocation.latitude],
+				center: [newLocation.lng, newLocation.lat],
 				zoom: 19,
 			});
 		}
@@ -61,21 +70,22 @@ const initializeMap = () => {
 
 	try {
 		map.value = new maplibregl.Map({
-			center: [props.location.longitude, props.location.latitude],
+			center: [props.location.lng, props.location.lat],
 			container: mapContainer.value,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 19,
 		});
+		const mapInstance = map.value;
 
-		map.value.on("load", () => {
+		mapInstance.on("load", () => {
 			if (props.organizationId !== 0) {
-				map.value.addSource("tegola", {
+				mapInstance.addSource("tegola", {
 					type: "vector",
 					tiles: [
 						`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
 					],
 				});
-				map.value.addLayer({
+				mapInstance.addLayer({
 					id: "service-area",
 					source: "tegola",
 					"source-layer": "service-area-bounds",
@@ -86,82 +96,32 @@ const initializeMap = () => {
 				});
 			}
 
-			map.value.addSource("flyover", {
+			mapInstance.addSource("flyover", {
 				type: "raster",
 				tiles: [props.urlTiles],
 			});
 
-			map.value.addLayer({
+			mapInstance.addLayer({
 				id: "flyover-layer",
 				source: "flyover",
 				type: "raster",
 			});
 
-			/*
-			map.value.on("click", (e) => {
+			mapInstance.on("click", (e) => {
 				emit("map-click", {
-					lng: e.lngLat.lng,
-					lat: e.lngLat.lat,
-					map: getCurrentInstance(),
+					location: {
+						lat: e.lngLat.lat,
+						lng: e.lngLat.lng,
+					},
+					map: mapInstance,
 					point: e.point,
 				});
 			});
-			*/
 		});
 	} catch (e) {
 		console.error("hey dummy", e);
 	}
 };
-
-const addLayer = (a) => {
-	return map.value?.addLayer(a);
-};
-
-const addSource = (a, b) => {
-	return map.value?.addSource(a, b);
-};
-
-const jumpTo = (args) => {
-	return map.value?.jumpTo(args);
-};
-
-const once = (a, b) => {
-	return map.value?.once(a, b);
-};
-
-const queryRenderedFeatures = (a) => {
-	return map.value?.queryRenderedFeatures(a);
-};
-
-const fitBounds = (bounds, options) => {
-	return map.value?.fitBounds(bounds, options);
-};
-
-const setLayoutProperty = (layout, property, value) => {
-	return map.value?.setLayoutProperty(layout, property, value);
-};
-
-const setMarkers = (newMarkers) => {
-	console.log("Setting map markers", newMarkers);
-	markers.value.forEach((marker) => marker.remove());
-	markers.value = newMarkers;
-	for (let m of newMarkers) {
-		m.addTo(map.value);
-	}
-};
-
-// Expose methods to parent components
-defineExpose({
-	addLayer,
-	addSource,
-	jumpTo,
-	once,
-	queryRenderedFeatures,
-	fitBounds,
-	setLayoutProperty,
-	setMarkers,
-	map,
-});
 
 onMounted(() => {
 	setTimeout(() => initializeMap(), 0);

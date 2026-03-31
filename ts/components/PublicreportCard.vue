@@ -316,16 +316,17 @@ import MapMultipoint from "@/components/MapMultipoint.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { formatAddress } from "@/format";
+import { PublicReport } from "@/types";
 
 interface Emits {
-	(e: "viewImage", index: int): void;
+	(e: "viewImage", index: number): void;
 }
 interface Props {
-	report: Publicreport;
+	report: PublicReport;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-function openPhotoViewer(index) {
+function openPhotoViewer(index: number) {
 	emit("viewImage", index);
 }
 </script>

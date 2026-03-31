@@ -27,8 +27,7 @@
 				:mapBounds="mapBounds || undefined"
 				:mapMarkers="mapMarkers"
 				:selectedCommunication="selectedCommunication"
-				:user="user"
-				@viewImage="openPhotoViewer"
+				@viewImage="openImageViewer"
 			/>
 		</template>
 		<template #right>
@@ -38,17 +37,16 @@
 				@markSignal="markSignal"
 				@sendMessage="sendMessage"
 				:selectedCommunication="selectedCommunication"
-				:user="user"
 			/>
 		</template>
 	</ThreeColumn>
-	<PhotoViewerModal
-		@close="showPhotoModal = false"
+	<ImageViewerModal
+		@close="showImageModal = false"
 		@imageNext="imageNext()"
 		@imagePrevious="imagePrevious()"
 		:images="currentImages"
-		:currentPhotoIndex="currentPhotoIndex"
-		:show="showPhotoModal"
+		:currentImageIndex="currentImageIndex"
+		:show="showImageModal"
 	/>
 	<ToastNotification
 		:message="toastMessage"
@@ -62,35 +60,36 @@ import { computed, onMounted, ref } from "vue";
 import maplibregl from "maplibre-gl";
 
 import { useCommunicationStore } from "@/store/communication";
-import { useUserStore } from "@/store/user";
+import { useSessionStore } from "@/store/session";
 import CommunicationColumnAction from "@/components/CommunicationColumnAction.vue";
 import CommunicationColumnDetail from "@/components/CommunicationColumnDetail.vue";
 import CommunicationColumnList from "@/components/CommunicationColumnList.vue";
-import PhotoViewerModal from "@/components/PhotoViewerModal.vue";
+import ImageViewerModal from "@/components/ImageViewerModal.vue";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ToastNotification from "@/components/ToastNotification.vue";
+import { Bounds, Communication, Marker } from "@/types";
 
 const communication = useCommunicationStore();
-const user = useUserStore();
+const session = useSessionStore();
 onMounted(() => {
 	fetchCommunications();
 });
 
 // Refs
-const currentPhotoIndex = ref<int>(0);
+const currentImageIndex = ref<number>(0);
 const error = ref<string | null>(null);
 const loading = ref<boolean>(true);
 const mapBounds = ref<Bounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
-const showPhotoModal = ref(false);
+const showImageModal = ref(false);
 const toastMessage = ref("");
 const toastShow = ref(false);
 const toastTitle = ref("");
 
-const currentPhoto = computed(() => {
+const currentImage = computed(() => {
 	const comm = selectedCommunication.value;
-	return comm.public_report?.images[currentPhotoIndex] ?? null;
+	return comm?.public_report?.images[currentImageIndex.value] ?? null;
 });
 const currentImages = computed(() => {
 	const comm = selectedCommunication.value;
@@ -99,16 +98,18 @@ const currentImages = computed(() => {
 	}
 	return comm.public_report.images ?? [];
 });
-const selectedCommunication = computed<Communication | null>(() => {
-	if (selectedId.value == null) {
-		return null;
-	}
-	if (communication.all == null) {
-		return null;
-	}
-	const result = communication.all.find((c) => c.id == selectedId.value);
-	return result;
-});
+const selectedCommunication = computed<Communication | null>(
+	(): Communication | null => {
+		if (selectedId.value == null) {
+			return null;
+		}
+		if (communication.all == null) {
+			return null;
+		}
+		const result = communication.all.find((c) => c.id == selectedId.value);
+		return result || null;
+	},
+);
 const handleDeselect = (id: string) => {
 	selectedId.value = null;
 	updateMap();
@@ -119,24 +120,15 @@ const handleSelect = (id: string) => {
 };
 async function fetchCommunications() {
 	await communication.fetchAll();
-	// if we already had something selected, reset it using the new data
-	if (selectedCommunication.value) {
-		const matching = communication.all.filter((c) => {
-			return c.id === selectedCommunication.value.id;
-		});
-		if (matching.length > 0) {
-			selectedCommunication.value = matching[0];
-		}
-	}
 }
 function imageNext() {
-	currentPhotoIndex.value = Math.min(
+	currentImageIndex.value = Math.min(
 		currentImages.value.length - 1,
-		currentPhotoIndex.value + 1,
+		currentImageIndex.value + 1,
 	);
 }
 function imagePrevious() {
-	currentPhotoIndex.value = Math.max(0, currentPhotoIndex.value - 1);
+	currentImageIndex.value = Math.max(0, currentImageIndex.value - 1);
 }
 async function loadFromAPI() {
 	loading.value = true;
@@ -144,19 +136,22 @@ async function loadFromAPI() {
 	try {
 		await Promise.all([fetchCommunications()]);
 	} catch (err) {
-		error.value = err.message;
+		error.value = err instanceof Error ? err.message : "fetch error";
 		console.error("Error loading data:", err);
 	} finally {
 		loading.value = false;
 	}
 }
 
-function openPhotoViewer(index) {
-	currentPhotoIndex.value = index;
-	showPhotoModal.value = true;
+function openImageViewer(index: number) {
+	currentImageIndex.value = index;
+	showImageModal.value = true;
 }
 
 async function markInvalid() {
+	if (selectedCommunication.value == null) {
+		return;
+	}
 	console.log("Marking report as invalid:", selectedCommunication.value.id);
 	const payload = {
 		reportID: selectedCommunication.value.id,
@@ -178,6 +173,9 @@ async function markInvalid() {
 }
 
 async function markSignal() {
+	if (selectedCommunication.value == null) {
+		return;
+	}
 	console.log("Marking report as signal:", selectedCommunication.value.id);
 	try {
 		const report_id = selectedCommunication.value.id;
@@ -201,12 +199,15 @@ async function markSignal() {
 		);
 		await fetchCommunications();
 	} catch (err) {
-		error.value = err.message;
+		error.value = err instanceof Error ? err.message : "fetch error";
 		console.error("Error creating lead:", err);
 	}
 }
 
 function removeCurrentFromList() {
+	if (communication.all == null) {
+		return;
+	}
 	const index = communication.all.findIndex((c) => c.id === selectedId.value);
 	if (index > -1) {
 		communication.all.splice(index, 1);
@@ -220,14 +221,15 @@ function removeCurrentFromList() {
 }
 async function sendMessage(message: string) {
 	if (!message.trim()) return;
-
-	console.log("Sending message reporter:", message.value);
+	if (selectedCommunication.value == null) return;
+	if (session.urls == null) return;
+	console.log("Sending message reporter:", message);
 
 	const payload = {
-		message: message.value,
+		message: message,
 		reportID: selectedCommunication.value.id,
 	};
-	const response = await fetch(user.urls.api.publicreport_message, {
+	const response = await fetch(session.urls?.api.publicreport_message, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -241,11 +243,10 @@ async function sendMessage(message: string) {
 
 	showNotification(
 		"Message Sent",
-		`Message successfully sent to ${selectedCommunication.value.public_report.reporter.name}`,
+		`Message successfully sent to ${selectedCommunication.value.public_report?.reporter.name}`,
 	);
-	messageText.value = "";
 }
-function showNotification(title, message) {
+function showNotification(title: string, message: string) {
 	toastTitle.value = title;
 	toastMessage.value = message;
 	toastShow.value = true;
@@ -268,35 +269,26 @@ function updateMap() {
 			color: "#FF0000",
 			draggable: false,
 			id: String(Date.now()),
-			location: {
-				lng: loc.longitude,
-				lat: loc.latitude,
-			},
+			location: loc,
 		},
 	];
 	console.log("markers now", mapMarkers.value);
 
-	let min = { lat: loc.latitude, lng: loc.longitude };
-	let max = { lat: loc.latitude, lng: loc.longitude };
+	let min = loc;
+	let max = loc;
 
-	for (const i of selectedCommunication.value.public_report.images) {
-		if (
-			i.location != null &&
-			i.location.latitude != 0 &&
-			i.location.longitude != 0
-		) {
+	for (const i of selectedCommunication.value?.public_report?.images ?? []) {
+		if (i.location != null && i.location.lat != 0 && i.location.lng != 0) {
 			mapMarkers.value.push({
 				color: "#00FF00",
 				draggable: false,
-				location: {
-					lat: i.location.latitude,
-					lng: i.location.longitude,
-				},
+				id: new Date().toISOString(),
+				location: i.location,
 			});
-			min.lat = Math.min(min.lat, i.location.latitude);
-			min.lng = Math.min(min.lng, i.location.longitude);
-			max.lat = Math.max(max.lat, i.location.latitude);
-			max.lng = Math.max(max.lng, i.location.longitude);
+			min.lat = Math.min(min.lat, i.location.lat);
+			min.lng = Math.min(min.lng, i.location.lng);
+			max.lat = Math.max(max.lat, i.location.lat);
+			max.lng = Math.max(max.lng, i.location.lng);
 		}
 	}
 
@@ -310,9 +302,6 @@ function updateMap() {
 			lng: min.lng - 0.01,
 		},
 	};
-}
-function onFilterChange(filters) {
-	console.log("Filters changed");
 }
 // Lifecycle hooks
 onMounted(async () => {

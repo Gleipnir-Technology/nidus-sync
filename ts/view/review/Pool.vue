@@ -66,7 +66,7 @@ body {
 				@doSelectTask="selectTask"
 				:error="error"
 				:selectedTaskID="selectedTaskID"
-				:tasks="reviewTask.all"
+				:tasks="reviewTask.all()"
 				:total="totalPending"
 			/>
 			<div v-else>
@@ -78,13 +78,13 @@ body {
 				:loading="loading"
 				:mapBounds="mapBounds || undefined"
 				:mapMarkers="mapMarkers"
-				:selectedTaskChanges="selectedTaskChanges"
+				:newPoolCondition="newPoolCondition"
+				:newPoolLocation="newPoolLocation"
 				:selectedTask="selectedTask"
-				:user="user"
 			/>
 		</template>
 		<template #right>
-			<ReviewPoolColumnAction :submitting="submitting" />
+			<ReviewPoolColumnAction :changes="changes" :submitting="submitting" />
 		</template>
 	</ThreeColumn>
 </template>
@@ -92,35 +92,21 @@ body {
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useReviewTaskStore } from "@/store/review-task";
-import { useUserStore } from "@/store/user";
+import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
-import ReviewTask from "@/types";
 import ReviewPoolColumnAction from "@/components/ReviewPoolColumnAction.vue";
 import ReviewPoolColumnDetail from "@/components/ReviewPoolColumnDetail.vue";
 import ReviewPoolColumnList from "@/components/ReviewPoolColumnList.vue";
-
-// TypeScript Interfaces
-interface Address {
-	number: string;
-	street: string;
-	locality: string;
-}
-
-interface Location {
-	latitude: number;
-	longitude: number;
-}
-
-interface Task {
-	id: number;
-	location: Location;
-	condition: string;
-	ownerContact?: string;
-	residentContact?: string;
-	poolShape?: string;
-	address?: Address;
-}
+import {
+	Bounds,
+	Changes,
+	Contact,
+	Location,
+	MapClickEvent,
+	Marker,
+	ReviewTask,
+} from "@/types";
 
 interface FormData {
 	latitude: number;
@@ -134,19 +120,6 @@ interface FormData {
 interface FieldConfig {
 	key: keyof FormData;
 	label: string;
-}
-
-interface Changes {
-	updated: string[];
-	unchanged: string[];
-}
-
-interface MapClickEvent {
-	detail: {
-		map: any;
-		lat: number;
-		lng: number;
-	};
 }
 
 // Props (you can pass these from parent component or environment)
@@ -173,20 +146,20 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // State
-const selectedTaskChanges = ref<ReviewTask>({
-	location: {},
-	pool: {},
-});
+const newPoolCondition = ref<string>("");
+const newPoolLocation = ref<Location>({ lat: 0, lng: 0 });
+const newOwnerName = ref<string>("");
+const newResidentName = ref<string>("");
 const error = ref<string | null>(null);
 const loading = ref<boolean>(true);
 const mapBounds = ref<Bounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
-const selectedTaskID = ref<int | null>(null);
+const selectedTaskID = ref<number | null>(null);
 const submitting = ref<boolean>(false);
 const totalPending = ref<number>(0);
 
 const reviewTask = useReviewTaskStore();
-const user = useUserStore();
+const session = useSessionStore();
 
 // Refs for map components
 const mapMultipoint = ref<any>(null);
@@ -194,7 +167,8 @@ const mapTile = ref<any>(null);
 
 // Computed: track which fields have changed
 const changes = computed<Changes>(() => {
-	if (!selectedTask.value) return { updated: [], unchanged: [] };
+	const pool = selectedTask.value?.pool;
+	if (!pool) return { updated: [], unchanged: [] };
 
 	const updated: string[] = [];
 	const unchanged: string[] = [];
@@ -205,23 +179,40 @@ const changes = computed<Changes>(() => {
 		{ key: "condition", label: "Pool condition" },
 		{ key: "ownerContact", label: "Owner contact" },
 		{ key: "residentContact", label: "Resident contact" },
-		{ key: "poolShape", label: "Pool shape" },
 	];
 
-	fields.forEach((field) => {
-		if (selectedTaskChanges[field.key] !== selectedTask.value[field.key]) {
-			updated.push(field.label);
-		} else {
-			unchanged.push(field.label);
-		}
-	});
+	if (newPoolCondition.value != pool.condition) {
+		updated.push("condition");
+	} else {
+		unchanged.push("condition");
+	}
+	if (newPoolLocation.value.lat != pool.site.location.lat) {
+		updated.push("latitude");
+	} else {
+		unchanged.push("latitude");
+	}
+	if (newPoolLocation.value.lng != pool.site.location.lng) {
+		updated.push("longitude");
+	} else {
+		unchanged.push("longitude");
+	}
+	if (newOwnerName.value != pool.site.owner?.name) {
+		updated.push("ownerContact");
+	} else {
+		unchanged.push("ownerContact");
+	}
+	if (newResidentName.value != pool.site.resident?.name) {
+		updated.push("residentContact");
+	} else {
+		unchanged.push("residentContact");
+	}
 
 	return { updated, unchanged };
 });
 
-const selectedTask = computed<ReviewTask | null>(() => {
+const selectedTask = computed<ReviewTask | undefined>(() => {
 	if (selectedTaskID.value == null) {
-		return null;
+		return undefined;
 	}
 	return reviewTask.byID(selectedTaskID.value);
 });
@@ -230,40 +221,53 @@ async function fetchTasks() {
 }
 // Helper Functions
 // Task Selection
-function selectTask(id: int): void {
+function selectTask(id: number): void {
 	console.log("Selected task", id);
 	selectedTaskID.value = id;
 
-	selectedTaskChanges.value = {
-		location: {},
-		pool: {},
-	};
+	const task = reviewTask.byID(id);
+	if (!task) {
+		console.log("no task", id);
+		return;
+	}
+	const pool = task.pool;
+	if (!pool) {
+		console.log("no pool for selected task");
+		return;
+	}
+	newPoolCondition.value = pool.condition;
+	newPoolLocation.value = pool.location;
+	newOwnerName.value = pool.site.owner?.name ?? "";
+	newResidentName.value = pool.site.resident?.name ?? "";
 
 	// Update map
-	const task = reviewTask.byID(id);
 	updateMap(task);
 }
 
 // Map Update
-function updateMap(task: Task): void {
+function updateMap(task: ReviewTask): void {
 	console.log("Updating map for task:", task.id);
 
 	const map = mapMultipoint.value;
 	if (!map) return;
 
-	const loc = task.location;
+	const loc = task.pool?.location;
+	if (!loc) {
+		map.SetMarkers([]);
+		return;
+	}
 	const markers = [
 		new maplibregl.Marker({
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([loc.longitude, loc.latitude]),
+		}).setLngLat([loc.lng, loc.lat]),
 	];
 
 	map.SetMarkers(markers);
 
 	const bounds = new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(loc.longitude - 0.005, loc.latitude - 0.005),
-		new maplibregl.LngLat(loc.longitude + 0.005, loc.latitude + 0.005),
+		new maplibregl.LngLat(loc.lng - 0.005, loc.lat - 0.005),
+		new maplibregl.LngLat(loc.lng + 0.005, loc.lat + 0.005),
 	);
 
 	map.FitBounds(bounds, {
@@ -273,23 +277,22 @@ function updateMap(task: Task): void {
 
 // Map Click Handler
 function updatePoolLocation(event: MapClickEvent): void {
-	console.log("map click", selectedTask.value?.id, event.detail);
+	console.log("map click", selectedTask.value?.id, event);
 
-	const map = event.detail.map;
-	const loc = {
-		latitude: event.detail.lat,
-		longitude: event.detail.lng,
-	};
+	/*
+	const map = event.map;
+	const loc = event.location;
 
 	map.SetMarkers([
 		new maplibregl.Marker({
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([event.detail.lng, event.detail.lat]),
+		}).setLngLat([loc.lng, loc.lat]),
 	]);
 
 	selectedTaskChanges.latitude = event.detail.lat;
 	selectedTaskChanges.longitude = event.detail.lng;
+	*/
 }
 
 // Submit Review
@@ -303,7 +306,7 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 		const payload: any = {
 			task_id: selectedTask.value.id,
 			status: action,
-			updates: selectedTaskChanges,
+			//updates: selectedTaskChanges,
 		};
 
 		const response = await fetch("/api/review/pool", {
@@ -319,22 +322,7 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 		}
 
 		// Remove task from list
-		const taskIndex = reviewTask.all.value.findIndex(
-			(t) => t.id === selectedTask.value!.id,
-		);
-		if (taskIndex > -1) {
-			reviewTask.all.value.splice(taskIndex, 1);
-			totalPending.value = Math.max(0, totalPending.value - 1);
-		}
-
-		// Select next task or clear selection
-		if (reviewTask.all.length > 0) {
-			const nextIndex = Math.min(taskIndex, reviewTask.all.length - 1);
-			selectTask(reviewTask.all[nextIndex]);
-		} else {
-			selectedTask.value = null;
-			originalValues.value = {};
-		}
+		reviewTask.remove(selectedTask.value!.id);
 
 		// Update list of tasks
 		await fetchTasks();

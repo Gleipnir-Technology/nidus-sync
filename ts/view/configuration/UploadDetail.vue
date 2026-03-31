@@ -100,238 +100,219 @@ tr.has-error {
 </style>
 <template>
 	<div class="container mt-4 results-container">
-		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h2>Upload Results: {{ upload?.filename }}</h2>
-			<span class="badge rounded-pill" :class="upload?.status">
-				<i class="bi me-1" :class="getUploadStatusIcon(upload?.status)"></i>
-				{{ getUploadStatusDisplay(upload?.status) }}
-			</span>
-		</div>
+		<div v-if="upload">
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h2>Upload Results: {{ upload.filename ?? "" }}</h2>
+				<span class="badge rounded-pill" :class="upload.status">
+					<i class="bi me-1" :class="getUploadStatusIcon(upload.status)"></i>
+					{{ getUploadStatusDisplay(upload.status) }}
+				</span>
+			</div>
 
-		<div class="row mb-4">
-			<div class="col-md-4">
-				<div class="card summary-card h-100 border-primary">
-					<div class="card-body text-center">
-						<h1 class="display-4 text-primary">
-							{{ upload?.csv_pool.count.existing }}
-						</h1>
-						<h5>Existing Pools</h5>
-						<p class="text-muted">Matches found in previous records</p>
+			<div class="row mb-4">
+				<div class="col-md-4">
+					<div class="card summary-card h-100 border-primary">
+						<div class="card-body text-center">
+							<h1 class="display-4 text-primary">
+								{{ upload.csv_pool?.count.existing }}
+							</h1>
+							<h5>Existing Pools</h5>
+							<p class="text-muted">Matches found in previous records</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="card summary-card h-100 border-success">
+						<div class="card-body text-center">
+							<h1 class="display-4 text-success">
+								{{ upload.csv_pool?.count.new }}
+							</h1>
+							<h5>New Pools</h5>
+							<p class="text-muted">Not found in existing records</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="card summary-card h-100 border-warning">
+						<div class="card-body text-center">
+							<h1 class="display-4 text-warning">
+								{{ upload.csv_pool?.count.outside }}
+							</h1>
+							<h5>Outside District</h5>
+							<p class="text-muted">Potential geocoding errors</p>
+						</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4">
-				<div class="card summary-card h-100 border-success">
-					<div class="card-body text-center">
-						<h1 class="display-4 text-success">
-							{{ upload?.csv_pool.count.new }}
-						</h1>
-						<h5>New Pools</h5>
-						<p class="text-muted">Not found in existing records</p>
-					</div>
-				</div>
-			</div>
-			<div class="col-md-4">
-				<div class="card summary-card h-100 border-warning">
-					<div class="card-body text-center">
-						<h1 class="display-4 text-warning">
-							{{ upload?.csv_pool.count.outside }}
-						</h1>
-						<h5>Outside District</h5>
-						<p class="text-muted">Potential geocoding errors</p>
-					</div>
-				</div>
-			</div>
-		</div>
 
-		<div class="card mb-4">
-			<div v-if="user == null">
-				<p>loading</p>
-			</div>
-			<div v-else>
-				<MapMultipoint
-					id="map"
-					:markers="[]"
-					:organization-id="user.organization.id"
-					:tegola="user.urls.tegola"
-					:xmin="user?.organization?.serviceArea?.min.x ?? 0"
-					:ymin="user?.organization?.serviceArea?.min.y ?? 0"
-					:xmax="user?.organization?.serviceArea?.max.x ?? 0"
-					:ymax="user?.organization?.serviceArea?.max.y ?? 0"
-				></MapMultipoint>
-			</div>
-		</div>
-
-		<div class="card mb-4">
-			<div
-				class="card-header bg-light d-flex justify-content-between align-items-center"
-			>
-				<h5 class="mb-0">Data Preview</h5>
-				<div class="form-check form-switch">
-					<input
-						class="form-check-input"
-						type="checkbox"
-						id="showIssuesOnly"
-						v-model="showIssuesOnly"
-						@change="handleShowIssuesOnly"
-					/>
-					<label class="form-check-label" for="showIssuesOnly">
-						Show issues only
-					</label>
+			<div class="card mb-4">
+				<div v-if="session.user == null">
+					<p>loading</p>
+				</div>
+				<div v-else>
+					<MapMultipoint
+						:bounds="session.user?.organization.service_area"
+						:markers="[]"
+						:organizationId="session.user?.organization.id"
+						:tegola="session.urls?.tegola ?? ''"
+					></MapMultipoint>
 				</div>
 			</div>
-			<div class="card-body">
+
+			<div class="card mb-4">
 				<div
-					v-for="error in upload?.errors"
-					:key="error.message"
-					class="alert alert-danger"
-					role="alert"
+					class="card-header bg-light d-flex justify-content-between align-items-center"
 				>
-					<i class="bi bi-exclamation-triangle me-2"></i>
-					<strong>Error:</strong> {{ error.message }}
+					<h5 class="mb-0">Data Preview</h5>
+					<div class="form-check form-switch">
+						<input
+							class="form-check-input"
+							type="checkbox"
+							id="showIssuesOnly"
+							v-model="showIssuesOnly"
+							@change="handleShowIssuesOnly"
+						/>
+						<label class="form-check-label" for="showIssuesOnly">
+							Show issues only
+						</label>
+					</div>
 				</div>
-
-				<div v-if="upload == null">Loading...</div>
-				<div
-					v-else-if="
-						upload.status === 'uploaded' || upload.status === 'parsing'
-					"
-					class="alert alert-info"
-					role="alert"
-				>
-					<i class="bi bi-exclamation-triangle me-2"></i>
-					<strong>Working:</strong> File is still processing... refresh this
-					page in a bit to see updates.
-				</div>
-
-				<template v-else>
+				<div class="card-body">
 					<div
-						v-if="!upload?.csv_pool.pools || upload.csv_pool.pools.length === 0"
-						class="alert alert-warning"
+						v-for="error in upload.csv_pool?.errors"
+						:key="error.message"
+						class="alert alert-danger"
 						role="alert"
 					>
 						<i class="bi bi-exclamation-triangle me-2"></i>
-						<strong>Warning:</strong> No pools could be understood from your
-						file.
+						<strong>Error:</strong> {{ error.message }}
 					</div>
 
-					<div v-else class="table-responsive">
-						<table class="table table-hover table-striped">
-							<thead class="table-light">
-								<tr class="header">
-									<th></th>
-									<th>Number</th>
-									<th>Street</th>
-									<th>City</th>
-									<th>Postal</th>
-									<th>Status</th>
-									<th>Condition</th>
-									<th>Tags</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr
-									v-for="(pool, index) in upload.csv_pool.pools"
-									:key="index"
-									:class="{
-										'has-error': pool.errors && pool.errors.length > 0,
-									}"
-									:style="getRowStyle(pool)"
-								>
-									<td>
-										<i
-											v-if="pool.errors && pool.errors.length > 0"
-											class="bi bi-info-circle-fill text-primary ms-1"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
-											:title="pool.errors.map((e) => e.message).join(', ')"
-										></i>
-									</td>
-									<td>{{ pool.address?.number }}</td>
-									<td>{{ pool.address?.street }}</td>
-									<td>{{ pool.address?.locality }}</td>
-									<td>{{ pool.address?.postal_code }}</td>
-									<td>
-										<span class="badge status" :class="pool.status">
-											{{ titleCase(pool.status) }}
-										</span>
-									</td>
-									<td>
-										<span class="badge condition" :class="pool.condition">
-											{{ titleCase(pool.condition) }}
-										</span>
-									</td>
-									<td>{{ pool.tags?.length || 0 }}</td>
-								</tr>
-							</tbody>
-						</table>
+					<div v-if="upload == null">Loading...</div>
+					<div
+						v-else-if="
+							upload.status === 'uploaded' || upload.status === 'parsing'
+						"
+						class="alert alert-info"
+						role="alert"
+					>
+						<i class="bi bi-exclamation-triangle me-2"></i>
+						<strong>Working:</strong> File is still processing... refresh this
+						page in a bit to see updates.
 					</div>
-				</template>
+
+					<template v-else>
+						<div
+							v-if="
+								!upload.csv_pool?.pools || upload.csv_pool.pools.length === 0
+							"
+							class="alert alert-warning"
+							role="alert"
+						>
+							<i class="bi bi-exclamation-triangle me-2"></i>
+							<strong>Warning:</strong> No pools could be understood from your
+							file.
+						</div>
+
+						<div v-else class="table-responsive">
+							<table class="table table-hover table-striped">
+								<thead class="table-light">
+									<tr class="header">
+										<th></th>
+										<th>Number</th>
+										<th>Street</th>
+										<th>City</th>
+										<th>Postal</th>
+										<th>Status</th>
+										<th>Condition</th>
+										<th>Tags</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr
+										v-for="(pool, index) in upload.csv_pool.pools"
+										:key="index"
+										:class="{
+											'has-error': hasError(upload.csv_pool, index),
+										}"
+										:style="getRowStyle(pool)"
+									>
+										<td>
+											<i
+												v-if="hasError(upload.csv_pool, index)"
+												class="bi bi-info-circle-fill text-primary ms-1"
+												data-bs-toggle="tooltip"
+												data-bs-placement="top"
+												:title="
+													errorsForLine(upload.csv_pool, index)
+														.map((e) => e.message)
+														.join(', ')
+												"
+											></i>
+										</td>
+										<td>{{ pool.address?.number }}</td>
+										<td>{{ pool.address?.street }}</td>
+										<td>{{ pool.address?.locality }}</td>
+										<td>{{ pool.address?.postal_code }}</td>
+										<td>
+											<span class="badge status" :class="pool.status">
+												{{ titleCase(pool.status) }}
+											</span>
+										</td>
+										<td>
+											<span class="badge condition" :class="pool.condition">
+												{{ titleCase(pool.condition) }}
+											</span>
+										</td>
+										<td>{{ pool.tags?.size || 0 }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</template>
+				</div>
+			</div>
+
+			<div class="d-flex justify-content-between mt-4 mb-5">
+				<button
+					type="button"
+					class="btn btn-outline-danger"
+					@click="handleDiscard"
+					:disabled="isSubmitting"
+				>
+					Discard
+				</button>
+				<button
+					class="btn btn-primary"
+					id="confirmUploadBtn"
+					@click="handleCommit"
+					:disabled="isSubmitting"
+				>
+					<i class="bi bi-check2 me-1"></i> Confirm and Commit Data
+				</button>
 			</div>
 		</div>
-
-		<div class="d-flex justify-content-between mt-4 mb-5">
-			<button
-				type="button"
-				class="btn btn-outline-danger"
-				@click="handleDiscard"
-				:disabled="isSubmitting"
-			>
-				Discard
-			</button>
-			<button
-				class="btn btn-primary"
-				id="confirmUploadBtn"
-				@click="handleCommit"
-				:disabled="isSubmitting"
-			>
-				<i class="bi bi-check2 me-1"></i> Confirm and Commit Data
-			</button>
+		<div v-else>
+			<p>loading...</p>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import * as bootstrap from "bootstrap";
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import { useUploadStore } from "@/store/upload";
-import { useUserStore } from "@/store/user";
-
-interface Address {
-	number: string;
-	street: string;
-	locality: string;
-	postal_code: string;
-}
+import { useSessionStore } from "@/store/session";
+import { CSVPoolDetail, CSVPoolError, Upload, UploadPoolRow } from "@/types";
 
 interface ErrorMessage {
 	message: string;
 }
 
-interface Pool {
-	address?: Address;
-	status: string;
-	condition: string;
-	tags?: string[];
-	errors?: ErrorMessage[];
-}
-
-interface CSVPool {
-	pools: Pool[];
-}
-interface Upload {
-	name: string;
-	status: string;
-	countExisting: number;
-	countNew: number;
-	countOutside: number;
-	errors?: ErrorMessage[];
-	csv_pool?: CSVPool;
-}
-
 interface Props {
-	id: int;
+	id: number;
 }
 
 const props = defineProps<Props>();
@@ -340,7 +321,7 @@ const router = useRouter();
 const showIssuesOnly = ref(false);
 const isSubmitting = ref(false);
 const uploadStore = useUploadStore();
-const user = useUserStore();
+const session = useSessionStore();
 
 const upload = ref<Upload | null>(null);
 
@@ -371,7 +352,7 @@ const titleCase = (str?: string): string => {
 	if (!str) return "";
 	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
-const getRowStyle = (pool: Pool) => {
+const getRowStyle = (pool: UploadPoolRow) => {
 	if (showIssuesOnly.value) {
 		const hasError = pool.errors && pool.errors.length > 0;
 		return { display: hasError ? "table-row" : "none" };
@@ -384,6 +365,7 @@ const handleShowIssuesOnly = () => {
 };
 
 const initializeMap = () => {
+	/*
 	if (!map) return;
 
 	map.addEventListener("load", () => {
@@ -407,6 +389,7 @@ const initializeMap = () => {
 			},
 		});
 	});
+	*/
 };
 
 const handleDiscard = async () => {
@@ -453,7 +436,18 @@ const handleCommit = async () => {
 		isSubmitting.value = false;
 	}
 };
-
+function hasError(csv: CSVPoolDetail, index: number): boolean {
+	return !!errorsForLine(csv, index);
+}
+function errorsForLine(csv: CSVPoolDetail, index: number): CSVPoolError[] {
+	let results = [];
+	for (const e of csv.errors) {
+		if (e.line == index) {
+			results.push(e);
+		}
+	}
+	return results;
+}
 onMounted(() => {
 	initializeMap();
 	uploadStore.fetchOne(props.id).then((u) => {

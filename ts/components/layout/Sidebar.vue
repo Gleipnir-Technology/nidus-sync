@@ -26,7 +26,9 @@
 					to="/_/communication"
 					icon="messaging"
 					label="Communication"
-					:notificationCount="user?.notification_counts?.communication ?? 0"
+					:notificationCount="
+						session.user?.notification_counts.communication ?? 0
+					"
 				/>
 			</li>
 			<li>
@@ -40,7 +42,7 @@
 					to="/_/review"
 					icon="review"
 					label="Review"
-					:notificationCount="user?.notification_counts?.review ?? 0"
+					:notificationCount="session.user?.notification_counts.review ?? 0"
 				/>
 			</li>
 			<li>
@@ -60,17 +62,17 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Tooltip, Popover } from "bootstrap";
-import NavigationLink from "../common/NavigationLink.vue";
-import { useUserStore } from "../../store/user";
+import NavigationLink from "@/components/common/NavigationLink.vue";
+import { SSEManager } from "@/SSEManager";
+import { useSessionStore } from "@/store/session";
 
 // Reactive state
 const isCollapsed = ref(false);
 
-const user = useUserStore();
+const session = useSessionStore();
 
 // Bootstrap tooltip instances
-let tooltipInstances = [];
-let sseUnsubscribe = null;
+let tooltipInstances: Tooltip[] = [];
 
 // Initialize Bootstrap components
 const initializeBootstrap = () => {
@@ -142,11 +144,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
 	// Cleanup Bootstrap tooltips
 	tooltipInstances.forEach((tooltip) => tooltip.dispose());
-
-	// Unsubscribe from SSE
-	if (sseUnsubscribe) {
-		sseUnsubscribe();
-	}
 });
 </script>
 

@@ -27,7 +27,8 @@ type reviewTask struct {
 	Reviewer *platform.User `json:"addressor"`
 }
 type reviewTaskPool struct {
-	Condition string `json:"condition"`
+	Condition string     `json:"condition"`
+	Site      types.Site `json:"site"`
 }
 type contentListReviewTask struct {
 	Tasks []reviewTask `json:"tasks"`

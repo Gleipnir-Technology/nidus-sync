@@ -102,13 +102,13 @@
 import CSVUpload from "@/components/CSVUpload.vue";
 import { router } from "@/router";
 
-function onError(err) {
+function onError(err: Error) {
 	console.error("CSV upload error", err);
 }
-function onFileSelected(file) {
+function onFileSelected(file: File) {
 	console.log("file selected", file);
 }
-function onUploadSuccess(data) {
+function onUploadSuccess(data: any) {
 	console.log("upload success", data);
 	router.push("/_" + data.uri);
 }

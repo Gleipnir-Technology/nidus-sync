@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Communication } from "../types";
 import { SSEManager } from "../SSEManager";
-import { useUserStore } from "./user";
+import { useSessionStore } from "./session";
 
 export const useCommunicationStore = defineStore("communication", () => {
 	// State
@@ -17,9 +17,9 @@ export const useCommunicationStore = defineStore("communication", () => {
 		}
 	});
 	// Actions
-	async function fetchAll() {
-		const userStore = useUserStore();
-		if (userStore.urls == null) {
+	async function fetchAll(): Promise<Communication[]> {
+		const session = useSessionStore();
+		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
 		}
 
@@ -31,7 +31,7 @@ export const useCommunicationStore = defineStore("communication", () => {
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
 			const response = await fetch(
-				`${userStore.urls.api.communication}?${params}`,
+				`${session.urls.api.communication}?${params}`,
 			);
 
 			if (!response.ok) {
@@ -39,6 +39,7 @@ export const useCommunicationStore = defineStore("communication", () => {
 			}
 			const data = await response.json();
 			all.value = data.communications;
+			return data.communications;
 		} catch (err) {
 			console.error("Error loading communications:", err);
 			throw err;

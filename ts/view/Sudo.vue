@@ -144,12 +144,8 @@
 							<div class="mb-3">
 								<label for="emailFrom" class="form-label">From Account</label>
 								<select class="form-select" id="emailFrom" name="emailFrom">
-									<option :value="forwardEmailRMOAddress">
-										{{ forwardEmailRMOAddress }}
-									</option>
-									<option :value="forwardEmailNidusAddress">
-										{{ forwardEmailNidusAddress }}
-									</option>
+									<option value="RMO address"></option>
+									<option value="Sync address"></option>
 								</select>
 							</div>
 							<div class="mb-3">
@@ -210,7 +206,7 @@
 									name="organizationID"
 									placeholder="Organization ID"
 									type="text"
-									:value="organizationID"
+									:value="session"
 								/>
 							</div>
 							<div class="mb-3">
@@ -421,4 +417,9 @@
 	</div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSessionStore } from "@/store/session";
+
+const session = useSessionStore();
+</script>
