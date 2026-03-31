@@ -17,7 +17,7 @@ type contentURLAPI struct {
 	ReviewTask          string `json:"review_task"`
 	Signal              string `json:"signal"`
 	Upload              string `json:"upload"`
-	User                string `json:"users"`
+	User                string `json:"user"`
 }
 type contentURLs struct {
 	API    contentURLAPI `json:"api"`

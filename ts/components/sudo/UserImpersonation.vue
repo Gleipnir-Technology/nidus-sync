@@ -108,6 +108,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useSessionStore } from "@/store/session";
+import UserSelector from "@/components/UserSelector.vue";
 import type { User } from "@/types";
 
 const session = useSessionStore();
