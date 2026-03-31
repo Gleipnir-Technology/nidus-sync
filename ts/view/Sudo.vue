@@ -327,7 +327,12 @@
 				<div class="row mb-3">
 					<div class="col-md-6">
 						<label for="userSearch" class="form-label">Search Users</label>
-						<user-selector></user-selector>
+						<UserSelector
+							v-model="selectedUserId"
+							label="Choose a user"
+							placeholder="Select a user..."
+							@change="onUserChange"
+						/>
 					</div>
 					<div class="col-md-6">
 						<label for="userRole" class="form-label">Filter by Role</label>
@@ -420,6 +425,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useSessionStore } from "@/store/session";
+import UserSelector from "@/components/UserSelector.vue";
+import type { User } from "@/types";
 
 const session = useSessionStore();
+
+const selectedUserId = ref<number | null>(null);
+
+const onUserChange = (user: User | null) => {
+	console.log("Selected user:", user);
+};
 </script>

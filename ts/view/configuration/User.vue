@@ -99,7 +99,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useUsersStore } from "@/store/users";
+import { useUserStore } from "@/store/user";
 
 interface User {
 	id: number;
@@ -120,9 +120,9 @@ interface URLConfiguration {
 // }>()
 
 // Reactive state
-const usersStore = useUsersStore();
+const userStore = useUserStore();
 const users = computed(() => {
-	return usersStore.all;
+	return userStore.all;
 });
 const urlConfiguration = ref<URLConfiguration>({
 	userAdd: "/configuration/user/add", // Update with your actual route
@@ -150,7 +150,7 @@ const deactivateUser = (userId: number): void => {
 // Lifecycle hooks
 onMounted(() => {
 	// Fetch users from API if needed
-	usersStore.fetchAll();
+	userStore.fetchAll();
 });
 
 // Optional: API call example

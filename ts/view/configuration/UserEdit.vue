@@ -242,7 +242,7 @@ pre {
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, ref, reactive } from "vue";
 import { useSessionStore } from "@/store/session";
-import { useUsersStore } from "@/store/users";
+import { useUserStore } from "@/store/user";
 import { User } from "@/types";
 
 interface Props {
@@ -257,7 +257,7 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const props = defineProps<Props>();
 const selectedFile = ref<File | null>(null);
 const selectedTag = ref<string>("");
-const usersStore = useUsersStore();
+const userStore = useUserStore();
 const session = useSessionStore();
 const user = ref<User | null>(null);
 
@@ -390,7 +390,7 @@ const cancelChanges = () => {
 	}
 };
 onMounted(() => {
-	usersStore.fetchAll().then((users) => {
+	userStore.fetchAll().then((users) => {
 		for (const u of users) {
 			if (u.id == props.id) {
 				user.value = u;

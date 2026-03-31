@@ -4,7 +4,7 @@ import { User } from "../types";
 import { SSEManager } from "../SSEManager";
 import { useSessionStore } from "./session";
 
-export const useUsersStore = defineStore("users", () => {
+export const useUserStore = defineStore("users", () => {
 	// State
 	const _byID = ref<Map<number, User>>(new Map());
 	const all = ref<User[] | null>(null);
