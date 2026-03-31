@@ -12,8 +12,13 @@ func Router() chi.Router {
 	// Unauthenticated endpoints
 	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
-	r.Get("/mailer/{code}", getMailer)
-	r.Get("/mailer/{code}/preview", getMailerPreview)
+	r.Get("/mailer/pool/random", getMailerPoolRandom)
+	r.Get("/mailer/mode-1", getMailer1)
+	r.Get("/mailer/mode-2/{code}", getMailer2)
+	r.Get("/mailer/mode-3/{code}", getMailer3)
+	r.Get("/mailer/mode-1/preview", getMailer1Preview)
+	r.Get("/mailer/mode-2/preview", getMailer2Preview)
+	r.Get("/mailer/mode-3/{code}/preview", getMailer3Preview)
 	r.Get("/district", getDistrict)
 
 	// Mock endpoints

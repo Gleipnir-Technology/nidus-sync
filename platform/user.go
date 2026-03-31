@@ -91,6 +91,7 @@ func CreateUser(ctx context.Context, username string, name string, password_hash
 	log.Info().Int32("id", o.ID).Msg("Created organization")
 	u_setter := models.UserSetter{
 		DisplayName:      omit.From(name),
+		IsActive:         omit.From(true),
 		OrganizationID:   omit.From(o.ID),
 		PasswordHash:     omit.From(password_hash),
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),

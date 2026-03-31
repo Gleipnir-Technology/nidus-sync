@@ -10,9 +10,11 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type contentMailer struct {
@@ -25,7 +27,22 @@ type contentMailer struct {
 	ReportURL    string
 }
 
-func getMailer(w http.ResponseWriter, r *http.Request) {
+func getMailer1(w http.ResponseWriter, r *http.Request) {
+	path := "/mailer/mode-1/preview"
+	content, err := pdf.GeneratePDF(r.Context(), path)
+	if err != nil {
+		respondError(w, "generate pdf failure", err, http.StatusInternalServerError)
+		return
+	}
+	err = writePDF(w, content, "mailer-mode-1.pdf")
+	if err != nil {
+		respondError(w, "copy error", err, http.StatusInternalServerError)
+		return
+	}
+}
+func getMailer2(w http.ResponseWriter, r *http.Request) {
+}
+func getMailer3(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {
 		http.Error(w, "empty code", http.StatusBadRequest)
@@ -37,16 +54,27 @@ func getMailer(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "generate pdf failure", err, http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/pdf")
-	disposition := fmt.Sprintf("attachment; filename=\"compliance-mailer-%s.pdf\"", code)
-	w.Header().Set("Content-Disposition", disposition)
-	_, err = io.Copy(w, bytes.NewReader(content))
+	filename := fmt.Sprintf("compliance-mailer-%s.pdf", code)
+	err = writePDF(w, content, filename)
 	if err != nil {
 		respondError(w, "copy error", err, http.StatusInternalServerError)
 		return
 	}
 }
-func getMailerPreview(w http.ResponseWriter, r *http.Request) {
+func writePDF(w http.ResponseWriter, content []byte, filename string) error {
+	w.Header().Set("Content-Type", "application/pdf")
+	disposition := fmt.Sprintf("attachment; filename=\"%s\"", filename)
+	w.Header().Set("Content-Disposition", disposition)
+	_, err := io.Copy(w, bytes.NewReader(content))
+	return err
+}
+func getMailer1Preview(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(w, "sync/mailer-1.html", contentMailer{})
+}
+func getMailer2Preview(w http.ResponseWriter, r *http.Request) {
+	html.RenderOrError(w, "sync/mailer-2.html", contentMailer{})
+}
+func getMailer3Preview(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
 	if code == "" {
 		http.Error(w, "empty code", http.StatusBadRequest)
@@ -70,7 +98,7 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	doc_id := uuid.New()
-	html.RenderOrError(w, "sync/mailer.html", contentMailer{
+	html.RenderOrError(w, "sync/mailer-3.html", contentMailer{
 		Config:       html.NewContentConfig(),
 		DocumentID:   doc_id.String(),
 		LogoURL:      config.MakeURLNidus("/api/district/%s/logo", org.Slug.GetOr("unset")),
@@ -79,4 +107,13 @@ func getMailerPreview(w http.ResponseWriter, r *http.Request) {
 		QRCodeURL:    config.MakeURLNidus("/qr-code/mailer/%s", code),
 		ReportURL:    config.MakeURLReport("/mailer/%s", code),
 	})
+}
+func getMailerPoolRandom(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	err := platform.WriteTileRandom(ctx, w)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to do random tile")
+		http.Error(w, "failed to do tile", http.StatusInternalServerError)
+		return
+	}
 }

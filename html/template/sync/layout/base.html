@@ -7,7 +7,6 @@
 		<!-- Bootstrap CSS -->
 		<link href="/static/vendor/css/bootstrap.min.css" rel="stylesheet" />
 		<!-- Bootstrap Icons -->
-		<link href="/static/css/bootstrap.css" rel="stylesheet" />
 		<link rel="icon" href="/static/ico/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
 		{{ if not .Config.IsProductionEnvironment }}
@@ -17,6 +16,6 @@
 	<body>
 		{{ template "content" . }}
 		<div id="flogo"></div>
-		<script src="/static/vendor/js/bootstrap.bundle.min.js"></script>
+		<script src="/static/vendor/bootstrap-5.3.8/bootstrap.bundle.min.js"></script>
 	</body>
 </html>

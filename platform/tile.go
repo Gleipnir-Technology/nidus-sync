@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,7 +15,8 @@ import (
 	"github.com/Gleipnir-Technology/arcgis-go/fieldseeker"
 	"github.com/aarondl/opt/omit"
 	//"github.com/Gleipnir-Technology/bob"
-	//"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -96,6 +98,30 @@ func ImageAtPoint(ctx context.Context, org Organization, level uint, lat, lng fl
 		Content:       data,
 		IsPlaceholder: false,
 	}, nil
+}
+
+// Writes a random tile from the cache. This is a very odd thing to do, it's for testing
+func WriteTileRandom(ctx context.Context, w http.ResponseWriter) error {
+	tile_rows, err := models.TileCachedImages.Query(
+		sm.Where(psql.Quote("is_empty").EQ(psql.Arg(false))),
+		sm.Limit(100),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("get tiles: %w", err)
+	}
+	tile_row := tile_rows[rand.Intn(len(tile_rows))]
+	tile_path := tilePath(tile_row.ArcgisID, uint(tile_row.Z), uint(tile_row.Y), uint(tile_row.X))
+	var tile *TileRaster
+	if tile_row.IsEmpty {
+		tile = TileRasterPlaceholder()
+	} else {
+		tile, err = loadTileFromDisk(tile_path)
+		if err != nil {
+			return fmt.Errorf("load tile from disk: %w", err)
+		}
+	}
+	log.Debug().Int32("z", tile_row.Z).Int32("y", tile_row.Y).Int32("x", tile_row.X).Bool("is empty", tile_row.IsEmpty).Msg("random tile")
+	return writeTile(w, tile)
 }
 func loadTileFromDisk(tile_path string) (*TileRaster, error) {
 	file, err := os.Open(tile_path)

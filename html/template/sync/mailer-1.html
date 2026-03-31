@@ -1,0 +1,176 @@
+{{ template "sync/layout/base.html" . }}
+
+{{ define "title" }}Mailer{{ end }}
+{{ define "extraheader" }}
+	<style>
+		@media print {
+			@page {
+				margin: 0.25in;
+			}
+		}
+
+		body {
+			margin: 0.25in;
+			font-family: "Times New Roman", serif;
+		}
+
+		.address-space {
+			position: absolute;
+			top: 0.2in;
+			left: 0.5in;
+			width: 3.25in;
+			height: 2.6in;
+			/* Uncomment below to visualize the address space during development */
+			/*border: 1px dashed #ccc;*/
+		}
+
+		.header-section {
+			margin-top: 2.8in; /* Clear the address space */
+			margin-bottom: 0.5in;
+		}
+
+		.pool-image {
+			float: right;
+			width: 2.5in;
+			height: 2in;
+			margin-left: 0.25in;
+			margin-bottom: 0.25in;
+			/*border: 2px solid #0dcaf0;
+            background-color: #e7f6ff;*/
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #0dcaf0;
+			font-style: italic;
+		}
+
+		.letter-content {
+			text-align: justify;
+			line-height: 1.6;
+		}
+
+		.logo-space {
+			text-align: center;
+			margin-top: 1in;
+			margin-bottom: 0.5in;
+		}
+
+		.logo {
+			width: 1.5in;
+			height: 1.5in;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			color: #198754;
+			font-style: italic;
+		}
+
+		.signature-line {
+			margin-top: 0.75in;
+			margin-left: 3in;
+		}
+
+		h2 {
+			color: #0d6efd;
+			margin-bottom: 0.5in;
+		}
+
+		.date {
+			margin-bottom: 0.3in;
+		}
+	</style>
+{{ end }}
+{{ define "content" }}
+	<!-- Address Space (will be populated automatically) -->
+	<div class="address-space"></div>
+
+	<!-- Main Letter Content -->
+	<div class="header-section">
+		<!-- Pool Image Placeholder -->
+		<img class="pool-image" src="/mailer/pool/random" />
+
+		<div class="date"><strong>Date:</strong>March 31, 2026</div>
+	</div>
+
+	<div class="letter-content">
+		<p>Dear Valued Member of Humanity,</p>
+
+		<p>
+			It has come to our attention that you are currently alive.
+			Congratulations! However, we must inform you that this status is under
+			constant threat by flying vampires no bigger than your pinky fingernail.
+			We are, of course, referring to <strong>mosquitoes</strong>—nature's tiny
+			terrorists.
+		</p>
+
+		<p>
+			Mosquitoes are responsible for spreading diseases like malaria, dengue
+			fever, West Nile virus, Zika, and a whole host of other ailments that
+			sound like rejected Harry Potter spells. "Dengue Fever-osa!" just doesn't
+			have the same ring to it, but it's certainly more dangerous than turning
+			your teacup into a toad.
+		</p>
+
+		<p>
+			The image you see to the right is an actual aerial photograph taken from a
+			plane of a location you probably don't care about. It's there so we can
+			see how good the print quality is. Hopefully it's good, but we won't know
+			until you bring it to us. Please
+			<b>take this letter to Benjamin Sperry.</b>
+		</p>
+
+		<p>
+			<strong>Why should you care?</strong> Because these miniature menaces are
+			plotting against you RIGHT NOW. While you're reading this letter,
+			mosquitoes are gathering in small committees near standing water, planning
+			their next attack. They don't sleep. They don't rest. They simply exist to
+			ruin your backyard barbecues and transmit diseases.
+		</p>
+
+		<p>
+			The good news? Delta MVCD is like the Avengers, but for bugs. We're out
+			there draining standing water, applying treatments, and generally making
+			life difficult for mosquitoes everywhere. We're the heroes you didn't know
+			you needed, fighting the villain too small to see in the dark.
+		</p>
+
+		<p><strong>What can YOU do?</strong></p>
+		<ul>
+			<li>
+				Eliminate standing water around your property (mosquitoes can breed in a
+				bottle cap—yes, really)
+			</li>
+			<li>
+				Wear EPA-approved insect repellent (become unfashionable to mosquitoes)
+			</li>
+			<li>
+				Install or repair window screens (the medieval castle defense strategy,
+				but modernized)
+			</li>
+			<li>
+				Support your local mosquito control district (that's us—we accept praise
+				and appreciation)
+			</li>
+		</ul>
+
+		<p>
+			Remember: An ounce of prevention is worth a pound of calamine lotion and
+			several days of uncontrollable itching. Together, we can make our
+			community less hospitable to these winged hypodermic needles and more
+			enjoyable for actual humans.
+		</p>
+
+		<p>Stay vigilant. Stay bite-free. Stay alive.</p>
+
+		<div class="signature-line">
+			<p><strong>Sincerely,</strong></p>
+			<p>Eli Ribble</p>
+			<p>Founder of Gleipnir</p>
+		</div>
+	</div>
+
+	<!-- Company Logo Space -->
+	<div class="logo-space">
+		<img class="logo" src="/static/img/nidus-logo-256-transparent.png" />
+	</div>
+{{ end }}

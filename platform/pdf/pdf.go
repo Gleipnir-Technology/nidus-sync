@@ -10,14 +10,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func GeneratePDF(ctx context.Context, code string) ([]byte, error) {
+func GeneratePDF(ctx context.Context, path string) ([]byte, error) {
 	// create context
 	chrome_ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
 	// capture pdf
 	var buf []byte
-	url := fmt.Sprintf("http://%s/mailer/%s/preview", config.Bind, code)
+	url := fmt.Sprintf("http://%s%s", config.Bind, path)
 	log.Info().Str("url", url).Msg("Getting with headless chrome")
 	if err := chromedp.Run(chrome_ctx, printToPDF(url, &buf)); err != nil {
 		return nil, fmt.Errorf("print to pdf: %w", err)
