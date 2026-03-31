@@ -120,12 +120,8 @@
 	<h3 class="section-title">Mosquito Activity Heatmap</h3>
 	<div class="row">
 		<div class="col-12">
-			<p v-if="session.user && dashboard.serviceArea.min.x === 0.0">
-				No service area for this organization yet
-			</p>
 			<MapAggregate
-				v-else
-				:bounds="session.user?.organization.service_area"
+				:bounds="mapBounds()"
 				:markers="[]"
 				:organizationId="dashboard.organization.id"
 				:tegola="session.urls?.tegola ?? ''"
@@ -161,7 +157,9 @@
 <script setup lang="ts">
 import { onMounted, reactive } from "vue";
 import MapAggregate from "@/components/MapAggregate.vue";
+import { formatBigNumber, formatTimeRelative } from "@/format";
 import { useSessionStore } from "@/store/session";
+import type { Bounds } from "@/types";
 
 const dashboard = reactive({
 	counts: {
@@ -184,52 +182,11 @@ const dashboard = reactive({
 });
 const session = useSessionStore();
 onMounted(async () => {});
-function formatBigNumber(n: number): string {
-	// Convert the number to a string
-	const numStr = n.toString();
-
-	// Add commas every three digits from the right
-	let result = "";
-	for (let i = 0; i < numStr.length; i++) {
-		if (i > 0 && (numStr.length - i) % 3 === 0) {
-			result += ",";
-		}
-		result += numStr[i];
+function mapBounds(): Bounds | undefined {
+	if (session.user?.organization.service_area) {
+		return session.user?.organization.service_area;
 	}
-
-	return result;
-}
-function formatTimeRelative(t: Date): string {
-	const now = new Date();
-	const diffMs = now.getTime() - t.getTime();
-
-	const hours = diffMs / (1000 * 60 * 60);
-
-	if (hours > 0) {
-		if (hours < 1) {
-			const minutes = diffMs / (1000 * 60);
-			return `${Math.floor(minutes)} minutes ago`;
-		} else if (hours < 24) {
-			return `${Math.floor(hours)} hours ago`;
-		} else {
-			const days = hours / 24;
-			return `${Math.floor(days)} days ago`;
-		}
-	} else {
-		if (hours < -24) {
-			const days = hours / 24;
-			return `in ${Math.floor(-1 * days)} days`;
-		} else if (hours < -1) {
-			return `in ${Math.floor(-1 * hours)} hours`;
-		} else {
-			const minutes = diffMs / (1000 * 60);
-			if (minutes > -1) {
-				const seconds = diffMs / 1000;
-				return `in ${Math.floor(-1 * seconds)} seconds`;
-			}
-			return `in ${Math.floor(-1 * minutes)} minutes`;
-		}
-	}
+	return undefined;
 }
 function refreshData() {
 	console.log("fake refresh");

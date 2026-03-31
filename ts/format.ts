@@ -9,6 +9,21 @@ export function formatAddress(address?: Address): string {
 	}
 	return `${address.number} ${address.street}, ${address.locality}`;
 }
+export function formatBigNumber(n: number): string {
+	// Convert the number to a string
+	const numStr = n.toString();
+
+	// Add commas every three digits from the right
+	let result = "";
+	for (let i = 0; i < numStr.length; i++) {
+		if (i > 0 && (numStr.length - i) % 3 === 0) {
+			result += ",";
+		}
+		result += numStr[i];
+	}
+
+	return result;
+}
 export function formatDistance(meters: number | undefined) {
 	if (meters === undefined || meters === null) {
 		return "unknown";
@@ -39,7 +54,38 @@ export function formatRelativeTime(dateString: string): string {
 	if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
 	return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 }
+export function formatTimeRelative(t: Date): string {
+	const now = new Date();
+	const diffMs = now.getTime() - t.getTime();
 
+	const hours = diffMs / (1000 * 60 * 60);
+
+	if (hours > 0) {
+		if (hours < 1) {
+			const minutes = diffMs / (1000 * 60);
+			return `${Math.floor(minutes)} minutes ago`;
+		} else if (hours < 24) {
+			return `${Math.floor(hours)} hours ago`;
+		} else {
+			const days = hours / 24;
+			return `${Math.floor(days)} days ago`;
+		}
+	} else {
+		if (hours < -24) {
+			const days = hours / 24;
+			return `in ${Math.floor(-1 * days)} days`;
+		} else if (hours < -1) {
+			return `in ${Math.floor(-1 * hours)} hours`;
+		} else {
+			const minutes = diffMs / (1000 * 60);
+			if (minutes > -1) {
+				const seconds = diffMs / 1000;
+				return `in ${Math.floor(-1 * seconds)} seconds`;
+			}
+			return `in ${Math.floor(-1 * minutes)} minutes`;
+		}
+	}
+}
 export function shortAddress(a: Address | undefined): string {
 	if (!a) return "unknown";
 	return `${a.number} ${a.street}, ${a.locality}`;
