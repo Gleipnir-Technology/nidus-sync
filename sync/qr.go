@@ -17,6 +17,10 @@ func getQRCodeMailer(w http.ResponseWriter, r *http.Request) {
 	content := config.MakeURLReport("/mailer/%s", code)
 	writeQRCode(w, r, content)
 }
+func getQRCodeMarketing(w http.ResponseWriter, r *http.Request) {
+	content := "https://nidus.cloud"
+	writeQRCode(w, r, content)
+}
 
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")

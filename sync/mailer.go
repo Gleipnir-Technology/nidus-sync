@@ -41,6 +41,17 @@ func getMailer1(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func getMailer2(w http.ResponseWriter, r *http.Request) {
+	path := "/mailer/mode-2/preview"
+	content, err := pdf.GeneratePDF(r.Context(), path)
+	if err != nil {
+		respondError(w, "generate pdf failure", err, http.StatusInternalServerError)
+		return
+	}
+	err = writePDF(w, content, "mailer-mode-2.pdf")
+	if err != nil {
+		respondError(w, "copy error", err, http.StatusInternalServerError)
+		return
+	}
 }
 func getMailer3(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")
@@ -72,7 +83,23 @@ func getMailer1Preview(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/mailer-1.html", contentMailer{})
 }
 func getMailer2Preview(w http.ResponseWriter, r *http.Request) {
-	html.RenderOrError(w, "sync/mailer-2.html", contentMailer{})
+	ctx := r.Context()
+	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, 1)
+	//org, err := platform.OrganizationByID(ctx, 1)
+	if err != nil {
+		http.Error(w, "no comp", http.StatusInternalServerError)
+		return
+	}
+
+	html.RenderOrError(w, "sync/mailer-2.html", contentMailer{
+		Config:       html.NewContentConfig(),
+		DocumentID:   "abc-123",
+		LogoURL:      config.MakeURLNidus("/api/district/delta-mvcd/logo"),
+		Organization: org,
+		PoolImageURL: config.MakeURLNidus("/mailer/pool/random"),
+		QRCodeURL:    config.MakeURLNidus("/qr-code/marketing"),
+		ReportURL:    "https://nidus.cloud",
+	})
 }
 func getMailer3Preview(w http.ResponseWriter, r *http.Request) {
 	code := chi.URLParam(r, "code")

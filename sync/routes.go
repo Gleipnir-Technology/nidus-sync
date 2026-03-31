@@ -14,7 +14,7 @@ func Router() chi.Router {
 	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
 	r.Get("/mailer/pool/random", getMailerPoolRandom)
 	r.Get("/mailer/mode-1", getMailer1)
-	r.Get("/mailer/mode-2/{code}", getMailer2)
+	r.Get("/mailer/mode-2", getMailer2)
 	r.Get("/mailer/mode-3/{code}", getMailer3)
 	r.Get("/mailer/mode-1/preview", getMailer1Preview)
 	r.Get("/mailer/mode-2/preview", getMailer2Preview)
@@ -33,6 +33,7 @@ func Router() chi.Router {
 
 	// Utility endpoints
 	r.Get("/privacy", getPrivacy)
+	r.Get("/qr-code/marketing", getQRCodeMarketing)
 	r.Get("/qr-code/report/{code}", getQRCodeReport)
 	r.Get("/qr-code/mailer/{code}", getQRCodeMailer)
 	r.Get("/template-test", getTemplateTest)
