@@ -17,15 +17,14 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
+	"github.com/Gleipnir-Technology/nidus-sync/middleware"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/getsentry/sentry-go/zerolog"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/hostrouter"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -105,7 +104,8 @@ func main() {
 	sentryMiddleware := sentryhttp.New(sentryhttp.Options{
 		Repanic: true,
 	})
-	r := chi.NewRouter()
+	//r := chi.NewRouter()
+	r := mux.NewRouter()
 
 	r.Use(LoggerMiddleware(&router_logger))
 	r.Use(middleware.RequestID)
@@ -115,15 +115,14 @@ func main() {
 	r.Use(sentryMiddleware.Handle)
 	r.Use(auth.NewSessionManager().LoadAndSave)
 
-	hr := hostrouter.New()
+	sync_router := r.Host(config.DomainNidus).Subrouter()
+	rmo_router := r.Host(config.DomainRMO).Subrouter()
 
 	// Set up routing by hostname
-	sr := nidussync.Router()
-	hr.Map("", sr)                         // default
-	hr.Map("*", sr)                        // default
-	hr.Map(config.DomainRMO, rmo.Router()) // report.mosquitoes.online
-	hr.Map(config.DomainNidus, sr)
-	r.Mount("/", hr)
+	nidussync.Router(sync_router)
+	rmo.Router(rmo_router)
+	//hr.Map("", sr)                         // default
+	//hr.Map("*", sr)                        // default
 
 	log.Debug().Str("report url", config.DomainRMO).Str("sync url", config.DomainNidus).Msg("Serving at URLs")
 

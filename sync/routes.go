@@ -3,26 +3,24 @@ package sync
 import (
 	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/static"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 )
 
-func Router() chi.Router {
-	r := chi.NewRouter()
-
+func Router(r *mux.Router) {
 	// Unauthenticated endpoints
-	r.Get("/arcgis/oauth/begin", getArcgisOauthBegin)
-	r.Get("/arcgis/oauth/callback", getArcgisOauthCallback)
-	r.Get("/mailer/pool/random", getMailerPoolRandom)
-	r.Get("/mailer/mode-1", getMailer1)
-	r.Get("/mailer/mode-2", getMailer2)
-	r.Get("/mailer/mode-3/{code}", getMailer3)
-	r.Get("/mailer/mode-1/preview", getMailer1Preview)
-	r.Get("/mailer/mode-2/preview", getMailer2Preview)
-	r.Get("/mailer/mode-3/{code}/preview", getMailer3Preview)
-	r.Get("/district", getDistrict)
+	r.HandleFunc("/arcgis/oauth/begin", getArcgisOauthBegin)
+	r.HandleFunc("/arcgis/oauth/callback", getArcgisOauthCallback)
+	r.HandleFunc("/mailer/pool/random", getMailerPoolRandom)
+	r.HandleFunc("/mailer/mode-1", getMailer1)
+	r.HandleFunc("/mailer/mode-2", getMailer2)
+	r.HandleFunc("/mailer/mode-3/{code}", getMailer3)
+	r.HandleFunc("/mailer/mode-1/preview", getMailer1Preview)
+	r.HandleFunc("/mailer/mode-2/preview", getMailer2Preview)
+	r.HandleFunc("/mailer/mode-3/{code}/preview", getMailer3Preview)
+	r.HandleFunc("/district", getDistrict)
 
 	// Mock endpoints
-	r.Get("/mock", renderMockList)
+	r.HandleFunc("/mock", renderMockList)
 	addMock(r, "/mock/report", "sync/mock/report.html")
 	addMock(r, "/mock/report/{code}", "sync/mock/report-detail.html")
 	addMock(r, "/mock/report/{code}/confirm", "sync/mock/report-confirmation.html")
@@ -32,18 +30,17 @@ func Router() chi.Router {
 	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 
 	// Utility endpoints
-	r.Get("/privacy", getPrivacy)
-	r.Get("/qr-code/marketing", getQRCodeMarketing)
-	r.Get("/qr-code/report/{code}", getQRCodeReport)
-	r.Get("/qr-code/mailer/{code}", getQRCodeMailer)
-	r.Get("/template-test", getTemplateTest)
+	r.HandleFunc("/privacy", getPrivacy)
+	r.HandleFunc("/qr-code/marketing", getQRCodeMarketing)
+	r.HandleFunc("/qr-code/report/{code}", getQRCodeReport)
+	r.HandleFunc("/qr-code/mailer/{code}", getQRCodeMailer)
+	r.HandleFunc("/template-test", getTemplateTest)
 
-	// Authenticated endpoints
-	r.Route("/api", api.AddRoutes)
+	api_router := r.PathPrefix("/api").Subrouter()
+	api.AddRoutes(api_router)
 
-	r.Get("/", getRoot)
-	r.Get("/_/*", getRoot)
+	r.HandleFunc("/", getRoot)
+	r.HandleFunc("/_/*", getRoot)
 
 	static.AddStaticRoute(r, "/static")
-	return r
 }

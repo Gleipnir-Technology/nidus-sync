@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,7 +24,7 @@ var startedTime time.Time = time.Now()
 
 var localFS http.Dir
 
-func AddStaticRoute(r chi.Router, path string) {
+func AddStaticRoute(r *mux.Router, path string) {
 	if localFS == "" {
 		localFS = http.Dir("./static")
 		// Useful for debugging embedded file issues
@@ -38,20 +38,22 @@ func AddStaticRoute(r chi.Router, path string) {
 	fileServer(r, "/static", localFS, embeddedStaticFS)
 }
 
-func fileServer(r chi.Router, path string, root http.FileSystem, embeddedFS embed.FS) {
+func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS embed.FS) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
 
 	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		r.HandleFunc(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
 		path += "/"
 	}
 	path += "*"
 
-	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		rctx := chi.RouteContext(r.Context())
-		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+	r.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		//rctx := chi.RouteContext(r.Context())
+
+		//pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		pathPrefix := strings.TrimPrefix(r.URL.Path, "/static")
 
 		// Determine the actual file path
 		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix+"/")

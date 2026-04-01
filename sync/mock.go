@@ -3,7 +3,7 @@ package sync
 import (
 	"fmt"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"net/http"
 	//"github.com/rs/zerolog/log"
 )
@@ -45,12 +45,12 @@ type mock struct {
 
 var mocks = []mock{}
 
-func addMock(r chi.Router, path string, template string) {
+func addMock(r *mux.Router, path string, template string) {
 	mocks = append(mocks, mock{
 		Path:     path,
 		template: template,
 	})
-	r.Get(path, renderMock(template))
+	r.HandleFunc(path, renderMock(template))
 }
 
 type contentMock struct {
@@ -61,7 +61,8 @@ type contentMock struct {
 
 func renderMock(template_name string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := chi.URLParam(r, "code")
+		vars := mux.Vars(r)
+		code := vars["code"]
 		if code == "" {
 			code = "abc-123"
 		}
