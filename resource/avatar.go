@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
@@ -21,6 +20,9 @@ func Avatar(r *router) *avatarR {
 type avatarR struct {
 	router *router
 }
+type avatar struct {
+	URI string `json:"uri"`
+}
 
 func (res *avatarR) ByIDGet(ctx context.Context, r *http.Request, u platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
@@ -31,17 +33,23 @@ func (res *avatarR) ByIDGet(ctx context.Context, r *http.Request, u platform.Use
 	}
 	return file.CollectionAvatar, uid, nil
 }
-func (res *avatarR) Create(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (string, *nhttp.ErrorWithStatus) {
+func (res *avatarR) Create(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (*avatar, *nhttp.ErrorWithStatus) {
 	if len(uploads) == 0 {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "No upload found")
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No upload found")
 	}
 	if len(uploads) != 1 {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "You must only submit one file at a time")
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "You must only submit one file at a time")
 	}
 	upload := uploads[0]
 	err := platform.AvatarCreate(r.Context(), u, upload)
 	if err != nil {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Create avatar: %w", err)
+		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "Create avatar: %w", err)
 	}
-	return fmt.Sprintf("/avatar/%s", upload.UUID.String()), nil
+	uri, err := res.router.UUIDToURI("avatar.ByIDGet", &upload.UUID)
+	if err != nil {
+		return nil, nhttp.NewError("create uri: %w", err)
+	}
+	return &avatar{
+		URI: *uri,
+	}, nil
 }

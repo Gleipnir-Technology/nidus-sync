@@ -126,23 +126,29 @@ func authenticatedHandlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.Han
 }
 
 type handlerFunctionPost[ReqType any] func(context.Context, *http.Request, ReqType) (string, *nhttp.ErrorWithStatus)
-type handlerFunctionPostAuthenticated[ReqType any] func(context.Context, *http.Request, platform.User, ReqType) (string, *nhttp.ErrorWithStatus)
+type handlerFunctionPostAuthenticated[RequestType any, ResponseType any] func(context.Context, *http.Request, platform.User, RequestType) (ResponseType, *nhttp.ErrorWithStatus)
 
-func authenticatedHandlerJSONPost[ReqType any](f handlerFunctionPostAuthenticated[ReqType]) http.Handler {
+func authenticatedHandlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPostAuthenticated[RequestType, ResponseType]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		w.Header().Set("Content-Type", "application/json")
-		req, e := parseRequest[ReqType](r)
+		req, e := parseRequest[RequestType](r)
 		if e != nil {
 			serializeError(w, e)
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, u, *req)
+		resp, e := f(ctx, r, u, *req)
 		if e != nil {
 			serializeError(w, e)
 			return
 		}
-		http.Redirect(w, r, path, http.StatusFound)
+		body, err := json.Marshal(resp)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to marshal json")
+			http.Error(w, "{\"message\": \"failed to marshal json\"}", http.StatusInternalServerError)
+			return
+		}
+		w.Write(body)
 	})
 }
 
@@ -214,7 +220,7 @@ type postMultipartResponse struct {
 	URI string `json:"uri"`
 }
 
-func authenticatedHandlerPostMultipart(f handlerFunctionPostAuthenticated[[]file.Upload], collection file.Collection) http.Handler {
+func authenticatedHandlerPostMultipart[ResponseType any](f handlerFunctionPostAuthenticated[[]file.Upload, ResponseType], collection file.Collection) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
 		if err != nil {
@@ -235,14 +241,12 @@ func authenticatedHandlerPostMultipart(f handlerFunctionPostAuthenticated[[]file
 			}
 		*/
 		ctx := r.Context()
-		path, e := f(ctx, r, u, uploads)
+		resp, e := f(ctx, r, u, uploads)
 		if e != nil {
 			http.Error(w, e.Error(), e.Status)
 			return
 		}
-		body, err := json.Marshal(postMultipartResponse{
-			URI: path,
-		})
+		body, err := json.Marshal(resp)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to marshal json")
 			http.Error(w, "{\"message\": \"failed to marshal json\"}", http.StatusInternalServerError)
