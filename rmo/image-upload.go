@@ -39,7 +39,7 @@ func extractImageUpload(headers *multipart.FileHeader) (upload platform.ImageUpl
 	if err != nil {
 		return upload, fmt.Errorf("Failed to create quick report photo uuid", err)
 	}
-	err = file.PublicImageFileContentWrite(u, bytes.NewReader(file_bytes))
+	err = file.ImageFileFromReader(file.CollectionPublicImage, u, bytes.NewReader(file_bytes))
 	if err != nil {
 		return upload, fmt.Errorf("Failed to write image file to disk: %w", err)
 	}

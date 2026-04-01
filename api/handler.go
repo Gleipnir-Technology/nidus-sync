@@ -13,11 +13,33 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/resource"
+	"github.com/google/uuid"
 	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
 
 var decoder = schema.NewDecoder()
+
+type handlerFunctionGetImage func(context.Context, *http.Request, platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus)
+
+func authenticatedHandlerGetImage(f handlerFunctionGetImage) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
+		ctx := r.Context()
+		collection, uid, e := f(ctx, r, u)
+		if e != nil {
+			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
+			body, err := json.Marshal(ErrorAPI{Message: e.Error()})
+			if err != nil {
+				log.Error().Err(err).Msg("failed to marshal error")
+				http.Error(w, "{\"message\": \"boom. I can't even tell you what went wrong\"}", http.StatusInternalServerError)
+				return
+			}
+			http.Error(w, string(body), e.Status)
+			return
+		}
+		file.ImageFileToWriter(collection, uid, w)
+	})
+}
 
 type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)

@@ -73,7 +73,7 @@ func apiGetDistrictLogo(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Logo not found", http.StatusNotFound)
 			return
 		}
-		file.ImageFileContentWriteLogo(w, org.LogoUUID.MustGet())
+		file.ImageFileToWriter(file.CollectionLogo, org.LogoUUID.MustGet(), w)
 		return
 	default:
 		http.Error(w, "Too many organizations, this is a programmer error", http.StatusInternalServerError)

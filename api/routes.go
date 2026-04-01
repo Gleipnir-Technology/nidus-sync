@@ -16,7 +16,9 @@ func AddRoutes(r *mux.Router) {
 	// Authenticated endpoints
 	r.Handle("/audio/{uuid}", auth.NewEnsureAuth(apiAudioPost)).Methods("POST")
 	r.Handle("/audio/{uuid}/content", auth.NewEnsureAuth(apiAudioContentPost)).Methods("POST")
-	r.Handle("/avatar", authenticatedHandlerPostMultipart(avatarPost, file.CollectionAvatar)).Methods("POST")
+	avatar := resource.Avatar(router)
+	r.Handle("/avatar/{uuid}", authenticatedHandlerGetImage(avatar.ByIDGet)).Methods("GET").Name("avatar.ByIDGet")
+	r.Handle("/avatar", authenticatedHandlerPostMultipart(avatar.Create, file.CollectionAvatar)).Methods("POST")
 	r.Handle("/client/ios", auth.NewEnsureAuth(handleClientIos)).Methods("GET")
 	communication := resource.Communication(r)
 	r.Handle("/communication", authenticatedHandlerJSON(communication.List)).Methods("GET")

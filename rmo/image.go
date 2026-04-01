@@ -21,5 +21,5 @@ func getImageByUUID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse uuid", http.StatusBadRequest)
 		return
 	}
-	file.PublicImageFileToResponse(w, uid)
+	file.ImageFileToWriter(file.CollectionPublicImage, uid, w)
 }

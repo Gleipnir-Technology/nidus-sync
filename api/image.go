@@ -62,7 +62,7 @@ func apiImageContentGet(w http.ResponseWriter, r *http.Request, u platform.User)
 		log.Error().Err(err).Msg("Failed to parse image UUID")
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
-	file.PublicImageFileToResponse(w, imageUUID)
+	file.ImageFileToWriter(file.CollectionPublicImage, imageUUID, w)
 	w.WriteHeader(http.StatusOK)
 }
 func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User) {
@@ -73,7 +73,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User
 		log.Error().Err(err).Msg("Failed to parse image UUID")
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)
 	}
-	err = file.ImageFileContentWrite(imageUUID, r.Body)
+	err = file.ImageFileFromReader(file.CollectionImageRaw, imageUUID, r.Body)
 	if err != nil {
 		renderShim(w, r, errRender(err))
 		return
