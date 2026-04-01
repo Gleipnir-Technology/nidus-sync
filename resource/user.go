@@ -7,9 +7,11 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -95,7 +97,7 @@ func (res *userR) ByIDGet(ctx context.Context, r *http.Request, user platform.Us
 	return u, nil
 }
 
-func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates platform.UserChangeRequest) (string, *nhttp.ErrorWithStatus) {
+func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates contentURLAPI) (string, *nhttp.ErrorWithStatus) {
 	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
 	vars := mux.Vars(r)
 	user_id_str := vars["id"]
@@ -103,7 +105,15 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 	if err != nil {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
 	}
-	err = platform.UserUpdate(ctx, user, user_id, updates)
+	user_changes := &models.UserSetter{}
+	if updates.Avatar != "" {
+		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", updates.Avatar)
+		if err != nil {
+			return "", nhttp.NewBadRequest("parse avatar uri: %w", err)
+		}
+		user_changes.Avatar = omitnull.FromPtr(avatar_uuid)
+	}
+	err = platform.UserUpdate(ctx, user, user_id, user_changes)
 	if err != nil {
 		return "", nhttp.NewError("user update: %w", err)
 	}

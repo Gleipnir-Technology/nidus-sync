@@ -15,7 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
+	//"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -188,13 +188,7 @@ func userSuggestionNonRoot(ctx context.Context, user User, query_arg string) ([]
 	return results, nil
 }
 
-type UserChangeRequest struct {
-	Avatar      string `json:"avatar"`
-	DisplayName string `json:"display_name"`
-}
-
-func UserUpdate(ctx context.Context, user User, user_id int, updates UserChangeRequest) error {
-	setter := models.UserSetter{}
+func UserUpdate(ctx context.Context, user User, user_id int, updates *models.UserSetter) error {
 	target_user, err := models.FindUser(ctx, db.PGInstance.BobDB, int32(user_id))
 	if err != nil {
 		return fmt.Errorf("find user: %w", err)
@@ -202,17 +196,7 @@ func UserUpdate(ctx context.Context, user User, user_id int, updates UserChangeR
 	if user.model.Role != enums.UserroleRoot && target_user.OrganizationID != target_user.OrganizationID {
 		return fmt.Errorf("Current user (%d) isn't allowed to change this user (%d)", user.ID, target_user.ID)
 	}
-	if updates.Avatar != "" {
-		u, err := uuid.Parse(updates.Avatar)
-		if err != nil {
-			return fmt.Errorf("parse uuid: %w", err)
-		}
-		setter.Avatar = omitnull.From(u)
-	}
-	if updates.DisplayName != "" {
-		setter.DisplayName = omit.From(updates.DisplayName)
-	}
-	err = target_user.Update(ctx, db.PGInstance.BobDB, &setter)
+	err = target_user.Update(ctx, db.PGInstance.BobDB, updates)
 	return err
 }
 func userSuggestionRoot(ctx context.Context, user User, query_arg string) ([]*User, error) {

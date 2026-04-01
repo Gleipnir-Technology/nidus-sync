@@ -13,6 +13,9 @@ type ErrorWithStatus struct {
 func (e *ErrorWithStatus) Error() string {
 	return e.Message
 }
+func NewBadRequest(mesg_format string, args ...any) *ErrorWithStatus {
+	return NewErrorStatus(http.StatusBadRequest, mesg_format, args...)
+}
 func NewError(mesg_format string, args ...any) *ErrorWithStatus {
 	return NewErrorStatus(http.StatusInternalServerError, mesg_format, args...)
 }
