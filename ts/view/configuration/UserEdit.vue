@@ -5,7 +5,10 @@
 	object-fit: cover;
 	border: 3px solid #dee2e6;
 }
-
+.bi-avatar {
+	height: 128px;
+	width: 128px;
+}
 .btn-close-white {
 	opacity: 0.8;
 }
@@ -47,7 +50,9 @@ pre {
 								<label class="form-label fw-bold">Avatar</label>
 								<div class="d-flex align-items-center">
 									<div class="position-relative">
+										<i v-if="avatar == ''" class="bi bi-avatar"></i>
 										<img
+											v-else
 											:src="avatar || defaultAvatar"
 											alt="User Avatar"
 											class="rounded-circle avatar-preview"
