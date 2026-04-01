@@ -102,7 +102,12 @@ func authenticatedHandlerJSONPut[ReqType any](f handlerFunctionPutAuthenticated[
 			serializeError(w, e)
 			return
 		}
-		http.Redirect(w, r, path, http.StatusFound)
+		if path == "" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Location", path)
+		http.Redirect(w, r, path, http.StatusCreated)
 	})
 }
 func parseRequest[ReqType any](r *http.Request) (*ReqType, *nhttp.ErrorWithStatus) {

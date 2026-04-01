@@ -3,11 +3,14 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog/log"
 )
 
 type contentURLAPI struct {
@@ -96,7 +99,16 @@ func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User
 	}, nil
 }
 
-func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.User) (string, *nhttp.ErrorWithStatus) {
-	//if updates.Avatar
+func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.UserChangeRequest) (string, *nhttp.ErrorWithStatus) {
+	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
+	user_id_str := chi.URLParam(r, "id")
+	user_id, err := strconv.Atoi(user_id_str)
+	if err != nil {
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
+	}
+	err = platform.UserUpdate(ctx, user, user_id, updates)
+	if err != nil {
+		return "", nhttp.NewError("user update: %w", err)
+	}
 	return "", nil
 }

@@ -362,11 +362,12 @@ const saveChanges = async () => {
 			console.error("Failed to upload avatar", error);
 		}
 	}
-	const url = session.urls?.api.user;
-	if (!url) {
-		console.log("empty avatar url");
+	const u = user.value;
+	if (!u) {
+		console.log("empty user");
 		return;
 	}
+	const url = "/api" + u.uri;
 	const response = await fetch(url, {
 		method: "PUT",
 		headers: {
