@@ -66,6 +66,43 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 	})
 }
 
+type handlerFunctionGetSlice[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
+
+func authenticatedHandlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
+		ctx := r.Context()
+		var body []byte
+		var params resource.QueryParams
+		err := decoder.Decode(&params, r.URL.Query())
+		if err != nil {
+			log.Error().Err(err).Msg("decode query failure")
+			http.Error(w, "failed to decode query", http.StatusInternalServerError)
+			return
+		}
+		resp, e := f(ctx, r, u, params)
+		w.Header().Set("Content-Type", "application/json")
+		//log.Info().Str("template", template).Err(e).Msg("handler done")
+		if e != nil {
+			log.Warn().Int("status", e.Status).Err(e).Str("user message", e.Message).Msg("Responding with an error from api")
+			body, err = json.Marshal(ErrorAPI{Message: e.Error()})
+			if err != nil {
+				log.Error().Err(err).Msg("failed to marshal error")
+				http.Error(w, "{\"message\": \"boom. I can't even tell you what went wrong\"}", http.StatusInternalServerError)
+				return
+			}
+			http.Error(w, string(body), e.Status)
+			return
+		}
+		body, err = json.Marshal(resp)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to marshal json")
+			http.Error(w, "{\"message\": \"failed to marshal json\"}", http.StatusInternalServerError)
+			return
+		}
+		w.Write(body)
+	})
+}
+
 type handlerFunctionPost[ReqType any] func(context.Context, *http.Request, ReqType) (string, *nhttp.ErrorWithStatus)
 type handlerFunctionPostAuthenticated[ReqType any] func(context.Context, *http.Request, platform.User, ReqType) (string, *nhttp.ErrorWithStatus)
 

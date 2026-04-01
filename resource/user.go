@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,16 +14,56 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type userR struct {
-	router *mux.Router
+type userResponse struct {
+	Avatar      string `json:"avatar"`
+	DisplayName string `json:"display_name"`
+	Initials    string `json:"initials"`
+	IsActive    bool   `json:"is_active"`
+	//Notifications      []Notification         `json:"notifications"`
+	//NotificationCounts UserNotificationCounts `json:"notification_counts"`
+	//Organization       Organization           `json:"organization"`
+	PasswordHash     string   `json:"-"`
+	PasswordHashType string   `json:"-"`
+	Role             string   `json:"role"`
+	Tags             []string `json:"tags"`
+	URI              string   `json:"uri"`
+	Username         string   `json:"username"`
 }
 
-func NewUser(r *mux.Router) *userR {
+func User(r *mux.Router) *userR {
 	return &userR{
 		router: r,
 	}
 }
+func (res *userR) response(u *platform.User) (*userResponse, error) {
+	if u == nil {
+		return nil, fmt.Errorf("nil user")
+	}
+	log.Info().Int("id", u.ID).Msg("making response from user")
+	i := strconv.FormatInt(int64(u.ID), 10)
+	handler := res.router.Get("user.ByIDGet")
+	if handler == nil {
+		return nil, fmt.Errorf("nil handler")
+	}
+	uri, err := handler.URL("id", i)
+	if err != nil {
+		return nil, fmt.Errorf("build uri: %w", err)
+	}
+	return &userResponse{
+		Avatar:      u.Avatar,
+		DisplayName: u.DisplayName,
+		Initials:    u.Initials,
+		IsActive:    u.Active,
+		Role:        u.Role,
+		Tags:        u.Tags,
+		URI:         uri.String(),
+		Username:    u.Username,
+	}, nil
+}
 
+type userR struct {
+	router *mux.Router
+}
 type responseListUser struct {
 	Users []*platform.User `json:"users"`
 }
@@ -56,6 +97,21 @@ func (res *userR) ByIDGet(ctx context.Context, r *http.Request, user platform.Us
 	return u, nil
 }
 
+func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates platform.UserChangeRequest) (string, *nhttp.ErrorWithStatus) {
+	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
+	vars := mux.Vars(r)
+	user_id_str := vars["id"]
+	user_id, err := strconv.Atoi(user_id_str)
+	if err != nil {
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
+	}
+	err = platform.UserUpdate(ctx, user, user_id, updates)
+	if err != nil {
+		return "", nhttp.NewError("user update: %w", err)
+	}
+	return "", nil
+}
+
 func (res *userR) SelfGet(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*contentUserSelf, *nhttp.ErrorWithStatus) {
 	counts, err := platform.NotificationCountsForUser(ctx, user)
 	if err != nil {
@@ -86,20 +142,22 @@ func (res *userR) SelfGet(ctx context.Context, r *http.Request, user platform.Us
 	}, nil
 }
 
-func (res *userR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*responseListUser, *nhttp.ErrorWithStatus) {
-	users, err := platform.UsersByOrg(ctx, user.Organization)
+func (res *userR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]*userResponse, *nhttp.ErrorWithStatus) {
+	users, err := platform.UserList(ctx, user)
 	if err != nil {
 		return nil, nhttp.NewError("list users: %w", err)
 	}
-	results := make([]*platform.User, len(users))
-	i := 0
-	for _, v := range users {
-		results[i] = v
-		i++
+	results := make([]*userResponse, len(users))
+	log.Debug().Int("len", len(users)).Msg("building response")
+	for i, v := range users {
+		log.Debug().Int("i", i).Msg("making results")
+		resp, err := res.response(v)
+		if err != nil {
+			return nil, nhttp.NewError("create response: %w", err)
+		}
+		results[i] = resp
 	}
-	return &responseListUser{
-		Users: results,
-	}, nil
+	return results, nil
 }
 
 type responseListUserSuggestion struct {
@@ -117,19 +175,4 @@ func (res *userR) SuggestionGet(ctx context.Context, r *http.Request, user platf
 	return &responseListUserSuggestion{
 		Users: users,
 	}, nil
-}
-
-func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates platform.UserChangeRequest) (string, *nhttp.ErrorWithStatus) {
-	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
-	vars := mux.Vars(r)
-	user_id_str := vars["id"]
-	user_id, err := strconv.Atoi(user_id_str)
-	if err != nil {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
-	}
-	err = platform.UserUpdate(ctx, user, user_id, updates)
-	if err != nil {
-		return "", nhttp.NewError("user update: %w", err)
-	}
-	return "", nil
 }

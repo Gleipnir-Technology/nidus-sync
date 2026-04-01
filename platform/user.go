@@ -37,7 +37,6 @@ type User struct {
 	PasswordHashType   string                 `json:"-"`
 	Role               string                 `json:"role"`
 	Tags               []string               `json:"tags"`
-	URI                string                 `json:"uri"`
 	Username           string                 `json:"username"`
 
 	model *models.User
@@ -67,7 +66,6 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 		PasswordHashType:   string(user.PasswordHashType),
 		Role:               user.Role.String(),
 		Tags:               []string{},
-		URI:                fmt.Sprintf("/user/%d", user.ID),
 		Username:           user.Username,
 
 		model: user,
@@ -112,6 +110,39 @@ func UserByID(ctx context.Context, user_id int32) (*User, error) {
 }
 func UserByUsername(ctx context.Context, username string) (*User, error) {
 	return getUser(ctx, models.SelectWhere.Users.Username.EQ(username))
+}
+func UserList(ctx context.Context, user User) ([]*User, error) {
+	var query models.UsersQuery
+	var orgByID map[int32]*Organization
+	if user.HasRoot() {
+		query = models.Users.Query()
+		orgs, err := OrganizationList(ctx, user)
+		if err != nil {
+			return nil, fmt.Errorf("org list: %w", err)
+		}
+		orgByID = make(map[int32]*Organization, len(orgs))
+		for _, org := range orgs {
+			orgByID[org.ID] = org
+		}
+	} else {
+		query = user.Organization.model.User()
+		orgByID = make(map[int32]*Organization, 1)
+		orgByID[user.model.OrganizationID] = &user.Organization
+	}
+	rows, err := query.All(ctx, db.PGInstance.BobDB)
+	results := make([]*User, len(rows))
+	if err != nil {
+		return nil, fmt.Errorf("query users: %w", err)
+	}
+	for i, row := range rows {
+		org, ok := orgByID[row.OrganizationID]
+		if !ok {
+			return nil, fmt.Errorf("get org %d", row.OrganizationID)
+		}
+		new_user := newUser(ctx, *org, row)
+		results[i] = &new_user
+	}
+	return results, nil
 }
 func UsersByOrg(ctx context.Context, org Organization) (map[int32]*User, error) {
 	users, err := org.model.User().All(ctx, db.PGInstance.BobDB)

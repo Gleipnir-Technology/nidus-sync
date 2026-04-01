@@ -98,6 +98,21 @@ func OrganizationByID(ctx context.Context, id int) (*Organization, error) {
 	o := newOrganization(org)
 	return &o, nil
 }
+func OrganizationList(ctx context.Context, user User) ([]*Organization, error) {
+	if !user.HasRoot() {
+		return []*Organization{&user.Organization}, nil
+	}
+	rows, err := models.Organizations.Query().All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query orgs: %w", err)
+	}
+	results := make([]*Organization, len(rows))
+	for i, row := range rows {
+		o := newOrganization(row)
+		results[i] = &o
+	}
+	return results, err
+}
 func newOrganization(org *models.Organization) Organization {
 	var sa *ServiceArea
 	if org.ServiceAreaXmax.IsValue() &&

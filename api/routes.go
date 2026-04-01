@@ -50,11 +50,11 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/upload/{id}/commit", authenticatedHandlerJSONPost(upload.Commit)).Methods("POST")
 	r.Handle("/upload/{id}/discard", authenticatedHandlerJSONPost(upload.Discard)).Methods("POST")
 
-	user := resource.NewUser(r)
+	user := resource.User(r)
 	r.Handle("/user/self", authenticatedHandlerJSON(user.SelfGet)).Methods("GET")
 	r.Handle("/user/suggestion", authenticatedHandlerJSON(user.SuggestionGet)).Methods("GET")
-	r.Handle("/user", authenticatedHandlerJSON(user.List)).Methods("GET")
-	r.Handle("/user/{id}", authenticatedHandlerJSON(user.ByIDGet)).Methods("GET")
+	r.Handle("/user", authenticatedHandlerJSONSlice(user.List)).Methods("GET")
+	r.Handle("/user/{id}", authenticatedHandlerJSON(user.ByIDGet)).Methods("GET").Name("user.ByIDGet")
 	r.Handle("/user/{id}", authenticatedHandlerJSONPut(user.ByIDPut)).Methods("PUT")
 
 	// Unauthenticated endpoints
