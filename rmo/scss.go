@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 func getScssDebug(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "*")
+	vars := mux.Vars(r)
+	path := vars["*"]
 	full_path := "scss/" + path
 	//log.Debug().Str("path", path).Str("full_path", full_path).Msg("working on SCSS debug")
 	file, err := os.Open(full_path)

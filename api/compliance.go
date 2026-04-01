@@ -13,14 +13,15 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/paulmach/orb/geojson"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
 
 func getComplianceRequestImagePool(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	code := vars["public_id"]
 	if code == "" {
 		http.Error(w, "empty public_id", http.StatusBadRequest)
 		return

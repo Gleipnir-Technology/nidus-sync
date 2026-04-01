@@ -5,14 +5,15 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 func getTile(w http.ResponseWriter, r *http.Request, user platform.User) {
-	x_str := chi.URLParam(r, "x")
-	y_str := chi.URLParam(r, "y")
-	z_str := chi.URLParam(r, "z")
+	vars := mux.Vars(r)
+	x_str := vars["x"]
+	y_str := vars["y"]
+	z_str := vars["z"]
 
 	x, err := strconv.Atoi(x_str)
 	if err != nil {

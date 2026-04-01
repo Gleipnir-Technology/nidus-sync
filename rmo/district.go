@@ -8,7 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 )
 
 type ContentDistrict struct {
@@ -23,7 +23,8 @@ type ContentDistrictList struct {
 }
 
 func districtBySlug(r *http.Request) (*models.Organization, error) {
-	slug := chi.URLParam(r, "slug")
+	vars := mux.Vars(r)
+	slug := vars["slug"]
 	district, err := models.Organizations.Query(
 		models.SelectWhere.Organizations.Slug.EQ(slug),
 	).One(r.Context(), db.PGInstance.BobDB)

@@ -7,8 +7,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type contentSource struct {
@@ -44,7 +44,8 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSource], *nhttp.ErrorWithStatus) {
-	globalid_s := chi.URLParam(r, "globalid")
+	vars := mux.Vars(r)
+	globalid_s := vars["globalid"]
 	if globalid_s == "" {
 		return nil, nhttp.NewError("No globalid provided: %w", nil)
 	}
@@ -86,7 +87,8 @@ func getTemplateTest(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(w, "sync/template-test.html", nil)
 }
 func getTrap(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentTrap], *nhttp.ErrorWithStatus) {
-	globalid_s := chi.URLParam(r, "globalid")
+	vars := mux.Vars(r)
+	globalid_s := vars["globalid"]
 	if globalid_s == "" {
 		return nil, nhttp.NewError("No globalid provided: %w", nil)
 	}

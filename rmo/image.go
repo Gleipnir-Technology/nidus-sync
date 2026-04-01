@@ -4,13 +4,14 @@ import (
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 // ServeImageByUUID reads an image with the given UUID from disk and writes it to the HTTP response
 func getImageByUUID(w http.ResponseWriter, r *http.Request) {
-	u := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	u := vars["uuid"]
 	if u == "" {
 		http.NotFound(w, r)
 		return

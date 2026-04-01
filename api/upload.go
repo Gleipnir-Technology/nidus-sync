@@ -11,12 +11,13 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 func getUploadByID(ctx context.Context, r *http.Request, u platform.User, query queryParams) (*platform.Upload, *nhttp.ErrorWithStatus) {
-	file_id_str := chi.URLParam(r, "id")
+	vars := mux.Vars(r)
+	file_id_str := vars["id"]
 	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to parse file_id: %w", err)
@@ -76,7 +77,8 @@ func getUploadPoolCustomCreate(ctx context.Context, r *http.Request, u platform.
 type FormUploadCommit struct{}
 
 func postUploadCommit(ctx context.Context, r *http.Request, u platform.User, f FormUploadCommit) (string, *nhttp.ErrorWithStatus) {
-	file_id_str := chi.URLParam(r, "id")
+	vars := mux.Vars(r)
+	file_id_str := vars["id"]
 	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
 		return "", nhttp.NewError("Failed to parse file_id: %w", err)
@@ -92,7 +94,8 @@ func postUploadCommit(ctx context.Context, r *http.Request, u platform.User, f F
 type FormUploadDiscard struct{}
 
 func postUploadDiscard(ctx context.Context, r *http.Request, u platform.User, f FormUploadDiscard) (string, *nhttp.ErrorWithStatus) {
-	file_id_str := chi.URLParam(r, "id")
+	vars := mux.Vars(r)
+	file_id_str := vars["id"]
 	file_id_, err := strconv.ParseInt(file_id_str, 10, 32)
 	if err != nil {
 		return "", nhttp.NewError("Failed to parse file_id: %w", err)

@@ -8,7 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/aarondl/opt/omit"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 )
 
 type ContentEmail struct {
@@ -16,7 +16,8 @@ type ContentEmail struct {
 }
 
 func getEmailByCode(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "code")
+	vars := mux.Vars(r)
+	id := vars["code"]
 	//id := r.FormValue("id")
 	if id == "" {
 		http.Error(w, "You must specify an id", http.StatusBadRequest)

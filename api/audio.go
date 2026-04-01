@@ -12,14 +12,14 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
-	id := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	id := vars["uuid"]
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
 		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
@@ -51,14 +51,15 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 		UUID:                    omit.From(noteUUID),
 	}
 	if err := platform.NoteAudioCreate(ctx, u, setter); err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
 func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.User) {
-	u_str := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	u_str := vars["uuid"]
 	u, err := uuid.Parse(u_str)
 	if err != nil {
 		http.Error(w, "Failed to parse image UUID", http.StatusBadRequest)

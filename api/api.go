@@ -10,15 +10,59 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/render"
+	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
+/*
+type renderer struct {
+}
+func (ren *renderer) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+*/
+// In the best case scenario, the excellent github.com/pkg/errors package
+// helps reveal information on the error, setting it on Err, and in the Render()
+// method, using it to set the application-specific error code in AppCode.
+type ResponseErr struct {
+	Error          error `json:"-"` // low-level runtime error
+	HTTPStatusCode int   `json:"-"` // http response status code
+
+	StatusText string `json:"status"`          // user-level status message
+	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
+	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+}
+
+func (e *ResponseErr) Render(w http.ResponseWriter, r *http.Request) error {
+	http.Error(w, e.StatusText, e.HTTPStatusCode)
+	return nil
+}
+
+func errRender(err error) *ResponseErr {
+	log.Error().Err(err).Msg("Rendering error")
+	return &ResponseErr{
+		Error:          err,
+		HTTPStatusCode: 500,
+		StatusText:     "Error rendering response",
+		ErrorText:      err.Error(),
+	}
+}
+
+type Renderable interface {
+	Render(http.ResponseWriter, *http.Request) error
+}
+
+func renderShim(w http.ResponseWriter, r *http.Request, renderer Renderable) error {
+	return renderer.Render(w, r)
+}
+func renderList(w http.ResponseWriter, r *http.Request, data []Renderable) error {
+	return nil
+}
 func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 	var sinceStr string
 	err := r.ParseForm()
 	if err != nil {
-		render.Render(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
+		renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
 		return
 	} else {
 		sinceStr = r.FormValue("since")
@@ -30,14 +74,14 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 	} else {
 		since, err = parseTime(sinceStr)
 		if err != nil {
-			render.Render(w, r, errRender(fmt.Errorf("Failed to parse 'since' value: %w", err)))
+			renderShim(w, r, errRender(fmt.Errorf("Failed to parse 'since' value: %w", err)))
 			return
 		}
 	}
 
 	csync, err := platform.ContentClientIos(r.Context(), u, since)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
@@ -51,8 +95,8 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 		Fieldseeker: toResponseFieldseeker(csync.Fieldseeker),
 		Since:       since_used,
 	}
-	if err := render.Render(w, r, response); err != nil {
-		render.Render(w, r, errRender(err))
+	if err := renderShim(w, r, response); err != nil {
+		renderShim(w, r, errRender(err))
 		return
 	}
 }
@@ -60,7 +104,7 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
@@ -69,23 +113,23 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) 
 	query.Limit = 100
 	sources, err := platform.MosquitoSourceQuery()
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
-	data := []render.Renderer{}
+	data := []Renderable{}
 	for _, s := range sources {
 		data = append(data, NewResponseMosquitoSource(s))
 	}
-	if err := render.RenderList(w, r, data); err != nil {
-		render.Render(w, r, errRender(err))
+	if err := renderList(w, r, data); err != nil {
+		renderShim(w, r, errRender(err))
 	}
 }
 
 func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
@@ -94,23 +138,23 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	query.Limit = 100
 	trap_data, err := platform.TrapDataQuery()
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
-	data := []render.Renderer{}
+	data := []Renderable{}
 	for _, td := range trap_data {
 		data = append(data, NewResponseTrapDatum(td))
 	}
-	if err := render.RenderList(w, r, data); err != nil {
-		render.Render(w, r, errRender(err))
+	if err := renderList(w, r, data); err != nil {
+		renderShim(w, r, errRender(err))
 	}
 }
 
 func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 	query := db.NewGeoQuery()
@@ -118,16 +162,16 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) 
 	query.Limit = 100
 	requests, err := platform.ServiceRequestQuery()
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 
-	data := []render.Renderer{}
+	data := []Renderable{}
 	for _, sr := range requests {
 		data = append(data, NewResponseServiceRequest(sr))
 	}
-	if err := render.RenderList(w, r, data); err != nil {
-		render.Render(w, r, errRender(err))
+	if err := renderList(w, r, data); err != nil {
+		renderShim(w, r, errRender(err))
 	}
 }
 
@@ -166,16 +210,6 @@ func parseBounds(r *http.Request) (*db.GeoBounds, error) {
 	}
 	bounds.West = temp
 	return &bounds, nil
-}
-
-func errRender(err error) render.Renderer {
-	log.Error().Err(err).Msg("Rendering error")
-	return &ResponseErr{
-		Error:          err,
-		HTTPStatusCode: 500,
-		StatusText:     "Error rendering response",
-		ErrorText:      err.Error(),
-	}
 }
 
 func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {

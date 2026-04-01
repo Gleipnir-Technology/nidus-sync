@@ -14,8 +14,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	"golang.org/x/text/cases"
@@ -270,7 +270,8 @@ func addContentFromWater(result *ContentStatusByID, water *models.PublicreportWa
 }
 
 func getStatusByID(w http.ResponseWriter, r *http.Request) {
-	report_id := chi.URLParam(r, "report_id")
+	vars := mux.Vars(r)
+	report_id := vars["report_id"]
 	ctx := r.Context()
 
 	report, err := models.PublicreportReports.Query(

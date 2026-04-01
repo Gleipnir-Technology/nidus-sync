@@ -11,14 +11,14 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 func apiImagePost(w http.ResponseWriter, r *http.Request, u platform.User) {
-	id := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	id := vars["uuid"]
 	noteUUID, err := uuid.Parse(id)
 	if err != nil {
 		http.Error(w, "Failed to decode the uuid", http.StatusBadRequest)
@@ -48,14 +48,15 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	}
 	err = platform.NoteImageCreate(ctx, u, setter)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
 func apiImageContentGet(w http.ResponseWriter, r *http.Request, u platform.User) {
-	u_str := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	u_str := vars["uuid"]
 	imageUUID, err := uuid.Parse(u_str)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse image UUID")
@@ -65,7 +66,8 @@ func apiImageContentGet(w http.ResponseWriter, r *http.Request, u platform.User)
 	w.WriteHeader(http.StatusOK)
 }
 func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User) {
-	u_str := chi.URLParam(r, "uuid")
+	vars := mux.Vars(r)
+	u_str := vars["uuid"]
 	imageUUID, err := uuid.Parse(u_str)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to parse image UUID")
@@ -73,7 +75,7 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User
 	}
 	err = file.ImageFileContentWrite(imageUUID, r.Body)
 	if err != nil {
-		render.Render(w, r, errRender(err))
+		renderShim(w, r, errRender(err))
 		return
 	}
 	w.WriteHeader(http.StatusOK)

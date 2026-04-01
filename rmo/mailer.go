@@ -11,7 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -34,7 +34,8 @@ type contentMailer struct {
 }
 
 func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -81,7 +82,8 @@ func getMailer(ctx context.Context, r *http.Request) (*html.Response[contentMail
 
 }
 func getMailerConfirm(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -92,7 +94,8 @@ func getMailerConfirm(ctx context.Context, r *http.Request) (*html.Response[cont
 	), nil
 }
 func getMailerContribute(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -103,7 +106,8 @@ func getMailerContribute(ctx context.Context, r *http.Request) (*html.Response[c
 	), nil
 }
 func getMailerEvidence(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -114,7 +118,8 @@ func getMailerEvidence(ctx context.Context, r *http.Request) (*html.Response[con
 	), nil
 }
 func getMailerSchedule(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -125,7 +130,8 @@ func getMailerSchedule(ctx context.Context, r *http.Request) (*html.Response[con
 	), nil
 }
 func getMailerUpdate(ctx context.Context, r *http.Request) (*html.Response[contentMailer], *nhttp.ErrorWithStatus) {
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}
@@ -140,7 +146,8 @@ type formMailerConfirm struct{}
 
 func postMailerConfirm(ctx context.Context, r *http.Request, form formMailerConfirm) (string, *nhttp.ErrorWithStatus) {
 	log.Info().Msg("Fake confirm location")
-	public_id := chi.URLParam(r, "public_id")
+	vars := mux.Vars(r)
+	public_id := vars["public_id"]
 	if public_id == "" {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "No 'public_id' in the url params")
 	}

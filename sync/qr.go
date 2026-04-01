@@ -6,11 +6,12 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 )
 
 func getQRCodeMailer(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	vars := mux.Vars(r)
+	code := vars["code"]
 	if code == "" {
 		respondError(w, "There should always be a id", nil, http.StatusBadRequest)
 	}
@@ -23,7 +24,8 @@ func getQRCodeMarketing(w http.ResponseWriter, r *http.Request) {
 }
 
 func getQRCodeReport(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	vars := mux.Vars(r)
+	code := vars["code"]
 	if code == "" {
 		respondError(w, "There should always be a code", nil, http.StatusBadRequest)
 	}

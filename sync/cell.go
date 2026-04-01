@@ -8,7 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/uber/h3-go/v4"
 )
 
@@ -21,7 +21,8 @@ type contentCell struct {
 }
 
 func getCellDetails(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentCell], *nhttp.ErrorWithStatus) {
-	cell_str := chi.URLParam(r, "cell")
+	vars := mux.Vars(r)
+	cell_str := vars["cell"]
 	if cell_str == "" {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "There should always be a cell")
 	}

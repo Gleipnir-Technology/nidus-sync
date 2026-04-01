@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -184,7 +184,8 @@ func postSMS(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok"))
 }
 func getSMS(w http.ResponseWriter, r *http.Request) {
-	org := chi.URLParam(r, "org")
+	vars := mux.Vars(r)
+	org := vars["org"]
 
 	to := r.URL.Query().Get("error")
 	from := r.URL.Query().Get("error")

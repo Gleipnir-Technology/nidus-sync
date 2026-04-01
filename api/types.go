@@ -8,7 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/null"
-	"github.com/go-chi/render"
+	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -95,30 +95,12 @@ type ResponseFieldseeker struct {
 	TrapData        []ResponseTrapData       `json:"traps"`
 }
 
-// ResponseErr renderer type for handling all sorts of errors.
 type ResponseClientIos struct {
 	Fieldseeker ResponseFieldseeker `json:"fieldseeker"`
 	Since       time.Time           `json:"since"`
 }
 
 func (i ResponseClientIos) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-// In the best case scenario, the excellent github.com/pkg/errors package
-// helps reveal information on the error, setting it on Err, and in the Render()
-// method, using it to set the application-specific error code in AppCode.
-type ResponseErr struct {
-	Error          error `json:"-"` // low-level runtime error
-	HTTPStatusCode int   `json:"-"` // http response status code
-
-	StatusText string `json:"status"`          // user-level status message
-	AppCode    int64  `json:"code,omitempty"`  // application-specific error code
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
-}
-
-func (e *ResponseErr) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
 

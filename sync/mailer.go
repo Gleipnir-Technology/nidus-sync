@@ -12,8 +12,8 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -54,7 +54,8 @@ func getMailer2(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func getMailer3(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	vars := mux.Vars(r)
+	code := vars["code"]
 	if code == "" {
 		http.Error(w, "empty code", http.StatusBadRequest)
 		return
@@ -102,7 +103,8 @@ func getMailer2Preview(w http.ResponseWriter, r *http.Request) {
 	})
 }
 func getMailer3Preview(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
+	vars := mux.Vars(r)
+	code := vars["code"]
 	if code == "" {
 		http.Error(w, "empty code", http.StatusBadRequest)
 		return

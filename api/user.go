@@ -9,7 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -101,7 +101,8 @@ func listUserSuggestion(ctx context.Context, r *http.Request, user platform.User
 
 func userPut(ctx context.Context, r *http.Request, user platform.User, updates platform.UserChangeRequest) (string, *nhttp.ErrorWithStatus) {
 	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
-	user_id_str := chi.URLParam(r, "id")
+	vars := mux.Vars(r)
+	user_id_str := vars["id"]
 	user_id, err := strconv.Atoi(user_id_str)
 	if err != nil {
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
