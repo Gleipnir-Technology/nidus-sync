@@ -8,6 +8,7 @@ import (
 )
 
 func AddRoutes(r *mux.Router) {
+	router := resource.NewRouter(r)
 	//r.Use(render.SetContentType(render.ContentTypeJSON))
 	// Unauthenticated endpoints
 	r.HandleFunc("/signin", handlerJSONPost(postSignin))
@@ -50,7 +51,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/upload/{id}/commit", authenticatedHandlerJSONPost(upload.Commit)).Methods("POST")
 	r.Handle("/upload/{id}/discard", authenticatedHandlerJSONPost(upload.Discard)).Methods("POST")
 
-	user := resource.User(r)
+	user := resource.User(router)
 	r.Handle("/user/self", authenticatedHandlerJSON(user.SelfGet)).Methods("GET")
 	r.Handle("/user/suggestion", authenticatedHandlerJSON(user.SuggestionGet)).Methods("GET")
 	r.Handle("/user", authenticatedHandlerJSONSlice(user.List)).Methods("GET")

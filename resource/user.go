@@ -15,10 +15,10 @@ import (
 )
 
 type userResponse struct {
-	Avatar      string `json:"avatar"`
-	DisplayName string `json:"display_name"`
-	Initials    string `json:"initials"`
-	IsActive    bool   `json:"is_active"`
+	Avatar      *string `json:"avatar"`
+	DisplayName string  `json:"display_name"`
+	Initials    string  `json:"initials"`
+	IsActive    bool    `json:"is_active"`
 	//Notifications      []Notification         `json:"notifications"`
 	//NotificationCounts UserNotificationCounts `json:"notification_counts"`
 	//Organization       Organization           `json:"organization"`
@@ -30,7 +30,7 @@ type userResponse struct {
 	Username         string   `json:"username"`
 }
 
-func User(r *mux.Router) *userR {
+func User(r *router) *userR {
 	return &userR{
 		router: r,
 	}
@@ -39,30 +39,28 @@ func (res *userR) response(u *platform.User) (*userResponse, error) {
 	if u == nil {
 		return nil, fmt.Errorf("nil user")
 	}
-	log.Info().Int("id", u.ID).Msg("making response from user")
-	i := strconv.FormatInt(int64(u.ID), 10)
-	handler := res.router.Get("user.ByIDGet")
-	if handler == nil {
-		return nil, fmt.Errorf("nil handler")
-	}
-	uri, err := handler.URL("id", i)
+	avatar, err := res.router.UUIDToURI("avatar.ByUUIDGet", u.Avatar)
 	if err != nil {
-		return nil, fmt.Errorf("build uri: %w", err)
+		return nil, fmt.Errorf("id to uri: %w", err)
+	}
+	uri, err := res.router.IDToURI("user.ByIDGet", u.ID)
+	if err != nil {
+		return nil, fmt.Errorf("id to uri: %w", err)
 	}
 	return &userResponse{
-		Avatar:      u.Avatar,
+		Avatar:      avatar,
 		DisplayName: u.DisplayName,
 		Initials:    u.Initials,
 		IsActive:    u.Active,
 		Role:        u.Role,
 		Tags:        u.Tags,
-		URI:         uri.String(),
+		URI:         uri,
 		Username:    u.Username,
 	}, nil
 }
 
 type userR struct {
-	router *mux.Router
+	router *router
 }
 type responseListUser struct {
 	Users []*platform.User `json:"users"`
