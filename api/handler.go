@@ -12,13 +12,14 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
+	"github.com/Gleipnir-Technology/nidus-sync/resource"
 	"github.com/gorilla/schema"
 	"github.com/rs/zerolog/log"
 )
 
 var decoder = schema.NewDecoder()
 
-type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User, queryParams) (*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type wrappedHandler func(http.ResponseWriter, *http.Request)
 type contentAuthenticated[T any] struct {
 	C      T
@@ -34,7 +35,7 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		ctx := r.Context()
 		var body []byte
-		var params queryParams
+		var params resource.QueryParams
 		err := decoder.Decode(&params, r.URL.Query())
 		if err != nil {
 			log.Error().Err(err).Msg("decode query failure")
