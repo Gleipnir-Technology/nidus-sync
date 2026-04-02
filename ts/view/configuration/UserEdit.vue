@@ -367,7 +367,7 @@ const saveChanges = async () => {
 		console.log("empty user");
 		return;
 	}
-	const url = "/api" + u.uri;
+	const url = u.uri;
 	const response = await fetch(url, {
 		method: "PUT",
 		headers: {

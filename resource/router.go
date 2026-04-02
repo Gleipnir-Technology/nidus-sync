@@ -56,6 +56,7 @@ func (r *router) IDToURI(route string, id int) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("build uri: %w", err)
 	}
+	uri.Scheme = "https"
 	return uri.String(), nil
 }
 
@@ -71,6 +72,7 @@ func (r *router) UUIDToURI(route string, u *uuid.UUID) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("build uri: %w", err)
 	}
+	uri.Scheme = "https"
 	result := uri.String()
 	return &result, nil
 }
