@@ -237,11 +237,11 @@ interface URLsAPI {
 }
 
 export interface User {
-	active: boolean;
 	avatar: string;
 	display_name: string;
 	id: number;
 	initials: string;
+	is_active: boolean;
 	role: string;
 	tags: string[];
 	uri: string;

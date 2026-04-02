@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -91,6 +92,8 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 			return "", nhttp.NewBadRequest("parse avatar uri: %w", err)
 		}
 		user_changes.Avatar = omitnull.FromPtr(avatar_uuid)
+	} else if updates.Avatar.IsNull() {
+		user_changes.Avatar = omitnull.FromPtr[uuid.UUID](nil)
 	}
 	if updates.DisplayName.IsValue() {
 		user_changes.DisplayName = updates.DisplayName

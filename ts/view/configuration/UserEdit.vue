@@ -43,7 +43,7 @@ pre {
 					<div class="card-header bg-primary text-white">
 						<h4 class="mb-0">User Configuration</h4>
 					</div>
-					<div v-if="user" class="card-body">
+					<div v-if="userChanges" class="card-body">
 						<!-- Avatar Section -->
 						<div class="row mb-4">
 							<div class="col-md-12">
@@ -51,12 +51,14 @@ pre {
 								<div class="d-flex align-items-center">
 									<div class="position-relative">
 										<i
-											v-if="user.avatar == null && avatar == ''"
+											v-if="
+												userChanges.avatar == null || userChanges.avatar == ''
+											"
 											class="bi bi-avatar"
 										></i>
 										<img
 											v-else
-											:src="user.avatar || avatar"
+											:src="userChanges.avatar"
 											alt="User Avatar"
 											class="rounded-circle avatar-preview"
 										/>
@@ -96,7 +98,7 @@ pre {
 								</label>
 								<input
 									id="display_name"
-									v-model="user.display_name"
+									v-model="userChanges.display_name"
 									type="text"
 									class="form-control"
 									placeholder="Enter display name"
@@ -110,7 +112,7 @@ pre {
 								</label>
 								<input
 									id="username"
-									v-model="user.username"
+									v-model="userChanges.username"
 									type="text"
 									class="form-control"
 									readonly
@@ -125,7 +127,20 @@ pre {
 								<label for="userRole" class="form-label fw-bold">
 									User Role
 								</label>
-								<select id="role" v-model="user.role" class="form-select">
+								<select
+									v-if="user && user.role == 'root'"
+									disabled
+									id="role"
+									class="form-select"
+								>
+									<option value="root">Root</option>
+								</select>
+								<select
+									id="role"
+									v-else
+									v-model="userChanges.role"
+									class="form-select"
+								>
 									<option value="">Select a role</option>
 									<option
 										v-for="option in optionRoles"
@@ -142,25 +157,14 @@ pre {
 								<label class="form-label fw-bold">User Status</label>
 								<div class="btn-group w-100" role="group">
 									<input
-										type="radio"
+										type="checkbox"
 										class="btn-check"
-										id="statusActive"
-										v-model="user.active"
+										id="isActive"
+										v-model="userChanges.is_active"
 										value="active"
 									/>
-									<label class="btn btn-outline-success" for="statusActive">
+									<label class="btn btn-outline-success" for="isActive">
 										<i class="bi bi-check-circle"></i> Active
-									</label>
-
-									<input
-										type="radio"
-										class="btn-check"
-										id="statusInactive"
-										v-model="user.active"
-										value="inactive"
-									/>
-									<label class="btn btn-outline-secondary" for="statusInactive">
-										<i class="bi bi-x-circle"></i> Inactive
 									</label>
 								</div>
 							</div>
@@ -172,7 +176,7 @@ pre {
 								<label class="form-label fw-bold">User Tags</label>
 								<div class="mb-2">
 									<span
-										v-for="tag in user.tags"
+										v-for="tag in userChanges.tags"
 										:key="tag"
 										class="badge bg-info text-dark me-2 mb-2"
 									>
@@ -185,7 +189,7 @@ pre {
 										></button>
 									</span>
 									<span
-										v-if="user.tags.length === 0"
+										v-if="userChanges.tags.length === 0"
 										class="text-muted fst-italic"
 									>
 										No tags added
@@ -198,7 +202,7 @@ pre {
 											v-for="tag in availableTags"
 											:key="tag"
 											:value="tag"
-											:disabled="user.tags.includes(tag)"
+											:disabled="userChanges.tags.includes(tag)"
 										>
 											{{ tag }}
 										</option>
@@ -207,7 +211,9 @@ pre {
 										class="btn btn-outline-primary"
 										type="button"
 										@click="addTag"
-										:disabled="!selectedTag || user.tags.includes(selectedTag)"
+										:disabled="
+											!selectedTag || userChanges.tags.includes(selectedTag)
+										"
 									>
 										<i class="bi bi-plus-lg"></i> Add Tag
 									</button>
@@ -260,7 +266,14 @@ interface Option {
 	label: string;
 	value: string;
 }
-const avatar = ref<string>("");
+export interface UserChanges {
+	avatar: string;
+	display_name: string;
+	is_active: boolean;
+	role: string;
+	tags: string[];
+	username: string;
+}
 const fileInput = ref<HTMLInputElement | null>(null);
 const props = defineProps<Props>();
 const selectedFile = ref<File | null>(null);
@@ -268,6 +281,7 @@ const selectedTag = ref<string>("");
 const userStore = useUserStore();
 const session = useSessionStore();
 const user = ref<User | null>(null);
+const userChanges = ref<UserChanges>();
 
 const optionRoles: Option[] = [
 	{ value: "account-owner", label: "Account Owner" },
@@ -297,14 +311,21 @@ const handleAvatarChange = (event: Event) => {
 		selectedFile.value = file;
 		const reader = new FileReader();
 		reader.onload = (e) => {
-			avatar.value = e.target?.result as string;
+			if (userChanges.value == undefined) {
+				console.log("can't update userChanges, it's undefined");
+				return;
+			}
+			userChanges.value.avatar = e.target?.result as string;
 		};
 		reader.readAsDataURL(file);
 	}
 };
 
 const removeAvatar = () => {
-	avatar.value = "";
+	if (userChanges.value == undefined) {
+		return;
+	}
+	userChanges.value.avatar = "";
 	if (fileInput.value) {
 		fileInput.value.value = "";
 	}
@@ -335,36 +356,48 @@ interface UserRequestPut {
 	display_name?: string;
 }
 const saveChanges = async () => {
-	console.log("Saving user changes");
-	let payload: UserRequestPut = {};
-	if (selectedFile.value) {
-		try {
-			const formData = new FormData();
-			formData.append("file", selectedFile.value);
-
-			const url = session.urls?.api.avatar;
-			if (!url) {
-				console.log("empty avatar url");
-				return;
-			}
-			const response = await fetch(url, {
-				body: formData,
-				method: "POST",
-			});
-			if (!response.ok) {
-				throw new Error(`Upload failed: ${response.statusText}`);
-			}
-
-			const data = await response.json();
-			payload.avatar = data.uri;
-		} catch (error) {
-			console.error("Failed to upload avatar", error);
-		}
-	}
 	const u = user.value;
 	if (!u) {
 		console.log("empty user");
 		return;
+	}
+	const uc = userChanges.value;
+	if (!uc) {
+		console.log("empty user changes");
+		return;
+	}
+	console.log("Saving user changes");
+	let payload: UserRequestPut = {};
+	if (uc.avatar != u.avatar) {
+		if (selectedFile.value) {
+			try {
+				const formData = new FormData();
+				formData.append("file", selectedFile.value);
+
+				const url = session.urls?.api.avatar;
+				if (!url) {
+					console.log("empty avatar url");
+					return;
+				}
+				const response = await fetch(url, {
+					body: formData,
+					method: "POST",
+				});
+				if (!response.ok) {
+					throw new Error(`Upload failed: ${response.statusText}`);
+				}
+
+				const data = await response.json();
+				payload.avatar = data.uri;
+			} catch (error) {
+				console.error("Failed to upload avatar", error);
+			}
+		} else if (!uc.avatar) {
+			payload.avatar = null;
+		}
+	}
+	if (uc.display_name != u.display_name) {
+		payload.display_name = uc.display_name;
 	}
 	const url = u.uri;
 	const response = await fetch(url, {
@@ -400,6 +433,14 @@ onMounted(() => {
 		for (const u of users) {
 			if (u.id == props.id) {
 				user.value = u;
+				userChanges.value = {
+					avatar: u.avatar,
+					display_name: u.display_name,
+					is_active: u.is_active,
+					role: u.role,
+					tags: u.tags,
+					username: u.username,
+				};
 				console.log("User set to", u);
 			}
 		}

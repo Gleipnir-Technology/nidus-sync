@@ -1,5 +1,5 @@
 <style scoped lang="scss">
-.tech-photo {
+.avatar {
 	width: 48px;
 	height: 48px;
 	border-radius: 50%;
@@ -55,10 +55,12 @@
 							<tr v-for="user in users" :key="user.id">
 								<td>
 									<div class="d-flex align-items-center">
+										<i v-if="!user.avatar" class="bi bi-avatar avatar"></i>
 										<img
 											:src="user.avatar"
 											:alt="user.display_name"
-											class="tech-photo me-3"
+											class="avatar me-3"
+											v-else
 										/>
 										<div>
 											<div class="fw-bold">{{ user.display_name }}</div>
@@ -142,7 +144,7 @@ const deactivateUser = (userId: number): void => {
 	if (!user) {
 		return;
 	}
-	user.active = false;
+	user.is_active = false;
 	// Add your deactivation logic here (e.g., API call)
 	console.log(`Deactivating user: ${userId}`);
 };
