@@ -30,11 +30,12 @@ type User struct {
 	DisplayName      string
 	ID               int
 	Initials         string
+	IsDronePilot     bool
+	IsWarrant        bool
 	Organization     Organization
 	PasswordHash     string
 	PasswordHashType string
 	Role             string
-	Tags             []string
 	Username         string
 
 	model *models.User
@@ -61,11 +62,12 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 		DisplayName:      user.DisplayName,
 		ID:               int(user.ID),
 		Initials:         extractInitials(user.DisplayName),
+		IsDronePilot:     user.IsDronePilot,
+		IsWarrant:        user.IsWarrant,
 		Organization:     org,
 		PasswordHash:     user.PasswordHash,
 		PasswordHashType: string(user.PasswordHashType),
 		Role:             user.Role.String(),
-		Tags:             []string{},
 		Username:         user.Username,
 
 		model: user,

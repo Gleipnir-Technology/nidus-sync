@@ -48,6 +48,13 @@ func (res *userR) response(u *platform.User) (*user, error) {
 	if err != nil {
 		return nil, fmt.Errorf("id to uri: %w", err)
 	}
+	tags := make([]string, 0)
+	if u.IsDronePilot {
+		tags = append(tags, "drone pilot")
+	}
+	if u.IsWarrant {
+		tags = append(tags, "warrant")
+	}
 	return &user{
 		Avatar:      omitnull.FromPtr(avatar),
 		DisplayName: omit.From(u.DisplayName),
@@ -55,7 +62,7 @@ func (res *userR) response(u *platform.User) (*user, error) {
 		Initials:    omit.From(u.Initials),
 		IsActive:    omit.From(u.Active),
 		Role:        omit.From(u.Role),
-		Tags:        omit.From(u.Tags),
+		Tags:        omit.From(tags),
 		URI:         omit.From(uri),
 		Username:    omit.From(u.Username),
 	}, nil
