@@ -23,15 +23,7 @@
 				class="dropdown-item d-flex align-items-center"
 				@mousedown.prevent="selectUser(user)"
 			>
-				<img
-					v-if="user.avatar"
-					:src="user.avatar"
-					:alt="user.display_name"
-					class="rounded-circle me-2"
-					width="32"
-					height="32"
-				/>
-				<span v-else class="badge bg-secondary me-2">{{ user.initials }}</span>
+				<Avatar :user="user" />
 
 				<div class="flex-grow-1">
 					<div v-html="highlightMatch(user.display_name)"></div>
@@ -58,6 +50,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import Avatar from "@/components/Avatar.vue";
 import { useUserStore } from "@/store/user";
 import type { User } from "@/types";
 
