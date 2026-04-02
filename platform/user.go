@@ -50,6 +50,9 @@ func (u User) AsJSON() string {
 func (u User) HasRoot() bool {
 	return u.model.Role == enums.UserroleRoot
 }
+func (u User) IsAccountOwner() bool {
+	return u.model.Role == enums.UserroleAccountOwner
+}
 func newUser(ctx context.Context, org Organization, user *models.User) User {
 	avatar := user.Avatar.Ptr()
 	u := User{

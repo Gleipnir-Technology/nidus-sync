@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -86,7 +87,7 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user id conversion: %w", err)
 	}
 	user_changes := &models.UserSetter{}
-	if !(user.HasRoot() || user.Role == enums.UserroleAccountOwner || user.ID == user_id) {
+	if !(user.HasRoot() || user.IsAccountOwner() || user.ID == user_id) {
 		return "", nhttp.NewForbidden("Only account owners can change other users")
 	}
 	if updates.Avatar.IsValue() {
@@ -103,8 +104,14 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 	}
 	if updates.Role.IsValue() {
 		// Don't allow privilege escalation
-		if user.HasRoot() || user.Role == enums.UserroleAccountOwner {
-			user_changes.Role = updates.Role.MustGet()
+		if user.HasRoot() || user.IsAccountOwner() {
+			var role enums.Userrole
+			v := updates.Role.MustGet()
+			err := role.Scan(v)
+			if err != nil {
+				return "", nhttp.NewBadRequest("invalid role %s: %w", v, err)
+			}
+			user_changes.Role = omit.From(role)
 		} else {
 			return "", nhttp.NewBadRequest("you aren't allowed to change roles")
 		}
