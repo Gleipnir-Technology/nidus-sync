@@ -24,7 +24,7 @@ type avatar struct {
 	URI string `json:"uri"`
 }
 
-func (res *avatarR) ByIDGet(ctx context.Context, r *http.Request, u platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus) {
+func (res *avatarR) ByUUIDGet(ctx context.Context, r *http.Request, u platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	uid_str := vars["uuid"]
 	uid, err := uuid.Parse(uid_str)
@@ -45,7 +45,7 @@ func (res *avatarR) Create(ctx context.Context, r *http.Request, u platform.User
 	if err != nil {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "Create avatar: %w", err)
 	}
-	uri, err := res.router.UUIDToURI("avatar.ByIDGet", &upload.UUID)
+	uri, err := res.router.UUIDToURI("avatar.ByUUIDGet", &upload.UUID)
 	if err != nil {
 		return nil, nhttp.NewError("create uri: %w", err)
 	}
