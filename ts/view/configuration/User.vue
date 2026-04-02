@@ -100,17 +100,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
+import { computedAsync } from "@vueuse/core";
 import { useUserStore } from "@/store/user";
-
-interface User {
-	id: number;
-	name: string;
-	avatar: string;
-	role: string;
-	status: "Active" | "Inactive";
-	tags: string[];
-}
+import { User } from "@/types";
 
 interface URLConfiguration {
 	userAdd: string;
@@ -123,8 +116,8 @@ interface URLConfiguration {
 
 // Reactive state
 const userStore = useUserStore();
-const users = computed(() => {
-	return userStore.all;
+const users = computedAsync(async (): Promise<User[]> => {
+	return await userStore.withAll();
 });
 const urlConfiguration = ref<URLConfiguration>({
 	userAdd: "/configuration/user/add", // Update with your actual route

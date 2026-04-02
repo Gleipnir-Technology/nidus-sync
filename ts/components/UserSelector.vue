@@ -12,7 +12,7 @@
 		/>
 
 		<div
-			v-if="showDropdown && filteredUsers.length > 0"
+			v-if="showDropdown && filteredUsers && filteredUsers.length > 0"
 			class="dropdown-menu show w-100"
 			style="max-height: 300px; overflow-y: auto"
 		>
@@ -39,6 +39,7 @@
 			v-if="
 				showDropdown &&
 				searchQuery.length >= minChars &&
+				filteredUsers &&
 				filteredUsers.length === 0
 			"
 			class="dropdown-menu show w-100"
@@ -49,7 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
+import { computedAsync } from "@vueuse/core";
 import Avatar from "@/components/Avatar.vue";
 import { useUserStore } from "@/store/user";
 import type { User } from "@/types";
@@ -76,14 +78,12 @@ const showDropdown = ref(false);
 
 onMounted(async () => {
 	// Fetch all users if not already loaded
-	if (!usersStore.all) {
-		await usersStore.fetchAll();
-	}
-
-	// Initialize search query with selected user's name if provided
-	if (props.modelValue) {
-		searchQuery.value = props.modelValue.display_name;
-	}
+	usersStore.withAll().then((all: User[]) => {
+		// Initialize search query with selected user's name if provided
+		if (props.modelValue) {
+			searchQuery.value = props.modelValue.display_name;
+		}
+	});
 });
 
 // Watch for external changes to modelValue
@@ -98,14 +98,15 @@ watch(
 	},
 );
 
-const filteredUsers = computed(() => {
-	if (searchQuery.value.length < props.minChars || !usersStore.all) {
+const filteredUsers = computedAsync(async (): Promise<User[]> => {
+	if (searchQuery.value.length < props.minChars) {
 		return [];
 	}
 
 	const query = searchQuery.value.toLowerCase();
 
-	return usersStore.all
+	const users = await usersStore.withAll();
+	return users
 		.filter((user: User) => {
 			const displayName = user.display_name.toLowerCase();
 			const username = user.username.toLowerCase();

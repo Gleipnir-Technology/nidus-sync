@@ -6,8 +6,8 @@ import { useSessionStore } from "@/store/session";
 
 export const useUserStore = defineStore("users", () => {
 	// State
+	const _all = ref<User[] | null>(null);
 	const _byID = ref<Map<number, User>>(new Map());
-	const all = ref<User[] | null>(null);
 	const error = ref(null);
 	const loading = ref(false);
 	const ongoingFetch = ref<Promise<User[]> | null>(null);
@@ -19,10 +19,18 @@ export const useUserStore = defineStore("users", () => {
 		}
 	});
 	// Actions
-	function byID(id: number) {
+	function byID(id: number): User | null {
 		const result = _byID.value.get(id);
+		if (!result) {
+			return null;
+		}
 		console.log("user", id, result);
 		return result;
+	}
+	async function byURI(uri: string): Promise<User | null> {
+		const all = await withAll();
+		const result = all.find((u: User) => u.uri == uri);
+		return result || null;
 	}
 	async function fetchAll(): Promise<User[]> {
 		const sessionStore = useSessionStore();
@@ -40,7 +48,7 @@ export const useUserStore = defineStore("users", () => {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const users = await response.json();
-			all.value = users;
+			_all.value = users;
 			for (const u of users) {
 				_byID.value.set(u.id, u);
 			}
@@ -51,8 +59,8 @@ export const useUserStore = defineStore("users", () => {
 		}
 	}
 	async function withAll(): Promise<User[]> {
-		if (all.value != null) {
-			return all.value;
+		if (_all.value != null) {
+			return _all.value;
 		}
 
 		if (ongoingFetch.value !== null) {
@@ -88,10 +96,9 @@ export const useUserStore = defineStore("users", () => {
 	}
 
 	return {
-		// State
-		all,
 		// Actions
 		byID,
+		byURI,
 		fetchAll,
 		fetchOne,
 		withAll,
