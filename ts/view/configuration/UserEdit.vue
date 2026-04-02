@@ -256,7 +256,7 @@ pre {
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, toRaw } from "vue";
 import { useSessionStore } from "@/store/session";
 import { useUserStore } from "@/store/user";
 import { User } from "@/types";
@@ -459,7 +459,7 @@ onMounted(() => {
 					display_name: u.display_name,
 					is_active: u.is_active,
 					role: u.role,
-					tags: structuredClone(u.tags),
+					tags: structuredClone(toRaw(u.tags)),
 					username: u.username,
 				};
 				console.log("User set to", u);
