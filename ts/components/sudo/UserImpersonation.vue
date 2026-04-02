@@ -8,9 +8,9 @@
 			<i class="bi bi-people"></i> Impersonate User
 		</div>
 		<div class="card-body">
-			<template v-if="isImpersonating && impersonatedUser">
+			<template v-if="session.impersonating">
 				<h1>You're impersonating</h1>
-				<p>{{ impersonatedUser.username }}</p>
+				<p>{{ session.impersonating }}</p>
 				<button class="btn btn-primary" @click="doImpersonationEnd">
 					End Impersonation
 				</button>
@@ -96,14 +96,13 @@ const doImpersonationStart = async () => {
 	const new_session = await session.fetchSession();
 	console.log("session is now", new_session);
 };
+/*
 onMounted(() => {
 	session.get().then((session: Session) => {
 		if (session.impersonating) {
 			isImpersonating.value = true;
-			console.log("is impersonating, but who?");
 			user.byURI(session.impersonating).then((user: User | null) => {
 				impersonatedUser.value = user;
-				console.log("is impersonating", user);
 			});
 		} else {
 			isImpersonating.value = false;
@@ -111,4 +110,5 @@ onMounted(() => {
 		}
 	});
 });
+*/
 </script>

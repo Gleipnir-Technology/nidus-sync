@@ -36,6 +36,9 @@ func AddUserSession(ctx context.Context, user *platform.User) {
 	sessionManager.Put(ctx, "username", user.Username)
 	log.Debug().Str("id", id_str).Str("username", user.Username).Msg("added user session")
 }
+func ImpersonateEnd(ctx context.Context) {
+	sessionManager.Put(ctx, "impersonated_user_id", "")
+}
 func ImpersonateUser(ctx context.Context, target_user_id int) {
 	target_user_id_str := strconv.Itoa(int(target_user_id))
 	sessionManager.Put(ctx, "impersonated_user_id", target_user_id_str)
@@ -53,7 +56,17 @@ func ImpersonatedUser(ctx context.Context) *int32 {
 	result := int32(i)
 	return &result
 }
+func ImpersonatorID(ctx context.Context) *int32 {
+	user_id_str := sessionManager.GetString(ctx, "user_id")
+	user_id, err := strconv.Atoi(user_id_str)
+	if err != nil {
+		log.Error().Err(err).Str("user_id", user_id_str).Msg("failed to parse user_id")
+		return nil
+	}
+	result := int32(user_id)
+	return &result
 
+}
 func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
 	ctx := r.Context()
 	user_id_str := sessionManager.GetString(ctx, "user_id")

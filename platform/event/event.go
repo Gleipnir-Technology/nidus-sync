@@ -26,8 +26,9 @@ func (e Event) MarshalJSON() ([]byte, error) {
 }
 
 type Envelope struct {
-	OrganizationID int32
 	Event          Event
+	OrganizationID int32
+	UserID         int32
 }
 
 func SetEventChannel(chan_events chan<- Envelope) {
@@ -90,6 +91,7 @@ const (
 	TypeRMONuisance
 	TypeRMOReport
 	TypeRMOWater
+	TypeSession
 	TypeSignal
 )
 
@@ -115,6 +117,17 @@ func Updated(t ResourceType, organization_id int32, uri_id string) {
 		OrganizationID: organization_id,
 	})
 }
+func UpdatedUser(t ResourceType, user_id int32, uri_id string) {
+	go Send(Envelope{
+		Event: Event{
+			Resource: resourceString(t),
+			Time:     time.Now(),
+			Type:     EventTypeUpdated,
+			URI:      makeURI(t, uri_id),
+		},
+		UserID: user_id,
+	})
+}
 func Send(env Envelope) {
 	chanEvents <- env
 }
@@ -127,13 +140,15 @@ func resourceString(t ResourceType) string {
 	case TypeNoteImage:
 		return "sync:note:image"
 	case TypeReviewTask:
-		return "sync:review_task"
+		return "sync:review-task"
 	case TypeRMONuisance:
 		return "rmo:nuisance"
 	case TypeRMOReport:
 		return "rmo:report"
 	case TypeRMOWater:
 		return "rmo:water"
+	case TypeSession:
+		return "sync:session"
 	case TypeSignal:
 		return "sync:signal"
 	default:
@@ -143,19 +158,21 @@ func resourceString(t ResourceType) string {
 func makeURI(t ResourceType, id string) string {
 	switch t {
 	case TypeFileCSV:
-		return config.MakeURLNidus("/upload/%s", id)
+		return config.MakeURLNidus("/api/upload/%s", id)
 	case TypeNoteAudio:
-		return config.MakeURLNidus("/note/%s", id)
+		return config.MakeURLNidus("/api/note/%s", id)
 	case TypeNoteImage:
-		return config.MakeURLNidus("/note/%s", id)
+		return config.MakeURLNidus("/api/note/%s", id)
 	case TypeReviewTask:
-		return config.MakeURLNidus("/review/%s", id)
+		return config.MakeURLNidus("/api/review/%s", id)
 	case TypeRMONuisance:
-		return config.MakeURLReport("/report/%s", id)
+		return config.MakeURLReport("/api/report/%s", id)
 	case TypeRMOWater:
-		return config.MakeURLReport("/report/%s", id)
+		return config.MakeURLReport("/api/report/%s", id)
+	case TypeSession:
+		return config.MakeURLReport("/api/session")
 	case TypeSignal:
-		return config.MakeURLReport("/signal/%s", id)
+		return config.MakeURLReport("/api/signal/%s", id)
 	default:
 		return config.MakeURLReport("/unknown")
 	}

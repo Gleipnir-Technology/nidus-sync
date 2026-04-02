@@ -17,7 +17,7 @@ type ConnectionSSE struct {
 	chanEvent      chan platform.Event
 	id             uuid.UUID
 	organizationID int32
-	userID         int
+	userID         int32
 }
 
 type Message struct {
@@ -49,6 +49,9 @@ func SetEventChannel(chan_envelopes <-chan platform.Envelope) {
 			for conn, _ := range connectionsSSE {
 				if conn.organizationID == envelope.OrganizationID {
 					log.Debug().Int("type", int(envelope.Event.Type)).Int32("env-org", envelope.OrganizationID).Msg("pushed event to client")
+					conn.chanEvent <- envelope.Event
+				} else if conn.userID == envelope.UserID {
+					log.Debug().Int("type", int(envelope.Event.Type)).Int32("env-user", envelope.UserID).Msg("pushed event to user")
 					conn.chanEvent <- envelope.Event
 				} else {
 					log.Debug().Int("type", int(envelope.Event.Type)).Int32("env-org", envelope.OrganizationID).Int32("conn-org", conn.organizationID).Msg("skipped event, bad org")
@@ -87,7 +90,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 		chanEvent:      make(chan platform.Event),
 		id:             uid,
 		organizationID: u.Organization.ID,
-		userID:         u.ID,
+		userID:         int32(u.ID),
 	}
 	connectionsSSE[&connection] = true
 	log.Debug().Int32("org", u.Organization.ID).Int("user", u.ID).Str("id", uid.String()).Msg("connected SSE client")

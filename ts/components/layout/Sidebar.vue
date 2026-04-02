@@ -208,8 +208,9 @@
 import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { Tooltip, Popover } from "bootstrap";
 import NavigationLink from "@/components/common/NavigationLink.vue";
-import { SSEManager } from "@/SSEManager";
+import { SSEManager, type SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
+import type { Session } from "@/types";
 
 // Reactive state
 const isCollapsed = ref(false);
@@ -279,6 +280,14 @@ const setTooltipsForSidebar = () => {
 
 // Lifecycle hooks
 onMounted(async () => {
+	const sub = SSEManager.subscribe((msg: SSEMessage) => {
+		if (msg.resource != "sync:session") {
+			return;
+		}
+		session.fetchSession().then((s: Session) => {
+			isImpersonating.value = !!s.impersonating;
+		});
+	});
 	restoreLocalStorage();
 
 	await nextTick();

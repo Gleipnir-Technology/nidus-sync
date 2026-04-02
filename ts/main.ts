@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
-import { SSEManager } from "./SSEManager";
+import { SSEManager, type SSEMessage } from "./SSEManager";
 //import { SetupSidebar } from "./sidebar";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -22,9 +22,9 @@ window.SSEManager = SSEManager;
 
 document.addEventListener("DOMContentLoaded", () => {
 	SSEManager.connect("/api/events");
-	SSEManager.subscribe("*", (e) => {
-		if (e.type != "heartbeat") {
-			console.log("SSE", e);
+	SSEManager.subscribe((msg: SSEMessage) => {
+		if (msg.type != "heartbeat") {
+			console.log("SSE", msg);
 		}
 	});
 });

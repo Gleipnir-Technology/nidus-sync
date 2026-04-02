@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Communication } from "../types";
-import { SSEManager } from "../SSEManager";
+import { SSEManager, SSEMessage } from "../SSEManager";
 import { useSessionStore } from "./session";
 
 export const useCommunicationStore = defineStore("communication", () => {
@@ -11,8 +11,8 @@ export const useCommunicationStore = defineStore("communication", () => {
 	const error = ref(null);
 
 	// Subscription
-	SSEManager.subscribe("*", (e) => {
-		if (e.resource.startsWith("rmo")) {
+	SSEManager.subscribe((msg: SSEMessage) => {
+		if (msg.resource.startsWith("rmo:")) {
 			fetchAll();
 		}
 	});

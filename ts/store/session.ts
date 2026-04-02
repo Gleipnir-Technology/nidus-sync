@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { SSEManager } from "@/SSEManager";
+import { SSEManager, type SSEMessage } from "@/SSEManager";
 import {
 	Organization,
 	Session,
@@ -11,6 +11,7 @@ import {
 
 export const useSessionStore = defineStore("session", () => {
 	// State
+	const impersonating = ref<string | null>(null);
 	const error = ref<string | null>(null);
 	const loading = ref(false);
 	const current = ref<Session | null>(null);
@@ -21,8 +22,8 @@ export const useSessionStore = defineStore("session", () => {
 	const urls = ref<URLs | null>(null);
 
 	// Subscription
-	SSEManager.subscribe("*", (e) => {
-		if (e.type !== "heartbeat") {
+	SSEManager.subscribe((msg: SSEMessage) => {
+		if (msg.type !== "sync:session") {
 			fetchSession();
 		}
 	});
@@ -37,6 +38,7 @@ export const useSessionStore = defineStore("session", () => {
 			if (!response.ok) throw new Error("Failed to fetch user");
 
 			const data: Session = await response.json();
+			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
 			self.value = data.self;
@@ -65,15 +67,15 @@ export const useSessionStore = defineStore("session", () => {
 			return ongoingFetch.value;
 		}
 
-		ongoingFetch.value = fetchSession().finally(() => {
-			ongoingFetch.value = null;
-		});
-		return ongoingFetch.value;
+		const s = await fetchSession();
+		current.value = s;
+		ongoingFetch.value = null;
+		return s;
 	}
 	return {
 		// State
-		current,
 		error,
+		impersonating,
 		loading,
 		notification_counts,
 		organization,

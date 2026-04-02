@@ -59,14 +59,15 @@
 import { computed, onMounted, ref } from "vue";
 import maplibregl from "maplibre-gl";
 
-import { useCommunicationStore } from "@/store/communication";
-import { useSessionStore } from "@/store/session";
 import CommunicationColumnAction from "@/components/CommunicationColumnAction.vue";
 import CommunicationColumnDetail from "@/components/CommunicationColumnDetail.vue";
 import CommunicationColumnList from "@/components/CommunicationColumnList.vue";
 import ImageViewerModal from "@/components/ImageViewerModal.vue";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ToastNotification from "@/components/ToastNotification.vue";
+import { SSEManager } from "@/SSEManager";
+import { useCommunicationStore } from "@/store/communication";
+import { useSessionStore } from "@/store/session";
 import { Bounds, Communication, Marker } from "@/types";
 
 const communication = useCommunicationStore();
@@ -306,15 +307,6 @@ function updateMap() {
 // Lifecycle hooks
 onMounted(async () => {
 	await loadFromAPI();
-
-	// Subscribe to SSE events
-	if (window.SSEManager) {
-		window.SSEManager.subscribe("*", (e) => {
-			if (e.resource.startsWith("rmo:")) {
-				fetchCommunications();
-			}
-		});
-	}
 
 	// Setup map layer after next tick to ensure map is mounted
 	/*
