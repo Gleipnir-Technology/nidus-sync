@@ -331,13 +331,12 @@ const removeTag = (tag: string) => {
 };
 
 interface UserRequestPut {
-	avatar: string | null;
+	avatar?: string | null;
+	display_name?: string;
 }
 const saveChanges = async () => {
 	console.log("Saving user changes");
-	let payload: UserRequestPut = {
-		avatar: "",
-	};
+	let payload: UserRequestPut = {};
 	if (selectedFile.value) {
 		try {
 			const formData = new FormData();

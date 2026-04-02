@@ -9,23 +9,24 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 type user struct {
-	Avatar           *string  `json:"avatar"`
-	DisplayName      string   `json:"display_name"`
-	ID               int      `json:"id"`
-	Initials         string   `json:"initials"`
-	IsActive         bool     `json:"is_active"`
-	PasswordHash     string   `json:"-"`
-	PasswordHashType string   `json:"-"`
-	Role             string   `json:"role"`
-	Tags             []string `json:"tags"`
-	URI              string   `json:"uri"`
-	Username         string   `json:"username"`
+	Avatar           omitnull.Val[string] `json:"avatar"`
+	DisplayName      omit.Val[string]     `json:"display_name"`
+	ID               omit.Val[int]        `json:"id"`
+	Initials         omit.Val[string]     `json:"initials"`
+	IsActive         omit.Val[bool]       `json:"is_active"`
+	PasswordHash     omit.Val[string]     `json:"-"`
+	PasswordHashType omit.Val[string]     `json:"-"`
+	Role             omit.Val[string]     `json:"role"`
+	Tags             omit.Val[[]string]   `json:"tags"`
+	URI              omit.Val[string]     `json:"uri"`
+	Username         omit.Val[string]     `json:"username"`
 }
 
 func User(r *router) *userR {
@@ -46,15 +47,15 @@ func (res *userR) response(u *platform.User) (*user, error) {
 		return nil, fmt.Errorf("id to uri: %w", err)
 	}
 	return &user{
-		Avatar:      avatar,
-		DisplayName: u.DisplayName,
-		ID:          int(u.ID),
-		Initials:    u.Initials,
-		IsActive:    u.Active,
-		Role:        u.Role,
-		Tags:        u.Tags,
-		URI:         uri,
-		Username:    u.Username,
+		Avatar:      omitnull.FromPtr(avatar),
+		DisplayName: omit.From(u.DisplayName),
+		ID:          omit.From(int(u.ID)),
+		Initials:    omit.From(u.Initials),
+		IsActive:    omit.From(u.Active),
+		Role:        omit.From(u.Role),
+		Tags:        omit.From(u.Tags),
+		URI:         omit.From(uri),
+		Username:    omit.From(u.Username),
 	}, nil
 }
 
@@ -81,15 +82,18 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 	user_id_str := vars["id"]
 	user_id, err := strconv.Atoi(user_id_str)
 	if err != nil {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
+		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user id conversion: %w", err)
 	}
 	user_changes := &models.UserSetter{}
-	if updates.Avatar != nil {
-		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", *updates.Avatar)
+	if updates.Avatar.IsValue() {
+		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", updates.Avatar.MustGet())
 		if err != nil {
 			return "", nhttp.NewBadRequest("parse avatar uri: %w", err)
 		}
 		user_changes.Avatar = omitnull.FromPtr(avatar_uuid)
+	}
+	if updates.DisplayName.IsValue() {
+		user_changes.DisplayName = updates.DisplayName
 	}
 	err = platform.UserUpdate(ctx, user, user_id, user_changes)
 	if err != nil {
