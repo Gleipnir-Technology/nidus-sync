@@ -183,8 +183,8 @@ const dashboard = reactive({
 const session = useSessionStore();
 onMounted(async () => {});
 function mapBounds(): Bounds | undefined {
-	if (session.user?.organization.service_area) {
-		return session.user?.organization.service_area;
+	if (session.organization?.service_area) {
+		return session.organization?.service_area;
 	}
 	return undefined;
 }

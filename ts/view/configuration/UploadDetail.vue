@@ -146,14 +146,14 @@ tr.has-error {
 			</div>
 
 			<div class="card mb-4">
-				<div v-if="session.user == null">
+				<div v-if="session.organization == null || session.self == null">
 					<p>loading</p>
 				</div>
 				<div v-else>
 					<MapMultipoint
-						:bounds="session.user?.organization.service_area"
+						:bounds="session.organization!.service_area"
 						:markers="[]"
-						:organizationId="session.user?.organization.id"
+						:organizationId="session.organization!.id"
 						:tegola="session.urls?.tegola ?? ''"
 					></MapMultipoint>
 				</div>

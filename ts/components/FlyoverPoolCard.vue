@@ -1,10 +1,10 @@
 <template>
 	<p>A flyover pool</p>
-	<div v-if="session.user">
+	<div v-if="session.organization">
 		<MapProxiedArcgisTile
 			:location="location"
 			:markers="markers"
-			:organizationId="session.user?.organization.id"
+			:organizationId="session.organization.id"
 			:tegola="session.urls?.tegola ?? ''"
 			:urlTiles="session.urls?.tile ?? ''"
 		/>

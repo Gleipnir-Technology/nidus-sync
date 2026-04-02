@@ -8,12 +8,13 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/google/uuid"
 )
 
 type Organization struct {
-	ID          int32        `json:"id"`
-	ServiceArea *ServiceArea `json:"service_area"`
+	ID          int32              `json:"id"`
+	ServiceArea *types.ServiceArea `json:"service_area"`
 
 	model *models.Organization
 }
@@ -75,11 +76,6 @@ func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.Fields
 	return sync, nil
 }
 
-type ServiceArea struct {
-	Min Point `json:"min"`
-	Max Point `json:"max"`
-}
-
 func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.FieldseekerServicerequest, error) {
 	results, err := o.model.Servicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -114,19 +110,19 @@ func OrganizationList(ctx context.Context, user User) ([]*Organization, error) {
 	return results, err
 }
 func newOrganization(org *models.Organization) Organization {
-	var sa *ServiceArea
+	var sa *types.ServiceArea
 	if org.ServiceAreaXmax.IsValue() &&
 		org.ServiceAreaXmin.IsValue() &&
 		org.ServiceAreaYmax.IsValue() &&
 		org.ServiceAreaYmin.IsValue() {
-		sa = &ServiceArea{
-			Min: Point{
-				X: org.ServiceAreaXmin.MustGet(),
-				Y: org.ServiceAreaYmin.MustGet(),
+		sa = &types.ServiceArea{
+			Min: types.Location{
+				Longitude: org.ServiceAreaXmin.MustGet(),
+				Latitude:  org.ServiceAreaYmin.MustGet(),
 			},
-			Max: Point{
-				X: org.ServiceAreaXmax.MustGet(),
-				Y: org.ServiceAreaYmax.MustGet(),
+			Max: types.Location{
+				Longitude: org.ServiceAreaXmax.MustGet(),
+				Latitude:  org.ServiceAreaYmax.MustGet(),
 			},
 		}
 	}

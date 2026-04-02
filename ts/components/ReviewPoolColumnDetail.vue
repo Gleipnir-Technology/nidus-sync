@@ -115,13 +115,13 @@
 		</div>
 
 		<!-- Map Components -->
-		<div class="map-container" v-if="session.user">
+		<div class="map-container" v-if="session.organization">
 			<MapMultipoint
 				ref="mapMultipoint"
 				id="map"
 				:bounds="mapBounds"
 				:markers="mapMarkers"
-				:organizationId="session.user.organization.id"
+				:organizationId="session.organization.id"
 				:tegola="session.urls?.tegola ?? ''"
 			></MapMultipoint>
 		</div>
@@ -129,11 +129,11 @@
 			<p>loading...</p>
 		</div>
 
-		<div class="map-container" v-if="session.user && selectedTask.pool">
+		<div class="map-container" v-if="session.organization && selectedTask.pool">
 			<MapProxiedArcgisTile
 				:location="selectedTask.pool?.location"
 				:markers="[]"
-				:organizationId="session.user?.organization.id"
+				:organizationId="session.organization.id"
 				:tegola="session.urls?.tegola ?? ''"
 				:urlTiles="session.urls?.tile ?? ''"
 				@map-click="doPoolLocation"

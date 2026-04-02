@@ -33,7 +33,10 @@
 	<div class="card shadow-sm mb-3">
 		<div class="card-header bg-white pane-header">Communication Workbench</div>
 		<div class="card-body">
-			<div v-if="loading || session.user == null" class="loading">
+			<div
+				v-if="loading || session.self == null || session.organization == null"
+				class="loading"
+			>
 				Loading...
 			</div>
 			<div v-else>
@@ -42,7 +45,7 @@
 						id="map"
 						:bounds="mapBounds"
 						:markers="mapMarkers"
-						:organizationId="session.user?.organization.id"
+						:organizationId="session.organization?.id"
 						:tegola="session.urls?.tegola ?? ''"
 					/>
 				</div>

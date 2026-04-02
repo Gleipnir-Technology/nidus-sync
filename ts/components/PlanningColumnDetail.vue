@@ -10,12 +10,12 @@
 			Active Investigation Workbench
 		</div>
 		<div class="card-body">
-			<div class="map-container" v-if="session.user">
+			<div class="map-container" v-if="session.organization">
 				<MapMultipoint
 					id="map"
-					:bounds="session.user.organization.service_area"
+					:bounds="session.organization.service_area"
 					:markers="markers"
-					:organizationId="session.user.organization.id"
+					:organizationId="session.organization.id"
 					:tegola="session.urls?.tegola ?? ''"
 				></MapMultipoint>
 			</div>
@@ -56,7 +56,7 @@
 				<MapProxiedArcgisTile
 					:location="selectedSignalLocation()"
 					:markers="[]"
-					:organizationId="session.user?.organization.id ?? 0"
+					:organizationId="session.organization?.id ?? 0"
 					:tegola="session.urls?.tegola ?? ''"
 					:urlTiles="session.urls?.tile ?? ''"
 					@map-click="updateSignalLocation"

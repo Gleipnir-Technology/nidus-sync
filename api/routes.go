@@ -38,6 +38,8 @@ func AddRoutes(r *mux.Router) {
 	review_task := resource.ReviewTask(r)
 	r.Handle("/review-task", authenticatedHandlerJSON(review_task.List)).Methods("GET")
 	r.Handle("/service-request", auth.NewEnsureAuth(apiServiceRequest)).Methods("GET")
+	session := resource.Session(router)
+	r.Handle("/session", authenticatedHandlerJSON(session.Get)).Methods("GET").Name("session.get")
 	signal := resource.Signal(r)
 	r.Handle("/signal", authenticatedHandlerJSON(signal.List)).Methods("GET")
 	r.Handle("/sudo/email", authenticatedHandlerJSONPost(postSudoEmail)).Methods("POST")

@@ -92,7 +92,7 @@ pre {
 									Display Name
 								</label>
 								<input
-									id="displayName"
+									id="display_name"
 									v-model="user.display_name"
 									type="text"
 									class="form-control"
@@ -122,7 +122,7 @@ pre {
 								<label for="userRole" class="form-label fw-bold">
 									User Role
 								</label>
-								<select id="userRole" v-model="user.role" class="form-select">
+								<select id="role" v-model="user.role" class="form-select">
 									<option value="">Select a role</option>
 									<option
 										v-for="option in optionRoles"
@@ -396,7 +396,8 @@ const cancelChanges = () => {
 	}
 };
 onMounted(() => {
-	userStore.fetchAll().then((users) => {
+	userStore.withAll().then((users) => {
+		console.log("got users. looking for match", users, props.id);
 		for (const u of users) {
 			if (u.id == props.id) {
 				user.value = u;

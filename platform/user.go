@@ -25,19 +25,17 @@ type NoUserError struct{}
 func (e NoUserError) Error() string { return "That user does not exist" }
 
 type User struct {
-	Active             bool
-	Avatar             *uuid.UUID
-	DisplayName        string
-	ID                 int
-	Initials           string
-	Notifications      []Notification
-	NotificationCounts UserNotificationCounts
-	Organization       Organization
-	PasswordHash       string
-	PasswordHashType   string
-	Role               string
-	Tags               []string
-	Username           string
+	Active           bool
+	Avatar           *uuid.UUID
+	DisplayName      string
+	ID               int
+	Initials         string
+	Organization     Organization
+	PasswordHash     string
+	PasswordHashType string
+	Role             string
+	Tags             []string
+	Username         string
 
 	model *models.User
 }
@@ -55,27 +53,20 @@ func (u User) HasRoot() bool {
 func newUser(ctx context.Context, org Organization, user *models.User) User {
 	avatar := user.Avatar.Ptr()
 	u := User{
-		Active:             true,
-		Avatar:             avatar,
-		DisplayName:        user.DisplayName,
-		ID:                 int(user.ID),
-		Initials:           extractInitials(user.DisplayName),
-		Notifications:      []Notification{},
-		NotificationCounts: UserNotificationCounts{},
-		Organization:       org,
-		PasswordHash:       user.PasswordHash,
-		PasswordHashType:   string(user.PasswordHashType),
-		Role:               user.Role.String(),
-		Tags:               []string{},
-		Username:           user.Username,
+		Active:           true,
+		Avatar:           avatar,
+		DisplayName:      user.DisplayName,
+		ID:               int(user.ID),
+		Initials:         extractInitials(user.DisplayName),
+		Organization:     org,
+		PasswordHash:     user.PasswordHash,
+		PasswordHashType: string(user.PasswordHashType),
+		Role:             user.Role.String(),
+		Tags:             []string{},
+		Username:         user.Username,
 
 		model: user,
 	}
-	counts, err := NotificationCountsForUser(ctx, u)
-	if err != nil {
-		log.Error().Err(err).Int32("id", user.ID).Msg("failed to get notification counts for user")
-	}
-	u.NotificationCounts = *counts
 	return u
 }
 
@@ -272,16 +263,14 @@ func extractInitials(name string) string {
 }
 func toUser(user *models.User) User {
 	return User{
-		DisplayName:        user.DisplayName,
-		ID:                 int(user.ID),
-		Initials:           extractInitials(user.DisplayName),
-		Notifications:      []Notification{},
-		NotificationCounts: UserNotificationCounts{},
-		Organization:       Organization{},
-		PasswordHash:       user.PasswordHash,
-		PasswordHashType:   string(user.PasswordHashType),
-		Role:               user.Role.String(),
-		Username:           user.Username,
+		DisplayName:      user.DisplayName,
+		ID:               int(user.ID),
+		Initials:         extractInitials(user.DisplayName),
+		Organization:     Organization{},
+		PasswordHash:     user.PasswordHash,
+		PasswordHashType: string(user.PasswordHashType),
+		Role:             user.Role.String(),
+		Username:         user.Username,
 
 		model: user,
 	}

@@ -27,10 +27,10 @@ type Notification struct {
 	Time    time.Time
 	Type    string
 }
-type UserNotificationCounts struct {
-	Communications uint `json:"communication"`
-	Home           uint `json:"home"`
-	Review         uint `json:"review"`
+type notificationCounts struct {
+	Communications uint
+	Home           uint
+	Review         uint
 }
 
 // Clear all notifications for a given user with the given path
@@ -105,7 +105,7 @@ func NotificationsForUser(ctx context.Context, u User) ([]Notification, error) {
 	}
 	return results, nil
 }
-func NotificationCountsForUser(ctx context.Context, u User) (*UserNotificationCounts, error) {
+func NotificationCountsForUser(ctx context.Context, u User) (*notificationCounts, error) {
 	count_home, err := u.model.UserNotifications(
 		models.SelectWhere.Notifications.ResolvedAt.IsNull(),
 	).Count(ctx, db.PGInstance.BobDB)
@@ -125,7 +125,7 @@ func NotificationCountsForUser(ctx context.Context, u User) (*UserNotificationCo
 		return nil, fmt.Errorf("Failed to get review notification count: %w", err)
 	}
 	//log.Debug().Int64("reports", count_reports).Int64("home", count_home).Int64("review", count_review).Int("user", u.ID).Msg("calculated notification counts")
-	return &UserNotificationCounts{
+	return &notificationCounts{
 		Communications: uint(count_reports),
 		Home:           uint(count_home),
 		Review:         uint(count_review),

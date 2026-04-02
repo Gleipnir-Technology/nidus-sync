@@ -26,9 +26,7 @@
 					to="/_/communication"
 					icon="messaging"
 					label="Communication"
-					:notificationCount="
-						session.user?.notification_counts.communication ?? 0
-					"
+					:notificationCount="session.notification_counts?.communication ?? 0"
 				/>
 			</li>
 			<li>
@@ -42,7 +40,7 @@
 					to="/_/review"
 					icon="review"
 					label="Review"
-					:notificationCount="session.user?.notification_counts.review ?? 0"
+					:notificationCount="session.notification_counts?.review ?? 0"
 				/>
 			</li>
 			<li>

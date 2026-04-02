@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/aarondl/opt/omitnull"
@@ -16,14 +14,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type userResponse struct {
-	Avatar      *string `json:"avatar"`
-	DisplayName string  `json:"display_name"`
-	Initials    string  `json:"initials"`
-	IsActive    bool    `json:"is_active"`
-	//Notifications      []Notification         `json:"notifications"`
-	//NotificationCounts UserNotificationCounts `json:"notification_counts"`
-	//Organization       Organization           `json:"organization"`
+type user struct {
+	Avatar           *string  `json:"avatar"`
+	DisplayName      string   `json:"display_name"`
+	ID               int      `json:"id"`
+	Initials         string   `json:"initials"`
+	IsActive         bool     `json:"is_active"`
 	PasswordHash     string   `json:"-"`
 	PasswordHashType string   `json:"-"`
 	Role             string   `json:"role"`
@@ -37,7 +33,7 @@ func User(r *router) *userR {
 		router: r,
 	}
 }
-func (res *userR) response(u *platform.User) (*userResponse, error) {
+func (res *userR) response(u *platform.User) (*user, error) {
 	if u == nil {
 		return nil, fmt.Errorf("nil user")
 	}
@@ -49,9 +45,10 @@ func (res *userR) response(u *platform.User) (*userResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("id to uri: %w", err)
 	}
-	return &userResponse{
+	return &user{
 		Avatar:      avatar,
 		DisplayName: u.DisplayName,
+		ID:          int(u.ID),
 		Initials:    u.Initials,
 		IsActive:    u.Active,
 		Role:        u.Role,
@@ -67,24 +64,6 @@ type userR struct {
 type responseListUser struct {
 	Users []*platform.User `json:"users"`
 }
-type contentURLAPI struct {
-	Avatar              string `json:"avatar"`
-	Communication       string `json:"communication"`
-	PublicreportMessage string `json:"publicreport_message"`
-	ReviewTask          string `json:"review_task"`
-	Signal              string `json:"signal"`
-	Upload              string `json:"upload"`
-	User                string `json:"user"`
-}
-type contentURLs struct {
-	API    contentURLAPI `json:"api"`
-	Tegola string        `json:"tegola"`
-	Tile   string        `json:"tile"`
-}
-type contentUserSelf struct {
-	Self platform.User `json:"self"`
-	URLs contentURLs   `json:"urls"`
-}
 
 func (res *userR) ByIDGet(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*platform.User, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
@@ -97,8 +76,7 @@ func (res *userR) ByIDGet(ctx context.Context, r *http.Request, user platform.Us
 	return u, nil
 }
 
-func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates contentURLAPI) (string, *nhttp.ErrorWithStatus) {
-	log.Info().Str("avatar", updates.Avatar).Msg("doing updates")
+func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.User, updates user) (string, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	user_id_str := vars["id"]
 	user_id, err := strconv.Atoi(user_id_str)
@@ -106,8 +84,8 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user update: %w", err)
 	}
 	user_changes := &models.UserSetter{}
-	if updates.Avatar != "" {
-		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", updates.Avatar)
+	if updates.Avatar != nil {
+		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", *updates.Avatar)
 		if err != nil {
 			return "", nhttp.NewBadRequest("parse avatar uri: %w", err)
 		}
@@ -120,42 +98,20 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 	return "", nil
 }
 
-func (res *userR) SelfGet(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*contentUserSelf, *nhttp.ErrorWithStatus) {
-	counts, err := platform.NotificationCountsForUser(ctx, user)
+func (res *userR) SelfGet(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*user, *nhttp.ErrorWithStatus) {
+	resp, err := res.response(&user)
 	if err != nil {
-		return nil, nhttp.NewError("get notifications: %w", err)
+		return nil, nhttp.NewError("create response: %w", err)
 	}
-	org, err := platform.OrganizationByID(ctx, int(user.Organization.ID))
-	if err != nil {
-		return nil, nhttp.NewError("get org: %w", err)
-	}
-	user.Organization = *org
-	user.NotificationCounts = *counts
-	urls := html.NewContentURL()
-	return &contentUserSelf{
-		Self: user,
-		URLs: contentURLs{
-			API: contentURLAPI{
-				Avatar:              config.MakeURLNidus("/api/avatar"),
-				Communication:       urls.API.Communication,
-				PublicreportMessage: urls.API.Publicreport.Message,
-				ReviewTask:          config.MakeURLNidus("/api/review-task"),
-				Signal:              config.MakeURLNidus("/api/signal"),
-				Upload:              config.MakeURLNidus("/api/upload"),
-				User:                config.MakeURLNidus("/api/user"),
-			},
-			Tegola: urls.Tegola,
-			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),
-		},
-	}, nil
+	return resp, nil
 }
 
-func (res *userR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]*userResponse, *nhttp.ErrorWithStatus) {
-	users, err := platform.UserList(ctx, user)
+func (res *userR) List(ctx context.Context, r *http.Request, u platform.User, query QueryParams) ([]*user, *nhttp.ErrorWithStatus) {
+	users, err := platform.UserList(ctx, u)
 	if err != nil {
 		return nil, nhttp.NewError("list users: %w", err)
 	}
-	results := make([]*userResponse, len(users))
+	results := make([]*user, len(users))
 	log.Debug().Int("len", len(users)).Msg("building response")
 	for i, v := range users {
 		log.Debug().Int("i", i).Msg("making results")

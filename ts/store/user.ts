@@ -1,15 +1,16 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { User } from "../types";
-import { SSEManager } from "../SSEManager";
-import { useSessionStore } from "./session";
+import { Session, User } from "@/types";
+import { SSEManager } from "@/SSEManager";
+import { useSessionStore } from "@/store/session";
 
 export const useUserStore = defineStore("users", () => {
 	// State
 	const _byID = ref<Map<number, User>>(new Map());
 	const all = ref<User[] | null>(null);
-	const loading = ref(false);
 	const error = ref(null);
+	const loading = ref(false);
+	const ongoingFetch = ref<Promise<User[]> | null>(null);
 
 	// Subscription
 	SSEManager.subscribe("*", (e) => {
@@ -24,11 +25,8 @@ export const useUserStore = defineStore("users", () => {
 		return result;
 	}
 	async function fetchAll(): Promise<User[]> {
-		const session = useSessionStore();
-		if (session.urls == null) {
-			throw new Error("can't fetch without user URL data");
-		}
-
+		const sessionStore = useSessionStore();
+		const session = await sessionStore.get();
 		loading.value = true;
 		error.value = null;
 		try {
@@ -41,16 +39,30 @@ export const useUserStore = defineStore("users", () => {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const data = await response.json();
-			all.value = data.users;
-			for (const u of data.users) {
+			const users = await response.json();
+			all.value = users;
+			for (const u of users) {
 				_byID.value.set(u.id, u);
 			}
-			return data.users;
+			return users;
 		} catch (err) {
 			console.error("Error loading users:", err);
 			throw err;
 		}
+	}
+	async function withAll(): Promise<User[]> {
+		if (all.value != null) {
+			return all.value;
+		}
+
+		if (ongoingFetch.value !== null) {
+			return ongoingFetch.value;
+		}
+
+		ongoingFetch.value = fetchAll().finally(() => {
+			ongoingFetch.value = null;
+		});
+		return ongoingFetch.value;
 	}
 	async function fetchOne(id: number) {
 		const session = useSessionStore();
@@ -82,5 +94,6 @@ export const useUserStore = defineStore("users", () => {
 		byID,
 		fetchAll,
 		fetchOne,
+		withAll,
 	};
 });

@@ -169,6 +169,19 @@ export interface ReviewTaskPool {
 	site: Site;
 }
 
+export interface SessionNotificationCounts {
+	communication: number;
+	home: number;
+	review: number;
+}
+export interface Session {
+	impersonating?: string;
+	notifications: Notification[];
+	notification_counts: SessionNotificationCounts;
+	organization: Organization;
+	self: User;
+	urls: URLs;
+}
 export interface Site {
 	address: Address;
 	created: string;
@@ -229,9 +242,6 @@ export interface User {
 	display_name: string;
 	id: number;
 	initials: string;
-	notifications: Notification[];
-	notification_counts: UserNotificationCounts;
-	organization: Organization;
 	role: string;
 	tags: string[];
 	uri: string;
@@ -241,10 +251,6 @@ export interface UserNotificationCounts {
 	communication: number;
 	home: number;
 	review: number;
-}
-export interface UserResponse {
-	self: User;
-	urls: URLs;
 }
 export interface Water {
 	access_comments: string;
