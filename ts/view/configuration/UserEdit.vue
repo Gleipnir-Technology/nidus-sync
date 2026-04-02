@@ -50,10 +50,13 @@ pre {
 								<label class="form-label fw-bold">Avatar</label>
 								<div class="d-flex align-items-center">
 									<div class="position-relative">
-										<i v-if="avatar == ''" class="bi bi-avatar"></i>
+										<i
+											v-if="user.avatar == null && avatar == ''"
+											class="bi bi-avatar"
+										></i>
 										<img
 											v-else
-											:src="avatar || defaultAvatar"
+											:src="user.avatar || avatar"
 											alt="User Avatar"
 											class="rounded-circle avatar-preview"
 										/>
@@ -265,9 +268,6 @@ const selectedTag = ref<string>("");
 const userStore = useUserStore();
 const session = useSessionStore();
 const user = ref<User | null>(null);
-
-const defaultAvatar =
-	"https://via.placeholder.com/150/cccccc/666666?text=No+Avatar";
 
 const optionRoles: Option[] = [
 	{ value: "account-owner", label: "Account Owner" },
