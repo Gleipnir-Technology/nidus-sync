@@ -291,13 +291,7 @@ const optionRoles: Option[] = [
 	{ value: "tech3", label: "Tech 3" },
 ];
 
-const availableTags: string[] = [
-	"warrant",
-	"drone pilot",
-	"certified",
-	"supervisor",
-	"field ops",
-];
+const availableTags: string[] = ["warrant", "drone pilot"];
 
 const triggerFileInput = () => {
 	fileInput.value?.click();
@@ -354,6 +348,9 @@ const removeTag = (tag: string) => {
 interface UserRequestPut {
 	avatar?: string | null;
 	display_name?: string;
+	is_active?: boolean;
+	role?: string;
+	tags?: string[];
 }
 const saveChanges = async () => {
 	const u = user.value;
@@ -398,6 +395,15 @@ const saveChanges = async () => {
 	}
 	if (uc.display_name != u.display_name) {
 		payload.display_name = uc.display_name;
+	}
+	if (uc.is_active != u.is_active) {
+		payload.is_active = uc.is_active;
+	}
+	if (uc.role != u.role) {
+		payload.role = uc.role;
+	}
+	if (uc.tags != u.tags) {
+		payload.tags = uc.tags;
 	}
 	const url = u.uri;
 	const response = await fetch(url, {

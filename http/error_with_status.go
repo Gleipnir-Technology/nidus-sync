@@ -33,3 +33,6 @@ func NewErrorStatus(status int, mesg_format string, args ...any) *ErrorWithStatu
 		Status:  status,
 	}
 }
+func NewForbidden(mesg_format string, args ...any) *ErrorWithStatus {
+	return NewErrorStatus(http.StatusForbidden, mesg_format, args...)
+}

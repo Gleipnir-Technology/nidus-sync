@@ -86,6 +86,9 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user id conversion: %w", err)
 	}
 	user_changes := &models.UserSetter{}
+	if !(user.HasRoot() || user.Role == enums.UserroleAccountOwner || user.ID == user_id) {
+		return "", nhttp.NewForbidden("Only account owners can change other users")
+	}
 	if updates.Avatar.IsValue() {
 		avatar_uuid, err := res.router.UUIDFromURI("avatar.ByUUIDGet", updates.Avatar.MustGet())
 		if err != nil {
@@ -98,6 +101,29 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 	if updates.DisplayName.IsValue() {
 		user_changes.DisplayName = updates.DisplayName
 	}
+	if updates.Role.IsValue() {
+		// Don't allow privilege escalation
+		if user.HasRoot() || user.Role == enums.UserroleAccountOwner {
+			user_changes.Role = updates.Role.MustGet()
+		} else {
+			return "", nhttp.NewBadRequest("you aren't allowed to change roles")
+		}
+	}
+	if updates.Tags.IsValue() {
+		for i, v := range updates.Tags.MustGet() {
+			user_changes.IsDronePilot = omit.From(false)
+			user_changes.IsWarrant = omit.From(false)
+			switch v {
+			case "drone pilot":
+				user_changes.IsDronePilot = omit.From(true)
+			case "warrant":
+				user_changes.IsWarrant = omit.From(true)
+			default:
+				return "", nhttp.NewBadRequest("'%s' (item %d) is not a valid tag", v, i)
+			}
+		}
+	}
+
 	err = platform.UserUpdate(ctx, user, user_id, user_changes)
 	if err != nil {
 		return "", nhttp.NewError("user update: %w", err)

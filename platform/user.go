@@ -83,6 +83,8 @@ func CreateUser(ctx context.Context, username string, name string, password_hash
 	u_setter := models.UserSetter{
 		DisplayName:      omit.From(name),
 		IsActive:         omit.From(true),
+		IsDronePilot:     omit.From(false),
+		IsWarrant:        omit.From(false),
 		OrganizationID:   omit.From(o.ID),
 		PasswordHash:     omit.From(password_hash),
 		PasswordHashType: omit.From(enums.HashtypeBcrypt14),

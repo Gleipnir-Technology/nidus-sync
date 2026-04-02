@@ -81,7 +81,7 @@
 									</span>
 								</td>
 								<td>
-									<RouterLink :to="`/_/configuration${user.uri}`">
+									<RouterLink :to="`/_/configuration/user/${user.id}`">
 										<button class="btn btn-sm btn-primary" title="Edit">
 											<i class="bi bi-person-x"></i>
 										</button>
