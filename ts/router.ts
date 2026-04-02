@@ -118,7 +118,9 @@ const routes: RouteRecordRaw[] = [
 		meta: { requiresAuth: true, showSidebar: true },
 		name: "User Edit",
 		path: "/_/configuration/user/:id",
-		props: true,
+		props: (route) => ({
+			id: parseInt(route.params.id as string, 10),
+		}),
 	},
 	{
 		path: "/_/intelligence",
