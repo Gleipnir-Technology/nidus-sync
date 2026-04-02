@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
@@ -47,6 +48,7 @@ type sessionURL struct {
 type sessionURLAPI struct {
 	Avatar              string `json:"avatar"`
 	Communication       string `json:"communication"`
+	Impersonation       string `json:"impersonation"`
 	PublicreportMessage string `json:"publicreport_message"`
 	ReviewTask          string `json:"review_task"`
 	Signal              string `json:"signal"`
@@ -65,8 +67,17 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 	if err != nil {
 		return nil, nhttp.NewError("create user: %w", err)
 	}
+	var impersonating *string
+	impersonating_id := auth.ImpersonatedUser(ctx)
+	if impersonating_id != nil {
+		i, err := res.router.IDToURI("user.ByIDGet", int(*impersonating_id))
+		if err != nil {
+			return nil, nhttp.NewError("create impersonating uri: %w", err)
+		}
+		impersonating = &i
+	}
 	return &session{
-		Impersonating: nil,
+		Impersonating: impersonating,
 		NotificationCounts: sessionNotificationCounts{
 			Communications: counts.Communications,
 			Home:           counts.Home,
@@ -81,6 +92,7 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 			API: sessionURLAPI{
 				Avatar:              config.MakeURLNidus("/api/avatar"),
 				Communication:       urls.API.Communication,
+				Impersonation:       config.MakeURLNidus("/api/impersonation"),
 				PublicreportMessage: urls.API.Publicreport.Message,
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
 				Signal:              config.MakeURLNidus("/api/signal"),

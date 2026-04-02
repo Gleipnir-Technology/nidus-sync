@@ -30,16 +30,37 @@ type EnsureAuth struct {
 	handler AuthenticatedHandler
 }
 
-func AddUserSession(r *http.Request, user *platform.User) {
-	id := strconv.Itoa(int(user.ID))
-	sessionManager.Put(r.Context(), "user_id", id)
-	sessionManager.Put(r.Context(), "username", user.Username)
-	log.Debug().Str("id", id).Str("username", user.Username).Msg("added user session")
+func AddUserSession(ctx context.Context, user *platform.User) {
+	id_str := strconv.Itoa(int(user.ID))
+	sessionManager.Put(ctx, "user_id", id_str)
+	sessionManager.Put(ctx, "username", user.Username)
+	log.Debug().Str("id", id_str).Str("username", user.Username).Msg("added user session")
+}
+func ImpersonateUser(ctx context.Context, target_user_id int) {
+	target_user_id_str := strconv.Itoa(int(target_user_id))
+	sessionManager.Put(ctx, "impersonated_user_id", target_user_id_str)
+}
+func ImpersonatedUser(ctx context.Context) *int32 {
+	i_str := sessionManager.GetString(ctx, "impersonated_user_id")
+	if i_str == "" {
+		return nil
+	}
+	i, err := strconv.Atoi(i_str)
+	if err != nil {
+		log.Error().Err(err).Str("impersonated_user_id", i_str).Msg("failed to parse impersonated_user_id")
+		return nil
+	}
+	result := int32(i)
+	return &result
 }
 
 func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
 	ctx := r.Context()
 	user_id_str := sessionManager.GetString(ctx, "user_id")
+	impersonated_user_id_str := sessionManager.GetString(ctx, "impersonated_user_id")
+	if impersonated_user_id_str != "" {
+		user_id_str = impersonated_user_id_str
+	}
 	if user_id_str != "" {
 		user_id, err := strconv.Atoi(user_id_str)
 		if err != nil {
@@ -59,7 +80,7 @@ func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	AddUserSession(r, user)
+	AddUserSession(ctx, user)
 	return user, nil
 }
 
@@ -108,7 +129,7 @@ func SigninUser(r *http.Request, username string, password string) (*platform.Us
 	if user == nil {
 		return nil, errors.New("No matching user")
 	}
-	AddUserSession(r, user)
+	AddUserSession(r.Context(), user)
 	return user, nil
 }
 

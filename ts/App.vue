@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useSessionStore } from "@/store/session";
+import { Session } from "@/types";
 
 import Sidebar from "./components/layout/Sidebar.vue";
 import MainContent from "./components/layout/MainContent.vue";
@@ -19,7 +20,9 @@ import NavigationLink from "@/components/common/NavigationLink.vue";
 
 const session = useSessionStore();
 onMounted(() => {
-	session.fetchSession();
+	session.get().then((session: Session) => {
+		console.log("session loaded", session);
+	});
 });
 </script>
 

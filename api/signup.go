@@ -31,7 +31,7 @@ func postSignup(ctx context.Context, r *http.Request, signup reqSignup) (string,
 		return "", nhttp.NewError("Failed to signup user", err)
 	}
 
-	auth.AddUserSession(r, user)
+	auth.AddUserSession(ctx, user)
 
 	return "/", nil
 }

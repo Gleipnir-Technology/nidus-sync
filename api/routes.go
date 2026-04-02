@@ -27,6 +27,8 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/image/{uuid}", auth.NewEnsureAuth(apiImagePost)).Methods("POST")
 	r.Handle("/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentGet)).Methods("GET")
 	r.Handle("/image/{uuid}/content", auth.NewEnsureAuth(apiImageContentPost)).Methods("POST")
+	impersonation := resource.Impersonation(router)
+	r.Handle("/impersonation", authenticatedHandlerJSONPost(impersonation.Create)).Methods("POST")
 	lead := resource.Lead(r)
 	r.Handle("/leads", authenticatedHandlerJSON(lead.List)).Methods("GET")
 	r.Handle("/leads", authenticatedHandlerJSONPost(lead.Create)).Methods("POST")

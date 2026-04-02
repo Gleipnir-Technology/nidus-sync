@@ -14,7 +14,7 @@ import (
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type user struct {
@@ -159,9 +159,9 @@ func (res *userR) List(ctx context.Context, r *http.Request, u platform.User, qu
 		return nil, nhttp.NewError("list users: %w", err)
 	}
 	results := make([]*user, len(users))
-	log.Debug().Int("len", len(users)).Msg("building response")
+	//log.Debug().Int("len", len(users)).Msg("building response")
 	for i, v := range users {
-		log.Debug().Int("i", i).Msg("making results")
+		//log.Debug().Int("i", i).Msg("making results")
 		resp, err := res.response(v)
 		if err != nil {
 			return nil, nhttp.NewError("create response: %w", err)

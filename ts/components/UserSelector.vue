@@ -49,24 +49,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import Avatar from "@/components/Avatar.vue";
 import { useUserStore } from "@/store/user";
 import type { User } from "@/types";
 
 interface Props {
+	modelValue?: User | null;
 	placeholder?: string;
 	minChars?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+	modelValue: null,
 	placeholder: "Search users...",
 	minChars: 3,
 });
 
 const emit = defineEmits<{
-	select: [user: User];
-	input: [query: string];
+	"update:modelValue": [user: User | null];
 }>();
 
 const usersStore = useUserStore();
@@ -78,7 +79,24 @@ onMounted(async () => {
 	if (!usersStore.all) {
 		await usersStore.fetchAll();
 	}
+
+	// Initialize search query with selected user's name if provided
+	if (props.modelValue) {
+		searchQuery.value = props.modelValue.display_name;
+	}
 });
+
+// Watch for external changes to modelValue
+watch(
+	() => props.modelValue,
+	(newValue) => {
+		if (newValue) {
+			searchQuery.value = newValue.display_name;
+		} else {
+			searchQuery.value = "";
+		}
+	},
+);
 
 const filteredUsers = computed(() => {
 	if (searchQuery.value.length < props.minChars || !usersStore.all) {
@@ -98,7 +116,11 @@ const filteredUsers = computed(() => {
 
 function onInput() {
 	showDropdown.value = searchQuery.value.length >= props.minChars;
-	emit("input", searchQuery.value);
+
+	// Clear selection if user is typing
+	if (props.modelValue && searchQuery.value !== props.modelValue.display_name) {
+		emit("update:modelValue", null);
+	}
 }
 
 function onFocus() {
@@ -117,7 +139,7 @@ function onBlur() {
 function selectUser(user: User) {
 	searchQuery.value = user.display_name;
 	showDropdown.value = false;
-	emit("select", user);
+	emit("update:modelValue", user);
 }
 
 function highlightMatch(text: string): string {

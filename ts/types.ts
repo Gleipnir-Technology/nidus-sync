@@ -229,6 +229,7 @@ export interface URLs {
 interface URLsAPI {
 	avatar: string;
 	communication: string;
+	impersonation: string;
 	publicreport_message: string;
 	review_task: string;
 	signal: string;
