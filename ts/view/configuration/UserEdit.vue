@@ -128,7 +128,7 @@ pre {
 									User Role
 								</label>
 								<select
-									v-if="user && user.role == 'root'"
+									v-if="userChanges && userChanges.role == 'root'"
 									disabled
 									id="role"
 									class="form-select"
@@ -228,6 +228,7 @@ pre {
 								<div class="d-flex justify-content-end">
 									<button
 										class="btn btn-secondary me-2"
+										:disabled="isSaving"
 										type="button"
 										@click="cancelChanges"
 									>
@@ -235,6 +236,7 @@ pre {
 									</button>
 									<button
 										class="btn btn-primary"
+										:disabled="isSaving"
 										type="button"
 										@click="saveChanges"
 									>
@@ -254,7 +256,7 @@ pre {
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, onMounted, ref, reactive } from "vue";
+import { onMounted, ref } from "vue";
 import { useSessionStore } from "@/store/session";
 import { useUserStore } from "@/store/user";
 import { User } from "@/types";
@@ -275,12 +277,12 @@ export interface UserChanges {
 	username: string;
 }
 const fileInput = ref<HTMLInputElement | null>(null);
+const isSaving = ref<boolean>(false);
 const props = defineProps<Props>();
 const selectedFile = ref<File | null>(null);
 const selectedTag = ref<string>("");
 const userStore = useUserStore();
 const session = useSessionStore();
-const user = ref<User | null>(null);
 const userChanges = ref<UserChanges>();
 
 const optionRoles: Option[] = [
@@ -326,22 +328,25 @@ const removeAvatar = () => {
 };
 
 const addTag = () => {
-	if (user.value == null) {
+	if (userChanges.value == null) {
 		return;
 	}
-	if (selectedTag.value && !user.value.tags.includes(selectedTag.value)) {
-		user.value.tags.push(selectedTag.value);
+	if (
+		selectedTag.value &&
+		!userChanges.value.tags.includes(selectedTag.value)
+	) {
+		userChanges.value.tags.push(selectedTag.value);
 		selectedTag.value = "";
 	}
 };
 
 const removeTag = (tag: string) => {
-	if (user.value == null) {
+	if (userChanges.value == null) {
 		return;
 	}
-	const index = user.value.tags.indexOf(tag);
+	const index = userChanges.value.tags.indexOf(tag);
 	if (index > -1) {
-		user.value.tags.splice(index, 1);
+		userChanges.value.tags.splice(index, 1);
 	}
 };
 
@@ -353,17 +358,20 @@ interface UserRequestPut {
 	tags?: string[];
 }
 const saveChanges = async () => {
-	const u = user.value;
-	if (!u) {
-		console.log("empty user");
-		return;
-	}
 	const uc = userChanges.value;
 	if (!uc) {
 		console.log("empty user changes");
 		return;
 	}
 	console.log("Saving user changes");
+	isSaving.value = true;
+	const all_users = await userStore.withAll();
+	const u = all_users.find((u: User) => u.id == props.id);
+	if (!u) {
+		console.log("no matching user");
+		isSaving.value = false;
+		return;
+	}
 	let payload: UserRequestPut = {};
 	if (uc.avatar != u.avatar) {
 		if (selectedFile.value) {
@@ -388,6 +396,8 @@ const saveChanges = async () => {
 				payload.avatar = data.uri;
 			} catch (error) {
 				console.error("Failed to upload avatar", error);
+				isSaving.value = false;
+				return;
 			}
 		} else if (!uc.avatar) {
 			payload.avatar = null;
@@ -405,6 +415,11 @@ const saveChanges = async () => {
 	if (uc.tags != u.tags) {
 		payload.tags = uc.tags;
 	}
+	if (Object.keys(payload).length === 0) {
+		console.log("refusing to make empty changes");
+		isSaving.value = false;
+		return;
+	}
 	const url = u.uri;
 	const response = await fetch(url, {
 		method: "PUT",
@@ -413,6 +428,7 @@ const saveChanges = async () => {
 		},
 		body: JSON.stringify(payload),
 	});
+	isSaving.value = false;
 	if (!response.ok) {
 		const errorData = await response.json();
 		throw new Error(
@@ -438,13 +454,12 @@ onMounted(() => {
 		console.log("got users. looking for match", users, props.id);
 		for (const u of users) {
 			if (u.id == props.id) {
-				user.value = u;
 				userChanges.value = {
 					avatar: u.avatar,
 					display_name: u.display_name,
 					is_active: u.is_active,
 					role: u.role,
-					tags: u.tags,
+					tags: structuredClone(u.tags),
 					username: u.username,
 				};
 				console.log("User set to", u);
