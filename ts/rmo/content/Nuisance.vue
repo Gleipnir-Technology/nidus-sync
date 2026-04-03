@@ -155,7 +155,7 @@ select.tall {
 				</p>
 				<div class="map-container">
 					<MapLocator
-						v-model="currentLocation"
+						v-model="currentCamera"
 						:markers="markers"
 						:initial-zoom="15"
 						@click="doMapClick"
@@ -163,7 +163,12 @@ select.tall {
 						@marker-drag-end="doMapMarkerDragEnd"
 					/>
 				</div>
-				<input type="hidden" id="map-zoom" name="map-zoom" />
+				<input
+					type="hidden"
+					id="map-zoom"
+					name="map-zoom"
+					:value="currentCamera?.zoom ?? 0"
+				/>
 				<input type="hidden" id="address-country" name="address-country" />
 				<input type="hidden" id="address-locality" name="address-locality" />
 				<input type="hidden" id="address-number" name="address-number" />
@@ -527,9 +532,10 @@ import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import type { Location, Marker } from "@/types";
+import type { Camera } from "@/type/map";
 import type { Address } from "@/type/stadia";
 
-const currentLocation = ref<Location | null>(null);
+const currentCamera = ref<Camera | null>(null);
 const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);

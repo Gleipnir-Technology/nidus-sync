@@ -23,19 +23,19 @@ import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import { onMounted, onUnmounted, ref, type Ref, shallowRef, watch } from "vue";
 import { boundsMarkers, boundsDefault } from "@/map-utils";
 import type { Location, Marker } from "@/types";
+import type { Camera, MoveEndEventInternal } from "@/type/map";
 
 // Emits interface
 interface Emits {
-	(e: "update:modelValue", location: Location): void;
+	(e: "update:modelValue", value: Camera): void;
 	(e: "click", location: Location): void;
 	(e: "load"): void;
-	(e: "zoomend"): void;
 	(e: "markerDragEnd", location: Location): void;
 }
 
 // Props
 interface Props {
-	modelValue: Location | null;
+	modelValue: Camera | null;
 	apiKey?: string;
 	markers?: Marker[];
 }
@@ -61,13 +61,13 @@ const initializeMap = () => {
 	if (props.markers.length > 0) {
 		bounds = boundsMarkers(props.markers);
 	}
-	map.value = new maplibregl.Map({
+	const _map = new maplibregl.Map({
 		bounds: bounds,
 		container: mapContainer.value,
 		style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 	});
-
-	map.value.on("click", (e: maplibregl.MapLayerMouseEvent) => {
+	map.value = _map;
+	_map.on("click", (e: maplibregl.MapLayerMouseEvent) => {
 		e.preventDefault();
 		console.log("internal click", e);
 		emit("click", {
@@ -76,13 +76,32 @@ const initializeMap = () => {
 		});
 	});
 
-	map.value.on("load", () => {
+	_map.on("load", () => {
 		console.log("map loaded");
 		emit("load");
 	});
 
-	map.value.on("zoomend", () => {
-		emit("zoomend");
+	_map.on("zoomend", (evt: MoveEndEventInternal) => {
+		console.log("zoomend", evt);
+		if (_map && !evt.isInternalUpdate) {
+			const center = _map.getCenter();
+			const newCamera: Camera = {
+				location: center,
+				zoom: _map.getZoom(),
+			};
+			emit("update:modelValue", newCamera);
+		}
+	});
+
+	_map.on("moveend", (evt: MoveEndEventInternal) => {
+		console.log("moveend", evt);
+		if (_map && !evt.isInternalUpdate) {
+			const center = _map.getCenter();
+			emit("update:modelValue", {
+				location: center,
+				zoom: _map.getZoom(),
+			});
+		}
 	});
 };
 
@@ -128,14 +147,22 @@ const frameMarkers = () => {
 
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
-		map.value.panTo(props.markers[0].location, { duration: 1000 });
+		map.value.panTo(
+			props.markers[0].location,
+			{ duration: 1000 },
+			{ isInternalUpdate: true },
+		);
 	} else {
 		// Multiple markers: fit bounds
 		const bounds = new maplibregl.LngLatBounds();
 		props.markers.forEach((marker) => {
 			bounds.extend([marker.location.lng, marker.location.lat]);
 		});
-		map.value.fitBounds(bounds, { padding: 10, duration: 1000 });
+		map.value.fitBounds(
+			bounds,
+			{ padding: 10, duration: 1000 },
+			{ isInternalUpdate: true },
+		);
 	}
 };
 
@@ -144,7 +171,11 @@ watch(
 	() => props.modelValue,
 	(newLocation) => {
 		if (map.value && newLocation) {
-			map.value.panTo(newLocation, { duration: 1000 });
+			map.value.panTo(
+				newLocation.location,
+				{ duration: 1000 },
+				{ isInternalUpdate: true },
+			);
 		}
 	},
 	{ deep: true },
