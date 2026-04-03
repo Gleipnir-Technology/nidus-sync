@@ -57,8 +57,8 @@
 									Report areas with high adult mosquito activity causing
 									discomfort or concern.
 								</p>
-								<RouteLink to="/nuisance" class="btn btn-primary mt-3"
-									>Report Problem</RouteLink
+								<RouterLink to="/nuisance" class="btn btn-primary mt-3"
+									>Report Problem</RouterLink
 								>
 							</div>
 						</div>
@@ -74,8 +74,8 @@
 									Report any water that has been sitting for several days, where
 									mosquitoes can live.
 								</p>
-								<RouteLink to="/water" class="btn btn-primary mt-3"
-									>Report Source</RouteLink
+								<RouterLink to="/water" class="btn btn-primary mt-3"
+									>Report Source</RouterLink
 								>
 							</div>
 						</div>
@@ -91,8 +91,8 @@
 									Check on a previous request or view current mosquito activity
 									in your area.
 								</p>
-								<RouteLink to="/status" class="btn btn-primary mt-3"
-									>Get Status</RouteLink
+								<RouterLink to="/status" class="btn btn-primary mt-3"
+									>Get Status</RouterLink
 								>
 							</div>
 						</div>
