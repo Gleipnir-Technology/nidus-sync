@@ -8,33 +8,27 @@
 }
 </style>
 <template>
-	<template v-if="district">
-		<section class="py-5 bg-primary text-white">
-			<div class="container">
-				<div class="row justify-content-center">
-					<div class="col-lg-10">
-						<h2 class="text-center mb-4">Report a Mosquito Problem</h2>
-						<p class="lead text-center">
-							Submit a report to help reduce mosquito activity in your
-							neighborhood.
-						</p>
-						<p class="lead text-center">
-							Report Mosquitoes Online works with local mosquito control
-							agencies to receive public reports.
-						</p>
-						<p class="lead text-center">
-							For this area, mosquito control services are provided by
-						</p>
-						<h3 class="text-center">{{ district.name }}</h3>
-						<img class="district-logo" :src="district.url_logo" />
-					</div>
-				</div>
+	<header
+		class="navbar navbar-expand-lg navbar-dark text-light bg-primary shadow-sm"
+	>
+		<div class="container">
+			<div class="d-flex align-items-center">
+				<template v-if="district">
+					<a class="navbar-brand d-flex align-items-center" href="/">
+						<img
+							:src="district.url_logo"
+							style="height: 48px"
+							alt="District logo"
+						/>
+					</a>
+					<h1 class="mb-0 ms-3">{{ district.name }}</h1>
+				</template>
+				<template v-else>
+					<h1>Loading...</h1>
+				</template>
 			</div>
-		</section>
-	</template>
-	<template v-else>
-		<p>loading district...</p>
-	</template>
+		</div>
+	</header>
 </template>
 <script setup lang="ts">
 import type { District } from "@/rmo/type";
