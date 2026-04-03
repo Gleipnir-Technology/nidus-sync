@@ -101,3 +101,34 @@ func getDistrictCompliancePermission(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
+func getDistrictComplianceProcess(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		"rmo/district-compliance-process.html",
+		ContentNuisance{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(nil),
+		},
+	)
+}
+
+func getDistrictComplianceSubmit(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		"rmo/district-compliance-submit.html",
+		ContentNuisance{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(nil),
+		},
+	)
+}
