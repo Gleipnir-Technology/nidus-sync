@@ -20,6 +20,7 @@ func Router(r *mux.Router) {
 	r.HandleFunc("/district/{slug}/compliance/address", getDistrictComplianceAddress).Methods("GET")
 	r.HandleFunc("/district/{slug}/compliance/concern", getDistrictComplianceConcern).Methods("GET")
 	r.HandleFunc("/district/{slug}/compliance/evidence", getDistrictComplianceEvidence).Methods("GET")
+	r.HandleFunc("/district/{slug}/compliance/permission", getDistrictCompliancePermission).Methods("GET")
 	r.HandleFunc("/district/{slug}/nuisance", getNuisanceDistrict).Methods("GET")
 	//r.HandleFunc("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT)).Methods("GET")
 	//r.HandleFunc("/district/{slug}/status", renderMock(mockStatusT)).Methods("GET")
