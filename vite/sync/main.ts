@@ -1,17 +1,16 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
-import App from "./App.vue";
-import router from "./router";
-import { SSEManager, type SSEMessage } from "./SSEManager";
-//import { SetupSidebar } from "./sidebar";
+import App from "@/AppSync.vue";
+import router from "@/router";
+import { SSEManager, type SSEMessage } from "@/SSEManager";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 // Import Bootstrap Icons CSS
 import "bootstrap-icons/font/bootstrap-icons.css";
 // Import Bootstrap SCSS
-import "./style/style.scss";
+import "@/style/style.scss";
 // Import custom icons
-import "./gen/custom-icons.scss";
+import "@/gen/custom-icons.scss";
 
 // Import Bootstrap JavaScript and make it available globally
 import * as bootstrap from "bootstrap";

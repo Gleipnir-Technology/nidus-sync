@@ -26,8 +26,8 @@
   },
   "scripts": {
     "build": "vue-tsc && vite build",
-    "dev-rmo": "vite --config vite/rmo.ts",
-    "dev-sync": "vite --config vite/sync.ts",
+    "dev-rmo": "vite serve vite/rmo",
+    "dev-sync": "vite serve vite/sync",
     "generate-icons": "node generate-icons.js",
     "typecheck": "vue-tsc --noEmit",
     "typecheck:watch": "vue-tsc --noEmit --watch"
