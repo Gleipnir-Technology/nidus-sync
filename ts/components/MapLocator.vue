@@ -77,34 +77,33 @@ const initializeMap = () => {
 	});
 
 	_map.on("load", () => {
-		console.log("map loaded");
 		emit("load");
+		updateModel(_map);
 	});
 
 	_map.on("zoomend", (evt: MoveEndEventInternal) => {
 		console.log("zoomend", evt);
 		if (_map && !evt.isInternalUpdate) {
-			const center = _map.getCenter();
-			const newCamera: Camera = {
-				location: center,
-				zoom: _map.getZoom(),
-			};
-			emit("update:modelValue", newCamera);
+			updateModel(_map);
 		}
 	});
 
 	_map.on("moveend", (evt: MoveEndEventInternal) => {
 		console.log("moveend", evt);
 		if (_map && !evt.isInternalUpdate) {
-			const center = _map.getCenter();
-			emit("update:modelValue", {
-				location: center,
-				zoom: _map.getZoom(),
-			});
+			updateModel(_map);
 		}
 	});
 };
 
+function updateModel(_map: maplibregl.Map) {
+	const center = _map.getCenter();
+	const newCamera: Camera = {
+		location: center,
+		zoom: _map.getZoom(),
+	};
+	emit("update:modelValue", newCamera);
+}
 // Update markers on the map
 const updateMarkers = () => {
 	if (!map.value) return;
@@ -149,7 +148,7 @@ const frameMarkers = () => {
 		// Single marker: pan to it
 		map.value.panTo(
 			props.markers[0].location,
-			{ duration: 1000 },
+			{ duration: 1000, zoom: props.modelValue?.zoom },
 			{ isInternalUpdate: true },
 		);
 	} else {

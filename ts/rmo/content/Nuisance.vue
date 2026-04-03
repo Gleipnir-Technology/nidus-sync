@@ -530,6 +530,9 @@ function doAddressSelected(address: Address) {
 		console.error("No geometry on address", address);
 		return;
 	}
+	if (currentCamera.value) {
+		currentCamera.value.zoom = 15;
+	}
 	marker.value = {
 		color: "#FF0000",
 		draggable: true,
