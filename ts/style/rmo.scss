@@ -1,0 +1,29 @@
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+// Make custom SVG icons about the same size as other icons
+i.bi svg {
+	height: 18px;
+	width: 18px;
+}
+@import "bootstrap/scss/functions";
+// Import Bootstrap's variables (this merges with your custom variables)
+@import "bootstrap/scss/variables";
+
+// Import Bootstrap's mixins
+@import "bootstrap/scss/mixins";
+
+// Import all of Bootstrap (or pick specific components)
+@import "bootstrap/scss/bootstrap";
+
+// Import Bootstrap Icons
+//@import "bootstrap-icons/font/bootstrap-icons.scss";
+
+@import "./dashboard.scss";
+@import "./sidebar.scss";
