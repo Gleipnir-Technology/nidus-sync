@@ -66,8 +66,10 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/user/{id}", authenticatedHandlerJSONPut(user.ByIDPut)).Methods("PUT")
 
 	// Unauthenticated endpoints
-	r.HandleFunc("/district", apiGetDistrict).Methods("GET")
-	r.HandleFunc("/district/{slug}/logo", apiGetDistrictLogo).Methods("GET")
+	district := resource.District(router)
+	r.Handle("/district", handlerJSONSlice(district.List)).Methods("GET")
+	//r.HandleFunc("/district", apiGetDistrict).Methods("GET")
+	r.HandleFunc("/district/{slug}/logo", apiGetDistrictLogo).Methods("GET").Name("district.logo.BySlug")
 	r.HandleFunc("/compliance-request/image/pool/{public_id}", getComplianceRequestImagePool).Methods("GET")
 	r.HandleFunc("/twilio/call", twilioCallPost).Methods("POST")
 	r.HandleFunc("/twilio/call/status", twilioCallStatusPost).Methods("POST")

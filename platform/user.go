@@ -115,7 +115,7 @@ func UserList(ctx context.Context, user User) ([]*User, error) {
 	var orgByID map[int32]*Organization
 	if user.HasRoot() {
 		query = models.Users.Query()
-		orgs, err := OrganizationList(ctx, user)
+		orgs, err := OrganizationList(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("org list: %w", err)
 		}

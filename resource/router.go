@@ -59,6 +59,18 @@ func (r *router) IDToURI(route string, id int) (string, error) {
 	uri.Scheme = "https"
 	return uri.String(), nil
 }
+func (r *router) SlugToURI(route string, slug string) (string, error) {
+	handler := r.router.Get(route)
+	if handler == nil {
+		return "", fmt.Errorf("nil handler '%s'", route)
+	}
+	uri, err := handler.URL("slug", slug)
+	if err != nil {
+		return "", fmt.Errorf("build uri: %w", err)
+	}
+	uri.Scheme = "https"
+	return uri.String(), nil
+}
 
 func (r *router) UUIDToURI(route string, u *uuid.UUID) (*string, error) {
 	if u == nil {

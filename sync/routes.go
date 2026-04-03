@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"github.com/Gleipnir-Technology/nidus-sync/api"
 	"github.com/Gleipnir-Technology/nidus-sync/static"
 	"github.com/gorilla/mux"
 )
@@ -35,9 +34,6 @@ func Router(r *mux.Router) {
 	r.HandleFunc("/qr-code/report/{code}", getQRCodeReport)
 	r.HandleFunc("/qr-code/mailer/{code}", getQRCodeMailer)
 	r.HandleFunc("/template-test", getTemplateTest)
-
-	api_router := r.PathPrefix("/api").Subrouter()
-	api.AddRoutes(api_router)
 
 	r.HandleFunc("/", getRoot)
 	r.HandleFunc("/_/*", getRoot)

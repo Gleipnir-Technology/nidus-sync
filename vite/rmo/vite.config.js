@@ -60,12 +60,12 @@ export default defineConfig({
 	server: {
 		allowedHosts: ["poweredge.local", "dev-report.mosquitoes.online"],
 		port: 9001,
-		/*proxy: {
+		proxy: {
 			"/api": {
-				target: "http://127.0.0.1:9002",
+				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
-		},*/
+		},
 		strictPort: true,
 	},
 });

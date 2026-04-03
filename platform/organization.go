@@ -83,6 +83,9 @@ func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.Field
 	}
 	return results, nil
 }
+func (o Organization) Slug() string {
+	return o.model.Slug.GetOr("")
+}
 func OrganizationByID(ctx context.Context, id int) (*Organization, error) {
 	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, int32(id))
 	if err != nil {
@@ -94,10 +97,7 @@ func OrganizationByID(ctx context.Context, id int) (*Organization, error) {
 	o := newOrganization(org)
 	return &o, nil
 }
-func OrganizationList(ctx context.Context, user User) ([]*Organization, error) {
-	if !user.HasRoot() {
-		return []*Organization{&user.Organization}, nil
-	}
+func OrganizationList(ctx context.Context) ([]*Organization, error) {
 	rows, err := models.Organizations.Query().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("query orgs: %w", err)
