@@ -53,18 +53,14 @@ const markerInstances: Ref<maplibregl.Marker[]> = shallowRef<
 	maplibregl.Marker[]
 >([]);
 
-function _bounds(): LngLatBoundsLike {
-	if (props.markers.length > 0) {
-		return boundsMarkers(props.markers);
-	} else {
-		return boundsDefault();
-	}
-}
 // Initialize map
 const initializeMap = () => {
 	if (!mapContainer.value) return;
 
-	const bounds = _bounds();
+	let bounds = boundsDefault();
+	if (props.markers.length > 0) {
+		bounds = boundsMarkers(props.markers);
+	}
 	map.value = new maplibregl.Map({
 		bounds: bounds,
 		container: mapContainer.value,
@@ -132,14 +128,14 @@ const frameMarkers = () => {
 
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
-		map.value.panTo(props.markers[0].location, { duration: 1000 });
+		map.value.panTo(props.markers[0].location, { duration: 1000, zoom: 15 });
 	} else {
 		// Multiple markers: fit bounds
 		const bounds = new maplibregl.LngLatBounds();
 		props.markers.forEach((marker) => {
 			bounds.extend([marker.location.lng, marker.location.lat]);
 		});
-		map.value.fitBounds(bounds, { padding: 50, duration: 1000 });
+		map.value.fitBounds(bounds, { padding: 10, duration: 1000 });
 	}
 };
 

@@ -533,11 +533,35 @@ const markers = computed((): Marker[] => {
 });
 function doAddressSelected(address: Address) {
 	console.log("Address selected", address);
+	const geom = address.geometry;
+	if (!geom) {
+		console.error("No geometry on address", address);
+		return;
+	}
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: {
+			lat: geom.coordinates[1],
+			lng: geom.coordinates[0],
+		},
+	};
 }
 function doMapClick(location: Location) {
-	console.log("Map clicked", location);
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
 }
 function doMapMarkerDragEnd(location: Location) {
-	console.log("marker drag end", location);
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
 }
 </script>
