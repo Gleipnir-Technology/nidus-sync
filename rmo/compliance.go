@@ -53,3 +53,19 @@ func getDistrictComplianceConcern(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 }
+
+func getDistrictComplianceEvidence(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		"rmo/district-compliance-evidence.html",
+		ContentNuisance{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(nil),
+		},
+	)
+}
