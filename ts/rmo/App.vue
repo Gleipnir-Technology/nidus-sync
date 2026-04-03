@@ -1,14 +1,13 @@
 <template>
 	<div id="app">
-		<h1>{{ message }}</h1>
-		<p>Count: {{ count }}</p>
-		<button @click="increment">Increment</button>
+		<RouterView />
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useHead } from "@vueuse/head";
+import { router } from "@/rmo/router";
 
 const count = ref<number>(0);
 const message = ref<string>("hey");
