@@ -455,7 +455,7 @@ select.tall {
 									rows="2"
 									placeholder="Describe any other potential breeding sites you've noticed..."
 								></textarea>
-								<photo-upload />
+								<ImageUpload v-model="images" />
 							</div>
 						</div>
 					</div>
@@ -510,11 +510,13 @@ select.tall {
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
+import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import type { Location, Marker } from "@/types";
 import type { Address } from "@/type/stadia";
 
 const currentLocation = ref<Location | null>(null);
+const images = ref<Image[]>([]);
 const marker = ref<Marker | null>(null);
 
 const isCollapsed = ref<boolean>(true);
