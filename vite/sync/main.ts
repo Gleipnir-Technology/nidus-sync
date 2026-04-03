@@ -16,9 +16,6 @@ import "@/gen/custom-icons.scss";
 import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
 
-// Make SSEManager available to all the JavaScript
-window.SSEManager = SSEManager;
-
 document.addEventListener("DOMContentLoaded", () => {
 	SSEManager.connect("/api/events");
 	SSEManager.subscribe((msg: SSEMessage) => {

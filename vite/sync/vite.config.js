@@ -66,27 +66,27 @@ export default defineConfig({
 		port: 9000,
 		proxy: {
 			"/api": {
-				target: "http://127.0.0.1:9002",
+				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
 			"/configuration/upload/pool/flyover": {
-				target: "http://127.0.0.1:9002",
+				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
 			"/mailer": {
-				target: "http://127.0.0.1:9002",
+				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
 			"/qr-code": {
-				target: "http://127.0.0.1:9002",
+				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
 			"/signin": {
-				target: "http://localhost:9002",
+				target: "http://localhost:9003",
 				changeOrigin: false,
 			},
 			"/signup": {
-				target: "http://localhost:9002",
+				target: "http://localhost:9003",
 				changeOrigin: false,
 			},
 		},
