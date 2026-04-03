@@ -38,48 +38,6 @@
 				setLocationInputs(response.features[0]);
 			}
 		}
-		function setLocationInputs(location) {
-			let country = document.getElementById("address-country");
-			let latitude = document.getElementById("latitude");
-			let longitude = document.getElementById("longitude");
-			let latlngAccuracyType = document.getElementById("latlng-accuracy-type");
-			let latlngAccuracyValue = document.getElementById(
-				"latlng-accuracy-value",
-			);
-			let number = document.getElementById("address-number");
-			let postalcode = document.getElementById("address-postalcode");
-			let locality = document.getElementById("address-locality");
-			let region = document.getElementById("address-region");
-			let street = document.getElementById("address-street");
-
-			// Extract context data from properties
-			const props = location.properties;
-			const context = props.context || {};
-
-			// Populate structured fields
-			country.value = context.iso_3166_a3;
-			latitude.value = location.geometry.coordinates[1];
-			longitude.value = location.geometry.coordinates[0];
-			latlngAccuracyType.value = props.precision;
-			latlngAccuracyValue.value = props.distance;
-			number.value = props.address_components?.number ?? "";
-			postalcode.value = props.address_components?.postal_code ?? "";
-			locality.value = context.whosonfirst?.locality?.name ?? "";
-			region.value = context.whosonfirst?.region?.abbreviation ?? "";
-			street.value = props.address_components?.street ?? "";
-		}
-		function toggleCollapse(something) {
-			el = document.getElementById(something);
-			if (el.classList.contains("collapse")) {
-				el.classList.remove("collapse");
-			} else {
-				el.classList.add("collapse");
-			}
-			document
-				.getElementById("toggle-additional")
-				.classList.add("visually-hidden");
-		}
-
 		// Check for source identification
 		document.addEventListener("DOMContentLoaded", function () {
 			// Elements

@@ -49,6 +49,7 @@
 	<div class="address-input-wrapper">
 		<label for="addressInput" class="form-label">Enter address</label>
 		<input
+			autocomplete="off"
 			id="addressInput"
 			v-model="searchText"
 			class="form-control"

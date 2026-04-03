@@ -163,34 +163,6 @@ select.tall {
 						@marker-drag-end="doMapMarkerDragEnd"
 					/>
 				</div>
-				<input
-					type="hidden"
-					id="map-zoom"
-					name="map-zoom"
-					:value="currentCamera?.zoom ?? 0"
-				/>
-				<input type="hidden" id="address-country" name="address-country" />
-				<input type="hidden" id="address-locality" name="address-locality" />
-				<input type="hidden" id="address-number" name="address-number" />
-				<input
-					type="hidden"
-					id="address-postalcode"
-					name="address-postalcode"
-				/>
-				<input type="hidden" id="address-region" name="address-region" />
-				<input type="hidden" id="address-street" name="address-street" />
-				<input type="hidden" id="latitude" name="latitude" />
-				<input type="hidden" id="longitude" name="longitude" />
-				<input
-					type="hidden"
-					id="latlng-accuracy-type"
-					name="latlng-accuracy-type"
-				/>
-				<input
-					type="hidden"
-					id="latlng-accuracy-value"
-					name="latlng-accuracy-value"
-				/>
 
 				<!-- Mosquito Activity Section -->
 				<div class="form-section">
@@ -591,6 +563,51 @@ async function doSubmit() {
 	errorMessage.value = "";
 	try {
 		const formData = new FormData(formElement.value);
+		if (selectedAddress.value) {
+			const address = selectedAddress.value;
+			const props = address.properties;
+			const context = props.context || {};
+
+			formData.append("address-country", context.iso_3166_a3);
+			formData.append(
+				"address-locality",
+				context.whosonfirst?.locality?.name ?? "",
+			);
+			formData.append("address-number", props.address_components?.number ?? "");
+			formData.append(
+				"address-postalcode",
+				props.address_components?.postal_code ?? "",
+			);
+			formData.append(
+				"address-region",
+				context.whosonfirst?.region?.abbreviation ?? "",
+			);
+			formData.append("address-street", props.address_components?.street ?? "");
+			formData.append(
+				"latitude",
+				address.geometry?.coordinates[1].toString() ?? "0",
+			);
+			formData.append(
+				"longitude",
+				address.geometry?.coordinates[0].toString() ?? "0",
+			);
+			formData.append("latlng-accuracy-type", props.precision ?? "");
+			formData.append(
+				"latlng-accuracy-value",
+				props.distance?.toString() ?? "",
+			);
+		} else {
+			formData.append("address-country", "");
+			formData.append("address-locality", "");
+			formData.append("address-number", "");
+			formData.append("address-postalcode", "");
+			formData.append("address-region", "");
+			formData.append("address-street", "");
+			formData.append("latitude", "0");
+			formData.append("longitude", "0");
+			formData.append("latlng-accuracy-type", "");
+			formData.append("latlng-accuracy-value", "");
+		}
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
 		});
