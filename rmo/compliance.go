@@ -1,0 +1,23 @@
+package rmo
+
+import (
+	"net/http"
+
+	"github.com/Gleipnir-Technology/nidus-sync/html"
+)
+
+func getDistrictCompliance(w http.ResponseWriter, r *http.Request) {
+	district, err := districtBySlug(r)
+	if err != nil {
+		respondError(w, "Failed to lookup organization", err, http.StatusBadRequest)
+		return
+	}
+	html.RenderOrError(
+		w,
+		"rmo/district-compliance.html",
+		ContentNuisance{
+			District: newContentDistrict(district),
+			URL:      makeContentURL(nil),
+		},
+	)
+}

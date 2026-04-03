@@ -35,28 +35,18 @@ func AddStaticRoute(r *mux.Router, path string) {
 			})
 		}
 	}
-	fileServer(r, "/static", localFS, embeddedStaticFS)
+	fileServer(r, "/static/", localFS, embeddedStaticFS)
 }
 
 func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS embed.FS) {
-	if strings.ContainsAny(path, "{}*") {
-		panic("FileServer does not permit any URL parameters.")
-	}
-
-	if path != "/" && path[len(path)-1] != '/' {
-		r.HandleFunc(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
-		path += "/"
-	}
-	path += "*"
-
-	r.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+	log.Debug().Str("path", path).Msg("adding file server")
+	r.PathPrefix(path).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//rctx := chi.RouteContext(r.Context())
 
 		//pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
-		pathPrefix := strings.TrimPrefix(r.URL.Path, "/static")
-
-		// Determine the actual file path
-		requestedPath := strings.TrimPrefix(r.URL.Path, pathPrefix+"/")
+		//pathPrefix := strings.TrimPrefix(r.URL.Path, "/static")
+		path := strings.TrimPrefix(r.URL.Path, "/static/")
+		//log.Debug().Str("path", path).Msg("handling request")
 
 		var err error
 		var fileToServe http.File
@@ -65,9 +55,9 @@ func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS emb
 		// For dev, try the current filesystem
 		if !config.IsProductionEnvironment() {
 			// Try to open from local filesystem for development
-			fileToServe, err = root.Open(requestedPath)
+			fileToServe, err = root.Open(path)
 			if err != nil {
-				log.Warn().Str("path", requestedPath).Msg("Failed to read static file for dev")
+				log.Warn().Err(err).Str("path", path).Msg("Failed to read static file for dev")
 				found = false
 			} else {
 				found = true
@@ -76,10 +66,10 @@ func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS emb
 		// For production use the embedded filesystem
 		if !found {
 			// Requested paths start with
-			embeddedFile, err := embeddedFS.Open(requestedPath)
+			embeddedFile, err := embeddedFS.Open(path)
 
 			if err != nil {
-				log.Debug().Err(err).Str("requested path", requestedPath).Msg("Failed to find resource")
+				log.Debug().Err(err).Str("embedded path", path).Msg("Failed to find resource")
 				http.NotFound(w, r)
 				return
 			}
@@ -93,14 +83,14 @@ func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS emb
 
 		// Add caching headers
 		if config.IsProductionEnvironment() {
-			ext := filepath.Ext(requestedPath)
+			ext := filepath.Ext(path)
 			switch ext {
 			case ".css", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
 				// Cache for 1 week (604800 seconds)
 				crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
 			default:
 				// If it's a generated file, cache it essentially forever (1 year)
-				if strings.HasPrefix(requestedPath, "gen/") {
+				if strings.HasPrefix(path, "/static/gen/") {
 					crw.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 				} else {
 					// Other files, 1 hour
@@ -109,7 +99,7 @@ func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS emb
 			}
 		}
 		// Serve the file
-		http.ServeContent(crw, r, requestedPath, startedTime, fileToServe)
+		http.ServeContent(crw, r, path, startedTime, fileToServe)
 
 		// Close the file
 		fileToServe.Close()
