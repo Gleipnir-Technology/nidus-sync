@@ -13,7 +13,7 @@ export default defineConfig({
 
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./ts"),
+			"@": path.resolve(__dirname, "../ts"),
 		},
 	},
 
@@ -38,7 +38,7 @@ export default defineConfig({
 		emptyOutDir: true,
 		rollupOptions: {
 			input: {
-				main: path.resolve(__dirname, "ts/main.ts"),
+				main: path.resolve(__dirname, "../ts/main-rmo.ts"),
 			},
 			output: {
 				entryFileNames: "js/bundle.[hash].js",
@@ -58,34 +58,14 @@ export default defineConfig({
 	},
 
 	server: {
-		allowedHosts: ["poweredge.local", "dev-sync.nidus.cloud"],
-		port: 9000,
-		proxy: {
+		allowedHosts: ["poweredge.local", "dev-report.mosquitoes.online"],
+		port: 9001,
+		/*proxy: {
 			"/api": {
 				target: "http://127.0.0.1:9002",
 				changeOrigin: false,
 			},
-			"/configuration/upload/pool/flyover": {
-				target: "http://127.0.0.1:9002",
-				changeOrigin: false,
-			},
-			"/mailer": {
-				target: "http://127.0.0.1:9002",
-				changeOrigin: false,
-			},
-			"/qr-code": {
-				target: "http://127.0.0.1:9002",
-				changeOrigin: false,
-			},
-			"/signin": {
-				target: "http://localhost:9002",
-				changeOrigin: false,
-			},
-			"/signup": {
-				target: "http://localhost:9002",
-				changeOrigin: false,
-			},
-		},
+		},*/
 		strictPort: true,
 	},
 });
