@@ -1,25 +1,17 @@
-<style scoped>
-.district-logo {
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
-	max-height: 88px;
-	width: auto;
-}
-</style>
+<style scoped></style>
 <template>
-	<Home :slug="slug">
+	<Nuisance :slug="slug">
 		<template #header>
 			<!-- Introduction Section -->
 			<HeaderDistrict :district="district" />
 		</template>
-	</Home>
+	</Nuisance>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
 import { computedAsync } from "@vueuse/core";
-import Home from "@/rmo/content/Home.vue";
+import Nuisance from "@/rmo/content/Nuisance.vue";
 import type { District } from "@/rmo/type";
 import { useDistrictStore } from "@/rmo/store/district";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";

@@ -3,9 +3,11 @@ import type { RouteRecordRaw } from "vue-router";
 import HomeBase from "@/rmo/view/Home.vue";
 import HomeDistrict from "@/rmo/view/district/Home.vue";
 import NuisanceBase from "@/rmo/view/Nuisance.vue";
-//import * as NuisanceDistrict from "@/rmo/view/district/Nuisance.vue";
-import Status from "@/rmo/view/Status.vue";
+import NuisanceDistrict from "@/rmo/view/district/Nuisance.vue";
+import StatusBase from "@/rmo/view/Status.vue";
+import StatusDistrict from "@/rmo/view/district/Status.vue";
 import Water from "@/rmo/view/Water.vue";
+import WaterDistrict from "@/rmo/view/district/Water.vue";
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
@@ -23,16 +25,28 @@ const routes: RouteRecordRaw[] = [
 		component: HomeDistrict,
 		props: true,
 	},
-	/*{
-		path: "/district/{slug}/nuisance",
+	{
+		path: "/district/:slug/nuisance",
 		name: "NuisanceDistrict",
 		component: NuisanceDistrict,
 		props: true,
-	},*/
+	},
+	{
+		path: "/district/:slug/status",
+		name: "StatusDistrict",
+		component: StatusDistrict,
+		props: true,
+	},
+	{
+		path: "/district/:slug/water",
+		name: "WaterDistrict",
+		component: WaterDistrict,
+		props: true,
+	},
 	{
 		path: "/status",
-		name: "Status",
-		component: Status,
+		name: "StatusBase",
+		component: StatusBase,
 	},
 	{
 		path: "/water",

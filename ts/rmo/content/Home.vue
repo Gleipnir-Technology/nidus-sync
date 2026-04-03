@@ -5,7 +5,6 @@
 }
 </style>
 <template>
-	<!-- Main Content -->
 	<main>
 		<slot name="header"></slot>
 
@@ -25,7 +24,7 @@
 									Report areas with high adult mosquito activity causing
 									discomfort or concern.
 								</p>
-								<RouterLink to="/nuisance" class="btn btn-primary mt-3"
+								<RouterLink :to="link('nuisance')" class="btn btn-primary mt-3"
 									>Report Problem</RouterLink
 								>
 							</div>
@@ -42,7 +41,7 @@
 									Report any water that has been sitting for several days, where
 									mosquitoes can live.
 								</p>
-								<RouterLink to="/water" class="btn btn-primary mt-3"
+								<RouterLink :to="link('water')" class="btn btn-primary mt-3"
 									>Report Source</RouterLink
 								>
 							</div>
@@ -59,7 +58,7 @@
 									Check on a previous request or view current mosquito activity
 									in your area.
 								</p>
-								<RouterLink to="/status" class="btn btn-primary mt-3"
+								<RouterLink :to="link('status')" class="btn btn-primary mt-3"
 									>Get Status</RouterLink
 								>
 							</div>
@@ -71,4 +70,16 @@
 	</main>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+interface Props {
+	slug?: string;
+}
+const props = defineProps<Props>();
+const link = (path: string): string => {
+	if (props.slug) {
+		return `/district/${props.slug}/${path}`;
+	} else {
+		return path;
+	}
+};
+</script>
