@@ -12,10 +12,11 @@ import (
 )
 
 type ContentDistrict struct {
-	Name       string
-	URLLogo    string
-	URLRMO     string
-	URLWebsite string
+	Name        string
+	OfficePhone string
+	URLLogo     string
+	URLRMO      string
+	URLWebsite  string
 }
 type ContentDistrictList struct {
 	Districts []ContentDistrict
@@ -59,9 +60,10 @@ func newContentDistrict(d *models.Organization) *ContentDistrict {
 		return nil
 	}
 	return &ContentDistrict{
-		Name:       d.Name,
-		URLLogo:    config.MakeURLNidus("/api/district/%s/logo", d.Slug.GetOr("unset")),
-		URLRMO:     config.MakeURLReport("/district/%s", d.Slug.GetOr("unset")),
-		URLWebsite: d.Website.GetOr(""),
+		Name:        d.Name,
+		OfficePhone: "123-456-7890",
+		URLLogo:     config.MakeURLNidus("/api/district/%s/logo", d.Slug.GetOr("unset")),
+		URLRMO:      config.MakeURLReport("/district/%s", d.Slug.GetOr("unset")),
+		URLWebsite:  d.Website.GetOr(""),
 	}
 }
