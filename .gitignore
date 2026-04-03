@@ -7,6 +7,7 @@ flogo.log
 nidus-sync
 nidus-sync.log
 node_modules/
+postgrid/cmd/send-pdf/send-pdf
 result
 stadia/cmd/bulk-geocode/bulk-geocode
 stadia/cmd/reverse-geocode/reverse-geocode
