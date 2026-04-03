@@ -1,3 +1,11 @@
+<template>
+	<div id="app">
+		<h1>{{ message }}</h1>
+		<p>Count: {{ count }}</p>
+		<button @click="increment">Increment</button>
+	</div>
+</template>
+
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useHead } from "@vueuse/head";
@@ -10,6 +18,7 @@ const increment = (): void => {
 };
 
 // Reactive head management
+/*
 useHead({
 	title: computed(() => `Count: ${count.value} - My Vue App`),
 	link: [
@@ -20,12 +29,5 @@ useHead({
 		},
 	],
 });
+*/
 </script>
-
-<template>
-	<div id="app">
-		<h1>{{ message }}</h1>
-		<p>Count: {{ count }}</p>
-		<button @click="increment">Increment</button>
-	</div>
-</template>
