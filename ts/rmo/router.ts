@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 import Home from "@/rmo/view/Home.vue";
 import Nuisance from "@/rmo/view/Nuisance.vue";
+import Water from "@/rmo/view/Water.vue";
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
@@ -12,6 +13,11 @@ const routes: RouteRecordRaw[] = [
 		path: "/nuisance",
 		name: "Nuisance",
 		component: Nuisance,
+	},
+	{
+		path: "/water",
+		name: "Water",
+		component: Water,
 	},
 ];
 
