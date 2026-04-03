@@ -2,9 +2,7 @@ package rmo
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -12,8 +10,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	//"github.com/gorilla/mux"
 	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
@@ -83,65 +79,6 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonBody)
-}
-
-func parseLatLng(r *http.Request) (platform.LatLng, error) {
-	result := platform.LatLng{
-		AccuracyType:  enums.PublicreportAccuracytypeNone,
-		AccuracyValue: 0.0,
-		Latitude:      nil,
-		Longitude:     nil,
-		MapZoom:       0.0,
-	}
-	latitude_str := r.FormValue("latitude")
-	longitude_str := r.FormValue("longitude")
-	latlng_accuracy_type_str := r.PostFormValue("latlng-accuracy-type")
-	latlng_accuracy_value_str := r.PostFormValue("latlng-accuracy-value")
-	map_zoom_str := r.PostFormValue("map-zoom")
-
-	var err error
-	if latlng_accuracy_type_str != "" {
-		err := result.AccuracyType.Scan(latlng_accuracy_type_str)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse accuracy type '%s': %w", latlng_accuracy_type_str, err)
-		}
-	}
-	if latlng_accuracy_value_str != "" {
-		var t float64
-		t, err = strconv.ParseFloat(latlng_accuracy_value_str, 32)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse latlng_accuracy_value '%s': %w", latlng_accuracy_value_str, err)
-		}
-		result.AccuracyValue = float64(t)
-	}
-
-	if latitude_str != "" {
-		var t float64
-		t, err = strconv.ParseFloat(latitude_str, 64)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse latitude '%s': %w", latitude_str, err)
-		}
-		result.Latitude = &t
-	}
-	if longitude_str != "" {
-		var t float64
-		t, err := strconv.ParseFloat(longitude_str, 64)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse longitude '%s': %w", longitude_str, err)
-		}
-		result.Longitude = &t
-	}
-
-	if map_zoom_str != "" {
-		var t float64
-		t, err = strconv.ParseFloat(map_zoom_str, 32)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse map_zoom_str '%s': %w", map_zoom_str, err)
-		} else {
-			result.MapZoom = float32(t)
-		}
-	}
-	return result, nil
 }
 
 func partialSearchParam(p string) string {

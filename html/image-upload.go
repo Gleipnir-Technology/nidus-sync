@@ -1,4 +1,4 @@
-package rmo
+package html
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 	"net/http"
 )
 
-func extractImageUpload(headers *multipart.FileHeader) (upload platform.ImageUpload, err error) {
+func ExtractImageUpload(headers *multipart.FileHeader) (upload platform.ImageUpload, err error) {
 	f, err := headers.Open()
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
@@ -55,11 +55,11 @@ func extractImageUpload(headers *multipart.FileHeader) (upload platform.ImageUpl
 	}, nil
 }
 
-func extractImageUploads(r *http.Request) (uploads []platform.ImageUpload, err error) {
+func ExtractImageUploads(r *http.Request) (uploads []platform.ImageUpload, err error) {
 	uploads = make([]platform.ImageUpload, 0)
 	for _, fheaders := range r.MultipartForm.File {
 		for _, headers := range fheaders {
-			upload, err := extractImageUpload(headers)
+			upload, err := ExtractImageUpload(headers)
 			if err != nil {
 				return make([]platform.ImageUpload, 0), fmt.Errorf("Failed to extract photo upload: %w", err)
 			}

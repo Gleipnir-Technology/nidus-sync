@@ -1,9 +1,16 @@
-package rmo
+package html
 
 import (
 	"net/http"
 )
 
+func BoolFromForm(r *http.Request, k string) bool {
+	s := r.PostFormValue(k)
+	if s == "on" {
+		return true
+	}
+	return false
+}
 func postFormBool(r *http.Request, k string) *bool {
 	v := r.PostFormValue(k)
 	if v == "" {
@@ -17,7 +24,7 @@ func postFormBool(r *http.Request, k string) *bool {
 	return &result
 }
 
-func postFormValueOrNone(r *http.Request, k string) string {
+func PostFormValueOrNone(r *http.Request, k string) string {
 	v := r.PostFormValue(k)
 	if v == "" {
 		return "none"

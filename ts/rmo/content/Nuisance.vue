@@ -120,10 +120,9 @@ select.tall {
 
 			<!-- Report Form -->
 			<form
-				id="mosquitoNuisanceForm"
-				action="/api/rmo/nuisance"
-				method="POST"
+				@submit.prevent="doSubmit"
 				enctype="multipart/form-data"
+				ref="formElement"
 			>
 				<!-- Location Section -->
 				<div class="form-section">
@@ -456,6 +455,13 @@ select.tall {
 									rows="2"
 									placeholder="Describe any other potential breeding sites you've noticed..."
 								></textarea>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<label for="image" class="form-label"
+									>Please provide a photo or two of the breeding source</label
+								>
 								<ImageUpload v-model="images" />
 							</div>
 						</div>
@@ -497,7 +503,14 @@ select.tall {
 							</p>
 						</div>
 						<div class="col-md-4 text-md-end mt-3 mt-md-0">
-							<button type="submit" class="btn btn-primary btn-lg">
+							<div v-if="errorMessage" class="error-message">
+								✗ {{ errorMessage }}
+							</div>
+							<button
+								type="submit"
+								class="btn btn-primary btn-lg"
+								:disabled="isSubmitting"
+							>
 								Submit Report
 							</button>
 						</div>
@@ -517,7 +530,10 @@ import type { Location, Marker } from "@/types";
 import type { Address } from "@/type/stadia";
 
 const currentLocation = ref<Location | null>(null);
+const errorMessage = ref("");
+const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
+const isSubmitting = ref(false);
 const marker = ref<Marker | null>(null);
 
 const showMore = ref<boolean>(false);
@@ -561,5 +577,27 @@ function doMapMarkerDragEnd(location: Location) {
 		id: "x",
 		location: location,
 	};
+}
+async function doSubmit() {
+	if (!formElement.value) return;
+
+	isSubmitting.value = true;
+	errorMessage.value = "";
+	try {
+		const formData = new FormData(formElement.value);
+		images.value.forEach((image, index) => {
+			formData.append(`image[${index}]`, image.file, image.name);
+		});
+		await fetch("/api/rmo/nuisance", {
+			method: "POST",
+			body: formData,
+			// Don't set Content-Type, the borwser should do it
+		});
+	} catch (error) {
+		errorMessage.value =
+			error instanceof Error ? error.message : "Upload failed";
+	} finally {
+		isSubmitting.value = false;
+	}
 }
 </script>

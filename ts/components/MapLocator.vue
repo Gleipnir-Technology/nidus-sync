@@ -128,7 +128,7 @@ const frameMarkers = () => {
 
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
-		map.value.panTo(props.markers[0].location, { duration: 1000, zoom: 15 });
+		map.value.panTo(props.markers[0].location, { duration: 1000 });
 	} else {
 		// Multiple markers: fit bounds
 		const bounds = new maplibregl.LngLatBounds();

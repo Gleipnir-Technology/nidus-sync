@@ -3,17 +3,10 @@ package rmo
 import (
 	"fmt"
 	"net/http"
-	"slices"
-	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
-	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type ContentNuisance struct {
@@ -68,122 +61,4 @@ func getSubmitComplete(w http.ResponseWriter, r *http.Request) {
 			URL:      makeContentURL(nil),
 		},
 	)
-}
-func postNuisance(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	err := r.ParseMultipartForm(32 << 10) // 32 MB buffer
-	if err != nil {
-		respondError(w, "Failed to parse form", err, http.StatusBadRequest)
-		return
-	}
-	additional_info := r.PostFormValue("additional-info")
-	address_raw := r.PostFormValue("address")
-	address_country := r.PostFormValue("address-country")
-	address_locality := r.PostFormValue("address-locality")
-	address_number := r.PostFormValue("address-number")
-	address_postal_code := r.PostFormValue("address-postalcode")
-	address_region := r.PostFormValue("address-region")
-	address_street := r.PostFormValue("address-street")
-	duration_str := postFormValueOrNone(r, "duration")
-	source_stagnant := boolFromForm(r, "source-stagnant")
-	source_container := boolFromForm(r, "source-container")
-	source_description := r.PostFormValue("source-description")
-	source_gutters := boolFromForm(r, "source-gutters")
-	source_locations := r.Form["source-location"]
-	tod_early := boolFromForm(r, "tod-early")
-	tod_day := boolFromForm(r, "tod-day")
-	tod_evening := boolFromForm(r, "tod-evening")
-	tod_night := boolFromForm(r, "tod-night")
-
-	duration := enums.PublicreportNuisancedurationtypeNone
-	is_location_frontyard := false
-	is_location_backyard := false
-	is_location_garden := false
-	is_location_pool := false
-	is_location_other := false
-
-	latlng, err := parseLatLng(r)
-
-	err = duration.Scan(duration_str)
-	if err != nil {
-		log.Warn().Err(err).Str("duration_str", duration_str).Msg("Failed to interpret 'duration'")
-	}
-
-	//log.Debug().Strs("source_locations", source_locations).Msg("parsing")
-	if slices.Contains(source_locations, "backyard") {
-		is_location_backyard = true
-	}
-	if slices.Contains(source_locations, "frontyard") {
-		is_location_frontyard = true
-	}
-	if slices.Contains(source_locations, "garden") {
-		is_location_garden = true
-	}
-	if slices.Contains(source_locations, "other") {
-		is_location_other = true
-	}
-	if slices.Contains(source_locations, "pool-area") {
-		is_location_pool = true
-	}
-
-	uploads, err := extractImageUploads(r)
-	log.Info().Int("len", len(uploads)).Msg("extracted uploads")
-	if err != nil {
-		respondError(w, "Failed to extract image uploads", err, http.StatusInternalServerError)
-		return
-	}
-	address := platform.Address{
-		Country:    address_country,
-		Locality:   address_locality,
-		Number:     address_number,
-		PostalCode: address_postal_code,
-		Raw:        address_raw,
-		Region:     address_region,
-		Street:     address_street,
-		Unit:       "",
-	}
-	setter_report := models.PublicreportReportSetter{
-		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressRaw:        omit.From(address.Raw),
-		AddressCountry:    omit.From(address.Country),
-		AddressNumber:     omit.From(address.Number),
-		AddressLocality:   omit.From(address.Locality),
-		AddressPostalCode: omit.From(address.PostalCode),
-		AddressRegion:     omit.From(address.Region),
-		AddressStreet:     omit.From(address.Street),
-		Created:           omit.From(time.Now()),
-		//H3cell:              omitnull.From(latlng.Cell.String()),
-		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
-		LatlngAccuracyValue: omit.From(float32(latlng.AccuracyValue)),
-		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
-		Location: omitnull.FromPtr[string](nil),
-		MapZoom:  omit.From(latlng.MapZoom),
-		//OrganizationID:    omitnull.FromPtr(organization_id),
-		//PublicID:          omit.From(public_id),
-		ReporterEmail: omit.From(""),
-		ReporterName:  omit.From(""),
-		ReporterPhone: omit.From(""),
-		ReportType:    omit.From(enums.PublicreportReporttypeNuisance),
-		Status:        omit.From(enums.PublicreportReportstatustypeReported),
-	}
-	setter_nuisance := models.PublicreportNuisanceSetter{
-		AdditionalInfo:      omit.From(additional_info),
-		Duration:            omit.From(duration),
-		IsLocationBackyard:  omit.From(is_location_backyard),
-		IsLocationFrontyard: omit.From(is_location_frontyard),
-		IsLocationGarden:    omit.From(is_location_garden),
-		IsLocationOther:     omit.From(is_location_other),
-		IsLocationPool:      omit.From(is_location_pool),
-		//ReportID            omit.Val[int32]
-		SourceContainer:   omit.From(source_container),
-		SourceDescription: omit.From(source_description),
-		SourceGutter:      omit.From(source_gutters),
-		SourceStagnant:    omit.From(source_stagnant),
-		TodDay:            omit.From(tod_day),
-		TodEarly:          omit.From(tod_early),
-		TodEvening:        omit.From(tod_evening),
-		TodNight:          omit.From(tod_night),
-	}
-	report, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, latlng, address, uploads)
-	http.Redirect(w, r, fmt.Sprintf("/submit-complete?report=%s", report.PublicID), http.StatusFound)
 }

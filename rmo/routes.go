@@ -8,11 +8,7 @@ import (
 
 func Router(r *mux.Router) {
 	r.HandleFunc("/", getRoot).Methods("GET")
-	r.HandleFunc("/nuisance", getNuisance).Methods("GET")
-	r.HandleFunc("/nuisance", postNuisance).Methods("POST")
 	r.HandleFunc("/submit-complete", getSubmitComplete).Methods("GET")
-	r.HandleFunc("/water", getWater).Methods("GET")
-	r.HandleFunc("/water", postWater).Methods("POST")
 
 	r.HandleFunc("/district", getDistrictList).Methods("GET")
 	r.HandleFunc("/district/{slug}", getRootDistrict).Methods("GET")
