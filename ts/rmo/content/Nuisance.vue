@@ -330,13 +330,14 @@ select.tall {
 				<button
 					id="toggle-additional"
 					class="btn btn-warning"
+					v-if="!showMore"
 					type="button"
-					@click="toggleCollapse()"
+					@click="showMore = true"
 				>
 					Click here to answer a few more questions to better help us solve your
 					mosquito problem
 				</button>
-				<div v-show="!isCollapsed" class="collapse">
+				<div :class="{ collapse: !showMore }">
 					<!-- Potential Sources Section -->
 					<div class="form-section">
 						<div class="section-heading">
@@ -519,10 +520,7 @@ const currentLocation = ref<Location | null>(null);
 const images = ref<Image[]>([]);
 const marker = ref<Marker | null>(null);
 
-const isCollapsed = ref<boolean>(true);
-const toggleCollapse = () => {
-	isCollapsed.value = !isCollapsed.value;
-};
+const showMore = ref<boolean>(false);
 const selectedAddress = ref<Address | null>(null);
 const markers = computed((): Marker[] => {
 	if (marker.value) {
