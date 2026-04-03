@@ -24,28 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 });
-document.addEventListener("init", () => {
-	const user = {
-		display_name: "",
-		initials: "",
-		notifications: [],
-		notification_counts: {
-			communication: 0,
-			home: 0,
-			review: 0,
-		},
-		organization: {
-			name: "",
-		},
-		role: "",
-		username: "",
-	};
-});
-interface GreetingComponent {
-	message: string;
-	name: string;
-	updateMessage(): void;
-}
 
 const pinia = createPinia();
 const app = createApp(App);

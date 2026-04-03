@@ -71,12 +71,4 @@
 	</main>
 </template>
 
-<script setup lang="ts">
-import { ref } from "vue";
-
-interface District {
-	name: string;
-	url_logo: string;
-}
-const district = ref<District | null>(null);
-</script>
+<script setup lang="ts"></script>

@@ -5,10 +5,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { onMounted, ref } from "vue";
 import { useHead } from "@vueuse/head";
 import { router } from "@/rmo/router";
+import { useDistrictStore } from "@/rmo/store/district";
+import type { District } from "@/rmo/type";
 
+const district = useDistrictStore();
 const count = ref<number>(0);
 const message = ref<string>("hey");
 
@@ -16,6 +19,16 @@ const increment = (): void => {
 	count.value++;
 };
 
+onMounted(() => {
+	district
+		.get()
+		.then((districts: District[]) => {
+			console.log("got districts");
+		})
+		.catch((e) => {
+			console.error("Failed to get districts", e);
+		});
+});
 // Reactive head management
 /*
 useHead({

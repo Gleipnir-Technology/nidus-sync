@@ -14,6 +14,7 @@ type districtR struct {
 
 type district struct {
 	Name    string `json:"name"`
+	Slug    string `json:"slug"`
 	URLLogo string `json:"url_logo"`
 }
 
@@ -40,6 +41,7 @@ func (res *districtR) List(ctx context.Context, r *http.Request, query QueryPara
 		}
 		districts = append(districts, &district{
 			Name:    org.Name(),
+			Slug:    slug,
 			URLLogo: logo,
 		})
 	}

@@ -1,3 +1,12 @@
+<style scoped>
+.district-logo {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	max-height: 88px;
+	width: auto;
+}
+</style>
 <template>
 	<Home>
 		<template #header>
@@ -20,14 +29,14 @@
 									For this area, mosquito control services are provided by
 								</p>
 								<h3 class="text-center">{{ district.name }}</h3>
-								<img class="district-logo" src="{{ district.url_logo }}" />
+								<img class="district-logo" :src="district.url_logo" />
 							</div>
 						</div>
 					</div>
 				</section>
 			</template>
 			<template v-else>
-				<p>loading</p>
+				<p>loading district...</p>
 			</template>
 		</template>
 	</Home>
@@ -35,11 +44,21 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { computedAsync } from "@vueuse/core";
 import Home from "@/rmo/content/Home.vue";
+import type { District } from "@/rmo/type";
+import { useDistrictStore } from "@/rmo/store/district";
 
-interface District {
-	name: string;
-	url_logo: string;
+interface Props {
+	slug: string;
 }
-const district = ref<District | null>(null);
+const props = defineProps<Props>();
+const districtStore = useDistrictStore();
+
+const district = computedAsync(async (): Promise<District | null> => {
+	const districts = await districtStore.get();
+	return (
+		districts.find((district: District) => district.slug == props.slug) || null
+	);
+});
 </script>
