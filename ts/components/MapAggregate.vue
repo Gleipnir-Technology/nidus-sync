@@ -27,8 +27,8 @@
 
 <script setup lang="ts">
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import maplibregl from "maplibre-gl";
+import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import { onMounted, onUnmounted, ref, shallowRef, type Ref } from "vue";
 import { Bounds, Marker } from "@/types";
 
@@ -37,7 +37,7 @@ interface Emits {
 }
 interface Props {
 	bounds?: Bounds;
-	markers: Marker[];
+	markers?: Marker[];
 	organizationId: number;
 	tegola: string;
 }

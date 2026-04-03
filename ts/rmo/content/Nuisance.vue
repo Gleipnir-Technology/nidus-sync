@@ -156,7 +156,14 @@ select.tall {
 					You can also click on the map to mark the location precisely
 				</p>
 				<div class="map-container">
-					<map-locator id="map"></map-locator>
+					<MapLocator
+						v-model="currentLocation"
+						:markers="markers"
+						:initial-zoom="15"
+						@click="doMapClick"
+						,
+						@marker-drag-end="doMapMarkerDragEnd"
+					/>
 				</div>
 				<input type="hidden" id="map-zoom" name="map-zoom" />
 				<input type="hidden" id="address-country" name="address-country" />
@@ -502,16 +509,34 @@ select.tall {
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
-import { Address } from "@/type/stadia";
+import MapLocator from "@/components/MapLocator.vue";
+import type { Location, Marker } from "@/types";
+import type { Address } from "@/type/stadia";
+
+const currentLocation = ref<Location | null>(null);
+const marker = ref<Marker | null>(null);
 
 const isCollapsed = ref<boolean>(true);
 const toggleCollapse = () => {
 	isCollapsed.value = !isCollapsed.value;
 };
 const selectedAddress = ref<Address | null>(null);
+const markers = computed((): Marker[] => {
+	if (marker.value) {
+		return [marker.value];
+	} else {
+		return [];
+	}
+});
 function doAddressSelected(address: Address) {
 	console.log("Address selected", address);
+}
+function doMapClick(location: Location) {
+	console.log("Map clicked", location);
+}
+function doMapMarkerDragEnd(location: Location) {
+	console.log("marker drag end", location);
 }
 </script>

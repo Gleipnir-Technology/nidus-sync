@@ -89,8 +89,8 @@ export interface MapClickEvent {
 	point: Point;
 }
 export interface Marker {
-	color: string;
-	draggable: boolean;
+	color?: string;
+	draggable?: boolean;
 	id: string;
 	location: Location;
 }
