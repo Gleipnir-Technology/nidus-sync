@@ -50,11 +50,12 @@
 
 					<div class="col-md-6">
 						<div class="mb-3 position-relative">
-							<address-input
+							<AddressSuggestion
+								v-model="selectedAddress"
 								placeholder="Start typing an address (min 3 characters)"
-								api-key=""
+								@address-selected="doAddressSelected"
 							>
-							</address-input>
+							</AddressSuggestion>
 						</div>
 					</div>
 				</div>
@@ -409,9 +410,15 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import AddressSuggestion from "@/components/AddressSuggestion.vue";
+import { Address } from "@/type/stadia";
 
 const isCollapsed = ref<boolean>(true);
 const toggleCollapse = () => {
 	isCollapsed.value = !isCollapsed.value;
 };
+const selectedAddress = ref<Address | null>(null);
+function doAddressSelected(address: Address) {
+	console.log("Address selected", address);
+}
 </script>
