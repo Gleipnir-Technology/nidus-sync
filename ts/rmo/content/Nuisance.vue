@@ -14,13 +14,12 @@
 	padding-bottom: 0;
 }
 .map-container {
-	background-color: #e9ecef;
 	border-radius: 10px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 	height: 500px;
-	display: flex;
 	align-items: center;
 	justify-content: center;
+	margin-bottom: 20px;
 	margin-top: 20px;
 }
 #map {

@@ -18,5 +18,5 @@ export function boundsMarkers(markers: Marker[]): LngLatBounds {
 	);
 }
 export function boundsDefault(): LngLatBounds {
-	return new LngLatBounds(new LngLat(-70, 50), new LngLat(-125, 25));
+	return new LngLatBounds(new LngLat(-125, 50), new LngLat(-70, 25));
 }

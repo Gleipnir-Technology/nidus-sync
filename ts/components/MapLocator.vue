@@ -54,7 +54,7 @@ const markerInstances: Ref<maplibregl.Marker[]> = shallowRef<
 >([]);
 
 function _bounds(): LngLatBoundsLike {
-	if (props.markers) {
+	if (props.markers.length > 0) {
 		return boundsMarkers(props.markers);
 	} else {
 		return boundsDefault();
