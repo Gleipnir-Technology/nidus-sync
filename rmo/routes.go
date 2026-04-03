@@ -18,6 +18,7 @@ func Router(r *mux.Router) {
 	r.HandleFunc("/district/{slug}", getRootDistrict).Methods("GET")
 	r.HandleFunc("/district/{slug}/compliance", getDistrictCompliance).Methods("GET")
 	r.HandleFunc("/district/{slug}/compliance/address", getDistrictComplianceAddress).Methods("GET")
+	r.HandleFunc("/district/{slug}/compliance/concern", getDistrictComplianceConcern).Methods("GET")
 	r.HandleFunc("/district/{slug}/nuisance", getNuisanceDistrict).Methods("GET")
 	//r.HandleFunc("/district/{slug}/nuisance-submit-complete", renderMock(mockNuisanceSubmitCompleteT)).Methods("GET")
 	//r.HandleFunc("/district/{slug}/status", renderMock(mockStatusT)).Methods("GET")
