@@ -499,10 +499,11 @@ select.tall {
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
+import { useLocationStore } from "@/store/location";
 import type { Location, Marker } from "@/types";
 import type { Camera } from "@/type/map";
 import type { Address } from "@/type/stadia";
@@ -516,6 +517,7 @@ const marker = ref<Marker | null>(null);
 
 const showMore = ref<boolean>(false);
 const selectedAddress = ref<Address | null>(null);
+const locationStore = useLocationStore();
 const markers = computed((): Marker[] => {
 	if (marker.value) {
 		return [marker.value];
@@ -626,4 +628,14 @@ async function doSubmit() {
 		isSubmitting.value = false;
 	}
 }
+onMounted(() => {
+	locationStore
+		.get()
+		.then((loc: GeolocationPosition) => {
+			console.log("got location");
+		})
+		.catch((e) => {
+			console.log("failed to get location", e);
+		});
+});
 </script>
