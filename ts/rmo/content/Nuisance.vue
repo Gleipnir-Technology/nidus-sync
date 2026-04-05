@@ -157,9 +157,7 @@ select.tall {
 					<MapLocator
 						v-model="currentCamera"
 						:markers="markers"
-						:initial-zoom="15"
 						@click="doMapClick"
-						,
 						@marker-drag-end="doMapMarkerDragEnd"
 					/>
 				</div>
