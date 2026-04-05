@@ -501,10 +501,11 @@ import { computed, onMounted, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
+import { useGeocodeStore } from "@/store/geocode";
 import { useLocationStore } from "@/store/location";
 import type { Location, Marker } from "@/types";
 import type { Camera } from "@/type/map";
-import type { Address } from "@/type/stadia";
+import type { Address, Geocode } from "@/type/stadia";
 
 const currentCamera = ref<Camera | null>(null);
 const errorMessage = ref("");
@@ -516,6 +517,7 @@ const marker = ref<Marker | null>(null);
 const showMore = ref<boolean>(false);
 const selectedAddress = ref<Address | null>(null);
 const locationStore = useLocationStore();
+const geocode = useGeocodeStore();
 const markers = computed((): Marker[] => {
 	if (marker.value) {
 		return [marker.value];
@@ -550,6 +552,14 @@ function doMapClick(location: Location) {
 		id: "x",
 		location: location,
 	};
+	geocode
+		.reverse(location)
+		.then((code: Geocode) => {
+			console.log("geocoded", code);
+		})
+		.catch((e) => {
+			console.error("failed to reverse geocode after map click", e);
+		});
 }
 function doMapMarkerDragEnd(location: Location) {
 	marker.value = {

@@ -1,0 +1,30 @@
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import type { Geocode } from "@/type/stadia";
+import type { Location } from "@/types";
+
+export const useGeocodeStore = defineStore("geocode", () => {
+	// State
+	const loading = ref(false);
+	const error = ref(null);
+
+	// Actions
+	async function reverse(location: Location): Promise<Geocode> {
+		loading.value = true;
+		error.value = null;
+		try {
+			const url = `https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=${location.lat}&point.lon=${location.lng}`;
+			const response = await fetch(url);
+			const data = (await response.json()) as Geocode;
+			return data;
+		} catch (err) {
+			console.error("Error loading signals:", err);
+			throw err;
+		}
+	}
+
+	return {
+		// Actions
+		reverse,
+	};
+});
