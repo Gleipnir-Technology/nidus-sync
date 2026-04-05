@@ -35,7 +35,6 @@ interface Properties {
 	precision?: string; // "centroid"
 	name: string;
 }
-
 export interface Geometry {
 	type: string;
 	coordinates: [number, number];

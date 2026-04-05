@@ -267,6 +267,9 @@ func allFeaturesIdenticalEnough(features []stadia.GeocodeFeature) bool {
 	return true
 }
 func maybeAddServiceArea(req stadia.RequestGeocode, org *models.Organization) {
+	if org == nil {
+		return
+	}
 	if org.ServiceAreaXmax.IsNull() ||
 		org.ServiceAreaYmax.IsNull() ||
 		org.ServiceAreaXmin.IsNull() ||

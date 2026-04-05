@@ -1,14 +1,15 @@
 package resource
 
 import (
-//"github.com/gorilla/schema"
+// "github.com/gorilla/schema"
 )
 
 type QueryParams struct {
-	Limit *int    `schema:"limit"`
-	Query *string `schema:"query"`
-	Sort  *string `schema:"sort"`
-	Type  *string `schema:"type"`
+	Limit          *int    `schema:"limit"`
+	OrganizationID *int    `schema:"org"`
+	Query          *string `schema:"query"`
+	Sort           *string `schema:"sort"`
+	Type           *string `schema:"type"`
 }
 
 func (qp QueryParams) SortOrDefault(default_name string, ascending bool) (string, bool) {

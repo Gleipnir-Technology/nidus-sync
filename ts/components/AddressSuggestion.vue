@@ -138,9 +138,11 @@ function handleInput() {
 
 async function fetchAddressSuggestions(text: string) {
 	try {
-		const url = `https://api.stadiamaps.com/geocoding/v2/autocomplete?text=${encodeURIComponent(
-			text,
-		)}&focus.point.lat=35&focus.point.lon=-115`;
+		const q = encodeURIComponent(text);
+		//const url = `https://api.stadiamaps.com/geocoding/v2/autocomplete?text=${encodeURIComponent(
+		//text,
+		//)}&focus.point.lat=35&focus.point.lon=-115`;
+		const url = `/api/geocode/suggestion?query=${q}`;
 
 		const response = await fetch(url);
 		const data = await response.json();
@@ -183,8 +185,10 @@ function formatAddressDisplay(address: Address): string {
 		const street = props.address_components.street ?? "";
 		const location = props.coarse_location ?? "";
 		return `${num} ${street}, ${location}`.trim();
-	} else {
+	} else if (props.name != "") {
 		return `${props.name ?? ""}, ${props.coarse_location ?? ""}`.trim();
+	} else {
+		return "???";
 	}
 }
 </script>

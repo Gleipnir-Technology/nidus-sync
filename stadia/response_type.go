@@ -98,7 +98,7 @@ type GeocodeMeta struct {
 // GeocodeFeature represents a GeoJSON feature in the response
 type GeocodeFeature struct {
 	Type       string            `json:"type"` // Should be "Feature"
-	Geometry   GeocodeGeometry   `json:"geometry"`
+	Geometry   *GeocodeGeometry  `json:"geometry"`
 	Properties GeocodeProperties `json:"properties"`
 }
 
@@ -113,6 +113,7 @@ type GeocodeProperties struct {
 	Addendum          map[string]interface{} `json:"addendum,omitempty"`
 	AddressComponents AddressComponents      `json:"address_components,omitempty"`
 	Accuracy          string                 `json:"accuracy"`          // 'point'
+	CoarseLocation    *string                `json:"coarse_location"`   // 'Riverton, UT, USA'
 	Confidence        float64                `json:"confidence"`        // 1
 	Context           Context                `json:"context,omitempty"` // bunch of stuff
 	Country           string                 `json:"country"`           // 'United States'
@@ -132,6 +133,7 @@ type GeocodeProperties struct {
 	MatchType         string                 `json:"match_type"`        // 'exact'
 	Name              string                 `json:"name"`              // '1234 Main St'
 	PostalCode        string                 `json:"postalcode"`        // '93618'
+	Precision         string                 `json:"precision"`         // 'centroid'
 	Region            string                 `json:"region"`            // 'California'
 	RegionA           string                 `json:"region_a"`          // 'CA'
 	RegionGID         string                 `json:"region_gid"`        // 'whosonfirst:region:85688637'
