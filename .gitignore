@@ -11,6 +11,7 @@ postgrid/cmd/send-pdf/send-pdf
 result
 stadia/cmd/bulk-geocode/bulk-geocode
 stadia/cmd/geocode-autocomplete/geocode-autocomplete
+stadia/cmd/geocode-bygid/geocode-bygid
 stadia/cmd/reverse-geocode/reverse-geocode
 stadia/cmd/structured-geocode/structured-geocode
 static/gen/
