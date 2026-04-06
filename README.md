@@ -2,6 +2,25 @@
 
 This is the software that powers [Nidus Cloud Sync](https://sync.nidus.cloud).
 
+## Administration
+
+### Password resets
+
+If you need to manually reset a password you can do so with:
+
+```
+$ nix-shell -p genpass
+$ genpass 12
+abc123abc123
+# this is from nidus, installed on deployment servers at the system layer
+$ passwordgen
+Please enter your password: abc123abc123
+Password: abc123abc123
+Hash: $2a$14$hdtoAtP7joczutY3bxaFqemBApH8xc5NbXLvDQqBfdzWV3jGSy4zi
+$ psql -d nidus-sync
+nidus-sync=> update user set password_hash='$2a$14$hdtoAtP7joczutY3bxaFqemBApH8xc5NbXLvDQqBfdzWV3jGSy4zi' where id=<something>;
+```
+
 ## Building from source
 
 First, you'll need [Nix](https://nix.dev).
