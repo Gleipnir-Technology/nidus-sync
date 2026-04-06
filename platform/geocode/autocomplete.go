@@ -23,7 +23,7 @@ func Autocomplete(ctx context.Context, org *models.Organization, address string)
 	maybeAddServiceArea(&req, org)
 	resp, err := client.GeocodeAutocomplete(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("client raw geocode failure on %s: %w", address, err)
+		return nil, fmt.Errorf("client geocode autocomplete failure on %s: %w", address, err)
 	}
 	result := make([]*AutocompleteResult, len(resp.Features))
 	for i, r := range resp.Features {

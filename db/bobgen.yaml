@@ -24,6 +24,7 @@ psql:
     - "fileupload"
     - "public"
     - "publicreport"
+    - "stadia"
     - "tile"
   shared_schema: "public"
   queries:

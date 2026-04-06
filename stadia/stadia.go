@@ -32,6 +32,10 @@ func NewStadiaMaps(api_key string) *StadiaMaps {
 	}
 }
 
+func (s *StadiaMaps) AddResponseMiddleware(m resty.ResponseMiddleware) {
+	s.client.SetResponseBodyUnlimitedReads(true)
+	s.client.AddResponseMiddleware(m)
+}
 func (s *StadiaMaps) Close() {
 	s.client.Close()
 }

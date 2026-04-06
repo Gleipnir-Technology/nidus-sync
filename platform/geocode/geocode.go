@@ -2,6 +2,7 @@ package geocode
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -10,13 +11,17 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	bobtypes "github.com/Gleipnir-Technology/bob/types"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
+	"github.com/aarondl/opt/omit"
 	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
+	"resty.dev/v3"
 )
 
 type GeocodeResult struct {
@@ -29,6 +34,22 @@ var client *stadia.StadiaMaps
 
 func InitializeStadia(key string) {
 	client = stadia.NewStadiaMaps(key)
+	client.AddResponseMiddleware(restyMiddleware)
+}
+func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
+	//log.Info().Msg("middleware")
+	ctx := context.Background()
+	var body bobtypes.JSON[json.RawMessage]
+	err := body.UnmarshalJSON(response.Bytes())
+	if err != nil {
+		return fmt.Errorf("unmarshal json in middleware: %w", err)
+	}
+	models.StadiaAPIRequests.Insert(&models.StadiaAPIRequestSetter{
+		CreatedAt: omit.From(time.Now()),
+		Request:   omit.From(response.Request.URL),
+		Response:  omit.From(body),
+	}).One(ctx, db.PGInstance.BobDB)
+	return nil
 }
 
 // Ensure the provided address exists. If it doesn't add it to the database.
@@ -215,6 +236,7 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 		Number:     feature.Properties.HouseNumber,
 		PostalCode: feature.Properties.PostalCode,
 		Region:     feature.Properties.Region,
+		Raw:        feature.Properties.FormattedAddressLine,
 		Street:     feature.Properties.Street,
 		Unit:       "",
 	}
