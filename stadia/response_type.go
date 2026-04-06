@@ -110,40 +110,44 @@ type GeocodeGeometry struct {
 
 // GeocodeProperties contains the properties of a geocoding result
 type GeocodeProperties struct {
-	Addendum          map[string]interface{} `json:"addendum,omitempty"`
-	AddressComponents AddressComponents      `json:"address_components,omitempty"`
-	Accuracy          string                 `json:"accuracy"`          // 'point'
-	CoarseLocation    *string                `json:"coarse_location"`   // 'Riverton, UT, USA'
-	Confidence        float64                `json:"confidence"`        // 1
-	Context           Context                `json:"context,omitempty"` // bunch of stuff
-	Country           string                 `json:"country"`           // 'United States'
-	CountryA          string                 `json:"country_a"`         // 'USA'
-	CountryCode       string                 `json:"country_code"`      // 'US'
-	CountryGID        string                 `json:"country_gid"`       // 'whosonfirst:country:85633793'
-	County            string                 `json:"county"`            // "Tulare County"
-	CountyA           string                 `json:"county_a"`          // 'TL'
-	CountyGID         string                 `json:"county_gid"`        // 'whosonfirst:county:102082895'
-	GID               string                 `json:"gid"`               // 'openaddresses:address:us/ca/tulare-addresses-county:fe9dfab3d45c4550'
-	HouseNumber       string                 `json:"housenumber"`       // '1234'
-	ID                string                 `json:"id"`                // us/ca/tulare-addresses-county:fe9dfab3d45c4550
-	Label             string                 `json:"label"`             // 1234 Main St, Dinuba, CA, USA
-	Layer             string                 `json:"layer"`             // 'address'
-	Locality          string                 `json:"locality"`          // 'Dinuba'
-	LocalityGID       string                 `json:"locality_gid"`      // 'whosonfirst:locality:85922491'
-	MatchType         string                 `json:"match_type"`        // 'exact'
-	Name              string                 `json:"name"`              // '1234 Main St'
-	PostalCode        string                 `json:"postalcode"`        // '93618'
-	Precision         string                 `json:"precision"`         // 'centroid'
-	Region            string                 `json:"region"`            // 'California'
-	RegionA           string                 `json:"region_a"`          // 'CA'
-	RegionGID         string                 `json:"region_gid"`        // 'whosonfirst:region:85688637'
-	Source            string                 `json:"source"`            // 'openaddresses'
-	SourceID          string                 `json:"source"`            // 'us/ca/tulare-addresses-county:fe9dfab3d45c4550'
-	Street            string                 `json:"street"`            // 'Main Street'
+	Addendum              map[string]interface{} `json:"addendum,omitempty"`
+	AddressComponents     AddressComponents      `json:"address_components,omitempty"`
+	Accuracy              string                 `json:"accuracy"`                // 'point'
+	CoarseLocation        *string                `json:"coarse_location"`         // 'Riverton, UT, USA'
+	Confidence            float64                `json:"confidence"`              // 1
+	Context               Context                `json:"context,omitempty"`       // bunch of stuff
+	Country               string                 `json:"country"`                 // 'United States'
+	CountryA              string                 `json:"country_a"`               // 'USA'
+	CountryCode           string                 `json:"country_code"`            // 'US'
+	CountryGID            string                 `json:"country_gid"`             // 'whosonfirst:country:85633793'
+	County                string                 `json:"county"`                  // "Tulare County"
+	CountyA               string                 `json:"county_a"`                // 'TL'
+	CountyGID             string                 `json:"county_gid"`              // 'whosonfirst:county:102082895'
+	FormattedAddressLine  string                 `json:"formatted_address_line"`  // '123 Main Street, Riverton, Utah 84065, United States of America'
+	FormattedAddressLines []string               `json:"formatted_address_lines"` // '123 Main Street', 'Riverton, Utah 84065', 'United States of America'
+	GID                   string                 `json:"gid"`                     // 'openaddresses:address:us/ca/tulare-addresses-county:fe9dfab3d45c4550'
+	HouseNumber           string                 `json:"housenumber"`             // '1234'
+	ID                    string                 `json:"id"`                      // us/ca/tulare-addresses-county:fe9dfab3d45c4550
+	Label                 string                 `json:"label"`                   // 1234 Main St, Dinuba, CA, USA
+	Layer                 string                 `json:"layer"`                   // 'address'
+	Locality              string                 `json:"locality"`                // 'Dinuba'
+	LocalityGID           string                 `json:"locality_gid"`            // 'whosonfirst:locality:85922491'
+	MatchType             string                 `json:"match_type"`              // 'exact'
+	Name                  string                 `json:"name"`                    // '1234 Main St'
+	PostalCode            string                 `json:"postalcode"`              // '93618'
+	Precision             string                 `json:"precision"`               // 'centroid'
+	Region                string                 `json:"region"`                  // 'California'
+	RegionA               string                 `json:"region_a"`                // 'CA'
+	RegionGID             string                 `json:"region_gid"`              // 'whosonfirst:region:85688637'
+	Source                string                 `json:"source"`                  // 'openaddresses'
+	Sources               []GeocodeSource        `json:"sources"`
+	SourceID              string                 `json:"source_id"` // 'us/ca/tulare-addresses-county:fe9dfab3d45c4550'
+	Street                string                 `json:"street"`    // 'Main Street'
 }
 
 // GeocodeSource represents a source of geocoding data
 type GeocodeSource struct {
+	FixitURL string `json:"fixit_url"`
 	Source   string `json:"source"`
 	SourceID string `json:"source_id"`
 }

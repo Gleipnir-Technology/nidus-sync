@@ -11,6 +11,8 @@ import (
 
 type AutocompleteResult struct {
 	Detail   string
+	GID      string
+	Layer    string // 'poi', 'postalcode', 'street',
 	Locality string
 }
 
@@ -29,9 +31,17 @@ func Autocomplete(ctx context.Context, org *models.Organization, address string)
 			log.Error().Str("type", r.Type).Msg("should be handled from Stadia")
 			continue
 		}
+		var locality string
+		if r.Properties.CoarseLocation != nil {
+			locality = *r.Properties.CoarseLocation
+		} else {
+			locality = "???"
+		}
 		result[i] = &AutocompleteResult{
 			Detail:   r.Properties.Name,
-			Locality: r.Properties.Locality,
+			GID:      r.Properties.GID,
+			Layer:    r.Properties.Layer,
+			Locality: locality,
 		}
 	}
 	return result, nil

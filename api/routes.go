@@ -74,6 +74,8 @@ func AddRoutes(r *mux.Router) {
 	district := resource.District(router)
 	r.Handle("/district", handlerJSONSlice(district.List)).Methods("GET")
 	geocode := resource.Geocode(router)
+	r.Handle("/geocode/by-gid/{id:.*}", handlerJSON(geocode.ByGID)).Methods("GET")
+	r.Handle("/geocode/reverse", handlerJSONPost(geocode.Reverse)).Methods("POST")
 	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
 
 	//r.HandleFunc("/district", apiGetDistrict).Methods("GET")

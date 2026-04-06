@@ -8,6 +8,7 @@ import (
 
 type Address struct {
 	Country    string `db:"country" json:"country"`
+	GID        string `db:"gid" json:"gid"`
 	Locality   string `db:"locality" json:"locality"`
 	Number     string `db:"number" json:"number"`
 	PostalCode string `db:"postal_code" json:"postal_code"`

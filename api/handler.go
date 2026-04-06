@@ -24,11 +24,12 @@ type ErrorAPI struct {
 var decoder = schema.NewDecoder()
 
 type handlerFunctionDelete func(context.Context, *http.Request, platform.User) *nhttp.ErrorWithStatus
-type handlerFunctionGet[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGet[T any] func(context.Context, *http.Request, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetImage func(context.Context, *http.Request, platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus)
 type handlerFunctionGetSlice[T any] func(context.Context, *http.Request, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetSliceAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
-type handlerFunctionPost[RequestType any] func(context.Context, *http.Request, RequestType) (string, *nhttp.ErrorWithStatus)
+type handlerFunctionPost[RequestType any, ResponseType any] func(context.Context, *http.Request, RequestType) (ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPostAuthenticated[RequestType any, ResponseType any] func(context.Context, *http.Request, platform.User, RequestType) (ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPostFormMultipart[RequestType any, ResponseType any] func(context.Context, *http.Request, RequestType) (*ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPutAuthenticated[RequestType any] func(context.Context, *http.Request, platform.User, RequestType) (string, *nhttp.ErrorWithStatus)
@@ -58,7 +59,7 @@ func authenticatedHandlerGetImage(f handlerFunctionGetImage) http.Handler {
 	})
 }
 
-func authenticatedHandlerJSON[T any](f handlerFunctionGet[T]) http.Handler {
+func authenticatedHandlerJSON[T any](f handlerFunctionGetAuthenticated[T]) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		ctx := r.Context()
 		var body []byte
@@ -189,6 +190,31 @@ func authenticatedHandlerPostMultipart[ResponseType any](f handlerFunctionPostAu
 		w.Write(body)
 	})
 }
+func handlerJSON[T any](f handlerFunctionGet[T]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		var body []byte
+		var params resource.QueryParams
+		err := decoder.Decode(&params, r.URL.Query())
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewBadRequest("failed to decode query: %w", err))
+			return
+		}
+		resp, e := f(ctx, r, params)
+		w.Header().Set("Content-Type", "application/json")
+		//log.Info().Str("template", template).Err(e).Msg("handler done")
+		if e != nil {
+			respondErrorStatus(w, e)
+			return
+		}
+		body, err = json.Marshal(resp)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
+			return
+		}
+		w.Write(body)
+	}
+}
 func handlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -215,7 +241,7 @@ func handlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.HandlerFunc {
 	}
 }
 
-func handlerJSONPost[RequestType any](f handlerFunctionPost[RequestType]) http.HandlerFunc {
+func handlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPost[RequestType, ResponseType]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		req, e := parseRequest[RequestType](r)
@@ -224,11 +250,16 @@ func handlerJSONPost[RequestType any](f handlerFunctionPost[RequestType]) http.H
 			return
 		}
 		ctx := r.Context()
-		path, e := f(ctx, r, *req)
+		resp, e := f(ctx, r, *req)
 		if e != nil {
 			return
 		}
-		http.Redirect(w, r, path, http.StatusFound)
+		body, err := json.Marshal(resp)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
+			return
+		}
+		w.Write(body)
 	}
 }
 func handlerFormPost[RequestType any, ResponseType any](f handlerFunctionPostFormMultipart[RequestType, ResponseType]) http.HandlerFunc {
