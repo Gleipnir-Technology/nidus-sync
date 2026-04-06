@@ -31,7 +31,8 @@ import {
 	shallowRef,
 	type Ref,
 } from "vue";
-import { Location, MapClickEvent, Marker, Point } from "@/types";
+import { MapClickEvent, Marker, Point } from "@/types";
+import type { Location } from "@/type/api";
 
 interface Emits {
 	(e: "map-click", event: MapClickEvent): void;
@@ -58,7 +59,7 @@ watch(
 	([newLocation]) => {
 		if (map.value) {
 			map.value.jumpTo({
-				center: [newLocation.lng, newLocation.lat],
+				center: [newLocation.longitude, newLocation.latitude],
 				zoom: 19,
 			});
 		}
@@ -70,7 +71,7 @@ const initializeMap = () => {
 
 	try {
 		map.value = new maplibregl.Map({
-			center: [props.location.lng, props.location.lat],
+			center: [props.location.longitude, props.location.latitude],
 			container: mapContainer.value,
 			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
 			zoom: 19,
@@ -110,8 +111,8 @@ const initializeMap = () => {
 			mapInstance.on("click", (e) => {
 				emit("map-click", {
 					location: {
-						lat: e.lngLat.lat,
-						lng: e.lngLat.lng,
+						latitude: e.lngLat.lat,
+						longitude: e.lngLat.lng,
 					},
 					map: mapInstance,
 					point: e.point,

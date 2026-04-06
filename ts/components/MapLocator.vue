@@ -22,7 +22,8 @@ import maplibregl from "maplibre-gl";
 import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import { onMounted, onUnmounted, ref, type Ref, shallowRef, watch } from "vue";
 import { boundsMarkers, boundsDefault } from "@/map-utils";
-import type { Location, Marker } from "@/types";
+import type { Marker } from "@/types";
+import type { Location } from "@/type/api";
 import type { Camera, MoveEndEventInternal } from "@/type/map";
 
 // Emits interface
@@ -71,8 +72,8 @@ const initializeMap = () => {
 		e.preventDefault();
 		console.log("internal click", e);
 		emit("click", {
-			lat: e.lngLat.lat,
-			lng: e.lngLat.lng,
+			latitude: e.lngLat.lat,
+			longitude: e.lngLat.lng,
 		});
 	});
 
@@ -99,7 +100,10 @@ const initializeMap = () => {
 function updateModel(_map: maplibregl.Map) {
 	const center = _map.getCenter();
 	const newCamera: Camera = {
-		location: center,
+		location: {
+			latitude: center.lat,
+			longitude: center.lng,
+		},
 		zoom: _map.getZoom(),
 	};
 	emit("update:modelValue", newCamera);
@@ -118,15 +122,18 @@ const updateMarkers = () => {
 			color: markerDef.color || "#FF0000",
 			draggable: markerDef.draggable ?? true,
 		})
-			.setLngLat(markerDef.location)
+			.setLngLat({
+				lat: markerDef.location.latitude,
+				lng: markerDef.location.longitude,
+			})
 			.addTo(map.value!);
 
 		if (markerDef.draggable ?? true) {
 			marker.on("dragend", () => {
 				const lngLat = marker.getLngLat();
 				emit("markerDragEnd", {
-					lat: lngLat.lat,
-					lng: lngLat.lng,
+					latitude: lngLat.lat,
+					longitude: lngLat.lng,
 				});
 			});
 		}
@@ -147,7 +154,10 @@ const frameMarkers = () => {
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
 		map.value.panTo(
-			props.markers[0].location,
+			{
+				lat: props.markers[0].location.latitude,
+				lng: props.markers[0].location.longitude,
+			},
 			{ duration: 1000, zoom: props.modelValue?.zoom },
 			{ isInternalUpdate: true },
 		);
@@ -155,7 +165,7 @@ const frameMarkers = () => {
 		// Multiple markers: fit bounds
 		const bounds = new maplibregl.LngLatBounds();
 		props.markers.forEach((marker) => {
-			bounds.extend([marker.location.lng, marker.location.lat]);
+			bounds.extend([marker.location.longitude, marker.location.latitude]);
 		});
 		map.value.fitBounds(
 			bounds,
@@ -171,7 +181,10 @@ watch(
 	(newLocation) => {
 		if (map.value && newLocation) {
 			map.value.panTo(
-				newLocation.location,
+				{
+					lat: newLocation.location.latitude,
+					lng: newLocation.location.longitude,
+				},
 				{ duration: 1000 },
 				{ isInternalUpdate: true },
 			);

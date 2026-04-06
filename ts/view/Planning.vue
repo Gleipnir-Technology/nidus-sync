@@ -67,7 +67,8 @@ import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { useSignalStore } from "@/store/signal";
 import { useSessionStore } from "@/store/session";
-import { Lead, Location, Point, Signal } from "@/types";
+import { Lead, Point, Signal } from "@/types";
+import type { Location } from "@/type/api";
 
 // Refs
 const mapTile = ref(null);
@@ -110,29 +111,6 @@ function doSendToOperations() {
 function doSplitLead() {
 	console.log("doSplitLead");
 }
-// Helper functions (outside component)
-const getBoundingBox = (points: Location[]) => {
-	if (!points || points.length === 0) {
-		return null;
-	}
-
-	let minLat = points[0].lat;
-	let maxLat = points[0].lat;
-	let minLng = points[0].lng;
-	let maxLng = points[0].lng;
-
-	for (const point of points) {
-		if (point.lat < minLat) minLat = point.lat;
-		if (point.lat > maxLat) maxLat = point.lat;
-		if (point.lng < minLng) minLng = point.lng;
-		if (point.lng > maxLng) maxLng = point.lng;
-	}
-
-	return new window.maplibregl.LngLatBounds(
-		new window.maplibregl.LngLat(minLng, minLat),
-		new window.maplibregl.LngLat(maxLng, maxLat),
-	);
-};
 const markers = computed(() => {
 	return [];
 });
@@ -151,7 +129,7 @@ const updateMap = (signals: Signal[]) => {
 		new window.maplibregl.Marker({
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([l.lng, l.lat]),
+		}).setLngLat([l.longitude, l.latitude]),
 	);
 
 	/*

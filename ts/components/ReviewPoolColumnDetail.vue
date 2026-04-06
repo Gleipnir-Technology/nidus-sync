@@ -34,10 +34,11 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="poolLocation.lng"
+							v-model="poolLocation.longitude"
 							:class="{
 								'border-warning':
-									poolLocation.lng !== selectedTask.pool?.location.lng,
+									poolLocation.longitude !==
+									selectedTask.pool?.location.longitude,
 							}"
 						/>
 					</div>
@@ -49,10 +50,11 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="poolLocation.lat"
+							v-model="poolLocation.latitude"
 							:class="{
 								'border-warning':
-									poolLocation.lat !== selectedTask.pool?.location?.lat,
+									poolLocation.latitude !==
+									selectedTask.pool?.location?.latitude,
 							}"
 						/>
 					</div>
@@ -150,13 +152,13 @@ import { useSessionStore } from "@/store/session";
 import {
 	Bounds,
 	Contact,
-	Location,
 	MapClickEvent,
 	Marker,
 	Pool,
 	ReviewTask,
 	User,
 } from "@/types";
+import type { Location } from "@/type/api";
 
 interface Props {
 	loading: boolean;
@@ -169,8 +171,8 @@ interface Props {
 const props = defineProps<Props>();
 const poolCondition = ref<string>("unknown");
 const poolLocation = ref<Location>({
-	lat: 0,
-	lng: 0,
+	latitude: 0,
+	longitude: 0,
 });
 const siteOwner = ref<Contact>({
 	has_email: false,

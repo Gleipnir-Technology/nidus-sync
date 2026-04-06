@@ -102,11 +102,11 @@ import {
 	Bounds,
 	Changes,
 	Contact,
-	Location,
 	MapClickEvent,
 	Marker,
 	ReviewTask,
 } from "@/types";
+import type { Location } from "@/type/api";
 
 interface FormData {
 	latitude: number;
@@ -147,7 +147,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // State
 const newPoolCondition = ref<string>("");
-const newPoolLocation = ref<Location>({ lat: 0, lng: 0 });
+const newPoolLocation = ref<Location>({ latitude: 0, longitude: 0 });
 const newOwnerName = ref<string>("");
 const newResidentName = ref<string>("");
 const error = ref<string | null>(null);
@@ -186,12 +186,12 @@ const changes = computed<Changes>(() => {
 	} else {
 		unchanged.push("condition");
 	}
-	if (newPoolLocation.value.lat != pool.site.location.lat) {
+	if (newPoolLocation.value.latitude != pool.site.location.latitude) {
 		updated.push("latitude");
 	} else {
 		unchanged.push("latitude");
 	}
-	if (newPoolLocation.value.lng != pool.site.location.lng) {
+	if (newPoolLocation.value.longitude != pool.site.location.longitude) {
 		updated.push("longitude");
 	} else {
 		unchanged.push("longitude");
@@ -260,14 +260,14 @@ function updateMap(task: ReviewTask): void {
 		new maplibregl.Marker({
 			color: "#FF0000",
 			draggable: false,
-		}).setLngLat([loc.lng, loc.lat]),
+		}).setLngLat([loc.longitude, loc.latitude]),
 	];
 
 	map.SetMarkers(markers);
 
 	const bounds = new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(loc.lng - 0.005, loc.lat - 0.005),
-		new maplibregl.LngLat(loc.lng + 0.005, loc.lat + 0.005),
+		new maplibregl.LngLat(loc.longitude - 0.005, loc.latitude - 0.005),
+		new maplibregl.LngLat(loc.longitude + 0.005, loc.latitude + 0.005),
 	);
 
 	map.FitBounds(bounds, {

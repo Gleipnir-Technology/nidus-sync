@@ -16,7 +16,8 @@
 
 <script setup lang="ts">
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
-import { Location, Marker } from "@/types";
+import { Location } from "@/type/api";
+import { Marker } from "@/types";
 import { useSessionStore } from "@/store/session";
 
 interface Props {

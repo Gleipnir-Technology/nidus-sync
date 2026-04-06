@@ -1,4 +1,4 @@
-import { Address } from "./types";
+import { Address } from "@/type/api";
 
 export function formatAddress(address?: Address): string {
 	if (!address) {

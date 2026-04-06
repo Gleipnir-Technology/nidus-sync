@@ -279,28 +279,32 @@ function updateMap() {
 	let max = loc;
 
 	for (const i of selectedCommunication.value?.public_report?.images ?? []) {
-		if (i.location != null && i.location.lat != 0 && i.location.lng != 0) {
+		if (
+			i.location != null &&
+			i.location.latitude != 0 &&
+			i.location.longitude != 0
+		) {
 			mapMarkers.value.push({
 				color: "#00FF00",
 				draggable: false,
 				id: new Date().toISOString(),
 				location: i.location,
 			});
-			min.lat = Math.min(min.lat, i.location.lat);
-			min.lng = Math.min(min.lng, i.location.lng);
-			max.lat = Math.max(max.lat, i.location.lat);
-			max.lng = Math.max(max.lng, i.location.lng);
+			min.latitude = Math.min(min.latitude, i.location.latitude);
+			min.longitude = Math.min(min.longitude, i.location.longitude);
+			max.latitude = Math.max(max.latitude, i.location.latitude);
+			max.longitude = Math.max(max.longitude, i.location.longitude);
 		}
 	}
 
 	mapBounds.value = {
 		max: {
-			lat: max.lat + 0.01,
-			lng: max.lng + 0.01,
+			latitude: max.latitude + 0.01,
+			longitude: max.longitude + 0.01,
 		},
 		min: {
-			lat: min.lat - 0.01,
-			lng: min.lng - 0.01,
+			latitude: min.latitude - 0.01,
+			longitude: min.longitude - 0.01,
 		},
 	};
 }

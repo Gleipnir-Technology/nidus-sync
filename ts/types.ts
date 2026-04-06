@@ -1,15 +1,6 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
+import { Address, Location } from "@/type/api";
 
-export interface Address {
-	country: string;
-	locality: string;
-	number: string;
-	postal_code: string;
-	raw: string;
-	region: string;
-	street: string;
-	unit: string;
-}
 export interface Bounds {
 	min: Location;
 	max: Location;
@@ -70,10 +61,6 @@ export interface Lead {
 	description: string;
 	id: number;
 	title: string;
-}
-export interface Location {
-	lat: number;
-	lng: number;
 }
 export interface LogEntry {
 	created: string;

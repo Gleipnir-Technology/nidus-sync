@@ -73,7 +73,8 @@ import PlanningColumnDetailEntry from "@/components/PlanningColumnDetailEntry.vu
 import TimeRelative from "@/components/TimeRelative.vue";
 import { shortAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
-import { Location, MapClickEvent, Marker, Signal } from "@/types";
+import { MapClickEvent, Marker, Signal } from "@/types";
+import type { Location } from "@/type/api";
 
 interface Props {
 	markers: Marker[];
@@ -125,8 +126,8 @@ const selectedSignalLocation = (): Location => {
 	const loc = first_pool?.location;
 	return (
 		loc || {
-			lat: 0,
-			lng: 0,
+			latitude: 0,
+			longitude: 0,
 		}
 	);
 };

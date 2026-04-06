@@ -1,5 +1,5 @@
 import maplibregl from "maplibre-gl";
-import type { Location } from "@/types";
+import type { Location } from "@/type/api";
 
 export interface Camera {
 	location: Location;

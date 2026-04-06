@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { Geocode } from "@/type/stadia";
-import type { Location } from "@/types";
+import type { Geocode, Location } from "@/type/api";
 
 export const useGeocodeStore = defineStore("geocode", () => {
 	// State
@@ -13,8 +12,16 @@ export const useGeocodeStore = defineStore("geocode", () => {
 		loading.value = true;
 		error.value = null;
 		try {
-			const url = `https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=${location.lat}&point.lon=${location.lng}`;
-			const response = await fetch(url);
+			//const url = `https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=${location.lat}&point.lon=${location.lng}`;
+
+			const url = "/api/geocode/reverse";
+			const response = await fetch(url, {
+				body: JSON.stringify(location),
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+			});
 			const data = (await response.json()) as Geocode;
 			return data;
 		} catch (err) {

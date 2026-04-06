@@ -142,9 +142,9 @@ select.tall {
 					<div class="col-md-6">
 						<div class="mb-3 position-relative">
 							<AddressSuggestion
-								v-model="selectedAddress"
+								v-model="address"
 								placeholder="Start typing an address (min 3 characters)"
-								@address-selected="doAddressSelected"
+								@suggestion-selected="doAddressSuggestionSelected"
 							>
 							</AddressSuggestion>
 						</div>
@@ -503,11 +503,13 @@ import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
 import { useLocationStore } from "@/store/location";
-import type { Location, Marker } from "@/types";
+import type { Marker } from "@/types";
+import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import type { Camera } from "@/type/map";
-import type { Address, Geocode } from "@/type/stadia";
 
+const address = ref<string>("");
 const currentCamera = ref<Camera | null>(null);
+const currentLocation = ref<Location | null>(null);
 const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
@@ -515,7 +517,7 @@ const isSubmitting = ref(false);
 const marker = ref<Marker | null>(null);
 
 const showMore = ref<boolean>(false);
-const selectedAddress = ref<Address | null>(null);
+const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 const locationStore = useLocationStore();
 const geocode = useGeocodeStore();
 const markers = computed((): Marker[] => {
@@ -525,13 +527,18 @@ const markers = computed((): Marker[] => {
 		return [];
 	}
 });
-function doAddressSelected(address: Address) {
-	console.log("Address selected", address);
-	const geom = address.geometry;
-	if (!geom) {
-		console.error("No geometry on address", address);
-		return;
-	}
+function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
+	console.log("Address suggestion selected", suggestion);
+
+	doAddressSuggestionDetails(suggestion);
+}
+async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
+	// Fetch full details for the selected suggestion
+	//const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${suggestion.properties.gid}`;
+	const url = `/api/geocode/by-gid/${suggestion.gid}`;
+	const response = await fetch(url);
+	const data = (await response.json()) as Geocode;
+
 	if (currentCamera.value) {
 		currentCamera.value.zoom = 15;
 	}
@@ -539,10 +546,7 @@ function doAddressSelected(address: Address) {
 		color: "#FF0000",
 		draggable: true,
 		id: "x",
-		location: {
-			lat: geom.coordinates[1],
-			lng: geom.coordinates[0],
-		},
+		location: data.location,
 	};
 }
 function doMapClick(location: Location) {
@@ -576,50 +580,18 @@ async function doSubmit() {
 	errorMessage.value = "";
 	try {
 		const formData = new FormData(formElement.value);
-		if (selectedAddress.value) {
-			const address = selectedAddress.value;
-			const props = address.properties;
-			const context = props.context || {};
-
-			formData.append("address-country", context.iso_3166_a3);
+		if (selectedSuggestion.value) {
+			formData.append("address-gid", selectedSuggestion.value.gid);
+		}
+		if (currentLocation.value) {
 			formData.append(
-				"address-locality",
-				context.whosonfirst?.locality?.name ?? "",
-			);
-			formData.append("address-number", props.address_components?.number ?? "");
-			formData.append(
-				"address-postalcode",
-				props.address_components?.postal_code ?? "",
+				"location_latitude",
+				currentLocation.value.latitude.toString(),
 			);
 			formData.append(
-				"address-region",
-				context.whosonfirst?.region?.abbreviation ?? "",
+				"location_longitude",
+				currentLocation.value.longitude.toString(),
 			);
-			formData.append("address-street", props.address_components?.street ?? "");
-			formData.append(
-				"latitude",
-				address.geometry?.coordinates[1].toString() ?? "0",
-			);
-			formData.append(
-				"longitude",
-				address.geometry?.coordinates[0].toString() ?? "0",
-			);
-			formData.append("latlng-accuracy-type", props.precision ?? "");
-			formData.append(
-				"latlng-accuracy-value",
-				props.distance?.toString() ?? "",
-			);
-		} else {
-			formData.append("address-country", "");
-			formData.append("address-locality", "");
-			formData.append("address-number", "");
-			formData.append("address-postalcode", "");
-			formData.append("address-region", "");
-			formData.append("address-street", "");
-			formData.append("latitude", "0");
-			formData.append("longitude", "0");
-			formData.append("latlng-accuracy-type", "");
-			formData.append("latlng-accuracy-value", "");
 		}
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
@@ -640,7 +612,12 @@ onMounted(() => {
 	locationStore
 		.get()
 		.then((loc: GeolocationPosition) => {
-			console.log("got location");
+			const coords = loc.coords;
+			currentLocation.value = coords;
+			if (currentCamera.value) {
+				currentCamera.value.location = coords;
+				currentCamera.value.zoom = 15;
+			}
 		})
 		.catch((e) => {
 			console.log("failed to get location", e);

@@ -44,7 +44,7 @@ function location(signal: Signal): string {
 	if (signal.address != null) {
 		return shortAddress(signal.address);
 	} else {
-		return `${signal.location.lat}, ${signal.location.lng}`;
+		return `${signal.location.latitude}, ${signal.location.longitude}`;
 	}
 }
 function title(signal: Signal): string {

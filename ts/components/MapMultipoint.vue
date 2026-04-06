@@ -46,8 +46,8 @@ const props = withDefaults(defineProps<Props>(), {
 	// default bounds cover a bunch of the continental US
 	bounds: () => {
 		return {
-			max: { lng: -70, lat: 50 },
-			min: { lng: -125, lat: 25 },
+			max: { longitude: -70, latitude: 50 },
+			min: { longitude: -125, latitude: 25 },
 		};
 	},
 });
@@ -61,8 +61,8 @@ watch(
 	() => props.bounds,
 	(newBounds) => {
 		const bounds = new maplibregl.LngLatBounds(
-			new maplibregl.LngLat(newBounds.min.lng, newBounds.min.lat),
-			new maplibregl.LngLat(newBounds.max.lng, newBounds.max.lat),
+			new maplibregl.LngLat(newBounds.min.longitude, newBounds.min.latitude),
+			new maplibregl.LngLat(newBounds.max.longitude, newBounds.max.latitude),
 		);
 		if (map.value == null) {
 			return;
@@ -83,8 +83,8 @@ watch(
 
 function _bounds(): LngLatBoundsLike {
 	return new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(boundsSafe.min.lng, boundsSafe.min.lat),
-		new maplibregl.LngLat(boundsSafe.max.lng, boundsSafe.max.lat),
+		new maplibregl.LngLat(boundsSafe.min.longitude, boundsSafe.min.latitude),
+		new maplibregl.LngLat(boundsSafe.max.longitude, boundsSafe.max.latitude),
 	);
 }
 
@@ -163,7 +163,10 @@ function updateMarkers(markers: Marker[]) {
 		if (markerInstances.value.has(markerData.id)) {
 			// Update existing marker position
 			const marker = markerInstances.value.get(markerData.id)!;
-			marker.setLngLat([markerData.location.lng, markerData.location.lat]);
+			marker.setLngLat([
+				markerData.location.longitude,
+				markerData.location.latitude,
+			]);
 			console.log("updated", markerData);
 		} else {
 			// Create a new marker
@@ -171,7 +174,10 @@ function updateMarkers(markers: Marker[]) {
 				color: markerData.color,
 				draggable: markerData.draggable,
 			})
-				.setLngLat([markerData.location.lng, markerData.location.lat])
+				.setLngLat([
+					markerData.location.longitude,
+					markerData.location.latitude,
+				])
 				.addTo(map.value!);
 
 			markerInstances.value.set(markerData.id, marker);

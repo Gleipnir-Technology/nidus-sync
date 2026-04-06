@@ -47,8 +47,8 @@ const props = withDefaults(defineProps<Props>(), {
 	// default bounds cover a bunch of the continental US
 	bounds: () => {
 		return {
-			max: { lng: -70, lat: 50 },
-			min: { lng: -125, lat: 25 },
+			max: { longitude: -70, latitude: 50 },
+			min: { longitude: -125, latitude: 25 },
 		};
 	},
 });
@@ -59,8 +59,8 @@ const map: Ref<MapLibreMap | null> = shallowRef(null);
 
 function _bounds(): LngLatBoundsLike {
 	return new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(boundsSafe.min.lng, boundsSafe.min.lat),
-		new maplibregl.LngLat(boundsSafe.max.lng, boundsSafe.max.lat),
+		new maplibregl.LngLat(boundsSafe.min.longitude, boundsSafe.min.latitude),
+		new maplibregl.LngLat(boundsSafe.max.longitude, boundsSafe.max.latitude),
 	);
 }
 const initializeMap = () => {

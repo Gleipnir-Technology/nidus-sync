@@ -61,13 +61,13 @@
 		<div v-if="suggestions.length > 0" class="suggestions-container list-group">
 			<div
 				v-for="(suggestion, index) in suggestions"
-				:key="suggestion.properties.gid || index"
+				:key="suggestion.gid"
 				class="suggestion-item list-group-item"
 				@click="selectSuggestion(suggestion)"
 			>
-				<div class="main-address">{{ suggestion.properties.name }}</div>
+				<div class="main-address">{{ suggestion.detail }}</div>
 				<div class="place-info">
-					{{ suggestion.properties.coarse_location }}
+					{{ suggestion.type }} {{ suggestion.locality }}
 				</div>
 			</div>
 		</div>
@@ -76,41 +76,36 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { Address } from "@/type/stadia";
+import { GeocodeSuggestion } from "@/type/api";
 
 // Props
 interface Props {
-	modelValue?: Address | null;
+	modelValue?: string;
+	organizationID?: string;
 	placeholder?: string;
-	apiKey?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	modelValue: null,
+	modelValue: "",
 	placeholder: "Enter address",
-	apiKey: "",
 });
 
 // Emits
 const emit = defineEmits<{
-	"update:modelValue": [value: Address | null];
-	"address-selected": [address: Address];
+	"update:modelValue": [value: string];
+	"suggestion-selected": [address: GeocodeSuggestion];
 }>();
 
 // State
 const searchText = ref("");
-const suggestions = ref<Address[]>([]);
+const suggestions = ref<GeocodeSuggestion[]>([]);
 const debounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 // Watch for external changes to modelValue
 watch(
 	() => props.modelValue,
 	(newValue) => {
-		if (newValue) {
-			searchText.value = formatAddressDisplay(newValue);
-		} else {
-			searchText.value = "";
-		}
+		searchText.value = newValue;
 	},
 	{ immediate: true },
 );
@@ -134,61 +129,41 @@ function handleInput() {
 	debounceTimer.value = setTimeout(async () => {
 		await fetchAddressSuggestions(text);
 	}, 300);
+
+	// Update the model
+	emit("update:modelValue", text);
 }
 
 async function fetchAddressSuggestions(text: string) {
 	try {
 		const q = encodeURIComponent(text);
-		//const url = `https://api.stadiamaps.com/geocoding/v2/autocomplete?text=${encodeURIComponent(
-		//text,
-		//)}&focus.point.lat=35&focus.point.lon=-115`;
-		const url = `/api/geocode/suggestion?query=${q}`;
+		let url = `/api/geocode/suggestion?query=${q}`;
+		if (props.organizationID) {
+			url = url + "&org=" + props.organizationID;
+		}
 
 		const response = await fetch(url);
 		const data = await response.json();
-		suggestions.value = data.features || [];
+		suggestions.value = data || [];
 	} catch (error) {
 		console.error("Error fetching geocoding suggestions:", error);
 		suggestions.value = [];
 	}
 }
 
-async function selectSuggestion(suggestion: Address) {
+async function selectSuggestion(suggestion: GeocodeSuggestion) {
 	try {
-		// Fetch full details for the selected suggestion
-		const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${suggestion.properties.gid}`;
-		const response = await fetch(url);
-		const data = await response.json();
-		const fullAddress: Address = data.features[0];
-
 		// Update display text
-		searchText.value = formatAddressDisplay(fullAddress);
+		searchText.value = suggestion.detail + ", " + suggestion.locality;
 
 		// Clear suggestions
 		suggestions.value = [];
 
 		// Emit the full address object
-		emit("update:modelValue", fullAddress);
-		emit("address-selected", fullAddress);
+		//emit("update:modelValue", search);
+		emit("suggestion-selected", suggestion);
 	} catch (error) {
 		console.error("Error fetching place details:", error);
-	}
-}
-
-function formatAddressDisplay(address: Address): string {
-	const props = address.properties;
-
-	if (props.formatted_address_line) {
-		return props.formatted_address_line;
-	} else if (props.address_components) {
-		const num = props.address_components.number ?? "";
-		const street = props.address_components.street ?? "";
-		const location = props.coarse_location ?? "";
-		return `${num} ${street}, ${location}`.trim();
-	} else if (props.name != "") {
-		return `${props.name ?? ""}, ${props.coarse_location ?? ""}`.trim();
-	} else {
-		return "???";
 	}
 }
 </script>
