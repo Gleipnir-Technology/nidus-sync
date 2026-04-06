@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import { District } from "@/rmo/type";
+import { District } from "@/type/api";
 
 export const useDistrictStore = defineStore("district", () => {
 	const districts = ref<District[] | null>(null);

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
+import Compliance from "@/rmo/view/Compliance.vue";
 import HomeBase from "@/rmo/view/Home.vue";
 import HomeDistrict from "@/rmo/view/district/Home.vue";
 import NuisanceBase from "@/rmo/view/Nuisance.vue";
@@ -23,6 +24,12 @@ const routes: RouteRecordRaw[] = [
 		path: "/district/:slug",
 		name: "HomeDistrict",
 		component: HomeDistrict,
+		props: true,
+	},
+	{
+		path: "/district/:slug/compliance",
+		name: "Compliance",
+		component: Compliance,
 		props: true,
 	},
 	{

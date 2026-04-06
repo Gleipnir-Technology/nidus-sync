@@ -9,6 +9,12 @@ export interface Address {
 	street: string;
 	unit: string;
 }
+export interface District {
+	name: string;
+	phone_office: string;
+	slug: string;
+	url_logo: string;
+}
 export interface Location {
 	latitude: number;
 	longitude: number;

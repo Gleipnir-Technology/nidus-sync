@@ -31,7 +31,7 @@
 	</header>
 </template>
 <script setup lang="ts">
-import type { District } from "@/rmo/type";
+import type { District } from "@/type/api";
 interface Props {
 	district?: District;
 }

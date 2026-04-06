@@ -45,7 +45,7 @@
 import { ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 import Home from "@/rmo/content/Home.vue";
-import type { District } from "@/rmo/type";
+import type { District } from "@/type/api";
 import { useDistrictStore } from "@/rmo/store/district";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
 
