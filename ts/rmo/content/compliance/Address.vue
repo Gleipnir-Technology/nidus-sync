@@ -1,55 +1,8 @@
-{{ template "rmo/layout/base.html" . }}
-
-{{ define "title" }}Confirm Address{{ end }}
-{{ define "extraheader" }}
-	<style>
-		body {
-			background-color: #f8f9fa;
-		}
-
-		.progress-bar {
-			background-color: #0d6efd;
-			transition: width 0.3s ease;
-		}
-
-		.map-placeholder {
-			width: 100%;
-			height: 250px;
-			background-color: #e9ecef;
-			border: 2px dashed #6c757d;
-			border-radius: 8px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #6c757d;
-			font-size: 14px;
-		}
-
-		#address-input {
-			font-size: 16px;
-		}
-	</style>
-{{ end }}
-{{ define "content" }}
+<template>
 	<div class="container-fluid px-3 py-3">
+		<HeaderCompliance :district="district" />
 		<!-- Progress Bar -->
-		<div class="mb-4">
-			<div class="d-flex justify-content-between align-items-center mb-2">
-				<span class="small text-muted">Step 2 of 8</span>
-			</div>
-			<div class="progress" style="height: 8px;">
-				<div
-					class="progress-bar"
-					role="progressbar"
-					style="width: 25%;"
-					aria-valuenow="25"
-					aria-valuemin="0"
-					aria-valuemax="100"
-				></div>
-			</div>
-		</div>
-
-		<!-- Main Content -->
+		<ProgressBarCompliance :step="2" />
 		<main>
 			<h2 class="h4 mb-3">Confirm the property address</h2>
 
@@ -93,4 +46,13 @@
 			</form>
 		</main>
 	</div>
-{{ end }}
+</template>
+<script setup lang="ts">
+import type { District } from "@/type/api";
+import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+interface Props {
+	district: District;
+}
+const props = defineProps<Props>();
+</script>

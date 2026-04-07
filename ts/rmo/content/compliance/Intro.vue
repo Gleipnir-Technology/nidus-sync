@@ -1,22 +1,7 @@
 <template>
 	<div class="container-fluid px-3 py-3">
 		<HeaderCompliance :district="district" />
-		<!-- Progress Bar -->
-		<div class="mb-4">
-			<div class="d-flex justify-content-between align-items-center mb-2">
-				<span class="small text-muted">Step 1 of 8</span>
-			</div>
-			<div class="progress" style="height: 8px">
-				<div
-					class="progress-bar"
-					role="progressbar"
-					style="width: 12%"
-					aria-valuenow="12"
-					aria-valuemin="0"
-					aria-valuemax="100"
-				></div>
-			</div>
-		</div>
+		<ProgressBarCompliance :step="2" />
 
 		<!-- Main Content -->
 		<main>
@@ -35,7 +20,7 @@
 			</div>
 
 			<div class="d-grid mt-4">
-				<RouterLink class="btn btn-primary btn-lg" to="./address">
+				<RouterLink class="btn btn-primary btn-lg" to="./compliance/address">
 					Get Started</RouterLink
 				>
 			</div>
@@ -45,6 +30,7 @@
 <script setup lang="ts">
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 interface Props {
 	district: District;
 }

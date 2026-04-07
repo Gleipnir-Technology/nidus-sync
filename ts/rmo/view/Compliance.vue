@@ -17,7 +17,9 @@ body > .container-fluid {
 </style>
 <template>
 	<template v-if="district">
-		<Intro :district="district" />
+		<router-view v-slot="{ Component }">
+			<component :is="Component" :district="district" />
+		</router-view>
 	</template>
 	<template v-else>
 		<p>loading {{ slug }}...</p>

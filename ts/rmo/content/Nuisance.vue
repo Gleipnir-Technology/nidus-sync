@@ -612,12 +612,13 @@ onMounted(() => {
 	locationStore
 		.get()
 		.then((loc: GeolocationPosition) => {
+			console.log("user geolocation", loc);
 			const coords = loc.coords;
 			currentLocation.value = coords;
-			if (currentCamera.value) {
-				currentCamera.value.location = coords;
-				currentCamera.value.zoom = 15;
-			}
+			currentCamera.value = {
+				location: coords,
+				zoom: 15,
+			};
 		})
 		.catch((e) => {
 			console.log("failed to get location", e);
