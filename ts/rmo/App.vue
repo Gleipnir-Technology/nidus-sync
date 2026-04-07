@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useHead } from "@vueuse/head";
+//import { useHead } from "@vueuse/head";
 import { router } from "@/rmo/router";
 import { useDistrictStore } from "@/rmo/store/district";
 import type { District } from "@/type/api";
