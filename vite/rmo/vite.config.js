@@ -34,11 +34,11 @@ export default defineConfig({
 
 	build: {
 		manifest: true,
-		outDir: "static/gen",
+		outDir: "static/gen/rmo",
 		emptyOutDir: true,
 		rollupOptions: {
 			input: {
-				main: path.resolve(__dirname, "../ts/main-rmo.ts"),
+				main: path.resolve(__dirname, "./main.ts"),
 			},
 			output: {
 				entryFileNames: "js/bundle.[hash].js",

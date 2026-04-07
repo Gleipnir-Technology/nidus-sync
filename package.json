@@ -25,7 +25,8 @@
     "vue-tsc": "^3.2.6"
   },
   "scripts": {
-    "build": "vue-tsc && vite build",
+    "build-rmo": "vite build vite/rmo",
+    "build-sync": "vite build vite/sync",
     "dev-rmo": "vite serve vite/rmo",
     "dev-sync": "vite serve vite/sync",
     "generate-icons": "node generate-icons.js",
