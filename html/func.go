@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/static"
+	//"github.com/Gleipnir-Technology/nidus-sync/static"
 	"github.com/aarondl/opt/null"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -63,10 +63,12 @@ func bigNumber(n int) string {
 	return result.String()
 }
 func bundlePathCSS() string {
-	return static.BundlePathCSS
+	//return static.BundlePathCSS
+	return "nowhere"
 }
 func bundlePathJS() string {
-	return static.BundlePathJS
+	//return static.BundlePathJS
+	return "nowhere"
 }
 func displayUploadStatus(s string) string {
 	switch s {

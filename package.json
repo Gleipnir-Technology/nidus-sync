@@ -30,6 +30,8 @@
     "dev-rmo": "vite serve vite/rmo",
     "dev-sync": "vite serve vite/sync",
     "generate-icons": "node generate-icons.js",
+    "preview-rmo": "vite preview vite/rmo --port 9001",
+    "preview-sync": "vite preview vite/sync --port 9001",
     "typecheck": "vue-tsc --noEmit",
     "typecheck:watch": "vue-tsc --noEmit --watch"
   }

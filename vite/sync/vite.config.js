@@ -33,12 +33,12 @@ export default defineConfig({
 	},
 
 	build: {
-		manifest: true,
+		manifest: false,
 		outDir: "static/gen/sync",
 		emptyOutDir: true,
 		rollupOptions: {
 			input: {
-				main: path.resolve(__dirname, "./main.ts"),
+				main: path.resolve(__dirname, "./index.html"),
 			},
 			output: {
 				entryFileNames: "js/bundle.[hash].js",

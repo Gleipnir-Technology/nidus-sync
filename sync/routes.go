@@ -35,8 +35,9 @@ func Router(r *mux.Router) {
 	r.HandleFunc("/qr-code/mailer/{code}", getQRCodeMailer)
 	r.HandleFunc("/template-test", getTemplateTest)
 
-	r.HandleFunc("/", getRoot)
-	r.HandleFunc("/_/*", getRoot)
+	//r.HandleFunc("/", getRoot)
+	//r.HandleFunc("/_/*", getRoot)
 
 	static.AddStaticRoute(r, "/static")
+	r.PathPrefix("/").Handler(static.SinglePageApp("static/gen/sync"))
 }

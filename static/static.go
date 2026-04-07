@@ -2,6 +2,7 @@ package static
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -22,88 +23,120 @@ var embeddedStaticFS embed.FS
 // static files from a http.FileSystem.
 var startedTime time.Time = time.Now()
 
-var localFS http.Dir
+var localFS = http.Dir("./static")
 
 func AddStaticRoute(r *mux.Router, path string) {
-	if localFS == "" {
-		localFS = http.Dir("./static")
-		// Useful for debugging embedded file issues
-		if config.IsProductionEnvironment() {
-			fs.WalkDir(embeddedStaticFS, ".", func(path string, d fs.DirEntry, err error) error {
-				log.Debug().Str("path", path).Send()
-				return nil
-			})
+	fileServer(r, "/static/", localFS, embeddedStaticFS)
+}
+
+func SinglePageApp(gen_path string) http.Handler {
+	// Accept the path as relative from project root, but
+	// fix it to actually be relative to static filesystem root
+	path := strings.TrimPrefix(gen_path, "static/")
+	return spaHandler{
+		genRoot: path,
+	}
+
+}
+
+type spaHandler struct {
+	genRoot string
+}
+
+func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	request_path := r.URL.Path
+	path := h.genRoot + request_path
+	fileToServe, err := fileFromFilesystem(path)
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		// default to index file
+		fileToServe, err = fileFromFilesystem(h.genRoot + "/index.html")
+
+		if err != nil {
+			log.Error().Err(err).Msg("failed to open embedded index file")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
-	fileServer(r, "/static/", localFS, embeddedStaticFS)
+	serveFileMaybeEmbedded(w, r, *fileToServe, path)
 }
 
 func fileServer(r *mux.Router, path string, root http.FileSystem, embeddedFS embed.FS) {
 	log.Debug().Str("path", path).Msg("adding file server")
 	r.PathPrefix(path).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//rctx := chi.RouteContext(r.Context())
-
-		//pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
-		//pathPrefix := strings.TrimPrefix(r.URL.Path, "/static")
 		path := strings.TrimPrefix(r.URL.Path, "/static/")
-		//log.Debug().Str("path", path).Msg("handling request")
-
-		var err error
-		var fileToServe http.File
-		found := false
-
-		// For dev, try the current filesystem
-		if !config.IsProductionEnvironment() {
-			// Try to open from local filesystem for development
-			fileToServe, err = root.Open(path)
-			if err != nil {
-				log.Warn().Err(err).Str("path", path).Msg("Failed to read static file for dev")
-				found = false
-			} else {
-				found = true
-			}
-		}
-		// For production use the embedded filesystem
-		if !found {
-			// Requested paths start with
-			embeddedFile, err := embeddedFS.Open(path)
-
-			if err != nil {
-				log.Debug().Err(err).Str("embedded path", path).Msg("Failed to find resource")
+		fileToServe, err := fileFromFilesystem(path)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
 				http.NotFound(w, r)
-				return
-			}
-
-			// Wrap the embedded file to implement http.File interface
-			fileToServe = &embeddedFileWrapper{embeddedFile}
-		}
-
-		// Create a custom ResponseWriter that allows us to modify headers
-		crw := &customResponseWriter{ResponseWriter: w}
-
-		// Add caching headers
-		if config.IsProductionEnvironment() {
-			ext := filepath.Ext(path)
-			switch ext {
-			case ".css", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
-				// Cache for 1 week (604800 seconds)
-				crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
-			default:
-				// If it's a generated file, cache it essentially forever (1 year)
-				if strings.HasPrefix(path, "/static/gen/") {
-					crw.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-				} else {
-					// Other files, 1 hour
-					crw.Header().Set("Cache-Control", "public, max-age=3600")
-				}
 			}
 		}
-		// Serve the file
-		http.ServeContent(crw, r, path, startedTime, fileToServe)
-
-		// Close the file
-		fileToServe.Close()
+		serveFileMaybeEmbedded(w, r, *fileToServe, path)
 	})
+}
+
+func fileFromFilesystem(path string) (*http.File, error) {
+	var err error
+	var fileToServe http.File
+	found := false
+
+	// For dev, try the current filesystem
+	if !config.IsProductionEnvironment() {
+		// Try to open from local filesystem for development
+		fileToServe, err = localFS.Open(path)
+		if err != nil {
+			log.Warn().Err(err).Str("path", path).Msg("Failed to read static file for dev")
+			found = false
+		} else {
+			found = true
+		}
+	}
+	// For production use the embedded filesystem
+	if !found {
+		// Requested paths start with
+		embeddedFile, err := embeddedStaticFS.Open(path)
+
+		if err != nil {
+			return nil, fmt.Errorf("open embedded file: %w", err)
+		}
+
+		// Wrap the embedded file to implement http.File interface
+		fileToServe = &embeddedFileWrapper{embeddedFile}
+	}
+	return &fileToServe, nil
+}
+
+// Serve a file from the filesystem if we're in development mode or from the
+// embedded filesystem if we aren't
+func serveFileMaybeEmbedded(w http.ResponseWriter, r *http.Request, fileToServe http.File, path string) {
+	// Create a custom ResponseWriter that allows us to modify headers
+	crw := &customResponseWriter{ResponseWriter: w}
+
+	// Add caching headers
+	if config.IsProductionEnvironment() {
+		ext := filepath.Ext(path)
+		switch ext {
+		case ".css", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".woff", ".woff2", ".ttf":
+			// Cache for 1 week (604800 seconds)
+			crw.Header().Set("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400")
+		default:
+			// If it's a generated file, cache it essentially forever (1 year)
+			if strings.HasPrefix(path, "/static/gen/") {
+				crw.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				// Other files, 1 hour
+				crw.Header().Set("Cache-Control", "public, max-age=3600")
+			}
+		}
+	}
+	// Serve the file
+	http.ServeContent(crw, r, path, startedTime, fileToServe)
+
+	// Close the file
+	fileToServe.Close()
 }
 
 type embeddedFileWrapper struct {
