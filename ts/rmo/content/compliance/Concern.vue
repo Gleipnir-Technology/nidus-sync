@@ -1,3 +1,44 @@
+<style scoped>
+.observation-image {
+	width: 100%;
+	height: 200px;
+	background-color: #e9ecef;
+	border: 1px solid #dee2e6;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #6c757d;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.observation-image:hover {
+	border-color: #0d6efd;
+	box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
+}
+
+.observation-image .overlay {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	background: rgba(0, 0, 0, 0.7);
+	color: white;
+	padding: 8px;
+	font-size: 12px;
+	text-align: center;
+}
+
+.inspector-notes {
+	background-color: #fff;
+	border-left: 4px solid #0d6efd;
+	padding: 16px;
+	border-radius: 4px;
+}
+</style>
 <template>
 	<div class="container-fluid px-3 py-3">
 		<HeaderCompliance :district="district" />

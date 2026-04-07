@@ -1,3 +1,17 @@
+<style scoped>
+.benefit-box {
+	background-color: #d1ecf1;
+	border-left: 4px solid #0dcaf0;
+	padding: 16px;
+	border-radius: 4px;
+}
+
+.optional-badge {
+	font-size: 0.85rem;
+	color: #6c757d;
+	font-weight: normal;
+}
+</style>
 <template>
 	<div class="container-fluid px-3 py-3">
 		<HeaderCompliance :district="district" />
