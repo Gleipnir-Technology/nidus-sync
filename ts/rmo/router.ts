@@ -2,7 +2,14 @@ import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
 import Compliance from "@/rmo/view/Compliance.vue";
 import ComplianceAddress from "@/rmo/content/compliance/Address.vue";
+import ComplianceComplete from "@/rmo/content/compliance/Complete.vue";
+import ComplianceConcern from "@/rmo/content/compliance/Concern.vue";
+import ComplianceContact from "@/rmo/content/compliance/Contact.vue";
+import ComplianceEvidence from "@/rmo/content/compliance/Evidence.vue";
 import ComplianceIntro from "@/rmo/content/compliance/Intro.vue";
+import CompliancePermission from "@/rmo/content/compliance/Permission.vue";
+import ComplianceProcess from "@/rmo/content/compliance/Process.vue";
+import ComplianceSubmit from "@/rmo/content/compliance/Submit.vue";
 import HomeBase from "@/rmo/view/Home.vue";
 import HomeDistrict from "@/rmo/view/district/Home.vue";
 import NuisanceBase from "@/rmo/view/Nuisance.vue";
@@ -39,6 +46,41 @@ const routes: RouteRecordRaw[] = [
 				component: ComplianceAddress,
 				name: "ComplianceAddress",
 				path: "address",
+			},
+			{
+				component: ComplianceComplete,
+				name: "ComplianceComplete",
+				path: "complete",
+			},
+			{
+				component: ComplianceConcern,
+				name: "ComplianceConcern",
+				path: "concern",
+			},
+			{
+				component: ComplianceContact,
+				name: "ComplianceContact",
+				path: "contact",
+			},
+			{
+				component: ComplianceEvidence,
+				name: "ComplianceEvidence",
+				path: "evidence",
+			},
+			{
+				component: CompliancePermission,
+				name: "CompliancePermission",
+				path: "permission",
+			},
+			{
+				component: ComplianceProcess,
+				name: "ComplianceProcess",
+				path: "process",
+			},
+			{
+				component: ComplianceSubmit,
+				name: "ComplianceSubmit",
+				path: "submit",
 			},
 		],
 		component: Compliance,

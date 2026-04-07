@@ -1,3 +1,9 @@
+<style scoped>
+.progress-bar {
+	background-color: #0d6efd;
+	transition: width 0.3s ease;
+}
+</style>
 <template>
 	<div class="mb-4">
 		<div class="d-flex justify-content-between align-items-center mb-2">

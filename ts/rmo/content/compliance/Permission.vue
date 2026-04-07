@@ -1,10 +1,67 @@
-{{ template "rmo/layout/base.html" . }}
+<style scoped>
+.access-option {
+	background-color: #fff;
+	border: 2px solid #dee2e6;
+	border-radius: 8px;
+	padding: 16px;
+	margin-bottom: 12px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
 
-{{ define "title" }}Property Access{{ end }}
-{{ define "extraheader" }}
-{{ end }}
-{{ define "content" }}
+.access-option:hover {
+	border-color: #0d6efd;
+	background-color: #f8f9fa;
+}
+
+.access-option.selected {
+	border-color: #0d6efd;
+	background-color: #e7f1ff;
+}
+
+.access-option input[type="radio"] {
+	width: 20px;
+	height: 20px;
+	margin-right: 12px;
+	cursor: pointer;
+}
+
+.access-option label {
+	cursor: pointer;
+	margin-bottom: 0;
+	flex-grow: 1;
+}
+
+.conditional-section {
+	display: block;
+	margin-top: 16px;
+	padding: 16px;
+	background-color: #fff;
+	border-radius: 8px;
+	border-left: 4px solid #0d6efd;
+}
+
+.dog-warning {
+	background-color: #fff3cd;
+	border-left: 4px solid #ffc107;
+	padding: 12px;
+	border-radius: 4px;
+	margin-top: 12px;
+}
+
+.encouragement-box {
+	background-color: #d1ecf1;
+	border-left: 4px solid #0dcaf0;
+	padding: 16px;
+	border-radius: 4px;
+}
+</style>
+<template>
 	<div class="container-fluid px-3 py-3">
+		<HeaderCompliance :district="district" />
+		<!-- Progress Bar -->
+		<ProgressBarCompliance :step="5" />
+
 		<main>
 			<h2 class="h4 mb-3">Property access permission</h2>
 
@@ -21,13 +78,13 @@
 					>
 
 					<!-- Option 1: Enter without owner present -->
-					<div class="access-option" id="option-1" onclick="selectOption(1)">
+					<div class="access-option">
 						<div class="d-flex align-items-start">
 							<input
 								type="radio"
-								name="access_permission"
 								id="access-allowed"
 								value="allowed"
+								v-model="selectedPermission"
 								class="mt-1"
 							/>
 							<label for="access-allowed">
@@ -40,7 +97,10 @@
 					</div>
 
 					<!-- Conditional fields for Option 1 -->
-					<div id="section-1" class="conditional-section">
+					<div
+						v-if="selectedPermission == 'allowed'"
+						class="conditional-section"
+					>
 						<div class="mb-3">
 							<label for="access-instructions" class="form-label">
 								Access Instructions
@@ -86,17 +146,17 @@
 							<div class="form-check">
 								<input
 									class="form-check-input"
+									id="dog-yes"
 									type="radio"
 									name="has_dog"
-									id="dog-yes"
-									value="yes"
+									v-model="hasDog"
 									onchange="toggleDogWarning()"
 								/>
 								<label class="form-check-label" for="dog-yes"> Yes </label>
 							</div>
 						</div>
 
-						<div id="dog-warning" class="dog-warning" style="display: none;">
+						<div class="dog-warning" v-if="hasDog">
 							<small>
 								<i class="bi bi-exclamation-triangle"></i>
 								<strong>Important:</strong> Our staff will only enter if the dog
@@ -107,13 +167,13 @@
 					</div>
 
 					<!-- Option 2: Enter with owner present -->
-					<div class="access-option" id="option-2" onclick="selectOption(2)">
+					<div class="access-option">
 						<div class="d-flex align-items-start">
 							<input
 								type="radio"
-								name="access_permission"
 								id="access-with-owner"
 								value="with_owner"
+								v-model="selectedPermission"
 								class="mt-1"
 							/>
 							<label for="access-with-owner">
@@ -126,7 +186,10 @@
 					</div>
 
 					<!-- Conditional fields for Option 2 -->
-					<div id="section-2" class="conditional-section">
+					<div
+						class="conditional-section"
+						v-if="selectedPermission == 'with_owner'"
+					>
 						<div class="form-check mb-3">
 							<input
 								class="form-check-input"
@@ -156,13 +219,13 @@
 					</div>
 
 					<!-- Option 3: Not granting entry -->
-					<div class="access-option" id="option-3" onclick="selectOption(3)">
+					<div class="access-option">
 						<div class="d-flex align-items-start">
 							<input
 								type="radio"
-								name="access_permission"
 								id="access-denied"
 								value="denied"
+								v-model="selectedPermission"
 								class="mt-1"
 							/>
 							<label for="access-denied">
@@ -175,7 +238,10 @@
 					</div>
 
 					<!-- Conditional message for Option 3 -->
-					<div id="section-3" class="conditional-section">
+					<div
+						class="conditional-section"
+						v-if="selectedPermission == 'denied'"
+					>
 						<div class="encouragement-box">
 							<p class="mb-2">
 								<strong>We understand.</strong> Your cooperation is voluntary,
@@ -203,39 +269,31 @@
 
 				<!-- Navigation Buttons -->
 				<div class="d-flex gap-2 mt-4">
-					<a href="../compliance/evidence" class="btn btn-outline-secondary">
+					<RouterLink class="btn btn-outline-secondary" to="./evidence">
 						Back
-					</a>
-					<a class="btn btn-primary flex-grow-1" href="contact"> Continue </a>
+					</RouterLink>
+					<RouterLink class="btn btn-primary flex-grow-1" to="contact">
+						Continue
+					</RouterLink>
 				</div>
 			</form>
 		</main>
 	</div>
+</template>
+<script setup lang="ts">
+import { ref } from "vue";
+import type { District } from "@/type/api";
+import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+interface Props {
+	district: District;
+}
+const props = defineProps<Props>();
+const hasDog = ref<boolean>(false);
+const selectedPermission = ref<string>("");
 
-	<script>
-		function selectOption(optionNum) {
-			// Update radio button
-			const radios = document.querySelectorAll(
-				'input[name="access_permission"]',
-			);
-			radios[optionNum - 1].checked = true;
-
-			// Update visual state of options
-			for (let i = 1; i <= 3; i++) {
-				const option = document.getElementById(`option-${i}`);
-				const section = document.getElementById(`section-${i}`);
-
-				if (i === optionNum) {
-					option.classList.add("selected");
-					section.classList.add("active");
-				} else {
-					option.classList.remove("selected");
-					section.classList.remove("active");
-				}
-			}
-		}
-
-		function toggleDogWarning() {
+function toggleDogWarning() {
+	/*
 			const dogYes = document.getElementById("dog-yes");
 			const dogWarning = document.getElementById("dog-warning");
 
@@ -244,18 +302,6 @@
 			} else {
 				dogWarning.style.display = "none";
 			}
-		}
-
-		// Initialize - check if any option is pre-selected
-		document.addEventListener("DOMContentLoaded", function () {
-			const radios = document.querySelectorAll(
-				'input[name="access_permission"]',
-			);
-			radios.forEach((radio, index) => {
-				if (radio.checked) {
-					selectOption(index + 1);
-				}
-			});
-		});
-	</script>
-{{ end }}
+*/
+}
+</script>

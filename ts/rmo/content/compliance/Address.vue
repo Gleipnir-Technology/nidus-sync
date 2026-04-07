@@ -1,3 +1,21 @@
+<style scoped>
+.map-placeholder {
+	width: 100%;
+	height: 250px;
+	background-color: #e9ecef;
+	border: 2px dashed #6c757d;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #6c757d;
+	font-size: 14px;
+}
+
+#address-input {
+	font-size: 16px;
+}
+</style>
 <template>
 	<div class="container-fluid px-3 py-3">
 		<HeaderCompliance :district="district" />
@@ -40,8 +58,12 @@
 
 				<!-- Navigation Buttons -->
 				<div class="d-flex gap-2 mt-4">
-					<a class="btn btn-outline-secondary" href="../compliance"> Back </a>
-					<a class="btn btn-primary flex-grow-1" href="concern"> Continue </a>
+					<RouterLink class="btn btn-outline-secondary" to="../compliance">
+						Back
+					</RouterLink>
+					<RouterLink class="btn btn-primary flex-grow-1" to="./concern">
+						Continue
+					</RouterLink>
 				</div>
 			</form>
 		</main>

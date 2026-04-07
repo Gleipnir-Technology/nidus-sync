@@ -1,7 +1,7 @@
 <template>
 	<div class="container-fluid px-3 py-3">
 		<HeaderCompliance :district="district" />
-		<ProgressBarCompliance :step="2" />
+		<ProgressBarCompliance :step="1" />
 
 		<!-- Main Content -->
 		<main>
