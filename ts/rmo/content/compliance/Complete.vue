@@ -246,17 +246,17 @@
 			<div class="d-grid gap-2">
 				<template v-if="hasCompleteResponse">
 					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-telephone"></i>Remove useful and complete
+						<i class="bi bi-dash"></i>Remove useful and complete
 					</button>
 				</template>
 				<template v-else-if="hasUsefulInfo">
 					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-telephone"></i>Add complete response
+						<i class="bi bi-plus"></i>Add complete response
 					</button>
 				</template>
 				<template v-else>
 					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-telephone"></i>Add useful response
+						<i class="bi bi-plus"></i>Add useful response
 					</button>
 				</template>
 			</div>
