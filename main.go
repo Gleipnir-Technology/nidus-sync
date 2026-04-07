@@ -119,13 +119,13 @@ func main() {
 	rmo_router := r.Host(config.DomainRMO).Subrouter()
 
 	// Set up routing by hostname
-	nidussync.Router(sync_router)
 	sync_api_router := sync_router.PathPrefix("/api").Subrouter()
 	api.AddRoutes(sync_api_router)
+	nidussync.Router(sync_router)
 
-	rmo.Router(rmo_router)
 	rmo_api_router := rmo_router.PathPrefix("/api").Subrouter()
 	api.AddRoutes(rmo_api_router)
+	rmo.Router(rmo_router)
 
 	//hr.Map("", sr)                         // default
 	//hr.Map("*", sr)                        // default
