@@ -13,9 +13,10 @@ type districtR struct {
 }
 
 type district struct {
-	Name    string `json:"name"`
-	Slug    string `json:"slug"`
-	URLLogo string `json:"url_logo"`
+	Name        string `json:"name"`
+	PhoneOffice string `json:"phone_office"`
+	Slug        string `json:"slug"`
+	URLLogo     string `json:"url_logo"`
 }
 
 func District(r *router) *districtR {
@@ -40,9 +41,10 @@ func (res *districtR) List(ctx context.Context, r *http.Request, query QueryPara
 			return nil, nhttp.NewError("logo url: %w", err)
 		}
 		districts = append(districts, &district{
-			Name:    org.Name(),
-			Slug:    slug,
-			URLLogo: logo,
+			Name:        org.Name(),
+			PhoneOffice: org.PhoneOffice(),
+			Slug:        slug,
+			URLLogo:     logo,
 		})
 	}
 	return districts, nil

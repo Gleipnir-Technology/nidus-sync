@@ -138,7 +138,7 @@
 		<div class="district-branding">
 			<img :src="district.url_logo" :alt="district.name + 'logo'" />
 			<h1>{{ district.name }}</h1>
-			<div class="phone">
+			<div class="phone" v-if="district.phone_office">
 				<i class="bi bi-telephone"></i> {{ district.phone_office }}
 			</div>
 		</div>

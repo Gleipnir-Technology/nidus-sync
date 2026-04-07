@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { createHead } from "@vueuse/head";
 import { createPinia } from "pinia";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "@/gen/custom-icons.scss";
 import "@/style/rmo.scss";
 import router from "@/rmo/router";

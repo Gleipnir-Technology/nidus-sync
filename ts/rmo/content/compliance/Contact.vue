@@ -24,7 +24,7 @@
 			<div class="benefit-box mb-4">
 				<p class="mb-0">
 					<i class="bi bi-info-circle"></i>
-					<strong>Why share your contact information?</strong><br />
+					<strong> Why share your contact information?</strong><br />
 					<small>
 						Providing your contact information helps the District review your
 						response and coordinate with you if a visit is still needed. This

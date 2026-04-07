@@ -62,6 +62,9 @@ func (o Organization) MarshalJSON() ([]byte, error) {
 func (o Organization) Name() string {
 	return o.model.Name
 }
+func (o Organization) PhoneOffice() string {
+	return o.model.OfficePhone.GetOr("")
+}
 func (o Organization) IsSyncOngoing() bool {
 	return IsSyncOngoing(o.ID)
 }
