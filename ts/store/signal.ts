@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import { Signal } from "../types";
-import { SSEManager, type SSEMessage } from "../SSEManager";
+import { ref } from "vue";
+import { Signal } from "@/types";
+import { SSEManager, type SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 
 export const useSignalStore = defineStore("signal", () => {

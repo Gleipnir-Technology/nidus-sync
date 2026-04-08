@@ -16,7 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 func DistrictForReport(ctx context.Context, report_id string) (*models.Organization, error) {
@@ -56,14 +56,14 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id string, destination string) *ErrorWithCode {
+func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id string, destination string) error {
 	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
 	if e != nil {
-		return newInternalError(e, "Failed to find report")
+		return fmt.Errorf("Failed to find report: %w", e)
 	}
 	e = email.EnsureInDB(ctx, destination)
 	if e != nil {
-		return newInternalError(e, "Failed to ensure phone is in DB")
+		return fmt.Errorf("Failed to ensure phone is in DB: %w", e)
 	}
 	err := addNotificationEmail(ctx, txn, report, destination)
 	if err != nil {
@@ -73,14 +73,14 @@ func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id 
 	return nil
 }
 
-func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id string, phone types.E164) *ErrorWithCode {
+func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id string, phone types.E164) error {
 	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
 	if e != nil {
-		return newInternalError(e, "Failed to find report")
+		return fmt.Errorf("Failed to find report: %w", e)
 	}
 	e = text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
-		return newInternalError(e, "Failed to ensure phone is in DB")
+		return fmt.Errorf("Failed to ensure phone is in DB: %w", e)
 	}
 	err := addNotificationPhone(ctx, txn, report, phone)
 	if err != nil {
@@ -90,10 +90,10 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id 
 	return nil
 }
 
-func RegisterSubscriptionEmail(ctx context.Context, txn bob.Executor, destination string) *ErrorWithCode {
+func RegisterSubscriptionEmail(ctx context.Context, txn bob.Executor, destination string) error {
 	e := email.EnsureInDB(ctx, destination)
 	if e != nil {
-		return newInternalError(e, "Failed to ensure email is in DB")
+		return fmt.Errorf("Failed to ensure email is in DB: %w", e)
 	}
 	setter := models.PublicreportSubscribeEmailSetter{
 		Created: omit.From(time.Now()),
@@ -103,16 +103,15 @@ func RegisterSubscriptionEmail(ctx context.Context, txn bob.Executor, destinatio
 	}
 	_, err := models.PublicreportSubscribeEmails.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to save new subscription email row")
-		return newInternalError(err, "Failed to save new subscription email row")
+		return fmt.Errorf("Failed to save new subscription email row: %w", err)
 	}
 
 	return nil
 }
-func RegisterSubscriptionPhone(ctx context.Context, txn bob.Executor, phone types.E164) *ErrorWithCode {
+func RegisterSubscriptionPhone(ctx context.Context, txn bob.Executor, phone types.E164) error {
 	e := text.EnsureInDB(ctx, db.PGInstance.BobDB, phone)
 	if e != nil {
-		return newInternalError(e, "Failed to ensure phone is in DB")
+		return fmt.Errorf("Failed to ensure phone is in DB: %w", e)
 	}
 	setter := models.PublicreportSubscribePhoneSetter{
 		Created: omit.From(time.Now()),
@@ -122,16 +121,15 @@ func RegisterSubscriptionPhone(ctx context.Context, txn bob.Executor, phone type
 	}
 	_, err := models.PublicreportSubscribePhones.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to save new subscription phone row")
-		return newInternalError(err, "Failed to save new subscription phone row")
+		return fmt.Errorf("Failed to save new subscription phone row: %w", err)
 	}
 	return nil
 }
 
-func SaveReporter(ctx context.Context, txn bob.Executor, report_id string, name string, email string, phone *types.E164, has_consent bool) *ErrorWithCode {
+func SaveReporter(ctx context.Context, txn bob.Executor, report_id string, name string, email string, phone *types.E164, has_consent bool) error {
 	report, e := reportByPublicID(ctx, db.PGInstance.BobDB, report_id)
 	if e != nil {
-		return newInternalError(e, "Failed to find report")
+		return fmt.Errorf("Failed to find report: %w", e)
 	}
 	if name != "" {
 		err := updateReporterName(ctx, txn, report, name)
@@ -162,7 +160,7 @@ func reportByPublicID(ctx context.Context, txn bob.Executor, public_id string) (
 		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
 	).One(ctx, txn)
 }
-func addNotificationEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) *ErrorWithCode {
+func addNotificationEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) error {
 	setter := models.PublicreportNotifyEmailSetter{
 		Created:      omit.From(time.Now()),
 		Deleted:      omitnull.FromPtr[time.Time](nil),
@@ -171,11 +169,11 @@ func addNotificationEmail(ctx context.Context, txn bob.Executor, report *models.
 	}
 	_, err := models.PublicreportNotifyEmails.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newInternalError(err, "Failed to save new notification email row")
+		return fmt.Errorf("Failed to save new notification email row: %w", err)
 	}
 	return nil
 }
-func addNotificationPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) *ErrorWithCode {
+func addNotificationPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) error {
 	var err error
 	setter := models.PublicreportNotifyPhoneSetter{
 		Created:   omit.From(time.Now()),
@@ -185,39 +183,38 @@ func addNotificationPhone(ctx context.Context, txn bob.Executor, report *models.
 	}
 	_, err = models.PublicreportNotifyPhones.Insert(&setter).Exec(ctx, txn)
 	if err != nil {
-		return newInternalError(err, "Failed to save new notification phone row")
+		return fmt.Errorf("Failed to save new notification phone row: %w", err)
 	}
 	return nil
 }
-func updateReporterConsent(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, has_consent bool) *ErrorWithCode {
+func updateReporterConsent(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, has_consent bool) error {
 	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
 		ReporterContactConsent: omitnull.From(has_consent),
 	})
 }
-func updateReporterEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) *ErrorWithCode {
+func updateReporterEmail(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, email string) error {
 	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
 		ReporterEmail: omit.From(email),
 	})
 }
-func updateReporterName(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, name string) *ErrorWithCode {
+func updateReporterName(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, name string) error {
 	return updateReportCol(ctx, txn, report, &models.PublicreportReportSetter{
 		ReporterName: omit.From(name),
 	})
 }
-func updateReportCol(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, setter *models.PublicreportReportSetter) *ErrorWithCode {
+func updateReportCol(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, setter *models.PublicreportReportSetter) error {
 	err := report.Update(ctx, txn, setter)
 	if err != nil {
-		log.Error().Err(err).Str("public_id", report.PublicID).Int32("report_id", report.ID).Msg("Failed to update report")
-		return newInternalError(err, "Failed to update nuisance report in the database")
+		return fmt.Errorf("Failed to update nuisance report in the database: %w", err)
 	}
 	return nil
 }
-func updateReporterPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) *ErrorWithCode {
+func updateReporterPhone(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, phone types.E164) error {
 	err := report.Update(ctx, txn, &models.PublicreportReportSetter{
 		ReporterPhone: omit.From(phone.PhoneString()),
 	})
 	if err != nil {
-		return newInternalError(err, "Failed to update report: %w", err)
+		return fmt.Errorf("Failed to update report: %w", err)
 	}
 	return nil
 }

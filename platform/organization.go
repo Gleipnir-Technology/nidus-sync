@@ -89,6 +89,9 @@ func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.Field
 func (o Organization) Slug() string {
 	return o.model.Slug.GetOr("")
 }
+func (o Organization) Website() string {
+	return o.model.Website.GetOr("")
+}
 func OrganizationByID(ctx context.Context, id int) (*Organization, error) {
 	org, err := models.FindOrganization(ctx, db.PGInstance.BobDB, int32(id))
 	if err != nil {

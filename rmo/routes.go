@@ -52,5 +52,5 @@ func Router(r *mux.Router) {
 		r.HandleFunc("/terms-of-service", getTerms).Methods("GET")
 	*/
 	static.AddStaticRoute(r, "/static")
-	r.PathPrefix("/").Handler(static.SinglePageApp("static/gen/rmo"))
+	r.PathPrefix("/").Handler(static.SinglePageApp("static/gen/rmo")).Methods("GET")
 }

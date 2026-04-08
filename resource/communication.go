@@ -9,7 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
+	pr "github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -48,7 +48,7 @@ func toImageURLs(m map[string][]uuid.UUID, id string) []string {
 	return urls
 }
 func (res *communicationR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*communicationList, *nhttp.ErrorWithStatus) {
-	reports, err := publicreport.ReportsForOrganization(ctx, user.Organization.ID)
+	reports, err := pr.ReportsForOrganization(ctx, user.Organization.ID)
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}

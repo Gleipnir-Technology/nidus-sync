@@ -88,7 +88,7 @@ func fileFromFilesystem(path string) (*http.File, error) {
 		// Try to open from local filesystem for development
 		fileToServe, err = localFS.Open(path)
 		if err != nil {
-			log.Warn().Err(err).Str("path", path).Msg("Failed to read static file for dev")
+			//log.Warn().Err(err).Str("path", path).Msg("Failed to read static file for dev")
 			found = false
 		} else {
 			found = true

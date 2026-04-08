@@ -13,17 +13,17 @@ import { ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 import Nuisance from "@/rmo/content/Nuisance.vue";
 import type { District } from "@/type/api";
-import { useDistrictStore } from "@/rmo/store/district";
+import { useStoreDistrict } from "@/rmo/store/district";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
 
 interface Props {
 	slug: string;
 }
 const props = defineProps<Props>();
-const districtStore = useDistrictStore();
+const districtStore = useStoreDistrict();
 
 const district = computedAsync(async (): Promise<District | undefined> => {
-	const districts = await districtStore.get();
+	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
 });
 </script>

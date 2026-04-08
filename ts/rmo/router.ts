@@ -14,6 +14,7 @@ import HomeBase from "@/rmo/view/Home.vue";
 import HomeDistrict from "@/rmo/view/district/Home.vue";
 import NuisanceBase from "@/rmo/view/Nuisance.vue";
 import NuisanceDistrict from "@/rmo/view/district/Nuisance.vue";
+import ReportSubmitted from "@/rmo/view/ReportSubmitted.vue";
 import StatusBase from "@/rmo/view/Status.vue";
 import StatusDistrict from "@/rmo/view/district/Status.vue";
 import Water from "@/rmo/view/Water.vue";
@@ -104,6 +105,12 @@ const routes: RouteRecordRaw[] = [
 		path: "/district/:slug/water",
 		name: "WaterDistrict",
 		component: WaterDistrict,
+		props: true,
+	},
+	{
+		path: "/submitted/:id",
+		name: "ReportSubmitted",
+		component: ReportSubmitted,
 		props: true,
 	},
 	{

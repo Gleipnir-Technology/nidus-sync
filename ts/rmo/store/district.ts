@@ -1,13 +1,39 @@
-import { ref } from "vue";
 import { defineStore } from "pinia";
-import { District } from "@/type/api";
+import { ref } from "vue";
+import type { District } from "@/type/api";
 
-export const useDistrictStore = defineStore("district", () => {
-	const districts = ref<District[] | null>(null);
+export const useStoreDistrict = defineStore("district", () => {
+	// State
+	const _byURI = ref<Map<string, District>>(new Map());
 	const error = ref<string | null>(null);
 	const loading = ref<boolean>(false);
 	const ongoingFetch = ref<Promise<District[]> | null>(null);
 
+	// Actions
+	async function byURI(uri: string): Promise<District | undefined> {
+		let district = _byURI.value.get(uri);
+		if (district) {
+			return district;
+		}
+		loading.value = true;
+		error.value = null;
+		try {
+			const response = await fetch(uri);
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const body = await response.json();
+			_byURI.value.set(uri, body);
+			return body;
+		} catch (e) {
+			console.error("Error loading users:", e);
+			error.value = e instanceof Error ? e.message : "an error ocurred";
+			throw e;
+		} finally {
+			loading.value = false;
+		}
+	}
 	async function fetchDistricts(): Promise<District[]> {
 		loading.value = true;
 		error.value = null;
@@ -17,7 +43,9 @@ export const useDistrictStore = defineStore("district", () => {
 			if (!response.ok) throw new Error("Failed to fetch districts");
 
 			const data: District[] = await response.json();
-			districts.value = data;
+			data.forEach((d: District) => {
+				_byURI.value.set(d.uri, d);
+			});
 			return data;
 		} catch (e) {
 			error.value = e instanceof Error ? e.message : "an error ocurred";
@@ -27,9 +55,9 @@ export const useDistrictStore = defineStore("district", () => {
 			loading.value = false;
 		}
 	}
-	async function get(): Promise<District[]> {
-		if (districts.value != null) {
-			return districts.value;
+	async function list(): Promise<District[]> {
+		if (_byURI.value.size > 0) {
+			return Array.from(_byURI.value.values());
 		}
 
 		if (ongoingFetch.value !== null) {
@@ -37,12 +65,13 @@ export const useDistrictStore = defineStore("district", () => {
 		}
 
 		const s = await fetchDistricts();
-		districts.value = s;
 		ongoingFetch.value = null;
 		return s;
 	}
+
 	return {
-		error,
-		get,
+		// Actions
+		byURI,
+		list,
 	};
 });

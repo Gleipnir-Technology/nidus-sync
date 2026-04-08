@@ -25,13 +25,13 @@ import (
 )
 
 type SomeReport interface {
-	addNotificationEmail(context.Context, bob.Executor, string) *ErrorWithCode
-	addNotificationPhone(context.Context, bob.Executor, types.E164) *ErrorWithCode
+	addNotificationEmail(context.Context, bob.Executor, string) error
+	addNotificationPhone(context.Context, bob.Executor, types.E164) error
 	districtID(context.Context) *int32
-	updateReporterConsent(context.Context, bob.Executor, bool) *ErrorWithCode
-	updateReporterEmail(context.Context, bob.Executor, string) *ErrorWithCode
-	updateReporterName(context.Context, bob.Executor, string) *ErrorWithCode
-	updateReporterPhone(context.Context, bob.Executor, types.E164) *ErrorWithCode
+	updateReporterConsent(context.Context, bob.Executor, bool) error
+	updateReporterEmail(context.Context, bob.Executor, string) error
+	updateReporterName(context.Context, bob.Executor, string) error
+	updateReporterPhone(context.Context, bob.Executor, types.E164) error
 	PublicReportID() string
 	reportID() int32
 }

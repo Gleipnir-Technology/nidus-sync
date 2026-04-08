@@ -30,18 +30,18 @@ body > .container-fluid {
 import { computed, onMounted, ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 
-import { useDistrictStore } from "@/rmo/store/district";
+import { useStoreDistrict } from "@/rmo/store/district";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import type { District } from "@/type/api";
 interface Props {
 	slug: string;
 }
 
-const districtStore = useDistrictStore();
+const districtStore = useStoreDistrict();
 
 const props = defineProps<Props>();
 const district = computedAsync(async (): Promise<District | undefined> => {
-	const districts = await districtStore.get();
+	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
 });
 </script>

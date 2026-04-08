@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { Session, User } from "@/types";
+import { User } from "@/types";
 import { SSEManager, type SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 

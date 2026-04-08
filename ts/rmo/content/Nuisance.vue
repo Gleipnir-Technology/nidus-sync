@@ -535,8 +535,15 @@ import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
 import { useLocationStore } from "@/store/location";
+import { useStorePublicreport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
+import type {
+	Address,
+	Geocode,
+	GeocodeSuggestion,
+	Location,
+	Publicreport,
+} from "@/type/api";
 import type { Camera } from "@/type/map";
 
 const address = ref<string>("");
@@ -551,6 +558,7 @@ const marker = ref<Marker | null>(null);
 const showMore = ref<boolean>(false);
 const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 const locationStore = useLocationStore();
+const storePublicreport = useStorePublicreport();
 const geocode = useGeocodeStore();
 const markers = computed((): Marker[] => {
 	if (marker.value) {
@@ -641,8 +649,9 @@ async function doSubmit() {
 			body: formData,
 			// Don't set Content-Type, the borwser should do it
 		});
-		const data = await resp.json();
-		router.push("/complete/" + data.id);
+		const data: Publicreport = (await resp.json()) as Publicreport;
+		storePublicreport.add(data);
+		router.push("/submitted/" + data.id);
 	} catch (error) {
 		errorMessage.value =
 			error instanceof Error ? error.message : "Upload failed";

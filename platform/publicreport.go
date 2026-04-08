@@ -24,6 +24,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func PublicreportByID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
+	report, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, err
+	}
+	return report, nil
+}
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
 	report, err := reportFromID(ctx, user, report_id)
 	if err != nil {

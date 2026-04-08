@@ -39,5 +39,5 @@ func Router(r *mux.Router) {
 	//r.HandleFunc("/_/*", getRoot)
 
 	static.AddStaticRoute(r, "/static")
-	r.PathPrefix("/").Handler(static.SinglePageApp("static/gen/sync"))
+	r.PathPrefix("/").Handler(static.SinglePageApp("static/gen/sync")).Methods("GET")
 }

@@ -48,11 +48,14 @@ func (r *router) UUIDFromURI(route string, uri string) (*uuid.UUID, error) {
 }
 func (r *router) IDToURI(route string, id int) (string, error) {
 	i := strconv.FormatInt(int64(id), 10)
+	return r.IDStrToURI(route, i)
+}
+func (r *router) IDStrToURI(route string, id string) (string, error) {
 	handler := r.router.Get(route)
 	if handler == nil {
 		return "", fmt.Errorf("nil handler '%s'", route)
 	}
-	uri, err := handler.URL("id", i)
+	uri, err := handler.URL("id", id)
 	if err != nil {
 		return "", fmt.Errorf("build uri: %w", err)
 	}

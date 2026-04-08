@@ -28,7 +28,9 @@ type nuisanceR struct {
 	router *router
 }
 type nuisance struct {
-	ID string `json:"id"`
+	District string `json:"district"`
+	ID       string `json:"id"`
+	URI      string `json:"uri"`
 }
 type nuisanceForm struct {
 	AdditionalInfo      string   `schema:"additional-info"`
@@ -181,7 +183,17 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	if err != nil {
 		return nil, nhttp.NewError("create nuisance report: %w", err)
 	}
+	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
+	if err != nil {
+		return nil, nhttp.NewError("generate uri: %w", err)
+	}
+	district_uri, err := res.router.IDToURI("district.ByIDGet", int(report.OrganizationID))
+	if err != nil {
+		return nil, nhttp.NewError("generate district uri: %w", err)
+	}
 	return &nuisance{
-		ID: report.PublicID,
+		District: district_uri,
+		ID:       report.PublicID,
+		URI:      uri,
 	}, nil
 }

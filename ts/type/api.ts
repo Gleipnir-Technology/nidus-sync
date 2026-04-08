@@ -13,7 +13,9 @@ export interface District {
 	name: string;
 	phone_office: string;
 	slug: string;
+	uri: string;
 	url_logo: string;
+	url_website: string;
 }
 export interface Location {
 	latitude: number;
@@ -29,4 +31,9 @@ export interface Geocode {
 	address: Address;
 	cell: number;
 	location: Location;
+}
+export interface Publicreport {
+	district: string;
+	id: string;
+	uri: string;
 }

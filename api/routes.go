@@ -73,10 +73,15 @@ func AddRoutes(r *mux.Router) {
 	// Unauthenticated endpoints
 	district := resource.District(router)
 	r.Handle("/district", handlerJSONSlice(district.List)).Methods("GET")
+	r.Handle("/district/{id}", handlerJSON(district.GetByID)).Methods("GET").Name("district.ByIDGet")
 	geocode := resource.Geocode(router)
 	r.Handle("/geocode/by-gid/{id:.*}", handlerJSON(geocode.ByGID)).Methods("GET")
 	r.Handle("/geocode/reverse", handlerJSONPost(geocode.Reverse)).Methods("POST")
 	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
+	publicreport := resource.Publicreport(router)
+	r.Handle("/publicreport/{id}", handlerJSON(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")
+	publicreport_notification := resource.PublicreportNotification(router)
+	r.Handle("/publicreport-notification", handlerJSONPost(publicreport_notification.Create)).Methods("POST")
 
 	//r.HandleFunc("/district", apiGetDistrict).Methods("GET")
 	r.HandleFunc("/district/{slug}/logo", apiGetDistrictLogo).Methods("GET").Name("district.logo.BySlug")

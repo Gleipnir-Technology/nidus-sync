@@ -8,10 +8,10 @@
 import { onMounted, ref } from "vue";
 //import { useHead } from "@vueuse/head";
 import { router } from "@/rmo/router";
-import { useDistrictStore } from "@/rmo/store/district";
+import { useStoreDistrict } from "@/rmo/store/district";
 import type { District } from "@/type/api";
 
-const district = useDistrictStore();
+const district = useStoreDistrict();
 const count = ref<number>(0);
 const message = ref<string>("hey");
 
@@ -21,11 +21,11 @@ const increment = (): void => {
 
 onMounted(() => {
 	district
-		.get()
+		.list()
 		.then((districts: District[]) => {
 			console.log("got districts");
 		})
-		.catch((e) => {
+		.catch((e: Error) => {
 			console.error("Failed to get districts", e);
 		});
 });
