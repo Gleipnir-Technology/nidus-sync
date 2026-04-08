@@ -23,8 +23,6 @@ import (
 func addFuncMap(t *template.Template) {
 	funcMap := template.FuncMap{
 		"bigNumber":           bigNumber,
-		"bundlePathCSS":       bundlePathCSS,
-		"bundlePathJS":        bundlePathJS,
 		"displayUploadStatus": displayUploadStatus,
 		"displayUploadType":   displayUploadType,
 		"duration":            duration,
@@ -61,14 +59,6 @@ func bigNumber(n int) string {
 	}
 
 	return result.String()
-}
-func bundlePathCSS() string {
-	//return static.BundlePathCSS
-	return "nowhere"
-}
-func bundlePathJS() string {
-	//return static.BundlePathJS
-	return "nowhere"
 }
 func displayUploadStatus(s string) string {
 	switch s {
