@@ -105,6 +105,37 @@ select.tall {
 	border-left: 4px solid #0d6efd;
 	background-color: #f8f9fa;
 }
+.map-container {
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	height: 500px;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	/* Prevent touch scrolling issues */
+	touch-action: pan-y pinch-zoom;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+	.map-container {
+		height: 400px;
+		margin-bottom: 15px;
+		margin-top: 15px;
+	}
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+	.map-container {
+		height: 350px;
+		border-radius: 5px;
+	}
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+}
 </style>
 
 <template>
