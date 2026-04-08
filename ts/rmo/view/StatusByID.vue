@@ -1,15 +1,31 @@
 <style scoped>
+.map-container {
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	height: 500px;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	align-items: center;
+	justify-content: center;
+	/* Prevent touch scrolling issues */
+	touch-action: pan-y pinch-zoom;
+}
+#map {
+	width: 100%;
+	height: 100%;
+}
+.status-badge {
+	font-size: 1rem;
+}
 .timeline {
 	border-left: 3px solid #dee2e6;
 	padding-left: 20px;
 	margin-left: 10px;
 }
-
 .timeline-item {
 	position: relative;
 	margin-bottom: 25px;
 }
-
 .timeline-item:before {
 	content: "";
 	position: absolute;
@@ -20,17 +36,14 @@
 	border-radius: 50%;
 	background-color: #0d6efd;
 }
-
 .timeline-date {
 	font-size: 0.85rem;
 	color: #6c757d;
 }
-
-.status-badge {
-	font-size: 1rem;
-}
 </style>
 <template>
+	<HeaderDistrict v-if="district" />
+	<Header v-else />
 	<div class="container my-4" v-if="report">
 		<!-- Report ID and Status Section -->
 		<div class="card mb-4">
@@ -62,7 +75,7 @@
 				<div class="row">
 					<div class="col-md-12">
 						<strong><i class="bi bi-pin-map me-2"></i>Location:</strong>
-						<span>{{ report.address }}</span>
+						<span>{{ report.address.raw }}</span>
 					</div>
 				</div>
 				<div class="row">
@@ -91,6 +104,29 @@
 				</div>
 			</div>
 		</div>
+		<!-- History Timeline -->
+		<div class="card">
+			<div class="card-header bg-success text-white">
+				<h5 class="mb-0">
+					<i class="bi bi-clock-history me-2"></i>Request History
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="timeline">
+					<div
+						v-for="(item, index) in report.log"
+						:key="index"
+						class="timeline-item"
+					>
+						<div class="timeline-date">
+							{{ formatTimeRelative(item.created) }}
+						</div>
+						<h5 class="mb-1">{{ item.type }}</h5>
+						<p class="mb-0">{{ item.message }}</p>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 	<div class="container my-4" v-else>
 		<p>loading...</p>
@@ -99,6 +135,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { computedAsync } from "@vueuse/core";
+import Header from "@/rmo/components/Header.vue";
+import HeaderDistrict from "@/components/HeaderDistrict.vue";
 import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicreport } from "@/store/publicreport";
@@ -130,7 +168,7 @@ const markers = computed((): Marker[] => {
 	}
 	return [
 		{
-			id: report.value.id,
+			id: props.id,
 			location: report.value.location,
 		},
 	];

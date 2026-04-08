@@ -32,25 +32,49 @@ export interface Geocode {
 	cell: number;
 	location: Location;
 }
+export interface LogEntryDTO {
+	created: string;
+	message: string;
+	type: string;
+	user_id: number;
+}
+export class LogEntry {
+	constructor(
+		public created: Date,
+		public message: string,
+		public type: string,
+		public user_id: number,
+	) {}
+	static fromJSON(json: LogEntryDTO): LogEntry {
+		return new LogEntry(
+			new Date(json.created),
+			json.message,
+			json.type,
+			json.user_id,
+		);
+	}
+}
 export interface PublicreportDTO {
-	address: string;
+	address: Address;
 	created: string;
 	district: string;
 	id: string;
 	image_count: number;
 	location: Location;
+	log: LogEntryDTO[];
 	status: string;
 	type: string;
 	uri: string;
 }
 export class Publicreport {
 	constructor(
-		public address: string,
+		public address: Address,
 		public created: Date,
 		public district: string,
 		public id: string,
 		public image_count: number,
 		public location: Location,
+		public log: LogEntry[],
 		public status: string,
 		public type: string,
 		public uri: string,
@@ -63,6 +87,7 @@ export class Publicreport {
 			json.id,
 			json.image_count,
 			json.location,
+			json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
 			json.status,
 			json.type,
 			json.uri,

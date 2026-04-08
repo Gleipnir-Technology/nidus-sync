@@ -103,10 +103,10 @@ const updateMarkers = () => {
 				markerData.location.longitude,
 				markerData.location.latitude,
 			]);
-			marker.setDraggable(markerData.draggable ?? false);
+			marker.setDraggable(false);
 		} else {
 			marker = new maplibregl.Marker({
-				draggable: markerData.draggable ?? false,
+				draggable: false,
 			})
 				.setLngLat([
 					markerData.location.longitude,
@@ -117,6 +117,7 @@ const updateMarkers = () => {
 			mapMarkers.value.set(markerData.id, marker);
 		}
 	});
+	frameMarkers();
 };
 
 // Frame all markers in view
@@ -130,7 +131,7 @@ const frameMarkers = () => {
 				lat: props.markers[0].location.latitude,
 				lng: props.markers[0].location.longitude,
 			},
-			{ duration: 1000 },
+			{ duration: 1000, zoom: 15 },
 			{ isInternalUpdate: true },
 		);
 	} else {

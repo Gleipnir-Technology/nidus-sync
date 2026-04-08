@@ -18,20 +18,15 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
 )
 
-func PublicreportByID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
-	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-	).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, err
-	}
-	return report, nil
+func PublicreportByID(ctx context.Context, report_id string) (*types.Report, error) {
+	return publicreport.Report(ctx, report_id)
 }
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
 	report, err := reportFromID(ctx, user, report_id)

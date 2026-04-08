@@ -29,7 +29,7 @@ WHERE i.id IN (1, 2, 3, 4)
 GROUP BY i.id;
 */
 // Get all the images that belong to the list of report IDs
-func loadImagesForReport(ctx context.Context, org_id int32, report_ids []int32) (results map[int32][]types.Image, err error) {
+func loadImagesForReport(ctx context.Context, report_ids []int32) (results map[int32][]types.Image, err error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"i.storage_uuid AS uuid",

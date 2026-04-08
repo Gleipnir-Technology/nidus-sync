@@ -13,19 +13,6 @@
 	margin-bottom: 1rem;
 	padding-bottom: 0;
 }
-.map-container {
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-	height: 500px;
-	align-items: center;
-	justify-content: center;
-	margin-bottom: 20px;
-	margin-top: 20px;
-}
-#map {
-	width: 100%;
-	height: 100%;
-}
 .section-heading {
 	margin-bottom: 1.5rem;
 	display: flex;
@@ -111,8 +98,14 @@ select.tall {
 	height: 500px;
 	margin-bottom: 20px;
 	margin-top: 20px;
+	align-items: center;
+	justify-content: center;
 	/* Prevent touch scrolling issues */
 	touch-action: pan-y pinch-zoom;
+}
+#map {
+	width: 100%;
+	height: 100%;
 }
 
 /* Mobile-specific adjustments */
@@ -130,11 +123,6 @@ select.tall {
 		height: 350px;
 		border-radius: 5px;
 	}
-}
-
-#map {
-	width: 100%;
-	height: 100%;
 }
 </style>
 

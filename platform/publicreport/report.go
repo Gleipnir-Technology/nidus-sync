@@ -18,13 +18,14 @@ import (
 )
 
 func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.Report, error) {
-	query := reportQuery(org_id)
+	query := reportQuery()
 	query.Apply(
+		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
 		sm.Where(psql.Quote("publicreport", "report", "reviewed").IsNull()),
 	)
-	return reportQueryToRows(ctx, org_id, query)
+	return reportQueryToRows(ctx, query)
 }
-func reportQueryToRows(ctx context.Context, org_id int32, query bob.BaseQuery[*dialect.SelectQuery]) ([]*types.Report, error) {
+func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQuery]) ([]*types.Report, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.Report]())
 
 	if err != nil {
@@ -34,7 +35,7 @@ func reportQueryToRows(ctx context.Context, org_id int32, query bob.BaseQuery[*d
 	for i, row := range rows {
 		report_ids[i] = row.ID
 	}
-	images_by_id, err := loadImagesForReport(ctx, org_id, report_ids)
+	images_by_id, err := loadImagesForReport(ctx, report_ids)
 	if err != nil {
 		return nil, fmt.Errorf("images for report: %w", err)
 	}
@@ -69,12 +70,27 @@ func reportQueryToRows(ctx context.Context, org_id int32, query bob.BaseQuery[*d
 	}
 	return results, nil
 }
-func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.Report, error) {
-	query := reportQuery(org_id)
+func Report(ctx context.Context, public_id string) (*types.Report, error) {
+	query := reportQuery()
 	query.Apply(
+		sm.Where(psql.Quote("publicreport", "report", "public_id").EQ(psql.Arg(public_id))),
+	)
+	reports, err := reportQueryToRows(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query to rows: %w", err)
+	}
+	if len(reports) != 1 {
+		return nil, fmt.Errorf("reports returned: %d", len(reports))
+	}
+	return reports[0], nil
+}
+func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.Report, error) {
+	query := reportQuery()
+	query.Apply(
+		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
 		sm.Where(psql.Quote("publicreport", "report", "id").EQ(psql.Any(ids))),
 	)
-	return reportQueryToRows(ctx, org_id, query)
+	return reportQueryToRows(ctx, query)
 }
 func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error) {
 	type _Row struct {
@@ -92,10 +108,11 @@ func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error
 	}
 	return row.Count, nil
 }
-func reportQuery(org_id int32) bob.BaseQuery[*dialect.SelectQuery] {
+func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 	return psql.Select(
 		sm.Columns(
 			"address_country AS \"address.country\"",
+			"address_gid AS \"address.gid\"",
 			"address_locality AS \"address.locality\"",
 			"address_number AS \"address.number\"",
 			"address_postal_code AS \"address.postal_code\"",
@@ -106,6 +123,7 @@ func reportQuery(org_id int32) bob.BaseQuery[*dialect.SelectQuery] {
 			"id",
 			"COALESCE(ST_Y(location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
 			"COALESCE(ST_X(location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
+			"organization_id",
 			"public_id",
 			"report_type",
 			"reporter_email AS \"reporter.email\"",
@@ -114,6 +132,5 @@ func reportQuery(org_id int32) bob.BaseQuery[*dialect.SelectQuery] {
 			"status",
 		),
 		sm.From("publicreport.report"),
-		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
 	)
 }

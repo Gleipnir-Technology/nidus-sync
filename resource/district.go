@@ -20,6 +20,7 @@ type district struct {
 	Name        string `json:"name"`
 	PhoneOffice string `json:"phone_office"`
 	Slug        string `json:"slug"`
+	URI         string `json:"uri"`
 	URLLogo     string `json:"url_logo"`
 	URLWebsite  string `json:"url_website"`
 }
@@ -75,10 +76,15 @@ func newDistrict(r *router, org *platform.Organization) (*district, error) {
 	if err != nil {
 		return nil, fmt.Errorf("logo url: %w", err)
 	}
+	uri, err := r.IDToURI("district.ByIDGet", int(org.ID))
+	if err != nil {
+		return nil, nhttp.NewError("district uri: %w", err)
+	}
 	return &district{
 		Name:        org.Name(),
 		PhoneOffice: org.PhoneOffice(),
 		Slug:        slug,
+		URI:         uri,
 		URLLogo:     logo,
 		URLWebsite:  org.Website(),
 	}, nil

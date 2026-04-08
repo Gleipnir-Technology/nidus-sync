@@ -13,9 +13,12 @@ type Report struct {
 	Location   *Location  `db:"location" json:"location"`
 	Log        []LogEntry `db:"-" json:"log"`
 	Nuisance   *Nuisance  `db:"nuisance" json:"nuisance"`
+	DistrictID *int32     `db:"organization_id" json:"-"`
+	District   *string    `db:"-" json:"district"`
 	PublicID   string     `db:"public_id" json:"public_id"`
 	Reporter   Contact    `db:"reporter" json:"reporter"`
 	Status     string     `db:"status" json:"status"`
 	Type       string     `db:"report_type" json:"type"`
+	URI        string     `db:"-" json:"uri"`
 	Water      *Water     `db:"water" json:"water"`
 }
