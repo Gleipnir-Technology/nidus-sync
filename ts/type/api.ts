@@ -32,8 +32,40 @@ export interface Geocode {
 	cell: number;
 	location: Location;
 }
-export interface Publicreport {
+export interface PublicreportDTO {
+	address: string;
+	created: string;
 	district: string;
 	id: string;
+	image_count: number;
+	location: Location;
+	status: string;
+	type: string;
 	uri: string;
+}
+export class Publicreport {
+	constructor(
+		public address: string,
+		public created: Date,
+		public district: string,
+		public id: string,
+		public image_count: number,
+		public location: Location,
+		public status: string,
+		public type: string,
+		public uri: string,
+	) {}
+	static fromJSON(json: PublicreportDTO): Publicreport {
+		return new Publicreport(
+			json.address,
+			new Date(json.created),
+			json.district,
+			json.id,
+			json.image_count,
+			json.location,
+			json.status,
+			json.type,
+			json.uri,
+		);
+	}
 }

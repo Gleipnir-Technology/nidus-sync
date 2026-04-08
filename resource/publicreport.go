@@ -2,8 +2,11 @@ package resource
 
 import (
 	"context"
+	"time"
+
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"net/http"
 	//"github.com/rs/zerolog/log"
 	"github.com/gorilla/mux"
@@ -14,9 +17,15 @@ type publicreportR struct {
 }
 
 type publicreport struct {
-	ID       string `json:"id"`
-	District string `json:"district"`
-	URI      string `json:"uri"`
+	Address    string         `json:"address"`
+	Created    time.Time      `json:"created"`
+	District   string         `json:"district"`
+	ID         string         `json:"id"`
+	ImageCount int            `json:"image_count"`
+	Location   types.Location `json:"location"`
+	Status     string         `json:"status"`
+	Type       string         `json:"type"`
+	URI        string         `json:"uri"`
 }
 
 func Publicreport(r *router) *publicreportR {
@@ -39,8 +48,23 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	if err != nil {
 		return nil, nhttp.NewError("district uri: %w", err)
 	}
+	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
+	if err != nil {
+		return nil, nhttp.NewError("uri: %w", err)
+	}
+	location := types.Location{
+		Latitude:  report.LocationLatitude.GetOr(0.0),
+		Longitude: report.LocationLongitude.GetOr(0.0),
+	}
 	return &publicreport{
-		District: district_uri,
-		ID:       report.PublicID,
+		District:   district_uri,
+		ID:         report.PublicID,
+		Address:    report.AddressRaw,
+		Created:    report.Created,
+		ImageCount: len(report.R.Images),
+		Location:   location,
+		Status:     report.Status.String(),
+		Type:       report.ReportType.String(),
+		URI:        uri,
 	}, nil
 }

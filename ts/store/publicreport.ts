@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { Publicreport } from "@/type/api";
+import { Publicreport, type PublicreportDTO } from "@/type/api";
 
 export const useStorePublicreport = defineStore("publicreport", () => {
 	// State
@@ -23,9 +23,10 @@ export const useStorePublicreport = defineStore("publicreport", () => {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const body = await response.json();
-			_byID.value.set(id, body);
-			return body;
+			const body: PublicreportDTO = await response.json();
+			const report = Publicreport.fromJSON(body);
+			_byID.value.set(id, report);
+			return report;
 		} catch (err) {
 			console.error("Error loading users:", err);
 			throw err;

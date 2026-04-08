@@ -1,0 +1,161 @@
+<style scoped>
+.timeline {
+	border-left: 3px solid #dee2e6;
+	padding-left: 20px;
+	margin-left: 10px;
+}
+
+.timeline-item {
+	position: relative;
+	margin-bottom: 25px;
+}
+
+.timeline-item:before {
+	content: "";
+	position: absolute;
+	left: -29px;
+	top: 0;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background-color: #0d6efd;
+}
+
+.timeline-date {
+	font-size: 0.85rem;
+	color: #6c757d;
+}
+
+.status-badge {
+	font-size: 1rem;
+}
+</style>
+<template>
+	<div class="container my-4" v-if="report">
+		<!-- Report ID and Status Section -->
+		<div class="card mb-4">
+			<div
+				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+			>
+				<h5 class="mb-0">Report {{ id }}</h5>
+				<span class="badge bg-warning text-dark status-badge">
+					{{ report.status }}
+				</span>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-4 mb-3">
+						<strong><i class="bi bi-tag me-2"></i>Type:</strong>
+						<span>{{ report.type }}</span>
+					</div>
+					<div class="col-md-4 mb-3">
+						<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
+						<span>{{ formatTimeRelative(report.created) }}</span>
+					</div>
+					<div class="col-md-4 mb-3" v-if="district">
+						<strong><i class="bi bi-crosshair me-2"></i>District:</strong>
+						<span>
+							{{ district.name }}
+						</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<strong><i class="bi bi-pin-map me-2"></i>Location:</strong>
+						<span>{{ report.address }}</span>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<strong><i class="bi bi-images me-2"></i>Images:</strong>
+						<span>
+							{{
+								report.image_count > 0 ? report.image_count : "None provided"
+							}}
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Map Section -->
+		<div class="card mb-4">
+			<div class="card-header bg-info text-white">
+				<h5 class="mb-0">
+					<i class="bi bi-pin-map-fill me-2"></i>Location Map
+				</h5>
+			</div>
+			<div class="card-body p-0">
+				<div class="map-container">
+					<MapLocatorDisplay id="map" :markers="markers"></MapLocatorDisplay>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container my-4" v-else>
+		<p>loading...</p>
+	</div>
+</template>
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { computedAsync } from "@vueuse/core";
+import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
+import { useStoreDistrict } from "@/rmo/store/district";
+import { useStorePublicreport } from "@/store/publicreport";
+import type { Marker } from "@/types";
+import type { District, Publicreport } from "@/type/api";
+import { formatTimeRelative } from "@/format";
+
+// Props
+interface Props {
+	id: string;
+}
+
+const props = defineProps<Props>();
+const storeDistrict = useStoreDistrict();
+const storePublicreport = useStorePublicreport();
+// Computed
+const report = computedAsync(async (): Promise<Publicreport | undefined> => {
+	return await storePublicreport.byID(props.id);
+});
+const district = computedAsync(async (): Promise<District | undefined> => {
+	if (!(report.value && report.value.district)) {
+		return undefined;
+	}
+	return await storeDistrict.byURI(report.value.district);
+});
+const markers = computed((): Marker[] => {
+	if (!(report.value && report.value.location)) {
+		return [];
+	}
+	return [
+		{
+			id: report.value.id,
+			location: report.value.location,
+		},
+	];
+});
+
+// Lifecycle
+onMounted(() => {
+	// Load map scripts if needed
+	loadMapScripts();
+});
+
+const loadMapScripts = () => {
+	// Load MapLibre GL if not already loaded
+	if (!document.querySelector('script[src*="maplibre-gl"]')) {
+		const script1 = document.createElement("script");
+		script1.src = "//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js";
+		document.head.appendChild(script1);
+	}
+
+	// Load Mapbox GL if not already loaded
+	if (!document.querySelector('script[src*="mapbox-gl"]')) {
+		const script2 = document.createElement("script");
+		script2.src =
+			"https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js";
+		document.head.appendChild(script2);
+	}
+};
+</script>
