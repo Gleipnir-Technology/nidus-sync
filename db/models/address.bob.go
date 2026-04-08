@@ -39,6 +39,7 @@ type Address struct {
 	Number     string            `db:"number_" `
 	LocationX  null.Val[float64] `db:"location_x,generated" `
 	LocationY  null.Val[float64] `db:"location_y,generated" `
+	Gid        string            `db:"gid" `
 
 	R addressR `db:"-" `
 }
@@ -66,7 +67,7 @@ type addressR struct {
 func buildAddressColumns(alias string) addressColumns {
 	return addressColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_", "location_x", "location_y",
+			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_", "location_x", "location_y", "gid",
 		).WithParent("address"),
 		tableAlias: alias,
 		Country:    psql.Quote(alias, "country"),
@@ -82,6 +83,7 @@ func buildAddressColumns(alias string) addressColumns {
 		Number:     psql.Quote(alias, "number_"),
 		LocationX:  psql.Quote(alias, "location_x"),
 		LocationY:  psql.Quote(alias, "location_y"),
+		Gid:        psql.Quote(alias, "gid"),
 	}
 }
 
@@ -101,6 +103,7 @@ type addressColumns struct {
 	Number     psql.Expression
 	LocationX  psql.Expression
 	LocationY  psql.Expression
+	Gid        psql.Expression
 }
 
 func (c addressColumns) Alias() string {
@@ -126,10 +129,11 @@ type AddressSetter struct {
 	Unit       omit.Val[string]            `db:"unit" `
 	Region     omit.Val[string]            `db:"region" `
 	Number     omit.Val[string]            `db:"number_" `
+	Gid        omit.Val[string]            `db:"gid" `
 }
 
 func (s AddressSetter) SetColumns() []string {
-	vals := make([]string, 0, 11)
+	vals := make([]string, 0, 12)
 	if s.Country.IsValue() {
 		vals = append(vals, "country")
 	}
@@ -162,6 +166,9 @@ func (s AddressSetter) SetColumns() []string {
 	}
 	if s.Number.IsValue() {
 		vals = append(vals, "number_")
+	}
+	if s.Gid.IsValue() {
+		vals = append(vals, "gid")
 	}
 	return vals
 }
@@ -200,6 +207,9 @@ func (s AddressSetter) Overwrite(t *Address) {
 	if s.Number.IsValue() {
 		t.Number = s.Number.MustGet()
 	}
+	if s.Gid.IsValue() {
+		t.Gid = s.Gid.MustGet()
+	}
 }
 
 func (s *AddressSetter) Apply(q *dialect.InsertQuery) {
@@ -208,7 +218,7 @@ func (s *AddressSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 11)
+		vals := make([]bob.Expression, 12)
 		if s.Country.IsValue() {
 			vals[0] = psql.Arg(s.Country.MustGet())
 		} else {
@@ -275,6 +285,12 @@ func (s *AddressSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
+		if s.Gid.IsValue() {
+			vals[11] = psql.Arg(s.Gid.MustGet())
+		} else {
+			vals[11] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -284,7 +300,7 @@ func (s AddressSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s AddressSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 11)
+	exprs := make([]bob.Expression, 0, 12)
 
 	if s.Country.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -360,6 +376,13 @@ func (s AddressSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "number_")...),
 			psql.Arg(s.Number),
+		}})
+	}
+
+	if s.Gid.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "gid")...),
+			psql.Arg(s.Gid),
 		}})
 	}
 
@@ -1141,6 +1164,7 @@ type addressWhere[Q psql.Filterable] struct {
 	Number     psql.WhereMod[Q, string]
 	LocationX  psql.WhereNullMod[Q, float64]
 	LocationY  psql.WhereNullMod[Q, float64]
+	Gid        psql.WhereMod[Q, string]
 }
 
 func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
@@ -1162,6 +1186,7 @@ func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 		Number:     psql.Where[Q, string](cols.Number),
 		LocationX:  psql.WhereNull[Q, float64](cols.LocationX),
 		LocationY:  psql.WhereNull[Q, float64](cols.LocationY),
+		Gid:        psql.Where[Q, string](cols.Gid),
 	}
 }
 

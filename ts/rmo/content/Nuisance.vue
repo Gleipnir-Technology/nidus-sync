@@ -566,8 +566,13 @@ function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	// Fetch full details for the selected suggestion
 	//const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${suggestion.properties.gid}`;
+	selectedSuggestion.value = suggestion;
 	const url = `/api/geocode/by-gid/${suggestion.gid}`;
 	const response = await fetch(url);
+	if (!response.ok) {
+		console.error("Failed to get suggestion detail", response.statusText);
+		return;
+	}
 	const data = (await response.json()) as Geocode;
 
 	if (currentCamera.value) {
@@ -590,7 +595,14 @@ function doMapClick(location: Location) {
 	geocode
 		.reverse(location)
 		.then((code: Geocode) => {
-			console.log("geocoded", code);
+			address.value = code.address.raw;
+			selectedSuggestion.value = {
+				detail: code.address.number + " " + code.address.street,
+				gid: code.address.gid,
+				locality: code.address.locality,
+				type: "address",
+			};
+			console.log("reverse geocoded", code);
 		})
 		.catch((e) => {
 			console.error("failed to reverse geocode after map click", e);
@@ -615,18 +627,13 @@ async function doSubmit() {
 			formData.append("address-gid", selectedSuggestion.value.gid);
 		}
 		if (currentLocation.value) {
-			formData.append(
-				"location_latitude",
-				currentLocation.value.latitude.toString(),
-			);
-			formData.append(
-				"location_longitude",
-				currentLocation.value.longitude.toString(),
-			);
+			formData.append("latitude", currentLocation.value.latitude.toString());
+			formData.append("longitude", currentLocation.value.longitude.toString());
 		}
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
 		});
+		formData.append("address", address.value);
 		await fetch("/api/rmo/nuisance", {
 			method: "POST",
 			body: formData,

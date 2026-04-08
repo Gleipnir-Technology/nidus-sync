@@ -32,13 +32,8 @@ type nuisance struct {
 }
 type nuisanceForm struct {
 	AdditionalInfo      string   `schema:"additional-info"`
-	AddressRaw          string   `schema:"address"`
-	AddressCountry      string   `schema:"address-country"`
-	AddressLocality     string   `schema:"address-locality"`
-	AddressNumber       string   `schema:"address-number"`
-	AddressPostalCode   string   `schema:"address-postalcode"`
-	AddressRegion       string   `schema:"address-region"`
-	AddressStreet       string   `schema:"address-street"`
+	AddressGID          string   `schema:"address-gid"`
+	Address             string   `schema:"address"`
 	Duration            string   `schema:"duration"`
 	Latitude            string   `schema:"latitude"`
 	Longitude           string   `schema:"longitude"`
@@ -136,24 +131,19 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
 	}
 	address := platform.Address{
-		Country:    n.AddressCountry,
-		Locality:   n.AddressLocality,
-		Number:     n.AddressNumber,
-		PostalCode: n.AddressPostalCode,
-		Raw:        n.AddressRaw,
-		Region:     n.AddressRegion,
-		Street:     n.AddressStreet,
-		Unit:       "",
+		GID: n.AddressGID,
+		Raw: n.Address,
 	}
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
+		AddressCountry:    omit.From(""),
+		AddressGid:        omit.From(address.GID),
+		AddressNumber:     omit.From(""),
+		AddressLocality:   omit.From(""),
+		AddressPostalCode: omit.From(""),
 		AddressRaw:        omit.From(address.Raw),
-		AddressCountry:    omit.From(address.Country),
-		AddressNumber:     omit.From(address.Number),
-		AddressLocality:   omit.From(address.Locality),
-		AddressPostalCode: omit.From(address.PostalCode),
-		AddressRegion:     omit.From(address.Region),
-		AddressStreet:     omit.From(address.Street),
+		AddressRegion:     omit.From(""),
+		AddressStreet:     omit.From(""),
 		Created:           omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
 		LatlngAccuracyType:  omit.From(latlng.AccuracyType),
@@ -188,6 +178,9 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		TodNight:          omit.From(n.TODNight),
 	}
 	report, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, latlng, address, uploads)
+	if err != nil {
+		return nil, nhttp.NewError("create nuisance report: %w", err)
+	}
 	return &nuisance{
 		ID: report.PublicID,
 	}, nil

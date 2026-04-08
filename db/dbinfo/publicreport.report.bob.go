@@ -258,6 +258,15 @@ var PublicreportReports = Table[
 			Generated: true,
 			AutoIncr:  false,
 		},
+		AddressGid: column{
+			Name:      "address_gid",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportReportIndexes{
 		ReportPkey: index{
@@ -368,11 +377,12 @@ type publicreportReportColumns struct {
 	Status                 column
 	LocationLatitude       column
 	LocationLongitude      column
+	AddressGid             column
 }
 
 func (c publicreportReportColumns) AsSlice() []column {
 	return []column{
-		c.AddressRaw, c.AddressNumber, c.AddressStreet, c.AddressLocality, c.AddressRegion, c.AddressPostalCode, c.AddressCountry, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude,
+		c.AddressRaw, c.AddressNumber, c.AddressStreet, c.AddressLocality, c.AddressRegion, c.AddressPostalCode, c.AddressCountry, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid,
 	}
 }
 

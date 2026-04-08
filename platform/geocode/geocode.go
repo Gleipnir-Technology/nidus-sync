@@ -75,10 +75,11 @@ func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address, l typ
 	}
 	created := time.Now()
 	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
 		im.Values(
 			psql.Arg(a.CountryEnum()),
 			psql.Arg(created),
+			psql.Arg(a.GID),
 			psql.Arg(cell),
 			psql.Raw("DEFAULT"),
 			psql.Arg(a.Locality),
@@ -97,6 +98,7 @@ func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address, l typ
 	return &models.Address{
 		Country:    a.CountryEnum(),
 		Created:    created,
+		Gid:        a.GID,
 		H3cell:     "",
 		ID:         row.ID,
 		Locality:   a.Locality,
@@ -135,10 +137,11 @@ func EnsureAddressWithGeocode(ctx context.Context, txn bob.Executor, org *models
 	}
 	created := time.Now()
 	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
 		im.Values(
 			psql.Arg(geo.Address.Country),
 			psql.Arg(created),
+			psql.Arg(geo.Address.GID),
 			psql.Arg(geo.Cell),
 			psql.Raw("DEFAULT"),
 			psql.Arg(geo.Address.Locality),
@@ -158,6 +161,7 @@ func EnsureAddressWithGeocode(ctx context.Context, txn bob.Executor, org *models
 	return &models.Address{
 		Country:    geo.Address.CountryEnum(),
 		Created:    created,
+		Gid:        geo.Address.GID,
 		H3cell:     "",
 		ID:         row.ID,
 		Locality:   geo.Address.Locality,
@@ -232,6 +236,7 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 	// This first structure generally works for forword geocoding
 	address := types.Address{
 		Country:    country_s,
+		GID:        feature.Properties.GID,
 		Locality:   feature.Properties.Locality,
 		Number:     feature.Properties.HouseNumber,
 		PostalCode: feature.Properties.PostalCode,

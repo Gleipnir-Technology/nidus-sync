@@ -54,6 +54,7 @@ type PublicreportReport struct {
 	Status                 enums.PublicreportReportstatustype `db:"status" `
 	LocationLatitude       null.Val[float64]                  `db:"location_latitude,generated" `
 	LocationLongitude      null.Val[float64]                  `db:"location_longitude,generated" `
+	AddressGid             string                             `db:"address_gid" `
 
 	R publicreportReportR `db:"-" `
 }
@@ -87,7 +88,7 @@ type publicreportReportR struct {
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 	return publicreportReportColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_raw", "address_number", "address_street", "address_locality", "address_region", "address_postal_code", "address_country", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude",
+			"address_raw", "address_number", "address_street", "address_locality", "address_region", "address_postal_code", "address_country", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid",
 		).WithParent("publicreport.report"),
 		tableAlias:             alias,
 		AddressRaw:             psql.Quote(alias, "address_raw"),
@@ -117,6 +118,7 @@ func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 		Status:                 psql.Quote(alias, "status"),
 		LocationLatitude:       psql.Quote(alias, "location_latitude"),
 		LocationLongitude:      psql.Quote(alias, "location_longitude"),
+		AddressGid:             psql.Quote(alias, "address_gid"),
 	}
 }
 
@@ -150,6 +152,7 @@ type publicreportReportColumns struct {
 	Status                 psql.Expression
 	LocationLatitude       psql.Expression
 	LocationLongitude      psql.Expression
+	AddressGid             psql.Expression
 }
 
 func (c publicreportReportColumns) Alias() string {
@@ -189,10 +192,11 @@ type PublicreportReportSetter struct {
 	Reviewed               omitnull.Val[time.Time]                      `db:"reviewed" `
 	ReviewerID             omitnull.Val[int32]                          `db:"reviewer_id" `
 	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
+	AddressGid             omit.Val[string]                             `db:"address_gid" `
 }
 
 func (s PublicreportReportSetter) SetColumns() []string {
-	vals := make([]string, 0, 25)
+	vals := make([]string, 0, 26)
 	if s.AddressRaw.IsValue() {
 		vals = append(vals, "address_raw")
 	}
@@ -267,6 +271,9 @@ func (s PublicreportReportSetter) SetColumns() []string {
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
+	}
+	if s.AddressGid.IsValue() {
+		vals = append(vals, "address_gid")
 	}
 	return vals
 }
@@ -347,6 +354,9 @@ func (s PublicreportReportSetter) Overwrite(t *PublicreportReport) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
+	if s.AddressGid.IsValue() {
+		t.AddressGid = s.AddressGid.MustGet()
+	}
 }
 
 func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
@@ -355,7 +365,7 @@ func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 25)
+		vals := make([]bob.Expression, 26)
 		if s.AddressRaw.IsValue() {
 			vals[0] = psql.Arg(s.AddressRaw.MustGet())
 		} else {
@@ -506,6 +516,12 @@ func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
 			vals[24] = psql.Raw("DEFAULT")
 		}
 
+		if s.AddressGid.IsValue() {
+			vals[25] = psql.Arg(s.AddressGid.MustGet())
+		} else {
+			vals[25] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -515,7 +531,7 @@ func (s PublicreportReportSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportReportSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 25)
+	exprs := make([]bob.Expression, 0, 26)
 
 	if s.AddressRaw.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -689,6 +705,13 @@ func (s PublicreportReportSetter) Expressions(prefix ...string) []bob.Expression
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
 			psql.Arg(s.Status),
+		}})
+	}
+
+	if s.AddressGid.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_gid")...),
+			psql.Arg(s.AddressGid),
 		}})
 	}
 
@@ -1964,6 +1987,7 @@ type publicreportReportWhere[Q psql.Filterable] struct {
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
 	LocationLatitude       psql.WhereNullMod[Q, float64]
 	LocationLongitude      psql.WhereNullMod[Q, float64]
+	AddressGid             psql.WhereMod[Q, string]
 }
 
 func (publicreportReportWhere[Q]) AliasedAs(alias string) publicreportReportWhere[Q] {
@@ -1999,6 +2023,7 @@ func buildPublicreportReportWhere[Q psql.Filterable](cols publicreportReportColu
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
 		LocationLatitude:       psql.WhereNull[Q, float64](cols.LocationLatitude),
 		LocationLongitude:      psql.WhereNull[Q, float64](cols.LocationLongitude),
+		AddressGid:             psql.Where[Q, string](cols.AddressGid),
 	}
 }
 
