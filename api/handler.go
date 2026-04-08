@@ -252,6 +252,7 @@ func handlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPost[Re
 		ctx := r.Context()
 		resp, e := f(ctx, r, *req)
 		if e != nil {
+			serializeError(w, e)
 			return
 		}
 		body, err := json.Marshal(resp)
