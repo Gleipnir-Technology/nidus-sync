@@ -203,6 +203,7 @@ const mapWrapper = useTemplateRef("mapWrapper");
 
 function activateMap() {
 	mapInteractive.value = true;
+	console.log("activated map");
 	if (!map.value) {
 		return;
 	}
@@ -230,14 +231,21 @@ function handleOutsideClick(event: MouseEvent | TouchEvent) {
 		console.log("Didn't click on anything");
 		return;
 	}
-	const cls = (event.target as HTMLDivElement).className ?? "";
-	console.log("outside map click", cls);
+	if (!mapWrapper.value) {
+		console.log("Somehow map wrapper is null");
+		return;
+	}
+	const target = event.target as HTMLElement;
+	const cls = target.className ?? "";
 	if (
 		mapInteractive.value &&
 		mapContainer.value &&
-		!(cls == "map-overlay" || cls == "maplibregl-canvas")
+		!(mapWrapper.value.contains(target) || cls == "map-overlay")
 	) {
+		console.log("deactivate map: outside map click", target, cls);
 		deactivateMap();
+	} else {
+		console.log("click is inside the map, ignoring");
 	}
 }
 // Initialize map
@@ -298,7 +306,7 @@ function initializeMap() {
 	});
 
 	// Listen for clicks outside the map
-	document.addEventListener("click", handleOutsideClick);
+	document.addEventListener("mousedown", handleOutsideClick);
 	document.addEventListener("touchstart", handleOutsideClick);
 }
 
