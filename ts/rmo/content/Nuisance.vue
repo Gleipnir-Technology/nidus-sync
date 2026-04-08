@@ -528,6 +528,7 @@ select.tall {
 </template>
 
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import { computed, onMounted, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
@@ -558,6 +559,7 @@ const markers = computed((): Marker[] => {
 		return [];
 	}
 });
+const router = useRouter();
 function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 	console.log("Address suggestion selected", suggestion);
 
@@ -634,11 +636,13 @@ async function doSubmit() {
 			formData.append(`image[${index}]`, image.file, image.name);
 		});
 		formData.append("address", address.value);
-		await fetch("/api/rmo/nuisance", {
+		const resp = await fetch("/api/rmo/nuisance", {
 			method: "POST",
 			body: formData,
 			// Don't set Content-Type, the borwser should do it
 		});
+		const data = await resp.json();
+		router.push("/complete/" + data.id);
 	} catch (error) {
 		errorMessage.value =
 			error instanceof Error ? error.message : "Upload failed";
