@@ -82,6 +82,12 @@ const markers = computed((): Marker[] => {
 	if (!props.modelValue.location) {
 		return [];
 	}
+	if (
+		props.modelValue.location.latitude == 0.0 ||
+		props.modelValue.location.longitude == 0.0
+	) {
+		return [];
+	}
 	const marker = {
 		color: "#FF0000",
 		draggable: true,
