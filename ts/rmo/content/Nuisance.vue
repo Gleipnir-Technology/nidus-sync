@@ -488,7 +488,23 @@ const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
 const isSubmitting = ref(false);
 const locationStore = useLocationStore();
-const locator = ref<Locator | null>(null);
+const locator = ref<Locator>({
+	address: {
+		country: "",
+		gid: "",
+		locality: "",
+		number: "",
+		postal_code: "",
+		raw: "",
+		region: "",
+		street: "",
+		unit: "",
+	},
+	location: {
+		latitude: 0,
+		longitude: 0,
+	},
+});
 
 const showMore = ref<boolean>(false);
 const storePublicReport = useStorePublicReport();

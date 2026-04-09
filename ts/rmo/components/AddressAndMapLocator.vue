@@ -38,7 +38,7 @@
 <template>
 	<div class="mb-4">
 		<AddressSuggestion
-			v-model="address"
+			v-model="modelValue.address"
 			placeholder="Start typing an address (min 3 characters)"
 			@suggestion-selected="doAddressSuggestionSelected"
 		>
@@ -72,22 +72,25 @@ interface Emits {
 	(e: "update:modelValue", value: Locator): void;
 }
 interface Props {
-	modelValue: Locator | null;
+	modelValue: Locator;
 }
 const address = ref<string>("");
 const currentCamera = ref<Camera | null>(null);
 const emit = defineEmits<Emits>();
 const geocode = useGeocodeStore();
-const marker = ref<Marker | null>(null);
 const markers = computed((): Marker[] => {
-	if (marker.value) {
-		return [marker.value];
-	} else {
+	if (!props.modelValue.location) {
 		return [];
 	}
+	const marker = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: props.modelValue.location,
+	};
+	return [marker];
 });
 const props = defineProps<Props>();
-const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 	console.log("Address suggestion selected", suggestion);
 
@@ -95,7 +98,7 @@ function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 }
 async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	// Fetch full details for the selected suggestion
-	selectedSuggestion.value = suggestion;
+	updateModel(suggestion.gid, suggestion.detail, props.modelValue.location);
 	const url = `/api/geocode/by-gid/${suggestion.gid}`;
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -108,32 +111,22 @@ async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 		console.log("suggestion located, zooming", data);
 		currentCamera.value.zoom = 15;
 	}
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: data.location,
-	};
-	updateModel();
+	updateModel(data.address.gid, data.address.raw, data.location);
 }
 function doMapClick(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
+	updateModel(
+		props.modelValue.address.gid,
+		props.modelValue.address.raw,
+		location,
+	);
 	geocode
 		.reverse(location)
 		.then((code: Geocode) => {
-			address.value = code.address.raw;
-			selectedSuggestion.value = {
-				detail: code.address.number + " " + code.address.street,
-				gid: code.address.gid,
-				locality: code.address.locality,
-				type: "address",
-			};
-			updateModel();
+			updateModel(
+				code.address.gid,
+				code.address.raw,
+				props.modelValue.location,
+			);
 			console.log("reverse geocoded", code);
 		})
 		.catch((e) => {
@@ -141,31 +134,30 @@ function doMapClick(location: Location) {
 		});
 }
 function doMapMarkerDragEnd(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
-	updateModel();
+	updateModel(
+		props.modelValue.address.gid,
+		props.modelValue.address.raw,
+		location,
+	);
 }
-function updateModel() {
+function updateModel(
+	address_gid: string,
+	address_raw: string,
+	location: Location,
+) {
 	const newLocator: Locator = {
 		address: {
 			country: "",
-			gid: selectedSuggestion ? (selectedSuggestion.value?.gid ?? "") : "",
+			gid: address_gid,
 			locality: "",
 			number: "",
 			postal_code: "",
-			raw: address.value,
+			raw: address_raw,
 			region: "",
 			street: "",
 			unit: "",
 		},
-		location: marker.value?.location ?? {
-			latitude: 0,
-			longitude: 0,
-		},
+		location: location,
 	};
 	emit("update:modelValue", newLocator);
 }

@@ -235,30 +235,12 @@ select.tall {
 							id="latlng-accuracy-value"
 							name="latlng-accuracy-value"
 						/>
-						<div class="col-md-6">
-							<div class="mb-3 position-relative">
-								<AddressSuggestion
-									v-model="address"
-									placeholder="Start typing an address (min 3 characters)"
-									@suggestion-selected="doAddressSuggestionSelected"
-								>
-								</AddressSuggestion>
-							</div>
-						</div>
 					</div>
 
 					<p class="small text-muted mb-2">
 						You can also click on the map to mark the location precisely
 					</p>
-					<div class="map-container">
-						<MapLocator
-							v-model="currentCamera"
-							:markers="markers"
-							@click="doMapClick"
-							@marker-drag-end="doMapMarkerDragEnd"
-						/>
-					</div>
-					<input type="hidden" id="map-zoom" name="map-zoom" />
+					<AddressAndMapLocator v-model="locator" />
 				</div>
 
 				<button
@@ -652,7 +634,7 @@ import type {
 	Location,
 	PublicReport,
 } from "@/type/api";
-import type { Camera } from "@/type/map";
+import type { Camera, Locator } from "@/type/map";
 
 const isCollapsed = ref<boolean>(true);
 const toggleCollapse = () => {
@@ -675,6 +657,23 @@ const markers = computed((): Marker[] => {
 	}
 });
 const locationStore = useLocationStore();
+const locator = ref<Locator>({
+	address: {
+		country: "",
+		gid: "",
+		locality: "",
+		number: "",
+		postal_code: "",
+		raw: "",
+		region: "",
+		street: "",
+		unit: "",
+	},
+	location: {
+		latitude: 0,
+		longitude: 0,
+	},
+});
 const router = useRouter();
 const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 const showMore = ref<boolean>(false);

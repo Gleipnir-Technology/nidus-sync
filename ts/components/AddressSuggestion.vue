@@ -76,23 +76,22 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { GeocodeSuggestion } from "@/type/api";
+import { Address, GeocodeSuggestion } from "@/type/api";
 
 // Props
 interface Props {
-	modelValue?: string;
+	modelValue: Address;
 	organizationID?: string;
 	placeholder?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	modelValue: "",
 	placeholder: "Enter address",
 });
 
 // Emits
 const emit = defineEmits<{
-	"update:modelValue": [value: string];
+	"update:modelValue": [value: Address];
 	"suggestion-selected": [address: GeocodeSuggestion];
 }>();
 
@@ -105,7 +104,7 @@ const debounceTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 watch(
 	() => props.modelValue,
 	(newValue) => {
-		searchText.value = newValue;
+		searchText.value = newValue.raw;
 	},
 	{ immediate: true },
 );
@@ -131,7 +130,17 @@ function handleInput() {
 	}, 300);
 
 	// Update the model
-	emit("update:modelValue", text);
+	emit("update:modelValue", {
+		country: "",
+		gid: props.modelValue.gid,
+		locality: "",
+		number: "",
+		postal_code: "",
+		raw: text,
+		region: "",
+		street: "",
+		unit: "",
+	});
 }
 
 async function fetchAddressSuggestions(text: string) {
@@ -160,7 +169,17 @@ async function selectSuggestion(suggestion: GeocodeSuggestion) {
 		suggestions.value = [];
 
 		// Emit the full address object
-		//emit("update:modelValue", search);
+		emit("update:modelValue", {
+			country: "",
+			gid: suggestion.gid,
+			locality: "",
+			number: "",
+			postal_code: "",
+			raw: suggestion.detail,
+			region: "",
+			street: "",
+			unit: "",
+		});
 		emit("suggestion-selected", suggestion);
 	} catch (error) {
 		console.error("Error fetching place details:", error);
