@@ -90,6 +90,8 @@ func Where[Q psql.Filterable]() struct {
 	Notifications                        notificationWhere[Q]
 	Organizations                        organizationWhere[Q]
 	Parcels                              parcelWhere[Q]
+	PublicreportClients                  publicreportClientWhere[Q]
+	PublicreportCompliances              publicreportComplianceWhere[Q]
 	PublicreportImages                   publicreportImageWhere[Q]
 	PublicreportImageExifs               publicreportImageExifWhere[Q]
 	PublicreportNotifyEmails             publicreportNotifyEmailWhere[Q]
@@ -198,6 +200,8 @@ func Where[Q psql.Filterable]() struct {
 		Notifications                        notificationWhere[Q]
 		Organizations                        organizationWhere[Q]
 		Parcels                              parcelWhere[Q]
+		PublicreportClients                  publicreportClientWhere[Q]
+		PublicreportCompliances              publicreportComplianceWhere[Q]
 		PublicreportImages                   publicreportImageWhere[Q]
 		PublicreportImageExifs               publicreportImageExifWhere[Q]
 		PublicreportNotifyEmails             publicreportNotifyEmailWhere[Q]
@@ -305,6 +309,8 @@ func Where[Q psql.Filterable]() struct {
 		Notifications:                        buildNotificationWhere[Q](Notifications.Columns),
 		Organizations:                        buildOrganizationWhere[Q](Organizations.Columns),
 		Parcels:                              buildParcelWhere[Q](Parcels.Columns),
+		PublicreportClients:                  buildPublicreportClientWhere[Q](PublicreportClients.Columns),
+		PublicreportCompliances:              buildPublicreportComplianceWhere[Q](PublicreportCompliances.Columns),
 		PublicreportImages:                   buildPublicreportImageWhere[Q](PublicreportImages.Columns),
 		PublicreportImageExifs:               buildPublicreportImageExifWhere[Q](PublicreportImageExifs.Columns),
 		PublicreportNotifyEmails:             buildPublicreportNotifyEmailWhere[Q](PublicreportNotifyEmails.Columns),

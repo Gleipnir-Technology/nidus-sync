@@ -1,8 +1,8 @@
 export enum PermissionAccess {
-	DENIED = "access-denied",
-	GRANTED = "access-granted",
+	DENIED = "denied",
+	GRANTED = "granted",
 	UNSELECTED = "unselected",
-	WITH_OWNER = "access-with-owner",
+	WITH_OWNER = "with-owner",
 }
 export interface Address {
 	country: string;

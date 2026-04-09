@@ -64,7 +64,6 @@ import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import { useGeocodeStore } from "@/store/geocode";
-import { useLocationStore } from "@/store/location";
 import type { Camera, Locator } from "@/type/map";
 import type { Marker } from "@/types";
 

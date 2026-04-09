@@ -267,6 +267,15 @@ var PublicreportReports = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ClientUUID: column{
+			Name:      "client_uuid",
+			DBType:    "uuid",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportReportIndexes{
 		ReportPkey: index{
@@ -318,6 +327,15 @@ var PublicreportReports = Table[
 			},
 			ForeignTable:   "address",
 			ForeignColumns: []string{"id"},
+		},
+		PublicreportReportReportClientUUIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "publicreport.report.report_client_uuid_fkey",
+				Columns: []string{"client_uuid"},
+				Comment: "",
+			},
+			ForeignTable:   "publicreport.client",
+			ForeignColumns: []string{"uuid"},
 		},
 		PublicreportReportReportOrganizationIDFkey: foreignKey{
 			constraint: constraint{
@@ -378,11 +396,12 @@ type publicreportReportColumns struct {
 	LocationLatitude       column
 	LocationLongitude      column
 	AddressGid             column
+	ClientUUID             column
 }
 
 func (c publicreportReportColumns) AsSlice() []column {
 	return []column{
-		c.AddressRaw, c.AddressNumber, c.AddressStreet, c.AddressLocality, c.AddressRegion, c.AddressPostalCode, c.AddressCountry, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid,
+		c.AddressRaw, c.AddressNumber, c.AddressStreet, c.AddressLocality, c.AddressRegion, c.AddressPostalCode, c.AddressCountry, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID,
 	}
 }
 
@@ -399,13 +418,14 @@ func (i publicreportReportIndexes) AsSlice() []index {
 
 type publicreportReportForeignKeys struct {
 	PublicreportReportReportAddressIDFkey      foreignKey
+	PublicreportReportReportClientUUIDFkey     foreignKey
 	PublicreportReportReportOrganizationIDFkey foreignKey
 	PublicreportReportReportReviewerIDFkey     foreignKey
 }
 
 func (f publicreportReportForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.PublicreportReportReportAddressIDFkey, f.PublicreportReportReportOrganizationIDFkey, f.PublicreportReportReportReviewerIDFkey,
+		f.PublicreportReportReportAddressIDFkey, f.PublicreportReportReportClientUUIDFkey, f.PublicreportReportReportOrganizationIDFkey, f.PublicreportReportReportReviewerIDFkey,
 	}
 }
 

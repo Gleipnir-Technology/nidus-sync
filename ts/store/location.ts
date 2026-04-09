@@ -5,7 +5,7 @@ interface GeolocationOptions {
 	timeout?: number;
 	enableHighAccuracy?: boolean;
 }
-export const useLocationStore = defineStore("location", () => {
+export const useStoreLocation = defineStore("location", () => {
 	function get(options?: GeolocationOptions): Promise<GeolocationPosition> {
 		return new Promise((resolve, reject) => {
 			// Check if geolocation is supported by the browser

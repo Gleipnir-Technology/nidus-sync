@@ -41,6 +41,8 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/review/pool", authenticatedHandlerJSONPost(postReviewPool)).Methods("POST")
 	review_task := resource.ReviewTask(r)
 	r.Handle("/review-task", authenticatedHandlerJSON(review_task.List)).Methods("GET")
+	compliance := resource.Compliance(router)
+	r.HandleFunc("/rmo/compliance", handlerFormPost(compliance.Create)).Methods("POST")
 	nuisance := resource.Nuisance(router)
 	r.HandleFunc("/rmo/nuisance", handlerFormPost(nuisance.Create)).Methods("POST")
 	water := resource.Water(router)

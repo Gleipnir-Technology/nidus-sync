@@ -86,6 +86,8 @@ type preloaders struct {
 	Notification                       notificationPreloader
 	Organization                       organizationPreloader
 	Parcel                             parcelPreloader
+	PublicreportClient                 publicreportClientPreloader
+	PublicreportCompliance             publicreportCompliancePreloader
 	PublicreportImage                  publicreportImagePreloader
 	PublicreportImageExif              publicreportImageExifPreloader
 	PublicreportNotifyEmail            publicreportNotifyEmailPreloader
@@ -186,6 +188,8 @@ func getPreloaders() preloaders {
 		Notification:                       buildNotificationPreloader(),
 		Organization:                       buildOrganizationPreloader(),
 		Parcel:                             buildParcelPreloader(),
+		PublicreportClient:                 buildPublicreportClientPreloader(),
+		PublicreportCompliance:             buildPublicreportCompliancePreloader(),
 		PublicreportImage:                  buildPublicreportImagePreloader(),
 		PublicreportImageExif:              buildPublicreportImageExifPreloader(),
 		PublicreportNotifyEmail:            buildPublicreportNotifyEmailPreloader(),
@@ -292,6 +296,8 @@ type thenLoaders[Q orm.Loadable] struct {
 	Notification                       notificationThenLoader[Q]
 	Organization                       organizationThenLoader[Q]
 	Parcel                             parcelThenLoader[Q]
+	PublicreportClient                 publicreportClientThenLoader[Q]
+	PublicreportCompliance             publicreportComplianceThenLoader[Q]
 	PublicreportImage                  publicreportImageThenLoader[Q]
 	PublicreportImageExif              publicreportImageExifThenLoader[Q]
 	PublicreportNotifyEmail            publicreportNotifyEmailThenLoader[Q]
@@ -392,6 +398,8 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Notification:                       buildNotificationThenLoader[Q](),
 		Organization:                       buildOrganizationThenLoader[Q](),
 		Parcel:                             buildParcelThenLoader[Q](),
+		PublicreportClient:                 buildPublicreportClientThenLoader[Q](),
+		PublicreportCompliance:             buildPublicreportComplianceThenLoader[Q](),
 		PublicreportImage:                  buildPublicreportImageThenLoader[Q](),
 		PublicreportImageExif:              buildPublicreportImageExifThenLoader[Q](),
 		PublicreportNotifyEmail:            buildPublicreportNotifyEmailThenLoader[Q](),

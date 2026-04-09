@@ -22,6 +22,7 @@ import (
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/stephenafamo/scan"
 )
 
@@ -55,6 +56,7 @@ type PublicreportReport struct {
 	LocationLatitude       null.Val[float64]                  `db:"location_latitude,generated" `
 	LocationLongitude      null.Val[float64]                  `db:"location_longitude,generated" `
 	AddressGid             string                             `db:"address_gid" `
+	ClientUUID             null.Val[uuid.UUID]                `db:"client_uuid" `
 
 	R publicreportReportR `db:"-" `
 }
@@ -72,10 +74,12 @@ type PublicreportReportsQuery = *psql.ViewQuery[*PublicreportReport, Publicrepor
 // publicreportReportR is where relationships are stored.
 type publicreportReportR struct {
 	TextJobs     CommsTextJobSlice            // comms.text_job.text_job_report_id_fkey
+	Compliance   *PublicreportCompliance      // publicreport.compliance.compliance_report_id_fkey
 	NotifyEmails PublicreportNotifyEmailSlice // publicreport.notify_email.notify_email_report_id_fkey
 	NotifyPhones PublicreportNotifyPhoneSlice // publicreport.notify_phone.notify_phone_report_id_fkey
 	Nuisance     *PublicreportNuisance        // publicreport.nuisance.nuisance_report_id_fkey
 	Address      *Address                     // publicreport.report.report_address_id_fkey
+	Client       *PublicreportClient          // publicreport.report.report_client_uuid_fkey
 	Organization *Organization                // publicreport.report.report_organization_id_fkey
 	ReviewerUser *User                        // publicreport.report.report_reviewer_id_fkey
 	Images       PublicreportImageSlice       // publicreport.report_image.report_image_image_id_fkeypublicreport.report_image.report_image_report_id_fkey
@@ -88,7 +92,7 @@ type publicreportReportR struct {
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 	return publicreportReportColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_raw", "address_number", "address_street", "address_locality", "address_region", "address_postal_code", "address_country", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid",
+			"address_raw", "address_number", "address_street", "address_locality", "address_region", "address_postal_code", "address_country", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid", "client_uuid",
 		).WithParent("publicreport.report"),
 		tableAlias:             alias,
 		AddressRaw:             psql.Quote(alias, "address_raw"),
@@ -119,6 +123,7 @@ func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 		LocationLatitude:       psql.Quote(alias, "location_latitude"),
 		LocationLongitude:      psql.Quote(alias, "location_longitude"),
 		AddressGid:             psql.Quote(alias, "address_gid"),
+		ClientUUID:             psql.Quote(alias, "client_uuid"),
 	}
 }
 
@@ -153,6 +158,7 @@ type publicreportReportColumns struct {
 	LocationLatitude       psql.Expression
 	LocationLongitude      psql.Expression
 	AddressGid             psql.Expression
+	ClientUUID             psql.Expression
 }
 
 func (c publicreportReportColumns) Alias() string {
@@ -193,10 +199,11 @@ type PublicreportReportSetter struct {
 	ReviewerID             omitnull.Val[int32]                          `db:"reviewer_id" `
 	Status                 omit.Val[enums.PublicreportReportstatustype] `db:"status" `
 	AddressGid             omit.Val[string]                             `db:"address_gid" `
+	ClientUUID             omitnull.Val[uuid.UUID]                      `db:"client_uuid" `
 }
 
 func (s PublicreportReportSetter) SetColumns() []string {
-	vals := make([]string, 0, 26)
+	vals := make([]string, 0, 27)
 	if s.AddressRaw.IsValue() {
 		vals = append(vals, "address_raw")
 	}
@@ -274,6 +281,9 @@ func (s PublicreportReportSetter) SetColumns() []string {
 	}
 	if s.AddressGid.IsValue() {
 		vals = append(vals, "address_gid")
+	}
+	if !s.ClientUUID.IsUnset() {
+		vals = append(vals, "client_uuid")
 	}
 	return vals
 }
@@ -357,6 +367,9 @@ func (s PublicreportReportSetter) Overwrite(t *PublicreportReport) {
 	if s.AddressGid.IsValue() {
 		t.AddressGid = s.AddressGid.MustGet()
 	}
+	if !s.ClientUUID.IsUnset() {
+		t.ClientUUID = s.ClientUUID.MustGetNull()
+	}
 }
 
 func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
@@ -365,7 +378,7 @@ func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 26)
+		vals := make([]bob.Expression, 27)
 		if s.AddressRaw.IsValue() {
 			vals[0] = psql.Arg(s.AddressRaw.MustGet())
 		} else {
@@ -522,6 +535,12 @@ func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
 			vals[25] = psql.Raw("DEFAULT")
 		}
 
+		if !s.ClientUUID.IsUnset() {
+			vals[26] = psql.Arg(s.ClientUUID.MustGetNull())
+		} else {
+			vals[26] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -531,7 +550,7 @@ func (s PublicreportReportSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportReportSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 26)
+	exprs := make([]bob.Expression, 0, 27)
 
 	if s.AddressRaw.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -712,6 +731,13 @@ func (s PublicreportReportSetter) Expressions(prefix ...string) []bob.Expression
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address_gid")...),
 			psql.Arg(s.AddressGid),
+		}})
+	}
+
+	if !s.ClientUUID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "client_uuid")...),
+			psql.Arg(s.ClientUUID),
 		}})
 	}
 
@@ -965,6 +991,30 @@ func (os PublicreportReportSlice) TextJobs(mods ...bob.Mod[*dialect.SelectQuery]
 	)...)
 }
 
+// Compliance starts a query for related objects on publicreport.compliance
+func (o *PublicreportReport) Compliance(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportCompliancesQuery {
+	return PublicreportCompliances.Query(append(mods,
+		sm.Where(PublicreportCompliances.Columns.ReportID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportReportSlice) Compliance(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportCompliancesQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return PublicreportCompliances.Query(append(mods,
+		sm.Where(psql.Group(PublicreportCompliances.Columns.ReportID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // NotifyEmails starts a query for related objects on publicreport.notify_email
 func (o *PublicreportReport) NotifyEmails(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNotifyEmailsQuery {
 	return PublicreportNotifyEmails.Query(append(mods,
@@ -1058,6 +1108,30 @@ func (os PublicreportReportSlice) Address(mods ...bob.Mod[*dialect.SelectQuery])
 
 	return Addresses.Query(append(mods,
 		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// Client starts a query for related objects on publicreport.client
+func (o *PublicreportReport) Client(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportClientsQuery {
+	return PublicreportClients.Query(append(mods,
+		sm.Where(PublicreportClients.Columns.UUID.EQ(psql.Arg(o.ClientUUID))),
+	)...)
+}
+
+func (os PublicreportReportSlice) Client(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportClientsQuery {
+	pkClientUUID := make(pgtypes.Array[null.Val[uuid.UUID]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkClientUUID = append(pkClientUUID, o.ClientUUID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkClientUUID), "uuid[]")),
+	))
+
+	return PublicreportClients.Query(append(mods,
+		sm.Where(psql.Group(PublicreportClients.Columns.UUID).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1302,6 +1376,60 @@ func (publicreportReport0 *PublicreportReport) AttachTextJobs(ctx context.Contex
 	return nil
 }
 
+func insertPublicreportReportCompliance0(ctx context.Context, exec bob.Executor, publicreportCompliance1 *PublicreportComplianceSetter, publicreportReport0 *PublicreportReport) (*PublicreportCompliance, error) {
+	publicreportCompliance1.ReportID = omit.From(publicreportReport0.ID)
+
+	ret, err := PublicreportCompliances.Insert(publicreportCompliance1).One(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportReportCompliance0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportReportCompliance0(ctx context.Context, exec bob.Executor, count int, publicreportCompliance1 *PublicreportCompliance, publicreportReport0 *PublicreportReport) (*PublicreportCompliance, error) {
+	setter := &PublicreportComplianceSetter{
+		ReportID: omit.From(publicreportReport0.ID),
+	}
+
+	err := publicreportCompliance1.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportReportCompliance0: %w", err)
+	}
+
+	return publicreportCompliance1, nil
+}
+
+func (publicreportReport0 *PublicreportReport) InsertCompliance(ctx context.Context, exec bob.Executor, related *PublicreportComplianceSetter) error {
+	var err error
+
+	publicreportCompliance1, err := insertPublicreportReportCompliance0(ctx, exec, related, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Compliance = publicreportCompliance1
+
+	publicreportCompliance1.R.Report = publicreportReport0
+
+	return nil
+}
+
+func (publicreportReport0 *PublicreportReport) AttachCompliance(ctx context.Context, exec bob.Executor, publicreportCompliance1 *PublicreportCompliance) error {
+	var err error
+
+	_, err = attachPublicreportReportCompliance0(ctx, exec, 1, publicreportCompliance1, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Compliance = publicreportCompliance1
+
+	publicreportCompliance1.R.Report = publicreportReport0
+
+	return nil
+}
+
 func insertPublicreportReportNotifyEmails0(ctx context.Context, exec bob.Executor, publicreportNotifyEmails1 []*PublicreportNotifyEmailSetter, publicreportReport0 *PublicreportReport) (PublicreportNotifyEmailSlice, error) {
 	for i := range publicreportNotifyEmails1 {
 		publicreportNotifyEmails1[i].ReportID = omit.From(publicreportReport0.ID)
@@ -1536,6 +1664,54 @@ func (publicreportReport0 *PublicreportReport) AttachAddress(ctx context.Context
 	publicreportReport0.R.Address = address1
 
 	address1.R.Reports = append(address1.R.Reports, publicreportReport0)
+
+	return nil
+}
+
+func attachPublicreportReportClient0(ctx context.Context, exec bob.Executor, count int, publicreportReport0 *PublicreportReport, publicreportClient1 *PublicreportClient) (*PublicreportReport, error) {
+	setter := &PublicreportReportSetter{
+		ClientUUID: omitnull.From(publicreportClient1.UUID),
+	}
+
+	err := publicreportReport0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportReportClient0: %w", err)
+	}
+
+	return publicreportReport0, nil
+}
+
+func (publicreportReport0 *PublicreportReport) InsertClient(ctx context.Context, exec bob.Executor, related *PublicreportClientSetter) error {
+	var err error
+
+	publicreportClient1, err := PublicreportClients.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachPublicreportReportClient0(ctx, exec, 1, publicreportReport0, publicreportClient1)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Client = publicreportClient1
+
+	publicreportClient1.R.Reports = append(publicreportClient1.R.Reports, publicreportReport0)
+
+	return nil
+}
+
+func (publicreportReport0 *PublicreportReport) AttachClient(ctx context.Context, exec bob.Executor, publicreportClient1 *PublicreportClient) error {
+	var err error
+
+	_, err = attachPublicreportReportClient0(ctx, exec, 1, publicreportReport0, publicreportClient1)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.Client = publicreportClient1
+
+	publicreportClient1.R.Reports = append(publicreportClient1.R.Reports, publicreportReport0)
 
 	return nil
 }
@@ -1988,6 +2164,7 @@ type publicreportReportWhere[Q psql.Filterable] struct {
 	LocationLatitude       psql.WhereNullMod[Q, float64]
 	LocationLongitude      psql.WhereNullMod[Q, float64]
 	AddressGid             psql.WhereMod[Q, string]
+	ClientUUID             psql.WhereNullMod[Q, uuid.UUID]
 }
 
 func (publicreportReportWhere[Q]) AliasedAs(alias string) publicreportReportWhere[Q] {
@@ -2024,6 +2201,7 @@ func buildPublicreportReportWhere[Q psql.Filterable](cols publicreportReportColu
 		LocationLatitude:       psql.WhereNull[Q, float64](cols.LocationLatitude),
 		LocationLongitude:      psql.WhereNull[Q, float64](cols.LocationLongitude),
 		AddressGid:             psql.Where[Q, string](cols.AddressGid),
+		ClientUUID:             psql.WhereNull[Q, uuid.UUID](cols.ClientUUID),
 	}
 }
 
@@ -2045,6 +2223,18 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 			if rel != nil {
 				rel.R.Report = o
 			}
+		}
+		return nil
+	case "Compliance":
+		rel, ok := retrieved.(*PublicreportCompliance)
+		if !ok {
+			return fmt.Errorf("publicreportReport cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Compliance = rel
+
+		if rel != nil {
+			rel.R.Report = o
 		}
 		return nil
 	case "NotifyEmails":
@@ -2094,6 +2284,18 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 		}
 
 		o.R.Address = rel
+
+		if rel != nil {
+			rel.R.Reports = PublicreportReportSlice{o}
+		}
+		return nil
+	case "Client":
+		rel, ok := retrieved.(*PublicreportClient)
+		if !ok {
+			return fmt.Errorf("publicreportReport cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Client = rel
 
 		if rel != nil {
 			rel.R.Reports = PublicreportReportSlice{o}
@@ -2197,8 +2399,10 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 }
 
 type publicreportReportPreloader struct {
+	Compliance   func(...psql.PreloadOption) psql.Preloader
 	Nuisance     func(...psql.PreloadOption) psql.Preloader
 	Address      func(...psql.PreloadOption) psql.Preloader
+	Client       func(...psql.PreloadOption) psql.Preloader
 	Organization func(...psql.PreloadOption) psql.Preloader
 	ReviewerUser func(...psql.PreloadOption) psql.Preloader
 	Water        func(...psql.PreloadOption) psql.Preloader
@@ -2206,6 +2410,19 @@ type publicreportReportPreloader struct {
 
 func buildPublicreportReportPreloader() publicreportReportPreloader {
 	return publicreportReportPreloader{
+		Compliance: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportCompliance, PublicreportComplianceSlice](psql.PreloadRel{
+				Name: "Compliance",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportReports,
+						To:          PublicreportCompliances,
+						FromColumns: []string{"id"},
+						ToColumns:   []string{"report_id"},
+					},
+				},
+			}, PublicreportCompliances.Columns.Names(), opts...)
+		},
 		Nuisance: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*PublicreportNuisance, PublicreportNuisanceSlice](psql.PreloadRel{
 				Name: "Nuisance",
@@ -2231,6 +2448,19 @@ func buildPublicreportReportPreloader() publicreportReportPreloader {
 					},
 				},
 			}, Addresses.Columns.Names(), opts...)
+		},
+		Client: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*PublicreportClient, PublicreportClientSlice](psql.PreloadRel{
+				Name: "Client",
+				Sides: []psql.PreloadSide{
+					{
+						From:        PublicreportReports,
+						To:          PublicreportClients,
+						FromColumns: []string{"client_uuid"},
+						ToColumns:   []string{"uuid"},
+					},
+				},
+			}, PublicreportClients.Columns.Names(), opts...)
 		},
 		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
@@ -2276,10 +2506,12 @@ func buildPublicreportReportPreloader() publicreportReportPreloader {
 
 type publicreportReportThenLoader[Q orm.Loadable] struct {
 	TextJobs     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Compliance   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NotifyEmails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NotifyPhones func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Nuisance     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Address      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Client       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ReviewerUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -2293,6 +2525,9 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 	type TextJobsLoadInterface interface {
 		LoadTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type ComplianceLoadInterface interface {
+		LoadCompliance(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type NotifyEmailsLoadInterface interface {
 		LoadNotifyEmails(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -2304,6 +2539,9 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 	}
 	type AddressLoadInterface interface {
 		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ClientLoadInterface interface {
+		LoadClient(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type OrganizationLoadInterface interface {
 		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2334,6 +2572,12 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 				return retrieved.LoadTextJobs(ctx, exec, mods...)
 			},
 		),
+		Compliance: thenLoadBuilder[Q](
+			"Compliance",
+			func(ctx context.Context, exec bob.Executor, retrieved ComplianceLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCompliance(ctx, exec, mods...)
+			},
+		),
 		NotifyEmails: thenLoadBuilder[Q](
 			"NotifyEmails",
 			func(ctx context.Context, exec bob.Executor, retrieved NotifyEmailsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -2356,6 +2600,12 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 			"Address",
 			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadAddress(ctx, exec, mods...)
+			},
+		),
+		Client: thenLoadBuilder[Q](
+			"Client",
+			func(ctx context.Context, exec bob.Executor, retrieved ClientLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadClient(ctx, exec, mods...)
 			},
 		),
 		Organization: thenLoadBuilder[Q](
@@ -2461,6 +2711,58 @@ func (os PublicreportReportSlice) LoadTextJobs(ctx context.Context, exec bob.Exe
 			rel.R.Report = o
 
 			o.R.TextJobs = append(o.R.TextJobs, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadCompliance loads the publicreportReport's Compliance into the .R struct
+func (o *PublicreportReport) LoadCompliance(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Compliance = nil
+
+	related, err := o.Compliance(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Report = o
+
+	o.R.Compliance = related
+	return nil
+}
+
+// LoadCompliance loads the publicreportReport's Compliance into the .R struct
+func (os PublicreportReportSlice) LoadCompliance(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportCompliances, err := os.Compliance(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportCompliances {
+
+			if !(o.ID == rel.ReportID) {
+				continue
+			}
+
+			rel.R.Report = o
+
+			o.R.Compliance = rel
+			break
 		}
 	}
 
@@ -2689,6 +2991,61 @@ func (os PublicreportReportSlice) LoadAddress(ctx context.Context, exec bob.Exec
 			rel.R.Reports = append(rel.R.Reports, o)
 
 			o.R.Address = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadClient loads the publicreportReport's Client into the .R struct
+func (o *PublicreportReport) LoadClient(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Client = nil
+
+	related, err := o.Client(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Reports = PublicreportReportSlice{o}
+
+	o.R.Client = related
+	return nil
+}
+
+// LoadClient loads the publicreportReport's Client into the .R struct
+func (os PublicreportReportSlice) LoadClient(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	publicreportClients, err := os.Client(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range publicreportClients {
+			if !o.ClientUUID.IsValue() {
+				continue
+			}
+
+			if !(o.ClientUUID.IsValue() && o.ClientUUID.MustGet() == rel.UUID) {
+				continue
+			}
+
+			rel.R.Reports = append(rel.R.Reports, o)
+
+			o.R.Client = rel
 			break
 		}
 	}

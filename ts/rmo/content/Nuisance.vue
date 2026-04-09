@@ -469,7 +469,7 @@ import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
-import { useLocationStore } from "@/store/location";
+import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
 import type {
@@ -487,7 +487,7 @@ const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
 const isSubmitting = ref(false);
-const locationStore = useLocationStore();
+const storeLocation = useStoreLocation();
 const locator = ref<Locator>({
 	address: {
 		country: "",
@@ -564,7 +564,7 @@ async function doSubmit() {
 	}
 }
 onMounted(() => {
-	locationStore
+	storeLocation
 		.get()
 		.then((loc: GeolocationPosition) => {
 			console.log("user geolocation", loc);
