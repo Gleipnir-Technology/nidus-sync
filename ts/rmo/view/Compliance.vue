@@ -18,7 +18,7 @@ body > .container-fluid {
 <template>
 	<template v-if="district">
 		<router-view v-slot="{ Component }">
-			<component :is="Component" :district="district" />
+			<component :is="Component" :district="district" @doLocator="doLocator" />
 		</router-view>
 	</template>
 	<template v-else>
@@ -33,6 +33,8 @@ import { computedAsync } from "@vueuse/core";
 import { useStoreDistrict } from "@/rmo/store/district";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import type { District } from "@/type/api";
+import { Locator } from "@/type/map";
+
 interface Props {
 	slug: string;
 }
@@ -44,4 +46,7 @@ const district = computedAsync(async (): Promise<District | undefined> => {
 	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
 });
+function doLocator(locator: Locator | null) {
+	console.log("locator", locator);
+}
 </script>

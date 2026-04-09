@@ -204,9 +204,9 @@
 								You can check the status of your report at any time using your
 								Report ID.
 							</p>
-							<a :href="`/status/${id}`" class="btn btn-outline-primary">
+							<RouterLink :to="`/status/${id}`" class="btn btn-outline-primary">
 								Check Status
-							</a>
+							</RouterLink>
 						</div>
 
 						<div class="row">

@@ -8,11 +8,11 @@ import (
 
 type Address struct {
 	Country    string `db:"country" json:"country"`
-	GID        string `db:"gid" json:"gid"`
+	GID        string `db:"gid" json:"gid" schema:"gid"`
 	Locality   string `db:"locality" json:"locality"`
 	Number     string `db:"number" json:"number"`
 	PostalCode string `db:"postal_code" json:"postal_code"`
-	Raw        string `db:"raw" json:"raw"`
+	Raw        string `db:"raw" json:"raw" schema:"raw"`
 	Region     string `db:"region" json:"region"`
 	Street     string `db:"street" json:"street"`
 	Unit       string `db:"unit" json:"unit"`

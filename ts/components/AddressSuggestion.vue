@@ -30,7 +30,7 @@
 	width: 100%;
 	max-height: 300px;
 	overflow-y: auto;
-	z-index: 1000;
+	z-index: 3;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 	background: white;
 }

@@ -27,6 +27,7 @@ export interface District {
 	url_website: string;
 }
 export interface Location {
+	accuracy?: number;
 	latitude: number;
 	longitude: number;
 }

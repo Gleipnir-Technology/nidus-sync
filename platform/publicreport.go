@@ -84,8 +84,8 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOReport, org_id, report_id)
 }
-func ReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, latlng LatLng, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return reportCreate(ctx, setter_report, latlng, address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func ReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
+	return reportCreate(ctx, setter_report, location, address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_nuisance.ReportID = omit.From(report_id)
 		_, err := models.PublicreportNuisances.Insert(&setter_nuisance).One(ctx, txn)
 		if err != nil {
@@ -95,8 +95,8 @@ func ReportNuisanceCreate(ctx context.Context, setter_report models.Publicreport
 	})
 }
 
-func ReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, latlng LatLng, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return reportCreate(ctx, setter_report, latlng, address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func ReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
+	return reportCreate(ctx, setter_report, location, address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_water.ReportID = omit.From(report_id)
 		_, err := models.PublicreportWaters.Insert(&setter_water).One(ctx, txn)
 		if err != nil {
@@ -108,7 +108,7 @@ func ReportWaterCreate(ctx context.Context, setter_report models.PublicreportRep
 
 type funcSetReportDetail = func(context.Context, bob.Executor, int32) error
 
-func reportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, latlng LatLng, address Address, images []ImageUpload, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
+func reportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location types.Location, address Address, images []ImageUpload, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
@@ -123,10 +123,10 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 
 	// If we've got an locality value it was set by geocoding so we should save it
 	var a *models.Address
-	if address.Locality != "" && latlng.Latitude != nil && latlng.Longitude != nil {
+	if address.Locality != "" && location.Latitude != 0 && location.Longitude != 0 {
 		a, err = geocode.EnsureAddress(ctx, txn, address, types.Location{
-			Latitude:  *latlng.Latitude,
-			Longitude: *latlng.Longitude,
+			Latitude:  location.Latitude,
+			Longitude: location.Longitude,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to ensure address: %w", err)
@@ -138,7 +138,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 		return nil, fmt.Errorf("Failed to save image uploads: %w", err)
 	}
 	var organization_id *int32
-	organization_id, err = MatchDistrict(ctx, latlng.Longitude, latlng.Latitude, images)
+	organization_id, err = MatchDistrict(ctx, location.Longitude, location.Latitude, images)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to match district")
 	}
@@ -153,9 +153,9 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create report database record: %w", err)
 	}
-	if latlng.Latitude != nil && latlng.Longitude != nil {
-		h3cell, _ := latlng.H3Cell()
-		geom_query, _ := latlng.GeometryQuery()
+	if location.Latitude != 0 && location.Longitude != 0 {
+		h3cell, _ := location.H3Cell()
+		geom_query, _ := location.GeometryQuery()
 		_, err = psql.Update(
 			um.Table("publicreport.report"),
 			um.SetCol("h3cell").ToArg(h3cell),

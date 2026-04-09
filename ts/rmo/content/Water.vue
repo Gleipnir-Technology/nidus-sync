@@ -1,4 +1,93 @@
 <style scoped>
+.form-section {
+	margin-bottom: 2.5rem;
+	padding-bottom: 2rem;
+	border-bottom: 1px solid #dee2e6;
+}
+.form-section:last-child {
+	border-bottom: none;
+	margin-bottom: 1rem;
+	padding-bottom: 0;
+}
+.section-heading {
+	margin-bottom: 1.5rem;
+	display: flex;
+	align-items: center;
+}
+.section-heading i {
+	margin-right: 10px;
+	font-size: 1.5rem;
+	color: #0d6efd;
+}
+.submit-container {
+	background-color: #f8f9fa;
+	padding: 20px;
+	border-radius: 5px;
+	margin-top: 2rem;
+}
+.source-card {
+	height: 100%;
+	transition: transform 0.3s;
+}
+.source-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+.source-icon {
+	font-size: 2rem;
+	margin-bottom: 1rem;
+	color: #0d6efd;
+}
+.time-of-day-btn {
+	width: 100%;
+	margin-bottom: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 15px 0;
+}
+.time-of-day-icon {
+	font-size: 1.5rem;
+	margin-bottom: 8px;
+}
+.time-label {
+	font-size: 0.9rem;
+}
+select.tall {
+	height: 160px;
+}
+.severity-item {
+	text-align: center;
+	padding: 10px;
+}
+.severity-scale {
+	display: flex;
+	justify-content: space-between;
+	margin: 20px 0;
+}
+.btn-check:checked + .btn.time-of-day-btn {
+	background-color: $info;
+	color: white;
+}
+.inspection-type-card {
+	cursor: pointer;
+	border: 1px solid #dee2e6;
+	padding: 20px;
+	border-radius: 5px;
+	height: 100%;
+	transition: all 0.3s;
+}
+.inspection-type-card.selected {
+	border-color: #0d6efd;
+	background-color: rgba(13, 110, 253, 0.05);
+}
+.inspection-type-card:hover {
+	border-color: #0d6efd;
+}
+.card-highlight {
+	border-left: 4px solid #0d6efd;
+	background-color: #f8f9fa;
+}
 .map-container {
 	background-color: #e9ecef;
 	border-radius: 10px;
@@ -7,11 +96,31 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	margin-bottom: 20px;
 	margin-top: 20px;
+	/* Prevent touch scrolling issues */
+	touch-action: pan-y pinch-zoom;
 }
 #map {
 	width: 100%;
 	height: 100%;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+	.map-container {
+		height: 400px;
+		margin-bottom: 15px;
+		margin-top: 15px;
+	}
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+	.map-container {
+		height: 350px;
+		border-radius: 5px;
+	}
 }
 </style>
 <template>
@@ -31,10 +140,9 @@
 
 			<!-- Report Form -->
 			<form
-				id="standingWater"
-				action="{{ .URL.WaterSubmit }}"
-				method="POST"
 				enctype="multipart/form-data"
+				ref="formElement"
+				@submit.prevent="doSubmit"
 			>
 				<!-- Photo Upload Section -->
 				<div class="form-section">
@@ -47,7 +155,7 @@
 						location data that can help us find the production source.
 					</p>
 					<div class="mb-4">
-						<photo-upload />
+						<ImageUpload v-model="images" />
 					</div>
 				</div>
 
@@ -129,10 +237,12 @@
 						/>
 						<div class="col-md-6">
 							<div class="mb-3 position-relative">
-								<address-input
+								<AddressSuggestion
+									v-model="address"
 									placeholder="Start typing an address (min 3 characters)"
+									@suggestion-selected="doAddressSuggestionSelected"
 								>
-								</address-input>
+								</AddressSuggestion>
 							</div>
 						</div>
 					</div>
@@ -141,21 +251,27 @@
 						You can also click on the map to mark the location precisely
 					</p>
 					<div class="map-container">
-						<map-locator id="map"></map-locator>
+						<MapLocator
+							v-model="currentCamera"
+							:markers="markers"
+							@click="doMapClick"
+							@marker-drag-end="doMapMarkerDragEnd"
+						/>
 					</div>
 					<input type="hidden" id="map-zoom" name="map-zoom" />
 				</div>
 
 				<button
-					id="toggle-additional"
 					class="btn btn-warning"
+					@click="showMore = true"
+					id="toggle-additional"
 					type="button"
-					@click="toggleCollapse()"
+					v-if="!showMore"
 				>
 					Click here to answer a few more questions to better help us solve your
 					mosquito problem
 				</button>
-				<div class="collapse" id="collapse-additional-fields">
+				<div :class="{ collapse: !showMore }" id="collapse-additional-fields">
 					<!-- Source Details Section -->
 					<div class="form-section">
 						<div class="section-heading">
@@ -395,12 +511,12 @@
 										type="checkbox"
 									/>
 									<label class="form-check-label" for="reporter-confidential">
-										<i
-											class="bi bi-info-circle-fill text-primary ms-1"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
+										<Tooltip
+											placement="top"
 											title="We share your information with mosquito control districts so they can follow up with any questions they may have about your report. Check this box if you would like the district to be careful not to share your information outside of the district operations team."
-										></i>
+										>
+											<i class="bi bi-info-circle-fill text-primary ms-1"></i>
+										</Tooltip>
 										I would like my personal information kept
 										confidential.</label
 									>
@@ -519,10 +635,154 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import AddressSuggestion from "@/components/AddressSuggestion.vue";
+import ImageUpload, { Image } from "@/components/ImageUpload.vue";
+import MapLocator from "@/components/MapLocator.vue";
+import Tooltip from "@/components/Tooltip.vue";
+import { useGeocodeStore } from "@/store/geocode";
+import { useLocationStore } from "@/store/location";
+import { useStorePublicReport } from "@/store/publicreport";
+import type { Marker } from "@/types";
+import type {
+	Address,
+	Geocode,
+	GeocodeSuggestion,
+	Location,
+	PublicReport,
+} from "@/type/api";
+import type { Camera } from "@/type/map";
 
 const isCollapsed = ref<boolean>(true);
 const toggleCollapse = () => {
 	isCollapsed.value = !isCollapsed.value;
 };
+const address = ref<string>("");
+const currentCamera = ref<Camera | null>(null);
+const currentLocation = ref<Location | null>(null);
+const errorMessage = ref("");
+const formElement = ref<HTMLFormElement | null>(null);
+const geocode = useGeocodeStore();
+const images = ref<Image[]>([]);
+const isSubmitting = ref(false);
+const marker = ref<Marker | null>(null);
+const markers = computed((): Marker[] => {
+	if (marker.value) {
+		return [marker.value];
+	} else {
+		return [];
+	}
+});
+const locationStore = useLocationStore();
+const router = useRouter();
+const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
+const showMore = ref<boolean>(false);
+const storePublicReport = useStorePublicReport();
+function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
+	console.log("Address suggestion selected", suggestion);
+
+	doAddressSuggestionDetails(suggestion);
+}
+async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
+	// Fetch full details for the selected suggestion
+	selectedSuggestion.value = suggestion;
+	const url = `/api/geocode/by-gid/${suggestion.gid}`;
+	const response = await fetch(url);
+	if (!response.ok) {
+		console.error("Failed to get suggestion detail", response.statusText);
+		return;
+	}
+	const data = (await response.json()) as Geocode;
+
+	if (currentCamera.value) {
+		currentCamera.value.zoom = 15;
+	}
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: data.location,
+	};
+}
+function doMapClick(location: Location) {
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
+	geocode
+		.reverse(location)
+		.then((code: Geocode) => {
+			address.value = code.address.raw;
+			selectedSuggestion.value = {
+				detail: code.address.number + " " + code.address.street,
+				gid: code.address.gid,
+				locality: code.address.locality,
+				type: "address",
+			};
+			console.log("reverse geocoded", code);
+		})
+		.catch((e) => {
+			console.error("failed to reverse geocode after map click", e);
+		});
+}
+function doMapMarkerDragEnd(location: Location) {
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
+}
+async function doSubmit() {
+	if (!formElement.value) return;
+
+	isSubmitting.value = true;
+	errorMessage.value = "";
+	try {
+		const formData = new FormData(formElement.value);
+		if (selectedSuggestion.value) {
+			formData.append("address-gid", selectedSuggestion.value.gid);
+		}
+		if (currentLocation.value) {
+			formData.append("latitude", currentLocation.value.latitude.toString());
+			formData.append("longitude", currentLocation.value.longitude.toString());
+		}
+		images.value.forEach((image, index) => {
+			formData.append(`image[${index}]`, image.file, image.name);
+		});
+		formData.append("address", address.value);
+		const resp = await fetch("/api/rmo/water", {
+			method: "POST",
+			body: formData,
+			// Don't set Content-Type, the borwser should do it
+		});
+		const data: PublicReport = (await resp.json()) as PublicReport;
+		storePublicReport.add(data);
+		router.push("/submitted/" + data.id);
+	} catch (error) {
+		errorMessage.value =
+			error instanceof Error ? error.message : "Upload failed";
+	} finally {
+		isSubmitting.value = false;
+	}
+}
+onMounted(() => {
+	locationStore
+		.get()
+		.then((loc: GeolocationPosition) => {
+			console.log("user geolocation", loc);
+			const coords = loc.coords;
+			currentLocation.value = coords;
+			currentCamera.value = {
+				location: coords,
+				zoom: 15,
+			};
+		})
+		.catch((e) => {
+			console.log("failed to get location", e);
+		});
+});
 </script>

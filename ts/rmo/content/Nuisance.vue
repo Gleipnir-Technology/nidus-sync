@@ -1,8 +1,4 @@
 <style scoped>
-.district-logo {
-	max-height: 80px;
-	width: auto;
-}
 .form-section {
 	margin-bottom: 2.5rem;
 	padding-bottom: 2rem;
@@ -92,38 +88,6 @@ select.tall {
 	border-left: 4px solid #0d6efd;
 	background-color: #f8f9fa;
 }
-.map-container {
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-	height: 500px;
-	margin-bottom: 20px;
-	margin-top: 20px;
-	align-items: center;
-	justify-content: center;
-	/* Prevent touch scrolling issues */
-	touch-action: pan-y pinch-zoom;
-}
-#map {
-	width: 100%;
-	height: 100%;
-}
-
-/* Mobile-specific adjustments */
-@media (max-width: 768px) {
-	.map-container {
-		height: 400px;
-		margin-bottom: 15px;
-		margin-top: 15px;
-	}
-}
-
-/* Extra small devices */
-@media (max-width: 576px) {
-	.map-container {
-		height: 350px;
-		border-radius: 5px;
-	}
-}
 </style>
 
 <template>
@@ -139,9 +103,9 @@ select.tall {
 
 			<!-- Report Form -->
 			<form
-				@submit.prevent="doSubmit"
 				enctype="multipart/form-data"
 				ref="formElement"
+				@submit.prevent="doSubmit"
 			>
 				<!-- Location Section -->
 				<div class="form-section">
@@ -157,29 +121,11 @@ select.tall {
 							</p>
 						</div>
 					</div>
-
-					<div class="col-md-6">
-						<div class="mb-3 position-relative">
-							<AddressSuggestion
-								v-model="address"
-								placeholder="Start typing an address (min 3 characters)"
-								@suggestion-selected="doAddressSuggestionSelected"
-							>
-							</AddressSuggestion>
-						</div>
-					</div>
 				</div>
 				<p class="small text-muted mb-2">
 					You can also click on the map to mark the location precisely
 				</p>
-				<div class="map-container">
-					<MapLocator
-						v-model="currentCamera"
-						:markers="markers"
-						@click="doMapClick"
-						@marker-drag-end="doMapMarkerDragEnd"
-					/>
-				</div>
+				<AddressAndMapLocator v-model="locator" />
 
 				<!-- Mosquito Activity Section -->
 				<div class="form-section">
@@ -321,11 +267,11 @@ select.tall {
 				</div>
 
 				<button
-					id="toggle-additional"
 					class="btn btn-warning"
-					v-if="!showMore"
-					type="button"
 					@click="showMore = true"
+					id="toggle-additional"
+					type="button"
+					v-if="!showMore"
 				>
 					Click here to answer a few more questions to better help us solve your
 					mosquito problem
@@ -521,6 +467,7 @@ import { computed, onMounted, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
+import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
 import { useLocationStore } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
@@ -532,88 +479,21 @@ import type {
 	Location,
 	PublicReport,
 } from "@/type/api";
-import type { Camera } from "@/type/map";
+import type { Camera, Locator } from "@/type/map";
 
-const address = ref<string>("");
 const currentCamera = ref<Camera | null>(null);
 const currentLocation = ref<Location | null>(null);
 const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
 const isSubmitting = ref(false);
-const marker = ref<Marker | null>(null);
+const locationStore = useLocationStore();
+const locator = ref<Locator | null>(null);
 
 const showMore = ref<boolean>(false);
-const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
-const locationStore = useLocationStore();
 const storePublicReport = useStorePublicReport();
 const geocode = useGeocodeStore();
-const markers = computed((): Marker[] => {
-	if (marker.value) {
-		return [marker.value];
-	} else {
-		return [];
-	}
-});
 const router = useRouter();
-function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
-	console.log("Address suggestion selected", suggestion);
-
-	doAddressSuggestionDetails(suggestion);
-}
-async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
-	// Fetch full details for the selected suggestion
-	//const url = `https://api.stadiamaps.com/geocoding/v2/place_details?ids=${suggestion.properties.gid}`;
-	selectedSuggestion.value = suggestion;
-	const url = `/api/geocode/by-gid/${suggestion.gid}`;
-	const response = await fetch(url);
-	if (!response.ok) {
-		console.error("Failed to get suggestion detail", response.statusText);
-		return;
-	}
-	const data = (await response.json()) as Geocode;
-
-	if (currentCamera.value) {
-		currentCamera.value.zoom = 15;
-	}
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: data.location,
-	};
-}
-function doMapClick(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
-	geocode
-		.reverse(location)
-		.then((code: Geocode) => {
-			address.value = code.address.raw;
-			selectedSuggestion.value = {
-				detail: code.address.number + " " + code.address.street,
-				gid: code.address.gid,
-				locality: code.address.locality,
-				type: "address",
-			};
-			console.log("reverse geocoded", code);
-		})
-		.catch((e) => {
-			console.error("failed to reverse geocode after map click", e);
-		});
-}
-function doMapMarkerDragEnd(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
-}
 async function doSubmit() {
 	if (!formElement.value) return;
 
@@ -621,17 +501,37 @@ async function doSubmit() {
 	errorMessage.value = "";
 	try {
 		const formData = new FormData(formElement.value);
-		if (selectedSuggestion.value) {
-			formData.append("address-gid", selectedSuggestion.value.gid);
+		if (locator.value) {
+			if (locator.value.address) {
+				formData.append("locator.address.gid", locator.value.address.gid);
+				formData.append("locator.address.raw", locator.value.address.raw);
+			}
+			if (locator.value.location) {
+				formData.append(
+					"locator.location.latitude",
+					locator.value.location.latitude.toString(),
+				);
+				formData.append(
+					"locator.location.longitude",
+					locator.value.location.longitude.toString(),
+				);
+			}
 		}
-		if (currentLocation.value) {
-			formData.append("latitude", currentLocation.value.latitude.toString());
-			formData.append("longitude", currentLocation.value.longitude.toString());
-		}
+		formData.append(
+			"location.accuracy",
+			currentLocation.value?.accuracy?.toString() ?? "0",
+		);
+		formData.append(
+			"location.latitude",
+			currentLocation.value?.latitude.toString() ?? "0",
+		);
+		formData.append(
+			"location.longitude",
+			currentLocation.value?.longitude.toString() ?? "0",
+		);
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
 		});
-		formData.append("address", address.value);
 		const resp = await fetch("/api/rmo/nuisance", {
 			method: "POST",
 			body: formData,

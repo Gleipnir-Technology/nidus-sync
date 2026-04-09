@@ -1,0 +1,172 @@
+<style scoped>
+#address-input {
+	font-size: 16px;
+}
+.map-container {
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	height: 500px;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	align-items: center;
+	justify-content: center;
+	/* Prevent touch scrolling issues */
+	touch-action: pan-y pinch-zoom;
+}
+#map {
+	width: 100%;
+	height: 100%;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+	.map-container {
+		height: 400px;
+		margin-bottom: 15px;
+		margin-top: 15px;
+	}
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+	.map-container {
+		height: 350px;
+		border-radius: 5px;
+	}
+}
+</style>
+<template>
+	<div class="mb-4">
+		<AddressSuggestion
+			v-model="address"
+			placeholder="Start typing an address (min 3 characters)"
+			@suggestion-selected="doAddressSuggestionSelected"
+		>
+		</AddressSuggestion>
+	</div>
+
+	<!-- Map Placeholder -->
+	<div class="mb-4">
+		<label class="form-label fw-semibold">Location Preview</label>
+		<div class="map-container">
+			<MapLocator
+				v-model="currentCamera"
+				:markers="markers"
+				@click="doMapClick"
+				@marker-drag-end="doMapMarkerDragEnd"
+			/>
+		</div>
+	</div>
+</template>
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import AddressSuggestion from "@/components/AddressSuggestion.vue";
+import MapLocator from "@/components/MapLocator.vue";
+import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
+import { useGeocodeStore } from "@/store/geocode";
+import { useLocationStore } from "@/store/location";
+import type { Camera, Locator } from "@/type/map";
+import type { Marker } from "@/types";
+
+interface Emits {
+	(e: "update:modelValue", value: Locator): void;
+}
+interface Props {
+	modelValue: Locator | null;
+}
+const address = ref<string>("");
+const currentCamera = ref<Camera | null>(null);
+const emit = defineEmits<Emits>();
+const geocode = useGeocodeStore();
+const marker = ref<Marker | null>(null);
+const markers = computed((): Marker[] => {
+	if (marker.value) {
+		return [marker.value];
+	} else {
+		return [];
+	}
+});
+const props = defineProps<Props>();
+const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
+function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
+	console.log("Address suggestion selected", suggestion);
+
+	doAddressSuggestionDetails(suggestion);
+}
+async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
+	// Fetch full details for the selected suggestion
+	selectedSuggestion.value = suggestion;
+	const url = `/api/geocode/by-gid/${suggestion.gid}`;
+	const response = await fetch(url);
+	if (!response.ok) {
+		console.error("Failed to get suggestion detail", response.statusText);
+		return;
+	}
+	const data = (await response.json()) as Geocode;
+
+	if (currentCamera.value) {
+		console.log("suggestion located, zooming", data);
+		currentCamera.value.zoom = 15;
+	}
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: data.location,
+	};
+	updateModel();
+}
+function doMapClick(location: Location) {
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
+	geocode
+		.reverse(location)
+		.then((code: Geocode) => {
+			address.value = code.address.raw;
+			selectedSuggestion.value = {
+				detail: code.address.number + " " + code.address.street,
+				gid: code.address.gid,
+				locality: code.address.locality,
+				type: "address",
+			};
+			updateModel();
+			console.log("reverse geocoded", code);
+		})
+		.catch((e) => {
+			console.error("failed to reverse geocode after map click", e);
+		});
+}
+function doMapMarkerDragEnd(location: Location) {
+	marker.value = {
+		color: "#FF0000",
+		draggable: true,
+		id: "x",
+		location: location,
+	};
+	updateModel();
+}
+function updateModel() {
+	const newLocator: Locator = {
+		address: {
+			country: "",
+			gid: selectedSuggestion ? (selectedSuggestion.value?.gid ?? "") : "",
+			locality: "",
+			number: "",
+			postal_code: "",
+			raw: address.value,
+			region: "",
+			street: "",
+			unit: "",
+		},
+		location: marker.value?.location ?? {
+			latitude: 0,
+			longitude: 0,
+		},
+	};
+	emit("update:modelValue", newLocator);
+}
+</script>

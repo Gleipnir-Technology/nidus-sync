@@ -1,4 +1,4 @@
-<style scoped>
+<style scoped lang="scss">
 @import url("https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css");
 .map-wrapper {
 	position: relative;
@@ -24,18 +24,18 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(255, 255, 255, 0.85);
+	background: rgba(255, 255, 255, 0.45);
 	backdrop-filter: blur(2px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 2;
 	cursor: pointer;
 	transition: background 0.2s ease;
 }
 
 .map-overlay:hover {
-	background: rgba(255, 255, 255, 0.9);
+	background: rgba(255, 255, 255, 0.65);
 }
 
 .overlay-content {
@@ -71,13 +71,18 @@
 	top: 10px;
 	right: 10px;
 	z-index: 999;
-	background: #ffc107;
 	border: none;
 	color: #000;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	font-size: 0.875rem;
 	padding: 0.375rem 0.75rem;
 	transition: all 0.2s;
+}
+.map-status-btn.locked {
+	background: $warning;
+}
+.map-status-btn.unlocked {
+	background: $primary;
 }
 
 .map-status-btn:hover {
@@ -120,37 +125,29 @@
 
 <template>
 	<div class="map-wrapper" ref="mapWrapper">
-		<!-- Tap-to-activate overlay -->
-		<div
-			class="map-overlay"
-			@click="activateMap"
-			ref="mapOverlay"
-			@touchstart.prevent="activateMap"
-			v-if="!mapInteractive"
-		>
-			<div class="overlay-content">
-				<i class="bi bi-hand-index-thumb"></i>
-				<p class="mb-0">Tap to select location</p>
-			</div>
-		</div>
-
 		<!-- Map container -->
-		<div
-			ref="mapContainer"
-			class="map-container"
-			:class="{ 'map-inactive': !mapInteractive }"
-		></div>
+		<div ref="mapContainer" class="map-container"></div>
 
 		<!-- Lock/unlock indicator button -->
 		<button
 			v-if="mapInteractive"
 			type="button"
-			class="btn btn-sm map-status-btn"
+			class="btn btn-sm map-status-btn unlocked"
 			@click="deactivateMap"
 			title="Lock map to enable page scrolling"
 		>
 			<i class="bi bi-unlock-fill"></i>
 			<span class="d-none d-md-inline ms-1">Map Active</span>
+		</button>
+		<button
+			v-if="!mapInteractive"
+			type="button"
+			class="btn btn-sm map-status-btn locked"
+			@click="activateMap"
+			title="Unlock map to enable map pan/zoom"
+		>
+			<i class="bi bi-lock-fill"></i>
+			<span class="d-none d-md-inline ms-1">Map Locked</span>
 		</button>
 	</div>
 </template>
@@ -198,7 +195,6 @@ const mapInteractive = ref(false);
 const mapMarkers: Ref<Map<string, maplibregl.Marker>> = shallowRef<
 	Map<string, maplibregl.Marker>
 >(new Map());
-const mapOverlay = useTemplateRef("mapOverlay");
 const mapWrapper = useTemplateRef("mapWrapper");
 
 function activateMap() {
@@ -225,29 +221,6 @@ function deactivateMap() {
 	map.value.doubleClickZoom.disable();
 }
 
-// Handle clicks outside the map to deactivate
-function handleOutsideClick(event: MouseEvent | TouchEvent) {
-	if (!event.target) {
-		console.log("Didn't click on anything");
-		return;
-	}
-	if (!mapWrapper.value) {
-		console.log("Somehow map wrapper is null");
-		return;
-	}
-	const target = event.target as HTMLElement;
-	const cls = target.className ?? "";
-	if (
-		mapInteractive.value &&
-		mapContainer.value &&
-		!(mapWrapper.value.contains(target) || cls == "map-overlay")
-	) {
-		console.log("deactivate map: outside map click", target, cls);
-		deactivateMap();
-	} else {
-		console.log("click is inside the map, ignoring");
-	}
-}
 // Initialize map
 function initializeMap() {
 	if (!mapContainer.value) return;
@@ -306,8 +279,6 @@ function initializeMap() {
 	});
 
 	// Listen for clicks outside the map
-	document.addEventListener("mousedown", handleOutsideClick);
-	document.addEventListener("touchstart", handleOutsideClick);
 }
 
 function updateModel(_map: maplibregl.Map) {
@@ -382,6 +353,7 @@ const updateMarkers = () => {
 			mapMarkers.value.set(markerData.id, marker);
 		}
 	});
+	frameMarkers();
 };
 
 // Frame all markers in view
@@ -416,6 +388,7 @@ const frameMarkers = () => {
 watch(
 	() => props.modelValue,
 	(newCamera) => {
+		console.log("New map camera", newCamera);
 		if (map.value && newCamera) {
 			map.value.panTo(
 				{
@@ -434,6 +407,7 @@ watch(
 watch(
 	() => props.markers,
 	() => {
+		console.log("New map markers", props.markers);
 		updateMarkers();
 	},
 	{ deep: true },
@@ -451,8 +425,6 @@ onUnmounted(() => {
 	if (clickTimeout.value) {
 		clearTimeout(clickTimeout.value);
 	}
-	document.removeEventListener("click", handleOutsideClick);
-	document.removeEventListener("touchstart", handleOutsideClick);
 
 	// Remove all markers
 	mapMarkers.value.forEach((marker) => marker.remove());
