@@ -1,4 +1,7 @@
 <style scoped>
+.capitalized {
+	text-transform: capitalize;
+}
 .map-container {
 	border-radius: 10px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -50,8 +53,8 @@
 			<div
 				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
 			>
-				<h5 class="mb-0">Report {{ id }}</h5>
-				<span class="badge bg-warning text-dark status-badge">
+				<h5 class="mb-0">Report {{ formatReportID(id) }}</h5>
+				<span class="badge bg-warning capitalized status-badge text-dark">
 					{{ report.status }}
 				</span>
 			</div>
@@ -59,7 +62,7 @@
 				<div class="row">
 					<div class="col-md-4 mb-3">
 						<strong><i class="bi bi-tag me-2"></i>Type:</strong>
-						<span>{{ report.type }}</span>
+						<span class="capitalized">{{ report.type }}</span>
 					</div>
 					<div class="col-md-4 mb-3">
 						<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
@@ -127,7 +130,7 @@
 						<div class="timeline-date">
 							{{ formatTimeRelative(item.created) }}
 						</div>
-						<h5 class="mb-1">{{ item.type }}</h5>
+						<h5 class="capitalized mb-1">{{ item.type }}</h5>
 						<p class="mb-0">{{ item.message }}</p>
 					</div>
 				</div>
@@ -149,7 +152,7 @@ import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
 import type { District, PublicReport } from "@/type/api";
-import { formatTimeRelative } from "@/format";
+import { formatReportID, formatTimeRelative } from "@/format";
 
 // Props
 interface Props {

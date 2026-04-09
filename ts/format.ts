@@ -54,6 +54,12 @@ export function formatRelativeTime(dateString: string): string {
 	if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
 	return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 }
+export function formatReportID(id: string): string {
+	if (id.length === 12) {
+		return `${id.substring(0, 4)}-${id.substring(4, 8)}-${id.substring(8)}`;
+	}
+	return id;
+}
 export function formatTimeRelative(t: Date): string {
 	const now = new Date();
 	const diffMs = now.getTime() - t.getTime();
