@@ -111,8 +111,8 @@
 				<div class="summary-section">
 					<h3><i class="bi bi-geo-alt"></i> Property Address</h3>
 					<div class="summary-item">
-						<div class="summary-value" v-if="compliance.locator?.address.raw">
-							{{ compliance.locator.address.raw }}
+						<div class="summary-value" v-if="modelValue.locator?.address.raw">
+							{{ modelValue.locator.address.raw }}
 							<span class="status-badge status-provided ms-2">
 								<i class="bi bi-check-circle"></i> Provided
 							</span>
@@ -130,10 +130,10 @@
 					<h3><i class="bi bi-camera"></i> Photos</h3>
 					<div class="summary-item">
 						<div class="summary-value">
-							<span class="photo-count" v-if="compliance.images.length > 0">
+							<span class="photo-count" v-if="modelValue.images.length > 0">
 								<i class="bi bi-images"></i>
-								{{ compliance.images.length }} photo{{
-									compliance.images.length > 1 ? "s" : ""
+								{{ modelValue.images.length }} photo{{
+									modelValue.images.length > 1 ? "s" : ""
 								}}
 								uploaded
 							</span>
@@ -141,9 +141,9 @@
 								<i class="bi bi-x-circle"></i> Not Provided
 							</span>
 						</div>
-						<div class="summary-value mt-2" v-if="compliance.comments">
+						<div class="summary-value mt-2" v-if="modelValue.comments">
 							<div class="summary-label">Comments:</div>
-							<small class="text-muted">{{ compliance.comments }}</small>
+							<small class="text-muted">{{ modelValue.comments }}</small>
 						</div>
 					</div>
 				</div>
@@ -155,7 +155,7 @@
 						<div class="summary-value">
 							<span
 								class="status-badge status-provided"
-								v-if="compliance.permission?.access == PermissionAccess.GRANTED"
+								v-if="modelValue.permission?.access == PermissionAccess.GRANTED"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted without owner
 								present
@@ -163,7 +163,7 @@
 							<span
 								class="status-badge status-provided"
 								v-else-if="
-									compliance.permission?.access == PermissionAccess.WITH_OWNER
+									modelValue.permission?.access == PermissionAccess.WITH_OWNER
 								"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted with owner
@@ -172,7 +172,7 @@
 							<span
 								class="status-badge status-not-provided"
 								v-else-if="
-									compliance.permission?.access == PermissionAccess.DENIED
+									modelValue.permission?.access == PermissionAccess.DENIED
 								"
 							>
 								<i class="bi bi-x-circle"></i> Entry denied
@@ -189,8 +189,8 @@
 					<h3><i class="bi bi-person"></i> Contact Information</h3>
 					<div class="summary-item">
 						<div class="summary-label">Name</div>
-						<div class="summary-value" v-if="compliance.contact?.name">
-							{{ compliance.contact.name }}
+						<div class="summary-value" v-if="modelValue.contact?.name">
+							{{ modelValue.contact.name }}
 						</div>
 						<div class="summary-value status-badge status-not-provided" v-else>
 							<i class="bi bi-x-circle"></i> Not provided
@@ -198,9 +198,9 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Phone</div>
-						<div class="summary-value" v-if="compliance.contact?.phone">
-							{{ compliance.contact.phone }}
-							<small class="text-muted" v-if="compliance.contact?.can_text"
+						<div class="summary-value" v-if="modelValue.contact?.phone">
+							{{ modelValue.contact.phone }}
+							<small class="text-muted" v-if="modelValue.contact?.can_text"
 								>(texting OK)</small
 							>
 						</div>
@@ -210,8 +210,8 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Email</div>
-						<div class="summary-value" v-if="compliance.contact?.email">
-							{{ compliance.contact?.email }}
+						<div class="summary-value" v-if="modelValue.contact?.email">
+							{{ modelValue.contact?.email }}
 						</div>
 						<div class="summary-value status-badge status-not-provided" v-else>
 							<i class="bi bi-x-circle"></i> Not provided
@@ -251,7 +251,7 @@ interface Emits {
 	(e: "doSubmit"): void;
 }
 interface Props {
-	compliance: Compliance;
+	modelValue: Compliance;
 	district: District;
 }
 const emit = defineEmits<Emits>();
