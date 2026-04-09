@@ -90,6 +90,10 @@
 						</span>
 					</div>
 				</div>
+				<NuisanceReportDetail
+					:nuisance="report.nuisance"
+					v-if="report.nuisance"
+				/>
 			</div>
 		</div>
 
@@ -140,6 +144,7 @@ import { computedAsync } from "@vueuse/core";
 import Header from "@/rmo/components/Header.vue";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
 import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
+import NuisanceReportDetail from "@/rmo/components/NuisanceReportDetail.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
