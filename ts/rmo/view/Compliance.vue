@@ -20,10 +20,13 @@ body > .container-fluid {
 		<router-view v-slot="{ Component }">
 			<component
 				:is="Component"
+				:compliance="compliance"
 				:district="district"
 				@doComments="doComments"
+				@doContact="doContact"
 				@doImages="doImages"
 				@doLocator="doLocator"
+				@doPermission="doPermission"
 			/>
 		</router-view>
 	</template>
@@ -41,13 +44,26 @@ import { useStoreDistrict } from "@/rmo/store/district";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import type { District } from "@/type/api";
 import { Locator } from "@/type/map";
+import { type Contact } from "@/rmo/content/compliance/Contact.vue";
+import { type Permission } from "@/rmo/content/compliance/Permission.vue";
 
+export interface Compliance {
+	comments: string;
+	contact?: Contact;
+	locator?: Locator;
+	images: Image[];
+	permission?: Permission;
+}
 interface Props {
 	slug: string;
 }
 
 const districtStore = useStoreDistrict();
 
+const compliance = ref<Compliance>({
+	comments: "",
+	images: [],
+});
 const props = defineProps<Props>();
 const district = computedAsync(async (): Promise<District | undefined> => {
 	const districts = await districtStore.list();
@@ -55,11 +71,22 @@ const district = computedAsync(async (): Promise<District | undefined> => {
 });
 function doComments(comments: string) {
 	console.log("comments", comments);
+	compliance.value.comments = comments;
+}
+function doContact(contact: Contact | undefined) {
+	console.log("contact", contact);
+	compliance.value.contact = contact;
 }
 function doImages(images: Image[]) {
 	console.log("images", images);
+	compliance.value.images = images;
 }
-function doLocator(locator: Locator | null) {
+function doLocator(locator: Locator | undefined) {
 	console.log("locator", locator);
+	compliance.value.locator = locator;
+}
+function doPermission(permission: Permission | undefined) {
+	console.log("permission", permission);
+	compliance.value.permission = permission;
 }
 </script>

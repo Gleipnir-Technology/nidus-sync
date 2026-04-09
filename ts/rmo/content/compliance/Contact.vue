@@ -46,6 +46,7 @@
 						id="contact-name"
 						name="name"
 						placeholder="Enter your name"
+						v-model="contact.name"
 					/>
 				</div>
 
@@ -61,6 +62,7 @@
 						id="contact-phone"
 						name="phone"
 						placeholder="(555) 123-4567"
+						v-model="contact.phone"
 					/>
 				</div>
 
@@ -71,8 +73,7 @@
 							class="form-check-input"
 							type="checkbox"
 							id="can-text"
-							name="can_text"
-							value="yes"
+							v-model="contact.can_text"
 						/>
 						<label class="form-check-label" for="can-text">
 							You may send text messages to this number
@@ -93,8 +94,8 @@
 						type="email"
 						class="form-control"
 						id="contact-email"
-						name="email"
 						placeholder="your.email@example.com"
+						v-model="contact.email"
 					/>
 					<div class="form-text">
 						We'll send you a confirmation and any updates about this request
@@ -114,20 +115,44 @@
 					<RouterLink class="btn btn-outline-secondary" to="./permission">
 						Back
 					</RouterLink>
-					<RouterLink class="btn btn-primary flex-grow-1" to="process">
+					<button class="btn btn-primary flex-grow-1" @click="doContinue()">
 						Continue
-					</RouterLink>
+					</button>
 				</div>
 			</form>
 		</main>
 	</div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
+
+import { router } from "@/rmo/router";
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+
+export interface Contact {
+	name: string;
+	phone: string;
+	can_text: boolean;
+	email: string;
+}
+interface Emits {
+	(e: "doContact", contact: Contact): void;
+}
 interface Props {
 	district: District;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
+const contact = ref<Contact>({
+	name: "",
+	phone: "",
+	can_text: true,
+	email: "",
+});
+function doContinue() {
+	emit("doContact", contact.value);
+	router.push("./process");
+}
 </script>

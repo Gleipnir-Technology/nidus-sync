@@ -83,8 +83,8 @@
 							<input
 								type="radio"
 								id="access-allowed"
-								:value="Permission.GRANTED"
-								v-model="selectedPermission"
+								:value="PermissionAccess.GRANTED"
+								v-model="permission.access"
 								class="mt-1"
 							/>
 							<label for="access-allowed">
@@ -99,7 +99,7 @@
 					<!-- Conditional fields for Option 1 -->
 					<div
 						v-if="
-							selectedPermission && selectedPermission == Permission.GRANTED
+							permission.access && permission.access == PermissionAccess.GRANTED
 						"
 						class="conditional-section"
 					>
@@ -112,8 +112,9 @@
 								class="form-control"
 								id="access-instructions"
 								name="access_instructions"
-								rows="3"
 								placeholder="Example: Side gate on left, backyard near shed..."
+								rows="3"
+								v-model="permission.access_instructions"
 							></textarea>
 						</div>
 
@@ -123,42 +124,31 @@
 								<span class="text-muted">(Optional)</span>
 							</label>
 							<input
-								type="text"
 								class="form-control"
 								id="gate-code"
 								name="gate_code"
 								placeholder="Enter code if applicable"
+								type="text"
+								v-model="permission.gate_code"
 							/>
 						</div>
 
 						<div class="mb-3">
-							<label class="form-label">Dog on Property?</label>
 							<div class="form-check">
 								<input
 									class="form-check-input"
-									type="radio"
+									type="checkbox"
 									name="has_dog"
-									id="dog-no"
-									value="no"
-									checked
-									onchange="toggleDogWarning()"
+									id="has_dog"
+									v-model="permission.has_dog"
 								/>
-								<label class="form-check-label" for="dog-no"> No </label>
-							</div>
-							<div class="form-check">
-								<input
-									class="form-check-input"
-									id="dog-yes"
-									type="radio"
-									name="has_dog"
-									v-model="hasDog"
-									onchange="toggleDogWarning()"
-								/>
-								<label class="form-check-label" for="dog-yes"> Yes </label>
+								<label class="form-check-label" for="has_dog"
+									>Dog on Property?</label
+								>
 							</div>
 						</div>
 
-						<div class="dog-warning" v-if="hasDog">
+						<div class="dog-warning" v-if="permission.has_dog">
 							<small>
 								<i class="bi bi-exclamation-triangle"></i>
 								<strong>Important:</strong> Our staff will only enter if the dog
@@ -174,8 +164,8 @@
 							<input
 								type="radio"
 								id="access-with-owner"
-								:value="Permission.WITH_OWNER"
-								v-model="selectedPermission"
+								:value="PermissionAccess.WITH_OWNER"
+								v-model="permission.access"
 								class="mt-1"
 							/>
 							<label for="access-with-owner">
@@ -191,30 +181,31 @@
 					<div
 						class="conditional-section"
 						v-if="
-							selectedPermission && selectedPermission == Permission.WITH_OWNER
+							permission.access &&
+							permission.access == PermissionAccess.WITH_OWNER
 						"
 					>
 						<div class="form-check mb-3">
 							<input
 								class="form-check-input"
 								type="checkbox"
-								id="request-scheduled"
+								id="request_scheduled"
 								name="request_scheduled"
-								value="yes"
+								v-model="permission.wants_scheduled"
 							/>
-							<label class="form-check-label" for="request-scheduled">
+							<label class="form-check-label" for="request_scheduled">
 								I would like to request a scheduled visit
 							</label>
 						</div>
 
 						<div class="mb-3">
-							<label for="availability-notes" class="form-label">
+							<label for="availability_notes" class="form-label">
 								Availability / Access Notes
 								<span class="text-muted">(Optional)</span>
 							</label>
 							<textarea
 								class="form-control"
-								id="availability-notes"
+								id="availability_notes"
 								name="availability_notes"
 								rows="3"
 								placeholder="Example: Available weekday mornings, please call before visiting..."
@@ -228,8 +219,8 @@
 							<input
 								type="radio"
 								id="access-denied"
-								:value="Permission.DENIED"
-								v-model="selectedPermission"
+								:value="PermissionAccess.DENIED"
+								v-model="permission.access"
 								class="mt-1"
 							/>
 							<label for="access-denied">
@@ -244,7 +235,9 @@
 					<!-- Conditional message for Option 3 -->
 					<div
 						class="conditional-section"
-						v-if="selectedPermission && selectedPermission == Permission.DENIED"
+						v-if="
+							permission.access && permission.access == PermissionAccess.DENIED
+						"
 					>
 						<div class="encouragement-box">
 							<p class="mb-2">
@@ -276,9 +269,9 @@
 					<RouterLink class="btn btn-outline-secondary" to="./evidence">
 						Back
 					</RouterLink>
-					<RouterLink class="btn btn-primary flex-grow-1" to="contact">
+					<button class="btn btn-primary flex-grow-1" @click="doContinue">
 						Continue
-					</RouterLink>
+					</button>
 				</div>
 			</form>
 		</main>
@@ -286,31 +279,37 @@
 </template>
 <script setup lang="ts">
 import { ref } from "vue";
-import type { District } from "@/type/api";
+import { router } from "@/rmo/router";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { type District, PermissionAccess } from "@/type/api";
+
+interface Emits {
+	(e: "doPermission", permission: Permission): void;
+}
+export interface Permission {
+	access?: PermissionAccess;
+	access_instructions: string;
+	availability_notes: string;
+	gate_code: string;
+	has_dog: boolean;
+	wants_scheduled: boolean;
+}
 interface Props {
 	district: District;
 }
-enum Permission {
-	GRANTED = "access-granted",
-	WITH_OWNER = "access-with-owner",
-	DENIED = "access-denied",
-}
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 const hasDog = ref<boolean>(false);
-const selectedPermission = ref<Permission | undefined>();
-
-function toggleDogWarning() {
-	/*
-			const dogYes = document.getElementById("dog-yes");
-			const dogWarning = document.getElementById("dog-warning");
-
-			if (dogYes.checked) {
-				dogWarning.style.display = "block";
-			} else {
-				dogWarning.style.display = "none";
-			}
-*/
+const permission = ref<Permission>({
+	access_instructions: "",
+	availability_notes: "",
+	gate_code: "",
+	has_dog: false,
+	wants_scheduled: false,
+});
+function doContinue() {
+	emit("doPermission", permission.value);
+	router.push("./contact");
 }
 </script>
