@@ -288,8 +288,8 @@ import { type District, PermissionAccess } from "@/type/api";
 import type { Compliance } from "@/rmo/view/Compliance.vue";
 
 interface Emits {
-	(e: "update:modelValue", value: Compliance): void;
 	(e: "doPermission"): void;
+	(e: "update:modelValue", value: Compliance): void;
 }
 export interface Permission {
 	access?: PermissionAccess;

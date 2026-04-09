@@ -33,93 +33,91 @@
 				</p>
 			</div>
 
-			<form id="contact-form" method="POST" action="/compliance/contact">
-				<!-- Name -->
-				<div class="mb-3">
-					<label for="contact-name" class="form-label fw-semibold">
-						Name
-						<span class="optional-badge">(Optional)</span>
-					</label>
+			<!-- Name -->
+			<div class="mb-3">
+				<label for="contact-name" class="form-label fw-semibold">
+					Name
+					<span class="optional-badge">(Optional)</span>
+				</label>
+				<input
+					type="text"
+					class="form-control"
+					id="contact-name"
+					name="name"
+					placeholder="Enter your name"
+					v-model="modelValue.contact.name"
+				/>
+			</div>
+
+			<!-- Phone -->
+			<div class="mb-3">
+				<label for="contact-phone" class="form-label fw-semibold">
+					Phone Number
+					<span class="optional-badge">(Optional)</span>
+				</label>
+				<input
+					type="tel"
+					class="form-control"
+					id="contact-phone"
+					name="phone"
+					placeholder="(555) 123-4567"
+					v-model="modelValue.contact.phone"
+				/>
+			</div>
+
+			<!-- Can we text? -->
+			<div class="mb-3">
+				<div class="form-check">
 					<input
-						type="text"
-						class="form-control"
-						id="contact-name"
-						name="name"
-						placeholder="Enter your name"
-						v-model="contact.name"
+						class="form-check-input"
+						type="checkbox"
+						id="can-text"
+						v-model="modelValue.contact.can_text"
 					/>
-				</div>
-
-				<!-- Phone -->
-				<div class="mb-3">
-					<label for="contact-phone" class="form-label fw-semibold">
-						Phone Number
-						<span class="optional-badge">(Optional)</span>
+					<label class="form-check-label" for="can-text">
+						You may send text messages to this number
 					</label>
-					<input
-						type="tel"
-						class="form-control"
-						id="contact-phone"
-						name="phone"
-						placeholder="(555) 123-4567"
-						v-model="contact.phone"
-					/>
 				</div>
+				<small class="text-muted ms-4 d-block mt-1">
+					Text messages allow for faster communication and updates
+				</small>
+			</div>
 
-				<!-- Can we text? -->
-				<div class="mb-3">
-					<div class="form-check">
-						<input
-							class="form-check-input"
-							type="checkbox"
-							id="can-text"
-							v-model="contact.can_text"
-						/>
-						<label class="form-check-label" for="can-text">
-							You may send text messages to this number
-						</label>
-					</div>
-					<small class="text-muted ms-4 d-block mt-1">
-						Text messages allow for faster communication and updates
-					</small>
+			<!-- Email -->
+			<div class="mb-4">
+				<label for="contact-email" class="form-label fw-semibold">
+					Email Address
+					<span class="optional-badge">(Optional)</span>
+				</label>
+				<input
+					type="email"
+					class="form-control"
+					id="contact-email"
+					placeholder="your.email@example.com"
+					v-model="modelValue.contact.email"
+				/>
+				<div class="form-text">
+					We'll send you a confirmation and any updates about this request
 				</div>
+			</div>
 
-				<!-- Email -->
-				<div class="mb-4">
-					<label for="contact-email" class="form-label fw-semibold">
-						Email Address
-						<span class="optional-badge">(Optional)</span>
-					</label>
-					<input
-						type="email"
-						class="form-control"
-						id="contact-email"
-						placeholder="your.email@example.com"
-						v-model="contact.email"
-					/>
-					<div class="form-text">
-						We'll send you a confirmation and any updates about this request
-					</div>
-				</div>
+			<div class="alert alert-light border" role="alert">
+				<small class="text-muted">
+					<i class="bi bi-shield-check"></i>
+					Your contact information will only be used for this compliance matter
+					and will be kept confidential.
+				</small>
+			</div>
 
-				<div class="alert alert-light border" role="alert">
-					<small class="text-muted">
-						<i class="bi bi-shield-check"></i>
-						Your contact information will only be used for this compliance
-						matter and will be kept confidential.
-					</small>
-				</div>
-
-				<!-- Navigation Buttons -->
-				<div class="d-flex gap-2 mt-4">
-					<RouterLink class="btn btn-outline-secondary" to="./permission">
-						Back
-					</RouterLink>
-					<button class="btn btn-primary flex-grow-1" @click="doContinue()">
-						Continue
-					</button>
-				</div>
-			</form>
+			<!-- Navigation Buttons -->
+			<div class="d-flex gap-2 mt-4">
+				<RouterLink class="btn btn-outline-secondary" to="./permission">
+					Back
+				</RouterLink>
+				<button class="btn btn-primary flex-grow-1" @click="doContinue()">
+					Continue
+				</button>
+			</div>
 		</main>
 	</div>
 </template>
@@ -130,6 +128,7 @@ import { router } from "@/rmo/router";
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import type { Compliance } from "@/rmo/view/Compliance.vue";
 
 export interface Contact {
 	name: string;
@@ -138,21 +137,18 @@ export interface Contact {
 	email: string;
 }
 interface Emits {
-	(e: "doContact", contact: Contact): void;
+	(e: "doContact"): void;
+	(e: "update:modelValue", value: Compliance): void;
 }
 interface Props {
 	district: District;
+	modelValue: Compliance;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-const contact = ref<Contact>({
-	name: "",
-	phone: "",
-	can_text: true,
-	email: "",
-});
 function doContinue() {
-	emit("doContact", contact.value);
+	emit("update:modelValue", props.modelValue);
+	emit("doContact");
 	router.push("./process");
 }
 </script>
