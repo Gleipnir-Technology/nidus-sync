@@ -110,7 +110,7 @@
 			<!-- Upload Area -->
 			<div class="mb-4">
 				<label class="form-label fw-semibold">Photos</label>
-				<ImageUpload v-model="images" />
+				<ImageUpload v-model="modelValue.images" />
 			</div>
 
 			<!-- Photo Previews -->
@@ -142,7 +142,7 @@
 					name="comments"
 					placeholder="Provide any additional information that may be helpful..."
 					rows="4"
-					v-model="comments"
+					v-model="modelValue.comments"
 				></textarea>
 				<div class="form-text">
 					Example: "This standing water appeared after recent rain" or "I've
@@ -170,20 +170,21 @@ import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import type { Compliance } from "@/rmo/view/Compliance.vue";
+
 interface Emits {
-	(e: "doComments", comments: string): void;
-	(e: "doImages", images: Image[]): void;
+	(e: "update:modelValue", value: Compliance): void;
+	(e: "doEvidence"): void;
 }
 interface Props {
 	district: District;
+	modelValue: Compliance;
 }
-const comments = ref<string>("");
 const emit = defineEmits<Emits>();
-const images = ref<Image[]>([]);
 const props = defineProps<Props>();
 function doContinue() {
-	emit("doComments", comments.value);
-	emit("doImages", images.value);
+	emit("update:modelValue", props.modelValue);
+	emit("doEvidence");
 	router.push("./permission");
 }
 </script>
