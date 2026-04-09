@@ -12,6 +12,7 @@ export const useStoreDistrict = defineStore("district", () => {
 	// Actions
 	async function byURI(uri: string): Promise<District | undefined> {
 		let district = _byURI.value.get(uri);
+		console.log("district by uri", uri, district);
 		if (district) {
 			return district;
 		}
@@ -45,6 +46,7 @@ export const useStoreDistrict = defineStore("district", () => {
 			const data: District[] = await response.json();
 			data.forEach((d: District) => {
 				_byURI.value.set(d.uri, d);
+				console.log("district", d.uri);
 			});
 			return data;
 		} catch (e) {

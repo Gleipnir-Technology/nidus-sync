@@ -51,7 +51,7 @@ import { onMounted, ref } from "vue";
 import { useSessionStore } from "@/store/session";
 import { useUserStore } from "@/store/user";
 import UserSelector from "@/components/UserSelector.vue";
-import type { Session, User } from "@/types";
+import type { Session, User } from "@/type/api";
 
 const session = useSessionStore();
 const user = useUserStore();

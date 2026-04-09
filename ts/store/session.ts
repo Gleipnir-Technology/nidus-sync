@@ -7,7 +7,7 @@ import {
 	SessionNotificationCounts,
 	URLs,
 	User,
-} from "@/types";
+} from "@/type/api";
 
 export const useSessionStore = defineStore("session", () => {
 	// State

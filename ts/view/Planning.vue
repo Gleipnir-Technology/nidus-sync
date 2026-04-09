@@ -67,8 +67,8 @@ import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { useSignalStore } from "@/store/signal";
 import { useSessionStore } from "@/store/session";
-import { Lead, Point, Signal } from "@/types";
-import type { Location } from "@/type/api";
+import type { Point } from "@/types";
+import type { Lead, Location, Signal } from "@/type/api";
 
 // Refs
 const mapTile = ref(null);

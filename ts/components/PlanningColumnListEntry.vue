@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { shortAddress } from "@/format";
-import { Signal } from "@/types";
+import { Signal } from "@/type/api";
 
 interface Props {
 	selected: boolean;

@@ -523,14 +523,14 @@ import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
 import { useLocationStore } from "@/store/location";
-import { useStorePublicreport } from "@/store/publicreport";
+import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
 import type {
 	Address,
 	Geocode,
 	GeocodeSuggestion,
 	Location,
-	Publicreport,
+	PublicReport,
 } from "@/type/api";
 import type { Camera } from "@/type/map";
 
@@ -546,7 +546,7 @@ const marker = ref<Marker | null>(null);
 const showMore = ref<boolean>(false);
 const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 const locationStore = useLocationStore();
-const storePublicreport = useStorePublicreport();
+const storePublicReport = useStorePublicReport();
 const geocode = useGeocodeStore();
 const markers = computed((): Marker[] => {
 	if (marker.value) {
@@ -637,8 +637,8 @@ async function doSubmit() {
 			body: formData,
 			// Don't set Content-Type, the borwser should do it
 		});
-		const data: Publicreport = (await resp.json()) as Publicreport;
-		storePublicreport.add(data);
+		const data: PublicReport = (await resp.json()) as PublicReport;
+		storePublicReport.add(data);
 		router.push("/submitted/" + data.id);
 	} catch (error) {
 		errorMessage.value =

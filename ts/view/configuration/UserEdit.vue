@@ -259,7 +259,7 @@ pre {
 import { onMounted, ref, toRaw } from "vue";
 import { useSessionStore } from "@/store/session";
 import { useUserStore } from "@/store/user";
-import { User } from "@/types";
+import { User } from "@/type/api";
 
 interface Props {
 	id: number;

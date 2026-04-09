@@ -103,7 +103,7 @@
 import { onMounted, ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 import { useUserStore } from "@/store/user";
-import { User } from "@/types";
+import { User } from "@/type/api";
 
 interface URLConfiguration {
 	userAdd: string;

@@ -42,7 +42,7 @@
 }
 </style>
 <template>
-	<HeaderDistrict v-if="district" />
+	<HeaderDistrict :district="district" v-if="district" />
 	<Header v-else />
 	<div class="container my-4" v-if="report">
 		<!-- Report ID and Status Section -->
@@ -83,7 +83,9 @@
 						<strong><i class="bi bi-images me-2"></i>Images:</strong>
 						<span>
 							{{
-								report.image_count > 0 ? report.image_count : "None provided"
+								report.images.length > 0
+									? report.images.length
+									: "None provided"
 							}}
 						</span>
 					</div>
@@ -139,9 +141,9 @@ import Header from "@/rmo/components/Header.vue";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
 import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
-import { useStorePublicreport } from "@/store/publicreport";
+import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import type { District, Publicreport } from "@/type/api";
+import type { District, PublicReport } from "@/type/api";
 import { formatTimeRelative } from "@/format";
 
 // Props
@@ -151,10 +153,10 @@ interface Props {
 
 const props = defineProps<Props>();
 const storeDistrict = useStoreDistrict();
-const storePublicreport = useStorePublicreport();
+const storePublicReport = useStorePublicReport();
 // Computed
-const report = computedAsync(async (): Promise<Publicreport | undefined> => {
-	return await storePublicreport.byID(props.id);
+const report = computedAsync(async (): Promise<PublicReport | undefined> => {
+	return await storePublicReport.byID(props.id);
 });
 const district = computedAsync(async (): Promise<District | undefined> => {
 	if (!(report.value && report.value.district)) {

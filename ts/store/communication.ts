@@ -1,8 +1,8 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import { Communication } from "../types";
-import { SSEManager, SSEMessage } from "../SSEManager";
-import { useSessionStore } from "./session";
+import { ref } from "vue";
+import { Communication } from "@/type/api";
+import { SSEManager, SSEMessage } from "@/SSEManager";
+import { useSessionStore } from "@/store/session";
 
 export const useCommunicationStore = defineStore("communication", () => {
 	// State

@@ -61,7 +61,7 @@
 </template>
 <script setup lang="ts">
 import { formatAddress } from "@/format";
-import { ReviewTask } from "@/types";
+import { ReviewTask } from "@/type/api";
 
 interface Emits {
 	(e: "doSelectTask", id: number): void;

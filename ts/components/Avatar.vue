@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { User } from "@/types";
+import { User } from "@/type/api";
 
 interface Props {
 	user: User;

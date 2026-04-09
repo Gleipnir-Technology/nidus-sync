@@ -210,7 +210,7 @@ import { Tooltip, Popover } from "bootstrap";
 import NavigationLink from "@/components/common/NavigationLink.vue";
 import { SSEManager, type SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
-import type { Session } from "@/types";
+import type { Session } from "@/type/api";
 
 // Reactive state
 const isCollapsed = ref(false);

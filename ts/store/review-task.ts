@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SSEManager, SSEMessage } from "@/SSEManager";
-import { ReviewTask } from "@/types";
+import { ReviewTask } from "@/type/api";
 import { useSessionStore } from "@/store/session";
 
 export const useReviewTaskStore = defineStore("review-task", () => {

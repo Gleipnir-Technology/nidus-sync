@@ -20,7 +20,7 @@ import FlyoverPoolCard from "@/components/FlyoverPoolCard.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { shortAddress } from "@/format";
-import { Signal } from "@/types";
+import { Signal } from "@/type/api";
 interface Props {
 	signal: Signal;
 }

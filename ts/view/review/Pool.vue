@@ -98,15 +98,9 @@ import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ReviewPoolColumnAction from "@/components/ReviewPoolColumnAction.vue";
 import ReviewPoolColumnDetail from "@/components/ReviewPoolColumnDetail.vue";
 import ReviewPoolColumnList from "@/components/ReviewPoolColumnList.vue";
-import {
-	Bounds,
-	Changes,
-	Contact,
-	MapClickEvent,
-	Marker,
-	ReviewTask,
-} from "@/types";
-import type { Location } from "@/type/api";
+import type { Changes } from "@/types";
+import { Contact, Location, ReviewTask } from "@/type/api";
+import { Bounds, MapClickEvent, Marker } from "@/types";
 
 interface FormData {
 	latitude: number;

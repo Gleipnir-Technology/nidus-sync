@@ -14,8 +14,7 @@ export default defineComponent({
 
 	props: {
 		time: {
-			type: String,
-			default: "",
+			type: Date,
 		},
 	},
 
@@ -56,7 +55,7 @@ export default defineComponent({
 			}
 		},
 
-		formatRelativeTime(timestamp: string): string {
+		formatRelativeTime(timestamp: Date): string {
 			const now = new Date();
 			const date = new Date(timestamp);
 			const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

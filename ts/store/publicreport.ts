@@ -1,19 +1,19 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { Publicreport, type PublicreportDTO } from "@/type/api";
+import { PublicReport, type PublicReportDTO } from "@/type/api";
 
-export const useStorePublicreport = defineStore("publicreport", () => {
+export const useStorePublicReport = defineStore("publicreport", () => {
 	// State
-	const _byID = ref<Map<string, Publicreport>>(new Map());
+	const _byID = ref<Map<string, PublicReport>>(new Map());
 	const error = ref(null);
 	const loading = ref(false);
-	//const ongoingFetch = ref<Promise<Publicreport[]> | null>(null);
+	//const ongoingFetch = ref<Promise<PublicReport[]> | null>(null);
 
-	function add(pr: Publicreport) {
+	function add(pr: PublicReport) {
 		_byID.value.set(pr.id, pr);
 	}
 	// Actions
-	async function byID(id: string): Promise<Publicreport | undefined> {
+	async function byID(id: string): Promise<PublicReport | undefined> {
 		loading.value = true;
 		error.value = null;
 		try {
@@ -23,8 +23,8 @@ export const useStorePublicreport = defineStore("publicreport", () => {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const body: PublicreportDTO = await response.json();
-			const report = Publicreport.fromJSON(body);
+			const body: PublicReportDTO = await response.json();
+			const report = PublicReport.fromJSON(body);
 			_byID.value.set(id, report);
 			return report;
 		} catch (err) {

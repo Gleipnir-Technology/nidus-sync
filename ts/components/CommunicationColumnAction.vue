@@ -107,9 +107,9 @@
 							<h6><i class="bi bi-clock-history"></i> Activity Log</h6>
 							<div class="small">
 								<div
-									v-for="entry in selectedCommunication?.public_report?.log ||
-									[]"
-									:key="entry.created"
+									v-for="(entry, index) in selectedCommunication?.public_report
+										?.log || []"
+									:key="index"
 									class="border-start border-2 ps-2 mb-2"
 								>
 									<div v-if="entry.type === 'created'">
@@ -147,7 +147,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { Communication, User } from "@/types";
+import { Communication, User } from "@/type/api";
 interface Emits {
 	(e: "markSignal"): void;
 	(e: "markInvalid"): void;
@@ -173,8 +173,8 @@ function applyMessageTemplate(template: string) {
 		messageText.value = templates[template as keyof typeof templates];
 	}
 }
-function formatDate(date: string) {
-	return new Date(date).toLocaleString();
+function formatDate(date: Date) {
+	return date.toLocaleString();
 }
 function handleTemplateChange(event: Event) {
 	const target = event.target as HTMLSelectElement;

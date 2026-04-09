@@ -258,8 +258,8 @@ import { ref, onMounted } from "vue";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
 import { useStoreDistrict } from "@/rmo/store/district";
-import { useStorePublicreport } from "@/store/publicreport";
-import type { District, Publicreport } from "@/type/api";
+import { useStorePublicReport } from "@/store/publicreport";
+import type { District, PublicReport } from "@/type/api";
 
 interface FormData {
 	name: string;
@@ -286,10 +286,10 @@ const formData = ref<FormData>({
 });
 const router = useRouter();
 const storeDistrict = useStoreDistrict();
-const storePublicreport = useStorePublicreport();
+const storePublicReport = useStorePublicReport();
 
-const report = computedAsync(async (): Promise<Publicreport | undefined> => {
-	return await storePublicreport.byID(props.id);
+const report = computedAsync(async (): Promise<PublicReport | undefined> => {
+	return await storePublicReport.byID(props.id);
 });
 const district = computedAsync(async (): Promise<District | undefined> => {
 	if (!(report.value && report.value.district)) {

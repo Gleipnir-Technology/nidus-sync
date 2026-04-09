@@ -54,7 +54,7 @@ import { ref, onMounted, watch } from "vue";
 import { computedAsync } from "@vueuse/core";
 import Avatar from "@/components/Avatar.vue";
 import { useUserStore } from "@/store/user";
-import type { User } from "@/types";
+import type { User } from "@/type/api";
 
 interface Props {
 	modelValue?: User | null;

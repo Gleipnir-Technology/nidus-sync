@@ -73,8 +73,8 @@ import PlanningColumnDetailEntry from "@/components/PlanningColumnDetailEntry.vu
 import TimeRelative from "@/components/TimeRelative.vue";
 import { shortAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
-import { MapClickEvent, Marker, Signal } from "@/types";
-import type { Location } from "@/type/api";
+import { MapClickEvent, Marker } from "@/types";
+import type { Location, Signal } from "@/type/api";
 
 interface Props {
 	markers: Marker[];

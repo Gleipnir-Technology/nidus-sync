@@ -144,7 +144,7 @@
 import { computed, ref } from "vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { formatAddress } from "@/format";
-import { Communication, LogEntry, PublicReport } from "@/types";
+import { Communication, LogEntry, PublicReport } from "@/type/api";
 
 interface Props {
 	all: Communication[] | null;
@@ -211,8 +211,8 @@ function filterMatchesLogEntry(filter: string, logs: LogEntry[]) {
 }
 function filterMatchesPublicReport(filter: string, pr: PublicReport) {
 	if (
-		pr.address_raw.includes(filter) ||
-		pr.public_id.includes(filter) ||
+		pr.address.raw.includes(filter) ||
+		pr.id.includes(filter) ||
 		filterMatchesLogEntry(filter, pr.log)
 	) {
 		return true;

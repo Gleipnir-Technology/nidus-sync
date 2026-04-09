@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useSessionStore } from "@/store/session";
-import { Session } from "@/types";
+import { Session } from "@/type/api";
 
 import Sidebar from "./components/layout/Sidebar.vue";
 import MainContent from "./components/layout/MainContent.vue";

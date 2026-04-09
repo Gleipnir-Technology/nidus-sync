@@ -198,7 +198,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import PlanningColumnListEntry from "@/components/PlanningColumnListEntry.vue";
-import { Followup, Lead, Signal } from "@/types";
+import { Followup, Lead, Signal } from "@/type/api";
 
 interface Emits {
 	(e: "refresh"): void;

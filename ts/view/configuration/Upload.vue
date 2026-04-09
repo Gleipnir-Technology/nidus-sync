@@ -160,7 +160,7 @@
 import { computed, onMounted } from "vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { useUploadStore } from "@/store/upload";
-import { Upload } from "@/types";
+import { Upload } from "@/type/api";
 
 const uploadStore = useUploadStore();
 const uploads = computed((): Upload[] | null => {

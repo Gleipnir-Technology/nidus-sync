@@ -25,7 +25,7 @@
 						Standing Water Report
 					</span>
 				</h5>
-				<small class="text-muted">Report ID: #{{ report.public_id }}</small>
+				<small class="text-muted">Report ID: #{{ report.id }}</small>
 			</div>
 			<span class="badge bg-secondary">
 				<TimeRelative :time="report.created" />
@@ -316,7 +316,7 @@ import MapMultipoint from "@/components/MapMultipoint.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { formatAddress } from "@/format";
-import { PublicReport } from "@/types";
+import { PublicReport } from "@/type/api";
 
 interface Emits {
 	(e: "viewImage", index: number): void;

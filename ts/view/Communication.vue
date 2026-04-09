@@ -68,7 +68,8 @@ import ToastNotification from "@/components/ToastNotification.vue";
 import { SSEManager } from "@/SSEManager";
 import { useCommunicationStore } from "@/store/communication";
 import { useSessionStore } from "@/store/session";
-import { Bounds, Communication, Marker } from "@/types";
+import type { Bounds, Marker } from "@/types";
+import type { Communication } from "@/type/api";
 
 const communication = useCommunicationStore();
 const session = useSessionStore();

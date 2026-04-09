@@ -45,7 +45,7 @@ interface Props {
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	// default bounds cover a bunch of the continental US
-	bounds: () => {
+	bounds: (): Bounds => {
 		return {
 			max: { longitude: -70, latitude: 50 },
 			min: { longitude: -125, latitude: 25 },

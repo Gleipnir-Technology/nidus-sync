@@ -56,7 +56,8 @@
 <script setup lang="ts">
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
-import { Changes, ReviewTask } from "@/types";
+import { Changes } from "@/types";
+import { ReviewTask } from "@/type/api";
 
 interface Props {
 	changes: Changes;

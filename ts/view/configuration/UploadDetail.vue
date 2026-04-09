@@ -305,7 +305,7 @@ import { useRouter } from "vue-router";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import { useUploadStore } from "@/store/upload";
 import { useSessionStore } from "@/store/session";
-import { CSVPoolDetail, CSVPoolError, Upload, UploadPoolRow } from "@/types";
+import { CSVPoolDetail, CSVPoolError, Upload, UploadPoolRow } from "@/type/api";
 
 interface ErrorMessage {
 	message: string;

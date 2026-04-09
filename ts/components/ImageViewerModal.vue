@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { formatDistance } from "@/format";
-import { Image } from "@/types";
+import { Image } from "@/type/api";
 
 interface Emits {
 	(e: "close"): void;
