@@ -30,7 +30,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import { onMounted, onUnmounted, ref, shallowRef, type Ref } from "vue";
-import { Bounds, Marker } from "@/types";
+import { Marker } from "@/types";
+import type { Bounds } from "@/type/api";
 
 interface Emits {
 	(e: "cell-click", cell: number): void;

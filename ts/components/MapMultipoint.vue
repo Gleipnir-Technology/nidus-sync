@@ -32,7 +32,8 @@ import {
 	watch,
 	type Ref,
 } from "vue";
-import { Bounds, Marker } from "@/types";
+import { Marker } from "@/types";
+import type { Bounds } from "@/type/api";
 
 interface Emits {}
 interface Props {

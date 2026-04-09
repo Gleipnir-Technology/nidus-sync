@@ -1,10 +1,6 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { Location } from "@/type/api";
 
-export interface Bounds {
-	min: Location;
-	max: Location;
-}
 export interface Changes {
 	updated: string[];
 	unchanged: string[];

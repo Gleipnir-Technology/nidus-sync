@@ -149,8 +149,8 @@ import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import { formatAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
-import type { Bounds, MapClickEvent, Marker } from "@/types";
-import { Contact, Pool, ReviewTask, User } from "@/type/api";
+import type { MapClickEvent, Marker } from "@/types";
+import { Bounds, Contact, Pool, ReviewTask, User } from "@/type/api";
 import type { Location } from "@/type/api";
 
 interface Props {

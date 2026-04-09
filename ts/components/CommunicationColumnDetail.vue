@@ -75,8 +75,8 @@ import { computed } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import PublicreportCard from "@/components/PublicreportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
-import type { Bounds, Marker } from "@/types";
-import type { Communication, User } from "@/type/api";
+import type { Marker } from "@/types";
+import type { Bounds, Communication, User } from "@/type/api";
 import { useSessionStore } from "@/store/session";
 
 interface Emits {

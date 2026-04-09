@@ -159,7 +159,7 @@ import { onMounted, reactive } from "vue";
 import MapAggregate from "@/components/MapAggregate.vue";
 import { formatBigNumber, formatTimeRelative } from "@/format";
 import { useSessionStore } from "@/store/session";
-import type { Bounds } from "@/types";
+import type { Bounds } from "@/type/api";
 
 const dashboard = reactive({
 	counts: {
