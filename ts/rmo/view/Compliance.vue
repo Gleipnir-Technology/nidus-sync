@@ -21,9 +21,8 @@ body > .container-fluid {
 			<component
 				:is="Component"
 				:district="district"
-				@doComments="doComments"
+				@doEvidence="doEvidence"
 				@doContact="doContact"
-				@doImages="doImages"
 				@doLocator="doLocator"
 				@doPermission="doPermission"
 				v-model="compliance"
@@ -42,17 +41,17 @@ import { computedAsync } from "@vueuse/core";
 import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import Intro from "@/rmo/content/compliance/Intro.vue";
-import type { District } from "@/type/api";
+import { type District, PermissionAccess } from "@/type/api";
 import { Locator } from "@/type/map";
 import { type Contact } from "@/rmo/content/compliance/Contact.vue";
 import { type Permission } from "@/rmo/content/compliance/Permission.vue";
 
 export interface Compliance {
 	comments: string;
-	contact?: Contact;
+	contact: Contact;
 	locator: Locator;
 	images: Image[];
-	permission?: Permission;
+	permission: Permission;
 }
 interface Props {
 	slug: string;
@@ -62,6 +61,12 @@ const districtStore = useStoreDistrict();
 
 const compliance = ref<Compliance>({
 	comments: "",
+	contact: {
+		name: "",
+		phone: "",
+		can_text: true,
+		email: "",
+	},
 	images: [],
 	locator: {
 		address: {
@@ -80,29 +85,30 @@ const compliance = ref<Compliance>({
 			longitude: 0,
 		},
 	},
+	permission: {
+		access: PermissionAccess.UNSELECTED,
+		access_instructions: "",
+		availability_notes: "",
+		gate_code: "",
+		has_dog: false,
+		wants_scheduled: false,
+	},
 });
 const props = defineProps<Props>();
 const district = computedAsync(async (): Promise<District | undefined> => {
 	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
 });
-function doComments(comments: string) {
-	console.log("comments", comments);
-	compliance.value.comments = comments;
+function doEvidence() {
+	console.log("evidence", compliance.value);
 }
-function doContact(contact: Contact | undefined) {
-	console.log("contact", contact);
-	compliance.value.contact = contact;
-}
-function doImages(images: Image[]) {
-	console.log("images", images);
-	compliance.value.images = images;
+function doContact() {
+	console.log("contact", compliance.value.contact);
 }
 function doLocator() {
 	console.log("locator done", compliance.value.locator);
 }
-function doPermission(permission: Permission | undefined) {
-	console.log("permission", permission);
-	compliance.value.permission = permission;
+function doPermission() {
+	console.log("permission", compliance.value.permission);
 }
 </script>

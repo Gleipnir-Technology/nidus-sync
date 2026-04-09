@@ -84,7 +84,7 @@
 								type="radio"
 								id="access-allowed"
 								:value="PermissionAccess.GRANTED"
-								v-model="permission.access"
+								v-model="modelValue.permission.access"
 								class="mt-1"
 							/>
 							<label for="access-allowed">
@@ -99,7 +99,8 @@
 					<!-- Conditional fields for Option 1 -->
 					<div
 						v-if="
-							permission.access && permission.access == PermissionAccess.GRANTED
+							modelValue.permission.access &&
+							modelValue.permission.access == PermissionAccess.GRANTED
 						"
 						class="conditional-section"
 					>
@@ -114,7 +115,7 @@
 								name="access_instructions"
 								placeholder="Example: Side gate on left, backyard near shed..."
 								rows="3"
-								v-model="permission.access_instructions"
+								v-model="modelValue.permission.access_instructions"
 							></textarea>
 						</div>
 
@@ -129,7 +130,7 @@
 								name="gate_code"
 								placeholder="Enter code if applicable"
 								type="text"
-								v-model="permission.gate_code"
+								v-model="modelValue.permission.gate_code"
 							/>
 						</div>
 
@@ -140,7 +141,7 @@
 									type="checkbox"
 									name="has_dog"
 									id="has_dog"
-									v-model="permission.has_dog"
+									v-model="modelValue.permission.has_dog"
 								/>
 								<label class="form-check-label" for="has_dog"
 									>Dog on Property?</label
@@ -148,7 +149,7 @@
 							</div>
 						</div>
 
-						<div class="dog-warning" v-if="permission.has_dog">
+						<div class="dog-warning" v-if="modelValue.permission.has_dog">
 							<small>
 								<i class="bi bi-exclamation-triangle"></i>
 								<strong>Important:</strong> Our staff will only enter if the dog
@@ -165,7 +166,7 @@
 								type="radio"
 								id="access-with-owner"
 								:value="PermissionAccess.WITH_OWNER"
-								v-model="permission.access"
+								v-model="modelValue.permission.access"
 								class="mt-1"
 							/>
 							<label for="access-with-owner">
@@ -181,8 +182,8 @@
 					<div
 						class="conditional-section"
 						v-if="
-							permission.access &&
-							permission.access == PermissionAccess.WITH_OWNER
+							modelValue.permission.access &&
+							modelValue.permission.access == PermissionAccess.WITH_OWNER
 						"
 					>
 						<div class="form-check mb-3">
@@ -191,7 +192,7 @@
 								type="checkbox"
 								id="request_scheduled"
 								name="request_scheduled"
-								v-model="permission.wants_scheduled"
+								v-model="modelValue.permission.wants_scheduled"
 							/>
 							<label class="form-check-label" for="request_scheduled">
 								I would like to request a scheduled visit
@@ -220,7 +221,7 @@
 								type="radio"
 								id="access-denied"
 								:value="PermissionAccess.DENIED"
-								v-model="permission.access"
+								v-model="modelValue.permission.access"
 								class="mt-1"
 							/>
 							<label for="access-denied">
@@ -236,7 +237,8 @@
 					<div
 						class="conditional-section"
 						v-if="
-							permission.access && permission.access == PermissionAccess.DENIED
+							modelValue.permission.access &&
+							modelValue.permission.access == PermissionAccess.DENIED
 						"
 					>
 						<div class="encouragement-box">
@@ -283,9 +285,11 @@ import { router } from "@/rmo/router";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import { type District, PermissionAccess } from "@/type/api";
+import type { Compliance } from "@/rmo/view/Compliance.vue";
 
 interface Emits {
-	(e: "doPermission", permission: Permission): void;
+	(e: "update:modelValue", value: Compliance): void;
+	(e: "doPermission"): void;
 }
 export interface Permission {
 	access?: PermissionAccess;
@@ -297,19 +301,13 @@ export interface Permission {
 }
 interface Props {
 	district: District;
+	modelValue: Compliance;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-const hasDog = ref<boolean>(false);
-const permission = ref<Permission>({
-	access_instructions: "",
-	availability_notes: "",
-	gate_code: "",
-	has_dog: false,
-	wants_scheduled: false,
-});
 function doContinue() {
-	emit("doPermission", permission.value);
+	emit("update:modelValue", props.modelValue);
+	emit("doPermission");
 	router.push("./contact");
 }
 </script>
