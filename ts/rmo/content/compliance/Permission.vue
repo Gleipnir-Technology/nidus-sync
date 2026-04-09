@@ -83,7 +83,7 @@
 							<input
 								type="radio"
 								id="access-allowed"
-								value="allowed"
+								:value="Permission.GRANTED"
 								v-model="selectedPermission"
 								class="mt-1"
 							/>
@@ -98,7 +98,9 @@
 
 					<!-- Conditional fields for Option 1 -->
 					<div
-						v-if="selectedPermission == 'allowed'"
+						v-if="
+							selectedPermission && selectedPermission == Permission.GRANTED
+						"
 						class="conditional-section"
 					>
 						<div class="mb-3">
@@ -172,7 +174,7 @@
 							<input
 								type="radio"
 								id="access-with-owner"
-								value="with_owner"
+								:value="Permission.WITH_OWNER"
 								v-model="selectedPermission"
 								class="mt-1"
 							/>
@@ -188,7 +190,9 @@
 					<!-- Conditional fields for Option 2 -->
 					<div
 						class="conditional-section"
-						v-if="selectedPermission == 'with_owner'"
+						v-if="
+							selectedPermission && selectedPermission == Permission.WITH_OWNER
+						"
 					>
 						<div class="form-check mb-3">
 							<input
@@ -224,7 +228,7 @@
 							<input
 								type="radio"
 								id="access-denied"
-								value="denied"
+								:value="Permission.DENIED"
 								v-model="selectedPermission"
 								class="mt-1"
 							/>
@@ -240,7 +244,7 @@
 					<!-- Conditional message for Option 3 -->
 					<div
 						class="conditional-section"
-						v-if="selectedPermission == 'denied'"
+						v-if="selectedPermission && selectedPermission == Permission.DENIED"
 					>
 						<div class="encouragement-box">
 							<p class="mb-2">
@@ -288,9 +292,14 @@ import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 interface Props {
 	district: District;
 }
+enum Permission {
+	GRANTED = "access-granted",
+	WITH_OWNER = "access-with-owner",
+	DENIED = "access-denied",
+}
 const props = defineProps<Props>();
 const hasDog = ref<boolean>(false);
-const selectedPermission = ref<string>("");
+const selectedPermission = ref<Permission | undefined>();
 
 function toggleDogWarning() {
 	/*
