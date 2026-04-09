@@ -26,8 +26,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-import type { District } from "@/type/api";
 import { router } from "@/rmo/router";
+import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
@@ -44,6 +44,8 @@ const props = defineProps<Props>();
 const locator = ref<Locator | null>(null);
 function doContinue() {
 	emit("doLocator", locator.value);
-	router.push("./concern");
+	// re-add when we have the concern data to show
+	// router.push("./concern");
+	router.push("./evidence");
 }
 </script>

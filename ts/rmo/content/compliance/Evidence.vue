@@ -107,92 +107,83 @@
 				</div>
 			</div>
 
-			<form
-				id="photo-form"
-				method="POST"
-				action="/compliance/photos"
-				enctype="multipart/form-data"
-			>
-				<!-- Upload Area -->
-				<div class="mb-4">
-					<label class="form-label fw-semibold">Photos</label>
-					<div
-						class="upload-area"
-						id="upload-area"
-						onclick="document.getElementById('file-input').click()"
-					>
-						<i
-							class="bi bi-camera-fill"
-							style="font-size: 2.5rem; color: #0d6efd"
-						></i>
-						<p class="mb-2 mt-2 fw-semibold">Tap to take photo or upload</p>
-						<p class="text-muted small mb-0">You can add multiple photos</p>
-					</div>
-					<input
-						type="file"
-						id="file-input"
-						name="photos"
-						accept="image/*"
-						capture="environment"
-						multiple
-					/>
-				</div>
+			<!-- Upload Area -->
+			<div class="mb-4">
+				<label class="form-label fw-semibold">Photos</label>
+				<ImageUpload v-model="images" />
+			</div>
 
-				<!-- Photo Previews -->
-				<div id="photo-previews" class="mb-4">
-					<!-- Thumbnails will be dynamically added here -->
-					<div class="row g-2" id="preview-container" style="display: none">
-						<!-- Example preview structure (hidden by default, shown when photos added):
-                                                <div class="col-4">
-                                                        <div class="photo-preview">
-                                                                <img src="..." alt="Preview">
-                                                                <button type="button" class="remove-btn" data-index="0">
-                                                                        <i class="bi bi-x-lg"></i>
-                                                                </button>
-                                                        </div>
-                                                </div>
-                                                -->
-					</div>
+			<!-- Photo Previews -->
+			<div id="photo-previews" class="mb-4">
+				<!-- Thumbnails will be dynamically added here -->
+				<div class="row g-2" id="preview-container" style="display: none">
+					<!-- Example preview structure (hidden by default, shown when photos added):
+											<div class="col-4">
+													<div class="photo-preview">
+															<img src="..." alt="Preview">
+															<button type="button" class="remove-btn" data-index="0">
+																	<i class="bi bi-x-lg"></i>
+															</button>
+													</div>
+											</div>
+											-->
 				</div>
+			</div>
 
-				<!-- Additional Comments -->
-				<div class="mb-4">
-					<label for="comments" class="form-label fw-semibold">
-						Additional Comments
-						<span class="text-muted fw-normal">(Optional)</span>
-					</label>
-					<textarea
-						class="form-control"
-						id="comments"
-						name="comments"
-						rows="4"
-						placeholder="Provide any additional information that may be helpful..."
-					></textarea>
-					<div class="form-text">
-						Example: "This standing water appeared after recent rain" or "I've
-						already taken steps to address this issue"
-					</div>
+			<!-- Additional Comments -->
+			<div class="mb-4">
+				<label for="comments" class="form-label fw-semibold">
+					Additional Comments
+					<span class="text-muted fw-normal">(Optional)</span>
+				</label>
+				<textarea
+					class="form-control"
+					id="comments"
+					name="comments"
+					placeholder="Provide any additional information that may be helpful..."
+					rows="4"
+					v-model="comments"
+				></textarea>
+				<div class="form-text">
+					Example: "This standing water appeared after recent rain" or "I've
+					already taken steps to address this issue"
 				</div>
+			</div>
 
-				<!-- Navigation Buttons -->
-				<div class="d-flex gap-2 mt-4">
-					<RouterLink to="./concern" class="btn btn-outline-secondary">
-						Back
-					</RouterLink>
-					<RouterLink to="permission" class="btn btn-primary flex-grow-1">
-						Continue
-					</RouterLink>
-				</div>
-			</form>
+			<!-- Navigation Buttons -->
+			<div class="d-flex gap-2 mt-4">
+				<RouterLink to="./address" class="btn btn-outline-secondary">
+					Back
+				</RouterLink>
+				<button class="btn btn-primary flex-grow-1" @click="doContinue">
+					Continue
+				</button>
+			</div>
 		</main>
 	</div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
+
+import { router } from "@/rmo/router";
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+interface Emits {
+	(e: "doComments", comments: string): void;
+	(e: "doImages", images: Image[]): void;
+}
 interface Props {
 	district: District;
 }
+const comments = ref<string>("");
+const emit = defineEmits<Emits>();
+const images = ref<Image[]>([]);
 const props = defineProps<Props>();
+function doContinue() {
+	emit("doComments", comments.value);
+	emit("doImages", images.value);
+	router.push("./permission");
+}
 </script>

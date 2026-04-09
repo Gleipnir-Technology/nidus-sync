@@ -18,7 +18,13 @@ body > .container-fluid {
 <template>
 	<template v-if="district">
 		<router-view v-slot="{ Component }">
-			<component :is="Component" :district="district" @doLocator="doLocator" />
+			<component
+				:is="Component"
+				:district="district"
+				@doComments="doComments"
+				@doImages="doImages"
+				@doLocator="doLocator"
+			/>
 		</router-view>
 	</template>
 	<template v-else>
@@ -30,6 +36,7 @@ body > .container-fluid {
 import { computed, onMounted, ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 
+import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import type { District } from "@/type/api";
@@ -46,6 +53,12 @@ const district = computedAsync(async (): Promise<District | undefined> => {
 	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
 });
+function doComments(comments: string) {
+	console.log("comments", comments);
+}
+function doImages(images: Image[]) {
+	console.log("images", images);
+}
 function doLocator(locator: Locator | null) {
 	console.log("locator", locator);
 }
