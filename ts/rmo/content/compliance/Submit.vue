@@ -111,8 +111,8 @@
 				<div class="summary-section">
 					<h3><i class="bi bi-geo-alt"></i> Property Address</h3>
 					<div class="summary-item">
-						<div class="summary-value" v-if="modelValue.locator?.address.raw">
-							{{ modelValue.locator.address.raw }}
+						<div class="summary-value" v-if="modelValue.address.raw">
+							{{ modelValue.address.raw }}
 							<span class="status-badge status-provided ms-2">
 								<i class="bi bi-check-circle"></i> Provided
 							</span>

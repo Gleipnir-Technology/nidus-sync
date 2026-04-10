@@ -43,7 +43,6 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/review-task", authenticatedHandlerJSON(review_task.List)).Methods("GET")
 	compliance := resource.Compliance(router)
 	r.HandleFunc("/rmo/compliance", handlerFormPost(compliance.Create)).Methods("POST")
-	r.HandleFunc("/rmo/compliance/{public_id}", handlerFormPost(compliance.Update)).Methods("PUT")
 	nuisance := resource.Nuisance(router)
 	r.HandleFunc("/rmo/nuisance", handlerFormPost(nuisance.Create)).Methods("POST")
 	water := resource.Water(router)
@@ -83,6 +82,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
 	publicreport := resource.Publicreport(router)
 	r.Handle("/publicreport/{id}", handlerJSON(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")
+	r.Handle("/publicreport/{id}", handlerJSONPut(publicreport.Update)).Methods("PUT")
 	publicreport_notification := resource.PublicreportNotification(router)
 	r.Handle("/publicreport-notification", handlerJSONPost(publicreport_notification.Create)).Methods("POST")
 

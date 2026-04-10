@@ -6,7 +6,6 @@ import (
 
 type Report struct {
 	Address    Address    `db:"address" json:"address"`
-	AddressRaw string     `db:"address_raw" json:"address_raw"`
 	Created    time.Time  `db:"created" json:"created"`
 	ID         int32      `db:"id" json:"-"`
 	Images     []Image    `db:"images" json:"images"`

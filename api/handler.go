@@ -263,6 +263,29 @@ func handlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPost[Re
 		w.Write(body)
 	}
 }
+
+func handlerJSONPut[RequestType any, ResponseType any](f handlerFunctionPost[RequestType, ResponseType]) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		req, e := parseRequest[RequestType](r)
+		if e != nil {
+			serializeError(w, e)
+			return
+		}
+		ctx := r.Context()
+		resp, e := f(ctx, r, *req)
+		if e != nil {
+			serializeError(w, e)
+			return
+		}
+		body, err := json.Marshal(resp)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
+			return
+		}
+		w.Write(body)
+	}
+}
 func handlerFormPost[RequestType any, ResponseType any](f handlerFunctionPostFormMultipart[RequestType, ResponseType]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

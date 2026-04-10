@@ -38,7 +38,7 @@
 <template>
 	<div class="mb-4">
 		<AddressSuggestion
-			v-model="modelValue.address"
+			v-model="modelValue"
 			placeholder="Start typing an address (min 3 characters)"
 			@suggestion-selected="doAddressSuggestionSelected"
 		>
@@ -63,17 +63,18 @@
 import { computed, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import MapLocator from "@/components/MapLocator.vue";
-import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
+import { Address } from "@/type/api";
+import type { Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import { useGeocodeStore } from "@/store/geocode";
-import { Camera, Locator } from "@/type/map";
+import { Camera } from "@/type/map";
 import type { Marker } from "@/types";
 
 interface Emits {
-	(e: "update:modelValue", value: Locator): void;
+	(e: "update:modelValue", value: Address): void;
 }
 interface Props {
 	initialCamera?: Camera;
-	modelValue: Locator;
+	modelValue: Address;
 }
 const address = ref<string>("");
 const currentCamera = ref<Camera>(new Camera());
@@ -96,6 +97,10 @@ const markers = computed((): Marker[] => {
 		location: props.modelValue.location,
 	};
 	return [marker];
+});
+const modelValue = computed({
+	get: () => props.modelValue,
+	set: (value: Address) => emit("update:modelValue", value),
 });
 const props = defineProps<Props>();
 function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
@@ -121,11 +126,7 @@ async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	updateModel(data.address.gid, data.address.raw, data.location);
 }
 function doMapClick(location: Location) {
-	updateModel(
-		props.modelValue.address.gid,
-		props.modelValue.address.raw,
-		location,
-	);
+	updateModel(props.modelValue.gid, props.modelValue.raw, location);
 	geocode
 		.reverse(location)
 		.then((code: Geocode) => {
@@ -141,31 +142,25 @@ function doMapClick(location: Location) {
 		});
 }
 function doMapMarkerDragEnd(location: Location) {
-	updateModel(
-		props.modelValue.address.gid,
-		props.modelValue.address.raw,
-		location,
-	);
+	updateModel(props.modelValue.gid, props.modelValue.raw, location);
 }
 function updateModel(
 	address_gid: string,
 	address_raw: string,
-	location: Location,
+	location?: Location,
 ) {
-	const newLocator: Locator = {
-		address: {
-			country: "",
-			gid: address_gid,
-			locality: "",
-			number: "",
-			postal_code: "",
-			raw: address_raw,
-			region: "",
-			street: "",
-			unit: "",
-		},
-		location: location,
-	};
-	emit("update:modelValue", newLocator);
+	const newAddress = new Address(
+		"",
+		address_gid,
+		"",
+		"",
+		"",
+		address_raw,
+		"",
+		"",
+		"",
+		location,
+	);
+	emit("update:modelValue", newAddress);
 }
 </script>

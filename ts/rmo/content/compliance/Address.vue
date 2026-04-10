@@ -12,7 +12,7 @@
 
 			<AddressAndMapLocator
 				:initialCamera="initialCamera"
-				v-model="modelValue.locator"
+				v-model="modelValue.address"
 			/>
 
 			<div class="d-flex gap-2 mt-4">
@@ -35,10 +35,10 @@ import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { Compliance } from "@/rmo/view/Compliance.vue";
-import { Camera, Locator } from "@/type/map";
+import { Camera } from "@/type/map";
 
 interface Emits {
-	(e: "doLocator"): void;
+	(e: "doAddress"): void;
 	(e: "update:modelValue", value: Compliance): void;
 }
 interface Props {
@@ -59,7 +59,7 @@ const initialCamera = computed((): Camera | undefined => {
 });
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
-	emit("doLocator");
+	emit("doAddress");
 	// re-add when we have the concern data to show
 	// router.push("./concern");
 	router.push(`/district/${props.district.slug}/compliance/evidence`);

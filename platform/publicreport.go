@@ -29,9 +29,12 @@ func PublicreportByID(ctx context.Context, report_id string) (*types.Report, err
 	return publicreport.Report(ctx, report_id)
 }
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
-	report, err := reportFromID(ctx, user, report_id)
+	report, err := reportFromID(ctx, report_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
+	}
+	if report.OrganizationID != user.Organization.ID {
+		return fmt.Errorf("user is from a different organization")
 	}
 
 	err = report.Update(ctx, db.PGInstance.BobDB, &models.PublicreportReportSetter{
@@ -52,9 +55,12 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := reportFromID(ctx, user, report_id)
+	report, err := reportFromID(ctx, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
+	}
+	if report.OrganizationID != user.Organization.ID {
+		return nil, fmt.Errorf("user is from a different organization")
 	}
 	if report.ReporterPhone != "" {
 		log.Debug().Str("report_id", report_id).Msg("contacting via phone")
@@ -80,6 +86,29 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 		log.Debug().Str("report_id", report_id).Msg("contacting via email")
 		return nil, errors.New("no contact methods available")
 	}
+}
+func PublicReportUpdate(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, location *types.Location) (*types.Report, error) {
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create txn: %w", err)
+	}
+	defer txn.Rollback(ctx)
+	report, err := reportFromID(ctx, report_id)
+	if err != nil {
+		return nil, fmt.Errorf("query report existence: %w", err)
+	}
+	err = report.Update(ctx, txn, &report_setter)
+	if err != nil {
+		return nil, fmt.Errorf("update report: %w", err)
+	}
+	if location != nil {
+		err = reportUpdateLocation(ctx, txn, report.ID, *location)
+		if err != nil {
+			return nil, fmt.Errorf("update location: %w", err)
+		}
+	}
+	txn.Commit(ctx)
+	return publicreport.Report(ctx, report_id)
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOReport, org_id, report_id)
@@ -170,17 +199,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 	if location != nil {
 		l := *location
 		if l.Latitude != 0 && l.Longitude != 0 {
-			h3cell, _ := location.H3Cell()
-			geom_query, _ := location.GeometryQuery()
-			_, err = psql.Update(
-				um.Table("publicreport.report"),
-				um.SetCol("h3cell").ToArg(h3cell),
-				um.SetCol("location").To(geom_query),
-				um.Where(psql.Quote("id").EQ(psql.Arg(result.ID))),
-			).Exec(ctx, txn)
-			if err != nil {
-				return nil, fmt.Errorf("Failed to insert publicreport.report geospatial", err)
-			}
+			reportUpdateLocation(ctx, txn, result.ID, l)
 		}
 	}
 	log.Info().Str("public_id", public_id).Int32("id", result.ID).Msg("Created base report")
@@ -226,13 +245,26 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 	}
 	return result, nil
 }
-func reportFromID(ctx context.Context, user User, report_id string) (*models.PublicreportReport, error) {
+func reportFromID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
 	report, err := models.PublicreportReports.Query(
 		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, err
 	}
 	return report, nil
+}
+func reportUpdateLocation(ctx context.Context, txn bob.Executor, id int32, location types.Location) error {
+	h3cell, _ := location.H3Cell()
+	geom_query, _ := location.GeometryQuery()
+	_, err := psql.Update(
+		um.Table("publicreport.report"),
+		um.SetCol("h3cell").ToArg(h3cell),
+		um.SetCol("location").To(geom_query),
+		um.Where(psql.Quote("id").EQ(psql.Arg(id))),
+	).Exec(ctx, txn)
+	if err != nil {
+		return fmt.Errorf("Failed to insert publicreport.report geospatial", err)
+	}
+	return nil
 }

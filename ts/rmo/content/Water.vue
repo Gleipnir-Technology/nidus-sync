@@ -240,7 +240,7 @@ select.tall {
 					<p class="small text-muted mb-2">
 						You can also click on the map to mark the location precisely
 					</p>
-					<AddressAndMapLocator v-model="locator" />
+					<AddressAndMapLocator v-model="address" />
 				</div>
 
 				<button
@@ -619,28 +619,22 @@ select.tall {
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
-import MapLocator from "@/components/MapLocator.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import { useGeocodeStore } from "@/store/geocode";
 import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import type {
+import {
 	Address,
-	Geocode,
-	GeocodeSuggestion,
-	Location,
-	PublicReport,
+	type Geocode,
+	type GeocodeSuggestion,
+	type Location,
+	type PublicReport,
 } from "@/type/api";
-import type { Camera, Locator } from "@/type/map";
+import type { Camera } from "@/type/map";
 
-const isCollapsed = ref<boolean>(true);
-const toggleCollapse = () => {
-	isCollapsed.value = !isCollapsed.value;
-};
-const address = ref<string>("");
+const address = ref<Address>(new Address());
 const currentCamera = ref<Camera | null>(null);
 const currentLocation = ref<Location | null>(null);
 const errorMessage = ref("");
@@ -657,84 +651,9 @@ const markers = computed((): Marker[] => {
 	}
 });
 const storeLocation = useStoreLocation();
-const locator = ref<Locator>({
-	address: {
-		country: "",
-		gid: "",
-		locality: "",
-		number: "",
-		postal_code: "",
-		raw: "",
-		region: "",
-		street: "",
-		unit: "",
-	},
-	location: {
-		latitude: 0,
-		longitude: 0,
-	},
-});
 const router = useRouter();
-const selectedSuggestion = ref<GeocodeSuggestion | null>(null);
 const showMore = ref<boolean>(false);
 const storePublicReport = useStorePublicReport();
-function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
-	console.log("Address suggestion selected", suggestion);
-
-	doAddressSuggestionDetails(suggestion);
-}
-async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
-	// Fetch full details for the selected suggestion
-	selectedSuggestion.value = suggestion;
-	const url = `/api/geocode/by-gid/${suggestion.gid}`;
-	const response = await fetch(url);
-	if (!response.ok) {
-		console.error("Failed to get suggestion detail", response.statusText);
-		return;
-	}
-	const data = (await response.json()) as Geocode;
-
-	if (currentCamera.value) {
-		currentCamera.value.zoom = 15;
-	}
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: data.location,
-	};
-}
-function doMapClick(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
-	geocode
-		.reverse(location)
-		.then((code: Geocode) => {
-			address.value = code.address.raw;
-			selectedSuggestion.value = {
-				detail: code.address.number + " " + code.address.street,
-				gid: code.address.gid,
-				locality: code.address.locality,
-				type: "address",
-			};
-			console.log("reverse geocoded", code);
-		})
-		.catch((e) => {
-			console.error("failed to reverse geocode after map click", e);
-		});
-}
-function doMapMarkerDragEnd(location: Location) {
-	marker.value = {
-		color: "#FF0000",
-		draggable: true,
-		id: "x",
-		location: location,
-	};
-}
 async function doSubmit() {
 	if (!formElement.value) return;
 
@@ -742,17 +661,35 @@ async function doSubmit() {
 	errorMessage.value = "";
 	try {
 		const formData = new FormData(formElement.value);
-		if (selectedSuggestion.value) {
-			formData.append("address-gid", selectedSuggestion.value.gid);
+		if (address.value) {
+			formData.append("address.gid", address.value.gid);
+			formData.append("address.raw", address.value.raw);
+			if (address.value.location) {
+				formData.append(
+					"address.location.latitude",
+					address.value.location.latitude.toString(),
+				);
+				formData.append(
+					"address.location.longitude",
+					address.value.location.longitude.toString(),
+				);
+			}
 		}
-		if (currentLocation.value) {
-			formData.append("latitude", currentLocation.value.latitude.toString());
-			formData.append("longitude", currentLocation.value.longitude.toString());
-		}
+		formData.append(
+			"location.accuracy",
+			currentLocation.value?.accuracy?.toString() ?? "0",
+		);
+		formData.append(
+			"location.latitude",
+			currentLocation.value?.latitude.toString() ?? "0",
+		);
+		formData.append(
+			"location.longitude",
+			currentLocation.value?.longitude.toString() ?? "0",
+		);
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
 		});
-		formData.append("address", address.value);
 		const resp = await fetch("/api/rmo/water", {
 			method: "POST",
 			body: formData,

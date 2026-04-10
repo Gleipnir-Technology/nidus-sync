@@ -25,9 +25,9 @@ body > .container-fluid {
 				<component
 					:is="Component"
 					:district="district"
+					@doAddress="doAddress"
 					@doEvidence="doEvidence"
 					@doContact="doContact"
-					@doLocator="doLocator"
 					@doPermission="doPermission"
 					v-model="compliance"
 				/>
@@ -51,19 +51,28 @@ import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import type { District, PublicReport } from "@/type/api";
 import { Address, Location, PermissionAccess } from "@/type/api";
-import { Locator } from "@/type/map";
 import { type Contact } from "@/rmo/content/compliance/Contact.vue";
 import { type Permission } from "@/rmo/content/compliance/Permission.vue";
 
 export interface Compliance {
+	address: Address;
 	comments: string;
 	contact: Contact;
 	id: string;
 	images: Image[];
 	location: Location;
-	locator: Locator;
 	permission: Permission;
 	uri: string;
+}
+interface ComplianceUpdate {
+	address?: Address;
+	comments?: string;
+	contact?: Contact;
+	//id: string;
+	//images?: Image[];
+	location?: Location;
+	permission?: Permission;
+	//uri: string;
 }
 interface Props {
 	slug: string;
@@ -72,6 +81,7 @@ interface Props {
 const districtStore = useStoreDistrict();
 
 const compliance = ref<Compliance>({
+	address: new Address(),
 	comments: "",
 	contact: {
 		name: "",
@@ -84,10 +94,6 @@ const compliance = ref<Compliance>({
 	location: {
 		latitude: 0,
 		longitude: 0,
-	},
-	locator: {
-		address: new Address(),
-		location: new Location(),
 	},
 	permission: {
 		access: PermissionAccess.UNSELECTED,
@@ -130,6 +136,14 @@ async function createReport(client_id: string, loc?: GeolocationPosition) {
 		console.error("Failed to create compliance report", resp.status, content);
 		return;
 	}
+	const body = await resp.json();
+	storeLocal.setExistingComplianceReportURI(body.uri);
+}
+function doAddress() {
+	console.log("address done", compliance.value.address);
+	updateReport({
+		address: compliance.value.address,
+	});
 }
 function doEvidence() {
 	console.log("evidence", compliance.value);
@@ -137,17 +151,28 @@ function doEvidence() {
 function doContact() {
 	console.log("contact", compliance.value.contact);
 }
-function doLocator() {
-	console.log("locator done", compliance.value.locator);
-	updateReport({
-		locator: compliance.value.locator,
-	});
-}
 function doPermission() {
 	console.log("permission", compliance.value.permission);
 }
-interface ComplianceUpdate {
-	locator?: Locator;
+async function fetchExistingReport(report_uri: string) {
+	isLoading.value = true;
+	const resp = await fetch(report_uri);
+	if (!resp.ok) {
+		isLoading.value = false;
+		const content = await resp.text();
+		console.error(
+			"Failed to fetch existing report",
+			report_uri,
+			resp.status,
+			content,
+		);
+		return;
+	}
+	const body = await resp.json();
+	compliance.value.id = body.id;
+	compliance.value.uri = body.uri;
+	compliance.value.address = body.address;
+	isLoading.value = false;
 }
 async function updateReport(updates: ComplianceUpdate) {
 	const resp = await fetch(compliance.value.uri, {
@@ -165,15 +190,23 @@ async function updateReport(updates: ComplianceUpdate) {
 }
 onMounted(() => {
 	const client_id = storeLocal.getClientID();
+	const report_uri = storeLocal.getExistingComplianceReportURI();
+	if (report_uri) {
+		fetchExistingReport(report_uri);
+	} else {
+		isLoading.value = false;
+		createReport(client_id);
+	}
 	storeLocation
 		.get()
 		.then((loc: GeolocationPosition) => {
 			compliance.value.location = loc.coords;
-			createReport(client_id, loc);
+			updateReport({
+				location: compliance.value.location,
+			});
 		})
 		.catch((e) => {
 			console.log("failed to get location", e);
-			createReport(client_id);
 		});
 });
 </script>

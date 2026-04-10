@@ -125,7 +125,7 @@ select.tall {
 				<p class="small text-muted mb-2">
 					You can also click on the map to mark the location precisely
 				</p>
-				<AddressAndMapLocator v-model="locator" />
+				<AddressAndMapLocator v-model="address" />
 
 				<!-- Mosquito Activity Section -->
 				<div class="form-section">
@@ -472,15 +472,16 @@ import { useGeocodeStore } from "@/store/geocode";
 import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import type {
+import {
 	Address,
-	Geocode,
-	GeocodeSuggestion,
-	Location,
-	PublicReport,
+	type Geocode,
+	type GeocodeSuggestion,
+	type Location,
+	type PublicReport,
 } from "@/type/api";
-import type { Camera, Locator } from "@/type/map";
+import type { Camera } from "@/type/map";
 
+const address = ref<Address>(new Address());
 const currentCamera = ref<Camera | null>(null);
 const currentLocation = ref<Location | null>(null);
 const errorMessage = ref("");
@@ -488,23 +489,6 @@ const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
 const isSubmitting = ref(false);
 const storeLocation = useStoreLocation();
-const locator = ref<Locator>({
-	address: {
-		country: "",
-		gid: "",
-		locality: "",
-		number: "",
-		postal_code: "",
-		raw: "",
-		region: "",
-		street: "",
-		unit: "",
-	},
-	location: {
-		latitude: 0,
-		longitude: 0,
-	},
-});
 
 const showMore = ref<boolean>(false);
 const storePublicReport = useStorePublicReport();
@@ -517,19 +501,17 @@ async function doSubmit() {
 	errorMessage.value = "";
 	try {
 		const formData = new FormData(formElement.value);
-		if (locator.value) {
-			if (locator.value.address) {
-				formData.append("locator.address.gid", locator.value.address.gid);
-				formData.append("locator.address.raw", locator.value.address.raw);
-			}
-			if (locator.value.location) {
+		if (address.value) {
+			formData.append("address.gid", address.value.gid);
+			formData.append("address.raw", address.value.raw);
+			if (address.value.location) {
 				formData.append(
-					"locator.location.latitude",
-					locator.value.location.latitude.toString(),
+					"address.location.latitude",
+					address.value.location.latitude.toString(),
 				);
 				formData.append(
-					"locator.location.longitude",
-					locator.value.location.longitude.toString(),
+					"address.location.longitude",
+					address.value.location.longitude.toString(),
 				);
 			}
 		}

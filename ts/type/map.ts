@@ -9,12 +9,6 @@ export class Camera {
 		this.zoom = zoom;
 	}
 }
-export class Locator {
-	constructor(
-		public address: Address,
-		public location: Location,
-	) {}
-}
 export type MoveEndEventInternal = maplibregl.MapLibreEvent<
 	| maplibregl.MapMouseEvent
 	| maplibregl.MapTouchEvent

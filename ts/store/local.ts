@@ -10,7 +10,15 @@ export const useStoreLocal = defineStore("local", () => {
 		localStorage.setItem("session_id", id.toString());
 		return id;
 	}
+	function getExistingComplianceReportURI(): string | null {
+		return localStorage.getItem("working_compilance_report_uri");
+	}
+	function setExistingComplianceReportURI(uri: string) {
+		localStorage.setItem("working_compilance_report_uri", uri);
+	}
 	return {
 		getClientID,
+		getExistingComplianceReportURI,
+		setExistingComplianceReportURI,
 	};
 });

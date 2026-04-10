@@ -15,6 +15,7 @@ export class Address {
 		public region: string = "",
 		public street: string = "",
 		public unit: string = "",
+		public location?: Location,
 	) {}
 }
 export interface Bounds {

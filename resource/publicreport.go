@@ -2,11 +2,14 @@ package resource
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/aarondl/opt/omit"
+	//"github.com/aarondl/opt/omitnull"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	"net/http"
 	//"github.com/rs/zerolog/log"
 	"github.com/gorilla/mux"
 )
@@ -44,5 +47,57 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	}
 	report.District = &district_uri
 	report.URI = uri
+	return report, nil
+}
+
+type publicreportForm struct {
+	Address    *types.Address  `schema:"address"`
+	ClientID   string          `schema:"client_id"`
+	DistrictID string          `schema:"district"`
+	Location   *types.Location `schema:"location"`
+	Locator    *Locator        `schema:"locator"`
+	Reporter   *types.Contact  `schema:"reporter"`
+}
+
+func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publicreportForm) (*types.Report, *nhttp.ErrorWithStatus) {
+	/*
+		uploads, err := html.ExtractImageUploads(r)
+		log.Info().Int("len", len(uploads)).Msg("extracted compliance uploads")
+		if err != nil {
+			return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
+		}
+	*/
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provide an ID")
+	}
+	report_setter := models.PublicreportReportSetter{}
+	if prf.Address != nil {
+		report_setter.AddressGid = omit.From(prf.Address.GID)
+		report_setter.AddressRaw = omit.From(prf.Address.Raw)
+	}
+	if prf.Location != nil {
+		//report_setter.Latitude = omit.From(prf.Location.Latitude)
+		//report_setter.Longitude = omit.From(prf.Location.Longitude)
+		if prf.Location.Accuracy != nil {
+			report_setter.LatlngAccuracyValue = omit.From(*prf.Location.Accuracy)
+		}
+	}
+	if prf.Reporter != nil {
+		if prf.Reporter.Email != nil {
+			report_setter.ReporterEmail = omit.From(*prf.Reporter.Email)
+		}
+		if prf.Reporter.Name != nil {
+			report_setter.ReporterName = omit.From(*prf.Reporter.Name)
+		}
+		if prf.Reporter.Phone != nil {
+			report_setter.ReporterPhone = omit.From(*prf.Reporter.Phone)
+		}
+	}
+	report, err := platform.PublicReportUpdate(ctx, public_id, report_setter, prf.Location)
+	if err != nil {
+		return nil, nhttp.NewError("update report: %w", err)
+	}
 	return report, nil
 }
