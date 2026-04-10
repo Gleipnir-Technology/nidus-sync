@@ -70,7 +70,7 @@
 	position: absolute;
 	top: 10px;
 	right: 10px;
-	z-index: 999;
+	z-index: 2;
 	border: none;
 	color: #000;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
