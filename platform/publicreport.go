@@ -129,6 +129,38 @@ func ReportComplianceCreate(ctx context.Context, setter_report models.Publicrepo
 		return nil
 	})
 }
+func ReportImageCreate(ctx context.Context, report_id string, images []ImageUpload) error {
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("create txn: %w", err)
+	}
+	defer txn.Rollback(ctx)
+
+	report, err := reportFromID(ctx, report_id)
+	if err != nil {
+		return fmt.Errorf("report from ID: %w", err)
+	}
+	saved_images, err := saveImageUploads(ctx, txn, images)
+	if err != nil {
+		return fmt.Errorf("Failed to save image uploads: %w", err)
+	}
+	if len(saved_images) > 0 {
+		setters := make([]*models.PublicreportReportImageSetter, 0)
+		for _, image := range saved_images {
+			setters = append(setters, &models.PublicreportReportImageSetter{
+				ImageID:  omit.From(int32(image.ID)),
+				ReportID: omit.From(int32(report.ID)),
+			})
+		}
+		_, err = models.PublicreportReportImages.Insert(bob.ToMods(setters...)).Exec(ctx, txn)
+		if err != nil {
+			return fmt.Errorf("Failed to save reference to images: %w", err)
+		}
+		log.Info().Int("len", len(images)).Msg("saved uploaded images")
+	}
+	txn.Commit(ctx)
+	return nil
+}
 func ReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
 	return reportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_nuisance.ReportID = omit.From(report_id)

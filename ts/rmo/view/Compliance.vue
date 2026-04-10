@@ -106,6 +106,7 @@ const compliance = ref<Compliance>({
 	uri: "",
 });
 const isLoading = ref<boolean>(true);
+const isUploading = ref<boolean>(false);
 const props = defineProps<Props>();
 const report = ref<PublicReport | null>();
 const district = computedAsync(async (): Promise<District | undefined> => {
@@ -147,7 +148,7 @@ function doAddress() {
 	});
 }
 function doEvidence() {
-	console.log("evidence", compliance.value);
+	uploadImages(compliance.value.images);
 }
 function doContact() {
 	console.log("contact", compliance.value.contact);
@@ -192,6 +193,31 @@ async function updateReport(updates: ComplianceUpdate) {
 		console.error("Failed to update compliance", resp.status, content);
 		return;
 	}
+}
+async function uploadImages(images: Image[]) {
+	isUploading.value = true;
+	const formData = new FormData();
+	images.map(async (image, index) => {
+		formData.append(`image[${index}]`, image.file, image.name);
+	});
+	const url = `${compliance.value.uri}/image`;
+	const response = await fetch(url, {
+		body: formData,
+		method: "POST",
+	});
+	if (!response.ok) {
+		const content = await response.text();
+		console.error(
+			"Failed to POST images",
+			url,
+			response.status,
+			response.statusText,
+			content,
+		);
+		isUploading.value = false;
+		return;
+	}
+	isUploading.value = false;
 }
 onMounted(() => {
 	const client_id = storeLocal.getClientID();

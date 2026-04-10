@@ -7,11 +7,12 @@ import (
 	"github.com/aarondl/opt/omit"
 	//"github.com/aarondl/opt/omitnull"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	//"github.com/rs/zerolog/log"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type publicreportR struct {
@@ -50,9 +51,35 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	return report, nil
 }
 
+type image struct {
+	Status string `json:"status"`
+}
+
+func (res *publicreportR) ImageCreate(ctx context.Context, r *http.Request, n nuisanceForm) (*image, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provide an ID")
+	}
+
+	uploads, err := html.ExtractImageUploads(r)
+	log.Info().Int("len", len(uploads)).Msg("report image uploads")
+	if err != nil {
+		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
+	}
+
+	platform.ReportImageCreate(ctx, public_id, uploads)
+	return &image{Status: "ok"}, nil
+}
+
+type complianceForm struct {
+	Comments *string `schema:"comments"`
+}
+
 type publicreportForm struct {
 	Address    *types.Address  `schema:"address"`
 	ClientID   string          `schema:"client_id"`
+	Compliance *complianceForm `schema:"compliance"`
 	DistrictID string          `schema:"district"`
 	Location   *types.Location `schema:"location"`
 	Locator    *Locator        `schema:"locator"`

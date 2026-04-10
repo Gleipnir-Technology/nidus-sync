@@ -83,6 +83,7 @@ func AddRoutes(r *mux.Router) {
 	publicreport := resource.Publicreport(router)
 	r.Handle("/publicreport/{id}", handlerJSON(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")
 	r.Handle("/publicreport/{id}", handlerJSONPut(publicreport.Update)).Methods("PUT")
+	r.Handle("/publicreport/{id}/image", handlerFormPost(publicreport.ImageCreate)).Methods("POST")
 	publicreport_notification := resource.PublicreportNotification(router)
 	r.Handle("/publicreport-notification", handlerJSONPost(publicreport_notification.Create)).Methods("POST")
 

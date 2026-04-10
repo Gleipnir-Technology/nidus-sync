@@ -29,14 +29,8 @@ type compliance struct {
 	ID       string `json:"id"`
 	URI      string `json:"uri"`
 }
-type complianceForm struct {
-	ClientID   string          `schema:"client_id"`
-	DistrictID string          `schema:"district"`
-	Location   *types.Location `schema:"location"`
-	Locator    *Locator        `schema:"locator"`
-}
 
-func (res *complianceR) Create(ctx context.Context, r *http.Request, n complianceForm) (*compliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportForm) (*compliance, *nhttp.ErrorWithStatus) {
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
 		AddressCountry:    omit.From(""),
