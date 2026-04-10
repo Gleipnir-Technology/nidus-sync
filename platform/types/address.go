@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/rs/zerolog/log"
 )
 
 type Address struct {
@@ -24,12 +24,10 @@ type Address struct {
 func (a Address) String() string {
 	return fmt.Sprintf("%s %s, %s, %s, %s, %s", a.Number, a.Street, a.Locality, a.Region, a.PostalCode, a.Country)
 }
-func (a Address) CountryEnum() enums.Countrytype {
-	return enums.CountrytypeUsa
-}
 func AddressFromModel(m *models.Address) Address {
+	log.Debug().Int32("id", m.ID).Float64("lat", m.LocationY.GetOr(0.0)).Float64("lng", m.LocationX.GetOr(0.0)).Msg("converting address")
 	return Address{
-		Country:  m.Country.String(),
+		Country:  m.Country,
 		GID:      m.Gid,
 		ID:       &m.ID,
 		Locality: m.Locality,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
@@ -29,10 +30,15 @@ func ByGID(ctx context.Context, gid string) (*GeocodeResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("latlngtocell: %w", err)
 	}
+	id, err := ensureAddressFromFeature(ctx, db.PGInstance.BobDB, feature)
+	if err != nil {
+		return nil, fmt.Errorf("insert address: %w", err)
+	}
 	return &GeocodeResult{
 		Address: types.Address{
 			Country:    feature.Properties.Context.ISO3166A3,
 			GID:        feature.Properties.GID,
+			ID:         &id,
 			Locality:   feature.Properties.Context.WhosOnFirst.Locality.Name,
 			Number:     feature.Properties.AddressComponents.Number,
 			PostalCode: feature.Properties.AddressComponents.PostalCode,

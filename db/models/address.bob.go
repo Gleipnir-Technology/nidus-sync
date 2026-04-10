@@ -18,7 +18,6 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
-	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -26,7 +25,7 @@ import (
 
 // Address is an object representing the database table.
 type Address struct {
-	Country    enums.Countrytype `db:"country" `
+	Country    string            `db:"country" `
 	Created    time.Time         `db:"created" `
 	Location   string            `db:"location" `
 	H3cell     string            `db:"h3cell" `
@@ -118,18 +117,18 @@ func (addressColumns) AliasedAs(alias string) addressColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type AddressSetter struct {
-	Country    omit.Val[enums.Countrytype] `db:"country" `
-	Created    omit.Val[time.Time]         `db:"created" `
-	Location   omit.Val[string]            `db:"location" `
-	H3cell     omit.Val[string]            `db:"h3cell" `
-	ID         omit.Val[int32]             `db:"id,pk" `
-	Locality   omit.Val[string]            `db:"locality" `
-	PostalCode omit.Val[string]            `db:"postal_code" `
-	Street     omit.Val[string]            `db:"street" `
-	Unit       omit.Val[string]            `db:"unit" `
-	Region     omit.Val[string]            `db:"region" `
-	Number     omit.Val[string]            `db:"number_" `
-	Gid        omit.Val[string]            `db:"gid" `
+	Country    omit.Val[string]    `db:"country" `
+	Created    omit.Val[time.Time] `db:"created" `
+	Location   omit.Val[string]    `db:"location" `
+	H3cell     omit.Val[string]    `db:"h3cell" `
+	ID         omit.Val[int32]     `db:"id,pk" `
+	Locality   omit.Val[string]    `db:"locality" `
+	PostalCode omit.Val[string]    `db:"postal_code" `
+	Street     omit.Val[string]    `db:"street" `
+	Unit       omit.Val[string]    `db:"unit" `
+	Region     omit.Val[string]    `db:"region" `
+	Number     omit.Val[string]    `db:"number_" `
+	Gid        omit.Val[string]    `db:"gid" `
 }
 
 func (s AddressSetter) SetColumns() []string {
@@ -1151,7 +1150,7 @@ func (address0 *Address) AttachSite(ctx context.Context, exec bob.Executor, site
 }
 
 type addressWhere[Q psql.Filterable] struct {
-	Country    psql.WhereMod[Q, enums.Countrytype]
+	Country    psql.WhereMod[Q, string]
 	Created    psql.WhereMod[Q, time.Time]
 	Location   psql.WhereMod[Q, string]
 	H3cell     psql.WhereMod[Q, string]
@@ -1173,7 +1172,7 @@ func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
 
 func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 	return addressWhere[Q]{
-		Country:    psql.Where[Q, enums.Countrytype](cols.Country),
+		Country:    psql.Where[Q, string](cols.Country),
 		Created:    psql.Where[Q, time.Time](cols.Created),
 		Location:   psql.Where[Q, string](cols.Location),
 		H3cell:     psql.Where[Q, string](cols.H3cell),

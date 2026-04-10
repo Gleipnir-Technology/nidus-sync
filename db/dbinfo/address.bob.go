@@ -17,7 +17,7 @@ var Addresses = Table[
 	Columns: addressColumns{
 		Country: column{
 			Name:      "country",
-			DBType:    "public.countrytype",
+			DBType:    "text",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
@@ -160,6 +160,23 @@ var Addresses = Table[
 			Where:         "",
 			Include:       []string{},
 		},
+		AddressGidUnique: index{
+			Type: "btree",
+			Name: "address_gid_unique",
+			Columns: []indexColumn{
+				{
+					Name:         "gid",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 		IdxAddressGeom: index{
 			Type: "gist",
 			Name: "idx_address_geom",
@@ -182,6 +199,14 @@ var Addresses = Table[
 		Name:    "address_pkey",
 		Columns: []string{"id"},
 		Comment: "",
+	},
+
+	Uniques: addressUniques{
+		AddressGidUnique: constraint{
+			Name:    "address_gid_unique",
+			Columns: []string{"gid"},
+			Comment: "",
+		},
 	},
 
 	Comment: "",
@@ -211,13 +236,14 @@ func (c addressColumns) AsSlice() []column {
 }
 
 type addressIndexes struct {
-	AddressPkey    index
-	IdxAddressGeom index
+	AddressPkey      index
+	AddressGidUnique index
+	IdxAddressGeom   index
 }
 
 func (i addressIndexes) AsSlice() []index {
 	return []index{
-		i.AddressPkey, i.IdxAddressGeom,
+		i.AddressPkey, i.AddressGidUnique, i.IdxAddressGeom,
 	}
 }
 
@@ -227,10 +253,14 @@ func (f addressForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type addressUniques struct{}
+type addressUniques struct {
+	AddressGidUnique constraint
+}
 
 func (u addressUniques) AsSlice() []constraint {
-	return []constraint{}
+	return []constraint{
+		u.AddressGidUnique,
+	}
 }
 
 type addressChecks struct{}

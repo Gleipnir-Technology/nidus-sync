@@ -9,7 +9,6 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	bobtypes "github.com/Gleipnir-Technology/bob/types"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -18,7 +17,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	"github.com/aarondl/opt/omit"
-	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
 	"resty.dev/v3"
@@ -52,127 +50,6 @@ func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 	return nil
 }
 
-// Ensure the provided address exists. If it doesn't add it to the database.
-func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address, l types.Location) (*models.Address, error) {
-	address, err := models.Addresses.Query(
-		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
-		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
-		models.SelectWhere.Addresses.Number.EQ(a.Number),
-		models.SelectWhere.Addresses.PostalCode.EQ(a.PostalCode),
-		models.SelectWhere.Addresses.Region.EQ(a.Region),
-		models.SelectWhere.Addresses.Street.EQ(a.Street),
-		models.SelectWhere.Addresses.Unit.EQ(a.Unit),
-	).One(ctx, txn)
-	if err == nil {
-		return address, nil
-	}
-	cell, err := h3utils.GetCell(l.Longitude, l.Latitude, 15)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", l.Longitude, l.Latitude)
-	}
-	type _row struct {
-		ID int32 `db:"id"`
-	}
-	created := time.Now()
-	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
-		im.Values(
-			psql.Arg(a.CountryEnum()),
-			psql.Arg(created),
-			psql.Arg(a.GID),
-			psql.Arg(cell),
-			psql.Raw("DEFAULT"),
-			psql.Arg(a.Locality),
-			psql.F("ST_Point", l.Longitude, l.Latitude, 4326),
-			psql.Arg(a.Number),
-			psql.Arg(a.PostalCode),
-			psql.Arg(a.Region),
-			psql.Arg(a.Street),
-			psql.Raw("''"),
-		),
-		im.Returning("id"),
-	), scan.StructMapper[_row]())
-	if err != nil {
-		return nil, fmt.Errorf("insert: %w", err)
-	}
-	return &models.Address{
-		Country:    a.CountryEnum(),
-		Created:    created,
-		Gid:        a.GID,
-		H3cell:     "",
-		ID:         row.ID,
-		Locality:   a.Locality,
-		Location:   "",
-		PostalCode: a.PostalCode,
-		Street:     a.Street,
-		Unit:       a.Unit,
-		Region:     a.Region,
-		Number:     a.Number,
-	}, nil
-}
-
-// Either get an address that matches, or create a new address. Either way, return an address
-// This will make a call to a structured geocode service, so it's slow.
-func EnsureAddressWithGeocode(ctx context.Context, txn bob.Executor, org *models.Organization, a types.Address) (*models.Address, error) {
-	address, err := models.Addresses.Query(
-		models.SelectWhere.Addresses.Country.EQ(a.CountryEnum()),
-		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
-		models.SelectWhere.Addresses.Number.EQ(a.Number),
-		models.SelectWhere.Addresses.PostalCode.EQ(a.PostalCode),
-		models.SelectWhere.Addresses.Region.EQ(a.Region),
-		models.SelectWhere.Addresses.Street.EQ(a.Street),
-		models.SelectWhere.Addresses.Unit.EQ(a.Unit),
-	).One(ctx, txn)
-	if err == nil {
-		return address, nil
-	}
-	// Geocode
-	geo, err := GeocodeStructured(ctx, org, a)
-	if err != nil {
-		return nil, fmt.Errorf("geocode: %w", err)
-	}
-
-	type _row struct {
-		ID int32 `db:"id"`
-	}
-	created := time.Now()
-	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
-		im.Values(
-			psql.Arg(geo.Address.Country),
-			psql.Arg(created),
-			psql.Arg(geo.Address.GID),
-			psql.Arg(geo.Cell),
-			psql.Raw("DEFAULT"),
-			psql.Arg(geo.Address.Locality),
-			psql.F("ST_Point", geo.Location.Longitude, geo.Location.Latitude, 4326),
-			psql.Arg(geo.Address.Number),
-			psql.Arg(geo.Address.PostalCode),
-			psql.Arg(geo.Address.Region),
-			psql.Arg(geo.Address.Street),
-			psql.Raw("''"),
-		),
-		im.Returning("id"),
-	), scan.StructMapper[_row]())
-	if err != nil {
-		return nil, fmt.Errorf("insert: %w", err)
-	}
-
-	return &models.Address{
-		Country:    geo.Address.CountryEnum(),
-		Created:    created,
-		Gid:        geo.Address.GID,
-		H3cell:     "",
-		ID:         row.ID,
-		Locality:   geo.Address.Locality,
-		Location:   "",
-		PostalCode: geo.Address.PostalCode,
-		Street:     geo.Address.Street,
-		Unit:       geo.Address.Unit,
-		Region:     geo.Address.Region,
-		Number:     geo.Address.Number,
-	}, nil
-}
 func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (*GeocodeResult, error) {
 	req := stadia.RequestGeocodeRaw{
 		Text: address,
@@ -182,6 +59,7 @@ func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (
 	if err != nil {
 		return nil, fmt.Errorf("client raw geocode failure on %s: %w", address, err)
 	}
+	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
 	return toGeocodeResult(*resp, address)
 }
 func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Address) (*GeocodeResult, error) {
@@ -198,6 +76,7 @@ func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Ad
 	if err != nil {
 		return nil, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
 	}
+	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
 	return toGeocodeResult(*resp, a.String())
 }
 func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResult, error) {
@@ -209,6 +88,7 @@ func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResul
 	if err != nil {
 		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
 	}
+	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
 	return toGeocodeResult(*resp, location.String())
 
 }
@@ -264,10 +144,13 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 }
 
 // Get the parcel for a given address, if one can be found
-func GetParcel(ctx context.Context, txn bob.Executor, a *models.Address) (*models.Parcel, error) {
+func GetParcel(ctx context.Context, txn bob.Executor, a types.Address) (*models.Parcel, error) {
+	if a.ID == nil {
+		return nil, fmt.Errorf("nil address ID")
+	}
 	result, err := models.Parcels.Query(
 		sm.InnerJoin("address").On(psql.F("ST_Contains", psql.Raw("parcel.geometry"), psql.Raw("address.location"))),
-		models.SelectWhere.Addresses.ID.EQ(a.ID),
+		models.SelectWhere.Addresses.ID.EQ(*a.ID),
 	).One(ctx, txn)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {

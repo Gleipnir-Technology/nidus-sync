@@ -60,23 +60,23 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 			Street:     row.AddressStreet,
 			Unit:       "",
 		}
-		address, err := geocode.EnsureAddressWithGeocode(ctx, txn, org, a)
+		geo, err := geocode.GeocodeStructured(ctx, org, a)
 		if err != nil {
 			//return fmt.Errorf("ensure address: %w", err)
-			if address == nil {
+			if geo == nil || geo.Address.ID == nil {
 				log.Warn().Err(err).Msg("ensure address failure")
 			} else {
-				log.Warn().Err(err).Int32("address.id", address.ID).Msg("ensure address failure")
+				log.Warn().Err(err).Int32("address.id", *geo.Address.ID).Msg("ensure address failure")
 			}
 			continue
 		}
-		parcel, err := geocode.GetParcel(ctx, txn, address)
+		parcel, err := geocode.GetParcel(ctx, txn, geo.Address)
 		if err != nil {
 			return fmt.Errorf("get parcel: %w", err)
 		}
 		var site *models.Site
 		site, err = models.Sites.Query(
-			models.SelectWhere.Sites.AddressID.EQ(address.ID),
+			models.SelectWhere.Sites.AddressID.EQ(*geo.Address.ID),
 		).One(ctx, txn)
 		if err != nil {
 			if err.Error() != "sql: no rows in result set" {
@@ -87,7 +87,7 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 				parcel_id = &(*parcel).ID
 			}
 			setter := models.SiteSetter{
-				AddressID: omit.From(address.ID),
+				AddressID: omit.From(*geo.Address.ID),
 				Created:   omit.From(time.Now()),
 				CreatorID: omit.FromPtr(file.Committer.Ptr()),
 				FileID:    omitnull.From(file_id),

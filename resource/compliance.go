@@ -12,7 +12,6 @@ import (
 	//"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/rs/zerolog/log"
 )
 
