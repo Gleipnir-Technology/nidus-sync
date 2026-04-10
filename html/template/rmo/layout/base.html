@@ -5,7 +5,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{{ template "title" . }} - Report Mosquitoes Online</title>
 		<link rel="icon" href="/static/ico/favicon-rmo.ico" type="image/x-icon" />
-		<link href="{{ bundlePathCSS }}" rel="stylesheet" />
 		{{ block "extraheader" . }}{{ end }}
 		<script>
 			var tooltipByElementId = {};
@@ -36,6 +35,5 @@
 	<body>
 		{{ template "content" . }}
 		{{ template "rmo/component/footer.html" . }}
-		<script src="{{ bundlePathJS }}" type="module"></script>
 	</body>
 </html>
